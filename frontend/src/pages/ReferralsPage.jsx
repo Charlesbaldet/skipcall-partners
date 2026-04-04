@@ -79,7 +79,7 @@ export default function ReferralsPage() {
             {loading ? (
               <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</td></tr>
             ) : referrals.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucun résultat</td></tr>
+              <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucun rÃ©sultat</td></tr>
             ) : referrals.map(r => (
               <tr key={r.id} onClick={() => openDetail(r)} style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background 0.1s' }} onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'} onMouseLeave={e => e.currentTarget.style.background = ''}>
                 <td style={{ padding: '13px 16px' }}>
@@ -93,7 +93,7 @@ export default function ReferralsPage() {
                 <td style={{ padding: '13px 16px' }}>
                   <Badge config={STATUS_CONFIG} value={r.status} />
                 </td>
-                <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
+                <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a' }}>{r.deal_value > 0 ? fmt(r.deal_value) : 'â'}</td>
                 <td style={{ padding: '13px 16px', color: '#94a3b8', fontSize: 13 }}>{fmtDate(r.created_at)}</td>
                 <td style={{ padding: '13px 16px' }}>
                   <ChevronRight size={16} color="#94a3b8" />
@@ -121,6 +121,19 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
   const [editStatus, setEditStatus] = useState(referral.status);
   const [editValue, setEditValue] = useState(referral.deal_value || '');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm('Supprimer ce referral définitivement ?')) return;
+    setDeleting(true);
+    try {
+      const api = (await import('../lib/api')).default;
+      await api.deleteReferral(referral.id);
+      onClose();
+      window.location.reload();
+    } catch(e) { alert(e.message); }
+    setDeleting(false);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -136,7 +149,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} />
       <div className="slide-in" style={{ position: 'relative', width: 500, maxWidth: '100%', background: '#fff', height: '100%', overflowY: 'auto', padding: 32, boxShadow: '-10px 0 40px rgba(0,0,0,0.1)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Détail du deal</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>DÃ©tail du deal</h2>
           <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', width: 34, height: 34, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} color="#64748b" />
           </button>
@@ -145,14 +158,14 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
         {/* Prospect Info */}
         <div style={{ background: '#f8fafc', borderRadius: 14, padding: 20, marginBottom: 24 }}>
           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18, marginBottom: 4 }}>{referral.prospect_name}</div>
-          <div style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>{referral.prospect_company} · {referral.prospect_role || 'N/A'}</div>
+          <div style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>{referral.prospect_company} Â· {referral.prospect_role || 'N/A'}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
             <InfoRow label="Email" value={referral.prospect_email} />
-            <InfoRow label="Tél" value={referral.prospect_phone || '—'} />
+            <InfoRow label="TÃ©l" value={referral.prospect_phone || 'â'} />
             <InfoRow label="Partenaire" value={referral.partner_name} />
             <InfoRow label="Niveau" value={<Badge config={LEVEL_CONFIG} value={referral.recommendation_level} />} />
-            <InfoRow label="Assigné à" value={referral.assigned_name || 'Non assigné'} />
-            <InfoRow label="Créé le" value={fmtDate(referral.created_at)} />
+            <InfoRow label="AssignÃ© Ã " value={referral.assigned_name || 'Non assignÃ©'} />
+            <InfoRow label="CrÃ©Ã© le" value={fmtDate(referral.created_at)} />
           </div>
         </div>
 
@@ -166,7 +179,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
 
         {/* Status Update */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 10 }}>Mettre à jour le statut</div>
+          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 10 }}>Mettre Ã  jour le statut</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {Object.entries(STATUS_CONFIG).map(([k, v]) => (
               <button key={k} onClick={() => setEditStatus(k)} style={{
@@ -181,7 +194,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
 
         {/* Deal Value */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Valeur du deal (€ / an)</div>
+          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Valeur du deal (â¬ / an)</div>
           <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} placeholder="Ex: 24000"
             style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
         </div>
@@ -189,7 +202,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
         {/* Commission Preview */}
         {editStatus === 'won' && Number(editValue) > 0 && (
           <div style={{ background: 'linear-gradient(135deg,#fef3c7,#fffbeb)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #fcd34d' }}>
-            <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>💰 Commission estimée</div>
+            <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>ð° Commission estimÃ©e</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>{fmt(commission)}</span>
               <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% de {fmt(Number(editValue))})</span>
@@ -205,7 +218,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
               {activities.map(a => (
                 <div key={a.id} style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', left: -22, top: 4, width: 10, height: 10, borderRadius: '50%', background: '#6366f1', border: '2px solid #fff' }} />
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>{fmtDateTime(a.created_at)} · {a.user_name}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>{fmtDateTime(a.created_at)} Â· {a.user_name}</div>
                   <div style={{ fontSize: 13, color: '#334155' }}>{formatActivity(a)}</div>
                 </div>
               ))}
@@ -223,6 +236,12 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
         }}>
           {saving ? 'Enregistrement...' : 'Sauvegarder'}
         </button>
+        <button onClick={handleDelete} disabled={deleting} style={{
+          width: '100%', padding: '12px', borderRadius: 12,
+          background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
+          fontWeight: 600, fontSize: 14, cursor: 'pointer', marginTop: 8, opacity: deleting ? 0.5 : 1,
+        }}>{deleting ? 'Suppression...' : '🗑 Supprimer ce referral'}
+        </button>
       </div>
     </div>
   );
@@ -230,10 +249,10 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
 
 function formatActivity(a) {
   switch (a.action) {
-    case 'created': return 'Recommandation créée';
-    case 'status_change': return `Statut: ${STATUS_CONFIG[a.old_value]?.label || a.old_value} → ${STATUS_CONFIG[a.new_value]?.label || a.new_value}`;
-    case 'value_updated': return `Valeur mise à jour: ${fmt(a.new_value)}`;
-    case 'assigned': return 'Assigné à un commercial';
+    case 'created': return 'Recommandation crÃ©Ã©e';
+    case 'status_change': return `Statut: ${STATUS_CONFIG[a.old_value]?.label || a.old_value} â ${STATUS_CONFIG[a.new_value]?.label || a.new_value}`;
+    case 'value_updated': return `Valeur mise Ã  jour: ${fmt(a.new_value)}`;
+    case 'assigned': return 'AssignÃ© Ã  un commercial';
     case 'note_added': return `Note: ${a.new_value}`;
     default: return a.action;
   }
