@@ -6,6 +6,15 @@ const router = express.Router();
 router.use(authenticate);
 router.use(partnerScope);
 
+// Helper: compute next quarter end from a date
+function nextQuarterEnd(date) {
+  const d = new Date(date);
+  const month = d.getMonth();
+  const quarterEnd = Math.ceil((month + 1) / 3) * 3;
+  const nextQ = new Date(d.getFullYear(), quarterEnd + 3, 0); // end of next quarter
+  return nextQ.toISOString().split('T')[0];
+}
+
 // ─── List commissions ───
 router.get('/', async (req, res) => {
   try {
@@ -40,12 +49,20 @@ router.get('/', async (req, res) => {
       params
     );
 
-    // Aggregates
     const totalPending = rows.filter(r => r.status === 'pending').reduce((s, r) => s + parseFloat(r.amount), 0);
+    const totalApproved = rows.filter(r => r.status === 'approved').reduce((s, r) => s + parseFloat(r.amount), 0);
     const totalPaid = rows.filter(r => r.status === 'paid').reduce((s, r) => s + parseFloat(r.amount), 0);
 
-    res.json({ commissions: rows, totalPending, totalPaid });
+    // Add computed payment_due_date for each commission
+    const enriched = rows.map(c => ({
+      ...c,
+      payment_due_date: c.approved_at ? nextQuarterEnd(c.approved_at) : null,
+      is_late: c.approved_at && c.status !== 'paid' && new Date(nextQuarterEnd(c.approved_at)) < new Date(),
+    }));
+
+    res.json({ commissions: enriched, totalPending, totalApproved, totalPaid });
   } catch (err) {
+    console.error('List commissions error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -81,15 +98,26 @@ router.put('/:id', authorize('admin'), async (req, res) => {
       return res.status(400).json({ error: 'Statut invalide' });
     }
 
+    const approvedAt = status === 'approved' ? new Date().toISOString() : null;
     const paidAt = status === 'paid' ? new Date().toISOString() : null;
+    
     const { rows: [commission] } = await query(
-      `UPDATE commissions SET status = $2, paid_at = COALESCE($3, paid_at) WHERE id = $1 RETURNING *`,
-      [req.params.id, status, paidAt]
+      `UPDATE commissions SET status = $2, 
+        approved_at = COALESCE($3, approved_at),
+        paid_at = COALESCE($4, paid_at) 
+       WHERE id = $1 RETURNING *`,
+      [req.params.id, status, approvedAt, paidAt]
     );
 
     if (!commission) return res.status(404).json({ error: 'Commission introuvable' });
+    
+    // Add computed fields
+    commission.payment_due_date = commission.approved_at ? nextQuarterEnd(commission.approved_at) : null;
+    commission.is_late = commission.approved_at && commission.status !== 'paid' && new Date(nextQuarterEnd(commission.approved_at)) < new Date();
+    
     res.json({ commission });
   } catch (err) {
+    console.error('Update commission error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
