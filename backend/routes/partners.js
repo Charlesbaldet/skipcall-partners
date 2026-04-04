@@ -7,7 +7,7 @@ const { authenticate, authorize } = require('../middleware/auth');
 const router = express.Router();
 router.use(authenticate);
 
-// ─── List partners ───
+// âââ List partners âââ
 router.get('/', async (req, res) => {
   try {
     const { rows } = await query(
@@ -17,9 +17,10 @@ router.get('/', async (req, res) => {
         COALESCE(SUM(CASE WHEN r.status = 'won' THEN r.deal_value END), 0) as total_revenue
        FROM partners p
        LEFT JOIN referrals r ON p.id = r.partner_id
-       WHERE p.is_active = true
+       WHERE (p.is_active = true OR $1 = 'all')
        GROUP BY p.id
-       ORDER BY p.name`
+       ORDER BY p.name`,
+      [req.query.show || 'active']
     );
     res.json({ partners: rows });
   } catch (err) {
@@ -27,7 +28,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ─── Get single partner ───
+// âââ Get single partner âââ
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
@@ -50,7 +51,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ─── Create partner (admin only) ───
+// âââ Create partner (admin only) âââ
 router.post('/', authorize('admin'), [
   body('name').trim().notEmpty(),
   body('contact_name').trim().notEmpty(),
@@ -89,7 +90,7 @@ router.post('/', authorize('admin'), [
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.code === '23505') {
-      return res.status(409).json({ error: 'Un partenaire avec cet email existe déjà' });
+      return res.status(409).json({ error: 'Un partenaire avec cet email existe dÃ©jÃ ' });
     }
     res.status(500).json({ error: 'Erreur serveur' });
   } finally {
@@ -97,7 +98,7 @@ router.post('/', authorize('admin'), [
   }
 });
 
-// ─── Update partner (admin only) ───
+// âââ Update partner (admin only) âââ
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
     const { name, contact_name, email, phone, company_website, commission_rate, is_active } = req.body;
@@ -117,6 +118,50 @@ router.put('/:id', authorize('admin'), async (req, res) => {
     if (!partner) return res.status(404).json({ error: 'Partenaire introuvable' });
     res.json({ partner });
   } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ─── Archive partner (admin only) ───
+router.put('/:id/archive', authorize('admin'), async (req, res) => {
+  try {
+    const { rows: [partner] } = await query(
+      'UPDATE partners SET is_active = NOT is_active WHERE id = $1 RETURNING *',
+      [req.params.id]
+    );
+    if (!partner) return res.status(404).json({ error: 'Partenaire introuvable' });
+    
+    // Also deactivate/reactivate user account
+    await query('UPDATE users SET is_active = $2 WHERE partner_id = $1', [req.params.id, partner.is_active]);
+    
+    res.json({ partner, message: partner.is_active ? 'Partenaire réactivé' : 'Partenaire archivé' });
+  } catch (err) {
+    console.error('Archive partner error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Delete partner (admin only) ───
+router.delete('/:id', authorize('admin'), async (req, res) => {
+  try {
+    // Check if partner has referrals
+    const { rows: [count] } = await query(
+      'SELECT COUNT(*) FROM referrals WHERE partner_id = $1', [req.params.id]
+    );
+    
+    if (parseInt(count.count) > 0) {
+      return res.status(400).json({ error: 'Impossible de supprimer un partenaire avec des recommandations. Archivez-le plutôt.' });
+    }
+    
+    // Delete user account first
+    await query('DELETE FROM users WHERE partner_id = $1', [req.params.id]);
+    const { rows } = await query('DELETE FROM partners WHERE id = $1 RETURNING id', [req.params.id]);
+    
+    if (rows.length === 0) return res.status(404).json({ error: 'Partenaire introuvable' });
+    res.json({ message: 'Partenaire supprimé' });
+  } catch (err) {
+    console.error('Delete partner error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
