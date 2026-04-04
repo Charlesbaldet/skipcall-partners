@@ -134,8 +134,7 @@ export default function CommissionsPage() {
                       <td style={{ padding: '13px 16px' }}>
                         <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: cs.bg, color: cs.color }}>{cs.label}</span>
                       </td>
-                      <td style={{ padding: '13px 16px' }}>
-                        <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '\u2014'}</td>
+                      <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '\u2014'}</td>
                       <td style={{ padding: '13px 16px', fontSize: 12 }}>
                         {c.payment_due_date ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#dc2626' : '#64748b', fontWeight: c.is_late ? 700 : 400 }}>
