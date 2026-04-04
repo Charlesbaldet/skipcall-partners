@@ -39,17 +39,18 @@ class ApiClient {
       this.setToken(null);
       this.setUser(null);
       window.location.href = '/login';
-      throw new Error('Session expirÃ©e');
+      throw new Error('Session expirÃÂ©e');
     }
 
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.error || 'Erreur serveur');
+      const msg = data.error || (data.errors ? data.errors.map(e => e.msg || e.message).join(', ') : 'Erreur serveur');
+      throw new Error(msg);
     }
     return data;
   }
 
-  // âââ Auth âââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Auth Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   async login(email, password) {
     const data = await this.request('/auth/login', {
       method: 'POST',
@@ -70,13 +71,13 @@ class ApiClient {
     return this.request('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) });
   }
 
-  // âââ Partners âââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Partners Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   getPartners() { return this.request('/partners'); }
   getPartner(id) { return this.request(`/partners/${id}`); }
   createPartner(data) { return this.request('/partners', { method: 'POST', body: JSON.stringify(data) }); }
   updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // âââ Referrals âââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Referrals Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   getReferrals(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/referrals?${qs}`);
@@ -85,7 +86,7 @@ class ApiClient {
   createReferral(data) { return this.request('/referrals', { method: 'POST', body: JSON.stringify(data) }); }
   updateReferral(id, data) { return this.request(`/referrals/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // âââ Commissions âââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Commissions Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   getCommissions(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/commissions?${qs}`);
@@ -93,7 +94,7 @@ class ApiClient {
   getCommissionsSummary() { return this.request('/commissions/summary'); }
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
 
-  // âââ Dashboard âââ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Dashboard Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   getKPIs() { return this.request('/dashboard/kpis'); }
   getTimeline(months = 6) { return this.request(`/dashboard/timeline?months=${months}`); }
   getPipeline() { return this.request('/dashboard/pipeline'); }
