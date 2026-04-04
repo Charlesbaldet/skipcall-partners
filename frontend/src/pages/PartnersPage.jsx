@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { Archive, Trash2, Pencil } from 'lucide-react';
 import { fmt } from '../lib/constants';
 import { Plus, X, Users } from 'lucide-react';
 
@@ -10,6 +11,22 @@ export default function PartnersPage() {
   const [form, setForm] = useState({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
   const [saving, setSaving] = useState(false);
   const [tempPwd, setTempPwd] = useState(null);
+
+  const handleArchive = async (id) => {
+    try {
+      await api.archivePartner(id);
+      const d = await api.getPartners();
+      setPartners(d.partners);
+    } catch(e) { alert(e.message); }
+  };
+
+  const handleDeletePartner = async (id) => {
+    if (!confirm('Supprimer ce partenaire ? (impossible s\'il a des recommandations)')) return;
+    try {
+      await api.deletePartner(id);
+      setPartners(prev => prev.filter(p => p.id !== id));
+    } catch(e) { alert(e.message); }
+  };
 
   useEffect(() => {
     api.getPartners().then(d => setPartners(d.partners)).catch(console.error).finally(() => setLoading(false));
@@ -95,7 +112,12 @@ export default function PartnersPage() {
                   <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18 }}>{p.name}</div>
                   <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
                 </div>
-                <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
+                  <button onClick={(e) => { e.stopPropagation(); }} title="Modifier" style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); handleArchive(p.id); }} title="Archiver" style={{ background: '#fef3c7', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#b45309', display: 'flex' }}><Archive size={13} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeletePartner(p.id); }} title="Supprimer" style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={13} /></button>
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                 <MiniStat label="Referrals" value={refs} />

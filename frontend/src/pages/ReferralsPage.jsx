@@ -121,6 +121,19 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
   const [editStatus, setEditStatus] = useState(referral.status);
   const [editValue, setEditValue] = useState(referral.deal_value || '');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm('Supprimer ce referral d\u00e9finitivement ?')) return;
+    setDeleting(true);
+    try {
+      const apiMod = (await import('../lib/api')).default;
+      await apiMod.deleteReferral(referral.id);
+      onClose();
+      window.location.reload();
+    } catch(e) { alert(e.message); }
+    setDeleting(false);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -222,6 +235,12 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
           opacity: saving ? 0.7 : 1,
         }}>
           {saving ? 'Enregistrement...' : 'Sauvegarder'}
+        </button>
+        <button onClick={handleDelete} disabled={deleting} style={{
+          width: '100%', padding: '12px', borderRadius: 12,
+          background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
+          fontWeight: 600, fontSize: 14, cursor: 'pointer', marginTop: 8, opacity: deleting ? 0.5 : 1,
+        }}>{deleting ? 'Suppression...' : 'Supprimer ce referral'}
         </button>
       </div>
     </div>
