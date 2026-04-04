@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 router.use(partnerScope);
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ List referrals ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ List referrals ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
 router.get('/', async (req, res) => {
   try {
     const { status, partner_id, level, page = 1, limit = 50 } = req.query;
@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Get single referral with activities ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Get single referral with activities ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
@@ -88,7 +88,7 @@ router.get('/:id', async (req, res) => {
 
     // Check partner scope
     if (req.partnerScope && rows[0].partner_id !== req.partnerScope) {
-      return res.status(403).json({ error: 'AccÃÂÃÂ¨s interdit' });
+      return res.status(403).json({ error: 'AccÃÂÃÂÃÂÃÂ¨s interdit' });
     }
 
     // Get activity log
@@ -107,7 +107,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Create referral (partner submits) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Create referral (partner submits) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
 router.post('/', [
   body('prospect_name').trim().notEmpty(),
   body('prospect_email').isEmail().normalizeEmail(),
@@ -175,7 +175,7 @@ router.post('/', [
   }
 });
 
-// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Update referral (internal team) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Update referral (internal team) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
 router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, res) => {
   const client = await getClient();
   try {
@@ -307,7 +307,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
 });
 
 
-// ─── Delete referral ───
+// âââ Delete referral âââ
 router.delete('/:id', authenticate, async (req, res) => {
   try {
     // Partners can only delete their own referrals
@@ -324,9 +324,9 @@ router.delete('/:id', authenticate, async (req, res) => {
     await query('DELETE FROM notification_queue WHERE payload::text LIKE $1', ['%' + req.params.id + '%']);
     
     const { rows } = await query(`DELETE FROM referrals ${condition} RETURNING id`, params);
-    if (rows.length === 0) return res.status(404).json({ error: 'Referral introuvable ou accès interdit' });
+    if (rows.length === 0) return res.status(404).json({ error: 'Referral introuvable ou accÃ¨s interdit' });
     
-    res.json({ message: 'Referral supprimé', id: rows[0].id });
+    res.json({ message: 'Referral supprimÃ©', id: rows[0].id });
   } catch (err) {
     console.error('Delete referral error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
