@@ -39,7 +39,7 @@ class ApiClient {
       this.setToken(null);
       this.setUser(null);
       window.location.href = '/login';
-      throw new Error('Session expirÃÂ©e');
+      throw new Error('Session expirÃÂÃÂ©e');
     }
 
     const data = await res.json();
@@ -50,7 +50,7 @@ class ApiClient {
     return data;
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Auth Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Auth ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
   async login(email, password) {
     const data = await this.request('/auth/login', {
       method: 'POST',
@@ -71,13 +71,13 @@ class ApiClient {
     return this.request('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) });
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Partners Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Partners ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
   getPartners() { return this.request('/partners'); }
   getPartner(id) { return this.request(`/partners/${id}`); }
   createPartner(data) { return this.request('/partners', { method: 'POST', body: JSON.stringify(data) }); }
   updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Referrals Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Referrals ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
   getReferrals(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/referrals?${qs}`);
@@ -86,7 +86,7 @@ class ApiClient {
   createReferral(data) { return this.request('/referrals', { method: 'POST', body: JSON.stringify(data) }); }
   updateReferral(id, data) { return this.request(`/referrals/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Commissions Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Commissions ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
   getCommissions(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/commissions?${qs}`);
@@ -94,7 +94,7 @@ class ApiClient {
   getCommissionsSummary() { return this.request('/commissions/summary'); }
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Dashboard Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Dashboard ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
   getKPIs() { return this.request('/dashboard/kpis'); }
   getTimeline(months = 6) { return this.request(`/dashboard/timeline?months=${months}`); }
   getPipeline() { return this.request('/dashboard/pipeline'); }
