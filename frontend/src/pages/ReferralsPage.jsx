@@ -122,9 +122,10 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
   const [editValue, setEditValue] = useState(referral.deal_value || '');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editEngagement, setEditEngagement] = useState(referral.engagement || 'monthly');
 
   const handleDelete = async () => {
-    if (!confirm('Supprimer ce referral d\u00e9finitivement ?')) return;
+    if (!confirm('Supprimer ce referral ?')) return;
     setDeleting(true);
     try {
       const apiMod = (await import('../lib/api')).default;
@@ -137,12 +138,14 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
 
   const handleSave = async () => {
     setSaving(true);
-    await onUpdate(referral.id, { status: editStatus, deal_value: Number(editValue) || 0 });
+    await onUpdate(referral.id, { status: editStatus, deal_value: Number(editValue) || 0, engagement: editEngagement });
     setSaving(false);
   };
 
   const rate = referral.commission_rate || 10;
-  const commission = editStatus === 'won' ? (Number(editValue) || 0) * rate / 100 : 0;
+  const engMultiplier = { monthly: 12, quarterly: 4, yearly: 1 }[editEngagement] || 12;
+  const annualValue = (Number(editValue) || 0) * engMultiplier;
+  const commission = editStatus === 'won' ? annualValue * rate / 100 : 0;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
@@ -194,9 +197,24 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
 
         {/* Deal Value */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Valeur du deal (€ / an)</div>
+          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>MRR (€ / mois)</div>
           <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} placeholder="Ex: 24000"
             style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
+        </div>
+
+        {/* Engagement */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Engagement</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[['monthly', 'Mensuel'], ['quarterly', 'Trimestriel'], ['yearly', 'Annuel']].map(([k, label]) => (
+              <button key={k} onClick={() => setEditEngagement(k)} style={{
+                padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                border: editEngagement === k ? '2px solid #6366f1' : '2px solid #e2e8f0',
+                background: editEngagement === k ? '#eef2ff' : '#fff',
+                color: editEngagement === k ? '#6366f1' : '#64748b',
+              }}>{label}</button>
+            ))}
+          </div>
         </div>
 
         {/* Commission Preview */}
@@ -205,7 +223,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
             <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>💰 Commission estimée</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>{fmt(commission)}</span>
-              <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% de {fmt(Number(editValue))})</span>
+              <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% de {fmt(annualValue)}/an)</span>
             </div>
           </div>
         )}
