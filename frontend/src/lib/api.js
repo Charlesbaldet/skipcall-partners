@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 class ApiClient {
   constructor() {
@@ -39,7 +39,7 @@ class ApiClient {
       this.setToken(null);
       this.setUser(null);
       window.location.href = '/login';
-      throw new Error('Session expirée');
+      throw new Error('Session expirÃ©e');
     }
 
     const data = await res.json();
@@ -49,7 +49,7 @@ class ApiClient {
     return data;
   }
 
-  // ─── Auth ───
+  // âââ Auth âââ
   async login(email, password) {
     const data = await this.request('/auth/login', {
       method: 'POST',
@@ -70,13 +70,13 @@ class ApiClient {
     return this.request('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) });
   }
 
-  // ─── Partners ───
+  // âââ Partners âââ
   getPartners() { return this.request('/partners'); }
   getPartner(id) { return this.request(`/partners/${id}`); }
   createPartner(data) { return this.request('/partners', { method: 'POST', body: JSON.stringify(data) }); }
   updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // ─── Referrals ───
+  // âââ Referrals âââ
   getReferrals(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/referrals?${qs}`);
@@ -85,7 +85,7 @@ class ApiClient {
   createReferral(data) { return this.request('/referrals', { method: 'POST', body: JSON.stringify(data) }); }
   updateReferral(id, data) { return this.request(`/referrals/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // ─── Commissions ───
+  // âââ Commissions âââ
   getCommissions(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/commissions?${qs}`);
@@ -93,7 +93,7 @@ class ApiClient {
   getCommissionsSummary() { return this.request('/commissions/summary'); }
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
 
-  // ─── Dashboard ───
+  // âââ Dashboard âââ
   getKPIs() { return this.request('/dashboard/kpis'); }
   getTimeline(months = 6) { return this.request(`/dashboard/timeline?months=${months}`); }
   getPipeline() { return this.request('/dashboard/pipeline'); }
