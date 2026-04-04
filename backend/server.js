@@ -14,7 +14,7 @@ const { startNotificationWorker } = require('./services/emailService');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Security Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Security ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -38,7 +38,7 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/', authLimiter);
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Routes Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Routes ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.use('/api/auth', authRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/referrals', referralRoutes);
@@ -50,7 +50,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Error handler Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Error handler ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({
@@ -60,9 +60,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Start Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Start ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 
-// âââ Auto-init database on startup âââ
+// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Auto-init database on startup Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 const { pool } = require('./db');
 const fs = require('fs');
 const path = require('path');
@@ -73,14 +73,14 @@ async function autoInit() {
     // Check if tables exist
     const { rows } = await pool.query("SELECT to_regclass('public.users')");
     if (rows[0].to_regclass) {
-      console.log('ð Database already initialized');
+      console.log('Ã°ÂÂÂ Database already initialized');
       return;
     }
     
-    console.log('ð§ Initializing database...');
+    console.log('Ã°ÂÂÂ§ Initializing database...');
     const schema = fs.readFileSync(path.join(__dirname, 'db/schema.sql'), 'utf8');
     await pool.query(schema);
-    console.log('â Schema created');
+    console.log('Ã¢ÂÂ Schema created');
     
     // Seed data
     const client = await pool.connect();
@@ -113,7 +113,7 @@ async function autoInit() {
         );
       }
       await client.query('COMMIT');
-      console.log('â Database seeded');
+      console.log('Ã¢ÂÂ Database seeded');
     } catch (e) {
       await client.query('ROLLBACK');
       console.error('Seed error:', e.message);
@@ -127,11 +127,18 @@ async function autoInit() {
 
 app.listen(PORT, async () => {
   await autoInit();
-  console.log(`Ã°ÂÂÂ Skipcall API running on port ${PORT}`);
+  // Always run migrations
+  try {
+    await pool.query("ALTER TABLE referrals DROP CONSTRAINT IF EXISTS referrals_status_check");
+    await pool.query("ALTER TABLE referrals ADD CONSTRAINT referrals_status_check CHECK (status IN ('new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'))");
+    await pool.query("ALTER TABLE commissions ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ");
+    console.log('Migrations OK');
+  } catch(e) { console.log('Migration:', e.message); }
+  console.log(`ÃÂ°ÃÂÃÂÃÂ Skipcall API running on port ${PORT}`);
   
   // Start email notification worker (checks queue every 30s)
   if (process.env.SMTP_HOST) {
     startNotificationWorker();
-    console.log('Ã°ÂÂÂ§ Email notification worker started');
+    console.log('ÃÂ°ÃÂÃÂÃÂ§ Email notification worker started');
   }
 });
