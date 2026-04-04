@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL Database ───
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: skipcall_referrals
+      POSTGRES_USER: skipcall
+      POSTGRES_PASSWORD: skipcall_dev_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skipcall -d skipcall_referrals"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend API ───
+  api:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://skipcall:skipcall_dev_2026@db:5432/skipcall_referrals
+      JWT_SECRET: dev_jwt_secret_change_in_production_please_64chars_minimum_ok
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:5173
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
