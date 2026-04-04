@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 router.use(partnerScope);
 
-// ─── List referrals ───
+// âââ List referrals âââ
 router.get('/', async (req, res) => {
   try {
     const { status, partner_id, level, page = 1, limit = 50 } = req.query;
@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ─── Get single referral with activities ───
+// âââ Get single referral with activities âââ
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
@@ -88,7 +88,7 @@ router.get('/:id', async (req, res) => {
 
     // Check partner scope
     if (req.partnerScope && rows[0].partner_id !== req.partnerScope) {
-      return res.status(403).json({ error: 'Accès interdit' });
+      return res.status(403).json({ error: 'AccÃ¨s interdit' });
     }
 
     // Get activity log
@@ -107,7 +107,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ─── Create referral (partner submits) ───
+// âââ Create referral (partner submits) âââ
 router.post('/', [
   body('prospect_name').trim().notEmpty(),
   body('prospect_email').isEmail().normalizeEmail(),
@@ -175,7 +175,7 @@ router.post('/', [
   }
 });
 
-// ─── Update referral (internal team) ───
+// âââ Update referral (internal team) âââ
 router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, res) => {
   const client = await getClient();
   try {
@@ -250,10 +250,9 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       if (partner) {
         // Upsert commission
         await client.query(
-          `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value)
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (referral_id) DO UPDATE SET 
-             amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value`,
+          `DELETE FROM commissions WHERE referral_id = $1;
+          INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value)
+           VALUES ($1, $2, $3, $4, $5)`,
           [req.params.id, partner.id, deal_value * partner.commission_rate / 100, partner.commission_rate, deal_value]
         );
 
