@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 router.use(partnerScope);
 
-// âââ List referrals âââ
+// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ List referrals Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 router.get('/', async (req, res) => {
   try {
     const { status, partner_id, level, page = 1, limit = 50 } = req.query;
@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// âââ Get single referral with activities âââ
+// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Get single referral with activities Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
@@ -88,7 +88,7 @@ router.get('/:id', async (req, res) => {
 
     // Check partner scope
     if (req.partnerScope && rows[0].partner_id !== req.partnerScope) {
-      return res.status(403).json({ error: 'AccÃ¨s interdit' });
+      return res.status(403).json({ error: 'AccÃÂ¨s interdit' });
     }
 
     // Get activity log
@@ -107,7 +107,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// âââ Create referral (partner submits) âââ
+// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Create referral (partner submits) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 router.post('/', [
   body('prospect_name').trim().notEmpty(),
   body('prospect_email').isEmail().normalizeEmail(),
@@ -175,7 +175,7 @@ router.post('/', [
   }
 });
 
-// âââ Update referral (internal team) âââ
+// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Update referral (internal team) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, res) => {
   const client = await getClient();
   try {
@@ -248,10 +248,10 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       );
 
       if (partner) {
-        // Upsert commission
+        // Delete existing commission if any, then create new
+        await client.query('DELETE FROM commissions WHERE referral_id = $1', [req.params.id]);
         await client.query(
-          `DELETE FROM commissions WHERE referral_id = $1;
-          INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value)
+          `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value)
            VALUES ($1, $2, $3, $4, $5)`,
           [req.params.id, partner.id, deal_value * partner.commission_rate / 100, partner.commission_rate, deal_value]
         );
