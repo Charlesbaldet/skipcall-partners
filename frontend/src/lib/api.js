@@ -39,7 +39,7 @@ class ApiClient {
       this.setToken(null);
       this.setUser(null);
       window.location.href = '/login';
-      throw new Error('Session expirÃÂÃÂ©e');
+      throw new Error('Session expirée');
     }
 
     const data = await res.json();
@@ -50,7 +50,7 @@ class ApiClient {
     return data;
   }
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Auth ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ─── Auth ───
   async login(email, password) {
     const data = await this.request('/auth/login', {
       method: 'POST',
@@ -71,13 +71,13 @@ class ApiClient {
     return this.request('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) });
   }
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Partners ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ─── Partners ───
   getPartners() { return this.request('/partners'); }
   getPartner(id) { return this.request(`/partners/${id}`); }
   createPartner(data) { return this.request('/partners', { method: 'POST', body: JSON.stringify(data) }); }
   updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Referrals ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ─── Referrals ───
   getReferrals(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/referrals?${qs}`);
@@ -86,7 +86,7 @@ class ApiClient {
   createReferral(data) { return this.request('/referrals', { method: 'POST', body: JSON.stringify(data) }); }
   updateReferral(id, data) { return this.request(`/referrals/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Commissions ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+  // ─── Commissions ───
   getCommissions(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request(`/commissions?${qs}`);
@@ -94,7 +94,14 @@ class ApiClient {
   getCommissionsSummary() { return this.request('/commissions/summary'); }
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
 
-  // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Dashboard ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+
+  // ─── Delete & Archive ───
+  deleteReferral(id) { return this.request(`/referrals/${id}`, { method: 'DELETE' }); }
+  deletePartner(id) { return this.request(`/partners/${id}`, { method: 'DELETE' }); }
+  archivePartner(id) { return this.request(`/partners/${id}/archive`, { method: 'PUT' }); }
+  updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
+
+  // ─── Dashboard ───
   getKPIs() { return this.request('/dashboard/kpis'); }
   getTimeline(months = 6) { return this.request(`/dashboard/timeline?months=${months}`); }
   getPipeline() { return this.request('/dashboard/pipeline'); }
