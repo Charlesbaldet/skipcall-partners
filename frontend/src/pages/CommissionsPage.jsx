@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, CreditCard } from 'lucide-react';
 
 const COM_STATUS = {
   pending: { label: 'En attente', color: '#f59e0b', bg: '#fffbeb', icon: Clock },
-  approved: { label: 'ApprouvÃ©e', color: '#6366f1', bg: '#eef2ff', icon: CheckCircle },
-  paid: { label: 'PayÃ©e', color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
+  approved: { label: 'Approuvée', color: '#6366f1', bg: '#eef2ff', icon: CheckCircle },
+  paid: { label: 'Payée', color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
 };
 
 export default function CommissionsPage() {
@@ -50,12 +50,12 @@ export default function CommissionsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
         <ComKPI icon={DollarSign} label="Total Commissions" value={fmt(totalAll)} color="#6366f1" />
         <ComKPI icon={Clock} label="En attente" value={fmt(totals.pending)} color="#f59e0b" />
-        <ComKPI icon={CheckCircle} label="PayÃ©es" value={fmt(totals.paid)} color="#16a34a" />
+        <ComKPI icon={CheckCircle} label="Payées" value={fmt(totals.paid)} color="#16a34a" />
       </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
-        {[{ id: 'summary', label: 'Par partenaire' }, { id: 'detail', label: 'DÃ©tail' }].map(t => (
+        {[{ id: 'summary', label: 'Par partenaire' }, { id: 'detail', label: 'Détail' }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
             background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#0f172a' : '#64748b',
@@ -69,7 +69,7 @@ export default function CommissionsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Partenaire', 'Taux', 'Deals', 'CA GÃ©nÃ©rÃ©', 'En attente', 'ApprouvÃ©', 'PayÃ©', 'Total'].map((h, i) => (
+                {['Partenaire', 'Taux', 'Deals', 'CA Généré', 'En attente', 'Approuvé', 'Payé', 'Total'].map((h, i) => (
                   <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                 ))}
               </tr>
@@ -113,7 +113,7 @@ export default function CommissionsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
-                  {['Prospect', 'Partenaire', 'Taux', 'Deal', 'Commission', 'Statut', 'Validé le', 'Échéance', 'Action'].map((h, i) => (
+                  {['Prospect', 'Partenaire', 'Taux', 'Valeur Deal', 'Commission', 'Statut', 'Action'].map((h, i) => (
                     <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                   ))}
                 </tr>
@@ -135,21 +135,11 @@ export default function CommissionsPage() {
                         <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: cs.bg, color: cs.color }}>{cs.label}</span>
                       </td>
                       <td style={{ padding: '13px 16px' }}>
-                        <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '—'}</td>
-                      <td style={{ padding: '13px 16px', fontSize: 12 }}>
-                        {c.payment_due_date ? (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#dc2626' : '#64748b', fontWeight: c.is_late ? 700 : 400 }}>
-                            {c.is_late && <AlertTriangle size={14} />}
-                            {fmtDate(c.payment_due_date)}
-                          </span>
-                        ) : '—'}
-                      </td>
-                      <td style={{ padding: '13px 16px' }}>
                         {c.status === 'pending' && (
                           <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eef2ff', border: 'none', color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Approuver</button>
                         )}
                         {c.status === 'approved' && (
-                          <button onClick={() => handleStatusChange(c.id, 'paid')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f0fdf4', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Marquer payÃ©e</button>
+                          <button onClick={() => handleStatusChange(c.id, 'paid')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f0fdf4', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Marquer payée</button>
                         )}
                         {c.status === 'paid' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
                       </td>
