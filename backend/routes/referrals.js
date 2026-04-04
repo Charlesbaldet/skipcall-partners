@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 router.use(partnerScope);
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ List referrals Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ List referrals ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 router.get('/', async (req, res) => {
   try {
     const { status, partner_id, level, page = 1, limit = 50 } = req.query;
@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Get single referral with activities Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Get single referral with activities ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
@@ -88,7 +88,7 @@ router.get('/:id', async (req, res) => {
 
     // Check partner scope
     if (req.partnerScope && rows[0].partner_id !== req.partnerScope) {
-      return res.status(403).json({ error: 'AccÃÂ¨s interdit' });
+      return res.status(403).json({ error: 'AccÃÂÃÂ¨s interdit' });
     }
 
     // Get activity log
@@ -107,7 +107,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Create referral (partner submits) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Create referral (partner submits) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 router.post('/', [
   body('prospect_name').trim().notEmpty(),
   body('prospect_email').isEmail().normalizeEmail(),
@@ -175,7 +175,7 @@ router.post('/', [
   }
 });
 
-// Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Update referral (internal team) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+// ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ Update referral (internal team) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
 router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, res) => {
   const client = await getClient();
   try {
@@ -200,7 +200,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       updates.status = status;
       activities.push({ action: 'status_change', old_value: current.status, new_value: status });
       
-      if (['won', 'lost'].includes(status)) {
+      if (['won', 'lost', 'duplicate'].includes(status)) {
         updates.closed_at = new Date().toISOString();
       }
     }
@@ -303,6 +303,33 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
     res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     client.release();
+  }
+});
+
+
+// ─── Delete referral ───
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    // Partners can only delete their own referrals
+    let condition = 'WHERE id = $1';
+    let params = [req.params.id];
+    if (req.user.role === 'partner') {
+      condition += ' AND partner_id = $2';
+      params.push(req.user.partnerId);
+    }
+    
+    // Delete related records first
+    await query('DELETE FROM commissions WHERE referral_id = $1', [req.params.id]);
+    await query('DELETE FROM referral_activities WHERE referral_id = $1', [req.params.id]);
+    await query('DELETE FROM notification_queue WHERE payload::text LIKE $1', ['%' + req.params.id + '%']);
+    
+    const { rows } = await query(`DELETE FROM referrals ${condition} RETURNING id`, params);
+    if (rows.length === 0) return res.status(404).json({ error: 'Referral introuvable ou accès interdit' });
+    
+    res.json({ message: 'Referral supprimé', id: rows[0].id });
+  } catch (err) {
+    console.error('Delete referral error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
