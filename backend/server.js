@@ -14,7 +14,7 @@ const { startNotificationWorker } = require('./services/emailService');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ─── Security ───
+// âââ Security âââ
 app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -38,7 +38,7 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/', authLimiter);
 
-// ─── Routes ───
+// âââ Routes âââ
 app.use('/api/auth', authRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/referrals', referralRoutes);
@@ -50,7 +50,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ─── Error handler ───
+// âââ Error handler âââ
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({
@@ -60,13 +60,78 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ─── Start ───
-app.listen(PORT, () => {
-  console.log(`🚀 Skipcall API running on port ${PORT}`);
+// âââ Start âââ
+
+// ─── Auto-init database on startup ───
+const { pool } = require('./db');
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcryptjs');
+
+async function autoInit() {
+  try {
+    // Check if tables exist
+    const { rows } = await pool.query("SELECT to_regclass('public.users')");
+    if (rows[0].to_regclass) {
+      console.log('📋 Database already initialized');
+      return;
+    }
+    
+    console.log('🔧 Initializing database...');
+    const schema = fs.readFileSync(path.join(__dirname, 'db/schema.sql'), 'utf8');
+    await pool.query(schema);
+    console.log('✅ Schema created');
+    
+    // Seed data
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const adminHash = await bcrypt.hash('skipcall2026!', 12);
+      const { rows: [admin] } = await client.query(
+        `INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO UPDATE SET password_hash = $2 RETURNING id`,
+        ['admin@skipcall.com', adminHash, 'Admin Skipcall', 'admin']
+      );
+      const comHash = await bcrypt.hash('commercial2026!', 12);
+      const { rows: [commercial] } = await client.query(
+        `INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO UPDATE SET password_hash = $2 RETURNING id`,
+        ['commercial@skipcall.com', comHash, 'Thomas Roche', 'commercial']
+      );
+      const partners = [
+        { name: 'TechAlliance', contact: 'Marc Dupont', email: 'marc@techalliance.fr', commission: 10 },
+        { name: 'DigiConseil', contact: 'Sophie Martin', email: 'sophie@digiconseil.fr', commission: 12 },
+        { name: 'CloudExperts', contact: 'Julien Petit', email: 'julien@cloudexperts.io', commission: 8 },
+      ];
+      for (const p of partners) {
+        const h = await bcrypt.hash('partner2026!', 12);
+        const { rows: [partner] } = await client.query(
+          `INSERT INTO partners (name, contact_name, email, commission_rate) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO UPDATE SET name = $1 RETURNING id`,
+          [p.name, p.contact, p.email, p.commission]
+        );
+        await client.query(
+          `INSERT INTO users (email, password_hash, full_name, role, partner_id) VALUES ($1, $2, $3, 'partner', $4) ON CONFLICT (email) DO UPDATE SET partner_id = $4`,
+          [p.email, h, p.contact, partner.id]
+        );
+      }
+      await client.query('COMMIT');
+      console.log('✅ Database seeded');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      console.error('Seed error:', e.message);
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Auto-init error:', err.message);
+  }
+}
+
+app.listen(PORT, async () => {
+  await autoInit();
+  console.log(`ð Skipcall API running on port ${PORT}`);
   
   // Start email notification worker (checks queue every 30s)
   if (process.env.SMTP_HOST) {
     startNotificationWorker();
-    console.log('📧 Email notification worker started');
+    console.log('ð§ Email notification worker started');
   }
 });
