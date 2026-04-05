@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { fmtDate, fmtDateTime } from '../lib/constants';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; const fmtDateTime = (d) => d ? new Date(d).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 import { UserPlus, CheckCircle, XCircle, Clock, Building, Mail, Phone, Globe, Users, X } from 'lucide-react';
 
 const STATUS_BADGE = {

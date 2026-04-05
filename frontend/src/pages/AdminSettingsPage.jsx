@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { fmtDate } from '../lib/constants';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 import { Settings, UserPlus, Shield, Briefcase, Mail, X, CheckCircle, Clock, Copy, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const ROLE_CONFIG = {
