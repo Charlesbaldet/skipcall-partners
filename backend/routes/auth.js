@@ -123,7 +123,6 @@ router.put('/password', authenticate, [
   }
 });
 
-module.exports = router;
 
 // ─── v3: Validate invitation token (public) ───
 router.get('/invitation/:token', async (req, res) => {
@@ -159,5 +158,4 @@ router.post('/setup-password', async (req, res) => {
   } catch (err) { console.error('Setup password error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-module.exports = router;
 module.exports = router;
