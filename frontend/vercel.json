@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://skipcall-partners-staging.up.railway.app/api/:path*"
+      "destination": "https://skipcall-partners-production.up.railway.app/api/:path*"
     },
     {
       "source": "/(.*)",
