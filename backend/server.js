@@ -27,13 +27,14 @@ app.use(express.json({ limit: '1mb' }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000, // 15 min
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
+// Stricter limit on auth
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -59,8 +60,8 @@ app.get('/api/health', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production'
-      ? 'Internal server error'
+    error: process.env.NODE_ENV === 'production' 
+      ? 'Internal server error' 
       : err.message,
   });
 });
@@ -68,6 +69,8 @@ app.use((err, req, res, next) => {
 // ─── Start ───
 app.listen(PORT, () => {
   console.log(`🚀 Skipcall API running on port ${PORT}`);
+  
+  // Start email notification worker (checks queue every 30s)
   if (process.env.SMTP_HOST) {
     startNotificationWorker();
     console.log('📧 Email notification worker started');
