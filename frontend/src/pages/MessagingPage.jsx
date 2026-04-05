@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import { fmtDateTime } from '../lib/constants';
 import { MessageCircle, Plus, Send, X, ArrowLeft, Users, Search } from 'lucide-react';

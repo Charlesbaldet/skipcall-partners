@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
 import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building } from 'lucide-react';

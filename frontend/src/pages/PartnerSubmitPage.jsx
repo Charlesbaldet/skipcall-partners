@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import { LEVEL_CONFIG } from '../lib/constants';
 import { Send, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
