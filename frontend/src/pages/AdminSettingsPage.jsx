@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { Settings, UserPlus, Shield, Briefcase, Mail, X, CheckCircle, Clock, Copy, Trash2, ToggleLeft, ToggleRight, Lock, Eye, EyeOff } from 'lucide-react';
+
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-import { Settings, UserPlus, Shield, Briefcase, Mail, X, CheckCircle, Clock, Copy, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const ROLE_CONFIG = {
   admin: { label: 'Admin', icon: Shield, color: '#dc2626', bg: '#fef2f2' },
@@ -9,21 +11,33 @@ const ROLE_CONFIG = {
 };
 
 export default function AdminSettingsPage() {
+  const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', full_name: '', role: 'commercial' });
   const [sending, setSending] = useState(false);
-  const [inviteSuccess, setInviteSuccess] = useState(null);
+  const [inviteResult, setInviteResult] = useState(null);
   const [tab, setTab] = useState('users');
+  const [copied, setCopied] = useState(false);
+
+  // Password change
+  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState(null);
+  const [showPw, setShowPw] = useState(false);
+
+  const isAdmin = user?.role === 'admin';
 
   const load = async () => {
-    try {
-      const [u, i] = await Promise.all([api.getAdminUsers(), api.getInvitations()]);
-      setUsers(u.users);
-      setInvitations(i.invitations);
-    } catch (err) { console.error(err); }
+    if (isAdmin) {
+      try {
+        const [u, i] = await Promise.all([api.getAdminUsers(), api.getInvitations()]);
+        setUsers(u.users);
+        setInvitations(i.invitations);
+      } catch (err) { console.error(err); }
+    }
     setLoading(false);
   };
 
@@ -31,39 +45,44 @@ export default function AdminSettingsPage() {
 
   const handleInvite = async () => {
     setSending(true);
-    setInviteSuccess(null);
+    setInviteResult(null);
     try {
       const data = await api.inviteUser(inviteForm);
-      setInviteSuccess(data.setupUrl);
+      setInviteResult({ email: data.email || inviteForm.email, tempPassword: data.tempPassword });
       setInviteForm({ email: '', full_name: '', role: 'commercial' });
       load();
     } catch (err) { alert(err.message); }
     setSending(false);
   };
 
-  const handleToggleActive = async (user) => {
-    try {
-      await api.updateAdminUser(user.id, { is_active: !user.is_active });
-      load();
-    } catch (err) { alert(err.message); }
+  const handleToggleActive = async (u) => {
+    try { await api.updateAdminUser(u.id, { is_active: !u.is_active }); load(); } catch (err) { alert(err.message); }
   };
 
-  const handleRoleChange = async (user, newRole) => {
-    try {
-      await api.updateAdminUser(user.id, { role: newRole });
-      load();
-    } catch (err) { alert(err.message); }
+  const handleRoleChange = async (u, newRole) => {
+    try { await api.updateAdminUser(u.id, { role: newRole }); load(); } catch (err) { alert(err.message); }
   };
 
   const handleDeleteInvitation = async (id) => {
+    try { await api.deleteInvitation(id); load(); } catch (err) { alert(err.message); }
+  };
+
+  const handlePasswordChange = async () => {
+    if (pwForm.newPw.length < 8) { setPwMsg({ type: 'error', text: 'Minimum 8 caractères' }); return; }
+    if (pwForm.newPw !== pwForm.confirm) { setPwMsg({ type: 'error', text: 'Les mots de passe ne correspondent pas' }); return; }
+    setPwSaving(true); setPwMsg(null);
     try {
-      await api.deleteInvitation(id);
-      load();
-    } catch (err) { alert(err.message); }
+      await api.changePassword(pwForm.current, pwForm.newPw);
+      setPwMsg({ type: 'success', text: 'Mot de passe mis à jour !' });
+      setPwForm({ current: '', newPw: '', confirm: '' });
+    } catch (err) { setPwMsg({ type: 'error', text: err.message }); }
+    setPwSaving(false);
   };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
@@ -73,37 +92,53 @@ export default function AdminSettingsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Paramètres</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>Gestion des utilisateurs et des accès</p>
+          <p style={{ color: '#64748b', marginTop: 4 }}>{isAdmin ? 'Gestion des utilisateurs et des accès' : 'Mon compte'}</p>
         </div>
-        <button onClick={() => { setShowInvite(!showInvite); setInviteSuccess(null); }} style={{
+        {isAdmin && (
+        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12,
           background: showInvite ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
           color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
         }}>
           {showInvite ? <X size={16} /> : <UserPlus size={16} />}
-          {showInvite ? 'Annuler' : 'Inviter un utilisateur'}
+          {showInvite ? 'Annuler' : 'Ajouter un utilisateur'}
         </button>
+        )}
       </div>
 
       {/* Invite form */}
-      {showInvite && (
+      {isAdmin && showInvite && (
         <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #e2e8f0', marginBottom: 24 }} className="fade-in">
-          {inviteSuccess ? (
+          {inviteResult ? (
             <div style={{ textAlign: 'center' }}>
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <Mail size={24} color="#16a34a" />
+                <CheckCircle size={24} color="#16a34a" />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Invitation envoyée !</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Utilisateur créé !</h3>
               <p style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>
-                Un email a été envoyé avec un lien pour créer le mot de passe.
+                Partagez ces identifiants de connexion :
               </p>
-              <div style={{ background: '#f8fafc', borderRadius: 10, padding: 12, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                <code style={{ fontSize: 12, color: '#6366f1', wordBreak: 'break-all' }}>{inviteSuccess}</code>
-                <button onClick={() => copyToClipboard(inviteSuccess)} style={{ background: '#eef2ff', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
-                  <Copy size={14} color="#6366f1" />
-                </button>
+              <div style={{ background: '#f8fafc', borderRadius: 12, padding: 20, display: 'inline-block', textAlign: 'left', border: '1px solid #e2e8f0' }}>
+                <div style={{ marginBottom: 10 }}>
+                  <span style={{ color: '#64748b', fontSize: 12 }}>Email</span>
+                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 15 }}>{inviteResult.email}</div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <span style={{ color: '#64748b', fontSize: 12 }}>Mot de passe provisoire</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <code style={{ background: '#eef2ff', padding: '6px 12px', borderRadius: 8, color: '#6366f1', fontWeight: 700, fontSize: 16, letterSpacing: 1 }}>{inviteResult.tempPassword}</code>
+                    <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
+                      {copied ? <CheckCircle size={14} color="#16a34a" /> : <Copy size={14} color="#6366f1" />}
+                    </button>
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: '#f59e0b', background: '#fffbeb', padding: '6px 10px', borderRadius: 6 }}>
+                  L'utilisateur pourra changer ce mot de passe dans Paramètres.
+                </div>
               </div>
-              <button onClick={() => { setShowInvite(false); setInviteSuccess(null); }} style={{ marginTop: 16, padding: '10px 20px', borderRadius: 10, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Fermer</button>
+              <div style={{ marginTop: 16 }}>
+                <button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Fermer</button>
+              </div>
             </div>
           ) : (
             <div>
@@ -140,7 +175,7 @@ export default function AdminSettingsPage() {
                 color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: sending ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <Mail size={16} /> {sending ? 'Envoi...' : 'Envoyer l\'invitation'}
+                <UserPlus size={16} /> {sending ? 'Création...' : 'Créer l\'utilisateur'}
               </button>
             </div>
           )}
@@ -148,8 +183,12 @@ export default function AdminSettingsPage() {
       )}
 
       {/* Tabs */}
+      {isAdmin && (
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
-        {[{ id: 'users', label: `Utilisateurs (${users.length})` }, { id: 'invitations', label: `Invitations (${invitations.filter(i => !i.accepted_at).length})` }].map(t => (
+        {[
+          { id: 'users', label: `Utilisateurs (${users.length})` },
+          { id: 'password', label: 'Mon mot de passe' },
+        ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
             background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#0f172a' : '#64748b',
@@ -157,8 +196,9 @@ export default function AdminSettingsPage() {
           }}>{t.label}</button>
         ))}
       </div>
+      )}
 
-      {tab === 'users' && (
+      {isAdmin && tab === 'users' && (
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
@@ -192,7 +232,7 @@ export default function AdminSettingsPage() {
                     <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{fmtDate(u.created_at)}</td>
                     <td style={{ padding: '13px 16px' }}>
                       <button onClick={() => handleToggleActive(u)} title={u.is_active ? 'Désactiver' : 'Activer'} style={{
-                        background: 'transparent', border: 'none', cursor: 'pointer', color: u.is_active ? '#64748b' : '#16a34a', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600,
+                        background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
                       }}>
                         {u.is_active ? <ToggleRight size={20} color="#16a34a" /> : <ToggleLeft size={20} color="#dc2626" />}
                       </button>
@@ -205,46 +245,50 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {tab === 'invitations' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {invitations.length === 0 ? (
-            <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
-              <p style={{ color: '#94a3b8' }}>Aucune invitation</p>
-            </div>
-          ) : invitations.map(inv => {
-            const role = ROLE_CONFIG[inv.role];
-            const expired = new Date(inv.expires_at) < new Date();
-            const accepted = !!inv.accepted_at;
-            return (
-              <div key={inv.id} style={{ background: '#fff', borderRadius: 14, padding: 18, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: accepted || expired ? 0.6 : 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: role.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <role.icon size={18} color={role.color} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{inv.full_name}</div>
-                    <div style={{ color: '#94a3b8', fontSize: 12 }}>{inv.email} · {role.label} · invité par {inv.invited_by_name}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {accepted ? (
-                    <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#f0fdf4', color: '#16a34a' }}>Acceptée</span>
-                  ) : expired ? (
-                    <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#fef2f2', color: '#dc2626' }}>Expirée</span>
-                  ) : (
-                    <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#fffbeb', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Clock size={12} /> En attente
-                    </span>
-                  )}
-                  {!accepted && (
-                    <button onClick={() => handleDeleteInvitation(inv.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
-                      <Trash2 size={14} color="#dc2626" />
-                    </button>
-                  )}
-                </div>
+      {(tab === 'password' || !isAdmin) && (
+        <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #e2e8f0', maxWidth: 480 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+            <Lock size={20} color="#6366f1" />
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Changer mon mot de passe</h3>
+          </div>
+
+          {pwMsg && (
+            <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500,
+              background: pwMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
+              color: pwMsg.type === 'success' ? '#16a34a' : '#dc2626',
+              border: `1px solid ${pwMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+            }}>{pwMsg.text}</div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Mot de passe actuel</label>
+              <div style={{ position: 'relative' }}>
+                <input type={showPw ? 'text' : 'password'} value={pwForm.current} onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 40px 10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+                <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
-            );
-          })}
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Nouveau mot de passe</label>
+              <input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder="Minimum 8 caractères"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Confirmer</label>
+              <input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} placeholder="Retapez le mot de passe"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+            </div>
+            <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{
+              padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+              color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <Lock size={16} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}
+            </button>
+          </div>
         </div>
       )}
     </div>

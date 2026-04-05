@@ -1,5 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const { query } = require('../db');
 const { authenticate, authorize } = require('../middleware/auth');
@@ -20,6 +21,7 @@ router.get('/users', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+// ─── Invite: create user with temp password ───
 router.post('/invite', [
   body('email').isEmail().normalizeEmail(),
   body('full_name').trim().notEmpty(),
@@ -29,19 +31,20 @@ router.post('/invite', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides' });
     const { email, full_name, role } = req.body;
+
     const { rows: existing } = await query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.length > 0) return res.status(409).json({ error: 'Un utilisateur avec cet email existe déjà' });
-    // Delete any previous invitation for this email
-    await query('DELETE FROM user_invitations WHERE email = $1', [email]);
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Generate temp password
+    const tempPassword = crypto.randomBytes(4).toString('hex') + '!A1';
+    const hash = await bcrypt.hash(tempPassword, 12);
+
     await query(
-      'INSERT INTO user_invitations (email, full_name, role, token, invited_by, expires_at) VALUES ($1, $2, $3, $4, $5, $6)',
-      [email, full_name, role, token, req.user.id, expiresAt]
+      'INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4)',
+      [email, hash, full_name, role]
     );
-    const frontendUrl = process.env.FRONTEND_URL || 'https://skipcall-partners.vercel.app';
-    const setupUrl = frontendUrl + '/setup-password/' + token;
-    res.status(201).json({ message: 'Invitation envoyée', setupUrl });
+
+    res.status(201).json({ message: 'Utilisateur créé', tempPassword, email });
   } catch (err) { console.error('Invite error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -58,9 +61,12 @@ router.get('/invitations', async (req, res) => {
 router.put('/users/:id', async (req, res) => {
   try {
     const { role, is_active } = req.body;
-    if (req.params.id === req.user.id && is_active === false) return res.status(400).json({ error: 'Vous ne pouvez pas désactiver votre propre compte' });
+    if (req.params.id === req.user.id && is_active === false)
+      return res.status(400).json({ error: 'Vous ne pouvez pas désactiver votre propre compte' });
     const { rows: [user] } = await query(
-      'UPDATE users SET role = COALESCE($2, role), is_active = COALESCE($3, is_active) WHERE id = $1 AND role IN (\'admin\', \'commercial\') RETURNING id, email, full_name, role, is_active',
+      `UPDATE users SET role = COALESCE($2, role), is_active = COALESCE($3, is_active)
+       WHERE id = $1 AND role IN ('admin', 'commercial')
+       RETURNING id, email, full_name, role, is_active`,
       [req.params.id, role, is_active]
     );
     if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });

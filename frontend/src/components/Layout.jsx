@@ -12,8 +12,8 @@ const ADMIN_NAV = [
   { to: '/referrals', icon: FileText, label: 'Pipeline' },
   { to: '/commissions', icon: DollarSign, label: 'Commissions' },
   { to: '/partners', icon: Users, label: 'Partenaires' },
-  { to: '/applications', icon: UserPlus, label: 'Candidatures' },
-  { to: '/messaging', icon: MessageCircle, label: 'Messagerie' },
+  { to: '/applications', icon: UserPlus, label: 'Candidatures', badge: 'applications' },
+  { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
   { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
@@ -22,7 +22,9 @@ const PARTNER_NAV = [
   { to: '/partner/referrals', icon: FileText, label: 'Mes Referrals' },
   { to: '/partner/submit', icon: Send, label: 'Soumettre' },
   { to: '/partner/payments', icon: DollarSign, label: 'Mes Paiements' },
-  { to: '/messaging', icon: MessageCircle, label: 'Messagerie' },
+  { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
+  { divider: true },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 export default function Layout({ children }) {
@@ -30,17 +32,37 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [pendingApps, setPendingApps] = useState(0);
 
   const nav = user?.role === 'partner' ? PARTNER_NAV : ADMIN_NAV;
   const isAdmin = user?.role === 'admin';
 
+  // Fetch notification counts
   useEffect(() => {
-    api.getUnreadCount().then(d => setUnread(d.count || 0)).catch(() => {});
-    const interval = setInterval(() => {
-      api.getUnreadCount().then(d => setUnread(d.count || 0)).catch(() => {});
-    }, 30000);
+    const fetchCounts = async () => {
+      try {
+        const msgData = await api.getUnreadCount();
+        setUnread(msgData.count || 0);
+      } catch (e) {}
+
+      if (isAdmin) {
+        try {
+          const appData = await api.getApplications('pending');
+          setPendingApps((appData.applications || []).length);
+        } catch (e) {}
+      }
+    };
+
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAdmin]);
+
+  // Update document title with notification count
+  useEffect(() => {
+    const total = unread + pendingApps;
+    document.title = total > 0 ? `(${total}) Skipcall - Programme Partenaires` : 'Skipcall - Programme Partenaires';
+  }, [unread, pendingApps]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -61,9 +83,14 @@ export default function Layout({ children }) {
     },
   };
 
+  const getBadge = (item) => {
+    if (item.badge === 'messages' && unread > 0) return unread;
+    if (item.badge === 'applications' && pendingApps > 0) return pendingApps;
+    return 0;
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
-      {/* Sidebar */}
       <aside style={s.sidebar}>
         {/* Logo */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -80,24 +107,20 @@ export default function Layout({ children }) {
         {/* Nav */}
         <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
           {nav.map((item, i) => {
-            if (item.divider) {
-              return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }} />;
-            }
+            if (item.divider) return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }} />;
             if (item.to === '/applications' && !isAdmin) return null;
-            if (item.to === '/settings' && !isAdmin) return null;
+            const badge = getBadge(item);
             return (
               <NavLink key={item.to} to={item.to}
                 style={({ isActive }) => ({ ...s.link, ...(isActive ? s.activeLink : {}) })}
               >
                 <item.icon size={18} style={{ flexShrink: 0 }} />
-                {!collapsed && (
-                  <span style={{ flex: 1 }}>{item.label}</span>
-                )}
-                {!collapsed && item.to === '/messaging' && unread > 0 && (
+                {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
+                {!collapsed && badge > 0 && (
                   <span style={{
                     background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700,
                     padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center',
-                  }}>{unread}</span>
+                  }}>{badge}</span>
                 )}
               </NavLink>
             );
@@ -143,7 +166,6 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      {/* Main content */}
       <main style={{
         flex: 1, marginLeft: collapsed ? 68 : 200,
         padding: '32px 40px', transition: 'margin-left 0.2s ease',
