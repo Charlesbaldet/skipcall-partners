@@ -113,7 +113,7 @@ export default function CommissionsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ background: '#f8fafc' }}>
-                  {['Prospect', 'Partenaire', 'Taux', 'Deal', 'Commission', 'Statut', 'Valid\u00e9 le', '\u00c9ch\u00e9ance', 'Action'].map((h, i) => (
+                  {['Prospect', 'Partenaire', 'Taux', 'Deal', 'Commission', 'Statut', 'Validé le', 'Échéance', 'Action'].map((h, i) => (
                     <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                   ))}
                 </tr>
@@ -134,14 +134,14 @@ export default function CommissionsPage() {
                       <td style={{ padding: '13px 16px' }}>
                         <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: cs.bg, color: cs.color }}>{cs.label}</span>
                       </td>
-                      <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '\u2014'}</td>
+                      <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '—'}</td>
                       <td style={{ padding: '13px 16px', fontSize: 12 }}>
                         {c.payment_due_date ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#dc2626' : '#64748b', fontWeight: c.is_late ? 700 : 400 }}>
                             {c.is_late && <AlertTriangle size={14} />}
                             {fmtDate(c.payment_due_date)}
                           </span>
-                        ) : '\u2014'}
+                        ) : '—'}
                       </td>
                       <td style={{ padding: '13px 16px' }}>
                         {c.status === 'pending' && (

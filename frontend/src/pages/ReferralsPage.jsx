@@ -143,9 +143,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
   };
 
   const rate = referral.commission_rate || 10;
-  const engMultiplier = { monthly: 12, quarterly: 4, yearly: 1 }[editEngagement] || 12;
-  const annualValue = (Number(editValue) || 0) * engMultiplier;
-  const commission = editStatus === 'won' ? annualValue * rate / 100 : 0;
+  const commission = editStatus === 'won' ? (Number(editValue) || 0) * rate / 100 : 0;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
@@ -223,7 +221,7 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
             <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>💰 Commission estimée</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
               <span style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>{fmt(commission)}</span>
-              <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% de {fmt(annualValue)}/an)</span>
+              <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% de {fmt(Number(editValue))})</span>
             </div>
           </div>
         )}
