@@ -125,7 +125,7 @@ export default function DashboardPage() {
       {/* Charts Row 2 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
         {/* Revenue over time — Feature #5: cumul toggle */}
-        <ChartCard title="CA Généré (€)" action={
+        <ChartCard title="MRR Généré (€)" action={
           <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 8, padding: 2 }}>
             {[{ key: false, label: 'Mensuel' }, { key: true, label: 'Cumulé' }].map(opt => (
               <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
@@ -143,7 +143,7 @@ export default function DashboardPage() {
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} formatter={v => fmt(v)} />
-              <Line type="monotone" dataKey="revenue" name={revenueCumul ? 'CA Cumulé' : 'CA Mensuel'} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
+              <Line type="monotone" dataKey="revenue" name={revenueCumul ? 'MRR Cumulé' : 'MRR Mensuel'} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr>
-                {['#', 'Partenaire', 'Referrals', 'Gagnés', 'CA', 'Conversion', 'Taux com.'].map((h, i) => (
+                {['#', 'Partenaire', 'Referrals', 'Gagnés', 'MRR', 'Conversion', 'Taux com.'].map((h, i) => (
                   <th key={i} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #f1f5f9' }}>{h}</th>
                 ))}
               </tr>

@@ -186,8 +186,8 @@ export default function AdminSettingsPage() {
       {isAdmin && (
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
         {[
-          { id: 'users', label: `Utilisateurs (${users.length})` },
-          { id: 'password', label: 'Mon mot de passe' },
+          { id: 'users', label: `Membres (${users.length})` },
+          { id: 'password', label: 'Mon compte' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
