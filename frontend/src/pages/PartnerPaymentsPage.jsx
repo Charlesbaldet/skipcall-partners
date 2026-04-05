@@ -1,0 +1,217 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import api from '../lib/api';
+import { fmt, fmtDate } from '../lib/constants';
+import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building } from 'lucide-react';
+
+const PAY_STATUS = {
+  pending: { label: 'En attente', color: '#f59e0b', bg: '#fffbeb', icon: Clock },
+  approved: { label: 'Approuvée', color: '#6366f1', bg: '#eef2ff', icon: CheckCircle },
+  paid: { label: 'Payée', color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
+};
+
+export default function PartnerPaymentsPage() {
+  const { user } = useAuth();
+  const [commissions, setCommissions] = useState([]);
+  const [totals, setTotals] = useState({ pending: 0, paid: 0 });
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [editIban, setEditIban] = useState(false);
+  const [ibanForm, setIbanForm] = useState({ iban: '', bic: '', account_holder: '' });
+  const [savingIban, setSavingIban] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      api.getCommissions(),
+      api.getMyPartnerProfile(),
+    ]).then(([c, p]) => {
+      setCommissions(c.commissions);
+      setTotals({ pending: c.totalPending, paid: c.totalPaid });
+      setProfile(p.partner);
+      setIbanForm({
+        iban: p.partner.iban || '',
+        bic: p.partner.bic || '',
+        account_holder: p.partner.account_holder || '',
+      });
+    }).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
+  const handleSaveIban = async () => {
+    setSavingIban(true);
+    try {
+      await api.updateMyIban(user.partnerId, ibanForm);
+      setProfile(prev => ({ ...prev, ...ibanForm }));
+      setEditIban(false);
+    } catch (err) {
+      alert(err.message);
+    }
+    setSavingIban(false);
+  };
+
+  const totalAll = commissions.reduce((s, c) => s + parseFloat(c.amount || 0), 0);
+
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+
+  return (
+    <div className="fade-in">
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Mes paiements</h1>
+      <p style={{ color: '#64748b', marginBottom: 24 }}>Historique et statut de vos commissions</p>
+
+      {/* KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+        <PayKPI icon={DollarSign} label="Total Commissions" value={fmt(totalAll)} color="#6366f1" />
+        <PayKPI icon={Clock} label="En attente" value={fmt(totals.pending)} color="#f59e0b" />
+        <PayKPI icon={CheckCircle} label="Payées" value={fmt(totals.paid)} color="#16a34a" />
+      </div>
+
+      {/* IBAN Section (Feature #2) */}
+      <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Building size={18} color="#6366f1" />
+            </div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Informations bancaires</h3>
+          </div>
+          {!editIban ? (
+            <button onClick={() => setEditIban(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10,
+              background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            }}>
+              <Edit3 size={14} />
+              {profile?.iban ? 'Modifier' : 'Ajouter'}
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setEditIban(false)} style={{
+                display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 10,
+                background: '#f1f5f9', border: 'none', color: '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              }}><X size={14} /> Annuler</button>
+              <button onClick={handleSaveIban} disabled={savingIban} style={{
+                display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 10,
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none', color: '#fff',
+                fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: savingIban ? 0.7 : 1,
+              }}><Save size={14} /> {savingIban ? 'Enregistrement...' : 'Enregistrer'}</button>
+            </div>
+          )}
+        </div>
+
+        {editIban ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Titulaire du compte</label>
+              <input value={ibanForm.account_holder} onChange={e => setIbanForm(f => ({ ...f, account_holder: e.target.value }))}
+                placeholder="Nom du titulaire"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>IBAN</label>
+              <input value={ibanForm.iban} onChange={e => setIbanForm(f => ({ ...f, iban: e.target.value.toUpperCase() }))}
+                placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, fontFamily: 'monospace', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>BIC</label>
+              <input value={ibanForm.bic} onChange={e => setIbanForm(f => ({ ...f, bic: e.target.value.toUpperCase() }))}
+                placeholder="BNPAFRPP"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, fontFamily: 'monospace', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+        ) : (
+          profile?.iban ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+              <div>
+                <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>Titulaire</div>
+                <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4 }}>{profile.account_holder || '—'}</div>
+              </div>
+              <div>
+                <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>IBAN</div>
+                <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4, fontFamily: 'monospace', letterSpacing: 1 }}>
+                  {profile.iban.replace(/(.{4})/g, '$1 ').trim()}
+                </div>
+              </div>
+              <div>
+                <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>BIC</div>
+                <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4, fontFamily: 'monospace' }}>{profile.bic || '—'}</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: '#fffbeb', borderRadius: 10, padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Clock size={16} color="#f59e0b" />
+              <span style={{ color: '#92400e', fontSize: 14 }}>
+                Ajoutez vos coordonnées bancaires pour recevoir vos paiements plus rapidement.
+              </span>
+            </div>
+          )
+        )}
+      </div>
+
+      {/* Payments list */}
+      <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+          <thead>
+            <tr style={{ background: '#f8fafc' }}>
+              {['Prospect', 'Deal', 'Taux', 'Commission', 'Statut', 'Date', 'Payé le'].map((h, i) => (
+                <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {commissions.length === 0 ? (
+              <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucune commission pour le moment</td></tr>
+            ) : commissions.map(c => {
+              const st = PAY_STATUS[c.status];
+              const StIcon = st.icon;
+              return (
+                <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                  <td style={{ padding: '13px 16px' }}>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div>
+                    <div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div>
+                  </td>
+                  <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(c.deal_value)}</td>
+                  <td style={{ padding: '13px 16px' }}>
+                    <span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span>
+                  </td>
+                  <td style={{ padding: '13px 16px', fontWeight: 800, color: st.color, fontSize: 16 }}>{fmt(c.amount)}</td>
+                  <td style={{ padding: '13px 16px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color }}>
+                      <StIcon size={13} />
+                      {st.label}
+                    </span>
+                  </td>
+                  <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{fmtDate(c.created_at)}</td>
+                  <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{c.paid_at ? fmtDate(c.paid_at) : '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          {commissions.length > 0 && (
+            <tfoot>
+              <tr style={{ background: '#f8fafc' }}>
+                <td colSpan={3} style={{ padding: '13px 16px', fontWeight: 700, color: '#0f172a' }}>Total</td>
+                <td style={{ padding: '13px 16px', fontWeight: 800, color: '#6366f1', fontSize: 18 }}>{fmt(totalAll)}</td>
+                <td colSpan={3}></td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function PayKPI({ icon: Icon, label, value, color }) {
+  return (
+    <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>{value}</div>
+        </div>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={20} color={color} />
+        </div>
+      </div>
+    </div>
+  );
+}

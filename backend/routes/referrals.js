@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 router.use(partnerScope);
 
-// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ List referrals ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+// ─── List referrals ───
 router.get('/', async (req, res) => {
   try {
     const { status, partner_id, level, page = 1, limit = 50 } = req.query;
@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
 
     const { rows } = await query(
       `SELECT r.*, p.name as partner_name, p.contact_name as partner_contact,
-              u.full_name as assigned_name
+              p.commission_rate, u.full_name as assigned_name
        FROM referrals r
        JOIN partners p ON r.partner_id = p.id
        LEFT JOIN users u ON r.assigned_to = u.id
@@ -69,7 +69,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Get single referral with activities ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+// ─── Get single referral with activities ───
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
@@ -88,7 +88,7 @@ router.get('/:id', async (req, res) => {
 
     // Check partner scope
     if (req.partnerScope && rows[0].partner_id !== req.partnerScope) {
-      return res.status(403).json({ error: 'AccÃÂÃÂÃÂÃÂ¨s interdit' });
+      return res.status(403).json({ error: 'Accès interdit' });
     }
 
     // Get activity log
@@ -107,7 +107,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Create referral (partner submits) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+// ─── Create referral (partner submits) ───
 router.post('/', [
   body('prospect_name').trim().notEmpty(),
   body('prospect_email').isEmail().normalizeEmail(),
@@ -175,11 +175,11 @@ router.post('/', [
   }
 });
 
-// ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Update referral (internal team) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+// ─── Update referral (internal team) ───
 router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, res) => {
   const client = await getClient();
   try {
-    const { status, deal_value, assigned_to, notes, lost_reason } = req.body;
+    const { status, deal_value, assigned_to, notes, lost_reason, engagement } = req.body;
 
     // Get current state
     const { rows: [current] } = await client.query(
@@ -200,7 +200,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       updates.status = status;
       activities.push({ action: 'status_change', old_value: current.status, new_value: status });
       
-      if (['won', 'lost', 'duplicate'].includes(status)) {
+      if (['won', 'lost'].includes(status)) {
         updates.closed_at = new Date().toISOString();
       }
     }
@@ -208,6 +208,11 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
     if (deal_value !== undefined && deal_value !== current.deal_value) {
       updates.deal_value = deal_value;
       activities.push({ action: 'value_updated', old_value: String(current.deal_value), new_value: String(deal_value) });
+    }
+
+    if (engagement && engagement !== current.engagement) {
+      updates.engagement = engagement;
+      activities.push({ action: 'engagement_updated', old_value: current.engagement, new_value: engagement });
     }
 
     if (assigned_to && assigned_to !== current.assigned_to) {
@@ -248,15 +253,14 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       );
 
       if (partner) {
-        // Delete existing commission if any, then create new
-        await client.query('DELETE FROM commissions WHERE referral_id = $1', [req.params.id]);
         await client.query(
           `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value)
-           VALUES ($1, $2, $3, $4, $5)`,
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (referral_id) DO UPDATE SET 
+             amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value`,
           [req.params.id, partner.id, deal_value * partner.commission_rate / 100, partner.commission_rate, deal_value]
         );
 
-        // Notify partner of won deal
         const { rows: [partnerUser] } = await client.query(
           `SELECT u.email, u.full_name FROM users u WHERE u.partner_id = $1 LIMIT 1`,
           [partner.id]
@@ -279,7 +283,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
          WHERE r.id = $1 LIMIT 1`,
         [req.params.id]
       );
-      if (partnerUser && status !== 'won') { // won notification sent above
+      if (partnerUser && status !== 'won') {
         await queueNotification(partnerUser.email, partnerUser.full_name, 'status_update', {
           prospectName: current.prospect_name,
           oldStatus: current.status,
@@ -292,7 +296,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
 
     // Return updated referral
     const { rows: [updated] } = await client.query(
-      `SELECT r.*, p.name as partner_name FROM referrals r JOIN partners p ON r.partner_id = p.id WHERE r.id = $1`,
+      `SELECT r.*, p.name as partner_name, p.commission_rate FROM referrals r JOIN partners p ON r.partner_id = p.id WHERE r.id = $1`,
       [req.params.id]
     );
 
@@ -306,30 +310,49 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
   }
 });
 
-
-// âââ Delete referral âââ
-router.delete('/:id', authenticate, async (req, res) => {
+// ─── Delete referral ───
+// Partners can delete their own referrals (only if status is 'new')
+// Admins can delete any referral
+router.delete('/:id', async (req, res) => {
+  const client = await getClient();
   try {
-    // Partners can only delete their own referrals
-    let condition = 'WHERE id = $1';
-    let params = [req.params.id];
-    if (req.user.role === 'partner') {
-      condition += ' AND partner_id = $2';
-      params.push(req.user.partnerId);
+    // Get the referral
+    const { rows: [referral] } = await query(
+      'SELECT * FROM referrals WHERE id = $1', [req.params.id]
+    );
+    if (!referral) {
+      return res.status(404).json({ error: 'Referral introuvable' });
     }
-    
-    // Delete related records first
-    await query('DELETE FROM commissions WHERE referral_id = $1', [req.params.id]);
-    await query('DELETE FROM referral_activities WHERE referral_id = $1', [req.params.id]);
-    await query('DELETE FROM notification_queue WHERE payload::text LIKE $1', ['%' + req.params.id + '%']);
-    
-    const { rows } = await query(`DELETE FROM referrals ${condition} RETURNING id`, params);
-    if (rows.length === 0) return res.status(404).json({ error: 'Referral introuvable ou accÃ¨s interdit' });
-    
-    res.json({ message: 'Referral supprimÃ©', id: rows[0].id });
+
+    // Authorization checks
+    if (req.user.role === 'partner') {
+      // Partner can only delete their own referrals
+      if (referral.partner_id !== req.user.partnerId) {
+        return res.status(403).json({ error: 'Accès interdit' });
+      }
+      // Partner can only delete referrals in 'new' status
+      if (referral.status !== 'new') {
+        return res.status(400).json({ error: 'Vous ne pouvez supprimer que les recommandations au statut "Nouveau". Contactez l\'admin pour les autres.' });
+      }
+    } else if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Accès interdit' });
+    }
+
+    await client.query('BEGIN');
+
+    // Delete related data
+    await client.query('DELETE FROM referral_activities WHERE referral_id = $1', [req.params.id]);
+    await client.query('DELETE FROM commissions WHERE referral_id = $1', [req.params.id]);
+    await client.query('DELETE FROM referrals WHERE id = $1', [req.params.id]);
+
+    await client.query('COMMIT');
+    res.json({ message: 'Referral supprimé' });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Delete referral error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    client.release();
   }
 });
 

@@ -7,6 +7,8 @@ import CommissionsPage from './pages/CommissionsPage';
 import PartnersPage from './pages/PartnersPage';
 import PartnerSubmitPage from './pages/PartnerSubmitPage';
 import PartnerMyReferrals from './pages/PartnerMyReferrals';
+import PartnerPaymentsPage from './pages/PartnerPaymentsPage';
+import MessagingPage from './pages/MessagingPage';
 import Layout from './components/Layout';
 
 function ProtectedRoute({ children, roles }) {
@@ -56,6 +58,18 @@ function AppRoutes() {
       <Route path="/partner/referrals" element={
         <ProtectedRoute roles={['partner']}>
           <Layout><PartnerMyReferrals /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/partner/payments" element={
+        <ProtectedRoute roles={['partner']}>
+          <Layout><PartnerPaymentsPage /></Layout>
+        </ProtectedRoute>
+      } />
+
+      {/* Messaging (all roles) */}
+      <Route path="/messaging" element={
+        <ProtectedRoute roles={['admin', 'commercial', 'partner']}>
+          <Layout><MessagingPage /></Layout>
         </ProtectedRoute>
       } />
 

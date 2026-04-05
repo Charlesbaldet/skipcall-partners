@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const [topPartners, setTopPartners] = useState([]);
   const [levels, setLevels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [revenueCumul, setRevenueCumul] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -40,12 +41,20 @@ export default function DashboardPage() {
     fill: STATUS_CONFIG[p.status]?.color || '#94a3b8',
   }));
 
-  const levelData = levels.map(l => ({
-    name: LEVEL_CONFIG[l.level]?.label || l.level,
-    total: parseInt(l.count),
-    won: parseInt(l.won),
-    fill: LEVEL_CONFIG[l.level]?.color || '#94a3b8',
-  }));
+  // Feature #4: enhanced level data with conversion rate
+  const levelData = levels.map(l => {
+    const total = parseInt(l.count);
+    const won = parseInt(l.won);
+    const convRate = total > 0 ? Math.round((won / total) * 100) : 0;
+    return {
+      name: LEVEL_CONFIG[l.level]?.label || l.level,
+      total,
+      won,
+      lost: total - won,
+      convRate,
+      fill: LEVEL_CONFIG[l.level]?.color || '#94a3b8',
+    };
+  });
 
   const timelineData = timeline.map(t => ({
     month: new Date(t.month + '-01').toLocaleDateString('fr-FR', { month: 'short' }),
@@ -54,6 +63,15 @@ export default function DashboardPage() {
     lost: parseInt(t.lost),
     revenue: parseFloat(t.revenue),
   }));
+
+  // Feature #5: compute cumulative revenue
+  const revenueData = revenueCumul
+    ? timelineData.reduce((acc, t, i) => {
+        const cumul = (i > 0 ? acc[i - 1].revenue : 0) + t.revenue;
+        acc.push({ ...t, revenue: cumul });
+        return acc;
+      }, [])
+    : timelineData;
 
   return (
     <div className="fade-in">
@@ -106,32 +124,83 @@ export default function DashboardPage() {
 
       {/* Charts Row 2 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-        {/* Revenue over time */}
-        <ChartCard title="CA Généré (€)">
+        {/* Revenue over time — Feature #5: cumul toggle */}
+        <ChartCard title="CA Généré (€)" action={
+          <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 8, padding: 2 }}>
+            {[{ key: false, label: 'Mensuel' }, { key: true, label: 'Cumulé' }].map(opt => (
+              <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
+                padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                background: revenueCumul === opt.key ? '#fff' : 'transparent',
+                color: revenueCumul === opt.key ? '#6366f1' : '#94a3b8',
+                boxShadow: revenueCumul === opt.key ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+              }}>{opt.label}</button>
+            ))}
+          </div>
+        }>
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={timelineData}>
+            <LineChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} formatter={v => fmt(v)} />
-              <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
+              <Line type="monotone" dataKey="revenue" name={revenueCumul ? 'CA Cumulé' : 'CA Mensuel'} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Level distribution */}
+        {/* Feature #4: Improved level chart */}
         <ChartCard title="Performance par niveau de reco">
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={levelData} layout="vertical" barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} width={80} />
-              <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="total" name="Total" fill="#e2e8f0" radius={[0,4,4,0]} />
-              <Bar dataKey="won" name="Gagnés" fill="#16a34a" radius={[0,4,4,0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 4 }}>
+            {levelData.map((l, idx) => (
+              <div key={idx}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{l.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
+                    <span style={{ color: '#64748b' }}>{l.total} referrals</span>
+                    <span style={{ color: '#16a34a', fontWeight: 700 }}>{l.won} gagnés</span>
+                    <span style={{
+                      padding: '2px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12,
+                      background: l.convRate >= 50 ? '#f0fdf4' : l.convRate >= 25 ? '#fffbeb' : '#fef2f2',
+                      color: l.convRate >= 50 ? '#16a34a' : l.convRate >= 25 ? '#f59e0b' : '#dc2626',
+                    }}>{l.convRate}%</span>
+                  </div>
+                </div>
+                {/* Stacked progress bar */}
+                <div style={{ display: 'flex', height: 28, borderRadius: 8, overflow: 'hidden', background: '#f1f5f9' }}>
+                  {l.won > 0 && (
+                    <div style={{
+                      width: `${(l.won / l.total) * 100}%`, background: 'linear-gradient(90deg, #22c55e, #16a34a)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 700, color: '#fff', minWidth: l.won > 0 ? 28 : 0,
+                    }}>{l.won}</div>
+                  )}
+                  {l.lost > 0 && (
+                    <div style={{
+                      width: `${(l.lost / l.total) * 100}%`, background: '#e2e8f0',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 600, color: '#64748b', minWidth: l.lost > 0 ? 28 : 0,
+                    }}>{l.lost}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {levelData.length === 0 && (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 14 }}>Aucune donnée</div>
+            )}
+            {/* Legend */}
+            {levelData.length > 0 && (
+              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', fontSize: 12 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a' }}></span>
+                  <span style={{ color: '#64748b' }}>Gagnés</span>
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 2, background: '#e2e8f0' }}></span>
+                  <span style={{ color: '#64748b' }}>Autres</span>
+                </span>
+              </div>
+            )}
+          </div>
         </ChartCard>
       </div>
 
@@ -192,10 +261,13 @@ function KPICard({ icon: Icon, label, value, sub, color, highlight }) {
   );
 }
 
-function ChartCard({ title, children }) {
+function ChartCard({ title, action, children }) {
   return (
     <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 20, letterSpacing: -0.3 }}>{title}</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', letterSpacing: -0.3 }}>{title}</h3>
+        {action}
+      </div>
       {children}
     </div>
   );

@@ -1,20 +1,43 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
-import { FileText, TrendingUp, DollarSign, Eye } from 'lucide-react';
+import { FileText, TrendingUp, DollarSign, Trash2 } from 'lucide-react';
 
 export default function PartnerMyReferrals() {
   const [referrals, setReferrals] = useState([]);
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
-  useEffect(() => {
-    Promise.all([api.getReferrals(), api.getKPIs()]).then(([r, k]) => {
+  const load = async () => {
+    try {
+      const [r, k] = await Promise.all([api.getReferrals(), api.getKPIs()]);
       setReferrals(r.referrals);
       setKpis(k);
-    }).catch(console.error).finally(() => setLoading(false));
+    } catch (err) { console.error(err); }
+  };
+
+  useEffect(() => {
+    load().finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    if (!confirm('Supprimer cette recommandation ?')) return;
+    setDeleting(id);
+    try {
+      await api.deleteReferral(id);
+      setReferrals(prev => prev.filter(r => r.id !== id));
+      if (selected?.id === id) setSelected(null);
+      // Refresh KPIs
+      const k = await api.getKPIs();
+      setKpis(k);
+    } catch (err) {
+      alert(err.message);
+    }
+    setDeleting(null);
+  };
 
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
 
@@ -53,6 +76,23 @@ export default function PartnerMyReferrals() {
                 <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: LEVEL_CONFIG[r.recommendation_level]?.bg, color: LEVEL_CONFIG[r.recommendation_level]?.color }}>{LEVEL_CONFIG[r.recommendation_level]?.label}</span>
                 <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: STATUS_CONFIG[r.status]?.bg, color: STATUS_CONFIG[r.status]?.color }}>{STATUS_CONFIG[r.status]?.label}</span>
                 {r.deal_value > 0 && <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{fmt(r.deal_value)}</span>}
+                {/* Feature #3: Delete button — only for 'new' status */}
+                {r.status === 'new' && (
+                  <button onClick={(e) => handleDelete(r.id, e)}
+                    disabled={deleting === r.id}
+                    title="Supprimer cette recommandation"
+                    style={{
+                      background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8,
+                      padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      color: '#dc2626', opacity: deleting === r.id ? 0.5 : 1,
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#fecaca'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -71,6 +111,22 @@ export default function PartnerMyReferrals() {
                   <div style={{ background: '#f0fdf4', borderRadius: 10, padding: 12, marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <DollarSign size={16} color="#16a34a" />
                     <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 14 }}>Deal gagné — Commission en attente de traitement</span>
+                  </div>
+                )}
+                {r.status === 'new' && (
+                  <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={(e) => handleDelete(r.id, e)}
+                      disabled={deleting === r.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '8px 16px', borderRadius: 10,
+                        background: '#fef2f2', border: '1px solid #fecaca',
+                        color: '#dc2626', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                        opacity: deleting === r.id ? 0.5 : 1,
+                      }}>
+                      <Trash2 size={14} />
+                      {deleting === r.id ? 'Suppression...' : 'Supprimer cette recommandation'}
+                    </button>
                   </div>
                 )}
               </div>

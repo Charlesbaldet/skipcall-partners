@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate, fmtDateTime } from '../lib/constants';
-import { X, ChevronRight, Clock, MessageSquare } from 'lucide-react';
+import { X, ChevronRight, Clock, MessageSquare, Trash2 } from 'lucide-react';
 
 export default function ReferralsPage() {
   const [referrals, setReferrals] = useState([]);
@@ -32,6 +32,8 @@ export default function ReferralsPage() {
     try {
       const data = await api.getReferral(ref.id);
       setActivities(data.activities || []);
+      // Update selected with full data including commission_rate
+      if (data.referral) setSelected(data.referral);
     } catch {}
   };
 
@@ -40,10 +42,19 @@ export default function ReferralsPage() {
       const { referral } = await api.updateReferral(id, updates);
       setReferrals(prev => prev.map(r => r.id === id ? { ...r, ...referral } : r));
       setSelected(prev => prev ? { ...prev, ...referral } : null);
-      // Reload activities
       const data = await api.getReferral(id);
       setActivities(data.activities || []);
     } catch (err) { console.error(err); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Supprimer ce referral ?')) return;
+    try {
+      await api.deleteReferral(id);
+      setSelected(null);
+      setActivities([]);
+      load();
+    } catch (err) { alert(err.message); }
   };
 
   return (
@@ -104,37 +115,26 @@ export default function ReferralsPage() {
         </table>
       </div>
 
-      {/* Detail Drawer */}
+      {/* Feature #6: Centered Modal instead of Drawer */}
       {selected && (
-        <DetailDrawer
+        <DetailModal
           referral={selected}
           activities={activities}
           onClose={() => { setSelected(null); setActivities([]); }}
           onUpdate={handleUpdate}
+          onDelete={handleDelete}
         />
       )}
     </div>
   );
 }
 
-function DetailDrawer({ referral, activities, onClose, onUpdate }) {
+function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
   const [editStatus, setEditStatus] = useState(referral.status);
   const [editValue, setEditValue] = useState(referral.deal_value || '');
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [editEngagement, setEditEngagement] = useState(referral.engagement || 'monthly');
-
-  const handleDelete = async () => {
-    if (!confirm('Supprimer ce referral ?')) return;
-    setDeleting(true);
-    try {
-      const apiMod = (await import('../lib/api')).default;
-      await apiMod.deleteReferral(referral.id);
-      onClose();
-      window.location.reload();
-    } catch(e) { alert(e.message); }
-    setDeleting(false);
-  };
+  const [tab, setTab] = useState('info');
 
   const handleSave = async () => {
     setSaving(true);
@@ -146,118 +146,158 @@ function DetailDrawer({ referral, activities, onClose, onUpdate }) {
   const commission = editStatus === 'won' ? (Number(editValue) || 0) * rate / 100 : 0;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} />
-      <div className="slide-in" style={{ position: 'relative', width: 500, maxWidth: '100%', background: '#fff', height: '100%', overflowY: 'auto', padding: 32, boxShadow: '-10px 0 40px rgba(0,0,0,0.1)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Détail du deal</h2>
-          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', width: 34, height: 34, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#64748b" />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+      <div className="fade-in" style={{
+        position: 'relative', background: '#fff', borderRadius: 24, width: 680, maxWidth: '100%',
+        maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 80px rgba(0,0,0,0.25)',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '28px 32px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{referral.prospect_name}</h2>
+              <Badge config={LEVEL_CONFIG} value={referral.recommendation_level} />
+            </div>
+            <p style={{ color: '#64748b', fontSize: 14 }}>{referral.prospect_company} · {referral.partner_name}</p>
+          </div>
+          <button onClick={onClose} style={{
+            background: '#f1f5f9', border: 'none', width: 38, height: 38, borderRadius: 12,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.15s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
+            onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
+          >
+            <X size={18} color="#475569" />
           </button>
         </div>
 
-        {/* Prospect Info */}
-        <div style={{ background: '#f8fafc', borderRadius: 14, padding: 20, marginBottom: 24 }}>
-          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18, marginBottom: 4 }}>{referral.prospect_name}</div>
-          <div style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>{referral.prospect_company} · {referral.prospect_role || 'N/A'}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
-            <InfoRow label="Email" value={referral.prospect_email} />
-            <InfoRow label="Tél" value={referral.prospect_phone || '—'} />
-            <InfoRow label="Partenaire" value={referral.partner_name} />
-            <InfoRow label="Niveau" value={<Badge config={LEVEL_CONFIG} value={referral.recommendation_level} />} />
-            <InfoRow label="Assigné à" value={referral.assigned_name || 'Non assigné'} />
-            <InfoRow label="Créé le" value={fmtDate(referral.created_at)} />
-          </div>
+        {/* Tabs */}
+        <div style={{ padding: '16px 32px 0', display: 'flex', gap: 4, borderBottom: '1px solid #e2e8f0' }}>
+          {[{ id: 'info', label: 'Informations' }, { id: 'pipeline', label: 'Pipeline' }, { id: 'history', label: `Historique (${activities.length})` }].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              padding: '10px 18px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              color: tab === t.id ? '#6366f1' : '#64748b',
+              borderBottom: tab === t.id ? '2px solid #6366f1' : '2px solid transparent',
+              background: 'transparent', marginBottom: -1,
+            }}>{t.label}</button>
+          ))}
         </div>
 
-        {/* Notes */}
-        {referral.notes && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Notes du partenaire</div>
-            <div style={{ background: '#fffbeb', borderRadius: 12, padding: 16, color: '#92400e', fontSize: 14, lineHeight: 1.6, borderLeft: '3px solid #f59e0b' }}>{referral.notes}</div>
-          </div>
-        )}
+        <div style={{ padding: '24px 32px 28px' }}>
+          {tab === 'info' && (
+            <div>
+              {/* Prospect Info */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginBottom: 24 }}>
+                <InfoRow label="Email" value={referral.prospect_email} />
+                <InfoRow label="Téléphone" value={referral.prospect_phone || '—'} />
+                <InfoRow label="Rôle" value={referral.prospect_role || '—'} />
+                <InfoRow label="Partenaire" value={referral.partner_name} />
+                <InfoRow label="Assigné à" value={referral.assigned_name || 'Non assigné'} />
+                <InfoRow label="Créé le" value={fmtDate(referral.created_at)} />
+              </div>
 
-        {/* Status Update */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 10 }}>Mettre à jour le statut</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {Object.entries(STATUS_CONFIG).map(([k, v]) => (
-              <button key={k} onClick={() => setEditStatus(k)} style={{
-                padding: '8px 14px', borderRadius: 10,
-                border: editStatus === k ? `2px solid ${v.color}` : '2px solid #e2e8f0',
-                background: editStatus === k ? v.bg : '#fff',
-                color: v.color, fontWeight: 600, fontSize: 12, cursor: 'pointer',
-              }}>{v.label}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Deal Value */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>MRR (€ / mois)</div>
-          <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} placeholder="Ex: 24000"
-            style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
-        </div>
-
-        {/* Engagement */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Engagement</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[['monthly', 'Mensuel'], ['quarterly', 'Trimestriel'], ['yearly', 'Annuel']].map(([k, label]) => (
-              <button key={k} onClick={() => setEditEngagement(k)} style={{
-                padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                border: editEngagement === k ? '2px solid #6366f1' : '2px solid #e2e8f0',
-                background: editEngagement === k ? '#eef2ff' : '#fff',
-                color: editEngagement === k ? '#6366f1' : '#64748b',
-              }}>{label}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Commission Preview */}
-        {editStatus === 'won' && Number(editValue) > 0 && (
-          <div style={{ background: 'linear-gradient(135deg,#fef3c7,#fffbeb)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #fcd34d' }}>
-            <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>💰 Commission estimée</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>{fmt(commission)}</span>
-              <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% de {fmt(Number(editValue))})</span>
-            </div>
-          </div>
-        )}
-
-        {/* Activity Log */}
-        {activities.length > 0 && (
-          <div style={{ marginBottom: 28 }}>
-            <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 12 }}>Historique</div>
-            <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {activities.map(a => (
-                <div key={a.id} style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: -22, top: 4, width: 10, height: 10, borderRadius: '50%', background: '#6366f1', border: '2px solid #fff' }} />
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>{fmtDateTime(a.created_at)} · {a.user_name}</div>
-                  <div style={{ fontSize: 13, color: '#334155' }}>{formatActivity(a)}</div>
+              {/* Notes */}
+              {referral.notes && (
+                <div>
+                  <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Notes du partenaire</div>
+                  <div style={{ background: '#fffbeb', borderRadius: 12, padding: 16, color: '#92400e', fontSize: 14, lineHeight: 1.6, borderLeft: '3px solid #f59e0b' }}>{referral.notes}</div>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Save */}
-        <button onClick={handleSave} disabled={saving} style={{
-          width: '100%', padding: '14px', borderRadius: 12,
-          background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff',
-          border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
-          boxShadow: '0 4px 15px rgba(99,102,241,0.3)',
-          opacity: saving ? 0.7 : 1,
-        }}>
-          {saving ? 'Enregistrement...' : 'Sauvegarder'}
-        </button>
-        <button onClick={handleDelete} disabled={deleting} style={{
-          width: '100%', padding: '12px', borderRadius: 12,
-          background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
-          fontWeight: 600, fontSize: 14, cursor: 'pointer', marginTop: 8, opacity: deleting ? 0.5 : 1,
-        }}>{deleting ? 'Suppression...' : 'Supprimer ce referral'}
-        </button>
+          {tab === 'pipeline' && (
+            <div>
+              {/* Status */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 10 }}>Statut</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {Object.entries(STATUS_CONFIG).map(([k, v]) => (
+                    <button key={k} onClick={() => setEditStatus(k)} style={{
+                      padding: '8px 14px', borderRadius: 10,
+                      border: editStatus === k ? `2px solid ${v.color}` : '2px solid #e2e8f0',
+                      background: editStatus === k ? v.bg : '#fff',
+                      color: v.color, fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                    }}>{v.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Deal Value */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>MRR (€ / mois)</div>
+                <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} placeholder="Ex: 24000"
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
+              </div>
+
+              {/* Engagement */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Engagement</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[['monthly', 'Mensuel'], ['quarterly', 'Trimestriel'], ['yearly', 'Annuel']].map(([k, label]) => (
+                    <button key={k} onClick={() => setEditEngagement(k)} style={{
+                      padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                      border: editEngagement === k ? '2px solid #6366f1' : '2px solid #e2e8f0',
+                      background: editEngagement === k ? '#eef2ff' : '#fff',
+                      color: editEngagement === k ? '#6366f1' : '#64748b',
+                    }}>{label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Commission Preview */}
+              {editStatus === 'won' && Number(editValue) > 0 && (
+                <div style={{ background: 'linear-gradient(135deg,#fef3c7,#fffbeb)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #fcd34d' }}>
+                  <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Commission estimée</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                    <span style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>{fmt(commission)}</span>
+                    <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% de {fmt(Number(editValue))})</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={handleSave} disabled={saving} style={{
+                  flex: 1, padding: '14px', borderRadius: 12,
+                  background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff',
+                  border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(99,102,241,0.3)',
+                  opacity: saving ? 0.7 : 1,
+                }}>
+                  {saving ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+                <button onClick={() => onDelete(referral.id)} style={{
+                  padding: '14px 20px', borderRadius: 12, background: '#fef2f2',
+                  color: '#dc2626', border: '1px solid #fecaca', fontWeight: 600,
+                  fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  <Trash2 size={16} /> Supprimer
+                </button>
+              </div>
+            </div>
+          )}
+
+          {tab === 'history' && (
+            <div>
+              {activities.length === 0 ? (
+                <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Aucune activité</div>
+              ) : (
+                <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {activities.map(a => (
+                    <div key={a.id} style={{ position: 'relative' }}>
+                      <div style={{ position: 'absolute', left: -26, top: 4, width: 10, height: 10, borderRadius: '50%', background: '#6366f1', border: '2px solid #fff', boxShadow: '0 0 0 2px #e2e8f0' }} />
+                      <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 3 }}>{fmtDateTime(a.created_at)} · {a.user_name}</div>
+                      <div style={{ fontSize: 14, color: '#334155', fontWeight: 500 }}>{formatActivity(a)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -268,6 +308,7 @@ function formatActivity(a) {
     case 'created': return 'Recommandation créée';
     case 'status_change': return `Statut: ${STATUS_CONFIG[a.old_value]?.label || a.old_value} → ${STATUS_CONFIG[a.new_value]?.label || a.new_value}`;
     case 'value_updated': return `Valeur mise à jour: ${fmt(a.new_value)}`;
+    case 'engagement_updated': return `Engagement mis à jour: ${a.new_value}`;
     case 'assigned': return 'Assigné à un commercial';
     case 'note_added': return `Note: ${a.new_value}`;
     default: return a.action;
@@ -284,7 +325,7 @@ function InfoRow({ label, value }) {
   return (
     <div>
       <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{label}</div>
-      <div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2, fontSize: 13 }}>{value}</div>
+      <div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div>
     </div>
   );
 }

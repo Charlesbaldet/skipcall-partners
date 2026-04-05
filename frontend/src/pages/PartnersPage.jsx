@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt } from '../lib/constants';
-import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore } from 'lucide-react';
+import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, AlertTriangle } from 'lucide-react';
 
 export default function PartnersPage() {
   const [partners, setPartners] = useState([]);
@@ -27,7 +27,7 @@ export default function PartnersPage() {
   };
 
   const handleDeletePartner = async (id) => {
-    if (!confirm('Supprimer ce partenaire ?')) return;
+    if (!confirm('Supprimer ce partenaire définitivement ?')) return;
     try { await api.deletePartner(id); setPartners(prev => prev.filter(p => p.id !== id)); } catch(e) { alert(e.message); }
   };
 
@@ -56,47 +56,63 @@ export default function PartnersPage() {
     setSaving(false);
   };
 
+  // Feature #7: Separate active and archived
+  const activePartners = partners.filter(p => p.is_active !== false);
+  const archivedPartners = partners.filter(p => p.is_active === false);
+
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
 
   return (
     <div className="fade-in">
+      {/* Edit modal */}
       {editingId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div onClick={() => setEditingId(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#fff', borderRadius: 20, padding: 32, width: 450, maxWidth: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Modifier le partenaire</h3>
-            {[['name', 'Entreprise'], ['contact_name', 'Contact'], ['email', 'Email'], ['phone', 'Téléphone'], ['company_website', 'Site web'], ['commission_rate', 'Taux (%)'], ['account_holder', 'Titulaire du compte'], ['iban', 'IBAN'], ['bic', 'BIC']].map(([key, label]) => (
-              <div key={key} style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>{label}</label>
-                <input value={editForm[key] || ''} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
-                  type={key === 'commission_rate' ? 'number' : 'text'}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} />
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 10, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
-              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Sauvegarder</button>
+          <div onClick={() => setEditingId(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 480, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0f172a' }}>Modifier le partenaire</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {[['name', 'Entreprise'], ['contact_name', 'Contact'], ['email', 'Email'], ['phone', 'Téléphone'], ['company_website', 'Site web'], ['commission_rate', 'Taux (%)'], ['account_holder', 'Titulaire compte'], ['iban', 'IBAN'], ['bic', 'BIC']].map(([key, label]) => (
+                <div key={key} style={{ gridColumn: key === 'iban' ? '1 / -1' : undefined }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
+                  <input value={editForm[key] || ''} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                    type={key === 'commission_rate' ? 'number' : 'text'}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, fontFamily: ['iban', 'bic'].includes(key) ? 'monospace' : 'inherit' }} />
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
+              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
             </div>
           </div>
         </div>
       )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Partenaires</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{partners.length} partenaire{partners.length > 1 ? 's' : ''} actif{partners.length > 1 ? 's' : ''}</p>
+          <p style={{ color: '#64748b', marginTop: 4 }}>{activePartners.length} partenaire{activePartners.length > 1 ? 's' : ''} actif{activePartners.length > 1 ? 's' : ''}</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners(next); }} style={{
+          <button onClick={() => {
+            const next = !showArchived;
+            setShowArchived(next);
+            loadPartners(next);
+          }} style={{
             padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer',
             border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b',
-          }}>{showArchived ? 'Masquer les archivés' : 'Voir les archivés'}</button>
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <Archive size={14} />
+            {showArchived ? `Archivés (${archivedPartners.length})` : 'Voir les archivés'}
+          </button>
           <button onClick={() => { setShowForm(!showForm); setTempPwd(null); }} style={{
-          display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12,
-          background: showForm ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-          color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-        }}>
-          {showForm ? <X size={16} /> : <Plus size={16} />}
-          {showForm ? 'Annuler' : 'Ajouter un partenaire'}
+            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12,
+            background: showForm ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+            color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+          }}>
+            {showForm ? <X size={16} /> : <Plus size={16} />}
+            {showForm ? 'Annuler' : 'Ajouter un partenaire'}
           </button>
         </div>
       </div>
@@ -137,36 +153,93 @@ export default function PartnersPage() {
         </div>
       )}
 
-      {/* Partners Grid */}
+      {/* Active Partners Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-        {partners.map(p => {
-          const refs = parseInt(p.total_referrals || 0);
-          const won = parseInt(p.won_deals || 0);
-          const conv = refs > 0 ? Math.round((won / refs) * 100) : 0;
-          return (
-            <div key={p.id} style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', opacity: p.is_active === false ? 0.7 : 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18 }}>{p.name}</div>
-                  <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {p.is_active === false && <span style={{ padding: '2px 8px', borderRadius: 6, background: '#fef3c7', color: '#b45309', fontSize: 11, fontWeight: 600 }}>Archivé</span>}
+        {activePartners.map(p => <PartnerCard key={p.id} partner={p} onEdit={startEdit} onArchive={handleArchive} onDelete={handleDeletePartner} />)}
+      </div>
+
+      {/* Feature #7: Archived Partners Section (separated) */}
+      {showArchived && archivedPartners.length > 0 && (
+        <div style={{ marginTop: 36 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <Archive size={18} color="#b45309" />
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#b45309' }}>Partenaires archivés</h2>
+            <span style={{ padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#b45309', fontSize: 12, fontWeight: 600 }}>{archivedPartners.length}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+            {archivedPartners.map(p => (
+              <div key={p.id} style={{
+                background: '#fffbeb', borderRadius: 16, padding: 24,
+                border: '1px solid #fcd34d', position: 'relative',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#92400e', fontSize: 18 }}>{p.name}</div>
+                    <div style={{ color: '#b45309', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
+                  </div>
                   <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
-                  <button onClick={(e) => { e.stopPropagation(); startEdit(p); }} title="Modifier" style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
-                  <button onClick={(e) => { e.stopPropagation(); handleArchive(p.id); }} style={{ background: '#fef3c7', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#b45309', display: 'flex' }}>{p.is_active !== false ? <Archive size={13} /> : <ArchiveRestore size={13} />}</button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDeletePartner(p.id); }} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={13} /></button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                  <MiniStat label="Referrals" value={parseInt(p.total_referrals || 0)} />
+                  <MiniStat label="Gagnés" value={parseInt(p.won_deals || 0)} color="#16a34a" />
+                  <MiniStat label="Conversion" value={`${parseInt(p.total_referrals || 0) > 0 ? Math.round((parseInt(p.won_deals || 0) / parseInt(p.total_referrals || 0)) * 100) : 0}%`} color="#6366f1" />
+                  <MiniStat label="CA" value={fmt(p.total_revenue)} color="#0f172a" />
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => handleArchive(p.id)} style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                    background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff',
+                    fontWeight: 600, fontSize: 13, boxShadow: '0 2px 8px rgba(34,197,94,0.3)',
+                  }}>
+                    <ArchiveRestore size={16} /> Réactiver
+                  </button>
+                  <button onClick={() => handleDeletePartner(p.id)} style={{
+                    padding: '10px 14px', borderRadius: 10, border: '1px solid #fecaca',
+                    background: '#fef2f2', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  }}>
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
-                <MiniStat label="Referrals" value={refs} />
-                <MiniStat label="Gagnés" value={won} color="#16a34a" />
-                <MiniStat label="Conversion" value={`${conv}%`} color="#6366f1" />
-                <MiniStat label="CA" value={fmt(p.total_revenue)} color="#0f172a" />
-              </div>
-            </div>
-          );
-        })}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showArchived && archivedPartners.length === 0 && (
+        <div style={{ marginTop: 36, background: '#f8fafc', borderRadius: 16, padding: 32, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+          <Archive size={32} color="#94a3b8" style={{ marginBottom: 12, opacity: 0.3 }} />
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>Aucun partenaire archivé</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
+  const refs = parseInt(p.total_referrals || 0);
+  const won = parseInt(p.won_deals || 0);
+  const conv = refs > 0 ? Math.round((won / refs) * 100) : 0;
+  return (
+    <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div>
+          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18 }}>{p.name}</div>
+          <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} title="Modifier" style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
+          <button onClick={(e) => { e.stopPropagation(); onArchive(p.id); }} title="Archiver" style={{ background: '#fef3c7', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#b45309', display: 'flex' }}><Archive size={13} /></button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(p.id); }} title="Supprimer" style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={13} /></button>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
+        <MiniStat label="Referrals" value={refs} />
+        <MiniStat label="Gagnés" value={won} color="#16a34a" />
+        <MiniStat label="Conversion" value={`${conv}%`} color="#6366f1" />
+        <MiniStat label="CA" value={fmt(p.total_revenue)} color="#0f172a" />
       </div>
     </div>
   );

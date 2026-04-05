@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = '/api';
 
 class ApiClient {
   constructor() {
@@ -44,8 +44,7 @@ class ApiClient {
 
     const data = await res.json();
     if (!res.ok) {
-      const msg = data.error || (data.errors ? data.errors.map(e => e.msg || e.message).join(', ') : 'Erreur serveur');
-      throw new Error(msg);
+      throw new Error(data.error || 'Erreur serveur');
     }
     return data;
   }
@@ -76,6 +75,10 @@ class ApiClient {
   getPartner(id) { return this.request(`/partners/${id}`); }
   createPartner(data) { return this.request('/partners', { method: 'POST', body: JSON.stringify(data) }); }
   updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
+  archivePartner(id) { return this.request(`/partners/${id}/archive`, { method: 'PUT' }); }
+  deletePartner(id) { return this.request(`/partners/${id}`, { method: 'DELETE' }); }
+  getMyPartnerProfile() { return this.request('/partners/me/profile'); }
+  updateMyIban(id, data) { return this.request(`/partners/${id}/iban`, { method: 'PUT', body: JSON.stringify(data) }); }
 
   // ─── Referrals ───
   getReferrals(params = {}) {
@@ -85,6 +88,7 @@ class ApiClient {
   getReferral(id) { return this.request(`/referrals/${id}`); }
   createReferral(data) { return this.request('/referrals', { method: 'POST', body: JSON.stringify(data) }); }
   updateReferral(id, data) { return this.request(`/referrals/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
+  deleteReferral(id) { return this.request(`/referrals/${id}`, { method: 'DELETE' }); }
 
   // ─── Commissions ───
   getCommissions(params = {}) {
@@ -94,19 +98,20 @@ class ApiClient {
   getCommissionsSummary() { return this.request('/commissions/summary'); }
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
 
-
-  // ─── Delete & Archive ───
-  deleteReferral(id) { return this.request(`/referrals/${id}`, { method: 'DELETE' }); }
-  deletePartner(id) { return this.request(`/partners/${id}`, { method: 'DELETE' }); }
-  archivePartner(id) { return this.request(`/partners/${id}/archive`, { method: 'PUT' }); }
-  updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
-
   // ─── Dashboard ───
   getKPIs() { return this.request('/dashboard/kpis'); }
   getTimeline(months = 6) { return this.request(`/dashboard/timeline?months=${months}`); }
   getPipeline() { return this.request('/dashboard/pipeline'); }
   getTopPartners() { return this.request('/dashboard/top-partners'); }
   getLevels() { return this.request('/dashboard/levels'); }
+
+  // ─── Messages (feature #8) ───
+  getConversations() { return this.request('/messages/conversations'); }
+  createConversation(data) { return this.request('/messages/conversations', { method: 'POST', body: JSON.stringify(data) }); }
+  getMessages(conversationId) { return this.request(`/messages/conversations/${conversationId}/messages`); }
+  sendMessage(conversationId, content) { return this.request(`/messages/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify({ content }) }); }
+  getUnreadCount() { return this.request('/messages/unread'); }
+  getMessageableUsers() { return this.request('/messages/users'); }
 }
 
 export const api = new ApiClient();
