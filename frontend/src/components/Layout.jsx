@@ -1,158 +1,154 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
-import { 
-  BarChart3, FileText, DollarSign, Users, Send, List, 
-  CreditCard, MessageCircle, LogOut, ChevronLeft, Settings
+import {
+  LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle,
+  LogOut, ChevronLeft, ChevronRight, UserPlus, Settings,
 } from 'lucide-react';
+
+const ADMIN_NAV = [
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/referrals', icon: FileText, label: 'Pipeline' },
+  { to: '/commissions', icon: DollarSign, label: 'Commissions' },
+  { to: '/partners', icon: Users, label: 'Partenaires' },
+  { to: '/applications', icon: UserPlus, label: 'Candidatures' },
+  { to: '/messaging', icon: MessageCircle, label: 'Messagerie' },
+  { divider: true },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
+];
+
+const PARTNER_NAV = [
+  { to: '/partner/referrals', icon: FileText, label: 'Mes Referrals' },
+  { to: '/partner/submit', icon: Send, label: 'Soumettre' },
+  { to: '/partner/payments', icon: DollarSign, label: 'Mes Paiements' },
+  { to: '/messaging', icon: MessageCircle, label: 'Messagerie' },
+];
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unread, setUnread] = useState(0);
 
-  // Poll unread messages every 30s
+  const nav = user?.role === 'partner' ? PARTNER_NAV : ADMIN_NAV;
+  const isAdmin = user?.role === 'admin';
+
   useEffect(() => {
-    const fetchUnread = () => {
-      api.getUnreadCount().then(d => setUnreadCount(d.unread)).catch(() => {});
-    };
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
+    api.getUnreadCount().then(d => setUnread(d.count || 0)).catch(() => {});
+    const interval = setInterval(() => {
+      api.getUnreadCount().then(d => setUnread(d.count || 0)).catch(() => {});
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = () => { logout(); navigate('/login'); };
+
+  const s = {
+    sidebar: {
+      width: collapsed ? 68 : 200, minWidth: collapsed ? 68 : 200,
+      background: '#0f172a', color: '#fff', display: 'flex', flexDirection: 'column',
+      transition: 'all 0.2s ease', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50,
+    },
+    link: {
+      display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px',
+      borderRadius: 10, color: '#94a3b8', textDecoration: 'none', fontSize: 14,
+      fontWeight: 500, transition: 'all 0.15s', margin: '2px 8px',
+    },
+    activeLink: {
+      background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))',
+      color: '#fff',
+    },
   };
 
-  const isPartner = user?.role === 'partner';
-
-  const navItems = isPartner ? [
-    { path: '/partner/submit', icon: Send, label: 'Recommander' },
-    { path: '/partner/referrals', icon: List, label: 'Mes recommandations' },
-    { path: '/partner/payments', icon: CreditCard, label: 'Mes paiements' },
-    { path: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: unreadCount },
-  ] : [
-    { path: '/', icon: BarChart3, label: 'Dashboard' },
-    { path: '/referrals', icon: FileText, label: 'Pipeline' },
-    { path: '/commissions', icon: DollarSign, label: 'Commissions' },
-    ...(user?.role === 'admin' ? [{ path: '/partners', icon: Users, label: 'Partenaires' }] : []),
-    { path: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: unreadCount },
-  ];
-
-  const w = collapsed ? 72 : 260;
-
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
       {/* Sidebar */}
-      <nav style={{
-        width: w, minHeight: '100vh', background: '#0f172a', 
-        display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease',
-        position: 'fixed', top: 0, left: 0, zIndex: 100,
-      }}>
+      <aside style={s.sidebar}>
         {/* Logo */}
-        <div style={{ padding: collapsed ? '20px 12px' : '20px 24px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            width: 38, height: 38, borderRadius: 11, flexShrink: 0,
-            background: 'linear-gradient(135deg,#6366f1,#a855f7)',
+            width: 36, height: 36, borderRadius: 11, flexShrink: 0,
+            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, fontWeight: 800, color: '#fff',
+            fontSize: 16, fontWeight: 800, color: '#fff',
+            boxShadow: '0 0 20px rgba(99,102,241,0.3)',
           }}>S</div>
-          {!collapsed && <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: -0.5 }}>Skipcall</span>}
+          {!collapsed && <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.5 }}>Skipcall</span>}
         </div>
 
-        {/* Nav items */}
-        <div style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {navItems.map(item => {
-            const active = location.pathname === item.path;
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
+          {nav.map((item, i) => {
+            if (item.divider) {
+              return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }} />;
+            }
+            if (item.to === '/applications' && !isAdmin) return null;
+            if (item.to === '/settings' && !isAdmin) return null;
             return (
-              <button key={item.path} onClick={() => navigate(item.path)} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: collapsed ? '12px' : '10px 16px',
-                borderRadius: 10, border: 'none', cursor: 'pointer', width: '100%',
-                background: active ? 'rgba(99,102,241,0.15)' : 'transparent',
-                color: active ? '#818cf8' : '#94a3b8',
-                fontWeight: active ? 600 : 500, fontSize: 14,
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                transition: 'all 0.15s',
-                position: 'relative',
-              }}
-                onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-                onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+              <NavLink key={item.to} to={item.to}
+                style={({ isActive }) => ({ ...s.link, ...(isActive ? s.activeLink : {}) })}
               >
-                <item.icon size={20} />
-                {!collapsed && <span>{item.label}</span>}
-                {item.badge > 0 && (
-                  <span style={{
-                    position: collapsed ? 'absolute' : 'relative',
-                    top: collapsed ? 4 : 'auto', right: collapsed ? 4 : 'auto',
-                    marginLeft: collapsed ? 0 : 'auto',
-                    background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700,
-                    borderRadius: 10, padding: '1px 7px', minWidth: 20, textAlign: 'center',
-                  }}>{item.badge}</span>
+                <item.icon size={18} style={{ flexShrink: 0 }} />
+                {!collapsed && (
+                  <span style={{ flex: 1 }}>{item.label}</span>
                 )}
-              </button>
+                {!collapsed && item.to === '/messaging' && unread > 0 && (
+                  <span style={{
+                    background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700,
+                    padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center',
+                  }}>{unread}</span>
+                )}
+              </NavLink>
             );
           })}
-        </div>
+        </nav>
 
-        {/* Bottom */}
-        <div style={{ padding: '12px 8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {/* Collapse toggle */}
-          <button onClick={() => setCollapsed(!collapsed)} style={{
-            display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
-            gap: 12, padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer',
-            width: '100%', background: 'transparent', color: '#64748b', fontSize: 13,
-          }}
-            onMouseEnter={e => e.currentTarget.style.color = '#94a3b8'}
-            onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
-          >
-            <ChevronLeft size={18} style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            {!collapsed && <span>Réduire</span>}
-          </button>
+        {/* Collapse toggle */}
+        <button onClick={() => setCollapsed(!collapsed)} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          padding: '10px', margin: '4px 8px', borderRadius: 8,
+          background: 'rgba(255,255,255,0.04)', border: 'none',
+          color: '#64748b', cursor: 'pointer', fontSize: 13,
+        }}>
+          {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> <span>Réduire</span></>}
+        </button>
 
-          {/* User info + logout */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
-            borderRadius: 10, marginTop: 4,
-          }}>
+        {/* User */}
+        <div style={{ padding: '12px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-              background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+              width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+              background: user?.role === 'admin' ? '#6366f1' : user?.role === 'commercial' ? '#0891b2' : '#8b5cf6',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, fontWeight: 700, color: '#fff',
+              color: '#fff', fontWeight: 700, fontSize: 14,
             }}>
-              {user?.fullName?.charAt(0)?.toUpperCase() || '?'}
+              {user?.fullName?.charAt(0) || '?'}
             </div>
             {!collapsed && (
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {user?.fullName}
                 </div>
-                <div style={{ color: '#64748b', fontSize: 11 }}>
-                  {user?.role === 'admin' ? 'Admin' : user?.role === 'commercial' ? 'Commercial' : user?.partnerName || 'Partenaire'}
-                </div>
+                <div style={{ color: '#64748b', fontSize: 11, textTransform: 'capitalize' }}>{user?.role}</div>
               </div>
             )}
             <button onClick={handleLogout} title="Déconnexion" style={{
-              background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer',
-              padding: 4, display: 'flex', borderRadius: 6,
-            }}
-              onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-              onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
-            >
+              background: 'transparent', border: 'none', color: '#64748b',
+              cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex',
+            }}>
               <LogOut size={16} />
             </button>
           </div>
         </div>
-      </nav>
+      </aside>
 
       {/* Main content */}
-      <main style={{ flex: 1, marginLeft: w, padding: 32, transition: 'margin-left 0.2s ease', maxWidth: `calc(100vw - ${w}px)` }}>
+      <main style={{
+        flex: 1, marginLeft: collapsed ? 68 : 200,
+        padding: '32px 40px', transition: 'margin-left 0.2s ease',
+        minHeight: '100vh',
+      }}>
         {children}
       </main>
     </div>

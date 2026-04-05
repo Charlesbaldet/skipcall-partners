@@ -10,6 +10,8 @@ const referralRoutes = require('./routes/referrals');
 const commissionRoutes = require('./routes/commissions');
 const dashboardRoutes = require('./routes/dashboard');
 const messageRoutes = require('./routes/messages');
+const applicationRoutes = require('./routes/applications');
+const adminRoutes = require('./routes/admin');
 const { startNotificationWorker } = require('./services/emailService');
 
 const app = express();
@@ -25,14 +27,13 @@ app.use(express.json({ limit: '1mb' }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
+  windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
-// Stricter limit on auth
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -46,6 +47,8 @@ app.use('/api/referrals', referralRoutes);
 app.use('/api/commissions', commissionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -56,8 +59,8 @@ app.get('/api/health', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
+    error: process.env.NODE_ENV === 'production'
+      ? 'Internal server error'
       : err.message,
   });
 });
@@ -65,8 +68,6 @@ app.use((err, req, res, next) => {
 // ─── Start ───
 app.listen(PORT, () => {
   console.log(`🚀 Skipcall API running on port ${PORT}`);
-  
-  // Start email notification worker (checks queue every 30s)
   if (process.env.SMTP_HOST) {
     startNotificationWorker();
     console.log('📧 Email notification worker started');

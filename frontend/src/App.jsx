@@ -1,99 +1,64 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
-import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
-import ReferralsPage from './pages/ReferralsPage';
-import CommissionsPage from './pages/CommissionsPage';
-import PartnersPage from './pages/PartnersPage';
-import PartnerSubmitPage from './pages/PartnerSubmitPage';
-import PartnerMyReferrals from './pages/PartnerMyReferrals';
-import PartnerPaymentsPage from './pages/PartnerPaymentsPage';
-import MessagingPage from './pages/MessagingPage';
-import Layout from './components/Layout';
+import Layout from './components/Layout.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import ReferralsPage from './pages/ReferralsPage.jsx';
+import CommissionsPage from './pages/CommissionsPage.jsx';
+import PartnersPage from './pages/PartnersPage.jsx';
+import PartnerMyReferrals from './pages/PartnerMyReferrals.jsx';
+import PartnerSubmitPage from './pages/PartnerSubmitPage.jsx';
+import PartnerPaymentsPage from './pages/PartnerPaymentsPage.jsx';
+import MessagingPage from './pages/MessagingPage.jsx';
+import LandingPage from './pages/LandingPage.jsx';
+import PublicApplyPage from './pages/PublicApplyPage.jsx';
+import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
+import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
+import AdminSettingsPage from './pages/AdminSettingsPage.jsx';
 
-function ProtectedRoute({ children, roles }) {
+function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
-  if (loading) return <LoadingScreen />;
-  if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#94a3b8' }}>Chargement...</div>;
+  if (!user) return <Navigate to="/login" />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" />;
   return children;
 }
 
 function AppRoutes() {
   const { user, loading } = useAuth();
-  if (loading) return <LoadingScreen />;
+  if (loading) return null;
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+      {/* Public pages */}
+      <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : '/dashboard'} /> : <LandingPage />} />
+      <Route path="/apply" element={<PublicApplyPage />} />
+      <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
+      <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : '/dashboard'} /> : <LoginPage />} />
 
-      {/* Internal routes */}
-      <Route path="/" element={
-        <ProtectedRoute roles={['admin', 'commercial']}>
-          <Layout><DashboardPage /></Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/referrals" element={
-        <ProtectedRoute roles={['admin', 'commercial']}>
-          <Layout><ReferralsPage /></Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/commissions" element={
-        <ProtectedRoute roles={['admin', 'commercial']}>
-          <Layout><CommissionsPage /></Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/partners" element={
-        <ProtectedRoute roles={['admin']}>
-          <Layout><PartnersPage /></Layout>
-        </ProtectedRoute>
-      } />
+      {/* Admin / Commercial */}
+      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />
+      <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><ReferralsPage /></Layout></ProtectedRoute>} />
+      <Route path="/commissions" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><CommissionsPage /></Layout></ProtectedRoute>} />
+      <Route path="/partners" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><PartnersPage /></Layout></ProtectedRoute>} />
+      <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminApplicationsPage /></Layout></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminSettingsPage /></Layout></ProtectedRoute>} />
+      <Route path="/messaging" element={<ProtectedRoute><Layout><MessagingPage /></Layout></ProtectedRoute>} />
 
-      {/* Partner routes */}
-      <Route path="/partner/submit" element={
-        <ProtectedRoute roles={['partner']}>
-          <Layout><PartnerSubmitPage /></Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/partner/referrals" element={
-        <ProtectedRoute roles={['partner']}>
-          <Layout><PartnerMyReferrals /></Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/partner/payments" element={
-        <ProtectedRoute roles={['partner']}>
-          <Layout><PartnerPaymentsPage /></Layout>
-        </ProtectedRoute>
-      } />
-
-      {/* Messaging (all roles) */}
-      <Route path="/messaging" element={
-        <ProtectedRoute roles={['admin', 'commercial', 'partner']}>
-          <Layout><MessagingPage /></Layout>
-        </ProtectedRoute>
-      } />
-
-      {/* Redirect based on role */}
-      <Route path="*" element={<Navigate to={user?.role === 'partner' ? '/partner/submit' : '/'} replace />} />
+      {/* Partner */}
+      <Route path="/partner/referrals" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerMyReferrals /></Layout></ProtectedRoute>} />
+      <Route path="/partner/submit" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerSubmitPage /></Layout></ProtectedRoute>} />
+      <Route path="/partner/payments" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerPaymentsPage /></Layout></ProtectedRoute>} />
     </Routes>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
-  );
-}
-
-function LoadingScreen() {
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,#6366f1,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#fff', margin: '0 auto 16px', animation: 'pulse 1.5s infinite' }}>S</div>
-        <p style={{ color: '#94a3b8', fontSize: 14 }}>Chargement...</p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
