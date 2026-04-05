@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { query, getClient } = require('../db');
+const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
@@ -123,102 +123,41 @@ router.put('/password', authenticate, [
   }
 });
 
-// ─── PUBLIC: Validate invitation token ───
+module.exports = router;
+
+// ─── v3: Validate invitation token (public) ───
 router.get('/invitation/:token', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT id, email, full_name, role, expires_at, accepted_at
-       FROM user_invitations WHERE token = $1`,
+      'SELECT id, email, full_name, role, expires_at, accepted_at FROM user_invitations WHERE token = $1',
       [req.params.token]
     );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Invitation introuvable' });
-    }
-
-    const invitation = rows[0];
-
-    if (invitation.accepted_at) {
-      return res.status(400).json({ error: 'Cette invitation a déjà été utilisée' });
-    }
-
-    if (new Date(invitation.expires_at) < new Date()) {
-      return res.status(400).json({ error: 'Cette invitation a expiré' });
-    }
-
-    res.json({
-      invitation: {
-        email: invitation.email,
-        fullName: invitation.full_name,
-        role: invitation.role,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
+    if (rows.length === 0) return res.status(404).json({ error: 'Invitation introuvable' });
+    if (rows[0].accepted_at) return res.status(400).json({ error: 'Invitation déjà utilisée' });
+    if (new Date(rows[0].expires_at) < new Date()) return res.status(400).json({ error: 'Invitation expirée' });
+    res.json({ invitation: { email: rows[0].email, fullName: rows[0].full_name, role: rows[0].role } });
+  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// ─── PUBLIC: Setup password from invitation ───
-router.post('/setup-password', [
-  body('token').notEmpty(),
-  body('password').isLength({ min: 8 }),
-], async (req, res) => {
-  const client = await getClient();
+// ─── v3: Setup password from invitation (public) ───
+router.post('/setup-password', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' });
-    }
-
     const { token, password } = req.body;
-
-    // Get invitation
-    const { rows } = await query(
-      `SELECT * FROM user_invitations WHERE token = $1`,
-      [token]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Invitation introuvable' });
-    }
-
-    const invitation = rows[0];
-
-    if (invitation.accepted_at) {
-      return res.status(400).json({ error: 'Cette invitation a déjà été utilisée' });
-    }
-
-    if (new Date(invitation.expires_at) < new Date()) {
-      return res.status(400).json({ error: 'Cette invitation a expiré' });
-    }
-
-    await client.query('BEGIN');
-
-    // Create user
+    if (!token || !password || password.length < 8) return res.status(400).json({ error: 'Mot de passe requis (8 caractères min)' });
+    const { rows } = await query('SELECT * FROM user_invitations WHERE token = $1', [token]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Invitation introuvable' });
+    const inv = rows[0];
+    if (inv.accepted_at) return res.status(400).json({ error: 'Invitation déjà utilisée' });
+    if (new Date(inv.expires_at) < new Date()) return res.status(400).json({ error: 'Invitation expirée' });
     const hash = await bcrypt.hash(password, 12);
-    await client.query(
-      `INSERT INTO users (email, password_hash, full_name, role)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (email) DO UPDATE SET password_hash = $2, role = $4, is_active = true`,
-      [invitation.email, hash, invitation.full_name, invitation.role]
+    await query(
+      'INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO UPDATE SET password_hash = $2, role = $4, is_active = true',
+      [inv.email, hash, inv.full_name, inv.role]
     );
-
-    // Mark invitation as accepted
-    await client.query(
-      `UPDATE user_invitations SET accepted_at = NOW() WHERE id = $1`,
-      [invitation.id]
-    );
-
-    await client.query('COMMIT');
-
-    res.json({ message: 'Compte créé avec succès. Vous pouvez maintenant vous connecter.' });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Setup password error:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
-  } finally {
-    client.release();
-  }
+    await query('UPDATE user_invitations SET accepted_at = NOW() WHERE id = $1', [inv.id]);
+    res.json({ message: 'Compte créé avec succès' });
+  } catch (err) { console.error('Setup password error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+module.exports = router;
 module.exports = router;
