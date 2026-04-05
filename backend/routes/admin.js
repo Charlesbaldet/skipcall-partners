@@ -64,12 +64,13 @@ router.post('/invite', [
     const frontendUrl = process.env.FRONTEND_URL || 'https://skipcall-partners.vercel.app';
     const setupUrl = `${frontendUrl}/setup-password/${token}`;
 
-    await queueNotification(email, full_name, 'user_invitation', {
+    try { await queueNotification(email, full_name, 'user_invitation', {
       invitedBy: req.user.fullName || 'Admin Skipcall',
       role: role === 'admin' ? 'Administrateur' : 'Commercial',
       setupUrl: setupUrl,
     });
 
+    } catch(notifErr) { console.log('Email notification skipped:', notifErr.message); }
     res.status(201).json({ message: 'Invitation envoyée', setupUrl });
   } catch (err) {
     console.error('Invite user error:', err);
