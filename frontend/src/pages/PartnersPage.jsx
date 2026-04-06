@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User } from 'lucide-react';
+import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 export default function PartnersPage() {
@@ -17,6 +17,7 @@ export default function PartnersPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   // Candidatures state
   const [applications, setApplications] = useState([]);
@@ -40,7 +41,7 @@ export default function PartnersPage() {
   useEffect(() => { if (tab === 'candidatures' && isAdmin) loadApplications(); }, [tab, appFilter]);
 
   const handleArchive = async (id) => { try { await api.archivePartner(id); await loadPartners(showArchived); } catch(e) { alert(e.message); } };
-  const handleDeletePartner = async (id) => { if (!confirm('Supprimer ce partenaire définitivement ?')) return; try { await api.deletePartner(id); setPartners(prev => prev.filter(p => p.id !== id)); } catch(e) { alert(e.message); } };
+  const handleDeletePartner = async (id) => { try { await api.deletePartner(id); setPartners(prev => prev.filter(p => p.id !== id)); } catch(e) { alert(e.message); } };
 
   const startEdit = (p) => { setEditingId(p.id); setEditForm({ name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '', company_website: p.company_website || '', commission_rate: p.commission_rate, iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '' }); };
   const saveEdit = async () => { try { await api.updatePartner(editingId, editForm); setEditingId(null); await loadPartners(showArchived); } catch(e) { alert(e.message); } };
@@ -91,7 +92,7 @@ export default function PartnersPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
               <button onClick={() => { handleArchive(editingId); setEditingId(null); }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fcd34d', background: '#fffbeb', color: '#b45309', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Archive size={14} /> Archiver</button>
-              <button onClick={() => { if (confirm('Êtes-vous sûr de vouloir supprimer définitivement ce partenaire ? Cette action est irréversible.')) { handleDeletePartner(editingId); setEditingId(null); } }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={14} /> Supprimer</button>
+              <button onClick={() => setDeleteConfirm(editingId)} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={14} /> Supprimer</button>
             </div>
           </div>
         </div>
@@ -138,6 +139,24 @@ export default function PartnersPage() {
                 {selectedApp.status === 'approved' ? 'Candidature acceptée' : 'Candidature refusée'}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={() => setDeleteConfirm(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 420, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <AlertTriangle size={28} color="#dc2626" />
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Supprimer ce partenaire ?</h3>
+            <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>Cette action est <strong style={{ color: '#dc2626' }}>irréversible</strong>. Toutes les données associées seront perdues.</p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, color: '#475569' }}>Annuler</button>
+              <button onClick={() => { handleDeletePartner(deleteConfirm); setDeleteConfirm(null); setEditingId(null); }} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
+            </div>
           </div>
         </div>
       )}

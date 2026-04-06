@@ -165,7 +165,7 @@ export default function ReferralsPage() {
         </div>
       ) : (
         /* KANBAN VIEW */
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16, minHeight: 500 }}>
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 180px)', minHeight: 400 }}>
           {KANBAN_STATUSES.map(status => {
             const sc = STATUS_CONFIG[status];
             const allCards = referrals.filter(r => r.status === status);
@@ -174,33 +174,33 @@ export default function ReferralsPage() {
             const hasMore = allCards.length > limit;
             return (
               <div key={status}
-                onDragOver={e => { e.preventDefault(); e.currentTarget.style.boxShadow = `inset 0 0 0 2px ${sc.color}`; }}
-                onDragLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
-                onDrop={e => { e.currentTarget.style.boxShadow = 'none'; handleDrop(e, status); }}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${sc.color}06`; }}
+                onDragLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
+                onDrop={e => { e.currentTarget.style.background = '#f8fafc'; handleDrop(e, status); }}
                 style={{
-                  minWidth: 250, flex: 1, background: '#fff', borderRadius: 14,
-                  padding: 10, display: 'flex', flexDirection: 'column',
-                  border: '1px solid #e2e8f0', boxShadow: 'none', transition: 'box-shadow 0.15s',
+                  minWidth: 260, width: 260, flexShrink: 0, background: '#f8fafc', borderRadius: 16,
+                  padding: 12, display: 'flex', flexDirection: 'column',
+                  border: '1px solid #e2e8f0',
                 }}
               >
                 {/* Column header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', marginBottom: 8, background: `${sc.color}08`, borderRadius: 10, borderBottom: `3px solid ${sc.color}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: sc.color }} />
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: sc.color }} />
                     <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
                   </div>
                   <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
                 </div>
 
-                {/* Cards */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 60 }}>
+                {/* Cards - scrollable */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                   {cards.map(r => (
                     <div key={r.id} draggable onDragStart={e => handleDragStart(e, r.id)}
                       onClick={() => openDetail(r)}
                       style={{
-                        background: '#f8fafc', borderRadius: 12, padding: 14, cursor: 'grab',
-                        border: `1px solid ${draggedId === r.id ? sc.color : '#e2e8f0'}`,
-                        boxShadow: draggedId === r.id ? `0 4px 12px ${sc.color}20` : '0 1px 2px rgba(0,0,0,0.04)',
+                        background: '#fff', borderRadius: 12, padding: 14, cursor: 'grab',
+                        border: draggedId === r.id ? `2px solid ${sc.color}` : '1px solid #e2e8f0',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                         opacity: draggedId === r.id ? 0.5 : 1, transition: 'all 0.15s',
                       }}
                     >
