@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote } from 'lucide-react';
 
 const COM_STATUS = {
   pending: { label: 'En attente', color: '#f59e0b', bg: '#fffbeb', icon: Clock },
@@ -16,24 +16,55 @@ export default function CommissionsPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('summary');
+  const [payModal, setPayModal] = useState(null);
+  const [paying, setPaying] = useState(false);
 
-  useEffect(() => {
-    Promise.all([api.getCommissionsSummary(), api.getCommissions()]).then(([s, c]) => {
-      setSummary(s.summary);
-      setCommissions(c.commissions);
-      setTotals({ pending: c.totalPending, paid: c.totalPaid });
-    }).catch(console.error).finally(() => setLoading(false));
-  }, []);
+  const reload = async () => {
+    const [s, c] = await Promise.all([api.getCommissionsSummary(), api.getCommissions()]);
+    setSummary(s.summary);
+    setCommissions(c.commissions);
+    setTotals({ pending: c.totalPending, paid: c.totalPaid });
+  };
+
+  useEffect(() => { reload().catch(console.error).finally(() => setLoading(false)); }, []);
 
   const handleStatusChange = async (id, status) => {
+    try { await api.updateCommission(id, status); await reload(); } catch (err) { console.error(err); }
+  };
+
+  const handlePayClick = async (commission) => {
     try {
-      await api.updateCommission(id, status);
-      const c = await api.getCommissions();
-      setCommissions(c.commissions);
-      setTotals({ pending: c.totalPending, paid: c.totalPaid });
-      const s = await api.getCommissionsSummary();
-      setSummary(s.summary);
-    } catch (err) { console.error(err); }
+      const partnerData = await api.getPartner(commission.partner_id);
+      const partner = partnerData.partner || partnerData;
+      setPayModal({ commission, partner });
+    } catch (err) {
+      setPayModal({ commission, partner: { name: commission.partner_name, contact_name: commission.partner_contact } });
+    }
+  };
+
+  const handleConfirmPay = async () => {
+    setPaying(true);
+    try {
+      await api.updateCommission(payModal.commission.id, 'paid');
+      setPayModal(null);
+      await reload();
+    } catch (err) { console.error(err); alert('Erreur lors du paiement'); }
+    setPaying(false);
+  };
+
+  const exportCSV = () => {
+    const headers = ['Prospect', 'Entreprise', 'Partenaire', 'Taux %', 'Deal €', 'Commission €', 'Statut', 'Date création', 'Date validation', 'Date paiement'];
+    const rows = commissions.map(c => [
+      c.prospect_name, c.prospect_company, c.partner_name, c.rate,
+      c.deal_value, c.amount, COM_STATUS[c.status]?.label || c.status,
+      c.created_at?.split('T')[0] || '', c.approved_at?.split('T')[0] || '', c.paid_at?.split('T')[0] || '',
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `commissions_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
   };
 
   const totalAll = summary.reduce((s, p) => s + parseFloat(p.total_amount || 0), 0);
@@ -43,8 +74,19 @@ export default function CommissionsPage() {
 
   return (
     <div className="fade-in">
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Commissions</h1>
-      <p style={{ color: '#64748b', marginBottom: 24 }}>Suivi des commissions partenaires</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Commissions</h1>
+          <p style={{ color: '#64748b', marginBottom: 24 }}>Suivi des commissions partenaires</p>
+        </div>
+        <button onClick={exportCSV} style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10,
+          background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600,
+          fontSize: 13, cursor: 'pointer',
+        }}>
+          <Download size={14} /> Export CSV
+        </button>
+      </div>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
@@ -69,7 +111,7 @@ export default function CommissionsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Partenaire', 'Taux', 'Deals', 'CA Généré', 'En attente', 'Approuvé', 'Payé', 'Total'].map((h, i) => (
+                {['Partenaire', 'Taux', 'Deals', 'MRR Généré', 'En attente', 'Approuvé', 'Payé', 'Total'].map((h, i) => (
                   <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                 ))}
               </tr>
@@ -102,8 +144,10 @@ export default function CommissionsPage() {
       ) : (
         <>
           <div style={{ marginBottom: 16 }}>
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-              style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#334155', background: '#fff', cursor: 'pointer' }}>
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{
+              padding: '8px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13,
+              fontWeight: 600, color: '#334155', background: '#fff', cursor: 'pointer',
+            }}>
               <option value="all">Tous les statuts</option>
               {Object.entries(COM_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
@@ -138,8 +182,7 @@ export default function CommissionsPage() {
                       <td style={{ padding: '13px 16px', fontSize: 12 }}>
                         {c.payment_due_date ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#dc2626' : '#64748b', fontWeight: c.is_late ? 700 : 400 }}>
-                            {c.is_late && <AlertTriangle size={14} />}
-                            {fmtDate(c.payment_due_date)}
+                            {c.is_late && <AlertTriangle size={14} />} {fmtDate(c.payment_due_date)}
                           </span>
                         ) : '—'}
                       </td>
@@ -148,7 +191,13 @@ export default function CommissionsPage() {
                           <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eef2ff', border: 'none', color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Approuver</button>
                         )}
                         {c.status === 'approved' && (
-                          <button onClick={() => handleStatusChange(c.id, 'paid')} style={{ padding: '6px 12px', borderRadius: 8, background: '#f0fdf4', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Marquer payée</button>
+                          <button onClick={() => handlePayClick(c)} style={{
+                            padding: '6px 12px', borderRadius: 8, background: '#f0fdf4', border: 'none',
+                            color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 4,
+                          }}>
+                            <CreditCard size={12} /> Payer
+                          </button>
                         )}
                         {c.status === 'paid' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
                       </td>
@@ -160,6 +209,94 @@ export default function CommissionsPage() {
             {filtered.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucune commission</div>}
           </div>
         </>
+      )}
+
+      {/* Payment confirmation modal */}
+      {payModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={() => setPayModal(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 480, maxWidth: '100%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', padding: 32 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>Confirmer le paiement</h2>
+                <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Vérifiez les informations avant de valider</p>
+              </div>
+              <button onClick={() => setPayModal(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={16} color="#475569" />
+              </button>
+            </div>
+
+            {/* Recap */}
+            <div style={{ background: '#f8fafc', borderRadius: 14, padding: 20, marginBottom: 20, border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <Building size={16} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ color: '#94a3b8', fontSize: 11 }}>Partenaire</div>
+                    <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{payModal.partner.name || payModal.commission.partner_name}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <User size={16} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ color: '#94a3b8', fontSize: 11 }}>Contact</div>
+                    <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{payModal.partner.contact_name || payModal.commission.partner_contact}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16 }}>
+                <Banknote size={16} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
+                <div>
+                  <div style={{ color: '#94a3b8', fontSize: 11 }}>IBAN</div>
+                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, fontFamily: 'monospace' }}>
+                    {payModal.partner.iban || 'Non renseigné'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ color: '#94a3b8', fontSize: 11 }}>Prospect</div>
+                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{payModal.commission.prospect_name}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#94a3b8', fontSize: 11 }}>Deal</div>
+                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{fmt(payModal.commission.deal_value)}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#94a3b8', fontSize: 11 }}>Taux</div>
+                  <div style={{ fontWeight: 600, color: '#6366f1', fontSize: 13 }}>{payModal.commission.rate}%</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div style={{ background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)', borderRadius: 14, padding: 20, textAlign: 'center', marginBottom: 24, border: '1px solid #bbf7d0' }}>
+              <div style={{ color: '#16a34a', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Montant à verser</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: '#16a34a', letterSpacing: -1 }}>{fmt(payModal.commission.amount)}</div>
+            </div>
+
+            {!payModal.partner.iban && (
+              <div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #fde68a' }}>
+                <AlertTriangle size={14} /> L'IBAN du partenaire n'est pas renseigné. Vérifiez les coordonnées bancaires.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setPayModal(null)} style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Annuler</button>
+              <button onClick={handleConfirmPay} disabled={paying} style={{
+                flex: 2, padding: '13px', borderRadius: 12,
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff',
+                border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                opacity: paying ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: '0 4px 15px rgba(34,197,94,0.3)',
+              }}>
+                <CreditCard size={16} /> {paying ? 'Validation...' : 'Confirmer le virement'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

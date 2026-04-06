@@ -12,6 +12,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const messageRoutes = require('./routes/messages');
 const applicationRoutes = require('./routes/applications');
 const adminRoutes = require('./routes/admin');
+const openapiRoutes = require('./routes/openapi');
 const { startNotificationWorker } = require('./services/emailService');
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/v1', openapiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
