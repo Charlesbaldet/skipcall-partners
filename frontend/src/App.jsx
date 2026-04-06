@@ -34,17 +34,17 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public pages */}
-      <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : '/dashboard'} /> : <LandingPage />} />
+      <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
       <Route path="/ref/:code" element={<PublicTrackingPage />} />
       <Route path="/apply" element={<PublicApplyPage />} />
       <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
-      <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : '/dashboard'} /> : <LoginPage />} />
+      <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
-      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />
-      <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><ReferralsPage /></Layout></ProtectedRoute>} />
-      <Route path="/commissions" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><CommissionsPage /></Layout></ProtectedRoute>} />
-      <Route path="/partners" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><PartnersPage /></Layout></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />
+      <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><ReferralsPage /></Layout></ProtectedRoute>} />
+      <Route path="/commissions" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><CommissionsPage /></Layout></ProtectedRoute>} />
+      <Route path="/partners" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><PartnersPage /></Layout></ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminApplicationsPage /></Layout></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout><SuperAdminPage /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
