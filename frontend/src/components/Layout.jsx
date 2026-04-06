@@ -174,7 +174,7 @@ export default function Layout({ children }) {
               fontSize: isSuperAdmin ? 16 : 18,
               fontWeight: 800,
               letterSpacing: -0.5,
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: 'inherit',
             }}>
               {isSuperAdmin ? 'Super Admin' : <>Ref<span style={{ color: C.pl }}>Boost</span></>}
             </span>

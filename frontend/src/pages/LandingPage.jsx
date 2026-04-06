@@ -18,7 +18,7 @@ function Logo({ size = 40, white = false }) {
         <path d="M16 34V14h8c2.2 0 4 .6 5.2 1.8 1.2 1.2 1.8 2.8 1.8 4.7 0 1.4-.4 2.6-1.1 3.6-.7 1-1.8 1.6-3.1 2l5 7.9h-4.5L23 26.5h-2.5V34H16zm4.5-11h3.2c1 0 1.8-.3 2.3-.8.5-.5.8-1.2.8-2.1 0-.9-.3-1.6-.8-2.1-.5-.5-1.3-.8-2.3-.8h-3.2v5.8z" fill="white"/>
         <path d="M32 14l3 0 0 3-1.5 1.5L32 17z" fill={C.a} opacity="0.9"/>
       </svg>
-      <span style={{ fontSize:size*0.55, fontWeight:800, letterSpacing:-1, color:white?'#fff':C.s, fontFamily:"'Outfit',sans-serif" }}>
+      <span style={{ fontSize:size*0.55, fontWeight:800, letterSpacing:-1, color:white?'#fff':C.s, fontFamily: 'inherit' }}>
         Ref<span style={{ color:C.p }}>Boost</span>
       </span>
     </div>
@@ -91,8 +91,8 @@ export default function LandingPage() {
   };
 
   return (
-    <div style={{ fontFamily:"'Outfit','DM Sans',-apple-system,sans-serif", color:C.s, overflow:'hidden' }}>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <div style={{ fontFamily: 'inherit', color:C.s, overflow:'hidden' }}>
+      
       <style>{`
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
@@ -132,7 +132,7 @@ export default function LandingPage() {
             <span style={{ background:g(C.p,C.pl),WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent' }}>recommandations en revenus</span>
           </h1>
 
-          <p className="fu fu3" style={{ fontSize:20,color:C.m,lineHeight:1.6,maxWidth:620,margin:'0 auto 40px',fontFamily:"'DM Sans',sans-serif" }}>
+          <p className="fu fu3" style={{ fontSize:20,color:C.m,lineHeight:1.6,maxWidth:620,margin:'0 auto 40px',fontFamily: 'inherit' }}>
             RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires.
             Automatisez le suivi des referrals, les commissions et la performance de votre réseau.
           </p>
@@ -164,14 +164,14 @@ export default function LandingPage() {
           <div style={s.center}>
             <div style={s.label}>Fonctionnalités</div>
             <h2 style={s.h2}>Tout pour gérer votre<br/><span style={{ color:C.p }}>programme d'apporteurs d'affaires</span></h2>
-            <p style={{ color:C.m,fontSize:16,marginTop:16,maxWidth:600,margin:'16px auto 0',fontFamily:"'DM Sans',sans-serif" }}>De la première recommandation au paiement de la commission, RefBoost automatise chaque étape.</p>
+            <p style={{ color:C.m,fontSize:16,marginTop:16,maxWidth:600,margin:'16px auto 0',fontFamily: 'inherit' }}>De la première recommandation au paiement de la commission, RefBoost automatise chaque étape.</p>
           </div>
           <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
             {features.map((f,i)=>(
               <div key={i} className="hl" style={{ padding:32,borderRadius:20,background:'#fff',border:'1px solid #f1f5f9',boxShadow:'0 4px 20px rgba(0,0,0,.03)',cursor:'default' }}>
                 <div style={{ fontSize:36,marginBottom:16 }}>{f.icon}</div>
                 <h3 style={{ fontSize:19,fontWeight:700,marginBottom:10 }}>{f.title}</h3>
-                <p style={{ color:C.m,fontSize:14,lineHeight:1.7,margin:0,fontFamily:"'DM Sans',sans-serif" }}>{f.desc}</p>
+                <p style={{ color:C.m,fontSize:14,lineHeight:1.7,margin:0,fontFamily: 'inherit' }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -192,7 +192,7 @@ export default function LandingPage() {
               <div key={i} style={{ textAlign:'center' }}>
                 <div style={{ width:64,height:64,borderRadius:16,margin:'0 auto 20px',background:g(C.p,C.pl),display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#fff' }}>{st.step}</div>
                 <h3 style={{ fontSize:20,fontWeight:700,color:'#fff',marginBottom:8 }}>{st.title}</h3>
-                <p style={{ color:'#94a3b8',fontSize:14,lineHeight:1.7,margin:0,fontFamily:"'DM Sans',sans-serif" }}>{st.desc}</p>
+                <p style={{ color:'#94a3b8',fontSize:14,lineHeight:1.7,margin:0,fontFamily: 'inherit' }}>{st.desc}</p>
               </div>
             ))}
           </div>
@@ -210,7 +210,7 @@ export default function LandingPage() {
             {testimonials.map((t,i)=>(
               <div key={i} className="hl" style={{ padding:32,borderRadius:20,background:'#fafbfc',border:'1px solid #f1f5f9' }}>
                 <div style={{ display:'flex',gap:2,marginBottom:16 }}>{[1,2,3,4,5].map(s=><span key={s} style={{ color:'#fbbf24',fontSize:18 }}>★</span>)}</div>
-                <p style={{ color:'#334155',fontSize:15,lineHeight:1.7,margin:'0 0 24px',fontFamily:"'DM Sans',sans-serif",fontStyle:'italic' }}>"{t.t}"</p>
+                <p style={{ color:'#334155',fontSize:15,lineHeight:1.7,margin:'0 0 24px',fontFamily: 'inherit',fontStyle:'italic' }}>"{t.t}"</p>
                 <div style={{ display:'flex',alignItems:'center',gap:12 }}>
                   <div style={{ width:44,height:44,borderRadius:12,background:g(C.p,C.pl),display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:18 }}>{t.a}</div>
                   <div>
@@ -230,7 +230,7 @@ export default function LandingPage() {
           <div style={s.center}>
             <div style={s.label}>Tarifs</div>
             <h2 style={s.h2}>Des prix simples, sans surprise</h2>
-            <p style={{ color:C.m,fontSize:16,marginTop:16,fontFamily:"'DM Sans',sans-serif" }}>Tous les plans incluent 14 jours d'essai gratuit. Sans engagement.</p>
+            <p style={{ color:C.m,fontSize:16,marginTop:16,fontFamily: 'inherit' }}>Tous les plans incluent 14 jours d'essai gratuit. Sans engagement.</p>
           </div>
           <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
             {plans.map((p,i)=>(
@@ -242,7 +242,7 @@ export default function LandingPage() {
                   {p.p==='0'?<span style={{ fontSize:20,fontWeight:700 }}>Sur mesure</span>:<><span style={{ fontSize:42,fontWeight:800,color:C.s }}>{p.p}</span><span style={{ color:C.m,fontSize:15 }}>€/mois</span></>}
                 </div>
                 <ul style={{ listStyle:'none',padding:0,margin:'0 0 28px' }}>
-                  {p.f.map((f,j)=><li key={j} style={{ padding:'8px 0',fontSize:14,color:'#334155',display:'flex',alignItems:'center',gap:10,fontFamily:"'DM Sans',sans-serif" }}><span style={{ color:C.p,fontWeight:700 }}>✓</span> {f}</li>)}
+                  {p.f.map((f,j)=><li key={j} style={{ padding:'8px 0',fontSize:14,color:'#334155',display:'flex',alignItems:'center',gap:10,fontFamily: 'inherit' }}><span style={{ color:C.p,fontWeight:700 }}>✓</span> {f}</li>)}
                 </ul>
                 <button onClick={()=>{trackClick('pricing_'+p.n);navigate(p.p==='0'?'/contact':'/signup')}} className={p.c?'bp':'bs'} style={{ width:'100%',padding:'14px 24px',borderRadius:12,cursor:'pointer',fontFamily:'inherit',fontSize:15,fontWeight:600,border:p.c?'none':'2px solid #e2e8f0',background:p.c?g(C.p,C.pl):'#fff',color:p.c?'#fff':C.s,boxShadow:p.c?`0 8px 30px ${C.p}25`:'none' }}>
                   {p.p==='0'?'Nous contacter':'Démarrer gratuitement'}
@@ -271,7 +271,7 @@ export default function LandingPage() {
               <summary style={{ padding:'20px 24px',fontWeight:600,fontSize:16,cursor:'pointer',background:'#fafbfc',listStyle:'none',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
                 {faq.q}<span style={{ color:C.p,fontSize:20 }}>+</span>
               </summary>
-              <div style={{ padding:'0 24px 20px',color:C.m,fontSize:14,lineHeight:1.7,fontFamily:"'DM Sans',sans-serif" }}>{faq.a}</div>
+              <div style={{ padding:'0 24px 20px',color:C.m,fontSize:14,lineHeight:1.7,fontFamily: 'inherit' }}>{faq.a}</div>
             </details>
           ))}
         </div>
@@ -283,7 +283,7 @@ export default function LandingPage() {
         <div style={{ position:'absolute',bottom:-50,left:-50,width:250,height:250,borderRadius:'50%',background:`${C.a}08` }}/>
         <div style={{ maxWidth:650,margin:'0 auto',textAlign:'center',position:'relative',zIndex:1 }}>
           <h2 style={{ fontSize:44,fontWeight:800,color:'#fff',letterSpacing:-2,margin:'0 0 16px' }}>Prêt à structurer votre<br/>réseau d'apporteurs ?</h2>
-          <p style={{ color:'#94a3b8',fontSize:17,lineHeight:1.6,marginBottom:36,fontFamily:"'DM Sans',sans-serif" }}>Rejoignez les entreprises qui utilisent RefBoost pour transformer leurs recommandations en revenus récurrents.</p>
+          <p style={{ color:'#94a3b8',fontSize:17,lineHeight:1.6,marginBottom:36,fontFamily: 'inherit' }}>Rejoignez les entreprises qui utilisent RefBoost pour transformer leurs recommandations en revenus récurrents.</p>
           <div style={{ display:'flex',gap:12,justifyContent:'center',maxWidth:460,margin:'0 auto' }}>
             <input type="email" placeholder="votre@email.com" value={email} onChange={e=>setEmail(e.target.value)} style={{ flex:1,padding:'16px 20px',borderRadius:12,border:'2px solid rgba(255,255,255,.1)',background:'rgba(255,255,255,.06)',color:'#fff',fontSize:15,fontFamily:'inherit',outline:'none' }}/>
             <button onClick={()=>{trackClick('footer_cta');navigate('/signup'+(email?'?email='+encodeURIComponent(email):''))}} className="bp" style={{ padding:'16px 28px',borderRadius:12,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:15,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',boxShadow:`0 8px 30px ${C.p}30` }}>
@@ -300,7 +300,7 @@ export default function LandingPage() {
           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:32 }}>
             <div>
               <Logo size={28} white/>
-              <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300,fontFamily:"'DM Sans',sans-serif" }}>La plateforme de gestion de programme d'apporteurs d'affaires et de parrainage professionnel.</p>
+              <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300,fontFamily: 'inherit' }}>La plateforme de gestion de programme d'apporteurs d'affaires et de parrainage professionnel.</p>
             </div>
             <div style={{ display:'flex',gap:48 }}>
               <div>

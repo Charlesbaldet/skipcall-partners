@@ -27,7 +27,7 @@ function Logo({ size = 40, white = false }) {
       </svg>
       <span style={{
         fontSize: size * 0.55, fontWeight: 800, letterSpacing: -1,
-        color: white ? '#fff' : C.s, fontFamily: "'Outfit',sans-serif"
+        color: white ? '#fff' : C.s, fontFamily: 'inherit'
       }}>
         Ref<span style={{ color: C.p }}>Boost</span>
       </span>
@@ -62,12 +62,12 @@ export default function LoginPage() {
       minHeight: '100vh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px',
-      fontFamily: "'Outfit','DM Sans',-apple-system,sans-serif",
+      fontFamily: 'inherit',
       color: C.s,
       background: `radial-gradient(ellipse 80% 60% at 50% -20%,${C.p}12,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,${C.a}08,transparent),${C.bg}`,
       position: 'relative', overflow: 'hidden',
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+      
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
@@ -122,7 +122,7 @@ export default function LoginPage() {
         </h1>
         <p style={{
           color: C.m, fontSize: 15, textAlign: 'center',
-          margin: '0 0 32px', fontFamily: "'DM Sans',sans-serif",
+          margin: '0 0 32px', fontFamily: 'inherit',
         }}>
           Accédez à votre programme partenaires
         </p>
@@ -133,7 +133,7 @@ export default function LoginPage() {
             background: '#fef2f2', border: '1px solid #fecaca',
             borderRadius: 12, padding: '12px 16px',
             color: '#b91c1c', fontSize: 14, marginBottom: 20,
-            fontFamily: "'DM Sans',sans-serif",
+            fontFamily: 'inherit',
           }}>
             {error}
           </div>
@@ -144,7 +144,7 @@ export default function LoginPage() {
           <div style={{ marginBottom: 18 }}>
             <label style={{
               display: 'block', color: C.s, fontSize: 13, fontWeight: 600,
-              marginBottom: 8, fontFamily: "'DM Sans',sans-serif",
+              marginBottom: 8, fontFamily: 'inherit',
             }}>
               Email
             </label>
@@ -159,7 +159,7 @@ export default function LoginPage() {
                 width: '100%', padding: '14px 16px', borderRadius: 12,
                 border: '1.5px solid #e2e8f0',
                 background: '#fafbfc', fontSize: 15, color: C.s,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: 'inherit',
                 outline: 'none', boxSizing: 'border-box',
                 transition: 'all .2s',
               }}
@@ -169,7 +169,7 @@ export default function LoginPage() {
           <div style={{ marginBottom: 24 }}>
             <label style={{
               display: 'block', color: C.s, fontSize: 13, fontWeight: 600,
-              marginBottom: 8, fontFamily: "'DM Sans',sans-serif",
+              marginBottom: 8, fontFamily: 'inherit',
             }}>
               Mot de passe
             </label>
@@ -184,7 +184,7 @@ export default function LoginPage() {
                 width: '100%', padding: '14px 16px', borderRadius: 12,
                 border: '1.5px solid #e2e8f0',
                 background: '#fafbfc', fontSize: 15, color: C.s,
-                fontFamily: "'DM Sans',sans-serif",
+                fontFamily: 'inherit',
                 outline: 'none', boxSizing: 'border-box',
                 transition: 'all .2s',
               }}
@@ -201,7 +201,7 @@ export default function LoginPage() {
               background: loading ? C.m : g(C.p, C.pl),
               color: '#fff', fontWeight: 700, fontSize: 15,
               cursor: loading ? 'not-allowed' : 'pointer',
-              fontFamily: "'Outfit',sans-serif",
+              fontFamily: 'inherit',
               boxShadow: loading ? 'none' : `0 8px 30px ${C.p}30`,
               opacity: loading ? 0.7 : 1,
             }}
@@ -213,7 +213,7 @@ export default function LoginPage() {
         {/* Footer link */}
         <p style={{
           textAlign: 'center', marginTop: 28, marginBottom: 0,
-          fontSize: 14, color: C.m, fontFamily: "'DM Sans',sans-serif",
+          fontSize: 14, color: C.m, fontFamily: 'inherit',
         }}>
           Pas encore de compte ?{' '}
           <Link to="/signup" style={{

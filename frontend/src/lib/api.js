@@ -86,6 +86,21 @@ class ApiClient {
 
   // Leaderboard
   getLeaderboard() { return this.request('/leaderboard'); }
+
+  // Tenant (current user's tenant)
+  updateMyTenant(data) {
+    const u = this.getUser() || {};
+    let tenantId = u.tenantId;
+    if (!tenantId && this.token) {
+      try {
+        const payload = JSON.parse(atob(this.token.split('.')[1]));
+        tenantId = payload.tenantId;
+      } catch(e) {}
+    }
+    if (!tenantId) return Promise.reject(new Error('Pas de tenant ID'));
+    return this.request('/tenants/' + tenantId, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
 }
 
 export const api = new ApiClient();

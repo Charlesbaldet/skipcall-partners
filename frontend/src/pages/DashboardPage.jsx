@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
+import OnboardingWizard from '../components/OnboardingWizard.jsx';
 import { fmt, STATUS_CONFIG, LEVEL_CONFIG } from '../lib/constants';
 
 const COLORS = ['#6366f1', '#0ea5e9', '#f59e0b', '#c026d3', '#16a34a', '#dc2626'];
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const [lbLevels, setLbLevels] = useState([]);
   const [lbLoading, setLbLoading] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
 
   useEffect(() => {
     Promise.all([
@@ -88,6 +90,7 @@ export default function DashboardPage() {
 
   return (
     <div className="fade-in">
+      {showWizard && <OnboardingWizard onClose={() => setShowWizard(false)} />}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Dashboard</h1>

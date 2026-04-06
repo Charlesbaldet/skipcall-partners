@@ -34,6 +34,7 @@ export default function SignupPage() {
       // Auto-login
       localStorage.setItem('skipcall_token', data.token);
       localStorage.setItem('skipcall_user', JSON.stringify(data.user));
+      localStorage.setItem('refboost_onboarding_pending', '1');
       // Track signup
       try { window._rb_track?.('signup', { company: form.company }); } catch(e) {}
       setStep(3);
