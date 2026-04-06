@@ -15,6 +15,7 @@ import PublicApplyPage from './pages/PublicApplyPage.jsx';
 import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
 import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
