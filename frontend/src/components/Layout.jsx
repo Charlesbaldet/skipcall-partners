@@ -89,7 +89,7 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
       <aside style={s.sidebar}>
         {/* Logo */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -168,7 +168,7 @@ export default function Layout({ children }) {
       <main style={{
         flex: 1, marginLeft: collapsed ? 68 : 200,
         padding: '32px 40px', transition: 'margin-left 0.2s ease',
-        minHeight: '100vh',
+        minHeight: '100vh', overflow: 'hidden',
       }}>
         {children}
       </main>
