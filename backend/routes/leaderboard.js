@@ -1,7 +1,6 @@
 const express = require('express');
 const { query } = require('../db');
-const { authenticate } = require('../middleware/auth');
-
+const { authenticate, tenantScope } = require('../middleware/auth');
 const router = express.Router();
 
 // ─── Levels configuration ───
@@ -28,31 +27,49 @@ function getNextLevel(wonDeals) {
 }
 
 // ─── GET /api/leaderboard ───
-router.get('/', authenticate, async (req, res) => {
+router.get('/', authenticate, tenantScope, async (req, res) => {
   try {
+    // Tenant isolation : filter partners by tenant_id
+    let whereClauses = ['p.is_active = true'];
+    let params = [];
+    let i = 1;
+
+    if (req.tenantId && !req.skipTenantFilter) {
+      whereClauses.push(`p.tenant_id = $${i++}`);
+      params.push(req.tenantId);
+    }
+
+    const whereSql = 'WHERE ' + whereClauses.join(' AND ');
+
     const { rows } = await query(
-      `SELECT p.id, p.name, p.contact_name, p.referral_code,
-              COALESCE(r.won_deals, 0) as won_deals,
-              COALESCE(r.total_referrals, 0) as total_referrals,
-              COALESCE(r.total_revenue, 0) as total_revenue,
-              COALESCE(c.total_commissions, 0) as total_commissions,
-              COALESCE(c.paid_commissions, 0) as paid_commissions
-       FROM partners p
-       LEFT JOIN (
-         SELECT partner_id,
-           COUNT(*) FILTER (WHERE status = 'won') as won_deals,
-           COUNT(*) as total_referrals,
-           COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) as total_revenue
-         FROM referrals GROUP BY partner_id
-       ) r ON p.id = r.partner_id
-       LEFT JOIN (
-         SELECT partner_id,
-           COALESCE(SUM(amount), 0) as total_commissions,
-           COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0) as paid_commissions
-         FROM commissions GROUP BY partner_id
-       ) c ON p.id = c.partner_id
-       WHERE p.is_active = true
-       ORDER BY COALESCE(r.won_deals, 0) DESC, COALESCE(r.total_revenue, 0) DESC`
+      `SELECT
+        p.id, p.name, p.contact_name, p.referral_code,
+        COALESCE(r.won_deals, 0) as won_deals,
+        COALESCE(r.total_referrals, 0) as total_referrals,
+        COALESCE(r.total_revenue, 0) as total_revenue,
+        COALESCE(c.total_commissions, 0) as total_commissions,
+        COALESCE(c.paid_commissions, 0) as paid_commissions
+      FROM partners p
+      LEFT JOIN (
+        SELECT
+          partner_id,
+          COUNT(*) FILTER (WHERE status = 'won') as won_deals,
+          COUNT(*) as total_referrals,
+          COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) as total_revenue
+        FROM referrals
+        GROUP BY partner_id
+      ) r ON p.id = r.partner_id
+      LEFT JOIN (
+        SELECT
+          partner_id,
+          COALESCE(SUM(amount), 0) as total_commissions,
+          COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0) as paid_commissions
+        FROM commissions
+        GROUP BY partner_id
+      ) c ON p.id = c.partner_id
+      ${whereSql}
+      ORDER BY COALESCE(r.won_deals, 0) DESC, COALESCE(r.total_revenue, 0) DESC`,
+      params
     );
 
     const leaderboard = rows.map((p, i) => {

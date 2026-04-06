@@ -27,7 +27,7 @@ async function runSecurityMigrations() {
     ON CONFLICT (slug) DO NOTHING`);
 
   // ═══ ADD tenant_id TO ALL TABLES ═══
-  const tables = ['users', 'partners', 'referrals', 'commissions', 'conversations', 'api_keys'];
+  const tables = ['users', 'partners', 'referrals', 'commissions', 'conversations', 'api_keys', 'partner_applications'];
   for (const table of tables) {
     try {
       await query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id)`);
