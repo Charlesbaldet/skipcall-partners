@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
   const [tab, setTab] = useState('account');
-
   const handleClose = () => navigate(-1);
 
   const NAV = [
@@ -33,36 +32,23 @@ export default function SettingsPage() {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div onClick={handleClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
-      <div className="fade-in" style={{
-        position: 'relative', background: '#fff', borderRadius: 24, width: 920, maxWidth: '100%',
-        height: '85vh', maxHeight: 700, display: 'flex', overflow: 'hidden',
-        boxShadow: '0 25px 80px rgba(0,0,0,0.25)',
-      }}>
+      <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 920, maxWidth: '100%', height: '85vh', maxHeight: 700, display: 'flex', overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
         {/* Left sidebar */}
         <div style={{ width: 220, background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 12px', display: 'flex', flexDirection: 'column' }}>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', padding: '0 12px', marginBottom: 20 }}>Paramètres</h2>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {NAV.map(item => (
               <button key={item.id} onClick={() => setTab(item.id)} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10,
-                border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, textAlign: 'left',
-                background: tab === item.id ? '#fff' : 'transparent',
-                color: tab === item.id ? '#0f172a' : '#64748b',
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, textAlign: 'left',
+                background: tab === item.id ? '#fff' : 'transparent', color: tab === item.id ? '#0f172a' : '#64748b',
                 boxShadow: tab === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              }}>
-                <item.icon size={16} /> {item.label}
-              </button>
+              }}><item.icon size={16} /> {item.label}</button>
             ))}
           </nav>
         </div>
-
         {/* Right content */}
         <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
-          <button onClick={handleClose} style={{
-            position: 'absolute', top: 24, right: 24, width: 36, height: 36, borderRadius: 10, zIndex: 10,
-            background: '#f1f5f9', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <button onClick={handleClose} style={{ position: 'absolute', top: 24, right: 24, width: 36, height: 36, borderRadius: 10, zIndex: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={18} color="#475569" />
           </button>
           <div style={{ padding: '72px 32px 32px 32px' }}>
@@ -89,11 +75,8 @@ function AccountTab({ user }) {
     if (pwForm.newPw.length < 8) { setPwMsg({ type: 'error', text: 'Minimum 8 caractères' }); return; }
     if (pwForm.newPw !== pwForm.confirm) { setPwMsg({ type: 'error', text: 'Les mots de passe ne correspondent pas' }); return; }
     setPwSaving(true); setPwMsg(null);
-    try {
-      await api.changePassword(pwForm.current, pwForm.newPw);
-      setPwMsg({ type: 'success', text: 'Mot de passe mis à jour !' });
-      setPwForm({ current: '', newPw: '', confirm: '' });
-    } catch (err) { setPwMsg({ type: 'error', text: err.message }); }
+    try { await api.changePassword(pwForm.current, pwForm.newPw); setPwMsg({ type: 'success', text: 'Mot de passe mis à jour !' }); setPwForm({ current: '', newPw: '', confirm: '' }); }
+    catch (err) { setPwMsg({ type: 'error', text: err.message }); }
     setPwSaving(false);
   };
 
@@ -113,28 +96,18 @@ function AccountTab({ user }) {
         <Lock size={16} color="#6366f1" />
         <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Changer le mot de passe</h4>
       </div>
-      {pwMsg && (
-        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500,
-          background: pwMsg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: pwMsg.type === 'success' ? '#16a34a' : '#dc2626',
-          border: `1px solid ${pwMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>{pwMsg.text}</div>
-      )}
+      {pwMsg && (<div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500, background: pwMsg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: pwMsg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${pwMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>{pwMsg.text}</div>)}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400 }}>
         <div>
           <label style={labelStyle}>Mot de passe actuel</label>
           <div style={{ position: 'relative' }}>
             <input type={showPw ? 'text' : 'password'} value={pwForm.current} onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))} style={inputStyle} />
-            <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
-              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
+            <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>{showPw ? <EyeOff size={16} /> : <Eye size={16} />}</button>
           </div>
         </div>
         <div><label style={labelStyle}>Nouveau mot de passe</label><input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder="Minimum 8 caractères" style={inputStyle} /></div>
         <div><label style={labelStyle}>Confirmer</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} style={inputStyle} /></div>
-        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{
-          padding: '11px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-          color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content',
-        }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
+        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
       </div>
     </div>
   );
@@ -152,18 +125,17 @@ function MembersTab() {
   const [deleteUserConfirm, setDeleteUserConfirm] = useState(null);
 
   const handleDeleteUser = async (id) => {
-    try { await api.request("/admin/users/" + id, { method: "DELETE" }); setDeleteUserConfirm(null); load(); } catch (err) { alert(err.message); }
+    try { await api.request('/admin/users/' + id, { method: 'DELETE' }); setDeleteUserConfirm(null); load(); }
+    catch (err) { alert(err.message); }
   };
+
   const load = async () => { try { const u = await api.getAdminUsers(); setUsers(u.users); } catch {} setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleInvite = async () => {
     setSending(true); setInviteResult(null);
-    try {
-      const data = await api.inviteUser(inviteForm);
-      setInviteResult({ email: data.email || inviteForm.email, tempPassword: data.tempPassword });
-      setInviteForm({ email: '', full_name: '', role: 'commercial' }); load();
-    } catch (err) { alert(err.message); }
+    try { const data = await api.inviteUser(inviteForm); setInviteResult({ email: data.email || inviteForm.email, tempPassword: data.tempPassword }); setInviteForm({ email: '', full_name: '', role: 'commercial' }); load(); }
+    catch (err) { alert(err.message); }
     setSending(false);
   };
 
@@ -175,12 +147,12 @@ function MembersTab() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Membres</h3>
-        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{
-          display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10,
-          background: showInvite ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-          color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-        }}>{showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? 'Annuler' : 'Ajouter'}</button>
+        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+          {showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? 'Annuler' : 'Ajouter'}
+        </button>
       </div>
+
+      {/* Invite form */}
       {showInvite && (
         <div style={{ background: '#f8fafc', borderRadius: 14, padding: 20, marginBottom: 20, border: '1px solid #e2e8f0' }} className="fade-in">
           {inviteResult ? (
@@ -192,9 +164,7 @@ function MembersTab() {
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Mot de passe provisoire</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <code style={{ background: '#eef2ff', padding: '4px 10px', borderRadius: 6, color: '#6366f1', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
-                    <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 5, padding: 4, cursor: 'pointer', display: 'flex' }}>
-                      {copied ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} color="#6366f1" />}
-                    </button>
+                    <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 5, padding: 4, cursor: 'pointer', display: 'flex' }}>{copied ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} color="#6366f1" />}</button>
                   </div>
                 </div>
               </div>
@@ -218,21 +188,25 @@ function MembersTab() {
           )}
         </div>
       )}
+
+      {/* Delete user confirmation modal */}
       {deleteUserConfirm && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={() => setDeleteUserConfirm(null)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(8px)" }} />
-          <div className="fade-in" style={{ position: "relative", background: "#fff", borderRadius: 24, padding: 32, width: 400, boxShadow: "0 25px 80px rgba(0,0,0,0.25)", textAlign: "center" }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}><Trash2 size={28} color="#dc2626" /></div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Supprimer cet utilisateur ?</h3>
-            <p style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>Cette action est irréversible.</p>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "2px solid #e2e8f0", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Annuler</button>
-              <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "none", background: "linear-gradient(135deg,#dc2626,#b91c1c)", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Trash2 size={16} /> Supprimer</button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={() => setDeleteUserConfirm(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 400, boxShadow: '0 25px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><Trash2 size={28} color="#dc2626" /></div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Supprimer cet utilisateur ?</h3>
+            <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Cette action est irréversible.</p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
+              <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#dc2626,#b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
             </div>
           </div>
         </div>
       )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
+      {/* Users list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {users.map(u => {
           const role = ROLE_CONFIG[u.role];
           return (
@@ -246,8 +220,10 @@ function MembersTab() {
                   <option value="admin">Admin</option><option value="commercial">Membre</option>
                 </select>
                 <button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
-                  <button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: "#fef2f2", border: "none", borderRadius: 6, padding: 5, cursor: "pointer", display: "flex" }}><Trash2 size={14} color="#dc2626" /></button>
                   {u.is_active ? <ToggleRight size={24} color="#16a34a" /> : <ToggleLeft size={24} color="#dc2626" />}
+                </button>
+                <button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex' }}>
+                  <Trash2 size={14} color="#dc2626" />
                 </button>
               </div>
             </div>
@@ -269,25 +245,14 @@ function IntegrationsTab() {
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [deleteUserConfirm, setDeleteUserConfirm] = useState(null);
 
-  const load = async () => {
-    try {
-      const [k, p] = await Promise.all([api.getApiKeys(), api.getPartners()]);
-      setApiKeys(k.apiKeys || []);
-      setPartners(p.partners || []);
-    } catch {} setLoading(false);
-  };
+  const load = async () => { try { const [k, p] = await Promise.all([api.getApiKeys(), api.getPartners()]); setApiKeys(k.apiKeys || []); setPartners(p.partners || []); } catch {} setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async () => {
     setCreating(true);
-    try {
-      const data = await api.createApiKey({ name: keyName, partner_id: partnerId || null });
-      setNewKey(data.apiKey);
-      setKeyName(''); setPartnerId('');
-      load();
-    } catch (err) { alert(err.message); }
+    try { const data = await api.createApiKey({ name: keyName, partner_id: partnerId || null }); setNewKey(data.apiKey); setKeyName(''); setPartnerId(''); load(); }
+    catch (err) { alert(err.message); }
     setCreating(false);
   };
 
@@ -306,107 +271,55 @@ function IntegrationsTab() {
   return (
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>Intégrations</h3>
-
-      {/* CRM cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 28 }}>
         {CRM_CARDS.map(crm => (
-          <div key={crm.name} style={{ padding: 20, borderRadius: 14, border: '1px solid #e2e8f0', background: '#fff', position: 'relative', opacity: 0.7 }}>
+          <div key={crm.name} style={{ padding: 20, borderRadius: 14, border: '1px solid #e2e8f0', background: '#fff', opacity: 0.7 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: crm.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, color: crm.color }}>{crm.name[0]}</div>
-              <div>
-                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{crm.name}</div>
-                {crm.soon && <span style={{ fontSize: 10, fontWeight: 600, color: '#f59e0b', background: '#fffbeb', padding: '2px 6px', borderRadius: 4 }}>Bientôt</span>}
-              </div>
+              <div><div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{crm.name}</div>{crm.soon && <span style={{ fontSize: 10, fontWeight: 600, color: '#f59e0b', background: '#fffbeb', padding: '2px 6px', borderRadius: 4 }}>Bientôt</span>}</div>
             </div>
             <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.5 }}>{crm.desc}</p>
           </div>
         ))}
       </div>
 
-      {/* Open API */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <Key size={16} color="#6366f1" />
-        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Open API</h4>
-      </div>
-      <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>
-        Créez des clés API pour intégrer Skipcall avec vos outils (Zapier, Make, n8n, custom).
-        Documentation : <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>POST /api/v1/referrals</code> · <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>GET /api/v1/referrals</code>
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}><Key size={16} color="#6366f1" /><h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Open API</h4></div>
+      <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>Créez des clés API pour intégrer Skipcall avec vos outils. <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>POST /api/v1/referrals</code> · <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>GET /api/v1/referrals</code></p>
 
-      {/* New key display */}
       {newKey && (
         <div style={{ background: '#fffbeb', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #fde68a' }} className="fade-in">
-          <div style={{ fontWeight: 700, color: '#92400e', fontSize: 13, marginBottom: 8 }}>Copiez cette clé maintenant — elle ne sera plus affichée</div>
+          <div style={{ fontWeight: 700, color: '#92400e', fontSize: 13, marginBottom: 8 }}>Copiez cette clé maintenant</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <code style={{ background: '#fff', padding: '8px 12px', borderRadius: 8, color: '#0f172a', fontWeight: 600, fontSize: 14, fontFamily: 'monospace', flex: 1, wordBreak: 'break-all' }}>{newKey}</code>
-            <button onClick={() => copyToClipboard(newKey)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 8, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>
-              {copied ? <CheckCircle size={16} color="#16a34a" /> : <Copy size={16} color="#6366f1" />}
-            </button>
+            <button onClick={() => copyToClipboard(newKey)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 8, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>{copied ? <CheckCircle size={16} color="#16a34a" /> : <Copy size={16} color="#6366f1" />}</button>
           </div>
         </div>
       )}
 
-      {/* Create key form */}
       {showCreate ? (
         <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Nom de la clé *</label>
-              <input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder="Ex: Zapier Integration" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Lier à un partenaire (optionnel)</label>
-              <select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }}>
-                <option value="">Aucun (accès global)</option>
-                {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </div>
+            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Nom *</label><input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder="Ex: Zapier" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
+            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Partenaire (optionnel)</label><select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }}><option value="">Aucun</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Key size={13} /> {creating ? 'Création...' : 'Générer la clé'}
-            </button>
+            <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? 'Création...' : 'Générer'}</button>
             <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
-          <Key size={14} /> Créer une clé API
-        </button>
+        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> Créer une clé API</button>
       )}
 
-      {/* API keys list */}
       {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>Chargement...</div> : (
-        {deleteUserConfirm && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={() => setDeleteUserConfirm(null)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(8px)" }} />
-          <div className="fade-in" style={{ position: "relative", background: "#fff", borderRadius: 24, padding: 32, width: 400, boxShadow: "0 25px 80px rgba(0,0,0,0.25)", textAlign: "center" }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}><Trash2 size={28} color="#dc2626" /></div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Supprimer cet utilisateur ?</h3>
-            <p style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>Cette action est irréversible.</p>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "2px solid #e2e8f0", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Annuler</button>
-              <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "none", background: "linear-gradient(135deg,#dc2626,#b91c1c)", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Trash2 size={16} /> Supprimer</button>
-            </div>
-          </div>
-        </div>
-      )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {apiKeys.filter(k => k.is_active).map(k => (
             <div key={k.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Key size={16} color="#6366f1" />
-                <div>
-                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{k.name}</div>
-                  <div style={{ color: '#94a3b8', fontSize: 11 }}>
-                    <code>{k.key_prefix}</code> · {k.partner_name || 'Global'} · Créée {fmtDate(k.created_at)}
-                    {k.last_used_at && <> · Dernière utilisation {fmtDate(k.last_used_at)}</>}
-                  </div>
-                </div>
+                <div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{k.name}</div><div style={{ color: '#94a3b8', fontSize: 11 }}><code>{k.key_prefix}</code> · {k.partner_name || 'Global'} · Créée {fmtDate(k.created_at)}{k.last_used_at && <> · Utilisée {fmtDate(k.last_used_at)}</>}</div></div>
               </div>
-              <button onClick={() => handleRevoke(k.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
-                <Trash2 size={14} color="#dc2626" />
-              </button>
+              <button onClick={() => handleRevoke(k.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
             </div>
           ))}
           {apiKeys.filter(k => k.is_active).length === 0 && <div style={{ color: '#94a3b8', fontSize: 13, padding: 16, textAlign: 'center' }}>Aucune clé API active</div>}
