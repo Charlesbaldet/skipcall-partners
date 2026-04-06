@@ -20,7 +20,6 @@ export default function CommissionsPage() {
   const [payModal, setPayModal] = useState(null);
   const [paying, setPaying] = useState(false);
   const [comLimits, setComLimits] = useState({});
-  const [comLimits, setComLimits] = useState({});
 
   const reload = async () => {
     const [s, c] = await Promise.all([api.getCommissionsSummary(), api.getCommissions()]);
