@@ -98,4 +98,25 @@ router.get('/audit-logs', authenticate, requireSuperAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+// ─── Delete tenant (soft delete - deactivate) ───
+router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    // Check tenant has no active users
+    const { rows: users } = await query('SELECT COUNT(*) FROM users WHERE tenant_id = $1 AND is_active = true', [req.params.id]);
+    const activeUsers = parseInt(users[0].count);
+
+    if (req.query.force !== 'true' && activeUsers > 0) {
+      return res.status(400).json({ error: `Ce tenant a encore ${activeUsers} utilisateur(s) actif(s). Ajoutez ?force=true pour forcer.` });
+    }
+
+    // Deactivate tenant (soft delete)
+    await query('UPDATE tenants SET is_active = false, updated_at = NOW() WHERE id = $1', [req.params.id]);
+    // Deactivate all users of this tenant
+    await query('UPDATE users SET is_active = false WHERE tenant_id = $1', [req.params.id]);
+
+    auditLog(req, 'tenant_deleted', 'tenant', req.params.id, { forced: req.query.force === 'true', deactivated_users: activeUsers });
+    res.json({ message: 'Tenant désactivé', deactivated_users: activeUsers });
+  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
 module.exports = router;

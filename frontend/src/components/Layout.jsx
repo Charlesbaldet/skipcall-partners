@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import {
   LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle,
-  LogOut, ChevronLeft, ChevronRight, UserPlus, Settings,
+  LogOut, ChevronLeft, ChevronRight, UserPlus, Settings, Globe, Activity, Shield,
 } from 'lucide-react';
 
 const ADMIN_NAV = [
@@ -14,7 +14,7 @@ const ADMIN_NAV = [
   { to: '/partners', icon: Users, label: 'Partenaires' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
-    { to: '/settings', icon: Settings, label: 'Paramètres' },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 const PARTNER_NAV = [
@@ -23,7 +23,13 @@ const PARTNER_NAV = [
   { to: '/partner/payments', icon: DollarSign, label: 'Mes Paiements' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
-    { to: '/settings', icon: Settings, label: 'Paramètres' },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
+];
+
+const SUPERADMIN_NAV = [
+  { to: '/super-admin', icon: Shield, label: 'Plateforme' },
+  { divider: true },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 export default function Layout({ children }) {
@@ -33,51 +39,48 @@ export default function Layout({ children }) {
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
 
-  const nav = user?.role === 'partner' ? PARTNER_NAV : ADMIN_NAV;
+  const isSuperAdmin = user?.role === 'superadmin';
   const isAdmin = user?.role === 'admin';
+  const nav = isSuperAdmin ? SUPERADMIN_NAV : user?.role === 'partner' ? PARTNER_NAV : ADMIN_NAV;
 
-  // Fetch notification counts
+  // Fetch notification counts (skip for superadmin)
   useEffect(() => {
+    if (isSuperAdmin) return;
     const fetchCounts = async () => {
-      try {
-        const msgData = await api.getUnreadCount();
-        setUnread(msgData.count || 0);
-      } catch (e) {}
-
+      try { const msgData = await api.getUnreadCount(); setUnread(msgData.count || 0); } catch (e) {}
       if (isAdmin) {
-        try {
-          const appData = await api.getApplications('pending');
-          setPendingApps((appData.applications || []).length);
-        } catch (e) {}
+        try { const appData = await api.getApplications('pending'); setPendingApps((appData.applications || []).length); } catch (e) {}
       }
     };
-
     fetchCounts();
     const interval = setInterval(fetchCounts, 30000);
     return () => clearInterval(interval);
-  }, [isAdmin]);
+  }, [isAdmin, isSuperAdmin]);
 
-  // Update document title with notification count
   useEffect(() => {
+    if (isSuperAdmin) { document.title = 'Skipcall - Super Admin'; return; }
     const total = unread + pendingApps;
     document.title = total > 0 ? `(${total}) Skipcall - Programme Partenaires` : 'Skipcall - Programme Partenaires';
-  }, [unread, pendingApps]);
+  }, [unread, pendingApps, isSuperAdmin]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const s = {
     sidebar: {
       width: collapsed ? 68 : 200, minWidth: collapsed ? 68 : 200,
-      background: '#0f172a', color: '#fff', display: 'flex', flexDirection: 'column',
-      transition: 'all 0.2s ease', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50,
+      background: isSuperAdmin ? '#1a1a2e' : '#0f172a',
+      color: '#fff', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease',
+      height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50,
     },
     link: {
-      display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px',
-      borderRadius: 10, color: '#94a3b8', textDecoration: 'none', fontSize: 14,
-      fontWeight: 500, transition: 'all 0.15s', margin: '2px 8px',
+      display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderRadius: 10,
+      color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 500,
+      transition: 'all 0.15s', margin: '2px 8px',
     },
     activeLink: {
-      background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))',
+      background: isSuperAdmin
+        ? 'linear-gradient(135deg, rgba(220,38,38,0.2), rgba(239,68,68,0.15))'
+        : 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))',
       color: '#fff',
     },
   };
@@ -95,12 +98,18 @@ export default function Layout({ children }) {
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 11, flexShrink: 0,
-            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+            background: isSuperAdmin ? 'linear-gradient(135deg, #dc2626, #ef4444)' : 'linear-gradient(135deg, #6366f1, #a855f7)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 800, color: '#fff',
-            boxShadow: '0 0 20px rgba(99,102,241,0.3)',
-          }}>S</div>
-          {!collapsed && <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.5 }}>Skipcall</span>}
+            boxShadow: isSuperAdmin ? '0 0 20px rgba(220,38,38,0.3)' : '0 0 20px rgba(99,102,241,0.3)',
+          }}>
+            {isSuperAdmin ? <Shield size={18} /> : 'S'}
+          </div>
+          {!collapsed && (
+            <span style={{ fontSize: isSuperAdmin ? 16 : 20, fontWeight: 700, letterSpacing: -0.5 }}>
+              {isSuperAdmin ? 'Super Admin' : 'Skipcall'}
+            </span>
+          )}
         </div>
 
         {/* Nav */}
@@ -110,16 +119,12 @@ export default function Layout({ children }) {
             if (item.to === '/applications' && !isAdmin) return null;
             const badge = getBadge(item);
             return (
-              <NavLink key={item.to} to={item.to}
-                style={({ isActive }) => ({ ...s.link, ...(isActive ? s.activeLink : {}) })}
-              >
+              <NavLink key={item.to} to={item.to} end={item.to === '/super-admin'}
+                style={({ isActive }) => ({ ...s.link, ...(isActive ? s.activeLink : {}) })}>
                 <item.icon size={18} style={{ flexShrink: 0 }} />
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
                 {!collapsed && badge > 0 && (
-                  <span style={{
-                    background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700,
-                    padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center',
-                  }}>{badge}</span>
+                  <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{badge}</span>
                 )}
               </NavLink>
             );
@@ -128,10 +133,8 @@ export default function Layout({ children }) {
 
         {/* Collapse toggle */}
         <button onClick={() => setCollapsed(!collapsed)} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          padding: '10px', margin: '4px 8px', borderRadius: 8,
-          background: 'rgba(255,255,255,0.04)', border: 'none',
-          color: '#64748b', cursor: 'pointer', fontSize: 13,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', margin: '4px 8px',
+          borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 13,
         }}>
           {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> <span>Réduire</span></>}
         </button>
@@ -141,9 +144,8 @@ export default function Layout({ children }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-              background: user?.role === 'admin' ? '#6366f1' : user?.role === 'commercial' ? '#0891b2' : '#8b5cf6',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 700, fontSize: 14,
+              background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? '#6366f1' : user?.role === 'commercial' ? '#0891b2' : '#8b5cf6',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14,
             }}>
               {user?.fullName?.charAt(0) || '?'}
             </div>
@@ -155,21 +157,14 @@ export default function Layout({ children }) {
                 <div style={{ color: '#64748b', fontSize: 11, textTransform: 'capitalize' }}>{user?.role}</div>
               </div>
             )}
-            <button onClick={handleLogout} title="Déconnexion" style={{
-              background: 'transparent', border: 'none', color: '#64748b',
-              cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex',
-            }}>
+            <button onClick={handleLogout} title="Déconnexion" style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex' }}>
               <LogOut size={16} />
             </button>
           </div>
         </div>
       </aside>
 
-      <main style={{
-        flex: 1, marginLeft: collapsed ? 68 : 200,
-        padding: '32px 40px', transition: 'margin-left 0.2s ease',
-        minHeight: '100vh', overflow: 'hidden',
-      }}>
+      <main style={{ flex: 1, marginLeft: collapsed ? 68 : 200, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
         {children}
       </main>
     </div>
