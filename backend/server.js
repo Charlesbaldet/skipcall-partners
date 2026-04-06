@@ -17,6 +17,10 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const trackingRoutes = require('./routes/tracking');
 const { startNotificationWorker } = require('./services/emailService');
 const { runMigrations } = require('./db/migrate');
+const { runSecurityMigrations } = require('./db/migrate-security');
+const { tenantMiddleware } = require('./middleware/tenant');
+const { securityHeaders, rateLimit, cleanupOldData } = require('./middleware/security');
+const tenantRoutes = require('./routes/tenants');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -55,6 +59,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/v1', openapiRoutes);
+app.use('/api/tenants', tenantRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/track', trackingRoutes);
 
