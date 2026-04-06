@@ -20,13 +20,6 @@ router.get('/', async (req, res) => {
     let params = [];
     let i = 1;
 
-    // Tenant isolation - filter by tenant
-    if (req.user.tenantId) {
-      where.push(`p.tenant_id = $${i++}`);
-      params.push(req.user.tenantId);
-    }
-
-
     // Partners can only see their own referrals
     if (req.partnerScope) {
       where.push(`r.partner_id = $${i++}`);
