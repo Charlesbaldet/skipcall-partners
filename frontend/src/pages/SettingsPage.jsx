@@ -65,7 +65,7 @@ export default function SettingsPage() {
           }}>
             <X size={18} color="#475569" />
           </button>
-          <div style={{ padding: '32px 32px 32px 32px', paddingRight: 64 }}>
+          <div style={{ padding: '56px 32px 32px 32px' }}>
             {tab === 'account' && <AccountTab user={user} />}
             {tab === 'members' && isAdmin && <MembersTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}

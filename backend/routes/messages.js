@@ -14,7 +14,7 @@ router.get('/conversations', async (req, res) => {
       `SELECT c.*, 
         cp_me.last_read_at,
         u.full_name as created_by_name,
-        p.name as partner_name,
+        (SELECT p2.name FROM conversation_participants cp2 JOIN users u3 ON cp2.user_id = u3.id JOIN partners p2 ON u3.partner_id = p2.id WHERE cp2.conversation_id = c.id LIMIT 1) as partner_name,
         (SELECT content FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) as last_message,
         (SELECT u2.full_name FROM messages m JOIN users u2 ON m.sender_id = u2.id WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) as last_message_by,
         (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.created_at > cp_me.last_read_at AND m.sender_id != $1) as unread_count
