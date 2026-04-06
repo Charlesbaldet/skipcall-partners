@@ -106,16 +106,16 @@ export default function ReferralsPage() {
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {/* View toggle */}
           <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-            <button onClick={() => setViewMode('table')} style={{
-              padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-              background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8',
-              fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}><List size={14} /> Table</button>
             <button onClick={() => setViewMode('kanban')} style={{
               padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
               background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8',
               fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
             }}><LayoutGrid size={14} /> Kanban</button>
+            <button onClick={() => setViewMode('table')} style={{
+              padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+              background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8',
+              fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            }}><List size={14} /> Table</button>
           </div>
 
           <Select value={filters.status} onChange={v => setFilters(f => ({ ...f, status: v }))}>
@@ -165,6 +165,7 @@ export default function ReferralsPage() {
         </div>
       ) : (
         /* KANBAN VIEW */
+        <div style={{ overflow: 'hidden', borderRadius: 16 }}>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 180px)', minHeight: 400 }}>
           {KANBAN_STATUSES.map(status => {
             const sc = STATUS_CONFIG[status];
@@ -233,6 +234,7 @@ export default function ReferralsPage() {
               </div>
             );
           })}
+        </div>
         </div>
       )}
 

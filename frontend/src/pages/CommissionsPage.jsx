@@ -19,6 +19,8 @@ export default function CommissionsPage() {
   const [viewMode, setViewMode] = useState('kanban');
   const [payModal, setPayModal] = useState(null);
   const [paying, setPaying] = useState(false);
+  const [comLimits, setComLimits] = useState({});
+  const [comLimits, setComLimits] = useState({});
 
   const reload = async () => {
     const [s, c] = await Promise.all([api.getCommissionsSummary(), api.getCommissions()]);
@@ -140,7 +142,10 @@ export default function CommissionsPage() {
       {tab === 'detail' && viewMode === 'kanban' && (
         <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 400 }}>
           {Object.entries(COM_STATUS).map(([status, sc]) => {
-            const cards = commissions.filter(c => c.status === status);
+            const allCards = commissions.filter(c => c.status === status);
+            const limit = comLimits[status] || 25;
+            const cards = allCards.slice(0, limit);
+            const hasMore = allCards.length > limit;
             return (
               <div key={status} style={{ flex: 1, background: '#f8fafc', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
@@ -149,8 +154,8 @@ export default function CommissionsPage() {
                     <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>{fmt(cards.reduce((s, c) => s + parseFloat(c.amount), 0))}</span>
-                    <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{cards.length}</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>{fmt(allCards.reduce((s, c) => s + parseFloat(c.amount), 0))}</span>
+                    <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
                   </div>
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
@@ -180,6 +185,12 @@ export default function CommissionsPage() {
                     </div>
                   ))}
                   {cards.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: '#cbd5e1', fontSize: 13 }}>Aucune commission</div>}
+                  {hasMore && (
+                    <button onClick={() => setComLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
+                      padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
+                      color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
+                    }}>Voir plus ({allCards.length - limit} restants)</button>
+                  )}
                 </div>
               </div>
             );
