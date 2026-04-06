@@ -35,7 +35,7 @@ router.post('/invite', [
     if (existing.length > 0) return res.status(409).json({ error: 'Un utilisateur avec cet email existe déjà' });
     const tempPassword = crypto.randomBytes(4).toString('hex') + '!A1';
     const hash = await bcrypt.hash(tempPassword, 12);
-    await query('INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4)', [email, hash, full_name, role]);
+    await query('INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, $4, $5)', [email, hash, full_name, role, req.user.tenantId]);
     res.status(201).json({ message: 'Utilisateur créé', tempPassword, email });
   } catch (err) { console.error('Invite error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
 });
