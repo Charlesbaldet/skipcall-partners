@@ -111,6 +111,10 @@ async function runSecurityMigrations() {
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ`);
   } catch (err) {}
 
+  // Fix role constraint to allow superadmin
+    await query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check").catch(() => {});
+    await query("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','commercial','partner','superadmin'))").catch(() => {});
+  
   // Promote admin to superadmin
   await query("UPDATE users SET role = 'superadmin' WHERE email IN ('c.baldet@hotmail.fr', 'admin@skipcall.com')").catch(() => {});
   console.log('✅ Security & multi-tenant migrations complete');
