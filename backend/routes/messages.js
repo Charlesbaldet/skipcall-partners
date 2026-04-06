@@ -233,3 +233,32 @@ router.get('/users', async (req, res) => {
 });
 
 module.exports = router;
+
+// ─── Delete conversation ───
+router.delete('/conversations/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM messages WHERE conversation_id = $1', [req.params.id]);
+    await query('DELETE FROM conversation_participants WHERE conversation_id = $1', [req.params.id]);
+    await query('DELETE FROM conversations WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Conversation supprimée' });
+  } catch (err) { console.error('Delete conv error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// ─── Cleanup old messages (>10 messages, older than 30 days) ───
+router.post('/cleanup', async (req, res) => {
+  try {
+    const { rowCount } = await query(`
+      DELETE FROM messages WHERE id IN (
+        SELECT m.id FROM messages m
+        JOIN (SELECT conversation_id, COUNT(*) as cnt FROM messages GROUP BY conversation_id HAVING COUNT(*) > 10) c
+        ON m.conversation_id = c.conversation_id
+        WHERE m.created_at < NOW() - INTERVAL '30 days'
+        AND m.id NOT IN (
+          SELECT id FROM messages m2 WHERE m2.conversation_id = m.conversation_id
+          ORDER BY m2.created_at DESC LIMIT 10
+        )
+      )
+    `);
+    res.json({ deleted: rowCount });
+  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+});

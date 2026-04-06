@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
 import { fmt, STATUS_CONFIG, LEVEL_CONFIG } from '../lib/constants';
@@ -157,9 +157,15 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="total" name="Total" fill="#6366f1" radius={[4,4,0,0]} />
-              <Bar dataKey="won" name="Gagnés" fill="#16a34a" radius={[4,4,0,0]} />
-              <Bar dataKey="lost" name="Perdus" fill="#dc2626" radius={[4,4,0,0]} />
+              <Bar dataKey="total" name="Total" fill="#6366f1" radius={[4,4,0,0]}>
+                <LabelList dataKey="total" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#6366f1' }} />
+              </Bar>
+              <Bar dataKey="won" name="Gagnés" fill="#16a34a" radius={[4,4,0,0]}>
+                <LabelList dataKey="won" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#16a34a' }} />
+              </Bar>
+              <Bar dataKey="lost" name="Perdus" fill="#dc2626" radius={[4,4,0,0]}>
+                <LabelList dataKey="lost" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#dc2626' }} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -167,7 +173,12 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
         <ChartCard title="Pipeline par statut">
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
-              <Pie data={pipelineData} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3}>
+              <Pie data={pipelineData} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3}
+                label={({ name, count, cx, cy, midAngle, outerRadius }) => {
+                  const x = cx + (outerRadius + 20) * Math.cos(-midAngle * Math.PI / 180);
+                  const y = cy + (outerRadius + 20) * Math.sin(-midAngle * Math.PI / 180);
+                  return count > 0 ? <text x={x} y={y} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600, fill: '#334155' }}>{name} ({count})</text> : null;
+                }}>
                 {pipelineData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Pie>
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} />
