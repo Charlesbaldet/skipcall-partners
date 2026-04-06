@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { query } = require('../db');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { auditLog } = require('../middleware/security');
 const { getTenantConfig, clearTenantCache } = require('../middleware/tenant');
 
@@ -11,7 +11,7 @@ router.get('/config', (req, res) => {
 });
 
 // ─── Admin: List all tenants ───
-router.get('/', auth, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
   try {
     const { rows } = await query('SELECT * FROM tenants ORDER BY created_at ASC');
@@ -22,7 +22,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // ─── Admin: Create tenant ───
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
   const { name, slug, domain, primary_color, secondary_color, logo_url } = req.body;
   if (!name || !slug) return res.status(400).json({ error: 'Nom et slug requis' });
@@ -43,7 +43,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // ─── Admin: Update tenant ───
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
   const { name, domain, primary_color, secondary_color, accent_color, logo_url, settings } = req.body;
 
@@ -64,7 +64,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // ─── Admin: Get audit logs ───
-router.get('/audit-logs', auth, async (req, res) => {
+router.get('/audit-logs', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
   const limit = Math.min(parseInt(req.query.limit) || 50, 200);
   const offset = parseInt(req.query.offset) || 0;
