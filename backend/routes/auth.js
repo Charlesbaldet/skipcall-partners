@@ -176,4 +176,37 @@ router.post('/setup-password', async (req, res) => {
   }
 });
 
+
+// ─── SIGNUP - Create new tenant + admin user ───
+router.post('/signup', [
+  body('company').trim().notEmpty(),
+  body('fullName').trim().notEmpty(),
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 10 }),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+    const { company, fullName, email, password, phone } = req.body;
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      return res.status(400).json({ error: 'Mot de passe: majuscule, minuscule, chiffre et caractere special requis.' });
+    }
+    const { rows: existing } = await query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.length > 0) return res.status(409).json({ error: 'Un compte avec cet email existe deja.' });
+    const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+    const { rows: [tenant] } = await query(
+      "INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color) VALUES ($1, $2, '#6366f1', '#0f172a', '#f97316') RETURNING id",
+      [company, slug]
+    );
+    const hash = await bcrypt.hash(password, 12);
+    const { rows: [user] } = await query(
+      "INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, 'admin', $4) RETURNING id, email, full_name, role, tenant_id",
+      [email, hash, fullName, tenant.id]
+    );
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, tenantId: tenant.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    try { await query("INSERT INTO audit_logs (user_id, tenant_id, action, resource_type, resource_id, details) VALUES ($1, $2, 'signup', 'tenant', $3, $4)", [user.id, tenant.id, tenant.id, JSON.stringify({ company, email })]); } catch(e) {}
+    res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, tenantId: tenant.id } });
+  } catch (err) { console.error('Signup error:', err); res.status(500).json({ error: 'Erreur lors de la creation du compte.' }); }
+});
+
 module.exports = router;

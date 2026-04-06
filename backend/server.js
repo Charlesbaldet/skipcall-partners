@@ -60,6 +60,16 @@ app.use('/api/auth/', authLimiter);
 app.use('/api/', tenantMiddleware);
 
 // ─── Routes ───
+
+// ─── Analytics tracking (no auth) ───
+app.post('/api/analytics/track', (req, res) => {
+  const { event, url, ref, depth, label } = req.body;
+  if (!event) return res.status(400).json({ error: 'event required' });
+  console.log('[ANALYTICS]', new Date().toISOString(), event, url || '', label ? 'label=' + label : '', depth ? 'depth=' + depth + '%' : '');
+  try { query("INSERT INTO analytics_events (event, url, referrer, user_agent, metadata, created_at) VALUES ($1, $2, $3, $4, $5, NOW())", [event, url, ref, req.body.ua, JSON.stringify({ depth, label, ts: req.body.ts })]).catch(() => {}); } catch(e) {}
+  res.json({ ok: true });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/referrals', referralRoutes);
