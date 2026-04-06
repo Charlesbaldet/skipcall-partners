@@ -152,7 +152,7 @@ export default function SignupPage() {
             <p style={{ color:C.m,fontSize:14,margin:'0 0 32px',fontFamily:"'DM Sans',sans-serif" }}>
               Votre espace <strong>{form.company}</strong> est prêt.<br/>Vous êtes l'administrateur.
             </p>
-            <button onClick={()=>navigate('/dashboard')}
+            <button onClick={()=>{ window.location.href = '/dashboard'; }}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
               Accéder à mon tableau de bord →
             </button>
