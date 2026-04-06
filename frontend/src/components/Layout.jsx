@@ -14,7 +14,6 @@ const ADMIN_NAV = [
   { to: '/partners', icon: Users, label: 'Partenaires' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
-  { to: '/super-admin', icon: 'Shield', label: 'Super Admin', roles: ['superadmin'] },
     { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
@@ -24,7 +23,6 @@ const PARTNER_NAV = [
   { to: '/partner/payments', icon: DollarSign, label: 'Mes Paiements' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
-  { to: '/super-admin', icon: 'Shield', label: 'Super Admin', roles: ['superadmin'] },
     { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 

@@ -112,7 +112,7 @@ async function runSecurityMigrations() {
   } catch (err) {}
 
   // Promote admin to superadmin
-  await query("UPDATE users SET role = 'superadmin' WHERE email = 'c.baldet@hotmail.fr'").catch(() => {});
+  await query("UPDATE users SET role = 'superadmin' WHERE email IN ('c.baldet@hotmail.fr', 'admin@skipcall.com')").catch(() => {});
   console.log('✅ Security & multi-tenant migrations complete');
 }
 
