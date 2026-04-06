@@ -5,6 +5,7 @@ const { authenticate, partnerScope, tenantScope } = require('../middleware/auth'
 
 const router = express.Router();
 router.use(authenticate);
+router.use(tenantScope);
 router.use(partnerScope);
 
 // ─── List conversations for current user ───
