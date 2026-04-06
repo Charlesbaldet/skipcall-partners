@@ -4,7 +4,7 @@ import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import {
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
-  CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Palette, Plus,
+  CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -26,7 +26,6 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { id: 'members', icon: Users, label: 'Membres' },
       { id: 'integrations', icon: Plug, label: 'Intégrations' },
-      { id: 'tenants', icon: Globe, label: 'Tenants' },
     ] : []),
   ];
 
@@ -56,7 +55,6 @@ export default function SettingsPage() {
             {tab === 'account' && <AccountTab user={user} />}
             {tab === 'members' && isAdmin && <MembersTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
-            {tab === 'tenants' && isAdmin && <TenantsTab />}
           </div>
         </div>
       </div>
@@ -331,138 +329,3 @@ function IntegrationsTab() {
   );
 }
 
-// ═══ TENANTS (Super Admin) ═══
-function TenantsTab() {
-  const [tenants, setTenants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', slug: '', domain: '', primary_color: '#6366f1', secondary_color: '#8b5cf6', logo_url: '' });
-  const [saving, setSaving] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-
-  const load = async () => {
-    try { const d = await api.request('/tenants'); setTenants(d.tenants || []); } catch (e) { console.error(e); }
-    setLoading(false);
-  };
-  useEffect(() => { load(); }, []);
-
-  const handleCreate = async () => {
-    if (!form.name || !form.slug) return;
-    setSaving(true);
-    try {
-      await api.request('/tenants', { method: 'POST', body: JSON.stringify(form), headers: { 'Content-Type': 'application/json' } });
-      setShowCreate(false); setForm({ name: '', slug: '', domain: '', primary_color: '#6366f1', secondary_color: '#8b5cf6', logo_url: '' }); load();
-    } catch (e) { alert(e.message); }
-    setSaving(false);
-  };
-
-  const startEdit = (t) => { setEditingId(t.id); setEditForm({ name: t.name, domain: t.domain || '', primary_color: t.primary_color, secondary_color: t.secondary_color, accent_color: t.accent_color || '#f59e0b', logo_url: t.logo_url || '' }); };
-
-  const saveEdit = async () => {
-    try {
-      await api.request('/tenants/' + editingId, { method: 'PUT', body: JSON.stringify(editForm), headers: { 'Content-Type': 'application/json' } });
-      setEditingId(null); load();
-    } catch (e) { alert(e.message); }
-  };
-
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
-
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div>
-          <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Tenants</h3>
-          <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Gérez vos clients en white-label</p>
-        </div>
-        <button onClick={() => setShowCreate(!showCreate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showCreate ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: showCreate ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-          {showCreate ? <X size={14} /> : <Plus size={14} />} {showCreate ? 'Annuler' : 'Nouveau tenant'}
-        </button>
-      </div>
-
-      {/* Create form */}
-      {showCreate && (
-        <div style={{ background: '#f8fafc', borderRadius: 14, padding: 20, marginBottom: 20, border: '1px solid #e2e8f0' }} className="fade-in">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Nom *</label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Mon Client SaaS" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Slug *</label><input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} placeholder="mon-client" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box', fontFamily: 'monospace' }} /></div>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Domaine</label><input value={form.domain} onChange={e => setForm(f => ({ ...f, domain: e.target.value }))} placeholder="app.monclient.com" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>URL Logo</label><input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://..." style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Couleur primaire</label><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer' }} /><code style={{ fontSize: 12, color: '#64748b' }}>{form.primary_color}</code></div></div>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Couleur secondaire</label><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="color" value={form.secondary_color} onChange={e => setForm(f => ({ ...f, secondary_color: e.target.value }))} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer' }} /><code style={{ fontSize: 12, color: '#64748b' }}>{form.secondary_color}</code></div></div>
-          </div>
-          <button onClick={handleCreate} disabled={saving || !form.name || !form.slug} style={{ padding: '10px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Création...' : 'Créer le tenant'}</button>
-        </div>
-      )}
-
-      {/* Edit modal */}
-      {editingId && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div onClick={() => setEditingId(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
-          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 520, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0f172a' }}>Modifier le tenant</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Nom</label><input value={editForm.name || ''} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
-              <div><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Domaine</label><input value={editForm.domain || ''} onChange={e => setEditForm(f => ({ ...f, domain: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
-              <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>URL Logo</label><input value={editForm.logo_url || ''} onChange={e => setEditForm(f => ({ ...f, logo_url: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
-            </div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
-              <div><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Primaire</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm.primary_color || '#6366f1'} onChange={e => setEditForm(f => ({ ...f, primary_color: e.target.value }))} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm.primary_color}</code></div></div>
-              <div><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Secondaire</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm.secondary_color || '#8b5cf6'} onChange={e => setEditForm(f => ({ ...f, secondary_color: e.target.value }))} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm.secondary_color}</code></div></div>
-              <div><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Accent</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm.accent_color || '#f59e0b'} onChange={e => setEditForm(f => ({ ...f, accent_color: e.target.value }))} style={{ width: 36, height: 36, border: 'none', borderRadius: 8, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm.accent_color}</code></div></div>
-            </div>
-            {/* Preview */}
-            <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>Aperçu</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: editForm.primary_color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18 }}>{(editForm.name || 'T')[0]}</div>
-                <div><div style={{ fontWeight: 700, color: '#0f172a' }}>{editForm.name || 'Tenant'}</div><div style={{ fontSize: 12, color: '#94a3b8' }}>{editForm.domain || 'aucun domaine'}</div></div>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 4, background: editForm.primary_color }} title="Primaire" />
-                  <div style={{ width: 20, height: 20, borderRadius: 4, background: editForm.secondary_color }} title="Secondaire" />
-                  <div style={{ width: 20, height: 20, borderRadius: 4, background: editForm.accent_color }} title="Accent" />
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
-              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tenants list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {tenants.map(t => (
-          <div key={t.id} onClick={() => startEdit(t)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#c7d2fe'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: t.primary_color || '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18 }}>
-                {t.logo_url ? <img src={t.logo_url} alt="" style={{ width: 24, height: 24, borderRadius: 4 }} /> : t.name[0]}
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{t.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                  <code style={{ fontSize: 11, color: '#6366f1', background: '#eef2ff', padding: '1px 6px', borderRadius: 4 }}>{t.slug}</code>
-                  {t.domain && <span style={{ fontSize: 12, color: '#64748b' }}>{t.domain}</span>}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ display: 'flex', gap: 3 }}>
-                <div style={{ width: 16, height: 16, borderRadius: 3, background: t.primary_color || '#6366f1' }} />
-                <div style={{ width: 16, height: 16, borderRadius: 3, background: t.secondary_color || '#8b5cf6' }} />
-                <div style={{ width: 16, height: 16, borderRadius: 3, background: t.accent_color || '#f59e0b' }} />
-              </div>
-              <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: t.is_active ? '#f0fdf4' : '#fef2f2', color: t.is_active ? '#16a34a' : '#dc2626' }}>{t.is_active ? 'Actif' : 'Inactif'}</span>
-            </div>
-          </div>
-        ))}
-        {tenants.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>Aucun tenant configuré</div>}
-      </div>
-    </div>
-  );
-}

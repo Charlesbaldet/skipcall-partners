@@ -15,6 +15,7 @@ import LandingPage from './pages/LandingPage.jsx';
 import PublicApplyPage from './pages/PublicApplyPage.jsx';
 import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
 import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
+import SuperAdminPage from './pages/SuperAdminPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
 
@@ -45,6 +46,7 @@ function AppRoutes() {
       <Route path="/commissions" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><CommissionsPage /></Layout></ProtectedRoute>} />
       <Route path="/partners" element={<ProtectedRoute allowedRoles={['admin', 'commercial']}><Layout><PartnersPage /></Layout></ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminApplicationsPage /></Layout></ProtectedRoute>} />
+      <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout><SuperAdminPage /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
       <Route path="/messaging" element={<ProtectedRoute><Layout><MessagingPage /></Layout></ProtectedRoute>} />
 

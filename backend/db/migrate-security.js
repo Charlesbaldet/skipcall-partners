@@ -111,6 +111,8 @@ async function runSecurityMigrations() {
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ`);
   } catch (err) {}
 
+  // Promote admin to superadmin
+  await query("UPDATE users SET role = 'superadmin' WHERE email = 'c.baldet@hotmail.fr'").catch(() => {});
   console.log('✅ Security & multi-tenant migrations complete');
 }
 

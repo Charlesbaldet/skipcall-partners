@@ -17,6 +17,7 @@ const openapiRoutes = require('./routes/openapi');
 const leaderboardRoutes = require('./routes/leaderboard');
 const trackingRoutes = require('./routes/tracking');
 const tenantRoutes = require('./routes/tenants');
+const superadminRoutes = require('./routes/superadmin');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -71,6 +72,7 @@ app.use('/api/v1', openapiRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/track', trackingRoutes);
 app.use('/api/tenants', tenantRoutes);
+app.use('/api/super-admin', superadminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
