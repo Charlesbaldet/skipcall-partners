@@ -149,7 +149,11 @@ function MembersTab() {
   const [sending, setSending] = useState(false);
   const [inviteResult, setInviteResult] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [deleteUserConfirm, setDeleteUserConfirm] = useState(null);
 
+  const handleDeleteUser = async (id) => {
+    try { await api.request("/admin/users/" + id, { method: "DELETE" }); setDeleteUserConfirm(null); load(); } catch (err) { alert(err.message); }
+  };
   const load = async () => { try { const u = await api.getAdminUsers(); setUsers(u.users); } catch {} setLoading(false); };
   useEffect(() => { load(); }, []);
 
@@ -214,7 +218,21 @@ function MembersTab() {
           )}
         </div>
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {deleteUserConfirm && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div onClick={() => setDeleteUserConfirm(null)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(8px)" }} />
+          <div className="fade-in" style={{ position: "relative", background: "#fff", borderRadius: 24, padding: 32, width: 400, boxShadow: "0 25px 80px rgba(0,0,0,0.25)", textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}><Trash2 size={28} color="#dc2626" /></div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Supprimer cet utilisateur ?</h3>
+            <p style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>Cette action est irréversible.</p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "2px solid #e2e8f0", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Annuler</button>
+              <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "none", background: "linear-gradient(135deg,#dc2626,#b91c1c)", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Trash2 size={16} /> Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {users.map(u => {
           const role = ROLE_CONFIG[u.role];
           return (
@@ -228,7 +246,8 @@ function MembersTab() {
                   <option value="admin">Admin</option><option value="commercial">Membre</option>
                 </select>
                 <button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
-                  {u.is_active ? <ToggleRight size={18} color="#16a34a" /> : <ToggleLeft size={18} color="#dc2626" />}
+                  <button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: "#fef2f2", border: "none", borderRadius: 6, padding: 5, cursor: "pointer", display: "flex" }}><Trash2 size={14} color="#dc2626" /></button>
+                  {u.is_active ? <ToggleRight size={24} color="#16a34a" /> : <ToggleLeft size={24} color="#dc2626" />}
                 </button>
               </div>
             </div>
@@ -250,6 +269,7 @@ function IntegrationsTab() {
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [deleteUserConfirm, setDeleteUserConfirm] = useState(null);
 
   const load = async () => {
     try {
@@ -357,7 +377,21 @@ function IntegrationsTab() {
 
       {/* API keys list */}
       {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>Chargement...</div> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {deleteUserConfirm && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div onClick={() => setDeleteUserConfirm(null)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(8px)" }} />
+          <div className="fade-in" style={{ position: "relative", background: "#fff", borderRadius: 24, padding: 32, width: 400, boxShadow: "0 25px 80px rgba(0,0,0,0.25)", textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}><Trash2 size={28} color="#dc2626" /></div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Supprimer cet utilisateur ?</h3>
+            <p style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>Cette action est irréversible.</p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "2px solid #e2e8f0", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Annuler</button>
+              <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: "none", background: "linear-gradient(135deg,#dc2626,#b91c1c)", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Trash2 size={16} /> Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {apiKeys.filter(k => k.is_active).map(k => (
             <div key={k.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

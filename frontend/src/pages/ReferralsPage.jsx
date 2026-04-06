@@ -138,7 +138,7 @@ export default function ReferralsPage() {
             <thead>
               <tr style={{ background: '#f8fafc' }}>
                 {['Prospect', 'Partenaire', 'Niveau', 'Statut', 'Valeur', 'Date', ''].map((h, i) => (
-                  <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                  <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                 ))}
               </tr>
             </thead>

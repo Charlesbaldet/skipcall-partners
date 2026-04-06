@@ -110,4 +110,10 @@ router.delete('/api-keys/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-module.exports = router;
+router.delete("/users/:id", async (req, res) => {
+  try {
+    if (req.params.id === req.user.id) return res.status(400).json({ error: "Impossible de supprimer votre propre compte" });
+    await query("DELETE FROM users WHERE id = $1 AND role IN ('admin', 'commercial')", [req.params.id]);
+    res.json({ message: "Utilisateur supprimé" });
+  } catch (err) { res.status(500).json({ error: "Erreur serveur" }); }
+});module.exports = router;
