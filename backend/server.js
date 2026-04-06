@@ -13,7 +13,10 @@ const messageRoutes = require('./routes/messages');
 const applicationRoutes = require('./routes/applications');
 const adminRoutes = require('./routes/admin');
 const openapiRoutes = require('./routes/openapi');
+const leaderboardRoutes = require('./routes/leaderboard');
+const trackingRoutes = require('./routes/tracking');
 const { startNotificationWorker } = require('./services/emailService');
+const { runMigrations } = require('./db/migrate');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -52,6 +55,8 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/v1', openapiRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/track', trackingRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -70,6 +75,7 @@ app.use((err, req, res, next) => {
 
 // ─── Start ───
 app.listen(PORT, () => {
+  runMigrations();
   console.log(`🚀 Skipcall API running on port ${PORT}`);
   
   // Start email notification worker (checks queue every 30s)

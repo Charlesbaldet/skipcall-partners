@@ -83,6 +83,9 @@ class ApiClient {
   getApiKeys() { return this.request('/admin/api-keys'); }
   createApiKey(data) { return this.request('/admin/api-keys', { method: 'POST', body: JSON.stringify(data) }); }
   revokeApiKey(id) { return this.request('/admin/api-keys/' + id, { method: 'DELETE' }); }
+
+  // Leaderboard
+  getLeaderboard() { return this.request('/leaderboard'); }
 }
 
 export const api = new ApiClient();

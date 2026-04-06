@@ -32,6 +32,7 @@ function AppRoutes() {
     <Routes>
       {/* Public pages */}
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : '/dashboard'} /> : <LandingPage />} />
+      <Route path="/ref/:code" element={<PublicTrackingPage />} />
       <Route path="/apply" element={<PublicApplyPage />} />
       <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
       <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : '/dashboard'} /> : <LoginPage />} />

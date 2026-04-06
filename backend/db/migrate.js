@@ -1,4 +1,5 @@
 const { query } = require('../db');
+const crypto = require('crypto');
 
 async function runMigrations() {
   try {
@@ -44,12 +45,36 @@ async function runMigrations() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
 
+    // v5: Add referral_code to partners
+    await query(`DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'partners' AND column_name = 'referral_code') THEN
+        ALTER TABLE partners ADD COLUMN referral_code VARCHAR(20) UNIQUE;
+      END IF;
+    END $$`);
+
+    // v5: Add source to referrals
+    await query(`DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'referrals' AND column_name = 'source') THEN
+        ALTER TABLE referrals ADD COLUMN source VARCHAR(50) DEFAULT 'manual';
+      END IF;
+    END $$`);
+
+    // Generate referral codes for partners that don't have one
+    const { rows: partners } = await query('SELECT id, name FROM partners WHERE referral_code IS NULL');
+    for (const p of partners) {
+      const code = p.name.replace(/[^A-Za-z]/g, '').substring(0, 4).toUpperCase() + crypto.randomBytes(2).toString('hex').toUpperCase();
+      try {
+        await query('UPDATE partners SET referral_code = $1 WHERE id = $2', [code, p.id]);
+      } catch (e) { /* skip if duplicate */ }
+    }
+
     // Indexes
     await query('CREATE INDEX IF NOT EXISTS idx_applications_status ON partner_applications(status)');
     await query('CREATE INDEX IF NOT EXISTS idx_applications_email ON partner_applications(email)');
     await query('CREATE INDEX IF NOT EXISTS idx_invitations_token ON user_invitations(token)');
     await query('CREATE INDEX IF NOT EXISTS idx_invitations_email ON user_invitations(email)');
     await query('CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)');
+    await query('CREATE INDEX IF NOT EXISTS idx_partners_referral_code ON partners(referral_code)');
 
     // UNIQUE constraints
     await query(`DO $$ BEGIN
