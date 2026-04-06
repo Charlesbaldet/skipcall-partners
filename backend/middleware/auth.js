@@ -31,7 +31,7 @@ function authorize(...roles) {
 // Restrict partners to their own data
 function partnerScope(req, res, next) {
   if (req.user.role === 'partner') {
-    req.partnerScope = req.user.partnerId;
+        req.partnerScope = req.user.partnerId || '00000000-0000-0000-0000-000000000000';
   }
   next();
 }
