@@ -8,7 +8,7 @@ const { generateApiKey, hashKey } = require('../middleware/apiKeyAuth');
 
 const router = express.Router();
 router.use(authenticate);
-router.use(authorize('admin'));
+router.use(authorize('admin', 'superadmin'));
 
 router.get('/users', async (req, res) => {
   try {
