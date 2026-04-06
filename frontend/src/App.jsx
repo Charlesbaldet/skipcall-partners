@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import Layout from './components/Layout.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -58,9 +59,9 @@ function AppRoutes() {
 export default function App() {
   return (
 
-      <AuthProvider>
+      <TenantProvider><AuthProvider>
         <AppRoutes />
-      </AuthProvider>
+      </AuthProvider></TenantProvider>
 
   );
 }
