@@ -37,7 +37,8 @@ function AppRoutes() {
       {/* Public pages */}
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
       <Route path="/ref/:code" element={<PublicTrackingPage />} />
-      <Route path="/apply" element={<PublicApplyPage />} />
+      <Route path="/apply" element={<PublicApplyPage />
+          <Route path="/r/:slug" element={<PublicApplyPage />} />} />
       <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
       <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />

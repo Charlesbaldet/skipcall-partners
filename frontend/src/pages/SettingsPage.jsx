@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import {
+  Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink,
 } from 'lucide-react';
@@ -26,6 +27,7 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { id: 'members', icon: Users, label: 'Membres' },
       { id: 'integrations', icon: Plug, label: 'Intégrations' },
+      { id: 'public-link', icon: Link2, label: 'Lien public' },
     ] : []),
   ];
 
@@ -55,6 +57,7 @@ export default function SettingsPage() {
             {tab === 'account' && <AccountTab user={user} />}
             {tab === 'members' && isAdmin && <MembersTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
+              {tab === 'public-link' && isAdmin && <PublicLinkTab />}
           </div>
         </div>
       </div>
@@ -329,3 +332,68 @@ function IntegrationsTab() {
   );
 }
 
+// ═══ LIEN PUBLIC ═══
+function PublicLinkTab() {
+  const [tenant, setTenant] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(null);
+
+  useEffect(() => {
+    api.getMyTenant()
+      .then(d => setTenant(d.tenant))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
+  if (!tenant) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Impossible de charger les infos du tenant.</div>;
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const directLink = origin + '/r/' + (tenant.slug || '');
+  const embedCode = '<iframe src="' + directLink + '" width="100%" height="700" frameborder="0" style="border-radius:12px;"></iframe>';
+
+  const copy = (key, text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Lien public d'inscription</h3>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Partage ce lien avec tes apporteurs d'affaires pour qu'ils puissent s'inscrire eux-mêmes. Tu valideras leurs candidatures depuis ton dashboard.</p>
+
+      <div style={{ marginBottom: 28 }}>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>Lien direct</h4>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+          <code style={{ flex: 1, fontSize: 13, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{directLink}</code>
+          <button onClick={() => copy('link', directLink)} style={{
+            padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: copied === 'link' ? '#dcfce7' : 'var(--rb-primary, #059669)',
+            color: copied === 'link' ? '#166534' : '#fff',
+            fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            {copied === 'link' ? <><CheckCircle size={14}/> Copié</> : <><Copy size={14}/> Copier</>}
+          </button>
+        </div>
+        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Tu peux le mettre dans tes emails, signatures, posts LinkedIn, etc.</p>
+      </div>
+
+      <div>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>Code à intégrer (iframe)</h4>
+        <div style={{ padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+          <code style={{ display: 'block', fontSize: 12, color: '#0f172a', marginBottom: 12, fontFamily: 'monospace', wordBreak: 'break-all', lineHeight: 1.6 }}>{embedCode}</code>
+          <button onClick={() => copy('embed', embedCode)} style={{
+            padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: copied === 'embed' ? '#dcfce7' : 'var(--rb-primary, #059669)',
+            color: copied === 'embed' ? '#166534' : '#fff',
+            fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            {copied === 'embed' ? <><CheckCircle size={14}/> Copié</> : <><Copy size={14}/> Copier le code</>}
+          </button>
+        </div>
+        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Colle ce snippet dans ton site (WordPress, Webflow, Notion, etc.) pour intégrer le formulaire directement.</p>
+      </div>
+    </div>
+  );
+}

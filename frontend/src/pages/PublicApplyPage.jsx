@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Send, CheckCircle, Building, User, Mail, Phone, Globe, Users, FileText } from 'lucide-react';
 
 export default function PublicApplyPage() {
+  const { slug } = useParams();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -21,7 +23,7 @@ export default function PublicApplyPage() {
       const res = await fetch('/api/applications/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, tenant_slug: slug }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');

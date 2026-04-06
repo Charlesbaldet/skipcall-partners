@@ -26,15 +26,24 @@ router.post('/apply', [
 
     const { company_name, contact_name, email, phone, company_website, company_size, motivation } = req.body;
 
+    // Resolve tenant from URL slug (set via /r/:slug routing) — fallback to domain
+    let resolvedTenantId = resolvedTenantId;
+    if (req.body.tenant_slug) {
+      try {
+        const { rows: ts } = await query("SELECT id FROM tenants WHERE slug = $1", [req.body.tenant_slug]);
+        if (ts[0]) resolvedTenantId = ts[0].id;
+      } catch (e) {}
+    }
+
     // Check if email already exists in applications or partners — within the same tenant
     let dupCheckSql = `
       SELECT id FROM partner_applications WHERE email = $1 AND status = 'pending'
-      ${req.tenantId ? 'AND tenant_id = $2' : ''}
+      ${resolvedTenantId ? 'AND tenant_id = $2' : ''}
       UNION
       SELECT id FROM partners WHERE email = $1
-      ${req.tenantId ? 'AND tenant_id = $2' : ''}
+      ${resolvedTenantId ? 'AND tenant_id = $2' : ''}
     `;
-    const dupParams = req.tenantId ? [email, req.tenantId] : [email];
+    const dupParams = resolvedTenantId ? [email, resolvedTenantId] : [email];
     const { rows: existing } = await query(dupCheckSql, dupParams);
 
     if (existing.length > 0) {
@@ -46,15 +55,15 @@ router.post('/apply', [
        (company_name, contact_name, email, phone, company_website, company_size, motivation, tenant_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [company_name, contact_name, email, phone, company_website, company_size, motivation, req.tenantId || null]
+      [company_name, contact_name, email, phone, company_website, company_size, motivation, resolvedTenantId || null]
     );
 
     // Notify admins of THIS tenant only
     let adminSql = `SELECT email, full_name FROM users WHERE role = 'admin' AND is_active = true`;
     let adminParams = [];
-    if (req.tenantId) {
+    if (resolvedTenantId) {
       adminSql += ' AND tenant_id = $1';
-      adminParams = [req.tenantId];
+      adminParams = [resolvedTenantId];
     }
     const { rows: admins } = await query(adminSql, adminParams);
 

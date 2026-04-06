@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Users, UserPlus, Palette, Link2, Sparkles, Rocket, Copy, Check } from 'lucide-react';
 import api from '../lib/api';
 
@@ -29,6 +29,11 @@ export default function OnboardingWizard({ onClose }) {
   const [customized, setCustomized] = useState(false);
 
   const [copied, setCopied] = useState(false);
+  const [tenantSlug, setTenantSlug] = useState('');
+
+  useEffect(() => {
+    api.getMyTenant().then(d => { if (d && d.tenant) setTenantSlug(d.tenant.slug || ''); }).catch(() => {});
+  }, []);
 
   const goNext = () => { setError(''); if (step < STEPS.length - 1) setStep(step + 1); else handleClose(); };
   const handleClose = () => { localStorage.removeItem('refboost_onboarding_pending'); onClose(); };
@@ -63,7 +68,7 @@ export default function OnboardingWizard({ onClose }) {
     finally { setSubmitting(false); }
   };
 
-  const publicLink = typeof window !== 'undefined' ? window.location.origin + '/apply' : '';
+  const publicLink = typeof window !== 'undefined' ? window.location.origin + (tenantSlug ? '/r/' + tenantSlug : '/apply') : '';
   const copyLink = () => { navigator.clipboard.writeText(publicLink); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   const cur = STEPS[step];
