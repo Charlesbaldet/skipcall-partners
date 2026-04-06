@@ -36,12 +36,4 @@ function partnerScope(req, res, next) {
   next();
 }
 
-// Restrict to tenant data
-function tenantScope(req, res, next) {
-  if (req.user && req.user.role !== 'superadmin') {
-    req.tenantId = req.user.tenantId || null;
-  }
-  next();
-}
-
-module.exports = { authenticate, authorize, partnerScope, tenantScope };
+module.exports = { authenticate, authorize, partnerScope };

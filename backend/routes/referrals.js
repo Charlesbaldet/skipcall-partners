@@ -21,18 +21,6 @@ router.get('/', async (req, res) => {
     let i = 1;
 
     // Partners can only see their own referrals
-    // Tenant isolation - non-superadmin users only see their tenant data
-    if (req.user.tenantId && req.user.role !== 'superadmin') {
-      where.push(\`r.tenant_id = \$\${i++}\`);
-      params.push(req.user.tenantId);
-    }
-
-    // Tenant isolation - non-superadmin users only see their tenant data
-    if (req.user.tenantId && req.user.role !== 'superadmin') {
-      where.push(\`r.tenant_id = \$\${i++}\`);
-      params.push(req.user.tenantId);
-    }
-
     if (req.partnerScope) {
       where.push(`r.partner_id = $${i++}`);
       params.push(req.partnerScope);
@@ -147,11 +135,11 @@ router.post('/', [
     const { rows: [referral] } = await query(
       `INSERT INTO referrals 
         (partner_id, submitted_by, prospect_name, prospect_email, prospect_phone, 
-         prospect_company, prospect_role, recommendation_level, notes, tenant_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         prospect_company, prospect_role, recommendation_level, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [partnerId, req.user.id, prospect_name, prospect_email, prospect_phone,
-       prospect_company, prospect_role, recommendation_level, notes, req.user.tenantId || null]
+       prospect_company, prospect_role, recommendation_level, notes]
     );
 
     // Log activity
