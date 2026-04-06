@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import { loadTheme } from './lib/theme';
 
 // ─── Global styles ───
 const style = document.createElement('style');
@@ -31,6 +32,8 @@ style.textContent = `
   .slide-in { animation: slideIn 0.3s ease-out; }
 `;
 document.head.appendChild(style);
+
+loadTheme();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

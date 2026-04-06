@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Users, UserPlus, Palette, Link2, Sparkles, Rocket, Copy, Check } from 'lucide-react';
 import api from '../lib/api';
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', a: '#f97316' };
+const C = { p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)', s: '#0f172a', m: '#64748b', a: 'var(--rb-accent, #f97316)' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 const STEPS = [
@@ -58,6 +58,7 @@ export default function OnboardingWizard({ onClose }) {
       if (customizeForm.accent_color) payload.accent_color = customizeForm.accent_color;
       await api.updateMyTenant(payload);
       setCustomized(true);
+      if (typeof window !== 'undefined' && window.__rbLoadTheme) window.__rbLoadTheme();
     } catch (e) { setError(e.message || 'Erreur'); }
     finally { setSubmitting(false); }
   };

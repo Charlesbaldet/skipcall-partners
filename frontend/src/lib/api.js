@@ -88,6 +88,8 @@ class ApiClient {
   getLeaderboard() { return this.request('/leaderboard'); }
 
   // Tenant (current user's tenant)
+  getMyTenant() { return this.request('/tenants/me'); }
+
   updateMyTenant(data) {
     const u = this.getUser() || {};
     let tenantId = u.tenantId;

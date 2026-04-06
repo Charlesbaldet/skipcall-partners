@@ -86,4 +86,20 @@ router.get('/audit-logs', authenticate, async (req, res) => {
   }
 });
 
+// Get current user's tenant (JWT-based, for theme / branding)
+router.get('/me', authenticate, async (req, res) => {
+  if (!req.user || !req.user.tenantId) return res.status(404).json({ error: 'No tenant' });
+  try {
+    const { rows } = await query(
+      'SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url FROM tenants WHERE id = $1',
+      [req.user.tenantId]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Tenant not found' });
+    res.json({ tenant: rows[0] });
+  } catch (err) {
+    console.error('Get my tenant error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

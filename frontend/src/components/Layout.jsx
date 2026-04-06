@@ -10,9 +10,13 @@ import {
 
 // ─── RefBoost design tokens (sync avec LandingPage) ───
 const C = {
-  p: '#059669', pl: '#10b981', pd: '#047857',
-  s: '#0f172a', sl: '#1e293b',
-  a: '#f97316', al: '#fb923c',
+  p: 'var(--rb-primary, #059669)',
+  pl: 'var(--rb-primary-light, #10b981)',
+  pd: 'var(--rb-primary-dark, #047857)',
+  s: '#0f172a',
+  sl: '#1e293b',
+  a: 'var(--rb-accent, #f97316)',
+  al: 'var(--rb-accent-light, #fb923c)',
   m: '#64748b',
 };
 
