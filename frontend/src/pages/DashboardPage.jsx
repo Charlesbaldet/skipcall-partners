@@ -171,20 +171,30 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
         </ChartCard>
 
         <ChartCard title="Pipeline par statut">
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie data={pipelineData} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3}
-                label={({ name, count, cx, cy, midAngle, outerRadius }) => {
-                  const x = cx + (outerRadius + 20) * Math.cos(-midAngle * Math.PI / 180);
-                  const y = cy + (outerRadius + 20) * Math.sin(-midAngle * Math.PI / 180);
-                  return count > 0 ? <text x={x} y={y} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600, fill: '#334155' }}>{name} ({count})</text> : null;
-                }}>
-                {pipelineData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-              </Pie>
-              <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 4 }}>
+            {pipelineData.filter(p => p.count > 0).map((p, i) => {
+              const total = pipelineData.reduce((s, d) => s + d.count, 0);
+              const pct = total > 0 ? Math.round(p.count / total * 100) : 0;
+              return (
+                <div key={i}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: p.fill }} />
+                      <span style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{p.name}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontWeight: 800, color: '#0f172a', fontSize: 18 }}>{p.count}</span>
+                      <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>{pct}%</span>
+                    </div>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 4, background: '#f1f5f9', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', borderRadius: 4, background: p.fill, width: `${pct}%`, transition: 'width 0.5s ease' }} />
+                  </div>
+                </div>
+              );
+            })}
+            {pipelineData.every(p => p.count === 0) && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32 }}>Aucune donnée</div>}
+          </div>
         </ChartCard>
       </div>
 

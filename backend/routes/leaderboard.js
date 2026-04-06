@@ -32,17 +32,27 @@ router.get('/', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT p.id, p.name, p.contact_name, p.referral_code,
-              COUNT(r.id) FILTER (WHERE r.status = 'won') as won_deals,
-              COUNT(r.id) as total_referrals,
-              COALESCE(SUM(r.deal_value) FILTER (WHERE r.status = 'won'), 0) as total_revenue,
-              COALESCE(SUM(c.amount), 0) as total_commissions,
-              COALESCE(SUM(c.amount) FILTER (WHERE c.status = 'paid'), 0) as paid_commissions
+              COALESCE(r.won_deals, 0) as won_deals,
+              COALESCE(r.total_referrals, 0) as total_referrals,
+              COALESCE(r.total_revenue, 0) as total_revenue,
+              COALESCE(c.total_commissions, 0) as total_commissions,
+              COALESCE(c.paid_commissions, 0) as paid_commissions
        FROM partners p
-       LEFT JOIN referrals r ON p.id = r.partner_id
-       LEFT JOIN commissions c ON p.id = c.partner_id
+       LEFT JOIN (
+         SELECT partner_id,
+           COUNT(*) FILTER (WHERE status = 'won') as won_deals,
+           COUNT(*) as total_referrals,
+           COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) as total_revenue
+         FROM referrals GROUP BY partner_id
+       ) r ON p.id = r.partner_id
+       LEFT JOIN (
+         SELECT partner_id,
+           COALESCE(SUM(amount), 0) as total_commissions,
+           COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0) as paid_commissions
+         FROM commissions GROUP BY partner_id
+       ) c ON p.id = c.partner_id
        WHERE p.is_active = true
-       GROUP BY p.id
-       ORDER BY won_deals DESC, total_revenue DESC`
+       ORDER BY COALESCE(r.won_deals, 0) DESC, COALESCE(r.total_revenue, 0) DESC`
     );
 
     const leaderboard = rows.map((p, i) => {
