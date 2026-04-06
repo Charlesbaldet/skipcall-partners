@@ -13,7 +13,8 @@ export default function ReferralsPage() {
   const [filters, setFilters] = useState({ status: 'all', partner_id: 'all' });
   const [selected, setSelected] = useState(null);
   const [activities, setActivities] = useState([]);
-  const [viewMode, setViewMode] = useState('table');
+  const [viewMode, setViewMode] = useState('kanban');
+  const [kanbanLimits, setKanbanLimits] = useState({});
   const [showConfetti, setShowConfetti] = useState(false);
   const [draggedId, setDraggedId] = useState(null);
 
@@ -164,27 +165,31 @@ export default function ReferralsPage() {
         </div>
       ) : (
         /* KANBAN VIEW */
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 16, minHeight: 500 }}>
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16, minHeight: 500 }}>
           {KANBAN_STATUSES.map(status => {
             const sc = STATUS_CONFIG[status];
-            const cards = referrals.filter(r => r.status === status);
+            const allCards = referrals.filter(r => r.status === status);
+            const limit = kanbanLimits[status] || 25;
+            const cards = allCards.slice(0, limit);
+            const hasMore = allCards.length > limit;
             return (
               <div key={status}
-                onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${sc.color}08`; }}
-                onDragLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
-                onDrop={e => { e.currentTarget.style.background = '#f8fafc'; handleDrop(e, status); }}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.boxShadow = `inset 0 0 0 2px ${sc.color}`; }}
+                onDragLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
+                onDrop={e => { e.currentTarget.style.boxShadow = 'none'; handleDrop(e, status); }}
                 style={{
-                  minWidth: 240, flex: 1, background: '#f8fafc', borderRadius: 14,
+                  minWidth: 250, flex: 1, background: '#fff', borderRadius: 14,
                   padding: 10, display: 'flex', flexDirection: 'column',
+                  border: '1px solid #e2e8f0', boxShadow: 'none', transition: 'box-shadow 0.15s',
                 }}
               >
                 {/* Column header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', marginBottom: 8, background: `${sc.color}08`, borderRadius: 10, borderBottom: `3px solid ${sc.color}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 10, height: 10, borderRadius: '50%', background: sc.color }} />
                     <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
                   </div>
-                  <span style={{ background: '#e2e8f0', color: '#475569', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{cards.length}</span>
+                  <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
                 </div>
 
                 {/* Cards */}
@@ -193,7 +198,7 @@ export default function ReferralsPage() {
                     <div key={r.id} draggable onDragStart={e => handleDragStart(e, r.id)}
                       onClick={() => openDetail(r)}
                       style={{
-                        background: '#fff', borderRadius: 12, padding: 14, cursor: 'grab',
+                        background: '#f8fafc', borderRadius: 12, padding: 14, cursor: 'grab',
                         border: `1px solid ${draggedId === r.id ? sc.color : '#e2e8f0'}`,
                         boxShadow: draggedId === r.id ? `0 4px 12px ${sc.color}20` : '0 1px 2px rgba(0,0,0,0.04)',
                         opacity: draggedId === r.id ? 0.5 : 1, transition: 'all 0.15s',
@@ -209,7 +214,7 @@ export default function ReferralsPage() {
                         {r.deal_value > 0 && <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</span>}
                       </div>
                       {/* Quick status change */}
-                      <div style={{ marginTop: 10, borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>
+                      <div style={{ marginTop: 10, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
                         <select value={r.status} onChange={e => { e.stopPropagation(); handleStatusChangeFromCard(r.id, e.target.value); }}
                           onClick={e => e.stopPropagation()}
                           style={{ width: '100%', padding: '4px 6px', borderRadius: 6, border: `1px solid ${sc.color}30`, background: sc.bg, color: sc.color, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
@@ -218,6 +223,12 @@ export default function ReferralsPage() {
                       </div>
                     </div>
                   ))}
+                  {hasMore && (
+                    <button onClick={() => setKanbanLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
+                      padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
+                      color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
+                    }}>Voir plus ({allCards.length - limit} restants)</button>
+                  )}
                 </div>
               </div>
             );

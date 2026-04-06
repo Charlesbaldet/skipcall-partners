@@ -89,6 +89,10 @@ export default function PartnersPage() {
               <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
               <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
             </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
+              <button onClick={() => { handleArchive(editingId); setEditingId(null); }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fcd34d', background: '#fffbeb', color: '#b45309', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Archive size={14} /> Archiver</button>
+              <button onClick={() => { if (confirm('Êtes-vous sûr de vouloir supprimer définitivement ce partenaire ? Cette action est irréversible.')) { handleDeletePartner(editingId); setEditingId(null); } }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={14} /> Supprimer</button>
+            </div>
           </div>
         </div>
       )}
@@ -293,8 +297,6 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
           <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
-          <button onClick={(e) => { e.stopPropagation(); onArchive(p.id); }} style={{ background: '#fef3c7', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#b45309', display: 'flex' }}><Archive size={13} /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(p.id); }} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={13} /></button>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
