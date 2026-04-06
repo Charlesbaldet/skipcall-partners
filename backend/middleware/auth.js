@@ -31,9 +31,35 @@ function authorize(...roles) {
 // Restrict partners to their own data
 function partnerScope(req, res, next) {
   if (req.user.role === 'partner') {
-        req.partnerScope = req.user.partnerId || '00000000-0000-0000-0000-000000000000';
+    req.partnerScope = req.user.partnerId || '00000000-0000-0000-0000-000000000000';
   }
   next();
 }
 
-module.exports = { authenticate, authorize, partnerScope };
+// Tenant isolation
+// Uses req.tenantId set by tenantMiddleware (domain/header resolution).
+// Verifies consistency with JWT tenantId when present.
+// Superadmins can bypass tenant isolation.
+function tenantScope(req, res, next) {
+  // Superadmins see everything
+  if (req.user && req.user.role === 'superadmin') {
+    req.skipTenantFilter = true;
+    return next();
+  }
+
+  // Verify JWT tenantId matches domain-resolved tenantId
+  if (req.user && req.user.tenantId && req.tenantId) {
+    if (req.user.tenantId !== req.tenantId) {
+      return res.status(403).json({ error: 'Accès interdit - tenant mismatch' });
+    }
+  }
+
+  // Fallback: use JWT tenantId if middleware didn't resolve
+  if (!req.tenantId && req.user && req.user.tenantId) {
+    req.tenantId = req.user.tenantId;
+  }
+
+  next();
+}
+
+module.exports = { authenticate, authorize, partnerScope, tenantScope };
