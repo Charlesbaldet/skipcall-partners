@@ -230,7 +230,7 @@ export default function OnboardingWizard({ onClose }) {
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: 10 }}>
           {canSkip && (
             <button onClick={goNext} disabled={submitting} style={{
               padding: '12px 18px', borderRadius: 12, border: 'none',
@@ -238,7 +238,7 @@ export default function OnboardingWizard({ onClose }) {
             }}>Passer</button>
           )}
           <button onClick={primaryAction} disabled={submitting} style={{
-            flex: 1, padding: '14px 24px', borderRadius: 12, border: 'none',
+            width: '100%', padding: '14px 24px', borderRadius: 12, border: 'none',
             background: submitting ? C.m : g(C.p, C.pl), color: '#fff',
             fontWeight: 700, fontSize: 15, cursor: submitting ? 'wait' : 'pointer',
             boxShadow: submitting ? 'none' : '0 8px 24px rgba(5,150,105,0.3)',
