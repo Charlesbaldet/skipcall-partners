@@ -12,7 +12,6 @@ const ADMIN_NAV = [
   { to: '/referrals', icon: FileText, label: 'Pipeline' },
   { to: '/commissions', icon: DollarSign, label: 'Commissions' },
   { to: '/partners', icon: Users, label: 'Partenaires' },
-  { to: '/applications', icon: UserPlus, label: 'Candidatures', badge: 'applications' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
   { to: '/settings', icon: Settings, label: 'Paramètres' },

@@ -238,37 +238,7 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
         </ChartCard>
       </div>
 
-      {/* Top Partners Table */}
-      <ChartCard title="Top Partenaires">
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead>
-              <tr>
-                {['#', 'Partenaire', 'Referrals', 'Gagnés', 'MRR', 'Conversion', 'Taux com.'].map((h, i) => (
-                  <th key={i} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #f1f5f9' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {topPartners.map((p, idx) => (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  <td style={{ padding: '12px 14px', fontWeight: 700, color: idx < 3 ? '#6366f1' : '#94a3b8' }}>{idx + 1}</td>
-                  <td style={{ padding: '12px 14px', fontWeight: 600, color: '#0f172a' }}>{p.name}</td>
-                  <td style={{ padding: '12px 14px', color: '#475569' }}>{p.total_referrals}</td>
-                  <td style={{ padding: '12px 14px', color: '#16a34a', fontWeight: 600 }}>{p.won_deals}</td>
-                  <td style={{ padding: '12px 14px', fontWeight: 600 }}>{fmt(p.revenue)}</td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <span style={{ padding: '3px 8px', borderRadius: 6, background: parseFloat(p.win_rate) >= 50 ? '#f0fdf4' : '#fef2f2', color: parseFloat(p.win_rate) >= 50 ? '#16a34a' : '#dc2626', fontWeight: 600, fontSize: 12 }}>{p.win_rate}%</span>
-                  </td>
-                  <td style={{ padding: '12px 14px' }}>
-                    <span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 600, fontSize: 12 }}>{p.commission_rate}%</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </ChartCard>
+
     </>
   );
 }
