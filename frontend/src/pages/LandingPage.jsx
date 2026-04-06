@@ -1,138 +1,211 @@
-import { useState, useEffect, useRef } from 'react';
-import { ArrowRight, CheckCircle, DollarSign, Users, TrendingUp, Zap, Shield, BarChart3, MessageCircle, Star } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const STATS = [
-  { value: '10%', label: 'Commission récurrente', sub: 'sur chaque deal signé' },
-  { value: '48h', label: 'Prise de contact', sub: 'délai max garanti' },
-  { value: '100%', label: 'Transparence', sub: 'suivi en temps réel' },
-];
+const COLORS = {
+  primary: '#059669',      // Emerald green
+  primaryLight: '#10b981',
+  primaryDark: '#047857',
+  secondary: '#0f172a',    // Deep navy
+  accent: '#f97316',       // Warm orange
+  accentLight: '#fb923c',
+  surface: '#ffffff',
+  muted: '#64748b',
+  bg: '#fafbfc',
+};
 
-const STEPS = [
-  { icon: Users, title: 'Recommandez', desc: 'Soumettez un prospect en 30 secondes via votre espace dédié.' },
-  { icon: Zap, title: 'On s\'en occupe', desc: 'Notre équipe commerciale contacte et accompagne le prospect.' },
-  { icon: DollarSign, title: 'Gagnez', desc: 'Vous touchez votre commission dès que le deal est signé.' },
-];
+// ─── SVG Logo Component ───
+function Logo({ size = 40, white = false }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+            <stop offset="0%" stopColor={COLORS.primary} />
+            <stop offset="100%" stopColor={COLORS.primaryLight} />
+          </linearGradient>
+        </defs>
+        <rect width="48" height="48" rx="14" fill="url(#logoGrad)" />
+        <path d="M16 34V14h8c2.2 0 4 .6 5.2 1.8 1.2 1.2 1.8 2.8 1.8 4.7 0 1.4-.4 2.6-1.1 3.6-.7 1-1.8 1.6-3.1 2l5 7.9h-4.5L23 26.5h-2.5V34H16zm4.5-11h3.2c1 0 1.8-.3 2.3-.8.5-.5.8-1.2.8-2.1 0-.9-.3-1.6-.8-2.1-.5-.5-1.3-.8-2.3-.8h-3.2v5.8z" fill="white" />
+        <path d="M32 14l3 0 0 3-1.5 1.5L32 17z" fill={COLORS.accent} opacity="0.9" />
+        <path d="M35 14l-1 4 3-1z" fill={COLORS.accentLight} opacity="0.7" />
+      </svg>
+      <span style={{
+        fontSize: size * 0.55, fontWeight: 800, letterSpacing: -1,
+        color: white ? '#fff' : COLORS.secondary,
+        fontFamily: "'Outfit', 'SF Pro Display', sans-serif",
+      }}>
+        Ref<span style={{ color: COLORS.primary }}>Boost</span>
+      </span>
+    </div>
+  );
+}
 
-const FEATURES = [
-  { icon: BarChart3, title: 'Dashboard en temps réel', desc: 'Suivez vos referrals, conversions et commissions depuis votre espace.' },
-  { icon: Shield, title: 'Paiements sécurisés', desc: 'Commissions versées automatiquement. IBAN géré en toute sécurité.' },
-  { icon: MessageCircle, title: 'Communication directe', desc: 'Messagerie intégrée avec l\'équipe commerciale Skipcall.' },
-  { icon: TrendingUp, title: 'Suivi du pipeline', desc: 'Visualisez l\'avancement de chaque prospect en temps réel.' },
-];
-
-const TESTIMONIALS = [
-  { name: 'Marc D.', company: 'TechAlliance', text: 'En 3 mois, j\'ai généré plus de 5 000€ de commissions. Le suivi est impeccable.', rating: 5 },
-  { name: 'Sophie M.', company: 'DigiConseil', text: 'La plateforme est intuitive et l\'équipe Skipcall réactive. Un vrai partenariat gagnant-gagnant.', rating: 5 },
-  { name: 'Julien P.', company: 'CloudExperts', text: 'Je recommande Skipcall à mes clients sans hésiter. La qualité du service parle d\'elle-même.', rating: 5 },
-];
+// ─── Animated Counter ───
+function Counter({ target, suffix = '' }) {
+  return <span>{target}{suffix}</span>;
+}
 
 export default function LandingPage() {
-  const [scrollY, setScrollY] = useState(0);
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
 
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const features = [
+    { icon: '🚀', title: 'Pipeline intelligent', desc: 'Suivez chaque referral du premier contact au closing. Kanban, filtres, statuts — tout en temps réel.' },
+    { icon: '💰', title: 'Commissions automatiques', desc: "Calcul auto des primes, validation en un clic, historique complet. Vos partenaires sont payés plus vite." },
+    { icon: '📊', title: 'Analytics avancés', desc: 'Dashboard avec KPIs, taux de conversion, MRR généré, performance par partenaire et par niveau.' },
+    { icon: '🏷️', title: 'White-label total', desc: 'Votre logo, vos couleurs, votre domaine. Vos clients ne verront jamais RefBoost — ils verront VOTRE marque.' },
+    { icon: '🔒', title: 'Sécurité ISO 27001', desc: 'Chiffrement AES-256, audit logs, brute force protection, RGPD ready. Vos données sont en sécurité.' },
+    { icon: '🔗', title: 'Liens de tracking', desc: 'Chaque partenaire a son lien unique. Formulaire public, attribution automatique, zéro friction.' },
+  ];
+
+  const testimonials = [
+    { name: 'Marie Dupont', role: 'Directrice Commerciale', company: 'TechFlow', text: "On a multiplié par 3 notre canal partenaires en 4 mois. L'outil est intuitif et nos partenaires l'adorent.", avatar: 'M' },
+    { name: 'Thomas Chen', role: 'CEO', company: 'ScaleUp Agency', text: "Le white-label nous permet de proposer un programme partenaires à nos clients sous notre marque. Game changer.", avatar: 'T' },
+    { name: 'Sophie Martin', role: 'Head of Partnerships', company: 'DataViz Pro', text: "Fini les tableurs Excel pour tracker les commissions. Tout est automatisé, transparent, et nos partenaires sont ravis.", avatar: 'S' },
+  ];
+
+  const plans = [
+    { name: 'Starter', price: '99', desc: 'Pour démarrer votre programme', features: ['Jusqu\'à 20 partenaires', '100 referrals/mois', 'Dashboard & analytics', 'Liens de tracking', 'Support email'], cta: false },
+    { name: 'Growth', price: '249', desc: 'Pour scaler votre programme', features: ['Partenaires illimités', 'Referrals illimités', 'White-label complet', 'API & intégrations', 'Support prioritaire', 'Multi-utilisateurs'], cta: true },
+    { name: 'Enterprise', price: 'Sur mesure', desc: 'Pour les grandes organisations', features: ['Tout Growth +', 'Multi-tenant', 'SSO / SAML', 'SLA garanti', 'Account manager dédié', 'Audit & conformité'], cta: false },
+  ];
 
   return (
-    <div style={{ background: '#000', color: '#fff', fontFamily: "'DM Sans', -apple-system, sans-serif", overflow: 'hidden' }}>
+    <div style={{ fontFamily: "'Outfit', 'DM Sans', -apple-system, sans-serif", color: COLORS.secondary, overflow: 'hidden' }}>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+
+      <style>{`
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .fade-up { animation: fadeUp 0.7s ease-out forwards; opacity: 0; }
+        .fade-up-1 { animation-delay: 0.1s; }
+        .fade-up-2 { animation-delay: 0.2s; }
+        .fade-up-3 { animation-delay: 0.3s; }
+        .fade-up-4 { animation-delay: 0.4s; }
+        .hover-lift { transition: transform 0.3s, box-shadow 0.3s; }
+        .hover-lift:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(5,150,105,0.15) !important; }
+        .btn-primary { transition: all 0.3s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(5,150,105,0.35); }
+        .btn-secondary:hover { background: ${COLORS.secondary} !important; color: #fff !important; }
+      `}</style>
+
       {/* ═══ NAVBAR ═══ */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        background: scrollY > 50 ? 'rgba(0,0,0,0.85)' : 'transparent',
-        backdropFilter: scrollY > 50 ? 'blur(20px)' : 'none',
-        borderBottom: scrollY > 50 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-        transition: 'all 0.3s',
+        padding: '16px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.04)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#fff' }}>S</div>
-          <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5 }}>Skipcall</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <a href="#how" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}>Comment ça marche</a>
-          <a href="#features" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>Avantages</a>
-          <a href="#testimonials" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>Témoignages</a>
-          <a href="/login" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>Connexion</a>
-          <a href="/apply" style={{
-            padding: '10px 22px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-            color: '#fff', textDecoration: 'none', fontWeight: 600, fontSize: 14,
-            boxShadow: '0 4px 15px rgba(99,102,241,0.3)',
-          }}>Devenir partenaire</a>
+        <Logo size={36} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          {['Fonctionnalités', 'Tarifs', 'Témoignages'].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} style={{ color: COLORS.muted, textDecoration: 'none', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}
+              onMouseEnter={e => e.target.style.color = COLORS.primary} onMouseLeave={e => e.target.style.color = COLORS.muted}>
+              {item}
+            </a>
+          ))}
+          <button onClick={() => navigate('/login')} style={{
+            padding: '10px 24px', borderRadius: 10, border: `2px solid ${COLORS.secondary}`, background: 'transparent',
+            color: COLORS.secondary, fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+          }} className="btn-secondary">
+            Connexion
+          </button>
+          <button onClick={() => navigate('/apply')} className="btn-primary" style={{
+            padding: '10px 24px', borderRadius: 10, border: 'none',
+            background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`,
+            color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            Démarrer gratuitement
+          </button>
         </div>
       </nav>
 
       {/* ═══ HERO ═══ */}
       <section style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        position: 'relative', textAlign: 'center', padding: '120px 24px 80px',
+        padding: '140px 48px 80px', position: 'relative',
+        background: `radial-gradient(ellipse 80% 60% at 50% -20%, ${COLORS.primary}12, transparent),
+                     radial-gradient(ellipse 60% 40% at 80% 80%, ${COLORS.accent}08, transparent),
+                     ${COLORS.bg}`,
       }}>
-        {/* Background effects */}
-        <div style={{
-          position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)',
-          width: 800, height: 800, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 60%)',
-          filter: 'blur(80px)', pointerEvents: 'none',
-        }} />
-        <div style={{
-          position: 'absolute', top: '30%', right: '10%',
-          width: 400, height: 400, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 60%)',
-          filter: 'blur(60px)', pointerEvents: 'none',
-        }} />
+        {/* Decorative elements */}
+        <div style={{ position: 'absolute', top: 120, left: 80, width: 300, height: 300, borderRadius: '50%', background: `${COLORS.primary}06`, animation: 'float 6s ease-in-out infinite' }} />
+        <div style={{ position: 'absolute', bottom: 100, right: 120, width: 200, height: 200, borderRadius: '50%', background: `${COLORS.accent}08`, animation: 'float 8s ease-in-out infinite 2s' }} />
 
-        <div style={{ position: 'relative', maxWidth: 800 }}>
-          <div style={{
-            display: 'inline-block', padding: '6px 16px', borderRadius: 20,
-            background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
-            color: '#818cf8', fontSize: 13, fontWeight: 600, marginBottom: 28,
+        <div style={{ maxWidth: 900, textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <div className="fade-up fade-up-1" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px',
+            borderRadius: 50, background: `${COLORS.primary}10`, border: `1px solid ${COLORS.primary}20`,
+            fontSize: 13, fontWeight: 600, color: COLORS.primary, marginBottom: 28,
           }}>
-            Programme Partenaires Skipcall
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.primary, animation: 'pulse 2s infinite' }} />
+            Nouveau — White-label multi-tenant disponible
           </div>
 
-          <h1 style={{
-            fontSize: 'clamp(36px, 5.5vw, 72px)', fontWeight: 800, lineHeight: 1.1,
-            letterSpacing: -2, marginBottom: 24,
-            background: 'linear-gradient(to right, #fff 30%, #a5b4fc 70%, #c084fc)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          <h1 className="fade-up fade-up-2" style={{
+            fontSize: 68, fontWeight: 900, lineHeight: 1.05, letterSpacing: -3,
+            margin: '0 0 24px', color: COLORS.secondary,
           }}>
-            Recommandez.<br />Nous vendons.<br />Vous gagnez.
+            Boostez vos revenus<br />
+            <span style={{ background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              grâce aux partenaires
+            </span>
           </h1>
 
-          <p style={{
-            fontSize: 20, color: '#94a3b8', lineHeight: 1.7, maxWidth: 560, margin: '0 auto 40px',
+          <p className="fade-up fade-up-3" style={{
+            fontSize: 20, color: COLORS.muted, lineHeight: 1.6, maxWidth: 600, margin: '0 auto 40px',
+            fontFamily: "'DM Sans', sans-serif",
           }}>
-            Rejoignez notre réseau de partenaires et touchez des commissions récurrentes sur chaque client que vous nous recommandez.
+            La plateforme SaaS qui transforme votre réseau en machine à referrals.
+            Pipeline, commissions, analytics — tout en white-label.
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <a href="/apply" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10, padding: '16px 32px',
-              borderRadius: 14, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-              color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 17,
-              boxShadow: '0 8px 30px rgba(99,102,241,0.4)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
+          <div className="fade-up fade-up-4" style={{ display: 'flex', gap: 16, justifyContent: 'center', alignItems: 'center' }}>
+            <button onClick={() => navigate('/apply')} className="btn-primary" style={{
+              padding: '16px 36px', borderRadius: 14, border: 'none',
+              background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`,
+              color: '#fff', fontWeight: 700, fontSize: 17, cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: `0 8px 30px ${COLORS.primary}30`,
             }}>
-              Devenir partenaire <ArrowRight size={20} />
-            </a>
-            <a href="#how" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 32px',
-              borderRadius: 14, background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.12)', color: '#fff',
-              textDecoration: 'none', fontWeight: 600, fontSize: 17,
+              Essai gratuit 14 jours →
+            </button>
+            <button onClick={() => document.getElementById('fonctionnalités')?.scrollIntoView({ behavior: 'smooth' })} className="btn-secondary" style={{
+              padding: '16px 36px', borderRadius: 14, border: `2px solid #e2e8f0`,
+              background: '#fff', color: COLORS.secondary, fontWeight: 600, fontSize: 17, cursor: 'pointer', fontFamily: 'inherit',
             }}>
-              Comment ça marche
-            </a>
+              Voir la démo
+            </button>
           </div>
 
-          {/* Stats */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 80 }}>
-            {STATS.map((s, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 44, fontWeight: 800, color: '#fff', letterSpacing: -1 }}>{s.value}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#a5b4fc', marginTop: 4 }}>{s.label}</div>
-                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{s.sub}</div>
+          {/* Social proof */}
+          <div className="fade-up fade-up-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, marginTop: 60, color: COLORS.muted, fontSize: 14 }}>
+            <div><span style={{ fontSize: 28, fontWeight: 800, color: COLORS.secondary }}>150+</span><br />Partenaires actifs</div>
+            <div style={{ width: 1, height: 40, background: '#e2e8f0' }} />
+            <div><span style={{ fontSize: 28, fontWeight: 800, color: COLORS.secondary }}>2.4M€</span><br />MRR généré</div>
+            <div style={{ width: 1, height: 40, background: '#e2e8f0' }} />
+            <div><span style={{ fontSize: 28, fontWeight: 800, color: COLORS.secondary }}>98%</span><br />Satisfaction</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FEATURES ═══ */}
+      <section id="fonctionnalités" style={{ padding: '100px 48px', background: '#fff' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Fonctionnalités</div>
+            <h2 style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2, margin: 0 }}>Tout ce qu'il faut pour<br /><span style={{ color: COLORS.primary }}>scaler votre programme</span></h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {features.map((f, i) => (
+              <div key={i} className="hover-lift" style={{
+                padding: 32, borderRadius: 20, background: '#fff', border: '1px solid #f1f5f9',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)', cursor: 'default',
+              }}>
+                <div style={{ fontSize: 36, marginBottom: 16 }}>{f.icon}</div>
+                <h3 style={{ fontSize: 19, fontWeight: 700, marginBottom: 10 }}>{f.title}</h3>
+                <p style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.7, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -140,70 +213,26 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
-      <section id="how" style={{ padding: '100px 24px', position: 'relative' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <div style={{ color: '#818cf8', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Simple & efficace</div>
-            <h2 style={{ fontSize: 44, fontWeight: 800, letterSpacing: -1 }}>Comment ça marche</h2>
-          </div>
+      <section style={{ padding: '100px 48px', background: COLORS.secondary }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primaryLight, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Comment ça marche</div>
+          <h2 style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2, margin: '0 0 64px', color: '#fff' }}>3 étapes pour démarrer</h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
-            {STEPS.map((step, i) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 20, padding: 36, position: 'relative', textAlign: 'center',
-                transition: 'border-color 0.3s, background 0.3s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-              >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40 }}>
+            {[
+              { step: '01', title: 'Créez votre espace', desc: 'Configurez votre programme en 5 minutes. Logo, couleurs, domaine — tout est personnalisable.' },
+              { step: '02', title: 'Invitez vos partenaires', desc: 'Envoyez des invitations par email. Chaque partenaire a son dashboard et son lien de tracking.' },
+              { step: '03', title: 'Récoltez les referrals', desc: 'Vos partenaires soumettent des leads. Vous trackez, convertissez, et payez les commissions.' },
+            ].map((s, i) => (
+              <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{
-                  position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)',
-                  width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#a855f7)',
+                  width: 64, height: 64, borderRadius: 16, margin: '0 auto 20px',
+                  background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14, fontWeight: 800, color: '#fff',
-                }}>{i + 1}</div>
-                <div style={{
-                  width: 56, height: 56, borderRadius: 16, background: 'rgba(99,102,241,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '16px auto 20px',
-                }}>
-                  <step.icon size={26} color="#818cf8" />
-                </div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>{step.title}</h3>
-                <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ FEATURES ═══ */}
-      <section id="features" style={{ padding: '100px 24px', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <div style={{ color: '#818cf8', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Votre espace</div>
-            <h2 style={{ fontSize: 44, fontWeight: 800, letterSpacing: -1 }}>Tout ce qu'il vous faut</h2>
-            <p style={{ color: '#94a3b8', fontSize: 17, maxWidth: 500, margin: '16px auto 0' }}>Un espace dédié pour gérer vos recommandations et suivre vos gains.</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
-            {FEATURES.map((f, i) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 18, padding: 32, display: 'flex', gap: 20,
-                transition: 'border-color 0.3s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.2)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
-              >
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <f.icon size={22} color="#818cf8" />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{f.title}</h3>
-                  <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>{f.desc}</p>
-                </div>
+                  fontSize: 22, fontWeight: 800, color: '#fff',
+                }}>{s.step}</div>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 8 }}>{s.title}</h3>
+                <p style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.7, margin: 0, fontFamily: "'DM Sans', sans-serif" }}>{s.desc}</p>
               </div>
             ))}
           </div>
@@ -211,28 +240,33 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ TESTIMONIALS ═══ */}
-      <section id="testimonials" style={{ padding: '100px 24px' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <section id="témoignages" style={{ padding: '100px 48px', background: '#fff' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <div style={{ color: '#818cf8', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Ils nous font confiance</div>
-            <h2 style={{ fontSize: 44, fontWeight: 800, letterSpacing: -1 }}>Nos partenaires témoignent</h2>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Témoignages</div>
+            <h2 style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2, margin: 0 }}>Ils nous font confiance</h2>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 18, padding: 28,
+            {testimonials.map((t, i) => (
+              <div key={i} className="hover-lift" style={{
+                padding: 32, borderRadius: 20, background: '#fafbfc', border: '1px solid #f1f5f9',
               }}>
                 <div style={{ display: 'flex', gap: 2, marginBottom: 16 }}>
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} size={16} fill="#f59e0b" color="#f59e0b" />
-                  ))}
+                  {[1,2,3,4,5].map(s => <span key={s} style={{ color: '#fbbf24', fontSize: 18 }}>★</span>)}
                 </div>
-                <p style={{ color: '#e2e8f0', fontSize: 15, lineHeight: 1.7, marginBottom: 20, fontStyle: 'italic' }}>"{t.text}"</p>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{t.name}</div>
-                  <div style={{ color: '#64748b', fontSize: 13 }}>{t.company}</div>
+                <p style={{ color: '#334155', fontSize: 15, lineHeight: 1.7, margin: '0 0 24px', fontFamily: "'DM Sans', sans-serif", fontStyle: 'italic' }}>"{t.text}"</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontWeight: 700, fontSize: 18,
+                  }}>{t.avatar}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: COLORS.secondary }}>{t.name}</div>
+                    <div style={{ fontSize: 12, color: COLORS.muted }}>{t.role} · {t.company}</div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -240,48 +274,104 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ═══ PRICING ═══ */}
+      <section id="tarifs" style={{ padding: '100px 48px', background: COLORS.bg }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Tarifs</div>
+            <h2 style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2, margin: 0 }}>Simple et transparent</h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {plans.map((p, i) => (
+              <div key={i} className="hover-lift" style={{
+                padding: 36, borderRadius: 24, background: '#fff',
+                border: p.cta ? `2px solid ${COLORS.primary}` : '1px solid #f1f5f9',
+                boxShadow: p.cta ? `0 20px 60px ${COLORS.primary}15` : '0 4px 20px rgba(0,0,0,0.03)',
+                position: 'relative',
+              }}>
+                {p.cta && <div style={{
+                  position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                  background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`,
+                  color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 16px', borderRadius: 50,
+                  textTransform: 'uppercase', letterSpacing: 1,
+                }}>Populaire</div>}
+                <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{p.name}</h3>
+                <p style={{ color: COLORS.muted, fontSize: 13, margin: '0 0 20px' }}>{p.desc}</p>
+                <div style={{ marginBottom: 24 }}>
+                  <span style={{ fontSize: 42, fontWeight: 800, color: COLORS.secondary }}>{p.price === 'Sur mesure' ? '' : p.price}</span>
+                  {p.price === 'Sur mesure' ? <span style={{ fontSize: 20, fontWeight: 700 }}>Sur mesure</span> : <span style={{ color: COLORS.muted, fontSize: 15 }}>€/mois</span>}
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px' }}>
+                  {p.features.map((f, j) => (
+                    <li key={j} style={{ padding: '8px 0', fontSize: 14, color: '#334155', display: 'flex', alignItems: 'center', gap: 10, fontFamily: "'DM Sans', sans-serif" }}>
+                      <span style={{ color: COLORS.primary, fontWeight: 700 }}>✓</span> {f}
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={() => navigate('/apply')} className={p.cta ? 'btn-primary' : 'btn-secondary'} style={{
+                  width: '100%', padding: '14px 24px', borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit',
+                  fontSize: 15, fontWeight: 600, border: p.cta ? 'none' : `2px solid #e2e8f0`,
+                  background: p.cta ? `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})` : '#fff',
+                  color: p.cta ? '#fff' : COLORS.secondary,
+                  boxShadow: p.cta ? `0 8px 30px ${COLORS.primary}25` : 'none',
+                }}>
+                  {p.price === 'Sur mesure' ? 'Nous contacter' : 'Commencer'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══ CTA ═══ */}
-      <section style={{ padding: '100px 24px' }}>
-        <div style={{
-          maxWidth: 800, margin: '0 auto', textAlign: 'center',
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1))',
-          border: '1px solid rgba(99,102,241,0.2)', borderRadius: 28, padding: '64px 48px',
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute', top: -50, right: -50, width: 200, height: 200,
-            borderRadius: '50%', background: 'rgba(99,102,241,0.1)', filter: 'blur(40px)',
-          }} />
-          <h2 style={{ fontSize: 40, fontWeight: 800, letterSpacing: -1, marginBottom: 16, position: 'relative' }}>
-            Prêt à générer des revenus ?
+      <section style={{
+        padding: '100px 48px',
+        background: `linear-gradient(135deg, ${COLORS.secondary} 0%, #1e293b 100%)`,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: `${COLORS.primary}10` }} />
+        <div style={{ position: 'absolute', bottom: -50, left: -50, width: 250, height: 250, borderRadius: '50%', background: `${COLORS.accent}08` }} />
+
+        <div style={{ maxWidth: 650, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <h2 style={{ fontSize: 44, fontWeight: 800, color: '#fff', letterSpacing: -2, margin: '0 0 16px' }}>
+            Prêt à booster vos<br />revenus partenaires ?
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: 17, maxWidth: 480, margin: '0 auto 32px', lineHeight: 1.7, position: 'relative' }}>
-            Rejoignez notre programme en quelques minutes et commencez à toucher des commissions récurrentes.
+          <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.6, marginBottom: 36, fontFamily: "'DM Sans', sans-serif" }}>
+            Rejoignez les entreprises qui utilisent RefBoost pour transformer leur réseau en source de revenus récurrents.
           </p>
-          <a href="/apply" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '18px 36px',
-            borderRadius: 14, background: '#fff', color: '#0f172a',
-            textDecoration: 'none', fontWeight: 700, fontSize: 17,
-            boxShadow: '0 8px 30px rgba(255,255,255,0.1)',
-            position: 'relative',
-          }}>
-            Postuler maintenant <ArrowRight size={20} />
-          </a>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', maxWidth: 460, margin: '0 auto' }}>
+            <input
+              type="email" placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)}
+              style={{
+                flex: 1, padding: '16px 20px', borderRadius: 12, border: '2px solid rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 15, fontFamily: 'inherit',
+                outline: 'none', backdropFilter: 'blur(10px)',
+              }}
+            />
+            <button onClick={() => navigate('/apply')} className="btn-primary" style={{
+              padding: '16px 28px', borderRadius: 12, border: 'none',
+              background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`,
+              color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+              whiteSpace: 'nowrap', boxShadow: `0 8px 30px ${COLORS.primary}30`,
+            }}>
+              Démarrer →
+            </button>
+          </div>
+          <p style={{ color: '#475569', fontSize: 12, marginTop: 16 }}>14 jours d'essai gratuit · Aucune carte requise</p>
         </div>
       </section>
 
       {/* ═══ FOOTER ═══ */}
-      <footer style={{
-        padding: '48px 40px', borderTop: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        maxWidth: 1200, margin: '0 auto',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#6366f1,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff' }}>S</div>
-          <span style={{ color: '#64748b', fontSize: 14 }}>Skipcall - Programme Partenaires</span>
-        </div>
-        <div style={{ color: '#475569', fontSize: 13 }}>
-          2026 Skipcall. Tous droits réservés.
+      <footer style={{ padding: '48px 48px 32px', background: COLORS.secondary, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Logo size={28} white />
+          <div style={{ display: 'flex', gap: 32 }}>
+            {['Fonctionnalités', 'Tarifs', 'Blog', 'Contact', 'CGV', 'Confidentialité'].map(item => (
+              <a key={item} href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>{item}</a>
+            ))}
+          </div>
+          <div style={{ color: '#475569', fontSize: 12 }}>© 2026 RefBoost. Tous droits réservés.</div>
         </div>
       </footer>
     </div>
