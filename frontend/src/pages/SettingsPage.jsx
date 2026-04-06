@@ -59,13 +59,13 @@ export default function SettingsPage() {
         {/* Right content */}
         <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
           <button onClick={handleClose} style={{
-            position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: 10,
+            position: 'absolute', top: 24, right: 24, width: 36, height: 36, borderRadius: 10, zIndex: 10,
             background: '#f1f5f9', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <X size={18} color="#475569" />
           </button>
-          <div style={{ padding: 32 }}>
+          <div style={{ padding: '32px 32px 32px 32px', paddingRight: 64 }}>
             {tab === 'account' && <AccountTab user={user} />}
             {tab === 'members' && isAdmin && <MembersTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
