@@ -167,16 +167,20 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
     // Clean messaging for users of this tenant
     await client.query('DELETE FROM messages WHERE sender_id IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
     await client.query('DELETE FROM conversation_participants WHERE user_id IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
-    // Delete conversations and orphaned messaging data linked to this tenant
-    await client.query('DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1)', [req.params.id]);
-    await client.query('DELETE FROM conversation_participants WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1)', [req.params.id]);
-    await client.query('DELETE FROM conversations WHERE tenant_id = $1', [req.params.id]);
+    // Delete messaging: catches both conversations linked to this tenant AND those created by users of this tenant
+    await client.query('DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1 OR created_by IN (SELECT id FROM users WHERE tenant_id = $1))', [req.params.id]);
+    await client.query('DELETE FROM conversation_participants WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1 OR created_by IN (SELECT id FROM users WHERE tenant_id = $1))', [req.params.id]);
+    await client.query('DELETE FROM conversations WHERE tenant_id = $1 OR created_by IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
     // Delete sessions for this tenant (ephemeral, FK on users + tenant)
-    await client.query('DELETE FROM sessions WHERE tenant_id = $1', [req.params.id]);
+    await client.query('DELETE FROM sessions WHERE tenant_id = $1 OR user_id IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
     // Audit logs: preserve for compliance, set tenant_id to NULL instead of DELETE
     await client.query('UPDATE audit_logs SET tenant_id = NULL WHERE tenant_id = $1', [req.params.id]);
-    // Delete API keys belonging to this tenant
-    await client.query('DELETE FROM api_keys WHERE tenant_id = $1', [req.params.id]);
+    // Delete API keys belonging to this tenant or created by its users
+    await client.query('DELETE FROM api_keys WHERE tenant_id = $1 OR created_by IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
+    // Partner applications: nullify reviewer (column is nullable), preserves audit trail
+    await client.query('UPDATE partner_applications SET reviewed_by = NULL WHERE reviewed_by IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
+    // User invitations: invited_by is NOT NULL, must DELETE invitations issued by these users
+    await client.query('DELETE FROM user_invitations WHERE invited_by IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
     // Delete users
     await client.query('DELETE FROM users WHERE tenant_id = $1', [req.params.id]);
     // Delete tenant-level config (levels, api keys, etc.)
@@ -266,6 +270,77 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
     res.status(201).json({ message: 'Super administrateur créé', user: newUser, tempPassword });
   } catch (err) {
     console.error('Invite superadmin error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Timeline KPIs (last 12 months evolution) ───
+router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    // Generate the last 12 months as YYYY-MM strings
+    const months = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+      });
+    }
+    // Cumulative count queries: for each month, how many entities existed at the end of that month
+    const [tenantsRows, partnersRows, leadsRows, volumeRows] = await Promise.all([
+      query(`
+        SELECT to_char(created_at, 'YYYY-MM') as month, COUNT(*) as count
+        FROM tenants
+        WHERE created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY month ORDER BY month
+      `),
+      query(`
+        SELECT to_char(created_at, 'YYYY-MM') as month, COUNT(*) as count
+        FROM partners
+        WHERE created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY month ORDER BY month
+      `),
+      query(`
+        SELECT to_char(created_at, 'YYYY-MM') as month, COUNT(*) as count
+        FROM referrals
+        WHERE created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY month ORDER BY month
+      `),
+      query(`
+        SELECT to_char(closed_at, 'YYYY-MM') as month, COALESCE(SUM(deal_value), 0) as total
+        FROM referrals
+        WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at >= NOW() - INTERVAL '12 months'
+        GROUP BY month ORDER BY month
+      `),
+    ]);
+    // Map results into the months array
+    const tenantsMap = Object.fromEntries(tenantsRows.rows.map(r => [r.month, parseInt(r.count)]));
+    const partnersMap = Object.fromEntries(partnersRows.rows.map(r => [r.month, parseInt(r.count)]));
+    const leadsMap = Object.fromEntries(leadsRows.rows.map(r => [r.month, parseInt(r.count)]));
+    const volumeMap = Object.fromEntries(volumeRows.rows.map(r => [r.month, parseFloat(r.total)]));
+    // Get cumulative totals before the 12-month window for accurate cumulative line
+    const [{ rows: [tenantsBefore] }, { rows: [partnersBefore] }] = await Promise.all([
+      query(`SELECT COUNT(*) as count FROM tenants WHERE created_at < NOW() - INTERVAL '12 months'`),
+      query(`SELECT COUNT(*) as count FROM partners WHERE created_at < NOW() - INTERVAL '12 months'`),
+    ]);
+    let cumulTenants = parseInt(tenantsBefore.count);
+    let cumulPartners = parseInt(partnersBefore.count);
+    const series = months.map(m => {
+      cumulTenants += (tenantsMap[m.key] || 0);
+      cumulPartners += (partnersMap[m.key] || 0);
+      return {
+        month: m.key,
+        label: m.label,
+        tenants_cumul: cumulTenants,
+        partners_cumul: cumulPartners,
+        leads_new: leadsMap[m.key] || 0,
+        volume_won: volumeMap[m.key] || 0,
+      };
+    });
+    res.json({ series });
+  } catch (err) {
+    console.error('Timeline error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
