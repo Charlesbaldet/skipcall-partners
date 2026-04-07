@@ -36,6 +36,7 @@ export default function OnboardingWizard({ onClose }) {
   }, []);
 
   const goNext = () => { setError(''); if (step < STEPS.length - 1) setStep(step + 1); else handleClose(); };
+  const goBack = () => { setError(''); if (step > 0) setStep(step - 1); };
   const handleClose = () => { localStorage.removeItem('refboost_onboarding_pending'); onClose(); };
 
   const submitUser = async () => {
@@ -236,19 +237,28 @@ export default function OnboardingWizard({ onClose }) {
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
+            {step > 0 && step < STEPS.length - 1 && (
+              <button onClick={goBack} disabled={submitting} style={{
+                padding: '14px 18px', borderRadius: 12, border: '1.5px solid #e2e8f0',
+                background: '#fff', color: C.m, fontWeight: 600, fontSize: 14,
+                cursor: submitting ? 'wait' : 'pointer',
+              }}>← Précédent</button>
+            )}
+            <button onClick={primaryAction} disabled={submitting} style={{
+              flex: 1, padding: '14px 24px', borderRadius: 12, border: 'none',
+              background: submitting ? C.m : g(C.p, C.pl), color: '#fff',
+              fontWeight: 700, fontSize: 15, cursor: submitting ? 'wait' : 'pointer',
+              boxShadow: submitting ? 'none' : '0 8px 24px rgba(5,150,105,0.3)',
+            }}>{primaryLabel()}</button>
+          </div>
           {canSkip && (
             <button onClick={goNext} disabled={submitting} style={{
               padding: '12px 18px', borderRadius: 12, border: 'none',
               background: 'transparent', color: C.m, fontWeight: 600, fontSize: 14, cursor: 'pointer',
-            }}>Passer</button>
+            }}>Passer cette étape</button>
           )}
-          <button onClick={primaryAction} disabled={submitting} style={{
-            width: '100%', padding: '14px 24px', borderRadius: 12, border: 'none',
-            background: submitting ? C.m : g(C.p, C.pl), color: '#fff',
-            fontWeight: 700, fontSize: 15, cursor: submitting ? 'wait' : 'pointer',
-            boxShadow: submitting ? 'none' : '0 8px 24px rgba(5,150,105,0.3)',
-          }}>{primaryLabel()}</button>
         </div>
       </div>
     </div>
