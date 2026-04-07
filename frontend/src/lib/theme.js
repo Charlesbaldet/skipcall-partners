@@ -5,9 +5,9 @@ import api from './api';
 const STYLE_ID = 'rb-theme-vars';
 
 const DEFAULTS = {
-  primary: '#059669',
-  primaryLight: '#10b981',
-  primaryDark: '#047857',
+  primary: '#047857',
+  primaryLight: '#059669',
+  primaryDark: '#065f46',
   accent: '#f97316',
   accentLight: '#fb923c',
 };

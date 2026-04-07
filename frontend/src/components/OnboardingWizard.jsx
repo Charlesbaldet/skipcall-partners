@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Users, UserPlus, Palette, Link2, Sparkles, Rocket, Copy, Check } from 'lucide-react';
 import api from '../lib/api';
 
-const C = { p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)', s: '#0f172a', m: '#64748b', a: 'var(--rb-accent, #f97316)' };
+const C = { p: 'var(--rb-primary, #047857)', pl: 'var(--rb-primary-light, #10b981)', s: '#0f172a', m: '#64748b', a: 'var(--rb-accent, #f97316)' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 const STEPS = [
@@ -120,7 +120,7 @@ export default function OnboardingWizard({ onClose }) {
           {STEPS.map((s, i) => (
             <div key={s.id} style={{
               flex: 1, height: 4, borderRadius: 2,
-              background: i <= step ? g(C.p, C.pl) : '#e2e8f0',
+              background: i <= step ? C.p : '#e2e8f0',
               transition: 'background 0.3s',
             }} />
           ))}
@@ -130,9 +130,9 @@ export default function OnboardingWizard({ onClose }) {
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 18, margin: '0 auto 16px',
-            background: g(C.p, C.pl),
+            background: C.p,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 30px rgba(5,150,105,0.3)',
+            boxShadow: '0 8px 30px rgba(4,120,87,0.3)',
           }}><Icon size={28} color="#fff" /></div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: C.s, margin: '0 0 8px', letterSpacing: -0.5 }}>{cur.title}</h2>
           <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Étape {step + 1} sur {STEPS.length}</p>
@@ -211,7 +211,7 @@ export default function OnboardingWizard({ onClose }) {
                 <code style={{ flex: 1, fontSize: 13, color: C.s, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicLink}</code>
                 <button onClick={copyLink} style={{
                   padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: copied ? '#dcfce7' : g(C.p, C.pl), color: copied ? '#166534' : '#fff',
+                  background: copied ? '#dcfce7' : C.p, color: copied ? '#166534' : '#fff',
                   fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
                 }}>
                   {copied ? <><Check size={14}/> Copié</> : <><Copy size={14}/> Copier</>}
@@ -248,9 +248,9 @@ export default function OnboardingWizard({ onClose }) {
             )}
             <button onClick={primaryAction} disabled={submitting} style={{
               flex: 1, padding: '14px 24px', borderRadius: 12, border: 'none',
-              background: submitting ? C.m : g(C.p, C.pl), color: '#fff',
+              background: submitting ? C.m : C.p, color: '#fff',
               fontWeight: 700, fontSize: 15, cursor: submitting ? 'wait' : 'pointer',
-              boxShadow: submitting ? 'none' : '0 8px 24px rgba(5,150,105,0.3)',
+              boxShadow: submitting ? 'none' : '0 8px 24px rgba(4,120,87,0.3)',
             }}>{primaryLabel()}</button>
           </div>
           {canSkip && (

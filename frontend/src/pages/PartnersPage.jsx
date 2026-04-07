@@ -88,7 +88,7 @@ export default function PartnersPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
-              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
+              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--rb-primary, #047857)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
               <button onClick={() => { handleArchive(editingId); setEditingId(null); }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fcd34d', background: '#fffbeb', color: '#b45309', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Archive size={14} /> Archiver</button>
@@ -172,7 +172,7 @@ export default function PartnersPage() {
               <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners(next); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Archive size={14} /> {showArchived ? `Archivés (${archivedPartners.length})` : 'Voir les archivés'}
               </button>
-              <button onClick={() => { setShowForm(!showForm); setTempPwd(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={() => { setShowForm(!showForm); setTempPwd(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'var(--rb-primary, #047857)', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
                 {showForm ? <X size={16} /> : <Plus size={16} />}
                 {showForm ? 'Annuler' : 'Ajouter un partenaire'}
               </button>
@@ -206,9 +206,9 @@ export default function PartnersPage() {
                   <p style={{ color: '#64748b', marginBottom: 16, fontSize: 14 }}>Voici les identifiants temporaires :</p>
                   <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, display: 'inline-block', textAlign: 'left' }}>
                     <p style={{ fontSize: 13, marginBottom: 4 }}><strong>Email :</strong> {form.email || partners[partners.length-1]?.email}</p>
-                    <p style={{ fontSize: 13 }}><strong>Mot de passe :</strong> <code style={{ background: '#eef2ff', padding: '2px 8px', borderRadius: 4, color: '#6366f1' }}>{tempPwd}</code></p>
+                    <p style={{ fontSize: 13 }}><strong>Mot de passe :</strong> <code style={{ background: '#eef2ff', padding: '2px 8px', borderRadius: 4, color: 'var(--rb-primary, #047857)' }}>{tempPwd}</code></p>
                   </div>
-                  <div style={{ marginTop: 20 }}><button onClick={() => { setShowForm(false); setTempPwd(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Fermer</button></div>
+                  <div style={{ marginTop: 20 }}><button onClick={() => { setShowForm(false); setTempPwd(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Fermer</button></div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
@@ -221,7 +221,7 @@ export default function PartnersPage() {
                     <FormField label="Site web" value={form.company_website} onChange={v => setForm(f => ({ ...f, company_website: v }))} />
                     <FormField label="Taux de commission (%)" value={form.commission_rate} onChange={v => setForm(f => ({ ...f, commission_rate: v }))} type="number" />
                   </div>
-                  <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Création...' : 'Créer le partenaire'}</button>
+                  <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Création...' : 'Créer le partenaire'}</button>
                 </form>
               )}
             </div>
@@ -288,7 +288,7 @@ export default function PartnersPage() {
                       </div>
                       <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{a.contact_name} · {a.email} · {fmtDate(a.created_at)}</div>
                     </div>
-                    <button onClick={() => { setSelectedApp(a); setCommissionRate(10); }} style={{ padding: '6px 14px', borderRadius: 8, background: '#eef2ff', border: 'none', color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button onClick={() => { setSelectedApp(a); setCommissionRate(10); }} style={{ padding: '6px 14px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #047857)', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <CheckCircle size={12} /> Examiner
                     </button>
                   </div>
@@ -314,7 +314,7 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
           <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
+          <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: 'var(--rb-primary, #047857)', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
           <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
         </div>
       </div>

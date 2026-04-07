@@ -52,7 +52,7 @@ export default function PartnerMyReferrals() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <PKPI icon={FileText} label="Total" value={kpis?.total_referrals || 0} color="var(--rb-primary, #059669)" />
+        <PKPI icon={FileText} label="Total" value={kpis?.total_referrals || 0} color="var(--rb-primary, #047857)" />
         <PKPI icon={TrendingUp} label="Gagnés" value={kpis?.won_count || 0} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
         <PKPI icon={DollarSign} label="Ma Commission" value={fmt(kpis?.total_commission || 0)} color="var(--rb-accent, #f97316)" />
       </div>
@@ -60,7 +60,7 @@ export default function PartnerMyReferrals() {
       {referrals.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
           <p style={{ color: '#94a3b8', marginBottom: 16 }}>Aucune recommandation pour le moment.</p>
-          <a href="/partner/submit" style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>Créer ma première recommandation →</a>
+          <a href="/partner/submit" style={{ color: 'var(--rb-primary, #047857)', fontWeight: 600 }}>Créer ma première recommandation →</a>
         </div>
       ) : viewMode === 'kanban' ? (
         <KanbanView referrals={referrals} onSelect={setSelected} />

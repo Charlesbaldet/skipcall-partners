@@ -211,7 +211,7 @@ export default function ReferralsPage() {
                       </div>
                       {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{r.prospect_company}</div>}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#6366f1', fontSize: 11, fontWeight: 600 }}>{r.partner_name}</span>
+                        <span style={{ color: 'var(--rb-primary, #047857)', fontSize: 11, fontWeight: 600 }}>{r.partner_name}</span>
                         {r.deal_value > 0 && <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</span>}
                       </div>
                       {/* Quick status change */}
@@ -227,7 +227,7 @@ export default function ReferralsPage() {
                   {hasMore && (
                     <button onClick={() => setKanbanLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
                       padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
-                      color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
+                      color: 'var(--rb-primary, #047857)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
                     }}>Voir plus ({allCards.length - limit} restants)</button>
                   )}
                 </div>
@@ -319,7 +319,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
         </div>
         <div style={{ padding: '16px 32px 0', display: 'flex', gap: 4, borderBottom: '1px solid #e2e8f0' }}>
           {[{ id: 'info', label: 'Informations' }, { id: 'pipeline', label: 'Pipeline' }, { id: 'history', label: `Historique (${activities.length})` }].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '10px 18px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: tab === t.id ? '#6366f1' : '#64748b', borderBottom: tab === t.id ? '2px solid #6366f1' : '2px solid transparent', background: 'transparent', marginBottom: -1 }}>{t.label}</button>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '10px 18px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: tab === t.id ? '#6366f1' : '#64748b', borderBottom: tab === t.id ? '2px solid var(--rb-primary, #047857)' : '2px solid transparent', background: 'transparent', marginBottom: -1 }}>{t.label}</button>
           ))}
         </div>
         <div style={{ padding: '24px 32px 28px' }}>
@@ -359,7 +359,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Engagement</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[['monthly', 'Mensuel'], ['quarterly', 'Trimestriel'], ['yearly', 'Annuel']].map(([k, label]) => (
-                    <button key={k} onClick={() => setEditEngagement(k)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editEngagement === k ? '2px solid #6366f1' : '2px solid #e2e8f0', background: editEngagement === k ? '#eef2ff' : '#fff', color: editEngagement === k ? '#6366f1' : '#64748b' }}>{label}</button>
+                    <button key={k} onClick={() => setEditEngagement(k)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editEngagement === k ? '2px solid var(--rb-primary, #047857)' : '2px solid #e2e8f0', background: editEngagement === k ? '#eef2ff' : '#fff', color: editEngagement === k ? '#6366f1' : '#64748b' }}>{label}</button>
                   ))}
                 </div>
               </div>
@@ -378,7 +378,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1 }}>{saving ? 'Enregistrement...' : 'Sauvegarder'}</button>
+                <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 15px rgba(4,120,87,0.3)', opacity: saving ? 0.7 : 1 }}>{saving ? 'Enregistrement...' : 'Sauvegarder'}</button>
                 <button onClick={() => onDelete(referral.id)} style={{ padding: '14px 20px', borderRadius: 12, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
               </div>
             </div>
@@ -391,7 +391,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
                 <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
                   {activities.map(a => (
                     <div key={a.id} style={{ position: 'relative' }}>
-                      <div style={{ position: 'absolute', left: -26, top: 4, width: 10, height: 10, borderRadius: '50%', background: '#6366f1', border: '2px solid #fff', boxShadow: '0 0 0 2px #e2e8f0' }} />
+                      <div style={{ position: 'absolute', left: -26, top: 4, width: 10, height: 10, borderRadius: '50%', background: 'var(--rb-primary, #047857)', border: '2px solid #fff', boxShadow: '0 0 0 2px #e2e8f0' }} />
                       <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 3 }}>{fmtDateTime(a.created_at)} · {a.user_name}</div>
                       <div style={{ fontSize: 14, color: '#334155', fontWeight: 500 }}>{formatActivity(a)}</div>
                     </div>

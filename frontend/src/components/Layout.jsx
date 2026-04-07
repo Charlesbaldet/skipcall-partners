@@ -10,7 +10,7 @@ import {
 
 // ─── RefBoost design tokens (sync avec LandingPage) ───
 const C = {
-  p: 'var(--rb-primary, #059669)',
+  p: 'var(--rb-primary, #047857)',
   pl: 'var(--rb-primary-light, #10b981)',
   pd: 'var(--rb-primary-dark, #047857)',
   s: '#0f172a',

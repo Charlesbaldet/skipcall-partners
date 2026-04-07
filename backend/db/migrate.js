@@ -109,6 +109,11 @@ async function runMigrations() {
     await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'level_threshold_type') THEN ALTER TABLE tenants ADD COLUMN level_threshold_type VARCHAR(20) DEFAULT 'deals'; END IF; END $$`);
     await query('CREATE INDEX IF NOT EXISTS idx_tenant_levels_tenant ON tenant_levels(tenant_id, position)');
 
+    // v8: Bump old #059669 (emerald-600) to #047857 (emerald-700) for WCAG AA accessibility
+    // Only affects tenants still on the old default, not custom colors.
+    await query(`UPDATE tenants SET primary_color = '#047857' WHERE primary_color = '#059669' OR primary_color IS NULL`);
+    await query(`UPDATE tenants SET accent_color = NULL WHERE accent_color = '#f97316'`);
+
     console.log('✅ Migrations completed');
   } catch (err) {
     console.error('Migration error:', err.message);

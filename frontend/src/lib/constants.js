@@ -1,5 +1,5 @@
 export const STATUS_CONFIG = {
-  new: { label: 'Nouveau', color: '#6366f1', bg: '#eef2ff' },
+  new: { label: 'Nouveau', color: 'var(--rb-primary, #047857)', bg: '#eef2ff' },
   contacted: { label: 'Contacté', color: '#0891b2', bg: '#ecfeff' },
   meeting: { label: 'RDV planifié', color: '#ca8a04', bg: '#fefce8' },
   proposal: { label: 'Proposition', color: '#c026d3', bg: '#fdf4ff' },

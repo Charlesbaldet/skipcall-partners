@@ -5,7 +5,7 @@ import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X,
 
 const COM_STATUS = {
   pending: { label: 'En attente', color: '#f59e0b', bg: '#fffbeb', icon: Clock },
-  approved: { label: 'Approuvée', color: '#6366f1', bg: '#eef2ff', icon: CheckCircle },
+  approved: { label: 'Approuvée', color: 'var(--rb-primary, #047857)', bg: '#eef2ff', icon: CheckCircle },
   paid: { label: 'Payée', color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
 };
 
@@ -121,11 +121,11 @@ export default function CommissionsPage() {
             <tbody>{summary.map(p => (
               <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                 <td style={{ padding: '13px 16px' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{p.contact_name}</div></td>
-                <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 12 }}>{p.commission_rate}%</span></td>
+                <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #047857)', fontWeight: 700, fontSize: 12 }}>{p.commission_rate}%</span></td>
                 <td style={{ padding: '13px 16px', fontWeight: 600 }}>{p.total_commissions}</td>
                 <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(p.total_deal_value)}</td>
                 <td style={{ padding: '13px 16px', color: '#f59e0b', fontWeight: 600 }}>{fmt(p.pending_amount)}</td>
-                <td style={{ padding: '13px 16px', color: '#6366f1', fontWeight: 600 }}>{fmt(p.approved_amount)}</td>
+                <td style={{ padding: '13px 16px', color: 'var(--rb-primary, #047857)', fontWeight: 600 }}>{fmt(p.approved_amount)}</td>
                 <td style={{ padding: '13px 16px', color: '#16a34a', fontWeight: 600 }}>{fmt(p.paid_amount)}</td>
                 <td style={{ padding: '13px 16px', fontWeight: 800, fontSize: 16, color: '#0f172a' }}>{fmt(p.total_amount)}</td>
               </tr>
@@ -163,7 +163,7 @@ export default function CommissionsPage() {
                       <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>{c.prospect_name}</div>
                       {c.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{c.prospect_company}</div>}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <span style={{ color: '#6366f1', fontSize: 11, fontWeight: 600 }}>{c.partner_name}</span>
+                        <span style={{ color: 'var(--rb-primary, #047857)', fontSize: 11, fontWeight: 600 }}>{c.partner_name}</span>
                         <span style={{ fontWeight: 800, color: sc.color, fontSize: 15 }}>{fmt(c.amount)}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: '#94a3b8', marginBottom: 10 }}>
@@ -171,7 +171,7 @@ export default function CommissionsPage() {
                         <span>{c.rate}%</span>
                       </div>
                       {status === 'pending' && (
-                        <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#eef2ff', border: 'none', color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Approuver</button>
+                        <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #047857)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Approuver</button>
                       )}
                       {status === 'approved' && (
                         <button onClick={() => handlePayClick(c)} style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#f0fdf4', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
@@ -187,7 +187,7 @@ export default function CommissionsPage() {
                   {hasMore && (
                     <button onClick={() => setComLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
                       padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
-                      color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
+                      color: 'var(--rb-primary, #047857)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
                     }}>Voir plus ({allCards.length - limit} restants)</button>
                   )}
                 </div>
@@ -218,7 +218,7 @@ export default function CommissionsPage() {
                   <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                     <td style={{ padding: '13px 16px' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div></td>
                     <td style={{ padding: '13px 16px', color: '#475569' }}>{c.partner_name}</td>
-                    <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span></td>
+                    <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #047857)', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span></td>
                     <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(c.deal_value)}</td>
                     <td style={{ padding: '13px 16px', fontWeight: 800, color: '#f59e0b', fontSize: 16 }}>{fmt(c.amount)}</td>
                     <td style={{ padding: '13px 16px' }}><span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: cs.bg, color: cs.color }}>{cs.label}</span></td>
@@ -227,7 +227,7 @@ export default function CommissionsPage() {
                       {c.payment_due_date ? (<span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#dc2626' : '#64748b', fontWeight: c.is_late ? 700 : 400 }}>{c.is_late && <AlertTriangle size={14} />}{fmtDate(c.payment_due_date)}</span>) : '—'}
                     </td>
                     <td style={{ padding: '13px 16px' }}>
-                      {c.status === 'pending' && <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eef2ff', border: 'none', color: '#6366f1', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Approuver</button>}
+                      {c.status === 'pending' && <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #047857)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Approuver</button>}
                       {c.status === 'approved' && <button onClick={() => handlePayClick(c)} style={{ padding: '6px 12px', borderRadius: 8, background: '#f0fdf4', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><CreditCard size={12} /> Payer</button>}
                       {c.status === 'paid' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
                     </td>
@@ -258,7 +258,7 @@ export default function CommissionsPage() {
               <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div><div style={{ color: '#94a3b8', fontSize: 11 }}>Prospect</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{payModal.commission.prospect_name}</div></div>
                 <div><div style={{ color: '#94a3b8', fontSize: 11 }}>Deal</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{fmt(payModal.commission.deal_value)}</div></div>
-                <div><div style={{ color: '#94a3b8', fontSize: 11 }}>Taux</div><div style={{ fontWeight: 600, color: '#6366f1', fontSize: 13 }}>{payModal.commission.rate}%</div></div>
+                <div><div style={{ color: '#94a3b8', fontSize: 11 }}>Taux</div><div style={{ fontWeight: 600, color: 'var(--rb-primary, #047857)', fontSize: 13 }}>{payModal.commission.rate}%</div></div>
               </div>
             </div>
             <div style={{ background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)', borderRadius: 14, padding: 20, textAlign: 'center', marginBottom: 24, border: '1px solid #bbf7d0' }}>

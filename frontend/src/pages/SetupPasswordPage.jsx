@@ -97,7 +97,7 @@ export default function SetupPasswordPage() {
       <div style={s.card} className="fade-in">
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>S</div>
+            <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #047857)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(4,120,87,0.4)' }}>S</div>
             <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>Skipcall</span>
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Créer votre mot de passe</h1>
@@ -128,9 +128,9 @@ export default function SetupPasswordPage() {
           </div>
           <button type="submit" disabled={saving} style={{
             width: '100%', padding: '14px', borderRadius: 12,
-            background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff',
+            background: 'var(--rb-primary, #047857)', color: '#fff',
             border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1,
+            boxShadow: '0 4px 15px rgba(4,120,87,0.3)', opacity: saving ? 0.7 : 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <Lock size={16} /> {saving ? 'Création...' : 'Créer mon compte'}

@@ -198,7 +198,7 @@ export default function LoginPage() {
             style={{
               width: '100%', padding: '15px',
               borderRadius: 12, border: 'none',
-              background: loading ? C.m : g(C.p, C.pl),
+              background: loading ? C.m : C.p,
               color: '#fff', fontWeight: 700, fontSize: 15,
               cursor: loading ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit',

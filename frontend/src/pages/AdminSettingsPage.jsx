@@ -97,7 +97,7 @@ export default function AdminSettingsPage() {
         {isAdmin && (
         <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12,
-          background: showInvite ? '#f1f5f9' : 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))',
+          background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #047857)',
           color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
         }}>
           {showInvite ? <X size={16} /> : <UserPlus size={16} />}
@@ -126,7 +126,7 @@ export default function AdminSettingsPage() {
                 <div style={{ marginBottom: 12 }}>
                   <span style={{ color: '#64748b', fontSize: 12 }}>Mot de passe provisoire</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <code style={{ background: '#eef2ff', padding: '6px 12px', borderRadius: 8, color: '#6366f1', fontWeight: 700, fontSize: 16, letterSpacing: 1 }}>{inviteResult.tempPassword}</code>
+                    <code style={{ background: '#eef2ff', padding: '6px 12px', borderRadius: 8, color: 'var(--rb-primary, #047857)', fontWeight: 700, fontSize: 16, letterSpacing: 1 }}>{inviteResult.tempPassword}</code>
                     <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
                       {copied ? <CheckCircle size={14} color="#16a34a" /> : <Copy size={14} color="#6366f1" />}
                     </button>
@@ -137,7 +137,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
               <div style={{ marginTop: 16 }}>
-                <button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Fermer</button>
+                <button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Fermer</button>
               </div>
             </div>
           ) : (
@@ -171,7 +171,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
               <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{
-                padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))',
+                padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #047857)',
                 color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: sending ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
@@ -282,7 +282,7 @@ export default function AdminSettingsPage() {
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
             </div>
             <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{
-              padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))',
+              padding: '12px', borderRadius: 12, background: 'var(--rb-primary, #047857)',
               color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
