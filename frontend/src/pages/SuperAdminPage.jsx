@@ -9,6 +9,8 @@ const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'n
 export default function SuperAdminPage() {
   const [tab, setTab] = useState('tenants');
   const [stats, setStats] = useState({});
+  const [timeline, setTimeline] = useState([]);
+  const [activeMetric, setActiveMetric] = useState('volume_won');
   const [tenants, setTenants] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,11 +24,13 @@ export default function SuperAdminPage() {
 
   const load = async () => {
     try {
-      const [s, t] = await Promise.all([
+      const [s, t, tl] = await Promise.all([
         api.request('/super-admin/stats'),
         api.request('/super-admin/tenants'),
+        api.request('/super-admin/timeline').catch(() => ({ series: [] })),
       ]);
       setStats(s); setTenants(t.tenants || []);
+      setTimeline((tl && tl.series) || []);
     } catch (err) {
       if (err.message?.includes('403')) navigate('/dashboard');
       console.error(err);
@@ -95,92 +99,8 @@ export default function SuperAdminPage() {
         <KPI icon={Target} label="Leads totaux" value={stats.total_leads || 0} color="#8b5cf6" />
       </div>
 
-      {/* Volume cards */}
-      {stats.volume_by_status && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', border: '1px solid #bbf7d0', borderRadius: 12, padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ background: '#059669', borderRadius: 8, padding: 8, display: 'flex' }}>
-                <TrendingUp size={18} color="#fff" />
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#065f46', textTransform: 'uppercase', letterSpacing: 0.5 }}>Volume gagné</div>
-            </div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#064e3b' }}>
-              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(stats.volume_by_status.won || 0)}
-            </div>
-            <div style={{ fontSize: 12, color: '#047857', marginTop: 4 }}>
-              {stats.leads_by_status && stats.leads_by_status.won ? `${stats.leads_by_status.won} lead${stats.leads_by_status.won > 1 ? 's' : ''} signé${stats.leads_by_status.won > 1 ? 's' : ''}` : '—'}
-            </div>
-          </div>
-          <div style={{ background: 'linear-gradient(135deg, #fefce8 0%, #fef9c3 100%)', border: '1px solid #fde047', borderRadius: 12, padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ background: '#ca8a04', borderRadius: 8, padding: 8, display: 'flex' }}>
-                <Activity size={18} color="#fff" />
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#854d0e', textTransform: 'uppercase', letterSpacing: 0.5 }}>Volume pipeline</div>
-            </div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#713f12' }}>
-              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format((stats.volume_by_status.contacted || 0) + (stats.volume_by_status.meeting || 0) + (stats.volume_by_status.proposal || 0))}
-            </div>
-            <div style={{ fontSize: 12, color: '#a16207', marginTop: 4 }}>
-              {(() => { const lbs = stats.leads_by_status || {}; const c = (lbs.contacted || 0) + (lbs.meeting || 0) + (lbs.proposal || 0); return c > 0 ? `${c} en cours` : '—'; })()}
-            </div>
-          </div>
-          <div style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fecaca', borderRadius: 12, padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ background: '#dc2626', borderRadius: 8, padding: 8, display: 'flex' }}>
-                <X size={18} color="#fff" />
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#991b1b', textTransform: 'uppercase', letterSpacing: 0.5 }}>Volume perdu</div>
-            </div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#7f1d1d' }}>
-              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(stats.volume_by_status.lost || 0)}
-            </div>
-            <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 4 }}>
-              {stats.leads_by_status && stats.leads_by_status.lost ? `${stats.leads_by_status.lost} lead${stats.leads_by_status.lost > 1 ? 's' : ''} perdu${stats.leads_by_status.lost > 1 ? 's' : ''}` : '—'}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tenants breakdown table */}
-      {stats.tenants_breakdown && stats.tenants_breakdown.length > 0 && (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 28, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BarChart3 size={18} color="#059669" />
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Activité par tenant</h3>
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-              <thead>
-                <tr style={{ background: '#f9fafb', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Tenant</th>
-                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'right' }}>Leads</th>
-                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'right' }}>Volume gagné</th>
-                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'right' }}>Pipeline</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.tenants_breakdown.map((t) => (
-                  <tr key={t.id} style={{ borderTop: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '14px 20px', fontWeight: 600, color: '#0f172a' }}>
-                      {t.name}
-                      <div style={{ fontSize: 11, fontWeight: 400, color: '#94a3b8' }}>{t.slug}</div>
-                    </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', color: '#475569' }}>{t.lead_count}</td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(t.volume_won || 0)}
-                    </td>
-                    <td style={{ padding: '14px 20px', textAlign: 'right', color: '#ca8a04' }}>
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(t.volume_pipeline || 0)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      {/* Timeline chart with metric tabs */}
+      <TimelineChart series={timeline} active={activeMetric} setActive={setActiveMetric} />
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
@@ -330,6 +250,104 @@ export default function SuperAdminPage() {
           {logs.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucun log</div>}
         </div>
       )}
+    </div>
+  );
+}
+
+function TimelineChart({ series, active, setActive }) {
+  if (!series || series.length === 0) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 40, textAlign: 'center', marginBottom: 28, color: '#94a3b8' }}>
+        Aucune donnée temporelle disponible pour le moment.
+      </div>
+    );
+  }
+  const metrics = [
+    { key: 'tenants_cumul', label: 'Clients', color: '#059669', format: (v) => v },
+    { key: 'partners_cumul', label: 'Partenaires', color: '#0ea5e9', format: (v) => v },
+    { key: 'leads_new', label: 'Leads / mois', color: '#f59e0b', format: (v) => v },
+    { key: 'volume_won', label: 'Volume gagné', color: '#16a34a', format: (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0) },
+  ];
+  const activeM = metrics.find((m) => m.key === active) || metrics[0];
+  const values = series.map((p) => Number(p[active]) || 0);
+  const max = Math.max(1, ...values);
+  const min = Math.min(0, ...values);
+  const W = 800, H = 240, padL = 56, padR = 16, padT = 24, padB = 32;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const x = (i) => padL + (series.length === 1 ? innerW / 2 : (i / (series.length - 1)) * innerW);
+  const y = (v) => padT + innerH - ((v - min) / (max - min || 1)) * innerH;
+  const path = series.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(values[i])}`).join(' ');
+  const areaPath = `${path} L ${x(series.length - 1)} ${padT + innerH} L ${x(0)} ${padT + innerH} Z`;
+  // Y axis ticks (4 levels)
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => min + (max - min) * r);
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 28, overflow: 'hidden' }}>
+      <div style={{ padding: '20px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Évolution sur 12 mois</h3>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>Suivez la croissance de votre plateforme</p>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {metrics.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setActive(m.key)}
+              style={{
+                background: active === m.key ? m.color : '#f1f5f9',
+                color: active === m.key ? '#fff' : '#475569',
+                border: 'none',
+                borderRadius: 8,
+                padding: '8px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: '16px 24px 24px' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+          <defs>
+            <linearGradient id={`grad-${active}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={activeM.color} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={activeM.color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* Y grid lines + labels */}
+          {yTicks.map((v, i) => (
+            <g key={i}>
+              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke="#f1f5f9" strokeWidth="1" />
+              <text x={padL - 8} y={y(v) + 4} fontSize="11" fill="#94a3b8" textAnchor="end">
+                {active === 'volume_won' ? new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(v) : Math.round(v)}
+              </text>
+            </g>
+          ))}
+          {/* X labels */}
+          {series.map((p, i) => (
+            i % Math.max(1, Math.ceil(series.length / 6)) === 0 && (
+              <text key={i} x={x(i)} y={H - 10} fontSize="11" fill="#94a3b8" textAnchor="middle">{p.label}</text>
+            )
+          ))}
+          {/* Area + line */}
+          <path d={areaPath} fill={`url(#grad-${active})`} />
+          <path d={path} fill="none" stroke={activeM.color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          {/* Points */}
+          {series.map((p, i) => (
+            <g key={i}>
+              <circle cx={x(i)} cy={y(values[i])} r="4" fill="#fff" stroke={activeM.color} strokeWidth="2" />
+              <title>{`${p.label}: ${activeM.format(values[i])}`}</title>
+            </g>
+          ))}
+        </svg>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: '#64748b' }}>
+          <span>Dernier mois</span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
+        </div>
+      </div>
     </div>
   );
 }
