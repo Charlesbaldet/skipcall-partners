@@ -117,6 +117,10 @@ async function runMigrations() {
     // v9: Revert to landing green — user prefers brand consistency
     await query(`UPDATE tenants SET primary_color = '#059669' WHERE primary_color = '#047857' OR primary_color IS NULL`);
 
+    // v10: Force landing green on ALL tenants (user explicit request)
+    // Clears any residual custom colors (lime #1ace0d, purple #8b5cf6, etc.)
+    await query(`UPDATE tenants SET primary_color = '#059669', secondary_color = '#10b981', accent_color = NULL`);
+
     console.log('✅ Migrations completed');
   } catch (err) {
     console.error('Migration error:', err.message);
