@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
-const { authenticate, partnerScope, tenantScope } = require('../middleware/auth');
+const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(authenticate);
@@ -64,6 +64,21 @@ router.post('/conversations', [
       [conv.id, req.user.id]
     );
 
+    // Security: verify all participants belong to current tenant
+    if (participant_ids.length > 0) {
+      const { rows: validUsers } = await client.query(
+        'SELECT id FROM users WHERE id = ANY($1) AND tenant_id = $2',
+        [participant_ids, req.tenantId]
+      );
+      const validIds = new Set(validUsers.map(u => u.id));
+      for (const pid of participant_ids) {
+        if (!validIds.has(pid) && pid !== req.user.id) {
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(403).json({ error: 'Participant invalide ou hors tenant' });
+        }
+      }
+    }
     // Add other participants
     for (const pid of participant_ids) {
       if (pid !== req.user.id) {
@@ -238,33 +253,52 @@ router.get('/users', async (req, res) => {
   }
 });
 
-module.exports = router;
 
 // ─── Delete conversation ───
 router.delete('/conversations/:id', async (req, res) => {
   try {
+    const { rows: part } = await query(
+      'SELECT 1 FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
+    if (part.length === 0) return res.status(403).json({ error: 'Accès interdit' });
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      await query('DELETE FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2', [req.params.id, req.user.id]);
+      return res.json({ message: 'Vous avez quitté la conversation' });
+    }
     await query('DELETE FROM messages WHERE conversation_id = $1', [req.params.id]);
     await query('DELETE FROM conversation_participants WHERE conversation_id = $1', [req.params.id]);
     await query('DELETE FROM conversations WHERE id = $1', [req.params.id]);
     res.json({ message: 'Conversation supprimée' });
-  } catch (err) { console.error('Delete conv error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch (err) {
+    console.error('Delete conv error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // ─── Cleanup old messages (>10 messages, older than 30 days) ───
-router.post('/cleanup', async (req, res) => {
+router.post('/cleanup', authorize('admin'), async (req, res) => {
   try {
     const { rowCount } = await query(`
-      DELETE FROM messages WHERE id IN (
+      DELETE FROM messages
+      WHERE id IN (
         SELECT m.id FROM messages m
-        JOIN (SELECT conversation_id, COUNT(*) as cnt FROM messages GROUP BY conversation_id HAVING COUNT(*) > 10) c
-        ON m.conversation_id = c.conversation_id
+        JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id
+        JOIN users u ON cp.user_id = u.id
         WHERE m.created_at < NOW() - INTERVAL '30 days'
-        AND m.id NOT IN (
-          SELECT id FROM messages m2 WHERE m2.conversation_id = m.conversation_id
-          ORDER BY m2.created_at DESC LIMIT 10
-        )
+          AND u.tenant_id = $1
+          AND m.id NOT IN (
+            SELECT id FROM messages m2
+            WHERE m2.conversation_id = m.conversation_id
+            ORDER BY m2.created_at DESC LIMIT 10
+          )
       )
-    `);
+    `, [req.tenantId]);
     res.json({ deleted: rowCount });
-  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch (err) {
+    console.error('Cleanup error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
+
+module.exports = router;

@@ -7,6 +7,11 @@ const { queueNotification } = require('../services/emailService');
 
 const router = express.Router();
 
+// In-memory per-IP rate limit for POST /apply (bot protection)
+const applyAttempts = new Map();
+const APPLY_LIMIT = 5;
+const APPLY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 // ─── PUBLIC: Submit application (no auth required) ───
 // Tenant is inherited from req.tenantId set by global tenantMiddleware (domain-based)
 router.post('/apply', [
@@ -19,6 +24,28 @@ router.post('/apply', [
   body('motivation').optional().trim(),
 ], async (req, res) => {
   try {
+    // Honeypot: bots typically fill every field including hidden ones
+    if (req.body.website && req.body.website.length > 0) {
+      return res.status(400).json({ error: 'Erreur de validation' });
+    }
+    // Per-IP rate limit: max 5 applications per hour
+    const clientIp = req.ip || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.connection.remoteAddress;
+    const nowTs = Date.now();
+    const attempt = applyAttempts.get(clientIp);
+    if (attempt && attempt.resetAt > nowTs) {
+      if (attempt.count >= APPLY_LIMIT) {
+        return res.status(429).json({ error: 'Trop de candidatures envoyées depuis cette adresse. Réessayez dans 1h.' });
+      }
+      attempt.count++;
+    } else {
+      applyAttempts.set(clientIp, { count: 1, resetAt: nowTs + APPLY_WINDOW_MS });
+    }
+    // Periodic cleanup to prevent memory leak (~0.1% of requests)
+    if (Math.random() < 0.001) {
+      for (const [k, v] of applyAttempts.entries()) {
+        if (v.resetAt <= nowTs) applyAttempts.delete(k);
+      }
+    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ error: errors.array()[0].msg });
