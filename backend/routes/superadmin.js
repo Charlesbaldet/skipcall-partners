@@ -2,6 +2,10 @@ const router = require('express').Router();
 const { query, getClient } = require('../db');
 const { authenticate } = require('../middleware/auth');
 const { auditLog } = require('../middleware/security');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const resend = require('../services/resend');
+const templates = require('../services/email-templates');
 
 // ─── Middleware: require superadmin role ───
 function requireSuperAdmin(req, res, next) {
@@ -195,6 +199,74 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
     res.status(500).json({ error: 'Erreur serveur: ' + err.message });
   } finally {
     client.release();
+  }
+});
+
+// ─── Invite a new super admin ───
+router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { email, full_name } = req.body;
+    if (!email || !full_name) {
+      return res.status(400).json({ error: 'Email et nom complet requis' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Email invalide' });
+    }
+    // Check if user already exists
+    const { rows: existing } = await query('SELECT id, role FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'Un utilisateur avec cet email existe déjà' });
+    }
+    // Generate temporary password
+    const tempPassword = crypto.randomBytes(9).toString('base64').replace(/[+/=]/g, '').slice(0, 12);
+    const hash = await bcrypt.hash(tempPassword, 10);
+    // Find the founder tenant (skipcall) to attach the superadmin to
+    const { rows: [founder] } = await query("SELECT id, name FROM tenants WHERE slug = 'skipcall' LIMIT 1");
+    const tenantId = founder ? founder.id : null;
+    // Insert user with superadmin role
+    const { rows: [newUser] } = await query(
+      'INSERT INTO users (email, password_hash, full_name, role, tenant_id, is_active) VALUES ($1, $2, $3, $4, $5, true) RETURNING id, email, full_name, role',
+      [email.toLowerCase(), hash, full_name, 'superadmin', tenantId]
+    );
+    // Fire-and-forget welcome email with credentials
+    try {
+      const loginUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/login';
+      const senderName = req.user && req.user.full_name ? req.user.full_name : 'L\'équipe RefBoost';
+      const bodyHtml = `
+        <p style="margin:0 0 16px;">Bonjour ${full_name},</p>
+        <p style="margin:0 0 16px;"><strong>${senderName}</strong> vient de vous nommer <strong>super administrateur</strong> sur RefBoost.</p>
+        <p style="margin:0 0 16px;">À ce titre, vous avez accès à la gestion globale de la plateforme : tenants, utilisateurs, métriques. <strong>Utilisez ce pouvoir avec précaution.</strong></p>
+        <p style="margin:0 0 16px;">Voici vos identifiants de connexion :</p>
+        <div style="margin:20px 0;padding:18px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
+          <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Email</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:15px;color:#1f2937;margin-bottom:12px;">${email}</div>
+          <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Mot de passe temporaire</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:17px;font-weight:600;color:#059669;">${tempPassword}</div>
+        </div>
+        <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Modifiez ce mot de passe dès votre première connexion depuis vos paramètres.</p>
+      `;
+      const html = templates.baseLayout({
+        title: `Vous êtes super administrateur RefBoost`,
+        preheader: `${senderName} vous a nommé super administrateur`,
+        tenantName: 'RefBoost',
+        bodyHtml,
+        ctaLabel: 'Se connecter au super admin',
+        ctaUrl: loginUrl,
+      });
+      await resend.sendAndLog({
+        to: email,
+        subject: 'Vous êtes super administrateur RefBoost',
+        html,
+        text: `Bonjour ${full_name},\n\n${senderName} vous a nommé super administrateur RefBoost.\n\nEmail: ${email}\nMot de passe temporaire: ${tempPassword}\n\nConnexion: ${loginUrl}`,
+        template: 'superadmin_invite',
+        payload: { recipient_name: full_name },
+        query,
+      });
+    } catch (e) { console.error('[superadmin.invite] email error:', e.message); }
+    res.status(201).json({ message: 'Super administrateur créé', user: newUser, tempPassword });
+  } catch (err) {
+    console.error('Invite superadmin error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
