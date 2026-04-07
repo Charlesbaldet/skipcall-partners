@@ -1,6 +1,9 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
+const resend = require('../services/resend');
+const templates = require('../services/email-templates');
+
 const router = express.Router();
 
 router.use(authenticate);
@@ -138,6 +141,61 @@ router.put('/:id', authorize('admin'), async (req, res) => {
     commission.payment_due_date = commission.approved_at ? nextQuarterEnd(commission.approved_at) : null;
     commission.is_late = commission.approved_at && commission.status !== 'paid' && new Date(nextQuarterEnd(commission.aproved_at)) < new Date();
 
+    // Fire-and-forget email when commission is approved or paid
+        if (status === 'approved' || status === 'paid') {
+          (async () => {
+            try {
+              const { rows: [enriched] } = await query(
+                `SELECT c.id, c.amount, c.status, c.referral_id, c.partner_id,
+                        r.prospect_name, r.prospect_company,
+                        t.name as tenant_name
+                 FROM commissions c
+                 JOIN referrals r ON c.referral_id = r.id
+                 JOIN partners p ON c.partner_id = p.id
+                 JOIN tenants t ON p.tenant_id = t.id
+                 WHERE c.id = $1`,
+                [req.params.id]
+              );
+              if (!enriched) return;
+              const { rows: partnerUsers } = await query(
+                `SELECT email, full_name FROM users WHERE partner_id = $1 AND is_active = true`,
+                [enriched.partner_id]
+              );
+              const dashboardUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/commissions';
+              const prospectName = enriched.prospect_name || enriched.prospect_company || 'votre prospect';
+              const amount = parseFloat(enriched.amount) || 0;
+              for (const u of partnerUsers) {
+                const tmpl = status === 'approved'
+                  ? templates.commissionValidated({
+                      partnerName: u.full_name,
+                      prospectName,
+                      commissionAmount: amount,
+                      currency: '€',
+                      dashboardUrl,
+                      tenantName: enriched.tenant_name,
+                    })
+                  : templates.commissionPaid({
+                      partnerName: u.full_name,
+                      prospectName,
+                      commissionAmount: amount,
+                      currency: '€',
+                      dashboardUrl,
+                      tenantName: enriched.tenant_name,
+                    });
+                await resend.sendAndLog({
+                  to: u.email,
+                  subject: tmpl.subject,
+                  html: tmpl.html,
+                  text: tmpl.text,
+                  template: status === 'approved' ? 'commission_validated' : 'commission_paid',
+                  payload: { recipient_name: u.full_name, commission_id: enriched.id, amount },
+                  query,
+                });
+              }
+            } catch (e) { console.error('[commissions.statusChange] email error:', e.message); }
+          })();
+        }
+    
     res.json({ commission });
   } catch (err) {
     console.error('Update commission error:', err);

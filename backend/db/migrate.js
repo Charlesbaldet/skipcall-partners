@@ -121,6 +121,17 @@ async function runMigrations() {
     // Clears any residual custom colors (lime #1ace0d, purple #8b5cf6, etc.)
     await query(`UPDATE tenants SET primary_color = '#059669', secondary_color = '#10b981', accent_color = NULL`);
 
+    
+    // ─── v14: apply endpoint rate limit (distributed, multi-worker safe) ───
+    await query(`
+      CREATE TABLE IF NOT EXISTS apply_rate_limits (
+        ip VARCHAR(45) PRIMARY KEY,
+        attempt_count INTEGER NOT NULL DEFAULT 1,
+        reset_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_apply_rate_limits_reset ON apply_rate_limits (reset_at)`);
     console.log('✅ Migrations completed');
   } catch (err) {
     console.error('Migration error:', err.message);

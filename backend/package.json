@@ -18,6 +18,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "@mollie/api-client": "^3.7.0",
+    "resend": "^3.2.0",
     "nodemailer": "^6.9.15",
     "pg": "^8.13.0",
     "express-validator": "^7.2.0"
