@@ -94,6 +94,21 @@ async function runMigrations() {
     await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'logo_url') THEN ALTER TABLE tenants ADD COLUMN logo_url TEXT; END IF; END $$`);
     await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'settings') THEN ALTER TABLE tenants ADD COLUMN settings JSONB; END IF; END $$`);
 
+    // v7: Programme — tenant_levels + level_threshold_type
+    await query(`CREATE TABLE IF NOT EXISTS tenant_levels (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+      name VARCHAR(50) NOT NULL,
+      min_threshold NUMERIC(15, 2) NOT NULL DEFAULT 0,
+      commission_rate NUMERIC(5, 2) NOT NULL DEFAULT 10,
+      color VARCHAR(20),
+      icon VARCHAR(10),
+      position INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'level_threshold_type') THEN ALTER TABLE tenants ADD COLUMN level_threshold_type VARCHAR(20) DEFAULT 'deals'; END IF; END $$`);
+    await query('CREATE INDEX IF NOT EXISTS idx_tenant_levels_tenant ON tenant_levels(tenant_id, position)');
+
     console.log('✅ Migrations completed');
   } catch (err) {
     console.error('Migration error:', err.message);

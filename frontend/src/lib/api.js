@@ -89,6 +89,14 @@ class ApiClient {
 
   // Tenant (current user's tenant)
   getMyTenant() { return this.request('/tenants/me'); }
+
+  // Programme (tenant levels)
+  getTenantLevels() { return this.request('/levels'); }
+  createTenantLevel(data) { return this.request('/levels', { method: 'POST', body: JSON.stringify(data) }); }
+  updateTenantLevel(id, data) { return this.request('/levels/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
+  deleteTenantLevel(id) { return this.request('/levels/' + id, { method: 'DELETE' }); }
+  resetTenantLevels() { return this.request('/levels/reset', { method: 'POST' }); }
+  setTenantLevelThresholdType(type) { return this.request('/levels/threshold-type', { method: 'POST', body: JSON.stringify({ type }) }); }
   getTenantBySlug(slug) { return this.request('/tenants/public/' + slug); }
 
   updateMyTenant(data) {
