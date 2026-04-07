@@ -5,6 +5,8 @@ const { body, validationResult } = require('express-validator');
 const { query } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const { generateApiKey, hashKey } = require('../middleware/apiKeyAuth');
+const resend = require('../services/resend');
+const templates = require('../services/email-templates');
 const router = express.Router();
 
 router.use(authenticate);
@@ -60,8 +62,44 @@ router.post('/invite', [
       'INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, $4, $5)',
       [email, hash, full_name, role, req.tenantId || null]
     );
-
-    res.status(201).json({ message: 'Utilisateur crÃ©Ã©', tempPassword, email });
+    // Fire-and-forget invitation email via Resend
+    try {
+      const loginUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/login';
+      const roleLabel = role === 'admin' ? 'administrateur' : 'commercial';
+      const tenantName = req.user && req.user.tenant_name ? req.user.tenant_name : 'RefBoost';
+      const senderName = req.user && req.user.full_name ? req.user.full_name : '';
+      const bodyHtml = `
+        <p style="margin:0 0 16px;">Bonjour ${full_name},</p>
+        <p style="margin:0 0 16px;"><strong>${senderName || 'L\'équipe ' + tenantName}</strong> vous a créé un compte sur l'espace <strong>${tenantName}</strong> en tant que <strong>${roleLabel}</strong>.</p>
+        <p style="margin:0 0 16px;">Voici vos identifiants de connexion :</p>
+        <div style="margin:20px 0;padding:18px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
+          <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Email</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:15px;color:#1f2937;margin-bottom:12px;">${email}</div>
+          <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Mot de passe temporaire</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:17px;font-weight:600;color:#059669;">${tempPassword}</div>
+        </div>
+        <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Par sécurité, nous vous invitons à modifier ce mot de passe dès votre première connexion depuis vos paramètres.</p>
+      `;
+      const html = templates.baseLayout({
+        title: `Bienvenue dans l'espace ${tenantName}`,
+        preheader: `Votre compte ${roleLabel} a été créé`,
+        tenantName,
+        bodyHtml,
+        ctaLabel: 'Se connecter maintenant',
+        ctaUrl: loginUrl,
+      });
+      await resend.sendAndLog({
+        to: email,
+        subject: `Bienvenue dans l'espace ${tenantName}`,
+        html,
+        text: `Bonjour ${full_name},\n\nUn compte ${roleLabel} vous a été créé sur ${tenantName}.\n\nEmail: ${email}\nMot de passe temporaire: ${tempPassword}\n\nConnexion: ${loginUrl}`,
+        template: 'member_invite',
+        payload: { recipient_name: full_name, role, tenant: tenantName },
+        query,
+      });
+    } catch (e) { console.error('[admin.invite] email error:', e.message); }
+    
+    res.status(201).json({ message: 'Utilisateur créé', tempPassword, email });
   } catch (err) { console.error('Invite error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
