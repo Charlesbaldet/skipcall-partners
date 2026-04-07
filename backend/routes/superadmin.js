@@ -90,9 +90,9 @@ router.post('/tenants', authenticate, requireSuperAdmin, async (req, res) => {
   if (!name || !slug) return res.status(400).json({ error: 'Nom et slug requis' });
   try {
     const { rows } = await query(
-      `INSERT INTO tenants (name, slug, domain, primary_color, secondary_color, accent_color, logo_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [name, slug.toLowerCase().replace(/[^a-z0-9-]/g, ''), domain || null, primary_color || '#6366f1', secondary_color || '#8b5cf6', accent_color || '#f59e0b', logo_url || null]
+      `INSERT INTO tenants (name, slug, domain, primary_color, secondary_color, accent_color, logo_url, revenue_model)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [name, slug.toLowerCase().replace(/[^a-z0-9-]/g, ''), domain || null, primary_color || '#6366f1', secondary_color || '#8b5cf6', accent_color || '#f59e0b', logo_url || null, req.body.revenue_model || 'CA']
     );
     auditLog(req, 'tenant_created', 'tenant', rows[0].id, { name, slug });
     res.json({ tenant: rows[0] });
@@ -110,8 +110,8 @@ router.put('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) => 
       `UPDATE tenants SET name = COALESCE($1, name), domain = COALESCE($2, domain),
        primary_color = COALESCE($3, primary_color), secondary_color = COALESCE($4, secondary_color),
        accent_color = COALESCE($5, accent_color), logo_url = COALESCE($6, logo_url),
-       is_active = COALESCE($7, is_active), updated_at = NOW() WHERE id = $8 RETURNING *`,
-      [name, domain, primary_color, secondary_color, accent_color, logo_url, is_active, req.params.id]
+       is_active = COALESCE($7, is_active), revenue_model = COALESCE($8, revenue_model), updated_at = NOW() WHERE id = $9 RETURNING *`,
+      [name, domain, primary_color, secondary_color, accent_color, logo_url, is_active, req.body.revenue_model || null, req.params.id]
     );
     auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
     res.json({ tenant: rows[0] });
