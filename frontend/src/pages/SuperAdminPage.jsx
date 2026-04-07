@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle } from 'lucide-react';
+import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart3 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -9,6 +9,8 @@ const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'n
 export default function SuperAdminPage() {
   const [tab, setTab] = useState('tenants');
   const [stats, setStats] = useState({});
+  const [timeline, setTimeline] = useState([]);
+  const [activeMetric, setActiveMetric] = useState('volume_won');
   const [tenants, setTenants] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,11 +24,13 @@ export default function SuperAdminPage() {
 
   const load = async () => {
     try {
-      const [s, t] = await Promise.all([
+      const [s, t, tl] = await Promise.all([
         api.request('/super-admin/stats'),
         api.request('/super-admin/tenants'),
+        api.request('/super-admin/timeline').catch(() => ({ series: [] })),
       ]);
       setStats(s); setTenants(t.tenants || []);
+      setTimeline((tl && tl.series) || []);
     } catch (err) {
       if (err.message?.includes('403')) navigate('/dashboard');
       console.error(err);
@@ -75,18 +79,28 @@ export default function SuperAdminPage() {
     <div className="fade-in">
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <Shield size={24} color="#6366f1" />
+          <Shield size={24} color="#059669" />
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Super Admin</h1>
         </div>
         <p style={{ color: '#64748b' }}>Gestion de la plateforme — données non-sensibles uniquement</p>
       </div>
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <KPI icon={Globe} label="Tenants actifs" value={stats.total_tenants || 0} color="#6366f1" />
+      {/* KPIs - Row 1: Counts */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 16 }}>
+        <KPI icon={Globe} label="Tenants actifs" value={stats.total_tenants || 0} color="#059669" />
         <KPI icon={Users} label="Utilisateurs totaux" value={stats.total_users || 0} color="#0ea5e9" />
         <KPI icon={Activity} label="Utilisateurs actifs" value={stats.active_users || 0} color="#16a34a" />
       </div>
+
+      {/* KPIs - Row 2: Partners & Leads */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <KPI icon={Briefcase} label="Partenaires totaux" value={stats.total_partners || 0} color="#f59e0b" />
+        <KPI icon={Briefcase} label="Partenaires actifs" value={stats.active_partners || 0} color="#16a34a" />
+        <KPI icon={Target} label="Leads totaux" value={stats.total_leads || 0} color="#8b5cf6" />
+      </div>
+
+      {/* Timeline chart with metric tabs */}
+      <TimelineChart series={timeline} active={activeMetric} setActive={setActiveMetric} />
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
@@ -135,7 +149,7 @@ export default function SuperAdminPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                   {[['primary_color', 'Primaire'], ['secondary_color', 'Secondaire'], ['accent_color', 'Accent']].map(([key, label]) => (
-                    <div key={key}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm[key] || '#6366f1'} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm[key]}</code></div></div>
+                    <div key={key}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm[key] || '#059669'} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm[key]}</code></div></div>
                   ))}
                 </div>
                 {/* Preview */}
@@ -187,7 +201,7 @@ export default function SuperAdminPage() {
                 <tr key={t.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '13px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 8, background: t.primary_color || '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{t.name[0]}</div>
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: t.primary_color || '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{t.name[0]}</div>
                       <span style={{ fontWeight: 600, color: '#0f172a' }}>{t.name}</span>
                     </div>
                   </td>
@@ -227,7 +241,7 @@ export default function SuperAdminPage() {
                 <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDateTime(l.created_at)}</td>
                 <td style={{ padding: '10px 14px', fontWeight: 500, color: '#0f172a' }}>{l.user_name || l.user_email || '—'}</td>
                 <td style={{ padding: '10px 14px', color: 'var(--rb-primary, #059669)', fontSize: 12 }}>{l.tenant_name || '—'}</td>
-                <td style={{ padding: '10px 14px' }}><span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: l.action.includes('fail') || l.action.includes('block') ? '#fef2f2' : '#eef2ff', color: l.action.includes('fail') || l.action.includes('block') ? '#dc2626' : '#6366f1' }}>{l.action}</span></td>
+                <td style={{ padding: '10px 14px' }}><span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: l.action.includes('fail') || l.action.includes('block') ? '#fef2f2' : '#eef2ff', color: l.action.includes('fail') || l.action.includes('block') ? '#dc2626' : '#059669' }}>{l.action}</span></td>
                 <td style={{ padding: '10px 14px', color: '#64748b', fontSize: 12 }}>{l.resource_type || '—'}</td>
                 <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 11, fontFamily: 'monospace' }}>{l.ip_address || '—'}</td>
               </tr>
@@ -236,6 +250,104 @@ export default function SuperAdminPage() {
           {logs.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucun log</div>}
         </div>
       )}
+    </div>
+  );
+}
+
+function TimelineChart({ series, active, setActive }) {
+  if (!series || series.length === 0) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 40, textAlign: 'center', marginBottom: 28, color: '#94a3b8' }}>
+        Aucune donnée temporelle disponible pour le moment.
+      </div>
+    );
+  }
+  const metrics = [
+    { key: 'tenants_cumul', label: 'Clients', color: '#059669', format: (v) => v },
+    { key: 'partners_cumul', label: 'Partenaires', color: '#0ea5e9', format: (v) => v },
+    { key: 'leads_cumul', label: 'Leads', color: '#f59e0b', format: (v) => v },
+    { key: 'volume_won', label: 'Volume gagné', color: '#16a34a', format: (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0) },
+  ];
+  const activeM = metrics.find((m) => m.key === active) || metrics[0];
+  const values = series.map((p) => Number(p[active]) || 0);
+  const max = Math.max(1, ...values);
+  const min = Math.min(0, ...values);
+  const W = 800, H = 240, padL = 56, padR = 16, padT = 24, padB = 32;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const x = (i) => padL + (series.length === 1 ? innerW / 2 : (i / (series.length - 1)) * innerW);
+  const y = (v) => padT + innerH - ((v - min) / (max - min || 1)) * innerH;
+  const path = series.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(values[i])}`).join(' ');
+  const areaPath = `${path} L ${x(series.length - 1)} ${padT + innerH} L ${x(0)} ${padT + innerH} Z`;
+  // Y axis ticks (4 levels)
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => min + (max - min) * r);
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 28, overflow: 'hidden' }}>
+      <div style={{ padding: '20px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Évolution sur 12 mois</h3>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>Suivez la croissance de votre plateforme</p>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {metrics.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setActive(m.key)}
+              style={{
+                background: active === m.key ? m.color : '#f1f5f9',
+                color: active === m.key ? '#fff' : '#475569',
+                border: 'none',
+                borderRadius: 8,
+                padding: '8px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: '16px 24px 24px' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+          <defs>
+            <linearGradient id={`grad-${active}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={activeM.color} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={activeM.color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* Y grid lines + labels */}
+          {yTicks.map((v, i) => (
+            <g key={i}>
+              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke="#f1f5f9" strokeWidth="1" />
+              <text x={padL - 8} y={y(v) + 4} fontSize="11" fill="#94a3b8" textAnchor="end">
+                {active === 'volume_won' ? new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(v) : Math.round(v)}
+              </text>
+            </g>
+          ))}
+          {/* X labels */}
+          {series.map((p, i) => (
+            i % Math.max(1, Math.ceil(series.length / 6)) === 0 && (
+              <text key={i} x={x(i)} y={H - 10} fontSize="11" fill="#94a3b8" textAnchor="middle">{p.label}</text>
+            )
+          ))}
+          {/* Area + line */}
+          <path d={areaPath} fill={`url(#grad-${active})`} />
+          <path d={path} fill="none" stroke={activeM.color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          {/* Points */}
+          {series.map((p, i) => (
+            <g key={i}>
+              <circle cx={x(i)} cy={y(values[i])} r="4" fill="#fff" stroke={activeM.color} strokeWidth="2" />
+              <title>{`${p.label}: ${activeM.format(values[i])}`}</title>
+            </g>
+          ))}
+        </svg>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: '#64748b' }}>
+          <span>Dernier mois</span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
+        </div>
+      </div>
     </div>
   );
 }
