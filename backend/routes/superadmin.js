@@ -177,7 +177,9 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
     await client.query('UPDATE audit_logs SET tenant_id = NULL WHERE tenant_id = $1', [req.params.id]);
     // Delete API keys belonging to this tenant or created by its users
     await client.query('DELETE FROM api_keys WHERE tenant_id = $1 OR created_by IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
-    // Partner applications: nullify reviewer (column is nullable), preserves audit trail
+    // Partner applications belonging to this tenant: full DELETE
+    await client.query('DELETE FROM partner_applications WHERE tenant_id = $1', [req.params.id]);
+        // Partner applications: nullify reviewer (column is nullable), preserves audit trail
     await client.query('UPDATE partner_applications SET reviewed_by = NULL WHERE reviewed_by IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
     // User invitations: invited_by is NOT NULL, must DELETE invitations issued by these users
     await client.query('DELETE FROM user_invitations WHERE invited_by IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
