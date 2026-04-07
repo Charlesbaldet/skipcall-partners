@@ -163,6 +163,16 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
     // Clean messaging for users of this tenant
     await client.query('DELETE FROM messages WHERE sender_id IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
     await client.query('DELETE FROM conversation_participants WHERE user_id IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
+    // Delete conversations and orphaned messaging data linked to this tenant
+    await client.query('DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1)', [req.params.id]);
+    await client.query('DELETE FROM conversation_participants WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1)', [req.params.id]);
+    await client.query('DELETE FROM conversations WHERE tenant_id = $1', [req.params.id]);
+    // Delete sessions for this tenant (ephemeral, FK on users + tenant)
+    await client.query('DELETE FROM sessions WHERE tenant_id = $1', [req.params.id]);
+    // Audit logs: preserve for compliance, set tenant_id to NULL instead of DELETE
+    await client.query('UPDATE audit_logs SET tenant_id = NULL WHERE tenant_id = $1', [req.params.id]);
+    // Delete API keys belonging to this tenant
+    await client.query('DELETE FROM api_keys WHERE tenant_id = $1', [req.params.id]);
     // Delete users
     await client.query('DELETE FROM users WHERE tenant_id = $1', [req.params.id]);
     // Delete tenant-level config (levels, api keys, etc.)
