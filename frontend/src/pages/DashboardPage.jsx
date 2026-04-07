@@ -11,7 +11,7 @@ const LEVEL_COLORS = {
   Bronze: { bg: '#fef3e2', color: '#cd7f32', border: '#f5d5a0' },
   Silver: { bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' },
   Gold: { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
-  Platinum: { bg: '#eef2ff', color: 'var(--rb-primary, #047857)', border: '#c7d2fe' },
+  Platinum: { bg: '#eef2ff', color: 'var(--rb-primary, #059669)', border: '#c7d2fe' },
 };
 
 export default function DashboardPage() {
@@ -355,7 +355,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink }) {
                         <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{p.next_level.deals_needed} → {p.next_level.icon}</span>
                       </div>
                     ) : (
-                      <span style={{ color: 'var(--rb-primary, #047857)', fontWeight: 600 }}>Max ✨</span>
+                      <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>Max ✨</span>
                     )}
                   </td>
                 </tr>

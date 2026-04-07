@@ -114,6 +114,9 @@ async function runMigrations() {
     await query(`UPDATE tenants SET primary_color = '#047857' WHERE primary_color = '#059669' OR primary_color IS NULL`);
     await query(`UPDATE tenants SET accent_color = NULL WHERE accent_color = '#f97316'`);
 
+    // v9: Revert to landing green — user prefers brand consistency
+    await query(`UPDATE tenants SET primary_color = '#059669' WHERE primary_color = '#047857' OR primary_color IS NULL`);
+
     console.log('✅ Migrations completed');
   } catch (err) {
     console.error('Migration error:', err.message);

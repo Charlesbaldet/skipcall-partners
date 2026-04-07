@@ -72,7 +72,7 @@ export default function PublicApplyPage() {
               {tenant?.logo_url ? (
                 <img src={tenant.logo_url} alt="Logo" style={{ height: 44, maxWidth: 160, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
               ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #047857)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(4,120,87,0.4)' }}>{(tenant?.name || 'S').charAt(0).toUpperCase()}</div>
+                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>{(tenant?.name || 'S').charAt(0).toUpperCase()}</div>
               )}
               <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>{tenant?.name || 'Skipcall'}</span>
             </div>
@@ -118,9 +118,9 @@ export default function PublicApplyPage() {
               </div>
               <button disabled={!canSubmit} onClick={() => setStep(2)} style={{
                 marginTop: 28, width: '100%', padding: '14px', borderRadius: 12,
-                background: canSubmit ? 'var(--rb-primary, #047857)' : 'rgba(255,255,255,0.06)',
+                background: canSubmit ? 'var(--rb-primary, #059669)' : 'rgba(255,255,255,0.06)',
                 color: canSubmit ? '#fff' : '#64748b', border: 'none', fontWeight: 600, fontSize: 15,
-                cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 15px rgba(4,120,87,0.3)' : 'none',
+                cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 15px rgba(5,150,105,0.3)' : 'none',
               }}>Continuer</button>
             </div>
           )}

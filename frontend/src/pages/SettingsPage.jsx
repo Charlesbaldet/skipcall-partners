@@ -98,7 +98,7 @@ function AccountTab({ user }) {
         </div>
         <div>
           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 16 }}>{user?.fullName}</div>
-          <div style={{ color: '#64748b', fontSize: 13 }}>{user?.email} · <span style={{ textTransform: 'capitalize', color: 'var(--rb-primary, #047857)', fontWeight: 600 }}>{user?.role}</span></div>
+          <div style={{ color: '#64748b', fontSize: 13 }}>{user?.email} · <span style={{ textTransform: 'capitalize', color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{user?.role}</span></div>
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -116,7 +116,7 @@ function AccountTab({ user }) {
         </div>
         <div><label style={labelStyle}>Nouveau mot de passe</label><input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder="Minimum 8 caractères" style={inputStyle} /></div>
         <div><label style={labelStyle}>Confirmer</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} style={inputStyle} /></div>
-        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
+        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
       </div>
     </div>
   );
@@ -157,7 +157,7 @@ function MembersTab() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Membres</h3>
-        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #047857)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           {showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? 'Annuler' : 'Ajouter'}
         </button>
       </div>
@@ -173,12 +173,12 @@ function MembersTab() {
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Email</span><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{inviteResult.email}</div></div>
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Mot de passe provisoire</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <code style={{ background: '#eef2ff', padding: '4px 10px', borderRadius: 6, color: 'var(--rb-primary, #047857)', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
+                    <code style={{ background: '#eef2ff', padding: '4px 10px', borderRadius: 6, color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
                     <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 5, padding: 4, cursor: 'pointer', display: 'flex' }}>{copied ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} color="#6366f1" />}</button>
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: 12 }}><button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>OK</button></div>
+              <div style={{ marginTop: 12 }}><button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>OK</button></div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -193,7 +193,7 @@ function MembersTab() {
                   ))}
                 </div>
               </div>
-              <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: sending ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}><UserPlus size={14} /> {sending ? 'Création...' : 'Créer'}</button>
+              <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: sending ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}><UserPlus size={14} /> {sending ? 'Création...' : 'Créer'}</button>
             </div>
           )}
         </div>
@@ -313,12 +313,12 @@ function IntegrationsTab() {
             <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Partenaire (optionnel)</label><select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }}><option value="">Aucun</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? 'Création...' : 'Générer'}</button>
+            <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? 'Création...' : 'Générer'}</button>
             <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'var(--rb-primary, #047857)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> Créer une clé API</button>
+        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> Créer une clé API</button>
       )}
 
       {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>Chargement...</div> : (
@@ -376,7 +376,7 @@ function PublicLinkTab() {
           <code style={{ flex: 1, fontSize: 13, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{directLink}</code>
           <button onClick={() => copy('link', directLink)} style={{
             padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: copied === 'link' ? '#dcfce7' : 'var(--rb-primary, #047857)',
+            background: copied === 'link' ? '#dcfce7' : 'var(--rb-primary, #059669)',
             color: copied === 'link' ? '#166534' : '#fff',
             fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
           }}>
@@ -392,7 +392,7 @@ function PublicLinkTab() {
           <code style={{ display: 'block', fontSize: 12, color: '#0f172a', marginBottom: 12, fontFamily: 'monospace', wordBreak: 'break-all', lineHeight: 1.6 }}>{embedCode}</code>
           <button onClick={() => copy('embed', embedCode)} style={{
             padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: copied === 'embed' ? '#dcfce7' : 'var(--rb-primary, #047857)',
+            background: copied === 'embed' ? '#dcfce7' : 'var(--rb-primary, #059669)',
             color: copied === 'embed' ? '#166534' : '#fff',
             fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
           }}>
@@ -494,7 +494,7 @@ function AppearanceTab() {
 
         <button onClick={save} disabled={saving} style={{
           padding: '12px 24px', borderRadius: 10, border: 'none', cursor: saving ? 'wait' : 'pointer',
-          background: 'var(--rb-primary, #047857)', color: '#fff', fontWeight: 700, fontSize: 14,
+          background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 700, fontSize: 14,
           width: 'fit-content', display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <Palette size={16} /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
@@ -625,7 +625,7 @@ function ProgramTab() {
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #047857)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Enregistrer</button>
+        <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Enregistrer</button>
         <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
       </div>
     </div>
@@ -647,12 +647,12 @@ function ProgramTab() {
         <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', fontSize: 13, marginBottom: 10 }}>Critère de progression</label>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setType('deals')} style={{
-            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (isDeal ? 'var(--rb-primary, #047857)' : '#e2e8f0'),
+            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (isDeal ? 'var(--rb-primary, #059669)' : '#e2e8f0'),
             background: isDeal ? '#f0fdf4' : '#fff', color: isDeal ? '#0f172a' : '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>🎯 Nombre de deals gagnés</button>
           <button onClick={() => setType('volume')} style={{
-            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (!isDeal ? 'var(--rb-primary, #047857)' : '#e2e8f0'),
+            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (!isDeal ? 'var(--rb-primary, #059669)' : '#e2e8f0'),
             background: !isDeal ? '#f0fdf4' : '#fff', color: !isDeal ? '#0f172a' : '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>💰 Volume d'affaires (€)</button>
@@ -681,7 +681,7 @@ function ProgramTab() {
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button onClick={startNew} disabled={editing !== null} style={{
           padding: '10px 18px', borderRadius: 10, border: 'none',
-          background: editing !== null ? '#e2e8f0' : 'var(--rb-primary, #047857)',
+          background: editing !== null ? '#e2e8f0' : 'var(--rb-primary, #059669)',
           color: editing !== null ? '#94a3b8' : '#fff',
           fontWeight: 600, fontSize: 13, cursor: editing !== null ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', gap: 6,

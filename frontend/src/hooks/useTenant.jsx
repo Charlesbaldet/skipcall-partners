@@ -5,7 +5,7 @@ const TenantContext = createContext(null);
 const DEFAULT_TENANT = {
   name: 'Skipcall',
   slug: 'skipcall',
-  primary_color: 'var(--rb-primary, #047857)',
+  primary_color: 'var(--rb-primary, #059669)',
   secondary_color: '#8b5cf6',
   accent_color: '#f59e0b',
   logo_url: null,
