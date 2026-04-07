@@ -115,8 +115,8 @@ export default function OnboardingWizard({ onClose }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m,
         }}><X size={16} /></button>
 
-        {/* Progress bar */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 28 }}>
+        {/* Progress bar (below the X close button) */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 32, marginBottom: 28 }}>
           {STEPS.map((s, i) => (
             <div key={s.id} style={{
               flex: 1, height: 4, borderRadius: 2,
