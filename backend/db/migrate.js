@@ -132,35 +132,6 @@ async function runMigrations() {
       )
     `);
     await query(`CREATE INDEX IF NOT EXISTS idx_apply_rate_limits_reset ON apply_rate_limits (reset_at)`);
-
-    // ─── v15: client payments tracking (external payment system ingestion) ───
-    await query(`
-      CREATE TABLE IF NOT EXISTS client_payments (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-        referral_id UUID REFERENCES referrals(id) ON DELETE SET NULL,
-        client_email VARCHAR(255),
-        client_name VARCHAR(255),
-        amount_cents INTEGER NOT NULL,
-        currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
-        external_payment_id VARCHAR(255),
-        external_source VARCHAR(50) NOT NULL DEFAULT 'mollie',
-        status VARCHAR(30) NOT NULL DEFAULT 'received',
-        raw_payload JSONB,
-        matched_at TIMESTAMP,
-        matched_by UUID REFERENCES users(id) ON DELETE SET NULL,
-        commission_id UUID REFERENCES commissions(id) ON DELETE SET NULL,
-        notes TEXT,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-      )
-    `);
-    await query(`CREATE INDEX IF NOT EXISTS idx_client_payments_tenant ON client_payments (tenant_id)`);
-    await query(`CREATE INDEX IF NOT EXISTS idx_client_payments_referral ON client_payments (referral_id)`);
-    await query(`CREATE INDEX IF NOT EXISTS idx_client_payments_email ON client_payments (LOWER(client_email))`);
-    await query(`CREATE INDEX IF NOT EXISTS idx_client_payments_status ON client_payments (status)`);
-    await query(`CREATE UNIQUE INDEX IF NOT EXISTS uniq_client_payments_external ON client_payments (external_source, external_payment_id) WHERE external_payment_id IS NOT NULL`);
-
     console.log('✅ Migrations completed');
   } catch (err) {
     console.error('Migration error:', err.message);
