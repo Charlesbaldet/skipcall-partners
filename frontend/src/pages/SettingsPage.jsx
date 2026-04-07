@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import {
+  Palette,
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink,
@@ -28,6 +29,7 @@ export default function SettingsPage() {
       { id: 'members', icon: Users, label: 'Membres' },
       { id: 'integrations', icon: Plug, label: 'Intégrations' },
       { id: 'public-link', icon: Link2, label: 'Lien public' },
+      { id: 'appearance', icon: Palette, label: 'Apparence' },
     ] : []),
   ];
 
@@ -58,6 +60,7 @@ export default function SettingsPage() {
             {tab === 'members' && isAdmin && <MembersTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
               {tab === 'public-link' && isAdmin && <PublicLinkTab />}
+              {tab === 'appearance' && isAdmin && <AppearanceTab />}
           </div>
         </div>
       </div>
@@ -222,9 +225,9 @@ function MembersTab() {
                 <select value={u.role} onChange={e => api.updateAdminUser(u.id, { role: e.target.value }).then(load)} style={{ padding: '3px 6px', borderRadius: 6, border: `1px solid ${role.color}30`, background: role.bg, color: role.color, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
                   <option value="admin">Admin</option><option value="commercial">Membre</option>
                 </select>
-                <button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
+                {u.role !== 'admin' && (<button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
                   {u.is_active ? <ToggleRight size={24} color="#16a34a" /> : <ToggleLeft size={24} color="#dc2626" />}
-                </button>
+                </button>)}
                 <button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex' }}>
                   <Trash2 size={14} color="#dc2626" />
                 </button>
@@ -393,6 +396,99 @@ function PublicLinkTab() {
           </button>
         </div>
         <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Colle ce snippet dans ton site (WordPress, Webflow, Notion, etc.) pour intégrer le formulaire directement.</p>
+      </div>
+    </div>
+  );
+}
+
+// ═══ APPARENCE ═══
+function AppearanceTab() {
+  const [form, setForm] = useState({ name: '', primary_color: '#059669', accent_color: '#f97316', logo_url: '' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  useEffect(() => {
+    api.getMyTenant()
+      .then(d => {
+        if (d && d.tenant) {
+          setForm({
+            name: d.tenant.name || '',
+            primary_color: d.tenant.primary_color || '#059669',
+            accent_color: d.tenant.accent_color || '#f97316',
+            logo_url: d.tenant.logo_url || '',
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const save = async () => {
+    setSaving(true); setMsg(null);
+    try {
+      await api.updateMyTenant(form);
+      if (typeof window !== 'undefined' && window.__rbLoadTheme) window.__rbLoadTheme();
+      setMsg({ type: 'success', text: 'Apparence mise à jour ✓' });
+      setTimeout(() => setMsg(null), 3000);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message || 'Erreur lors de la sauvegarde' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
+
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', fontFamily: 'inherit' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 };
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Apparence</h3>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Personnalise les couleurs et le logo de ton espace partenaires. Ces réglages s'appliquent partout : sidebar admin, wizard d'onboarding, et page publique d'inscription.</p>
+
+      {msg && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+          {msg.text}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
+        <div>
+          <label style={labelStyle}>Nom de l'entreprise</label>
+          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Mon entreprise" style={inputStyle} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Couleur principale</label>
+            <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
+          </div>
+          <div>
+            <label style={labelStyle}>Couleur d'accent</label>
+            <input type="color" value={form.accent_color} onChange={e => setForm(f => ({ ...f, accent_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
+          </div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>URL du logo</label>
+          <input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://exemple.com/logo.png" style={inputStyle} />
+          <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>Colle l'URL d'une image hébergée. Format recommandé : PNG transparent, hauteur ~80px.</p>
+          {form.logo_url && (
+            <div style={{ marginTop: 12, padding: 16, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+              <img src={form.logo_url} alt="Aperçu" style={{ maxHeight: 60, maxWidth: '100%' }} onError={e => { e.target.style.display = 'none'; }} />
+            </div>
+          )}
+        </div>
+
+        <button onClick={save} disabled={saving} style={{
+          padding: '12px 24px', borderRadius: 10, border: 'none', cursor: saving ? 'wait' : 'pointer',
+          background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 700, fontSize: 14,
+          width: 'fit-content', display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <Palette size={16} /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+        </button>
       </div>
     </div>
   );

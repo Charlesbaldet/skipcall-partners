@@ -102,4 +102,18 @@ router.get('/me', authenticate, async (req, res) => {
   }
 });
 
+// Public: Get tenant by slug (for public pages like /r/:slug — theme + logo)
+router.get('/public/:slug', async (req, res) => {
+  try {
+    const { rows } = await query(
+      'SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url FROM tenants WHERE slug = $1',
+      [req.params.slug]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Tenant not found' });
+    res.json({ tenant: rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

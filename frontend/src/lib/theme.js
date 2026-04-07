@@ -48,6 +48,20 @@ function injectVars(t) {
 }`;
 }
 
+export async function loadThemeBySlug(slug) {
+  if (!slug) return null;
+  try {
+    const r = await fetch('/api/tenants/public/' + encodeURIComponent(slug));
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d && d.tenant) {
+      injectVars(d.tenant);
+      return d.tenant;
+    }
+  } catch (e) {}
+  return null;
+}
+
 export async function loadTheme() {
   try {
     const data = await api.getMyTenant();

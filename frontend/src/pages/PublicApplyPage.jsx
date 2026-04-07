@@ -1,9 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { loadThemeBySlug } from '../lib/theme';
 import { Send, CheckCircle, Building, User, Mail, Phone, Globe, Users, FileText } from 'lucide-react';
 
 export default function PublicApplyPage() {
   const { slug } = useParams();
+  const [tenantLogo, setTenantLogo] = useState(null);
+
+  useEffect(() => {
+    if (slug) {
+      loadThemeBySlug(slug).then(t => {
+        if (t && t.logo_url) setTenantLogo(t.logo_url);
+      });
+    }
+  }, [slug]);
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);

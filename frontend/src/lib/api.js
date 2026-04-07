@@ -89,6 +89,7 @@ class ApiClient {
 
   // Tenant (current user's tenant)
   getMyTenant() { return this.request('/tenants/me'); }
+  getTenantBySlug(slug) { return this.request('/tenants/public/' + slug); }
 
   updateMyTenant(data) {
     const u = this.getUser() || {};
