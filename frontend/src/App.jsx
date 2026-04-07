@@ -1,3 +1,4 @@
+import SignupPage from './pages/SignupPage.jsx';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
@@ -37,8 +38,10 @@ function AppRoutes() {
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
       <Route path="/ref/:code" element={<PublicTrackingPage />} />
       <Route path="/apply" element={<PublicApplyPage />} />
+          <Route path="/r/:slug" element={<PublicApplyPage />} />
       <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
-      <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />

@@ -6,7 +6,7 @@ import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building } 
 
 const PAY_STATUS = {
   pending: { label: 'En attente', color: '#f59e0b', bg: '#fffbeb', icon: Clock },
-  approved: { label: 'Approuvée', color: '#6366f1', bg: '#eef2ff', icon: CheckCircle },
+  approved: { label: 'Approuvée', color: 'var(--rb-primary, #059669)', bg: '#eef2ff', icon: CheckCircle },
   paid: { label: 'Payée', color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
 };
 
@@ -89,7 +89,7 @@ export default function PartnerPaymentsPage() {
               }}><X size={14} /> Annuler</button>
               <button onClick={handleSaveIban} disabled={savingIban} style={{
                 display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 10,
-                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none', color: '#fff',
+                background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
                 fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: savingIban ? 0.7 : 1,
               }}><Save size={14} /> {savingIban ? 'Enregistrement...' : 'Enregistrer'}</button>
             </div>
@@ -170,7 +170,7 @@ export default function PartnerPaymentsPage() {
                   </td>
                   <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(c.deal_value)}</td>
                   <td style={{ padding: '13px 16px' }}>
-                    <span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span>
+                    <span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span>
                   </td>
                   <td style={{ padding: '13px 16px', fontWeight: 800, color: st.color, fontSize: 16 }}>{fmt(c.amount)}</td>
                   <td style={{ padding: '13px 16px' }}>
@@ -189,7 +189,7 @@ export default function PartnerPaymentsPage() {
             <tfoot>
               <tr style={{ background: '#f8fafc' }}>
                 <td colSpan={3} style={{ padding: '13px 16px', fontWeight: 700, color: '#0f172a' }}>Total</td>
-                <td style={{ padding: '13px 16px', fontWeight: 800, color: '#6366f1', fontSize: 18 }}>{fmt(totalAll)}</td>
+                <td style={{ padding: '13px 16px', fontWeight: 800, color: 'var(--rb-primary, #059669)', fontSize: 18 }}>{fmt(totalAll)}</td>
                 <td colSpan={3}></td>
               </tr>
             </tfoot>

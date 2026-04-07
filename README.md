@@ -1,2 +1,2 @@
 # skipcall-partners
-Skipcall Partner Referral Management Platform
+Skipcall Partner Referral Management Platform.

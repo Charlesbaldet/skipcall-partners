@@ -3,9 +3,39 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import {
-  LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle,
-  LogOut, ChevronLeft, ChevronRight, UserPlus, Settings, Globe, Activity, Shield,
+  LayoutDashboard, FileText, DollarSign, Users, Send,
+  MessageCircle, LogOut, ChevronLeft, ChevronRight,
+  UserPlus, Settings, Globe, Activity, Shield,
 } from 'lucide-react';
+
+// ─── RefBoost design tokens (sync avec LandingPage) ───
+const C = {
+  p: 'var(--rb-primary, #059669)',
+  pl: 'var(--rb-primary-light, #10b981)',
+  pd: 'var(--rb-primary-dark, #047857)',
+  s: '#0f172a',
+  sl: '#1e293b',
+  a: 'var(--rb-accent, #f97316)',
+  al: 'var(--rb-accent-light, #fb923c)',
+  m: '#64748b',
+};
+
+// RefBoost Logo SVG (compact version pour le sidebar)
+function RefBoostLogo({ size = 36 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="lg-sidebar" x1="0" y1="0" x2="48" y2="48">
+          <stop offset="0%" stopColor={C.p} />
+          <stop offset="100%" stopColor={C.pl} />
+        </linearGradient>
+      </defs>
+      <rect width="48" height="48" rx="14" fill="url(#lg-sidebar)" />
+      <path d="M16 34V14h8c2.2 0 4 .6 5.2 1.8 1.2 1.2 1.8 2.8 1.8 4.7 0 1.4-.4 2.6-1.1 3.6-.7 1-1.8 1.6-3.1 2l5 7.9h-4.5L23 26.5h-2.5V34H16zm4.5-11h3.2c1 0 1.8-.3 2.3-.8.5-.5.8-1.2.8-2.1 0-.9-.3-1.6-.8-2.1-.5-.5-1.3-.8-2.3-.8h-3.2v5.8z" fill="white" />
+      <path d="M32 14l3 0 0 3-1.5 1.5L32 17z" fill={C.a} opacity="0.9" />
+    </svg>
+  );
+}
 
 const ADMIN_NAV = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -38,6 +68,14 @@ export default function Layout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
+  const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (e) => setTenant(e.detail || window.__rbTenant);
+    window.addEventListener('rb-theme-loaded', handler);
+    return () => window.removeEventListener('rb-theme-loaded', handler);
+  }, []);
 
   const isSuperAdmin = user?.role === 'superadmin';
   const isAdmin = user?.role === 'admin';
@@ -47,9 +85,15 @@ export default function Layout({ children }) {
   useEffect(() => {
     if (isSuperAdmin) return;
     const fetchCounts = async () => {
-      try { const msgData = await api.getUnreadCount(); setUnread(msgData.count || 0); } catch (e) {}
+      try {
+        const msgData = await api.getUnreadCount();
+        setUnread(msgData.count || 0);
+      } catch (e) {}
       if (isAdmin) {
-        try { const appData = await api.getApplications('pending'); setPendingApps((appData.applications || []).length); } catch (e) {}
+        try {
+          const appData = await api.getApplications('pending');
+          setPendingApps((appData.applications || []).length);
+        } catch (e) {}
       }
     };
     fetchCounts();
@@ -58,29 +102,53 @@ export default function Layout({ children }) {
   }, [isAdmin, isSuperAdmin]);
 
   useEffect(() => {
-    if (isSuperAdmin) { document.title = 'Skipcall - Super Admin'; return; }
+    if (isSuperAdmin) {
+      document.title = 'RefBoost - Super Admin';
+      return;
+    }
     const total = unread + pendingApps;
-    document.title = total > 0 ? `(${total}) Skipcall - Programme Partenaires` : 'Skipcall - Programme Partenaires';
-  }, [unread, pendingApps, isSuperAdmin]);
+    document.title = total > 0
+      ? `(${total}) RefBoost - Programme Partenaires`
+      : 'RefBoost - Programme Partenaires';
+  }, [unread, pendingApps, isSuperAdmin, tenant]);
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const s = {
     sidebar: {
-      width: collapsed ? 68 : 200, minWidth: collapsed ? 68 : 200,
-      background: isSuperAdmin ? '#1a1a2e' : '#0f172a',
-      color: '#fff', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease',
-      height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50,
+      width: collapsed ? 68 : 200,
+      minWidth: collapsed ? 68 : 200,
+      background: isSuperAdmin ? '#1a1a2e' : C.s,
+      color: '#fff',
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'all 0.2s ease',
+      height: '100vh',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      zIndex: 50,
     },
     link: {
-      display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderRadius: 10,
-      color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 500,
-      transition: 'all 0.15s', margin: '2px 8px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      padding: '10px 16px',
+      borderRadius: 10,
+      color: '#94a3b8',
+      textDecoration: 'none',
+      fontSize: 14,
+      fontWeight: 500,
+      transition: 'all 0.15s',
+      margin: '2px 8px',
     },
     activeLink: {
       background: isSuperAdmin
         ? 'linear-gradient(135deg, rgba(220,38,38,0.2), rgba(239,68,68,0.15))'
-        : 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))',
+        : `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`,
       color: '#fff',
     },
   };
@@ -96,18 +164,31 @@ export default function Layout({ children }) {
       <aside style={s.sidebar}>
         {/* Logo */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 11, flexShrink: 0,
-            background: isSuperAdmin ? 'linear-gradient(135deg, #dc2626, #ef4444)' : 'linear-gradient(135deg, #6366f1, #a855f7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, fontWeight: 800, color: '#fff',
-            boxShadow: isSuperAdmin ? '0 0 20px rgba(220,38,38,0.3)' : '0 0 20px rgba(99,102,241,0.3)',
-          }}>
-            {isSuperAdmin ? <Shield size={18} /> : 'S'}
-          </div>
+          {isSuperAdmin ? (
+            <div style={{
+              width: 36, height: 36, borderRadius: 11, flexShrink: 0,
+              background: 'linear-gradient(135deg, #dc2626, #ef4444)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 20px rgba(220,38,38,0.3)',
+            }}>
+              <Shield size={18} color="#fff" />
+            </div>
+          ) : (
+            <div style={{
+              flexShrink: 0,
+              filter: `drop-shadow(0 0 16px ${C.p}40)`,
+            }}>
+              {tenant?.logo_url ? <img src={tenant.logo_url} alt="Logo" style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} /> : <RefBoostLogo size={36} />}
+            </div>
+          )}
           {!collapsed && (
-            <span style={{ fontSize: isSuperAdmin ? 16 : 20, fontWeight: 700, letterSpacing: -0.5 }}>
-              {isSuperAdmin ? 'Super Admin' : 'Skipcall'}
+            <span style={{
+              fontSize: isSuperAdmin ? 16 : 18,
+              fontWeight: 800,
+              letterSpacing: -0.5,
+              fontFamily: 'inherit',
+            }}>
+              {isSuperAdmin ? 'Super Admin' : (tenant?.name || 'RefBoost')}
             </span>
           )}
         </div>
@@ -119,12 +200,19 @@ export default function Layout({ children }) {
             if (item.to === '/applications' && !isAdmin) return null;
             const badge = getBadge(item);
             return (
-              <NavLink key={item.to} to={item.to} end={item.to === '/super-admin'}
-                style={({ isActive }) => ({ ...s.link, ...(isActive ? s.activeLink : {}) })}>
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/super-admin'}
+                style={({ isActive }) => ({ ...s.link, ...(isActive ? s.activeLink : {}) })}
+              >
                 <item.icon size={18} style={{ flexShrink: 0 }} />
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
                 {!collapsed && badge > 0 && (
-                  <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{badge}</span>
+                  <span style={{
+                    background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700,
+                    padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center',
+                  }}>{badge}</span>
                 )}
               </NavLink>
             );
@@ -132,10 +220,15 @@ export default function Layout({ children }) {
         </nav>
 
         {/* Collapse toggle */}
-        <button onClick={() => setCollapsed(!collapsed)} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', margin: '4px 8px',
-          borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 13,
-        }}>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '10px', margin: '4px 8px', borderRadius: 8,
+            background: 'rgba(255,255,255,0.04)', border: 'none',
+            color: '#64748b', cursor: 'pointer', fontSize: 13,
+          }}
+        >
           {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> <span>Réduire</span></>}
         </button>
 
@@ -144,29 +237,55 @@ export default function Layout({ children }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-              background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? '#6366f1' : user?.role === 'commercial' ? '#0891b2' : '#8b5cf6',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14,
+              background: isSuperAdmin
+                ? '#dc2626'
+                : user?.role === 'admin'
+                  ? C.p
+                  : user?.role === 'commercial'
+                    ? '#0891b2'
+                    : C.pl,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 700, fontSize: 14,
             }}>
               {user?.fullName?.charAt(0) || '?'}
             </div>
             {!collapsed && (
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{
+                  fontWeight: 600, color: '#e2e8f0', fontSize: 13,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
                   {user?.fullName}
                 </div>
                 <div style={{ color: '#64748b', fontSize: 11, textTransform: 'capitalize' }}>{user?.role}</div>
               </div>
             )}
-            <button onClick={handleLogout} title="Déconnexion" style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex' }}>
+            <button
+              onClick={handleLogout}
+              title="Déconnexion"
+              style={{
+                background: 'transparent', border: 'none',
+                color: '#64748b', cursor: 'pointer', padding: 6,
+                borderRadius: 6, display: 'flex',
+              }}
+            >
               <LogOut size={16} />
             </button>
           </div>
         </div>
       </aside>
 
-      <main style={{ flex: 1, marginLeft: collapsed ? 68 : 200, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
+      <main style={{
+        flex: 1,
+        marginLeft: collapsed ? 68 : 200,
+        padding: '32px 40px',
+        transition: 'margin-left 0.2s ease',
+        minHeight: '100vh',
+        overflow: 'hidden',
+      }}>
         {children}
       </main>
     </div>
   );
 }
+

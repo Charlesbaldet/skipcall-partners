@@ -2,13 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import { loadTheme } from './lib/theme';
 
 // ─── Global styles ───
 const style = document.createElement('style');
 style.textContent = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f1f5f9;
     color: #0f172a;
     -webkit-font-smoothing: antialiased;
@@ -31,6 +32,8 @@ style.textContent = `
   .slide-in { animation: slideIn 0.3s ease-out; }
 `;
 document.head.appendChild(style);
+
+loadTheme();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

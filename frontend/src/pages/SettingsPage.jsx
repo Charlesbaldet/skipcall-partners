@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import {
+  Trophy, Plus, Edit2,
+  Palette,
+  Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink,
 } from 'lucide-react';
@@ -26,6 +29,9 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { id: 'members', icon: Users, label: 'Membres' },
       { id: 'integrations', icon: Plug, label: 'Intégrations' },
+      { id: 'public-link', icon: Link2, label: 'Lien public' },
+      { id: 'appearance', icon: Palette, label: 'Apparence' },
+      { id: 'program', icon: Trophy, label: 'Programme' },
     ] : []),
   ];
 
@@ -55,6 +61,9 @@ export default function SettingsPage() {
             {tab === 'account' && <AccountTab user={user} />}
             {tab === 'members' && isAdmin && <MembersTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
+              {tab === 'public-link' && isAdmin && <PublicLinkTab />}
+              {tab === 'appearance' && isAdmin && <AppearanceTab />}
+              {tab === 'program' && isAdmin && <ProgramTab />}
           </div>
         </div>
       </div>
@@ -89,7 +98,7 @@ function AccountTab({ user }) {
         </div>
         <div>
           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 16 }}>{user?.fullName}</div>
-          <div style={{ color: '#64748b', fontSize: 13 }}>{user?.email} · <span style={{ textTransform: 'capitalize', color: '#6366f1', fontWeight: 600 }}>{user?.role}</span></div>
+          <div style={{ color: '#64748b', fontSize: 13 }}>{user?.email} · <span style={{ textTransform: 'capitalize', color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{user?.role}</span></div>
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -107,7 +116,7 @@ function AccountTab({ user }) {
         </div>
         <div><label style={labelStyle}>Nouveau mot de passe</label><input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder="Minimum 8 caractères" style={inputStyle} /></div>
         <div><label style={labelStyle}>Confirmer</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} style={inputStyle} /></div>
-        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
+        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
       </div>
     </div>
   );
@@ -131,6 +140,7 @@ function MembersTab() {
 
   const load = async () => { try { const u = await api.getAdminUsers(); setUsers(u.users); } catch {} setLoading(false); };
   useEffect(() => { load(); }, []);
+  const founderAdminId = users.filter(u => u.role === 'admin').sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0]?.id;
 
   const handleInvite = async () => {
     setSending(true); setInviteResult(null);
@@ -147,7 +157,7 @@ function MembersTab() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Membres</h3>
-        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           {showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? 'Annuler' : 'Ajouter'}
         </button>
       </div>
@@ -163,12 +173,12 @@ function MembersTab() {
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Email</span><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{inviteResult.email}</div></div>
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Mot de passe provisoire</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <code style={{ background: '#eef2ff', padding: '4px 10px', borderRadius: 6, color: '#6366f1', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
+                    <code style={{ background: '#eef2ff', padding: '4px 10px', borderRadius: 6, color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
                     <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 5, padding: 4, cursor: 'pointer', display: 'flex' }}>{copied ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} color="#6366f1" />}</button>
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: 12 }}><button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: 8, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>OK</button></div>
+              <div style={{ marginTop: 12 }}><button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>OK</button></div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -183,7 +193,7 @@ function MembersTab() {
                   ))}
                 </div>
               </div>
-              <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{ padding: '10px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: sending ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}><UserPlus size={14} /> {sending ? 'Création...' : 'Créer'}</button>
+              <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: sending ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}><UserPlus size={14} /> {sending ? 'Création...' : 'Créer'}</button>
             </div>
           )}
         </div>
@@ -219,12 +229,12 @@ function MembersTab() {
                 <select value={u.role} onChange={e => api.updateAdminUser(u.id, { role: e.target.value }).then(load)} style={{ padding: '3px 6px', borderRadius: 6, border: `1px solid ${role.color}30`, background: role.bg, color: role.color, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
                   <option value="admin">Admin</option><option value="commercial">Membre</option>
                 </select>
-                <button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
+                {u.role !== 'admin' && (<button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
                   {u.is_active ? <ToggleRight size={24} color="#16a34a" /> : <ToggleLeft size={24} color="#dc2626" />}
-                </button>
-                <button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex' }}>
+                </button>)}
+                {u.id !== founderAdminId && (<button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex' }}>
                   <Trash2 size={14} color="#dc2626" />
-                </button>
+                </button>)}
               </div>
             </div>
           );
@@ -303,12 +313,12 @@ function IntegrationsTab() {
             <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Partenaire (optionnel)</label><select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }}><option value="">Aucun</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? 'Création...' : 'Générer'}</button>
+            <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? 'Création...' : 'Générer'}</button>
             <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> Créer une clé API</button>
+        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> Créer une clé API</button>
       )}
 
       {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>Chargement...</div> : (
@@ -329,3 +339,358 @@ function IntegrationsTab() {
   );
 }
 
+// ═══ LIEN PUBLIC ═══
+function PublicLinkTab() {
+  const [tenant, setTenant] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(null);
+
+  useEffect(() => {
+    api.getMyTenant()
+      .then(d => setTenant(d.tenant))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
+  if (!tenant) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Impossible de charger les infos du tenant.</div>;
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const directLink = origin + '/r/' + (tenant.slug || '');
+  const embedCode = '<iframe src="' + directLink + '" width="100%" height="700" frameborder="0" style="border-radius:12px;"></iframe>';
+
+  const copy = (key, text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Lien public d'inscription</h3>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Partage ce lien avec tes apporteurs d'affaires pour qu'ils puissent s'inscrire eux-mêmes. Tu valideras leurs candidatures depuis ton dashboard.</p>
+
+      <div style={{ marginBottom: 28 }}>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>Lien direct</h4>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+          <code style={{ flex: 1, fontSize: 13, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{directLink}</code>
+          <button onClick={() => copy('link', directLink)} style={{
+            padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: copied === 'link' ? '#dcfce7' : 'var(--rb-primary, #059669)',
+            color: copied === 'link' ? '#166534' : '#fff',
+            fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            {copied === 'link' ? <><CheckCircle size={14}/> Copié</> : <><Copy size={14}/> Copier</>}
+          </button>
+        </div>
+        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Tu peux le mettre dans tes emails, signatures, posts LinkedIn, etc.</p>
+      </div>
+
+      <div>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>Code à intégrer (iframe)</h4>
+        <div style={{ padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+          <code style={{ display: 'block', fontSize: 12, color: '#0f172a', marginBottom: 12, fontFamily: 'monospace', wordBreak: 'break-all', lineHeight: 1.6 }}>{embedCode}</code>
+          <button onClick={() => copy('embed', embedCode)} style={{
+            padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: copied === 'embed' ? '#dcfce7' : 'var(--rb-primary, #059669)',
+            color: copied === 'embed' ? '#166534' : '#fff',
+            fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            {copied === 'embed' ? <><CheckCircle size={14}/> Copié</> : <><Copy size={14}/> Copier le code</>}
+          </button>
+        </div>
+        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Colle ce snippet dans ton site (WordPress, Webflow, Notion, etc.) pour intégrer le formulaire directement.</p>
+      </div>
+    </div>
+  );
+}
+
+// ═══ APPARENCE ═══
+function AppearanceTab() {
+  const [form, setForm] = useState({ name: '', primary_color: '#059669', accent_color: '#f97316', logo_url: '' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  useEffect(() => {
+    api.getMyTenant()
+      .then(d => {
+        if (d && d.tenant) {
+          setForm({
+            name: d.tenant.name || '',
+            primary_color: d.tenant.primary_color || '#059669',
+            accent_color: d.tenant.accent_color || '#f97316',
+            logo_url: d.tenant.logo_url || '',
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  function slugify(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 50);
+  }
+
+  const save = async () => {
+    setSaving(true); setMsg(null);
+    try {
+      const slug = slugify(form.name);
+      const payload = { ...form, slug: slug || undefined };
+      await api.updateMyTenant(payload);
+      if (typeof window !== 'undefined' && window.__rbLoadTheme) window.__rbLoadTheme();
+      setMsg({ type: 'success', text: slug ? `Apparence mise à jour ✓ Nouveau lien : /r/${slug}` : 'Apparence mise à jour ✓' });
+      setTimeout(() => setMsg(null), 3000);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message || 'Erreur lors de la sauvegarde' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
+
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', fontFamily: 'inherit' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 };
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Apparence</h3>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Personnalise les couleurs et le logo de ton espace partenaires. Ces réglages s'appliquent partout : sidebar admin, wizard d'onboarding, et page publique d'inscription.</p>
+
+      {msg && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+          {msg.text}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
+        <div>
+          <label style={labelStyle}>Nom de l'entreprise</label>
+          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Mon entreprise" style={inputStyle} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Couleur principale</label>
+            <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
+          </div>
+          <div>
+            <label style={labelStyle}>Couleur d'accent</label>
+            <input type="color" value={form.accent_color} onChange={e => setForm(f => ({ ...f, accent_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
+          </div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>URL du logo</label>
+          <input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://exemple.com/logo.png" style={inputStyle} />
+          <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>Colle l'URL d'une image hébergée. Format recommandé : PNG transparent, hauteur ~80px.</p>
+          {form.logo_url && (
+            <div style={{ marginTop: 12, padding: 16, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+              <img src={form.logo_url} alt="Aperçu" style={{ maxHeight: 60, maxWidth: '100%' }} onError={e => { e.target.style.display = 'none'; }} />
+            </div>
+          )}
+        </div>
+
+        <button onClick={save} disabled={saving} style={{
+          padding: '12px 24px', borderRadius: 10, border: 'none', cursor: saving ? 'wait' : 'pointer',
+          background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 700, fontSize: 14,
+          width: 'fit-content', display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <Palette size={16} /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══ PROGRAMME ═══
+function ProgramTab() {
+  const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null); // level id or 'new'
+  const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
+  const [msg, setMsg] = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const d = await api.getTenantLevels();
+      setData({ levels: d.levels || [], threshold_type: d.threshold_type || 'deals' });
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message || 'Erreur' });
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const setType = async (type) => {
+    try {
+      await api.setTenantLevelThresholdType(type);
+      setData(d => ({ ...d, threshold_type: type }));
+      setMsg({ type: 'success', text: 'Critère mis à jour ✓' });
+      setTimeout(() => setMsg(null), 2000);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message });
+    }
+  };
+
+  const startEdit = (l) => {
+    setForm({
+      name: l.name || '',
+      icon: l.icon || '⭐',
+      color: l.color || '#94a3b8',
+      min_threshold: parseFloat(l.min_threshold) || 0,
+      commission_rate: parseFloat(l.commission_rate) || 10,
+    });
+    setEditing(l.id);
+  };
+
+  const startNew = () => {
+    setForm({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
+    setEditing('new');
+  };
+
+  const save = async () => {
+    if (!form.name) { setMsg({ type: 'error', text: 'Le nom est requis' }); return; }
+    try {
+      if (editing === 'new') {
+        await api.createTenantLevel({ ...form, position: data.levels.length });
+      } else {
+        await api.updateTenantLevel(editing, form);
+      }
+      setEditing(null);
+      await load();
+      setMsg({ type: 'success', text: 'Niveau enregistré ✓' });
+      setTimeout(() => setMsg(null), 2000);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message || 'Erreur' });
+    }
+  };
+
+  const del = async (id) => {
+    if (!window.confirm('Supprimer ce niveau ? Les partenaires seront recalculés.')) return;
+    try {
+      await api.deleteTenantLevel(id);
+      load();
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message });
+    }
+  };
+
+  const reset = async () => {
+    if (!window.confirm('Réinitialiser aux valeurs par défaut (Bronze/Silver/Gold/Platinum) ? Tes niveaux personnalisés seront effacés.')) return;
+    try {
+      await api.resetTenantLevels();
+      load();
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message });
+    }
+  };
+
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
+
+  const isDeal = data.threshold_type === 'deals';
+  const unitLabel = isDeal ? 'deals gagnés' : '€ générés';
+  const thresholdInputLabel = isDeal ? 'Deals gagnés requis' : 'Volume (€) requis';
+
+  const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 11, marginBottom: 4 };
+
+  const formBlock = (
+    <div style={{ padding: 16, background: '#fffbeb', borderRadius: 12, border: '2px dashed #fbbf24', marginBottom: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 60px', gap: 10, marginBottom: 10 }}>
+        <div>
+          <label style={labelStyle}>Nom</label>
+          <input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Bronze, Diamant..." />
+        </div>
+        <div>
+          <label style={labelStyle}>Icône</label>
+          <input style={{ ...inputStyle, textAlign: 'center', fontSize: 18 }} value={form.icon} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} maxLength="2" />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr', gap: 10, marginBottom: 12 }}>
+        <div>
+          <label style={labelStyle}>Couleur</label>
+          <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} style={{ ...inputStyle, height: 36, padding: 2, cursor: 'pointer' }} />
+        </div>
+        <div>
+          <label style={labelStyle}>{thresholdInputLabel}</label>
+          <input type="number" min="0" step={isDeal ? '1' : '100'} style={inputStyle} value={form.min_threshold} onChange={e => setForm(f => ({ ...f, min_threshold: parseFloat(e.target.value) || 0 }))} />
+        </div>
+        <div>
+          <label style={labelStyle}>Commission (%)</label>
+          <input type="number" min="0" max="100" step="0.5" style={inputStyle} value={form.commission_rate} onChange={e => setForm(f => ({ ...f, commission_rate: parseFloat(e.target.value) || 0 }))} />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Enregistrer</button>
+        <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Programme partenaires</h3>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Configure les niveaux et les commissions de ton programme. Les partenaires montent de niveau automatiquement selon leur performance.</p>
+
+      {msg && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+          {msg.text}
+        </div>
+      )}
+
+      {/* Threshold type */}
+      <div style={{ marginBottom: 28 }}>
+        <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', fontSize: 13, marginBottom: 10 }}>Critère de progression</label>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => setType('deals')} style={{
+            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (isDeal ? 'var(--rb-primary, #059669)' : '#e2e8f0'),
+            background: isDeal ? '#f0fdf4' : '#fff', color: isDeal ? '#0f172a' : '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>🎯 Nombre de deals gagnés</button>
+          <button onClick={() => setType('volume')} style={{
+            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (!isDeal ? 'var(--rb-primary, #059669)' : '#e2e8f0'),
+            background: !isDeal ? '#f0fdf4' : '#fff', color: !isDeal ? '#0f172a' : '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>💰 Volume d'affaires (€)</button>
+        </div>
+      </div>
+
+      {/* Levels list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+        {data.levels.map(l => editing === l.id ? (
+          <div key={l.id}>{formBlock}</div>
+        ) : (
+          <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: (l.color || '#94a3b8') + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{l.icon || '⭐'}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, color: l.color || '#0f172a', fontSize: 15 }}>{l.name}</div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>À partir de {parseFloat(l.min_threshold)} {unitLabel} · {parseFloat(l.commission_rate)}% de commission</div>
+            </div>
+            <button onClick={() => startEdit(l)} title="Éditer" style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef2ff', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#6366f1" /></button>
+            <button onClick={() => del(l.id)} title="Supprimer" style={{ padding: 8, borderRadius: 8, border: 'none', background: '#fef2f2', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
+          </div>
+        ))}
+        {editing === 'new' && formBlock}
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+        <button onClick={startNew} disabled={editing !== null} style={{
+          padding: '10px 18px', borderRadius: 10, border: 'none',
+          background: editing !== null ? '#e2e8f0' : 'var(--rb-primary, #059669)',
+          color: editing !== null ? '#94a3b8' : '#fff',
+          fontWeight: 600, fontSize: 13, cursor: editing !== null ? 'not-allowed' : 'pointer',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}><Plus size={14} /> Ajouter un niveau</button>
+        <button onClick={reset} style={{
+          padding: '10px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
+          background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+        }}>Réinitialiser aux valeurs par défaut</button>
+      </div>
+    </div>
+  );
+}

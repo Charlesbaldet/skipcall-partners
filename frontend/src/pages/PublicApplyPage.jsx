@@ -1,7 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { loadThemeBySlug } from '../lib/theme';
 import { Send, CheckCircle, Building, User, Mail, Phone, Globe, Users, FileText } from 'lucide-react';
 
 export default function PublicApplyPage() {
+  const { slug } = useParams();
+  const [tenant, setTenant] = useState(null);
+
+  useEffect(() => {
+    if (slug) {
+      loadThemeBySlug(slug).then(t => {
+        if (t) setTenant(t);
+      });
+    }
+  }, [slug]);
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -21,7 +33,7 @@ export default function PublicApplyPage() {
       const res = await fetch('/api/applications/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, tenant_slug: slug }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
@@ -57,9 +69,13 @@ export default function PublicApplyPage() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg,#6366f1,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(99,102,241,0.4)' }}>S</div>
-            <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>Skipcall</span>
-          </div>
+              {tenant?.logo_url ? (
+                <img src={tenant.logo_url} alt="Logo" style={{ height: 44, maxWidth: 160, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+              ) : (
+                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>{(tenant?.name || 'S').charAt(0).toUpperCase()}</div>
+              )}
+              <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>{tenant?.name || 'Skipcall'}</span>
+            </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Devenir partenaire</h1>
           <p style={{ color: '#94a3b8', fontSize: 15 }}>Rejoignez notre programme et générez des revenus récurrents</p>
         </div>
@@ -102,9 +118,9 @@ export default function PublicApplyPage() {
               </div>
               <button disabled={!canSubmit} onClick={() => setStep(2)} style={{
                 marginTop: 28, width: '100%', padding: '14px', borderRadius: 12,
-                background: canSubmit ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.06)',
+                background: canSubmit ? 'var(--rb-primary, #059669)' : 'rgba(255,255,255,0.06)',
                 color: canSubmit ? '#fff' : '#64748b', border: 'none', fontWeight: 600, fontSize: 15,
-                cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 15px rgba(99,102,241,0.3)' : 'none',
+                cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 15px rgba(5,150,105,0.3)' : 'none',
               }}>Continuer</button>
             </div>
           )}

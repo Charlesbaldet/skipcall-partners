@@ -46,7 +46,7 @@ export default function PartnerSubmitPage() {
             Merci pour votre recommandation. L'équipe Skipcall va prendre contact avec le prospect rapidement. Vous serez notifié des mises à jour par email.
           </p>
           <button onClick={() => { setForm({ prospect_name: '', prospect_email: '', prospect_phone: '', prospect_company: '', prospect_role: '', recommendation_level: 'warm', notes: '' }); setStep(1); setSubmitted(false); }}
-            style={{ padding: '12px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+            style={{ padding: '12px 28px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
             <Send size={14} style={{ marginRight: 8, verticalAlign: -2 }} />
             Nouvelle recommandation
           </button>
@@ -87,7 +87,7 @@ export default function PartnerSubmitPage() {
           </div>
           <button disabled={!canNext1} onClick={() => setStep(2)} style={{
             marginTop: 32, width: '100%', padding: '14px', borderRadius: 12,
-            background: canNext1 ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : '#e2e8f0',
+            background: canNext1 ? 'var(--rb-primary, #059669)' : '#e2e8f0',
             color: canNext1 ? '#fff' : '#94a3b8', border: 'none', fontWeight: 600, fontSize: 15,
             cursor: canNext1 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>Continuer <ArrowRight size={16} /></button>

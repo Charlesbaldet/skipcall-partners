@@ -70,7 +70,7 @@ export default function PublicTrackingPage() {
       <div style={{ background: '#fff', borderRadius: 28, maxWidth: 520, width: '100%', padding: 40, boxShadow: '0 25px 80px rgba(0,0,0,0.3)' }} className="fade-in">
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 0 30px rgba(99,102,241,0.3)' }}>
+          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 0 30px rgba(5,150,105,0.3)' }}>
             <span style={{ color: '#fff', fontWeight: 800, fontSize: 22 }}>S</span>
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Recommandé par {partner.name}</h1>
@@ -109,16 +109,16 @@ export default function PublicTrackingPage() {
           </div>
           <button type="submit" disabled={sending || !form.prospect_name || !form.prospect_email} style={{
             padding: '14px', borderRadius: 14, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer',
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff',
+            background: 'var(--rb-primary, #059669)', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            opacity: sending ? 0.7 : 1, boxShadow: '0 4px 20px rgba(99,102,241,0.3)',
+            opacity: sending ? 0.7 : 1, boxShadow: '0 4px 20px rgba(5,150,105,0.3)',
           }}>
             <Send size={18} /> {sending ? 'Envoi...' : 'Envoyer ma demande'}
           </button>
         </form>
 
         <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12, marginTop: 20 }}>
-          Powered by <strong style={{ color: '#6366f1' }}>Skipcall</strong>
+          Powered by <strong style={{ color: 'var(--rb-primary, #059669)' }}>Skipcall</strong>
         </p>
       </div>
     </div>

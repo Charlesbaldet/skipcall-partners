@@ -2,12 +2,13 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const { queueNotification } = require('../services/emailService');
 
 const router = express.Router();
 
 // ─── PUBLIC: Submit application (no auth required) ───
+// Tenant is inherited from req.tenantId set by global tenantMiddleware (domain-based)
 router.post('/apply', [
   body('company_name').trim().notEmpty().withMessage('Nom de société requis'),
   body('contact_name').trim().notEmpty().withMessage('Nom du contact requis'),
@@ -25,26 +26,47 @@ router.post('/apply', [
 
     const { company_name, contact_name, email, phone, company_website, company_size, motivation } = req.body;
 
-    // Check if email already exists in applications or partners
-    const { rows: existing } = await query(
-      `SELECT id FROM partner_applications WHERE email = $1 AND status = 'pending'
-       UNION SELECT id FROM partners WHERE email = $1`,
-      [email]
-    );
+    // Resolve tenant from URL slug (set via /r/:slug routing) — fallback to domain
+    let resolvedTenantId = req.tenantId;
+    if (req.body.tenant_slug) {
+      try {
+        const { rows: ts } = await query("SELECT id FROM tenants WHERE slug = $1", [req.body.tenant_slug]);
+        if (ts[0]) resolvedTenantId = ts[0].id;
+      } catch (e) {}
+    }
+
+    // Check if email already exists in applications or partners — within the same tenant
+    let dupCheckSql = `
+      SELECT id FROM partner_applications WHERE email = $1 AND status = 'pending'
+      ${resolvedTenantId ? 'AND tenant_id = $2' : ''}
+      UNION
+      SELECT id FROM partners WHERE email = $1
+      ${resolvedTenantId ? 'AND tenant_id = $2' : ''}
+    `;
+    const dupParams = resolvedTenantId ? [email, resolvedTenantId] : [email];
+    const { rows: existing } = await query(dupCheckSql, dupParams);
+
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Une candidature ou un compte existe déjà avec cet email' });
     }
 
     const { rows: [application] } = await query(
-      `INSERT INTO partner_applications (company_name, contact_name, email, phone, company_website, company_size, motivation)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [company_name, contact_name, email, phone, company_website, company_size, motivation]
+      `INSERT INTO partner_applications
+       (company_name, contact_name, email, phone, company_website, company_size, motivation, tenant_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [company_name, contact_name, email, phone, company_website, company_size, motivation, resolvedTenantId || null]
     );
 
-    // Notify admins
-    const { rows: admins } = await query(
-      `SELECT email, full_name FROM users WHERE role = 'admin' AND is_active = true`
-    );
+    // Notify admins of THIS tenant only
+    let adminSql = `SELECT email, full_name FROM users WHERE role = 'admin' AND is_active = true`;
+    let adminParams = [];
+    if (resolvedTenantId) {
+      adminSql += ' AND tenant_id = $1';
+      adminParams = [resolvedTenantId];
+    }
+    const { rows: admins } = await query(adminSql, adminParams);
+
     for (const admin of admins) {
       await queueNotification(admin.email, admin.full_name, 'new_application', {
         companyName: company_name,
@@ -61,65 +83,82 @@ router.post('/apply', [
 });
 
 // ─── ADMIN: List applications ───
-router.get('/', authenticate, authorize('admin'), async (req, res) => {
+router.get('/', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     const { status } = req.query;
-    let where = '';
+    let where = [];
     let params = [];
+    let i = 1;
 
     if (status && status !== 'all') {
-      where = 'WHERE pa.status = $1';
-      params = [status];
+      where.push(`pa.status = $${i++}`);
+      params.push(status);
     }
+
+    if (req.tenantId && !req.skipTenantFilter) {
+      where.push(`pa.tenant_id = $${i++}`);
+      params.push(req.tenantId);
+    }
+
+    const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
     const { rows } = await query(
       `SELECT pa.*, u.full_name as reviewer_name
        FROM partner_applications pa
        LEFT JOIN users u ON pa.reviewed_by = u.id
-       ${where}
+       ${whereSql}
        ORDER BY pa.created_at DESC`,
       params
     );
+
     res.json({ applications: rows });
   } catch (err) {
+    console.error('List applications error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
 // ─── ADMIN: Approve application ───
-router.put('/:id/approve', authenticate, authorize('admin'), async (req, res) => {
+router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   const client = await getClient();
   try {
     const { commission_rate = 10 } = req.body;
 
-    // Get application
-    const { rows: [app] } = await query(
-      'SELECT * FROM partner_applications WHERE id = $1', [req.params.id]
-    );
+    // Get application — tenant scoped
+    let appSql = 'SELECT * FROM partner_applications WHERE id = $1';
+    let appParams = [req.params.id];
+    if (req.tenantId && !req.skipTenantFilter) {
+      appSql += ' AND tenant_id = $2';
+      appParams.push(req.tenantId);
+    }
+    const { rows: [app] } = await query(appSql, appParams);
+
     if (!app) return res.status(404).json({ error: 'Candidature introuvable' });
     if (app.status !== 'pending') return res.status(400).json({ error: 'Candidature déjà traitée' });
 
     await client.query('BEGIN');
 
-    // Create partner
+    // Create partner with tenant_id
     const { rows: [partner] } = await client.query(
-      `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [app.company_name, app.contact_name, app.email, app.phone, app.company_website, commission_rate]
+      `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [app.company_name, app.contact_name, app.email, app.phone, app.company_website, commission_rate, req.tenantId || null]
     );
 
-    // Create user account
+    // Create user account with tenant_id
     const tempPassword = Math.random().toString(36).slice(2, 10) + '!A1';
     const hash = await bcrypt.hash(tempPassword, 12);
     await client.query(
-      `INSERT INTO users (email, password_hash, full_name, role, partner_id)
-       VALUES ($1, $2, $3, 'partner', $4)`,
-      [app.email, hash, app.contact_name, partner.id]
+      `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id)
+       VALUES ($1, $2, $3, 'partner', $4, $5)`,
+      [app.email, hash, app.contact_name, partner.id, req.tenantId || null]
     );
 
     // Update application status
     await client.query(
-      `UPDATE partner_applications SET status = 'approved', reviewed_by = $2, reviewed_at = NOW()
+      `UPDATE partner_applications
+       SET status = 'approved', reviewed_by = $2, reviewed_at = NOW()
        WHERE id = $1`,
       [req.params.id, req.user.id]
     );
@@ -148,16 +187,22 @@ router.put('/:id/approve', authenticate, authorize('admin'), async (req, res) =>
 });
 
 // ─── ADMIN: Reject application ───
-router.put('/:id/reject', authenticate, authorize('admin'), async (req, res) => {
+router.put('/:id/reject', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     const { reason } = req.body;
 
-    const { rows: [app] } = await query(
-      `UPDATE partner_applications 
-       SET status = 'rejected', reviewed_by = $2, reviewed_at = NOW(), rejection_reason = $3
-       WHERE id = $1 AND status = 'pending' RETURNING *`,
-      [req.params.id, req.user.id, reason || null]
-    );
+    let sql = `UPDATE partner_applications
+               SET status = 'rejected', reviewed_by = $2, reviewed_at = NOW(), rejection_reason = $3
+               WHERE id = $1 AND status = 'pending'`;
+    let params = [req.params.id, req.user.id, reason || null];
+
+    if (req.tenantId && !req.skipTenantFilter) {
+      sql += ` AND tenant_id = $4`;
+      params.push(req.tenantId);
+    }
+    sql += ' RETURNING *';
+
+    const { rows: [app] } = await query(sql, params);
 
     if (!app) return res.status(404).json({ error: 'Candidature introuvable ou déjà traitée' });
 
@@ -169,6 +214,7 @@ router.put('/:id/reject', authenticate, authorize('admin'), async (req, res) => 
 
     res.json({ application: app });
   } catch (err) {
+    console.error('Reject application error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

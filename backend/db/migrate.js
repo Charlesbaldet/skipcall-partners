@@ -89,6 +89,38 @@ async function runMigrations() {
       END IF;
     END $$`);
 
+    // v6: Tenant appearance columns (white-label)
+    await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'accent_color') THEN ALTER TABLE tenants ADD COLUMN accent_color VARCHAR(20); END IF; END $$`);
+    await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'logo_url') THEN ALTER TABLE tenants ADD COLUMN logo_url TEXT; END IF; END $$`);
+    await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'settings') THEN ALTER TABLE tenants ADD COLUMN settings JSONB; END IF; END $$`);
+
+    // v7: Programme — tenant_levels + level_threshold_type
+    await query(`CREATE TABLE IF NOT EXISTS tenant_levels (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+      name VARCHAR(50) NOT NULL,
+      min_threshold NUMERIC(15, 2) NOT NULL DEFAULT 0,
+      commission_rate NUMERIC(5, 2) NOT NULL DEFAULT 10,
+      color VARCHAR(20),
+      icon VARCHAR(10),
+      position INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'level_threshold_type') THEN ALTER TABLE tenants ADD COLUMN level_threshold_type VARCHAR(20) DEFAULT 'deals'; END IF; END $$`);
+    await query('CREATE INDEX IF NOT EXISTS idx_tenant_levels_tenant ON tenant_levels(tenant_id, position)');
+
+    // v8: Bump old #059669 (emerald-600) to #047857 (emerald-700) for WCAG AA accessibility
+    // Only affects tenants still on the old default, not custom colors.
+    await query(`UPDATE tenants SET primary_color = '#047857' WHERE primary_color = '#059669' OR primary_color IS NULL`);
+    await query(`UPDATE tenants SET accent_color = NULL WHERE accent_color = '#f97316'`);
+
+    // v9: Revert to landing green — user prefers brand consistency
+    await query(`UPDATE tenants SET primary_color = '#059669' WHERE primary_color = '#047857' OR primary_color IS NULL`);
+
+    // v10: Force landing green on ALL tenants (user explicit request)
+    // Clears any residual custom colors (lime #1ace0d, purple #8b5cf6, etc.)
+    await query(`UPDATE tenants SET primary_color = '#059669', secondary_color = '#10b981', accent_color = NULL`);
+
     console.log('✅ Migrations completed');
   } catch (err) {
     console.error('Migration error:', err.message);

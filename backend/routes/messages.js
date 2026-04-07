@@ -1,10 +1,11 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
-const { authenticate, partnerScope } = require('../middleware/auth');
+const { authenticate, partnerScope, tenantScope } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(authenticate);
+router.use(tenantScope);
 router.use(partnerScope);
 
 // ─── List conversations for current user ───
@@ -213,6 +214,11 @@ router.get('/users', async (req, res) => {
   try {
     let whereClause = 'WHERE u.is_active = true AND u.id != $1';
     const params = [req.user.id];
+    // Tenant isolation : restrict to users of current tenant
+    if (req.tenantId && !req.skipTenantFilter) {
+      params.push(req.tenantId);
+      whereClause += ` AND u.tenant_id = $${params.length}`;
+    }
 
     // Partners can only message admins and commercials
     if (req.user.role === 'partner') {

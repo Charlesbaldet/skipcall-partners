@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
+import OnboardingWizard from '../components/OnboardingWizard.jsx';
 import { fmt, STATUS_CONFIG, LEVEL_CONFIG } from '../lib/constants';
 
 const COLORS = ['#6366f1', '#0ea5e9', '#f59e0b', '#c026d3', '#16a34a', '#dc2626'];
@@ -10,7 +11,7 @@ const LEVEL_COLORS = {
   Bronze: { bg: '#fef3e2', color: '#cd7f32', border: '#f5d5a0' },
   Silver: { bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' },
   Gold: { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
-  Platinum: { bg: '#eef2ff', color: '#6366f1', border: '#c7d2fe' },
+  Platinum: { bg: '#eef2ff', color: 'var(--rb-primary, #059669)', border: '#c7d2fe' },
 };
 
 export default function DashboardPage() {
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const [lbLevels, setLbLevels] = useState([]);
   const [lbLoading, setLbLoading] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
 
   useEffect(() => {
     Promise.all([
@@ -88,6 +90,7 @@ export default function DashboardPage() {
 
   return (
     <div className="fade-in">
+      {showWizard && <OnboardingWizard onClose={() => setShowWizard(false)} />}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Dashboard</h1>
@@ -352,7 +355,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink }) {
                         <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{p.next_level.deals_needed} → {p.next_level.icon}</span>
                       </div>
                     ) : (
-                      <span style={{ color: '#6366f1', fontWeight: 600 }}>Max ✨</span>
+                      <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>Max ✨</span>
                     )}
                   </td>
                 </tr>

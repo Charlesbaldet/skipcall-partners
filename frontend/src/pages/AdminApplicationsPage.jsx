@@ -154,7 +154,7 @@ export default function AdminApplicationsPage() {
                 <div style={{ fontWeight: 700, color: '#16a34a', marginBottom: 12 }}>Partenaire créé !</div>
                 <div style={{ background: '#fff', borderRadius: 10, padding: 12, display: 'inline-block', textAlign: 'left' }}>
                   <p style={{ fontSize: 13, marginBottom: 4 }}><strong>Email :</strong> {selected.email}</p>
-                  <p style={{ fontSize: 13, margin: 0 }}><strong>Mot de passe :</strong> <code style={{ background: '#eef2ff', padding: '2px 8px', borderRadius: 4, color: '#6366f1' }}>{tempPwd}</code></p>
+                  <p style={{ fontSize: 13, margin: 0 }}><strong>Mot de passe :</strong> <code style={{ background: '#eef2ff', padding: '2px 8px', borderRadius: 4, color: 'var(--rb-primary, #059669)' }}>{tempPwd}</code></p>
                 </div>
               </div>
             )}
