@@ -68,6 +68,14 @@ export default function Layout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
+  const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (e) => setTenant(e.detail || window.__rbTenant);
+    window.addEventListener('rb-theme-loaded', handler);
+    return () => window.removeEventListener('rb-theme-loaded', handler);
+  }, []);
 
   const isSuperAdmin = user?.role === 'superadmin';
   const isAdmin = user?.role === 'admin';
@@ -102,7 +110,7 @@ export default function Layout({ children }) {
     document.title = total > 0
       ? `(${total}) RefBoost - Programme Partenaires`
       : 'RefBoost - Programme Partenaires';
-  }, [unread, pendingApps, isSuperAdmin]);
+  }, [unread, pendingApps, isSuperAdmin, tenant]);
 
   const handleLogout = () => {
     logout();
@@ -170,7 +178,7 @@ export default function Layout({ children }) {
               flexShrink: 0,
               filter: `drop-shadow(0 0 16px ${C.p}40)`,
             }}>
-              <RefBoostLogo size={36} />
+              {tenant?.logo_url ? <img src={tenant.logo_url} alt="Logo" style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} /> : <RefBoostLogo size={36} />}
             </div>
           )}
           {!collapsed && (
@@ -180,7 +188,7 @@ export default function Layout({ children }) {
               letterSpacing: -0.5,
               fontFamily: 'inherit',
             }}>
-              {isSuperAdmin ? 'Super Admin' : <>Ref<span style={{ color: C.pl }}>Boost</span></>}
+              {isSuperAdmin ? 'Super Admin' : (tenant?.name || 'RefBoost')}
             </span>
           )}
         </div>

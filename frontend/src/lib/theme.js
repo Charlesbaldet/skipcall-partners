@@ -56,6 +56,10 @@ export async function loadThemeBySlug(slug) {
     const d = await r.json();
     if (d && d.tenant) {
       injectVars(d.tenant);
+      if (typeof window !== 'undefined') {
+        window.__rbTenant = d.tenant;
+        window.dispatchEvent(new CustomEvent('rb-theme-loaded', { detail: d.tenant }));
+      }
       return d.tenant;
     }
   } catch (e) {}
@@ -65,7 +69,13 @@ export async function loadThemeBySlug(slug) {
 export async function loadTheme() {
   try {
     const data = await api.getMyTenant();
-    if (data && data.tenant) injectVars(data.tenant);
+    if (data && data.tenant) {
+      injectVars(data.tenant);
+      if (typeof window !== 'undefined') {
+        window.__rbTenant = data.tenant;
+        window.dispatchEvent(new CustomEvent('rb-theme-loaded', { detail: data.tenant }));
+      }
+    }
   } catch (e) {
     // Silent fail — keep default green theme
   }

@@ -425,12 +425,18 @@ function AppearanceTab() {
       .finally(() => setLoading(false));
   }, []);
 
+  function slugify(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 50);
+  }
+
   const save = async () => {
     setSaving(true); setMsg(null);
     try {
-      await api.updateMyTenant(form);
+      const slug = slugify(form.name);
+      const payload = { ...form, slug: slug || undefined };
+      await api.updateMyTenant(payload);
       if (typeof window !== 'undefined' && window.__rbLoadTheme) window.__rbLoadTheme();
-      setMsg({ type: 'success', text: 'Apparence mise à jour ✓' });
+      setMsg({ type: 'success', text: slug ? `Apparence mise à jour ✓ Nouveau lien : /r/${slug}` : 'Apparence mise à jour ✓' });
       setTimeout(() => setMsg(null), 3000);
     } catch (e) {
       setMsg({ type: 'error', text: e.message || 'Erreur lors de la sauvegarde' });
