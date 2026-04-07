@@ -319,23 +319,29 @@ router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
     const partnersMap = Object.fromEntries(partnersRows.rows.map(r => [r.month, parseInt(r.count)]));
     const leadsMap = Object.fromEntries(leadsRows.rows.map(r => [r.month, parseInt(r.count)]));
     const volumeMap = Object.fromEntries(volumeRows.rows.map(r => [r.month, parseFloat(r.total)]));
-    // Get cumulative totals before the 12-month window for accurate cumulative line
-    const [{ rows: [tenantsBefore] }, { rows: [partnersBefore] }] = await Promise.all([
+    // Get cumulative totals before the 12-month window for accurate cumulative lines
+    const [tBefore, pBefore, lBefore, vBefore] = await Promise.all([
       query(`SELECT COUNT(*) as count FROM tenants WHERE created_at < NOW() - INTERVAL '12 months'`),
       query(`SELECT COUNT(*) as count FROM partners WHERE created_at < NOW() - INTERVAL '12 months'`),
+      query(`SELECT COUNT(*) as count FROM referrals WHERE created_at < NOW() - INTERVAL '12 months'`),
+      query(`SELECT COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at < NOW() - INTERVAL '12 months'`),
     ]);
-    let cumulTenants = parseInt(tenantsBefore.count);
-    let cumulPartners = parseInt(partnersBefore.count);
+    let cumulTenants = parseInt(tBefore.rows[0].count);
+    let cumulPartners = parseInt(pBefore.rows[0].count);
+    let cumulLeads = parseInt(lBefore.rows[0].count);
+    let cumulVolume = parseFloat(vBefore.rows[0].total);
     const series = months.map(m => {
       cumulTenants += (tenantsMap[m.key] || 0);
       cumulPartners += (partnersMap[m.key] || 0);
+      cumulLeads += (leadsMap[m.key] || 0);
+      cumulVolume += (volumeMap[m.key] || 0);
       return {
         month: m.key,
         label: m.label,
         tenants_cumul: cumulTenants,
         partners_cumul: cumulPartners,
-        leads_new: leadsMap[m.key] || 0,
-        volume_won: volumeMap[m.key] || 0,
+        leads_cumul: cumulLeads,
+        volume_won: cumulVolume,
       };
     });
     res.json({ series });
