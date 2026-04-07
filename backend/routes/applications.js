@@ -27,7 +27,7 @@ router.post('/apply', [
     const { company_name, contact_name, email, phone, company_website, company_size, motivation } = req.body;
 
     // Resolve tenant from URL slug (set via /r/:slug routing) — fallback to domain
-    let resolvedTenantId = resolvedTenantId;
+    let resolvedTenantId = req.tenantId;
     if (req.body.tenant_slug) {
       try {
         const { rows: ts } = await query("SELECT id FROM tenants WHERE slug = $1", [req.body.tenant_slug]);
