@@ -19,14 +19,14 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
       query('SELECT COUNT(*) FROM users'),
       query('SELECT COUNT(*) FROM users WHERE is_active = true'),
       query('SELECT COUNT(*) FROM partners'),
-      query("SELECT COUNT(*) FROM partners WHERE status = 'active'"),
+      query("SELECT COUNT(*) FROM partners WHERE is_active = true"),
       query('SELECT status, COUNT(*) as count FROM referrals GROUP BY status'),
       query('SELECT status, COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE deal_value IS NOT NULL GROUP BY status'),
       query(`
         SELECT t.id, t.name, t.slug,
                COUNT(DISTINCT r.id) as lead_count,
                COALESCE(SUM(r.deal_value) FILTER (WHERE r.status = 'won'), 0) as volume_won,
-               COALESCE(SUM(r.deal_value) FILTER (WHERE r.status IN ('qualified', 'negotiation')), 0) as volume_pipeline
+               COALESCE(SUM(r.deal_value) FILTER (WHERE r.status IN ('contacted', 'meeting', 'proposal')), 0) as volume_pipeline
         FROM tenants t
         LEFT JOIN partners p ON p.tenant_id = t.id
         LEFT JOIN referrals r ON r.partner_id = p.id
@@ -163,6 +163,16 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
     // Clean messaging for users of this tenant
     await client.query('DELETE FROM messages WHERE sender_id IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
     await client.query('DELETE FROM conversation_participants WHERE user_id IN (SELECT id FROM users WHERE tenant_id = $1)', [req.params.id]);
+    // Delete conversations and orphaned messaging data linked to this tenant
+    await client.query('DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1)', [req.params.id]);
+    await client.query('DELETE FROM conversation_participants WHERE conversation_id IN (SELECT id FROM conversations WHERE tenant_id = $1)', [req.params.id]);
+    await client.query('DELETE FROM conversations WHERE tenant_id = $1', [req.params.id]);
+    // Delete sessions for this tenant (ephemeral, FK on users + tenant)
+    await client.query('DELETE FROM sessions WHERE tenant_id = $1', [req.params.id]);
+    // Audit logs: preserve for compliance, set tenant_id to NULL instead of DELETE
+    await client.query('UPDATE audit_logs SET tenant_id = NULL WHERE tenant_id = $1', [req.params.id]);
+    // Delete API keys belonging to this tenant
+    await client.query('DELETE FROM api_keys WHERE tenant_id = $1', [req.params.id]);
     // Delete users
     await client.query('DELETE FROM users WHERE tenant_id = $1', [req.params.id]);
     // Delete tenant-level config (levels, api keys, etc.)
