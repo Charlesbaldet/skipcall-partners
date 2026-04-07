@@ -3,6 +3,9 @@ const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
 const { queueNotification } = require('../services/emailService');
+const resend = require('../services/resend');
+const templates = require('../services/email-templates');
+
 const router = express.Router();
 
 // All routes require authentication + tenant isolation
@@ -345,6 +348,44 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
     );
 
     res.json({ referral: updated });
+
+    // Fire-and-forget: send 'lead won' email to partner user(s) if status just transitioned to 'won'
+    if (updates.status === 'won' && current.status !== 'won') {
+      (async () => {
+        try {
+          const { rows: partnerUsers } = await query(
+            `SELECT u.email, u.full_name, t.name as tenant_name
+             FROM users u JOIN tenants t ON u.tenant_id = t.id
+             WHERE u.partner_id = $1 AND u.is_active = true`,
+            [updated.partner_id]
+          );
+          const rate = parseFloat(updated.commission_rate) || 0;
+          const dealValue = parseFloat(updated.deal_value) || 0;
+          const commissionAmount = Math.round(dealValue * rate) / 100;
+          const dashboardUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/dashboard';
+          for (const u of partnerUsers) {
+            const tmpl = templates.leadWon({
+              partnerName: u.full_name,
+              prospectName: updated.prospect_name || updated.prospect_company || 'votre prospect',
+              dealValue: dealValue || null,
+              commissionAmount: commissionAmount || null,
+              currency: '€',
+              dashboardUrl,
+              tenantName: u.tenant_name,
+            });
+            await resend.sendAndLog({
+              to: u.email,
+              subject: tmpl.subject,
+              html: tmpl.html,
+              text: tmpl.text,
+              template: 'lead_won',
+              payload: { recipient_name: u.full_name, referral_id: updated.id, deal_value: dealValue },
+              query,
+            });
+          }
+        } catch (e) { console.error('[referrals.won] email error:', e.message); }
+      })();
+    }
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Update referral error:', err);
