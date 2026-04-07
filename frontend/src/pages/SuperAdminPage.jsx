@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle } from 'lucide-react';
+import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart3 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -75,18 +75,112 @@ export default function SuperAdminPage() {
     <div className="fade-in">
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <Shield size={24} color="#6366f1" />
+          <Shield size={24} color="#059669" />
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Super Admin</h1>
         </div>
         <p style={{ color: '#64748b' }}>Gestion de la plateforme — données non-sensibles uniquement</p>
       </div>
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <KPI icon={Globe} label="Tenants actifs" value={stats.total_tenants || 0} color="#6366f1" />
+      {/* KPIs - Row 1: Counts */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 16 }}>
+        <KPI icon={Globe} label="Tenants actifs" value={stats.total_tenants || 0} color="#059669" />
         <KPI icon={Users} label="Utilisateurs totaux" value={stats.total_users || 0} color="#0ea5e9" />
         <KPI icon={Activity} label="Utilisateurs actifs" value={stats.active_users || 0} color="#16a34a" />
       </div>
+
+      {/* KPIs - Row 2: Partners & Leads */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
+        <KPI icon={Briefcase} label="Partenaires totaux" value={stats.total_partners || 0} color="#f59e0b" />
+        <KPI icon={Briefcase} label="Partenaires actifs" value={stats.active_partners || 0} color="#16a34a" />
+        <KPI icon={Target} label="Leads totaux" value={stats.total_leads || 0} color="#8b5cf6" />
+      </div>
+
+      {/* Volume cards */}
+      {stats.volume_by_status && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
+          <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', border: '1px solid #bbf7d0', borderRadius: 12, padding: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ background: '#059669', borderRadius: 8, padding: 8, display: 'flex' }}>
+                <TrendingUp size={18} color="#fff" />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#065f46', textTransform: 'uppercase', letterSpacing: 0.5 }}>Volume gagné</div>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#064e3b' }}>
+              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(stats.volume_by_status.won || 0)}
+            </div>
+            <div style={{ fontSize: 12, color: '#047857', marginTop: 4 }}>
+              {stats.leads_by_status && stats.leads_by_status.won ? `${stats.leads_by_status.won} lead${stats.leads_by_status.won > 1 ? 's' : ''} signé${stats.leads_by_status.won > 1 ? 's' : ''}` : '—'}
+            </div>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #fefce8 0%, #fef9c3 100%)', border: '1px solid #fde047', borderRadius: 12, padding: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ background: '#ca8a04', borderRadius: 8, padding: 8, display: 'flex' }}>
+                <Activity size={18} color="#fff" />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#854d0e', textTransform: 'uppercase', letterSpacing: 0.5 }}>Volume pipeline</div>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#713f12' }}>
+              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format((stats.volume_by_status.contacted || 0) + (stats.volume_by_status.meeting || 0) + (stats.volume_by_status.proposal || 0))}
+            </div>
+            <div style={{ fontSize: 12, color: '#a16207', marginTop: 4 }}>
+              {(() => { const lbs = stats.leads_by_status || {}; const c = (lbs.contacted || 0) + (lbs.meeting || 0) + (lbs.proposal || 0); return c > 0 ? `${c} en cours` : '—'; })()}
+            </div>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fecaca', borderRadius: 12, padding: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ background: '#dc2626', borderRadius: 8, padding: 8, display: 'flex' }}>
+                <X size={18} color="#fff" />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#991b1b', textTransform: 'uppercase', letterSpacing: 0.5 }}>Volume perdu</div>
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#7f1d1d' }}>
+              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(stats.volume_by_status.lost || 0)}
+            </div>
+            <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 4 }}>
+              {stats.leads_by_status && stats.leads_by_status.lost ? `${stats.leads_by_status.lost} lead${stats.leads_by_status.lost > 1 ? 's' : ''} perdu${stats.leads_by_status.lost > 1 ? 's' : ''}` : '—'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tenants breakdown table */}
+      {stats.tenants_breakdown && stats.tenants_breakdown.length > 0 && (
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 28, overflow: 'hidden' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <BarChart3 size={18} color="#059669" />
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Activité par tenant</h3>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ background: '#f9fafb', textAlign: 'left' }}>
+                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 }}>Tenant</th>
+                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'right' }}>Leads</th>
+                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'right' }}>Volume gagné</th>
+                  <th style={{ padding: '12px 20px', fontWeight: 600, color: '#475569', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'right' }}>Pipeline</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.tenants_breakdown.map((t) => (
+                  <tr key={t.id} style={{ borderTop: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '14px 20px', fontWeight: 600, color: '#0f172a' }}>
+                      {t.name}
+                      <div style={{ fontSize: 11, fontWeight: 400, color: '#94a3b8' }}>{t.slug}</div>
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'right', color: '#475569' }}>{t.lead_count}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(t.volume_won || 0)}
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'right', color: '#ca8a04' }}>
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(t.volume_pipeline || 0)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
@@ -135,7 +229,7 @@ export default function SuperAdminPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                   {[['primary_color', 'Primaire'], ['secondary_color', 'Secondaire'], ['accent_color', 'Accent']].map(([key, label]) => (
-                    <div key={key}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm[key] || '#6366f1'} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm[key]}</code></div></div>
+                    <div key={key}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm[key] || '#059669'} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm[key]}</code></div></div>
                   ))}
                 </div>
                 {/* Preview */}
@@ -187,7 +281,7 @@ export default function SuperAdminPage() {
                 <tr key={t.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '13px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 8, background: t.primary_color || '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{t.name[0]}</div>
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: t.primary_color || '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{t.name[0]}</div>
                       <span style={{ fontWeight: 600, color: '#0f172a' }}>{t.name}</span>
                     </div>
                   </td>
@@ -227,7 +321,7 @@ export default function SuperAdminPage() {
                 <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDateTime(l.created_at)}</td>
                 <td style={{ padding: '10px 14px', fontWeight: 500, color: '#0f172a' }}>{l.user_name || l.user_email || '—'}</td>
                 <td style={{ padding: '10px 14px', color: 'var(--rb-primary, #059669)', fontSize: 12 }}>{l.tenant_name || '—'}</td>
-                <td style={{ padding: '10px 14px' }}><span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: l.action.includes('fail') || l.action.includes('block') ? '#fef2f2' : '#eef2ff', color: l.action.includes('fail') || l.action.includes('block') ? '#dc2626' : '#6366f1' }}>{l.action}</span></td>
+                <td style={{ padding: '10px 14px' }}><span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: l.action.includes('fail') || l.action.includes('block') ? '#fef2f2' : '#eef2ff', color: l.action.includes('fail') || l.action.includes('block') ? '#dc2626' : '#059669' }}>{l.action}</span></td>
                 <td style={{ padding: '10px 14px', color: '#64748b', fontSize: 12 }}>{l.resource_type || '—'}</td>
                 <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 11, fontFamily: 'monospace' }}>{l.ip_address || '—'}</td>
               </tr>
