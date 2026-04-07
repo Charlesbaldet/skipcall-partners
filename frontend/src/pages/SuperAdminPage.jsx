@@ -265,7 +265,7 @@ function TimelineChart({ series, active, setActive }) {
   const metrics = [
     { key: 'tenants_cumul', label: 'Clients', color: '#059669', format: (v) => v },
     { key: 'partners_cumul', label: 'Partenaires', color: '#0ea5e9', format: (v) => v },
-    { key: 'leads_new', label: 'Leads / mois', color: '#f59e0b', format: (v) => v },
+    { key: 'leads_cumul', label: 'Leads', color: '#f59e0b', format: (v) => v },
     { key: 'volume_won', label: 'Volume gagné', color: '#16a34a', format: (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0) },
   ];
   const activeM = metrics.find((m) => m.key === active) || metrics[0];
