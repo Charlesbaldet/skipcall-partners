@@ -89,7 +89,7 @@ export default function AdminApplicationsPage() {
                   borderLeft: app.status === 'pending' ? '4px solid #f59e0b' : '4px solid transparent',
                   transition: 'border-color 0.15s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = '#6366f1'}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--rb-primary, #059669)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -144,7 +144,7 @@ export default function AdminApplicationsPage() {
             {selected.motivation && (
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Motivation</div>
-                <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, color: '#334155', fontSize: 14, lineHeight: 1.6, borderLeft: '3px solid #6366f1' }}>{selected.motivation}</div>
+                <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, color: '#334155', fontSize: 14, lineHeight: 1.6, borderLeft: '3px solid var(--rb-primary, #059669)' }}>{selected.motivation}</div>
               </div>
             )}
 
@@ -170,7 +170,7 @@ export default function AdminApplicationsPage() {
                 <div style={{ display: 'flex', gap: 12 }}>
                   <button onClick={() => handleApprove(selected.id)} disabled={processing} style={{
                     flex: 1, padding: '14px', borderRadius: 12,
-                    background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff',
+                    background: 'var(--rb-primary, #059669)', color: '#fff',
                     border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     opacity: processing ? 0.7 : 1,
