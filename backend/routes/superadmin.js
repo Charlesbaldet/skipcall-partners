@@ -19,14 +19,14 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
       query('SELECT COUNT(*) FROM users'),
       query('SELECT COUNT(*) FROM users WHERE is_active = true'),
       query('SELECT COUNT(*) FROM partners'),
-      query("SELECT COUNT(*) FROM partners WHERE status = 'active'"),
+      query("SELECT COUNT(*) FROM partners WHERE is_active = true"),
       query('SELECT status, COUNT(*) as count FROM referrals GROUP BY status'),
       query('SELECT status, COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE deal_value IS NOT NULL GROUP BY status'),
       query(`
         SELECT t.id, t.name, t.slug,
                COUNT(DISTINCT r.id) as lead_count,
                COALESCE(SUM(r.deal_value) FILTER (WHERE r.status = 'won'), 0) as volume_won,
-               COALESCE(SUM(r.deal_value) FILTER (WHERE r.status IN ('qualified', 'negotiation')), 0) as volume_pipeline
+               COALESCE(SUM(r.deal_value) FILTER (WHERE r.status IN ('contacted', 'meeting', 'proposal')), 0) as volume_pipeline
         FROM tenants t
         LEFT JOIN partners p ON p.tenant_id = t.id
         LEFT JOIN referrals r ON r.partner_id = p.id
