@@ -67,6 +67,8 @@ export async function loadThemeBySlug(slug) {
 }
 
 export async function loadTheme() {
+  // skipcall_token check: skip if unauthenticated — loadThemeBySlug handles public pages
+  if (typeof window !== 'undefined' && !localStorage.getItem('skipcall_token')) return;
   try {
     const data = await api.getMyTenant();
     if (data && data.tenant) {
