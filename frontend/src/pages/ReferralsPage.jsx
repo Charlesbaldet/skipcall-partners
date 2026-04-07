@@ -285,10 +285,18 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
   const [saving, setSaving] = useState(false);
   const [editEngagement, setEditEngagement] = useState(referral.engagement || 'monthly');
   const [tab, setTab] = useState('info');
+  const [saveToast, setSaveToast] = useState(null);
 
   const handleSave = async () => {
     setSaving(true);
-    await onUpdate(referral.id, { status: editStatus, deal_value: Number(editValue) || 0, engagement: editEngagement });
+    setSaveToast(null);
+    try {
+      await onUpdate(referral.id, { status: editStatus, deal_value: Number(editValue) || 0, engagement: editEngagement });
+      setSaveToast({ type: 'success', text: 'Modifications enregistrées ✓' });
+      setTimeout(() => setSaveToast(null), 2500);
+    } catch (e) {
+      setSaveToast({ type: 'error', text: e.message || 'Erreur lors de la sauvegarde' });
+    }
     setSaving(false);
   };
 
@@ -364,8 +372,13 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
                   </div>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 15px rgba(99,102,241,0.3)', opacity: saving ? 0.7 : 1 }}>{saving ? 'Enregistrement...' : 'Sauvegarder'}</button>
+              {saveToast && (
+              <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 600, background: saveToast.type === 'success' ? '#f0fdf4' : '#fef2f2', color: saveToast.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${saveToast.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+                {saveToast.text}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1 }}>{saving ? 'Enregistrement...' : 'Sauvegarder'}</button>
                 <button onClick={() => onDelete(referral.id)} style={{ padding: '14px 20px', borderRadius: 12, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
               </div>
             </div>
