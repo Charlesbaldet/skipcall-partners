@@ -77,7 +77,7 @@ export default function CommissionsPage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComKPI icon={DollarSign} label="Total Commissions" value={fmt(totalAll)} color="#6366f1" />
+        <ComKPI icon={DollarSign} label="Total Commissions" value={fmt(totalAll)} color="var(--rb-primary, #059669)" />
         <ComKPI icon={Clock} label="En attente" value={fmt(totals.pending)} color="#f59e0b" />
         <ComKPI icon={CheckCircle} label="Payées" value={fmt(totals.paid)} color="#16a34a" />
       </div>
@@ -268,7 +268,7 @@ export default function CommissionsPage() {
             {!payModal.partner.iban && (<div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #fde68a' }}><AlertTriangle size={14} /> IBAN non renseigné.</div>)}
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setPayModal(null)} style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Annuler</button>
-              <button onClick={handleConfirmPay} disabled={paying} style={{ flex: 2, padding: '13px', borderRadius: 12, background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: paying ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(34,197,94,0.3)' }}>
+              <button onClick={handleConfirmPay} disabled={paying} style={{ flex: 2, padding: '13px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: paying ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(34,197,94,0.3)' }}>
                 <CreditCard size={16} /> {paying ? 'Validation...' : 'Confirmer le virement'}
               </button>
             </div>
