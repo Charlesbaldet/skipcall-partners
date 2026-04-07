@@ -179,6 +179,17 @@ router.delete("/users/:id", async (req, res) => {
   try {
     if (req.params.id === req.user.id)
       return res.status(400).json({ error: "Impossible de supprimer votre propre compte" });
+    // SECURITY : refuse deleting the founder admin (oldest admin in the tenant)
+    // so the tenant always keeps at least one admin.
+    if (req.tenantId && !req.skipTenantFilter) {
+      const { rows: founder } = await query(
+        "SELECT id FROM users WHERE role = 'admin' AND tenant_id = $1 ORDER BY created_at ASC LIMIT 1",
+        [req.tenantId]
+      );
+      if (founder[0] && founder[0].id === req.params.id) {
+        return res.status(403).json({ error: 'Impossible de supprimer le premier administrateur' });
+      }
+    }
 
     // Tenant check
     let whereExtra = `AND role IN ('admin', 'commercial')`;
