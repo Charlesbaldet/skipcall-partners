@@ -88,7 +88,7 @@ export default function PartnersPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
-              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
+              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
               <button onClick={() => { handleArchive(editingId); setEditingId(null); }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fcd34d', background: '#fffbeb', color: '#b45309', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Archive size={14} /> Archiver</button>
@@ -172,7 +172,7 @@ export default function PartnersPage() {
               <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners(next); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Archive size={14} /> {showArchived ? `Archivés (${archivedPartners.length})` : 'Voir les archivés'}
               </button>
-              <button onClick={() => { setShowForm(!showForm); setTempPwd(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={() => { setShowForm(!showForm); setTempPwd(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
                 {showForm ? <X size={16} /> : <Plus size={16} />}
                 {showForm ? 'Annuler' : 'Ajouter un partenaire'}
               </button>
@@ -221,7 +221,7 @@ export default function PartnersPage() {
                     <FormField label="Site web" value={form.company_website} onChange={v => setForm(f => ({ ...f, company_website: v }))} />
                     <FormField label="Taux de commission (%)" value={form.commission_rate} onChange={v => setForm(f => ({ ...f, commission_rate: v }))} type="number" />
                   </div>
-                  <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Création...' : 'Créer le partenaire'}</button>
+                  <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Création...' : 'Créer le partenaire'}</button>
                 </form>
               )}
             </div>

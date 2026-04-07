@@ -89,7 +89,7 @@ export default function PartnerPaymentsPage() {
               }}><X size={14} /> Annuler</button>
               <button onClick={handleSaveIban} disabled={savingIban} style={{
                 display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 10,
-                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none', color: '#fff',
+                background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', border: 'none', color: '#fff',
                 fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: savingIban ? 0.7 : 1,
               }}><Save size={14} /> {savingIban ? 'Enregistrement...' : 'Enregistrer'}</button>
             </div>

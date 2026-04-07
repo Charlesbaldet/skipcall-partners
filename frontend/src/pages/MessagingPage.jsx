@@ -121,7 +121,7 @@ export default function MessagingPage() {
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Messagerie</h1>
           <p style={{ color: '#64748b', marginTop: 4 }}>Échangez avec l'équipe Skipcall</p>
         </div>
-        <button onClick={openNewConversation} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+        <button onClick={openNewConversation} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
           <Plus size={16} /> Nouvelle conversation
         </button>
       </div>
@@ -221,7 +221,7 @@ export default function MessagingPage() {
                         {roleBadge && !isMe && <span style={{ padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: roleBadge.bg, color: roleBadge.color }}>{roleBadge.label}</span>}
                         <span style={{ fontSize: 11, color: '#94a3b8' }}>{fmtDateTime(msg.created_at)}</span>
                       </div>
-                      <div style={{ maxWidth: '75%', padding: '10px 16px', borderRadius: 14, background: isMe ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : '#f1f5f9', color: isMe ? '#fff' : '#0f172a', fontSize: 14, lineHeight: 1.6, borderBottomRightRadius: isMe ? 4 : 14, borderBottomLeftRadius: isMe ? 14 : 4 }}>
+                      <div style={{ maxWidth: '75%', padding: '10px 16px', borderRadius: 14, background: isMe ? 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))' : '#f1f5f9', color: isMe ? '#fff' : '#0f172a', fontSize: 14, lineHeight: 1.6, borderBottomRightRadius: isMe ? 4 : 14, borderBottomLeftRadius: isMe ? 14 : 4 }}>
                         {msg.content}
                       </div>
                     </div>
@@ -233,7 +233,7 @@ export default function MessagingPage() {
               {/* Input */}
               <div style={{ padding: '16px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 12 }}>
                 <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()} placeholder="Écrire un message..." style={{ flex: 1, padding: '10px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 14, color: '#0f172a' }} />
-                <button onClick={handleSend} disabled={sending || !newMessage.trim()} style={{ width: 44, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer', background: newMessage.trim() ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: sending ? 0.7 : 1 }}>
+                <button onClick={handleSend} disabled={sending || !newMessage.trim()} style={{ width: 44, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer', background: newMessage.trim() ? 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: sending ? 0.7 : 1 }}>
                   <Send size={18} color={newMessage.trim() ? '#fff' : '#94a3b8'} />
                 </button>
               </div>
@@ -282,7 +282,7 @@ export default function MessagingPage() {
               <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Premier message *</label>
               <textarea value={newConvForm.message} onChange={e => setNewConvForm(f => ({ ...f, message: e.target.value }))} placeholder="Votre message..." rows={4} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
-            <button onClick={handleCreateConversation} disabled={creating || !newConvForm.subject.trim() || !newConvForm.message.trim() || newConvForm.participant_ids.length === 0} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', opacity: creating ? 0.7 : 1 }}>
+            <button onClick={handleCreateConversation} disabled={creating || !newConvForm.subject.trim() || !newConvForm.message.trim() || newConvForm.participant_ids.length === 0} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', opacity: creating ? 0.7 : 1 }}>
               {creating ? 'Création...' : 'Démarrer la conversation'}
             </button>
           </div>

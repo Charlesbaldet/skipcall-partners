@@ -97,7 +97,7 @@ export default function AdminSettingsPage() {
         {isAdmin && (
         <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12,
-          background: showInvite ? '#f1f5f9' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+          background: showInvite ? '#f1f5f9' : 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))',
           color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
         }}>
           {showInvite ? <X size={16} /> : <UserPlus size={16} />}
@@ -171,7 +171,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
               <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{
-                padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))',
                 color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: sending ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
@@ -282,7 +282,7 @@ export default function AdminSettingsPage() {
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
             </div>
             <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{
-              padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+              padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg, var(--rb-primary, #059669), var(--rb-accent, #f97316))',
               color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
