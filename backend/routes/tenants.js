@@ -48,7 +48,7 @@ router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'superadmin' && req.params.id !== req.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
-  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings } = req.body;
+  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model } = req.body;
 
   let cleanSlug = null;
   if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
@@ -65,6 +65,15 @@ router.put('/:id', authenticate, async (req, res) => {
       `UPDATE tenants SET name = COALESCE($1, name), slug = COALESCE($2, slug), domain = COALESCE($3, domain), primary_color = COALESCE($4, primary_color), secondary_color = COALESCE($5, secondary_color), accent_color = COALESCE($6, accent_color), logo_url = COALESCE($7, logo_url), settings = COALESCE($8, settings), updated_at = NOW()  WHERE id = $9 RETURNING *`,
       [name, cleanSlug, domain, primary_color, secondary_color, accent_color, logo_url, settings ? JSON.stringify(settings) : null, req.params.id]
     );
+
+    // Safe optional revenue_model update (column may not exist yet if migration v15 failed)
+    if (revenue_model !== undefined) {
+      try {
+        await query('UPDATE tenants SET revenue_model = $1 WHERE id = $2', [revenue_model || null, req.params.id]);
+      } catch (e) {
+        console.error('[tenants PUT] revenue_model update skipped:', e.message);
+      }
+    }
     clearTenantCache();
     auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
     res.json({ tenant: rows[0] });
