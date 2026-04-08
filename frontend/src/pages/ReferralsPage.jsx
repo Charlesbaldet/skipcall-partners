@@ -17,6 +17,7 @@ export default function ReferralsPage() {
   const [kanbanLimits, setKanbanLimits] = useState({});
   const [showConfetti, setShowConfetti] = useState(false);
   const [draggedId, setDraggedId] = useState(null);
+  const [myTenant, setMyTenant] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -289,7 +290,6 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   const [editEngagement, setEditEngagement] = useState(referral.engagement || 'monthly');
   const [tab, setTab] = useState('info');
   const [saveToast, setSaveToast] = useState(null);
-  const [myTenant, setMyTenant] = useState(null);
 
   const handleSave = async () => {
     setSaving(true);
