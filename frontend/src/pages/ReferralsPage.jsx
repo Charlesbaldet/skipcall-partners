@@ -23,8 +23,8 @@ export default function ReferralsPage() {
       const params = {};
       if (filters.status !== 'all') params.status = filters.status;
       if (filters.partner_id !== 'all') params.partner_id = filters.partner_id;
-      const [refData, partData] = await Promise.all([api.getReferrals(params), api.getPartners()]);
-      setReferrals(refData.referrals); setTotal(refData.total); setPartners(partData.partners);
+      const [refData, partData, mt] = await Promise.all([api.getReferrals(params), api.getPartners(), api.getMyTenant()]);
+      setReferrals(refData.referrals); setMyTenant(mt && (mt.tenant || mt)); setTotal(refData.total); setPartners(partData.partners);
     } catch (err) { console.error(err); }
     setLoading(false);
   }, [filters]);
@@ -241,7 +241,7 @@ export default function ReferralsPage() {
       {selected && (
         <DetailModal referral={selected} activities={activities}
           onClose={() => { setSelected(null); setActivities([]); }}
-          onUpdate={handleUpdate} onDelete={handleDelete}
+          onUpdate={handleUpdate} onDelete={handleDelete} myTenant={myTenant}
         />
       )}
     </div>
@@ -279,13 +279,17 @@ function Confetti() {
 }
 
 // ═══ DETAIL MODAL (unchanged from original) ═══
-function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
+function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTenant }) {
+  const rModel = myTenant?.revenue_model || 'CA';
+  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
+  const rUnit = rModel === 'ARR' ? '€ / an' : rModel === 'MRR' ? '€ / mois' : '€';
   const [editStatus, setEditStatus] = useState(referral.status);
   const [editValue, setEditValue] = useState(referral.deal_value || '');
   const [saving, setSaving] = useState(false);
   const [editEngagement, setEditEngagement] = useState(referral.engagement || 'monthly');
   const [tab, setTab] = useState('info');
   const [saveToast, setSaveToast] = useState(null);
+  const [myTenant, setMyTenant] = useState(null);
 
   const handleSave = async () => {
     setSaving(true);
@@ -352,7 +356,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete }) {
                 </div>
               </div>
               <div style={{ marginBottom: 24 }}>
-                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>MRR (€ / mois)</div>
+                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{rLabel} ({rUnit})</div>
                 <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} placeholder="Ex: 24000" style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
               </div>
               <div style={{ marginBottom: 24 }}>
