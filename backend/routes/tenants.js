@@ -45,7 +45,7 @@ router.post('/', authenticate, async (req, res) => {
 // ─── Admin: Update tenant ───
 router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'admin' && req.user.role !== 'superadmin') return res.status(403).json({ error: 'Accès interdit' });
-  if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenant_id) {
+  if (req.user.role !== 'superadmin' && req.params.id !== req.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
   const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model } = req.body;
