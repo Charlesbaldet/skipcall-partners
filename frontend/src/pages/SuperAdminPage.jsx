@@ -129,7 +129,7 @@ export default function SuperAdminPage() {
               </div>
               <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                 {[['primary_color', 'Primaire'], ['secondary_color', 'Secondaire'], ['accent_color', 'Accent']].map(([key, label]) => (
-                  <div key={key}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11, color: '#94a3b8' }}>{form[key]}</code></div></div>
+                  <div key={key}><label style={{ fontSize: 10, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11, color: '#94a3b8' }}>{form[key]}</code></div></div>
                 ))}
               </div>
               <button onClick={handleCreate} disabled={saving || !form.name || !form.slug} style={{ padding: '10px 24px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Création...' : 'Créer le tenant'}</button>
@@ -272,7 +272,7 @@ function TimelineChart({ series, active, setActive }) {
   const values = series.map((p) => Number(p[active]) || 0);
   const max = Math.max(1, ...values);
   const min = Math.min(0, ...values);
-  const W = 800, H = 160, padL = 48, padR = 12, padT = 16, padB = 24;
+  const W = 800, H = 150, padL = 48, padR = 12, padT = 16, padB = 24;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const x = (i) => padL + (series.length === 1 ? innerW / 2 : (i / (series.length - 1)) * innerW);
   const y = (v) => padT + innerH - ((v - min) / (max - min || 1)) * innerH;
@@ -358,7 +358,7 @@ function KPI({ icon: Icon, label, value, color }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>{value}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color, letterSpacing: -1 }}>{value}</div>
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={20} color={color} /></div>
       </div>
