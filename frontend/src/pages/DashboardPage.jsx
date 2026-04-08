@@ -22,7 +22,6 @@ export default function DashboardPage() {
   const [levels, setLevels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [revenueCumul, setRevenueCumul] = useState(false);
-  const [myTenant, setMyTenant] = useState(null);
   const [tab, setTab] = useState('overview');
   const [leaderboard, setLeaderboard] = useState([]);
   const [lbLevels, setLbLevels] = useState([]);
@@ -33,10 +32,10 @@ export default function DashboardPage() {
   useEffect(() => {
     Promise.all([
       api.getKPIs(), api.getTimeline(6), api.getPipeline(),
-      api.getTopPartners(), api.getLevels(), api.getMyTenant(),
-    ]).then(([k, t, p, tp, l, mt]) => {
+      api.getTopPartners(), api.getLevels(),
+    ]).then(([k, t, p, tp, l]) => {
       setKpis(k); setTimeline(t.timeline); setPipeline(p.pipeline);
-      setTopPartners(tp.topPartners); setLevels(l.levels); setMyTenant(mt && (mt.tenant || mt));
+      setTopPartners(tp.topPartners); setLevels(l.levels);
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
@@ -88,10 +87,6 @@ export default function DashboardPage() {
   const revenueData = revenueCumul
     ? timelineData.reduce((acc, t, i) => { acc.push({ ...t, revenue: (i > 0 ? acc[i - 1].revenue : 0) + t.revenue }); return acc; }, [])
     : timelineData;
-
-  const rModel = myTenant?.revenue_model || 'CA';
-  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
-  const rPeriod = rModel === 'ARR' ? 'Annualisé' : 'Mensuel';
 
   return (
     <div className="fade-in">
@@ -208,7 +203,7 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
 
       {/* Charts Row 2 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-        <ChartCard title={`${rLabel} Généré (€)`} action={
+        <ChartCard title="MRR Généré (€)" action={
           <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 8, padding: 2 }}>
             {[{ key: false, label: 'Mensuel' }, { key: true, label: 'Cumulé' }].map(opt => (
               <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
@@ -226,7 +221,7 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} formatter={v => fmt(v)} />
-              <Line type="monotone" dataKey="revenue" name={revenueCumul ? `${rLabel} Cumulé` : `${rLabel} ${rPeriod}`} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
+              <Line type="monotone" dataKey="revenue" name={revenueCumul ? 'MRR Cumulé' : 'MRR Mensuel'} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -312,7 +307,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
             <tr style={{ background: '#f8fafc' }}>
-              {['#', 'Partenaire', 'Niveau', 'Deals gagnés', `${rLabel} Généré`, 'Commissions', 'Conversion', 'Lien', 'Progression'].map((h, i) => (
+              {['#', 'Partenaire', 'Niveau', 'Deals gagnés', 'MRR Généré', 'Commissions', 'Conversion', 'Lien', 'Progression'].map((h, i) => (
                 <th key={i} style={{ padding: '13px 14px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr>
