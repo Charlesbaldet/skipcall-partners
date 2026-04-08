@@ -30,7 +30,8 @@ export default function CommissionsPage() {
   useEffect(() => { reload().catch(console.error).finally(() => setLoading(false)); }, []);
 
   const handleStatusChange = async (id, status) => {
-    try { await api.updateCommission(id, status); await reload(); } catch (err) { console.error(err); }
+    setCommissions(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+    try { await api.updateCommission(id, status); await reload(); } catch (err) { console.error(err); await reload(); }
   };
 
   const handlePayClick = async (commission) => {
