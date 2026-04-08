@@ -136,11 +136,11 @@ async function runMigrations() {
     // ─── v15: tenant revenue model (MRR / ARR / CA / Other) ───
     await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS revenue_model VARCHAR(20) DEFAULT 'CA'`);
     await query(`
-      DO $ BEGIN
+      DO $$ BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'revenue_model_check') THEN
           ALTER TABLE tenants ADD CONSTRAINT revenue_model_check CHECK (revenue_model IN ('MRR', 'ARR', 'CA', 'Other'));
         END IF;
-      END $;
+      END $$;
     `);
 
     console.log('✅ Migrations completed');
