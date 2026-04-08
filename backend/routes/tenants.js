@@ -12,7 +12,7 @@ router.get('/config', (req, res) => {
 
 // ─── Admin: List all tenants ───
 router.get('/', authenticate, async (req, res) => {
-  if (req.user.role !== 'admin' && req.user.role !== 'superadmin') return res.status(403).json({ error: 'Accès interdit' });
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
   try {
     const { rows } = await query('SELECT * FROM tenants ORDER BY created_at ASC');
     res.json({ tenants: rows });
@@ -24,10 +24,7 @@ router.get('/', authenticate, async (req, res) => {
 // ─── Admin: Create tenant ───
 router.post('/', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
-  if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenant_id) {
-    return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
-  }
-  const { name, slug, domain, primary_color, secondary_color, logo_url , revenue_model } = req.body;
+  const { name, slug, domain, primary_color, secondary_color, logo_url } = req.body;
   if (!name || !slug) return res.status(400).json({ error: 'Nom et slug requis' });
 
   try {
@@ -47,8 +44,11 @@ router.post('/', authenticate, async (req, res) => {
 
 // ─── Admin: Update tenant ───
 router.put('/:id', authenticate, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
-  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings } = req.body;
+  if (req.user.role !== 'admin' && req.user.role !== 'superadmin') return res.status(403).json({ error: 'Accès interdit' });
+  if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenant_id) {
+    return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
+  }
+  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model } = req.body;
 
   let cleanSlug = null;
   if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
