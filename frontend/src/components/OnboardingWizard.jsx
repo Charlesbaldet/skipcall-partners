@@ -25,7 +25,7 @@ export default function OnboardingWizard({ onClose }) {
   const [partnerForm, setPartnerForm] = useState({ name: '', contact_name: '', email: '', commission_rate: 10 });
   const [createdPartner, setCreatedPartner] = useState(null);
 
-  const [customizeForm, setCustomizeForm] = useState({ name: '', primary_color: C.p, accent_color: C.a });
+  const [customizeForm, setCustomizeForm] = useState({ name: '', primary_color: C.p, accent_color: C.a, revenue_model: 'MRR' });
   const [customized, setCustomized] = useState(false);
 
   const [copied, setCopied] = useState(false);
@@ -62,6 +62,7 @@ export default function OnboardingWizard({ onClose }) {
       if (customizeForm.name) payload.name = customizeForm.name;
       if (customizeForm.primary_color) payload.primary_color = customizeForm.primary_color;
       if (customizeForm.accent_color) payload.accent_color = customizeForm.accent_color;
+      if (customizeForm.revenue_model) payload.revenue_model = customizeForm.revenue_model;
       await api.updateMyTenant(payload);
       setCustomized(true);
       if (typeof window !== 'undefined' && window.__rbLoadTheme) window.__rbLoadTheme();
@@ -196,6 +197,7 @@ export default function OnboardingWizard({ onClose }) {
                     style={{ ...inputStyle, height: 44, padding: 4 }} />
                 </Field>
               </div>
+              <Field label="Modèle de revenus"><select value={customizeForm.revenue_model} onChange={e => setCustomizeForm({...customizeForm, revenue_model: e.target.value})} style={inputStyle}><option value="MRR">MRR — Revenu mensuel récurrent</option><option value="ARR">ARR — Revenu annuel récurrent</option><option value="CA">CA — Chiffre d'affaires</option><option value="Other">Autre</option></select></Field>
             </div>
           )}
           {step === 3 && customized && (
