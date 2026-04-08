@@ -272,7 +272,7 @@ function TimelineChart({ series, active, setActive }) {
   const values = series.map((p) => Number(p[active]) || 0);
   const max = Math.max(1, ...values);
   const min = Math.min(0, ...values);
-  const W = 800, H = 240, padL = 56, padR = 16, padT = 24, padB = 32;
+  const W = 800, H = 160, padL = 48, padR = 12, padT = 16, padB = 24;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const x = (i) => padL + (series.length === 1 ? innerW / 2 : (i / (series.length - 1)) * innerW);
   const y = (v) => padT + innerH - ((v - min) / (max - min || 1)) * innerH;
@@ -281,11 +281,11 @@ function TimelineChart({ series, active, setActive }) {
   // Y axis ticks (4 levels)
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => min + (max - min) * r);
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 28, overflow: 'hidden' }}>
-      <div style={{ padding: '20px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, marginBottom: 20, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Évolution sur 12 mois</h3>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>Suivez la croissance de votre plateforme</p>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Évolution sur 12 mois</h3>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>Suivez la croissance de votre plateforme</p>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {metrics.map((m) => (
@@ -297,8 +297,8 @@ function TimelineChart({ series, active, setActive }) {
                 color: active === m.key ? '#fff' : '#475569',
                 border: 'none',
                 borderRadius: 8,
-                padding: '8px 14px',
-                fontSize: 13,
+                padding: '6px 12px',
+                fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.15s',
@@ -309,7 +309,7 @@ function TimelineChart({ series, active, setActive }) {
           ))}
         </div>
       </div>
-      <div style={{ padding: '16px 24px 24px' }}>
+      <div style={{ padding: '10px 18px 16px' }}>
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
           <defs>
             <linearGradient id={`grad-${active}`} x1="0" x2="0" y1="0" y2="1">
@@ -321,7 +321,7 @@ function TimelineChart({ series, active, setActive }) {
           {yTicks.map((v, i) => (
             <g key={i}>
               <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke="#f1f5f9" strokeWidth="1" />
-              <text x={padL - 8} y={y(v) + 4} fontSize="11" fill="#94a3b8" textAnchor="end">
+              <text x={padL - 8} y={y(v) + 4} fontSize="10" fill="#94a3b8" textAnchor="end">
                 {active === 'volume_won' ? new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(v) : Math.round(v)}
               </text>
             </g>
@@ -329,23 +329,23 @@ function TimelineChart({ series, active, setActive }) {
           {/* X labels */}
           {series.map((p, i) => (
             i % Math.max(1, Math.ceil(series.length / 6)) === 0 && (
-              <text key={i} x={x(i)} y={H - 10} fontSize="11" fill="#94a3b8" textAnchor="middle">{p.label}</text>
+              <text key={i} x={x(i)} y={H - 10} fontSize="10" fill="#94a3b8" textAnchor="middle">{p.label}</text>
             )
           ))}
           {/* Area + line */}
           <path d={areaPath} fill={`url(#grad-${active})`} />
-          <path d={path} fill="none" stroke={activeM.color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          <path d={path} fill="none" stroke={activeM.color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
           {/* Points */}
           {series.map((p, i) => (
             <g key={i}>
-              <circle cx={x(i)} cy={y(values[i])} r="4" fill="#fff" stroke={activeM.color} strokeWidth="2" />
+              <circle cx={x(i)} cy={y(values[i])} r="3" fill="#fff" stroke={activeM.color} strokeWidth="2" />
               <title>{`${p.label}: ${activeM.format(values[i])}`}</title>
             </g>
           ))}
         </svg>
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: '#64748b' }}>
+        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: '#64748b' }}>
           <span>Dernier mois</span>
-          <span style={{ fontSize: 18, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
         </div>
       </div>
     </div>
