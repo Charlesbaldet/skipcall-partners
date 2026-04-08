@@ -199,7 +199,7 @@ export default function SuperAdminPage() {
           <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead><tr style={{ background: '#f8fafc' }}>
-                {['Tenant', 'Slug', 'Domaine', 'Users', 'Partenaires', 'Statut', 'Créé le', ''].map((h, i) => (
+                {['Tenant', 'Slug', 'Domaine', 'Users', 'Partenaires', 'Statut', 'Créé le', 'Modèle', ''].map((h, i) => (
                   <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                 ))}
               </tr></thead>
@@ -220,6 +220,7 @@ export default function SuperAdminPage() {
                   <td style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600 }}>{t.partner_count}</td>
                   <td style={{ padding: '13px 16px', textAlign: 'center' }}><span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: t.is_active ? '#f0fdf4' : '#fef2f2', color: t.is_active ? '#16a34a' : '#dc2626' }}>{t.is_active ? 'Actif' : 'Inactif'}</span></td>
                   <td style={{ padding: '13px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>{fmtDate(t.created_at)}</td>
+                  <td style={{ padding: '13px 16px', textAlign: 'center', fontSize: 12, color: '#475569' }}>{t.revenue_model || '—'}</td>
                   <td style={{ padding: '13px 16px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
                       <button onClick={() => startEdit(t)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Pencil size={14} color="#64748b" /></button>

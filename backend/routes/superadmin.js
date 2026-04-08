@@ -70,7 +70,7 @@ router.get('/tenants', authenticate, requireSuperAdmin, async (req, res) => {
   try {
     const { rows } = await query(`
       SELECT t.id, t.name, t.slug, t.domain, t.logo_url, t.primary_color, t.secondary_color, t.accent_color,
-             t.is_active, t.created_at, t.updated_at,
+             t.is_active, t.created_at, t.updated_at, t.revenue_model,
              COUNT(DISTINCT u.id) as user_count,
              COUNT(DISTINCT u.id) FILTER (WHERE u.is_active = true) as active_user_count,
              COUNT(DISTINCT p.id) as partner_count
