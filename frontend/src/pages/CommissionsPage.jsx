@@ -20,9 +20,13 @@ export default function CommissionsPage() {
   const [payModal, setPayModal] = useState(null);
   const [paying, setPaying] = useState(false);
   const [comLimits, setComLimits] = useState({});
+  const [myTenant, setMyTenant] = useState(null);
+  const rModel = myTenant?.revenue_model || 'CA';
+  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
 
   const reload = async () => {
-    const [s, c] = await Promise.all([api.getCommissionsSummary(), api.getCommissions()]);
+    const [s, c, mt] = await Promise.all([api.getCommissionsSummary(), api.getCommissions(), api.getMyTenant()]);
+    setMyTenant(mt && (mt.tenant || mt));
     setSummary(s.summary); setCommissions(c.commissions);
     setTotals({ pending: c.totalPending, paid: c.totalPaid });
   };
@@ -115,7 +119,7 @@ export default function CommissionsPage() {
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead><tr style={{ background: '#f8fafc' }}>
-              {['Partenaire', 'Taux', 'Deals', 'MRR Généré', 'En attente', 'Approuvé', 'Payé', 'Total'].map((h, i) => (
+              {['Partenaire', 'Taux', 'Deals', `${rLabel} Généré`, 'En attente', 'Approuvé', 'Payé', 'Total'].map((h, i) => (
                 <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr></thead>
