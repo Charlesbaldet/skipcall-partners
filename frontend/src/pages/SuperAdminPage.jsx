@@ -20,6 +20,9 @@ export default function SuperAdminPage() {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showInviteSaModal, setShowInviteSaModal] = useState(false);
+  const [saInviteForm, setSaInviteForm] = useState({ email: '', full_name: '' });
+  const [saInviteSubmitting, setSaInviteSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -117,17 +120,7 @@ export default function SuperAdminPage() {
             <button onClick={() => setShowCreate(!showCreate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 12, background: showCreate ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showCreate ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
               {showCreate ? <X size={14} /> : <Plus size={14} />} {showCreate ? 'Annuler' : 'Nouveau tenant'}
             </button>
-            <button onClick={async () => {
-              const email = prompt('Email du nouveau super admin :');
-              if (!email) return;
-              const full_name = prompt('Nom complet :') || email;
-              try {
-                await api.request('/super-admin/invite-superadmin', { method: 'POST', body: JSON.stringify({ email, full_name }), headers: { 'Content-Type': 'application/json' } });
-                alert('\u2705 Super admin invit\u00e9 ! Email envoy\u00e9 \u00e0 ' + email);
-              } catch (e) {
-                alert('\u274c Erreur : ' + (e.message || e));
-              }
-            }} style={{ padding: '8px 16px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginLeft: 8 }}>
+            <button onClick={() => setShowInviteSaModal(true)} style={{style={{ padding: '8px 16px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginLeft: 8 }}>
               + Inviter super admin
             </button>
           </div>
@@ -261,6 +254,28 @@ export default function SuperAdminPage() {
             ))}</tbody>
           </table>
           {logs.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucun log</div>}
+        </div>
+      )}
+    
+      {showInviteSaModal && (
+        <div onClick={() => setShowInviteSaModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div onClick={e => e.stopPropagation()} style={{background:'white',borderRadius:12,padding:24,minWidth:400,maxWidth:500,boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}}>
+            <h3 style={{margin:'0 0 16px',fontSize:18,fontWeight:600,color:'#0f172a'}}>Inviter un super admin</h3>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <div>
+                <label style={{display:'block',fontSize:13,color:'#64748b',marginBottom:4}}>Email</label>
+                <input type="email" value={saInviteForm.email} onChange={e => setSaInviteForm({...saInviteForm, email: e.target.value})} placeholder="email@exemple.com" style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:14,boxSizing:'border-box'}} autoFocus />
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:13,color:'#64748b',marginBottom:4}}>Nom complet</label>
+                <input type="text" value={saInviteForm.full_name} onChange={e => setSaInviteForm({...saInviteForm, full_name: e.target.value})} placeholder="Jean Dupont" style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:14,boxSizing:'border-box'}} />
+              </div>
+            </div>
+            <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:20}}>
+              <button onClick={() => { setShowInviteSaModal(false); setSaInviteForm({email:'',full_name:''}); }} style={{padding:'8px 16px',background:'white',color:'#64748b',border:'1px solid #e2e8f0',borderRadius:6,fontSize:13,fontWeight:600,cursor:'pointer'}}>Annuler</button>
+              <button disabled={saInviteSubmitting || !saInviteForm.email} onClick={async () => { setSaInviteSubmitting(true); try { await api.request('/super-admin/invite-superadmin', { method: 'POST', body: JSON.stringify({ email: saInviteForm.email, full_name: saInviteForm.full_name || saInviteForm.email }), headers: { 'Content-Type': 'application/json' } }); alert('✅ Super admin invité ! Email envoyé à ' + saInviteForm.email); setShowInviteSaModal(false); setSaInviteForm({email:'',full_name:''}); } catch (e) { alert('❌ Erreur : ' + e.message); } setSaInviteSubmitting(false); }} style={{padding:'8px 16px',background:'#7c3aed',color:'white',border:'none',borderRadius:6,fontSize:13,fontWeight:600,cursor:saInviteSubmitting?'not-allowed':'pointer',opacity:saInviteSubmitting?0.6:1}}>{saInviteSubmitting ? 'Envoi...' : 'Inviter'}</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
