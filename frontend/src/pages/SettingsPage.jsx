@@ -407,7 +407,7 @@ function PublicLinkTab() {
 
 // ═══ APPARENCE ═══
 function AppearanceTab() {
-  const [form, setForm] = useState({ name: '', primary_color: '#059669', accent_color: '#f97316', logo_url: '' });
+  const [form, setForm] = useState({ name: '', revenue_model: 'CA', primary_color: '#059669', accent_color: '#f97316', logo_url: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -419,6 +419,7 @@ function AppearanceTab() {
           setForm({
             name: d.tenant.name || '',
             primary_color: d.tenant.primary_color || '#059669',
+            revenue_model: d.tenant.revenue_model || 'CA',
             accent_color: d.tenant.accent_color || '#f97316',
             logo_url: d.tenant.logo_url || '',
           });
@@ -470,6 +471,16 @@ function AppearanceTab() {
           <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Mon entreprise" style={inputStyle} />
         </div>
 
+        <div>
+          <label style={labelStyle}>Modèle de revenus</label>
+          <select value={form.revenue_model || 'CA'} onChange={e => setForm(f => ({ ...f, revenue_model: e.target.value }))} style={inputStyle}>
+            <option value="MRR">MRR — Revenu mensuel récurrent</option>
+            <option value="ARR">ARR — Revenu annuel récurrent</option>
+            <option value="CA">CA — Chiffre d'affaires (one-shot)</option>
+            <option value="Other">Autre</option>
+          </select>
+          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#64748b' }}>Type de revenus principal — utilisé pour adapter les libellés du dashboard</p>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div>
             <label style={labelStyle}>Couleur principale</label>
