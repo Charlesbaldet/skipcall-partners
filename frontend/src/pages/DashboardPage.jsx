@@ -22,12 +22,12 @@ export default function DashboardPage() {
   const [levels, setLevels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [revenueCumul, setRevenueCumul] = useState(false);
-  const [myTenant, setMyTenant] = useState(null);
   const [tab, setTab] = useState('overview');
   const [leaderboard, setLeaderboard] = useState([]);
   const [lbLevels, setLbLevels] = useState([]);
   const [lbLoading, setLbLoading] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [myTenant, setMyTenant] = useState(null);
   const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
 
   useEffect(() => {
@@ -35,8 +35,8 @@ export default function DashboardPage() {
       api.getKPIs(), api.getTimeline(6), api.getPipeline(),
       api.getTopPartners(), api.getLevels(), api.getMyTenant(),
     ]).then(([k, t, p, tp, l, mt]) => {
-      setKpis(k); setTimeline(t.timeline); setPipeline(p.pipeline);
-      setTopPartners(tp.topPartners); setLevels(l.levels); setMyTenant(mt && (mt.tenant || mt));
+      setKpis(k); setMyTenant(mt && (mt.tenant || mt)); setTimeline(t.timeline); setPipeline(p.pipeline);
+      setTopPartners(tp.topPartners); setLevels(l.levels);
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
@@ -89,10 +89,6 @@ export default function DashboardPage() {
     ? timelineData.reduce((acc, t, i) => { acc.push({ ...t, revenue: (i > 0 ? acc[i - 1].revenue : 0) + t.revenue }); return acc; }, [])
     : timelineData;
 
-  const rModel = myTenant?.revenue_model || 'CA';
-  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
-  const rPeriod = rModel === 'ARR' ? 'Annualisé' : 'Mensuel';
-
   return (
     <div className="fade-in">
       {showWizard && <OnboardingWizard onClose={() => setShowWizard(false)} />}
@@ -125,14 +121,14 @@ export default function DashboardPage() {
           kpis={kpis} pipelineData={pipelineData} levelData={levelData}
           timelineData={timelineData} revenueData={revenueData}
           revenueCumul={revenueCumul} setRevenueCumul={setRevenueCumul}
-          topPartners={topPartners}
+          topPartners={topPartners} myTenant={myTenant}
         />
       )}
 
       {tab === 'classement' && (
         <ClassementTab
           leaderboard={leaderboard} levels={lbLevels} loading={lbLoading}
-          copied={copied} copyLink={copyLink}
+          copied={copied} copyLink={copyLink} myTenant={myTenant}
         />
       )}
     </div>
@@ -142,7 +138,9 @@ export default function DashboardPage() {
 // ═══════════════════════════════════════
 // VUE D'ENSEMBLE TAB
 // ═══════════════════════════════════════
-function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData, revenueCumul, setRevenueCumul, topPartners }) {
+function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData, revenueCumul, setRevenueCumul, topPartners, myTenant }) {
+  const rModel = myTenant?.revenue_model || 'CA';
+  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
   return (
     <>
       {/* KPI Grid */}
@@ -226,7 +224,7 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} formatter={v => fmt(v)} />
-              <Line type="monotone" dataKey="revenue" name={revenueCumul ? `${rLabel} Cumulé` : `${rLabel} ${rPeriod}`} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
+              <Line type="monotone" dataKey="revenue" name={revenueCumul ? `${rLabel} Cumulé` : `${rLabel} Mensuel`} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -275,7 +273,9 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
 // ═══════════════════════════════════════
 // CLASSEMENT TAB
 // ═══════════════════════════════════════
-function ClassementTab({ leaderboard, levels, loading, copied, copyLink }) {
+function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenant }) {
+  const rModel = myTenant?.revenue_model || 'CA';
+  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
 
   const topThree = leaderboard.slice(0, 3);
