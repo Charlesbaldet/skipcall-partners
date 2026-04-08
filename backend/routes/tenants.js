@@ -110,7 +110,7 @@ router.get('/me', authenticate, async (req, res) => {
   if (!req.user || !req.user.tenantId) return res.status(404).json({ error: 'No tenant' });
   try {
     const { rows } = await query(
-      'SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url FROM tenants WHERE id = $1',
+      'SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url, revenue_model FROM tenants WHERE id = $1',
       [req.user.tenantId]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Tenant not found' });
