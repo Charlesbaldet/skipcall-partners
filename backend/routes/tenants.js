@@ -45,7 +45,7 @@ router.post('/', authenticate, async (req, res) => {
 // ─── Admin: Update tenant ───
 router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'admin' && req.user.role !== 'superadmin') return res.status(403).json({ error: 'Accès interdit' });
-  if (req.user.role !== 'superadmin' && req.params.id !== req.tenantId) {
+  if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
   const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model } = req.body;
@@ -94,10 +94,10 @@ router.get('/audit-logs', authenticate, async (req, res) => {
        LEFT JOIN users u ON al.user_id = u.id
        WHERE al.tenant_id = $1
        ORDER BY al.created_at DESC LIMIT $2 OFFSET $3`,
-      [req.tenantId, limit, offset]
+      [req.user.tenantId, limit, offset]
     );
     const { rows: countRows } = await query(
-      'SELECT COUNT(*) FROM audit_logs WHERE tenant_id = $1', [req.tenantId]
+      'SELECT COUNT(*) FROM audit_logs WHERE tenant_id = $1', [req.user.tenantId]
     );
     res.json({ logs: rows, total: parseInt(countRows[0].count) });
   } catch (err) {
