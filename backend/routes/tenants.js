@@ -48,21 +48,21 @@ router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'superadmin' && req.params.id !== req.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
-  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model } = req.body;
+  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings } = req.body;
 
   let cleanSlug = null;
   if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
     cleanSlug = String(slug).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 50);
     if (cleanSlug.length === 0) return res.status(400).json({ error: 'Slug invalide' });
     try {
-      const { rows: existing } = await query('SELECT id FROM tenants WHERE slug = $1 AND id != $2', [cleanSlug, revenue_model || null, req.params.id]);
+      const { rows: existing } = await query('SELECT id FROM tenants WHERE slug = $1 AND id != $2', [cleanSlug, req.params.id]);
       if (existing.length > 0) return res.status(409).json({ error: 'Ce slug est déjà utilisé par un autre espace' });
     } catch (e) {}
   }
 
   try {
     const { rows } = await query(
-      `UPDATE tenants SET name = COALESCE($1, name), slug = COALESCE($2, slug), domain = COALESCE($3, domain), primary_color = COALESCE($4, primary_color), secondary_color = COALESCE($5, secondary_color), accent_color = COALESCE($6, accent_color), logo_url = COALESCE($7, logo_url), settings = COALESCE($8, settings), updated_at = NOW() , revenue_model = COALESCE($9, revenue_model) WHERE id = $10 RETURNING *`,
+      `UPDATE tenants SET name = COALESCE($1, name), slug = COALESCE($2, slug), domain = COALESCE($3, domain), primary_color = COALESCE($4, primary_color), secondary_color = COALESCE($5, secondary_color), accent_color = COALESCE($6, accent_color), logo_url = COALESCE($7, logo_url), settings = COALESCE($8, settings), updated_at = NOW()  WHERE id = $9 RETURNING *`,
       [name, cleanSlug, domain, primary_color, secondary_color, accent_color, logo_url, settings ? JSON.stringify(settings) : null, req.params.id]
     );
     clearTenantCache();
