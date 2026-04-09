@@ -147,7 +147,7 @@ export default function MessagingPage() {
                   onMouseLeave={e => e.currentTarget.querySelector('.conv-actions').style.opacity = '0'}
                 >
                   <div onClick={() => openConversation(conv)} style={{
-                    padding: '14px 20px', cursor: 'pointer', borderBottom: '1px solid #f8fafc',
+                    padding: '14px 20px', cursor: 'pointer', borderBottom: '1px solid #e2e8f0',
                     background: active ? '#eef2ff' : unread > 0 ? '#fafbff' : '#fff',
                     borderLeft: active ? '3px solid #6366f1' : '3px solid transparent',
                   }}>
