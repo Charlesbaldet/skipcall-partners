@@ -21,11 +21,15 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
+  const isSuperadmin = user?.role === 'superadmin';
   const [tab, setTab] = useState('account');
   const handleClose = () => navigate(-1);
 
   const NAV = [
     { id: 'account', icon: User, label: 'Mon compte' },
+    ...(isSuperadmin ? [
+      { id: 'superadmins', icon: Users, label: 'Membres' },
+    ] : []),
     ...(isAdmin ? [
       { id: 'members', icon: Users, label: 'Membres' },
       { id: 'integrations', icon: Plug, label: 'Intégrations' },
@@ -59,6 +63,7 @@ export default function SettingsPage() {
           </button>
           <div style={{ padding: '72px 32px 32px 32px' }}>
             {tab === 'account' && <AccountTab user={user} />}
+            {tab === 'superadmins' && <SuperAdminsTab />}
             {tab === 'members' && isAdmin && <MembersTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
               {tab === 'public-link' && isAdmin && <PublicLinkTab />}
@@ -73,9 +78,6 @@ export default function SettingsPage() {
 
 // ═══ MON COMPTE ═══
 function AccountTab({ user }) {
-  const [saEmail, setSaEmail] = useState('');
-  const [saName, setSaName] = useState('');
-  const [saSubmitting, setSaSubmitting] = useState(false);
   const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
@@ -121,17 +123,88 @@ function AccountTab({ user }) {
         <div><label style={labelStyle}>Confirmer</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} style={inputStyle} /></div>
         <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
       </div>
-      {user?.role === 'superadmin' && (
-        <div style={{ marginTop: 24, padding: 20, background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 12 }}>
-          <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: '#581c87' }}>Inviter un super administrateur</h3>
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b21a8' }}>Donne accès à la gestion de tous les tenants de la plateforme.</p>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <input type="email" value={saEmail} onChange={e => setSaEmail(e.target.value)} placeholder="email@exemple.com" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
-            <input type="text" value={saName} onChange={e => setSaName(e.target.value)} placeholder="Nom complet" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
-            <button disabled={saSubmitting || !saEmail} onClick={async () => { setSaSubmitting(true); try { await api.request('/super-admin/invite-superadmin', { method: 'POST', body: JSON.stringify({ email: saEmail, full_name: saName || saEmail }), headers: { 'Content-Type': 'application/json' } }); alert('✅ Super admin invité ! Email envoyé à ' + saEmail); setSaEmail(''); setSaName(''); } catch (e) { alert('❌ Erreur : ' + e.message); } setSaSubmitting(false); }} style={{ padding: '10px 20px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saSubmitting ? 'not-allowed' : 'pointer', opacity: saSubmitting ? 0.6 : 1, whiteSpace: 'nowrap' }}>{saSubmitting ? 'Envoi...' : 'Inviter'}</button>
-          </div>
+    </div>
+  );
+}
+
+// ═══ SUPER ADMINS (vue superadmin) ═══
+function SuperAdminsTab() {
+  const [superadmins, setSuperadmins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saEmail, setSaEmail] = useState('');
+  const [saName, setSaName] = useState('');
+  const [saSubmitting, setSaSubmitting] = useState(false);
+
+  const loadSuperadmins = async () => {
+    setLoading(true);
+    try {
+      const data = await api.request('/super-admin/superadmins');
+      setSuperadmins(data.superadmins || []);
+    } catch (e) {
+      console.error('Failed to load superadmins:', e);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadSuperadmins(); }, []);
+
+  const handleInvite = async () => {
+    if (!saEmail) return;
+    setSaSubmitting(true);
+    try {
+      await api.request('/super-admin/invite-superadmin', { method: 'POST', body: JSON.stringify({ email: saEmail, full_name: saName || saEmail }), headers: { 'Content-Type': 'application/json' } });
+      alert('✅ Super admin invité ! Email envoyé à ' + saEmail);
+      setSaEmail('');
+      setSaName('');
+      loadSuperadmins();
+    } catch (e) {
+      alert('❌ Erreur : ' + e.message);
+    }
+    setSaSubmitting(false);
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Super administrateurs</h2>
+        <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>Gère les accès super admin de la plateforme</p>
+      </div>
+
+      <div style={{ marginBottom: 24, padding: 20, background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 12 }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: '#581c87' }}>Inviter un super administrateur</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b21a8' }}>Donne accès à la gestion de tous les tenants de la plateforme.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input type="email" value={saEmail} onChange={e => setSaEmail(e.target.value)} placeholder="email@exemple.com" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
+          <input type="text" value={saName} onChange={e => setSaName(e.target.value)} placeholder="Nom complet" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
+          <button disabled={saSubmitting || !saEmail} onClick={handleInvite} style={{ padding: '10px 20px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saSubmitting ? 'not-allowed' : 'pointer', opacity: saSubmitting ? 0.6 : 1, whiteSpace: 'nowrap' }}>{saSubmitting ? 'Envoi...' : 'Inviter'}</button>
         </div>
-      )}
+      </div>
+
+      <div>
+        <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>Liste ({superadmins.length})</h3>
+        {loading ? (
+          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>
+        ) : superadmins.length === 0 ? (
+          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0' }}>Aucun super administrateur</div>
+        ) : (
+          <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            {superadmins.map((sa, idx) => (
+              <div key={sa.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderTop: idx === 0 ? 'none' : '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#7c3aed', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>{(sa.full_name || sa.email).charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{sa.full_name || '—'}</div>
+                    <div style={{ fontSize: 13, color: '#64748b' }}>{sa.email}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 999, background: sa.is_active ? '#d1fae5' : '#fee2e2', color: sa.is_active ? '#065f46' : '#991b1b', fontSize: 12, fontWeight: 600 }}>{sa.is_active ? 'Actif' : 'Inactif'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

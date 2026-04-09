@@ -208,6 +208,22 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
   }
 });
 
+// ─── List all super admins ───
+router.get('/superadmins', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { rows } = await query(`
+      SELECT id, email, full_name, is_active, created_at
+      FROM users
+      WHERE role = 'superadmin'
+      ORDER BY created_at ASC
+    `);
+    res.json({ superadmins: rows });
+  } catch (err) {
+    console.error('List superadmins error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ─── Invite a new super admin ───
 router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, res) => {
   try {
