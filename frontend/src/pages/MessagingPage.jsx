@@ -97,12 +97,7 @@ export default function MessagingPage() {
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-      {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', background: 'white', borderBottom: '1px solid #e2e8f0' }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Messages</h1>
-      </div>
-
+    <div style={{ height: 'calc(100vh - 0px)', background: '#f8fafc', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Main: sidebar + chat */}
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
