@@ -20,7 +20,7 @@ const ROLE_CONFIG = {
 export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
   const [tab, setTab] = useState('account');
   const handleClose = () => navigate(-1);
 
@@ -124,6 +124,10 @@ function AccountTab({ user }) {
 
 // ═══ MEMBRES ═══
 function MembersTab() {
+  const { user: currentUser } = useAuth();
+  const [saEmail, setSaEmail] = useState('');
+  const [saName, setSaName] = useState('');
+  const [saSubmitting, setSaSubmitting] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
@@ -240,6 +244,17 @@ function MembersTab() {
           );
         })}
       </div>
+      {currentUser?.role === 'superadmin' && (
+        <div style={{ marginTop: 32, padding: 20, background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 12 }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: '#581c87' }}>Inviter un super administrateur</h3>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b21a8' }}>Les super admins ont accès à la gestion de tous les tenants de la plateforme.</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input type="email" value={saEmail} onChange={e => setSaEmail(e.target.value)} placeholder="email@exemple.com" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
+            <input type="text" value={saName} onChange={e => setSaName(e.target.value)} placeholder="Nom complet" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
+            <button disabled={saSubmitting || !saEmail} onClick={async () => { setSaSubmitting(true); try { await api.request('/super-admin/invite-superadmin', { method: 'POST', body: JSON.stringify({ email: saEmail, full_name: saName || saEmail }), headers: { 'Content-Type': 'application/json' } }); alert('✅ Super admin invité ! Email envoyé à ' + saEmail); setSaEmail(''); setSaName(''); } catch (e) { alert('❌ Erreur : ' + e.message); } setSaSubmitting(false); }} style={{ padding: '10px 20px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saSubmitting ? 'not-allowed' : 'pointer', opacity: saSubmitting ? 0.6 : 1, whiteSpace: 'nowrap' }}>{saSubmitting ? 'Envoi...' : 'Inviter SA'}</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
