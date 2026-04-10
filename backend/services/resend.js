@@ -12,6 +12,19 @@
 
 let resendClient = null;
 
+// --- Startup diagnostic (remove after debugging) ---
+console.log('[resend] === STARTUP DIAGNOSTIC ===');
+console.log('[resend] RESEND_API_KEY present:', !!process.env.RESEND_API_KEY, '| length:', (process.env.RESEND_API_KEY || '').length);
+try {
+  const { Resend: _R } = require('resend');
+  console.log('[resend] Package loaded OK, creating test client...');
+  const _testClient = new _R(process.env.RESEND_API_KEY || 'test');
+  console.log('[resend] Client created OK, emails method exists:', typeof _testClient.emails?.send);
+} catch(e) {
+  console.error('[resend] PACKAGE ERROR:', e.message);
+}
+console.log('[resend] === END DIAGNOSTIC ===');
+
 function getClient() {
   if (resendClient) return resendClient;
   if (!process.env.RESEND_API_KEY) return null;
