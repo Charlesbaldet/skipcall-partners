@@ -161,7 +161,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 1 && createdUser && (
-            <SuccessBox text={'Utilisateur créé ! Mot de passe temporaire : '} code={createdUser.tempPassword} />
+            <SuccessBox text={'Utilisateur créé !'} code={'✓ Identifiants envoyés par email à ' + createdUser.email} />
           )}
 
           {step === 2 && !createdPartner && (
@@ -178,7 +178,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 2 && createdPartner && (
-            <SuccessBox text={'Partenaire créé ! Mot de passe temporaire : '} code={createdPartner.tempPassword} />
+            <SuccessBox text={'Partenaire créé !'} code={'✓ Identifiants envoyés par email à ' + createdPartner.email} />
           )}
 
           {step === 3 && !customized && (

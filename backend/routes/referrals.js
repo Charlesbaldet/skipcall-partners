@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
-const { queueNotification } = require('../services/emailService');
+// emails via resend.sendAndLog — emailService.queueNotification removed
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
 
@@ -193,13 +193,33 @@ router.post('/', [
       [partnerId]
     );
 
+    const _dashUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/referrals';
+    const _levelLabel = { hot: '🔥 Chaud', warm: '🌤️ Tiède', cold: '❄️ Froid' }[recommendation_level] || recommendation_level;
     for (const admin of admins) {
-      await queueNotification(admin.email, admin.full_name, 'new_referral', {
-        partnerName: partner.name,
-        prospectName: prospect_name,
-        prospectCompany: prospect_company,
-        level: recommendation_level,
-        referralId: referral.id,
+      const _bodyHtml = `<p style="margin:0 0 16px;">Bonjour ${admin.full_name},</p>
+        <p style="margin:0 0 16px;"><strong>${partner.name}</strong> vient de soumettre un nouveau prospect :</p>
+        <div style="margin:16px 0;padding:16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #059669;">
+          <div style="font-weight:700;font-size:16px;color:#1f2937;">${prospect_name}</div>
+          ${prospect_company ? `<div style="color:#6b7280;font-size:14px;">${prospect_company}</div>` : ''}
+          <div style="margin-top:8px;font-size:13px;color:#6b7280;">Niveau : <strong>${_levelLabel}</strong></div>
+        </div>`;
+      const _html = templates.baseLayout({
+        title: 'Nouveau prospect soumis',
+        preheader: `${partner.name} a soumis ${prospect_name}`,
+        bodyHtml: _bodyHtml,
+        ctaLabel: 'Voir dans le pipeline',
+        ctaUrl: _dashUrl,
+      });
+      await resend.sendAndLog({
+        to: admin.email,
+        subject: `Nouveau referral : ${prospect_name} (${partner.name})`,
+        html: _html,
+        text: `Nouveau referral de ${partner.name} : ${prospect_name}${prospect_company ? ' — ' + prospect_company : ''}.
+Niveau : ${_levelLabel}
+Voir : ${_dashUrl}`,
+        template: 'new_referral',
+        payload: { recipient_name: admin.full_name, partner_name: partner.name, prospect_name, referral_id: referral.id },
+        query,
       });
     }
 
@@ -308,14 +328,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
           `SELECT u.email, u.full_name FROM users u WHERE u.partner_id = $1 LIMIT 1`,
           [partner.id]
         );
-
-        if (partnerUser) {
-          await queueNotification(partnerUser.email, partnerUser.full_name, 'deal_won', {
-            prospectName: current.prospect_name,
-            dealValue: deal_value,
-            commission: deal_value * partner.commission_rate / 100,
-          });
-        }
+        // deal_won email handled by resend.sendAndLog fire-and-forget below
       }
     }
 
@@ -329,10 +342,33 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       );
 
       if (partnerUser && status !== 'won') {
-        await queueNotification(partnerUser.email, partnerUser.full_name, 'status_update', {
-          prospectName: current.prospect_name,
-          oldStatus: current.status,
-          newStatus: status,
+        const _statusLabels = { new: 'Nouveau', contacted: 'Contacté', qualified: 'Qualifié', won: 'Conclu', lost: 'Perdu' };
+        const _newLabel = _statusLabels[status] || status;
+        const _bodyHtml2 = `<p style="margin:0 0 16px;">Bonjour ${partnerUser.full_name},</p>
+          <p style="margin:0 0 16px;">Le statut de votre recommandation <strong>${current.prospect_name}</strong> vient de changer :</p>
+          <div style="margin:16px 0;padding:20px;background:#f0fdf4;border-radius:10px;text-align:center;border-left:4px solid #059669;">
+            <div style="font-size:22px;font-weight:700;color:#059669;">${_newLabel}</div>
+          </div>
+          <p style="margin:0 0 16px;">Connectez-vous à votre espace pour suivre l'avancement.</p>`;
+        const _html2 = templates.baseLayout({
+          title: 'Mise à jour de votre recommandation',
+          preheader: `${current.prospect_name} est maintenant "${_newLabel}"`,
+          bodyHtml: _bodyHtml2,
+          ctaLabel: 'Voir mes recommandations',
+          ctaUrl: (process.env.FRONTEND_URL || 'https://refboost.io') + '/referrals',
+        });
+        await resend.sendAndLog({
+          to: partnerUser.email,
+          subject: `Mise à jour : ${current.prospect_name} → ${_newLabel}`,
+          html: _html2,
+          text: `Bonjour ${partnerUser.full_name},
+
+Votre recommandation "${current.prospect_name}" est passée au statut "${_newLabel}".
+
+Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
+          template: 'status_update',
+          payload: { recipient_name: partnerUser.full_name, referral_id: req.params.id, new_status: status },
+          query,
         });
       }
     }

@@ -321,25 +321,23 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
 // ─── Resend diagnostic (temporary) ───
 router.get('/debug-resend', authenticate, requireSuperAdmin, async (req, res) => {
   const diag = { isConfigured: resend.isConfigured() };
-  // Use the REAL sendEmail function from the resend module
   try {
     const result = await resend.sendEmail({
       to: 'c.baldet@hotmail.fr',
-      subject: 'RefBoost Test Email - ' + new Date().toISOString(),
-      html: '<h2>Resend fonctionne !</h2><p>Cet email a été envoyé depuis le diagnostic RefBoost.</p>',
+      subject: 'RefBoost Test - ' + new Date().toISOString(),
+      html: '<h2>Resend fonctionne</h2><p>Email test depuis RefBoost.</p>'
     });
     diag.sendResult = result;
   } catch (e) {
     diag.sendError = e.message;
   }
-  // Check notification_queue
   try {
     const { rows } = await query('SELECT recipient_email, sent, error, template FROM notification_queue ORDER BY id DESC LIMIT 5');
     diag.lastNotifications = rows;
-  } catch (e) { diag.notifError = e.message; }
+  } catch (e) {
+    diag.notifError = e.message;
+  }
   res.json(diag);
-});
-
 });
 
 // ─── Delete superadmin ───

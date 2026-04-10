@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
-const { queueNotification } = require('../services/emailService');
+const resend = require('../services/resend');
+const templates = require('../services/email-templates');
 
 const router = express.Router();
 
@@ -94,11 +95,31 @@ router.post('/apply', [
     }
     const { rows: admins } = await query(adminSql, adminParams);
 
+    const _appDashUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/applications';
     for (const admin of admins) {
-      await queueNotification(admin.email, admin.full_name, 'new_application', {
-        companyName: company_name,
-        contactName: contact_name,
-        email: email,
+      const _bodyHtml = `<p style="margin:0 0 16px;">Bonjour ${admin.full_name},</p>
+        <p style="margin:0 0 16px;">Une nouvelle candidature partenaire vient d'être soumise :</p>
+        <div style="margin:16px 0;padding:16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #059669;">
+          <div style="font-weight:700;font-size:16px;color:#1f2937;">${contact_name}</div>
+          <div style="color:#6b7280;font-size:14px;">${company_name}</div>
+          <div style="margin-top:8px;"><a href="mailto:${email}" style="color:#059669;">${email}</a></div>
+        </div>`;
+      const _html = templates.baseLayout({
+        title: 'Nouvelle candidature partenaire',
+        preheader: `${contact_name} (${company_name}) souhaite rejoindre votre programme`,
+        bodyHtml: _bodyHtml,
+        ctaLabel: 'Examiner la candidature',
+        ctaUrl: _appDashUrl,
+      });
+      await resend.sendAndLog({
+        to: admin.email,
+        subject: `Nouvelle candidature : ${contact_name} — ${company_name}`,
+        html: _html,
+        text: `Nouvelle candidature de ${contact_name} (${company_name}) — ${email}.
+Voir : ${_appDashUrl}`,
+        template: 'new_application',
+        payload: { recipient_name: admin.full_name, contact_name, company_name, email },
+        query,
       });
     }
 
@@ -192,13 +213,48 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
 
     await client.query('COMMIT');
 
-    // Send welcome email to partner
-    await queueNotification(app.email, app.contact_name, 'application_approved', {
-      companyName: app.company_name,
-      email: app.email,
-      tempPassword: tempPassword,
-      loginUrl: process.env.FRONTEND_URL || 'https://skipcall-partners.vercel.app',
-    });
+    // Send welcome email to partner via Resend
+    try {
+      const { rows: [_tenantRow] } = await query('SELECT name FROM tenants WHERE id = $1', [req.tenantId]);
+      const _tenantName = _tenantRow ? _tenantRow.name : 'RefBoost';
+      const _loginUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/login';
+      const _bodyHtml = `<p style="margin:0 0 16px;">Bonjour ${app.contact_name},</p>
+        <p style="margin:0 0 16px;">Félicitations ! Votre candidature au programme partenaire de <strong>${_tenantName}</strong> a été approuvée.</p>
+        <p style="margin:0 0 16px;">Voici vos identifiants de connexion :</p>
+        <div style="margin:20px 0;padding:18px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
+          <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Email</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:15px;color:#1f2937;margin-bottom:12px;">${app.email}</div>
+          <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Mot de passe temporaire</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:17px;font-weight:600;color:#059669;">${tempPassword}</div>
+        </div>
+        <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Modifiez ce mot de passe dès votre première connexion.</p>`;
+      const _html = templates.baseLayout({
+        title: 'Bienvenue dans le programme partenaire !',
+        preheader: 'Votre candidature a été approuvée',
+        tenantName: _tenantName,
+        bodyHtml: _bodyHtml,
+        ctaLabel: 'Se connecter maintenant',
+        ctaUrl: _loginUrl,
+      });
+      await resend.sendAndLog({
+        to: app.email,
+        subject: `Bienvenue dans le programme partenaire ${_tenantName} !`,
+        html: _html,
+        text: `Bonjour ${app.contact_name},
+
+Votre candidature a été approuvée !
+
+Email: ${app.email}
+Mot de passe temporaire: ${tempPassword}
+
+Connexion: ${_loginUrl}`,
+        template: 'application_approved',
+        payload: { recipient_name: app.contact_name, company_name: app.company_name },
+        query,
+      });
+    } catch (_emailErr) {
+      console.error('[applications.approve] email error:', _emailErr.message);
+    }
 
     res.json({ partner, tempPassword });
   } catch (err) {
@@ -233,11 +289,37 @@ router.put('/:id/reject', authenticate, tenantScope, authorize('admin'), async (
 
     if (!app) return res.status(404).json({ error: 'Candidature introuvable ou déjà traitée' });
 
-    // Notify applicant of rejection
-    await queueNotification(app.email, app.contact_name, 'application_rejected', {
-      companyName: app.company_name,
-      reason: reason || 'Votre candidature ne correspond pas à nos critères actuels.',
-    });
+    // Notify applicant of rejection via Resend
+    try {
+      const _rejReason = reason || 'Votre candidature ne correspond pas à nos critères actuels.';
+      const _rejBodyHtml = `<p style="margin:0 0 16px;">Bonjour ${app.contact_name},</p>
+        <p style="margin:0 0 16px;">Merci de l'intérêt que vous portez à notre programme partenaire.</p>
+        <p style="margin:0 0 16px;">Après examen de votre candidature pour <strong>${app.company_name}</strong>, nous ne pouvons malheureusement pas y donner suite :</p>
+        <div style="margin:16px 0;padding:16px;background:#fef2f2;border-radius:10px;border-left:4px solid #ef4444;color:#374151;font-style:italic;">${_rejReason}</div>
+        <p style="margin:0 0 16px;">Nous vous souhaitons bonne continuation et espérons avoir l'opportunité de collaborer à l'avenir.</p>`;
+      const _rejHtml = templates.baseLayout({
+        title: 'Suite donnée à votre candidature',
+        preheader: 'Réponse à votre candidature partenaire',
+        bodyHtml: _rejBodyHtml,
+      });
+      await resend.sendAndLog({
+        to: app.email,
+        subject: 'Suite donnée à votre candidature partenaire',
+        html: _rejHtml,
+        text: `Bonjour ${app.contact_name},
+
+Nous avons examiné votre candidature pour ${app.company_name}.
+
+${_rejReason}
+
+Cordialement.`,
+        template: 'application_rejected',
+        payload: { recipient_name: app.contact_name, company_name: app.company_name },
+        query,
+      });
+    } catch (_rejEmailErr) {
+      console.error('[applications.reject] email error:', _rejEmailErr.message);
+    }
 
     res.json({ application: app });
   } catch (err) {
