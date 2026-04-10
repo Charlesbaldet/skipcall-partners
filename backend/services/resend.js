@@ -10,27 +10,21 @@
  * 3. Set RESEND_FROM_EMAIL (e.g. 'RefBoost <notifications@refboost.io>')
  */
 
-let resendClient = null;
+// CRITICAL: Capture env vars at module load time — they may be cleared later by dotenv
+const RESEND_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM_EMAIL || 'RefBoost <notifications@refboost.io>';
 
-// --- Startup diagnostic (remove after debugging) ---
-console.log('[resend] === STARTUP DIAGNOSTIC ===');
-console.log('[resend] RESEND_API_KEY present:', !!process.env.RESEND_API_KEY, '| length:', (process.env.RESEND_API_KEY || '').length);
-try {
-  const { Resend: _R } = require('resend');
-  console.log('[resend] Package loaded OK, creating test client...');
-  const _testClient = new _R(process.env.RESEND_API_KEY || 'test');
-  console.log('[resend] Client created OK, emails method exists:', typeof _testClient.emails?.send);
-} catch(e) {
-  console.error('[resend] PACKAGE ERROR:', e.message);
-}
-console.log('[resend] === END DIAGNOSTIC ===');
+console.log('[resend] Module loaded — API key present:', !!RESEND_KEY, '| length:', (RESEND_KEY || '').length);
+
+let resendClient = null;
 
 function getClient() {
   if (resendClient) return resendClient;
-  if (!process.env.RESEND_API_KEY) return null;
+  if (!RESEND_KEY) return null;
   try {
     const { Resend } = require('resend');
-    resendClient = new Resend(process.env.RESEND_API_KEY);
+    resendClient = new Resend(RESEND_KEY);
+    console.log('[resend] Client created successfully');
     return resendClient;
   } catch (err) {
     console.warn('[resend] Package not installed or init failed:', err.message);
@@ -39,11 +33,11 @@ function getClient() {
 }
 
 function isConfigured() {
-  return !!process.env.RESEND_API_KEY;
+  return !!RESEND_KEY;
 }
 
 function getFromAddress() {
-  return process.env.RESEND_FROM_EMAIL || 'RefBoost <notifications@refboost.io>';
+  return RESEND_FROM;
 }
 
 /**
@@ -59,7 +53,7 @@ function getFromAddress() {
 async function sendEmail({ to, subject, html, text, replyTo }) {
   const client = getClient();
   if (!client) {
-    console.warn('[resend] RESEND_API_KEY not configured, email skipped:', subject, '→', to);
+    console.warn('[resend] RESEND_API_KEY not configured, email skipped:', subject, '\u2192', to);
     return { ok: false, error: 'not_configured' };
   }
   try {
@@ -71,11 +65,13 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
     };
     if (text) payload.text = text;
     if (replyTo) payload.reply_to = replyTo;
+    console.log('[resend] Sending email to', to, 'subject:', subject);
     const { data, error } = await client.emails.send(payload);
     if (error) {
       console.error('[resend] Send error:', error);
       return { ok: false, error: error.message || 'send_failed' };
     }
+    console.log('[resend] Email sent OK, id:', data && data.id);
     return { ok: true, id: data && data.id };
   } catch (err) {
     console.error('[resend] Exception:', err);
