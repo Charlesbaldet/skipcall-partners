@@ -28,6 +28,9 @@ const { tenantMiddleware } = require('./middleware/tenant');
 const { securityHeaders, auditLog, cleanupOldData } = require('./middleware/security');
 
 const app = express();
+
+// Trust Railway's proxy (fixes express-rate-limit X-Forwarded-For error)
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
 
 // ─── Security Headers (ISO 27001 A.13.1) ───
