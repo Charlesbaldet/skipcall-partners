@@ -292,6 +292,28 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
   }
 });
 
+// ─── Delete superadmin ───
+router.delete('/delete-superadmin/:id', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (id === req.user.id) {
+      return res.status(400).json({ error: 'Vous ne pouvez pas vous supprimer vous-même' });
+    }
+    const { rows: [target] } = await query('SELECT id, role, email FROM users WHERE id = $1', [id]);
+    if (!target) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    if (target.role !== 'superadmin') {
+      return res.status(400).json({ error: "Cet utilisateur n'est pas un super administrateur" });
+    }
+    await query('DELETE FROM users WHERE id = $1 AND role = $2', [id, 'superadmin']);
+    res.json({ success: true, message: 'Super administrateur supprimé' });
+  } catch (err) {
+    console.error('[superadmin] Delete error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ─── Timeline KPIs (last 12 months evolution) ───
 router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
   try {
