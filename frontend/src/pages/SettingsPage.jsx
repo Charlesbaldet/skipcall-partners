@@ -163,6 +163,17 @@ function SuperAdminsTab() {
     setSaSubmitting(false);
   };
 
+  const handleDeleteSA = async (sa) => {
+    if (!window.confirm('Supprimer ' + (sa.full_name || sa.email) + ' des super admins ?')) return;
+    try {
+      await api.request('/super-admin/delete-superadmin/' + sa.id, { method: 'DELETE' });
+      alert('Super admin supprim\u00e9');
+      loadSuperadmins();
+    } catch (e) {
+      alert('Erreur : ' + e.message);
+    }
+  };
+
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
@@ -199,6 +210,7 @@ function SuperAdminsTab() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ padding: '4px 10px', borderRadius: 999, background: sa.is_active ? '#d1fae5' : '#fee2e2', color: sa.is_active ? '#065f46' : '#991b1b', fontSize: 12, fontWeight: 600 }}>{sa.is_active ? 'Actif' : 'Inactif'}</span>
+                  {sa.id !== user?.id && <button onClick={() => handleDeleteSA(sa)} style={{ padding: '4px 10px', borderRadius: 999, background: '#fee2e2', color: '#991b1b', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}>Supprimer</button>}
                 </div>
               </div>
             ))}
