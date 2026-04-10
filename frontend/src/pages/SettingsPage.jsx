@@ -129,6 +129,7 @@ function AccountTab({ user }) {
 
 // ═══ SUPER ADMINS (vue superadmin) ═══
 function SuperAdminsTab() {
+  const { user } = useAuth();
   const [superadmins, setSuperadmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saEmail, setSaEmail] = useState('');
