@@ -306,11 +306,15 @@ router.delete('/delete-superadmin/:id', authenticate, requireSuperAdmin, async (
     if (target.role !== 'superadmin') {
       return res.status(400).json({ error: "Cet utilisateur n'est pas un super administrateur" });
     }
+    // Clean up FK dependencies before deleting
+    await query('DELETE FROM sessions WHERE user_id = $1', [id]);
+    await query('UPDATE audit_logs SET user_id = NULL WHERE user_id = $1', [id]);
+    await query('DELETE FROM notification_queue WHERE recipient_email = $1', [target.email]);
     await query('DELETE FROM users WHERE id = $1 AND role = $2', [id, 'superadmin']);
     res.json({ success: true, message: 'Super administrateur supprimé' });
   } catch (err) {
-    console.error('[superadmin] Delete error:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('[superadmin] Delete error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur: ' + err.message });
   }
 });
 
