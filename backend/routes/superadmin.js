@@ -15,6 +15,32 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
+// --- DEBUG: Resend diagnostic (TEMPORARY) ---
+router.get('/resend-debug', authenticate, requireSuperAdmin, async (req, res) => {
+  const diag = {
+    envKeyExists: !!process.env.RESEND_API_KEY,
+    envKeyLength: (process.env.RESEND_API_KEY || '').length,
+    envKeyPrefix: (process.env.RESEND_API_KEY || '').slice(0, 6),
+  };
+  try {
+    const { Resend } = require('resend');
+    diag.requireOk = true;
+    const client = new Resend(process.env.RESEND_API_KEY);
+    diag.clientCreated = true;
+    const { data, error } = await client.emails.send({
+      from: 'RefBoost <notifications@refboost.io>',
+      to: [req.user.email],
+      subject: 'RefBoost Resend Test',
+      html: '<p>Si vous lisez ceci, Resend fonctionne.</p>',
+    });
+    diag.sendResult = { data, error };
+  } catch (err) {
+    diag.error = err.message;
+    diag.stack = err.stack ? err.stack.split('\n').slice(0, 3) : [];
+  }
+  res.json(diag);
+});
+
 // ─── Dashboard stats (non-sensitive) ───
 router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
   try {
