@@ -151,10 +151,29 @@ export default function AdminApplicationsPage() {
             {approvedEmail && (
               <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #bbf7d0', textAlign: 'center' }}>
                 <CheckCircle size={24} color="#16a34a" style={{ marginBottom: 8 }} />
-                <div style={{ fontWeight: 700, color: '#16a34a', marginBottom: 12 }}>Partenaire créé !</div>
-                <div style={{ background: '#fff', borderRadius: 10, padding: 12, display: 'inline-block', textAlign: 'left' }}>
-                  <p style={{ fontSize: 13, marginBottom: 4 }}><strong>Email :</strong> {selected.email}</p>
-                  <p style={{ fontSize: 13, margin: 0 }}><strong>Mot de passe :</strong> <span style={{ color: '#059669', fontWeight: 600 }}>✓ Identifiants envoyés par email</span>
+                <div style={{ fontWeight: 700, color: '#16a34a', marginBottom: 4 }}>Partenaire créé !</div>
+                <div style={{ color: '#059669', fontSize: 13 }}>✓ Identifiants envoyés par email à {selected?.email}</div>
+              </div>
+            )}
+
+            {selected.status === 'pending' && !approvedEmail && (
+              <div>
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Taux de commission (%)</label>
+                  <input type="number" value={commissionRate} onChange={e => setCommissionRate(e.target.value)} min="0" max="50"
+                    style={{ width: 120, padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button onClick={() => handleApprove(selected.id)} disabled={processing} style={{
+                    flex: 1, padding: '14px', borderRadius: 12,
+                    background: 'var(--rb-primary, #059669)', color: '#fff',
+                    border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    opacity: processing ? 0.7 : 1,
+                  }}>
+                    <CheckCircle size={18} /> Accepter
+                  </button>
                   <button onClick={() => handleReject(selected.id)} disabled={processing} style={{
                     flex: 1, padding: '14px', borderRadius: 12,
                     background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
