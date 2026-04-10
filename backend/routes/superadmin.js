@@ -307,6 +307,7 @@ router.delete('/delete-superadmin/:id', authenticate, requireSuperAdmin, async (
       return res.status(400).json({ error: "Cet utilisateur n'est pas un super administrateur" });
     }
     // Clean up FK dependencies before deleting
+    await query('DELETE FROM conversation_participants WHERE user_id = $1', [id]);
     await query('DELETE FROM sessions WHERE user_id = $1', [id]);
     await query('UPDATE audit_logs SET user_id = NULL WHERE user_id = $1', [id]);
     await query('DELETE FROM notification_queue WHERE recipient_email = $1', [target.email]);
