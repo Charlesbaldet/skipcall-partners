@@ -291,7 +291,6 @@ function SuccessBox({ text, code }) {
     <div style={{ padding: 16, background: '#f0fdf4', borderRadius: 12, border: '1px solid #bbf7d0', textAlign: 'center' }}>
       <div style={{ color: '#166534', fontSize: 14, marginBottom: 8 }}>✓ {text}</div>
       <code style={{ display: 'inline-block', padding: '8px 14px', background: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#0f172a', border: '1px solid #bbf7d0' }}>{code}</code>
-      <p style={{ color: '#16a34a', fontSize: 11, margin: '10px 0 0' }}>Note ce mot de passe — partage-le avec la personne</p>
     </div>
   );
 }
