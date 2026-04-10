@@ -318,6 +318,39 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
   }
 });
 
+// ─── Resend diagnostic (temporary) ───
+router.get('/debug-resend', authenticate, requireSuperAdmin, async (req, res) => {
+  const diag = { keyPresent: !!process.env.RESEND_API_KEY, keyLength: (process.env.RESEND_API_KEY || '').length };
+  try {
+    const { Resend } = require('resend');
+    diag.packageLoaded = true;
+    const client = new Resend(process.env.RESEND_API_KEY);
+    diag.clientCreated = true;
+    diag.hasEmailsMethod = typeof client.emails?.send === 'function';
+    // Try sending a real test email
+    try {
+      const { data, error } = await client.emails.send({
+        from: 'RefBoost <notifications@refboost.io>',
+        to: ['c.baldet@hotmail.fr'],
+        subject: 'RefBoost Resend Test',
+        html: '<p>Si tu vois ce mail, Resend fonctionne !</p>',
+      });
+      diag.sendResult = { data, error };
+    } catch (sendErr) {
+      diag.sendError = sendErr.message;
+    }
+  } catch (e) {
+    diag.packageLoaded = false;
+    diag.packageError = e.message;
+  }
+  // Check notification_queue
+  try {
+    const { rows } = await query('SELECT recipient_email, sent, error, template FROM notification_queue ORDER BY id DESC LIMIT 5');
+    diag.lastNotifications = rows;
+  } catch (e) { diag.notifError = e.message; }
+  res.json(diag);
+});
+
 // ─── Delete superadmin ───
 router.delete('/delete-superadmin/:id', authenticate, requireSuperAdmin, async (req, res) => {
   try {
