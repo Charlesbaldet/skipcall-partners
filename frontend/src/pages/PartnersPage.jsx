@@ -13,7 +13,7 @@ export default function PartnersPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
   const [saving, setSaving] = useState(false);
-  const [tempPwd, setTempPwd] = useState(null);
+  const [createdEmail, setCreatedEmail] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -51,8 +51,8 @@ export default function PartnersPage() {
     try {
       const data = await api.createPartner(form);
       setPartners(prev => [...prev, { ...data.partner, total_referrals: '0', won_deals: '0', total_revenue: '0' }]);
-      setTempPwd(data.tempPassword);
-      setForm({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
+      setCreatedEmail(data.partner.email || form.email);
+            setForm({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
     } catch (err) { console.error(err); }
     setSaving(false);
   };
@@ -172,7 +172,7 @@ export default function PartnersPage() {
               <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners(next); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Archive size={14} /> {showArchived ? `Archivés (${archivedPartners.length})` : 'Voir les archivés'}
               </button>
-              <button onClick={() => { setShowForm(!showForm); setTempPwd(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={() => { setShowForm(!showForm); setCreatedEmail(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
                 {showForm ? <X size={16} /> : <Plus size={16} />}
                 {showForm ? 'Annuler' : 'Ajouter un partenaire'}
               </button>
@@ -208,7 +208,7 @@ export default function PartnersPage() {
                     <p style={{ fontSize: 13, marginBottom: 4 }}><strong>Email :</strong> {form.email || partners[partners.length-1]?.email}</p>
                     <p style={{ fontSize: 13 }}><strong>Mot de passe :</strong> <code style={{ background: '#eef2ff', padding: '2px 8px', borderRadius: 4, color: 'var(--rb-primary, #059669)' }}>{tempPwd}</code></p>
                   </div>
-                  <div style={{ marginTop: 20 }}><button onClick={() => { setShowForm(false); setTempPwd(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Fermer</button></div>
+                  <div style={{ marginTop: 20 }}><button onClick={() => { setShowForm(false); setCreatedEmail(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Fermer</button></div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
