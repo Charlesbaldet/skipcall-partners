@@ -320,28 +320,17 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
 
 // ─── Resend diagnostic (temporary) ───
 router.get('/debug-resend', authenticate, requireSuperAdmin, async (req, res) => {
-  const diag = { keyPresent: !!process.env.RESEND_API_KEY, keyLength: (process.env.RESEND_API_KEY || '').length };
+  const diag = { isConfigured: resend.isConfigured() };
+  // Use the REAL sendEmail function from the resend module
   try {
-    const { Resend } = require('resend');
-    diag.packageLoaded = true;
-    const client = new Resend(process.env.RESEND_API_KEY);
-    diag.clientCreated = true;
-    diag.hasEmailsMethod = typeof client.emails?.send === 'function';
-    // Try sending a real test email
-    try {
-      const { data, error } = await client.emails.send({
-        from: 'RefBoost <notifications@refboost.io>',
-        to: ['c.baldet@hotmail.fr'],
-        subject: 'RefBoost Resend Test',
-        html: '<p>Si tu vois ce mail, Resend fonctionne !</p>',
-      });
-      diag.sendResult = { data, error };
-    } catch (sendErr) {
-      diag.sendError = sendErr.message;
-    }
+    const result = await resend.sendEmail({
+      to: 'c.baldet@hotmail.fr',
+      subject: 'RefBoost Test Email - ' + new Date().toISOString(),
+      html: '<h2>Resend fonctionne !</h2><p>Cet email a été envoyé depuis le diagnostic RefBoost.</p>',
+    });
+    diag.sendResult = result;
   } catch (e) {
-    diag.packageLoaded = false;
-    diag.packageError = e.message;
+    diag.sendError = e.message;
   }
   // Check notification_queue
   try {
@@ -349,6 +338,8 @@ router.get('/debug-resend', authenticate, requireSuperAdmin, async (req, res) =>
     diag.lastNotifications = rows;
   } catch (e) { diag.notifError = e.message; }
   res.json(diag);
+});
+
 });
 
 // ─── Delete superadmin ───
