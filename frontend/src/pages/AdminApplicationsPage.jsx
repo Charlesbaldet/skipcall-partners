@@ -151,20 +151,8 @@ export default function AdminApplicationsPage() {
             {approvedEmail && (
               <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #bbf7d0', textAlign: 'center' }}>
                 <CheckCircle size={24} color="#16a34a" style={{ marginBottom: 8 }} />
-                <div style={{ fontWeight: 700, color: '#16a34a', marginBottom: 12 }}>Partenaire créé !</div>
-                <div style={{ background: '#fff', borderRadius: 10, padding: 12, display: 'inline-block', textAlign: 'left' }}>
-                  <p style={{ fontSize: 13, marginBottom: 4 }}><strong>Email :</strong> {selected.email}</p>
-                  <p style={{ fontSize: 13, margin: 0 }}><strong>Mot de passe :</strong> <span style={{ color: '#059669', fontWeight: 600 }}>✓ Identifiants envoyés par email</span>
-                  <button onClick={() => handleReject(selected.id)} disabled={processing} style={{
-                    flex: 1, padding: '14px', borderRadius: 12,
-                    background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca',
-                    fontWeight: 600, fontSize: 15, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    opacity: processing ? 0.7 : 1,
-                  }}>
-                    <XCircle size={18} /> Refuser
-                  </button>
-                </div>
+                <div style={{ fontWeight: 700, color: '#16a34a', marginBottom: 4 }}>Partenaire créé !</div>
+                <div style={{ color: '#059669', fontSize: 13 }}>✓ Identifiants envoyés par email à {selected?.email}</div>
               </div>
             )}
 
