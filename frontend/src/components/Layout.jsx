@@ -1,4 +1,4 @@
-import { Trophy, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -6,7 +6,7 @@ import api from '../lib/api';
 import {
   LayoutDashboard, FileText, DollarSign, Users, Send,
   MessageCircle, LogOut, ChevronLeft, ChevronRight,
-  UserPlus, Settings, Globe, Activity, BarChart2, Shield,
+  UserPlus, Settings, Globe, Activity, BarChart2, Trophy, Shield,
 } from 'lucide-react';
 
 // ─── RefBoost design tokens (sync avec LandingPage) ───
