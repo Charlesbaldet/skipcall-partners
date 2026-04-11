@@ -28,7 +28,7 @@ router.post('/login', [
     }
 
     const { rows } = await query(
-      `SELECT u.id, u.email, u.password_hash, u.full_name, u.role, u.partner_id, u.is_active, u.tenant_id,
+      `SELECT u.id, u.email, u.password_hash, u.full_name, u.role, u.partner_id, u.is_active, u.tenant_id, u.must_change_password,
               p.name as partner_name
        FROM users u LEFT JOIN partners p ON u.partner_id = p.id
        WHERE u.email = $1`,
@@ -68,7 +68,7 @@ router.post('/login', [
 
     res.json({
       token,
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, partnerId: user.partner_id, partnerName: user.partner_name },
+      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, partnerId: user.partner_id, partnerName: user.partner_name, mustChangePassword: user.must_change_password || false },
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -207,6 +207,22 @@ router.post('/signup', [
     try { await query("INSERT INTO audit_logs (user_id, tenant_id, action, resource_type, resource_id, details) VALUES ($1, $2, 'signup', 'tenant', $3, $4)", [user.id, tenant.id, tenant.id, JSON.stringify({ company, email })]); } catch(e) {}
     res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, tenantId: tenant.id } });
   } catch (err) { console.error('Signup error:', err); res.status(500).json({ error: 'Erreur lors de la creation du compte.' }); }
+});
+
+// Change password (1ère connexion)
+router.post('/change-password', async (req, res) => {
+  try {
+    const { userId, newPassword } = req.body;
+    if (!userId || !newPassword) return res.status(400).json({ error: 'Paramètres manquants' });
+    if (newPassword.length < 8) return res.status(400).json({ error: 'Mot de passe trop court (8 min)' });
+    const bcrypt = require('bcryptjs');
+    const { query } = require('../db');
+    const hash = await bcrypt.hash(newPassword, 12);
+    await query('UPDATE users SET password_hash = $1, must_change_password = false WHERE id = $2', [hash, userId]);
+    res.json({ message: 'Mot de passe mis à jour' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 module.exports = router;
