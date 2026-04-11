@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { Trophy, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
+import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
 import {
   LayoutDashboard, FileText, DollarSign, Users, Send,
@@ -44,6 +45,7 @@ const ADMIN_NAV = [
   { to: '/partners', icon: Users, label: 'Partenaires' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
+  { to: '/settings?tab=program', icon: Trophy, label: 'Programme' },
   { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
@@ -63,7 +65,10 @@ const SUPERADMIN_NAV = [
 ];
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
+  const handlePasswordChanged = () => {
+    if (user) setUser({ ...user, mustChangePassword: false });
+  };
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -285,7 +290,11 @@ export default function Layout({ children }) {
       }}>
         {children}
       </main>
-    </div>
+    
+      {user?.mustChangePassword && (
+        <ChangePasswordModal user={user} onSuccess={handlePasswordChanged} />
+      )}
+      </div>
   );
 }
 
