@@ -215,10 +215,8 @@ export default function LoginPage() {
           textAlign: 'center', marginTop: 28, marginBottom: 0,
           fontSize: 14, color: C.m, fontFamily: 'inherit',
         }}>
-          Pas encore de compte ?{' '}
-          <Link to="/signup" style={{
-            color: C.p, fontWeight: 600, textDecoration: 'none',
-          }}>
+          <span style={{ display: 'block', marginBottom: 4 }}>Pas encore de compte ?</span>
+          <Link to="/signup" style={{ color: C.p, fontWeight: 700, textDecoration: 'none', display: 'block' }}>
             Créer un espace gratuit →
           </Link>
         </p>

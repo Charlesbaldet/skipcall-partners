@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
 
@@ -7,7 +7,8 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numer
 const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function SuperAdminPage() {
-  const [tab, setTab] = useState('clients');
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get('tab') || 'clients';
   const [stats, setStats] = useState({});
   const [timeline, setTimeline] = useState([]);
   const [activeMetric, setActiveMetric] = useState('volume_won');
@@ -77,14 +78,6 @@ export default function SuperAdminPage() {
 
   return (
     <div className="fade-in">
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <Shield size={24} color="#059669" />
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Super Admin</h1>
-        </div>
-        <p style={{ color: '#64748b' }}>Gestion de la plateforme — données non-sensibles uniquement</p>
-      </div>
-
       {tab === 'stats' && (<>
       {/* KPIs - Row 1: Counts */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 16 }}>
@@ -106,13 +99,7 @@ export default function SuperAdminPage() {
       </>)}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
-        {[{ id: 'clients', label: 'Clients', icon: Globe }, { id: 'stats', label: 'Statistiques', icon: BarChart2 }, { id: 'logs', label: 'Audit Logs', icon: Activity }].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#0f172a' : '#64748b', boxShadow: tab === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <t.icon size={14} /> {t.label}
-          </button>
-        ))}
-      </div>
+
 
       {tab === 'clients' && (
         <>
