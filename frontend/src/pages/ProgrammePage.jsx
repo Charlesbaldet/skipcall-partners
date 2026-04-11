@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../lib/api';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -8,8 +12,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink,
-} from 'lucide-
-// ─── Programme Page ───
+} from 'lucide-react';
 
 export default function ProgrammePage() {
   const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
