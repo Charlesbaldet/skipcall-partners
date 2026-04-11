@@ -99,13 +99,7 @@ export default function SuperAdminPage() {
       </>)}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
-        {[{ id: 'clients', label: 'Clients', icon: Globe }, { id: 'stats', label: 'Statistiques', icon: BarChart2 }, { id: 'logs', label: 'Audit Logs', icon: Activity }].map(t => (
-          <button key={t.id} onClick={() => setActiveMetric(t.id)} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#0f172a' : '#64748b', boxShadow: tab === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <t.icon size={14} /> {t.label}
-          </button>
-        ))}
-      </div>
+
 
       {tab === 'clients' && (
         <>
