@@ -8,7 +8,7 @@ const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'n
 
 export default function SuperAdminPage() {
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get('tab') || 'clients');
+  const tab = searchParams.get('tab') || 'clients';
   const [stats, setStats] = useState({});
   const [timeline, setTimeline] = useState([]);
   const [activeMetric, setActiveMetric] = useState('volume_won');
@@ -93,7 +93,7 @@ export default function SuperAdminPage() {
             { id: 'stats', label: 'Statistiques', icon: BarChart2 },
             { id: 'logs', label: 'Audit Logs', icon: Activity },
           ].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
+            <button key={t.id} onClick={() => } style={{
               display: 'flex', alignItems: 'center', gap: 10, width: '100%',
               padding: '11px 20px', border: 'none', cursor: 'pointer', textAlign: 'left',
               fontSize: 14, fontWeight: tab === t.id ? 700 : 500,
