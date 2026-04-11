@@ -1,4 +1,4 @@
-import { Trophy, useState, useEffect } from 'react';
+import { Trophy, BarChart2, Activity, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -59,7 +59,9 @@ const PARTNER_NAV = [
 ];
 
 const SUPERADMIN_NAV = [
-  { to: '/super-admin', icon: Shield, label: 'Plateforme' },
+  { to: '/super-admin?tab=clients', icon: Globe, label: 'Clients' },
+  { to: '/super-admin?tab=stats', icon: BarChart2, label: 'Statistiques' },
+  { to: '/super-admin?tab=logs', icon: Activity, label: 'Audit Logs' },
   { divider: true },
   { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
