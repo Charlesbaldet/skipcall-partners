@@ -321,7 +321,8 @@ function TimelineChart({ series, active, setActive }) {
   );
 }
 
-function KPI({ icon: Icon, label, value, color }) {
+function KPI({ icon, label, value, color }) {
+  const Icon = icon;
   return (
     <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
