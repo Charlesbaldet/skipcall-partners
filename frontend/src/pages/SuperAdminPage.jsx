@@ -93,7 +93,7 @@ export default function SuperAdminPage() {
             { id: 'stats', label: 'Statistiques', icon: BarChart2 },
             { id: 'logs', label: 'Audit Logs', icon: Activity },
           ].map(t => (
-            <button key={t.id} onClick={() => } style={{
+            <button key={t.id} onClick={() => {}} style={{
               display: 'flex', alignItems: 'center', gap: 10, width: '100%',
               padding: '11px 20px', border: 'none', cursor: 'pointer', textAlign: 'left',
               fontSize: 14, fontWeight: tab === t.id ? 700 : 500,
