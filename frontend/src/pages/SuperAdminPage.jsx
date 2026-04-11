@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
 
@@ -7,7 +7,8 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numer
 const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function SuperAdminPage() {
-  const [tab, setTab] = useState('clients');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get('tab') || 'clients');
   const [stats, setStats] = useState({});
   const [timeline, setTimeline] = useState([]);
   const [activeMetric, setActiveMetric] = useState('volume_won');
@@ -76,38 +77,7 @@ export default function SuperAdminPage() {
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}><p style={{ color: '#94a3b8' }}>Chargement...</p></div>;
 
   return (
-    <div className="fade-in" style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', gap: 0 }}>
-      {/* Sidebar gauche */}
-      <div style={{ width: 220, flexShrink: 0, borderRight: '1px solid #e2e8f0', minHeight: '100%', paddingTop: 28, background: '#fff' }}>
-        <div style={{ padding: '0 20px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-            <Shield size={16} color="#059669" />
-            <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>Super Admin</span>
-          </div>
-          <p style={{ color: '#94a3b8', fontSize: 11, margin: 0 }}>Plateforme globale</p>
-        </div>
-        <nav>
-          {[
-            { id: 'clients', label: 'Clients', icon: Globe },
-            { id: 'stats', label: 'Statistiques', icon: BarChart2 },
-            { id: 'logs', label: 'Audit Logs', icon: Activity },
-          ].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-              padding: '11px 20px', border: 'none', cursor: 'pointer', textAlign: 'left',
-              fontSize: 14, fontWeight: tab === t.id ? 700 : 500,
-              background: tab === t.id ? '#f0fdf4' : 'transparent',
-              color: tab === t.id ? '#059669' : '#64748b',
-              borderRight: `3px solid ${tab === t.id ? '#059669' : 'transparent'}`,
-              transition: 'all 0.15s',
-            }}>
-              <t.icon size={15} /> {t.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-      {/* Contenu */}
-      <div style={{ flex: 1, minWidth: 0, padding: '28px 32px' }}>
+    <div className="fade-in">
       {tab === 'clients' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
@@ -250,7 +220,6 @@ export default function SuperAdminPage() {
         </div>
       )}
     
-      </div>
     </div>
   );
 }
@@ -348,7 +317,6 @@ function TimelineChart({ series, active, setActive }) {
           <span>Dernier mois</span>
           <span style={{ fontSize: 14, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
         </div>
-      </div>
     </div>
   );
 }
