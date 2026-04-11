@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
@@ -72,6 +72,15 @@ export default function Layout({ children }) {
     if (user) setUser({ ...user, mustChangePassword: false });
   };
   const navigate = useNavigate();
+  const location = useLocation();
+  const [currentSearchParams] = useSearchParams();
+  const isItemActive = (item) => {
+    if (!item.to || !item.to.includes('?')) return false;
+    const [path, query] = item.to.split('?');
+    const itemParams = new URLSearchParams(query);
+    return location.pathname === path &&
+      [...itemParams].every(([k, v]) => currentSearchParams.get(k) === v);
+  };
   const [collapsed, setCollapsed] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
@@ -211,7 +220,7 @@ export default function Layout({ children }) {
                 key={item.to}
                 to={item.to}
                 end={item.to === '/super-admin'}
-                style={({ isActive }) => ({ ...s.link, ...(isActive ? s.activeLink : {}) })}
+                style={({ isActive }) => ({ ...s.link, ...((item.to && item.to.includes('?') ? isItemActive(item) : isActive) ? s.activeLink : {}) })}
               >
                 <item.icon size={18} style={{ flexShrink: 0 }} />
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
