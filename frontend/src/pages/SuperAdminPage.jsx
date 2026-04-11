@@ -7,7 +7,7 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numer
 const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function SuperAdminPage() {
-  const [tab, setTab] = useState('tenants');
+  const [tab, setTab] = useState('clients');
   const [stats, setStats] = useState({});
   const [timeline, setTimeline] = useState([]);
   const [activeMetric, setActiveMetric] = useState('volume_won');
@@ -85,6 +85,7 @@ export default function SuperAdminPage() {
         <p style={{ color: '#64748b' }}>Gestion de la plateforme — données non-sensibles uniquement</p>
       </div>
 
+      {tab === 'stats' && (<>
       {/* KPIs - Row 1: Counts */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 16 }}>
         <KPI icon={Globe} label="Tenants actifs" value={stats.total_tenants || 0} color="#059669" />
@@ -102,16 +103,18 @@ export default function SuperAdminPage() {
       {/* Timeline chart with metric tabs */}
       <TimelineChart series={timeline} active={activeMetric} setActive={setActiveMetric} />
 
+      </>)}
+
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
-        {[{ id: 'tenants', label: 'Tenants', icon: Globe }, { id: 'logs', label: 'Audit Logs', icon: Activity }].map(t => (
+        {[{ id: 'clients', label: 'Clients', icon: Globe }, { id: 'stats', label: 'Statistiques', icon: BarChart2 }, { id: 'logs', label: 'Audit Logs', icon: Activity }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#0f172a' : '#64748b', boxShadow: tab === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <t.icon size={14} /> {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 'tenants' && (
+      {tab === 'clients' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
             <button onClick={() => setShowCreate(!showCreate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 12, background: showCreate ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showCreate ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
@@ -193,7 +196,7 @@ export default function SuperAdminPage() {
           <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead><tr style={{ background: '#f8fafc' }}>
-                {['Tenant', 'Slug', 'Domaine', 'Users', 'Partenaires', 'Statut', 'Créé le', 'Modèle', ''].map((h, i) => (
+                {['Tenant', 'Slug', 'Admin', 'Domaine', 'Users', 'Partenaires', 'Statut', 'Créé le', 'Modèle', ''].map((h, i) => (
                   <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                 ))}
               </tr></thead>
@@ -206,6 +209,7 @@ export default function SuperAdminPage() {
                     </div>
                   </td>
                   <td style={{ padding: '13px 16px', textAlign: 'center' }}><code style={{ fontSize: 12, color: 'var(--rb-primary, #059669)', background: '#eef2ff', padding: '2px 8px', borderRadius: 4 }}>{t.slug}</code></td>
+                  <td style={{ padding: '13px 16px', fontSize: 13 }}><div style={{ fontWeight: 600 }}>{t.admin_name || '—'}</div>{t.admin_email && <div style={{ color: '#64748b', fontSize: 12 }}>{t.admin_email}</div>}</td>
                   <td style={{ padding: '13px 16px', textAlign: 'center', color: '#64748b', fontSize: 13 }}>{t.domain || '—'}</td>
                   <td style={{ padding: '13px 16px', textAlign: 'center' }}>
                     <span style={{ fontWeight: 700, color: '#0f172a' }}>{t.active_user_count}</span>
