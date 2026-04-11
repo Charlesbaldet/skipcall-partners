@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import {
@@ -22,7 +22,8 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
   const isSuperadmin = user?.role === 'superadmin';
-  const [tab, setTab] = useState('account');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get('tab') || 'account');
   const handleClose = () => navigate(-1);
 
   const NAV = [
@@ -35,7 +36,6 @@ export default function SettingsPage() {
       { id: 'integrations', icon: Plug, label: 'Intégrations' },
       { id: 'public-link', icon: Link2, label: 'Lien public' },
       { id: 'appearance', icon: Palette, label: 'Apparence' },
-      { id: 'program', icon: Trophy, label: 'Programme' },
     ] : []),
   ];
 
