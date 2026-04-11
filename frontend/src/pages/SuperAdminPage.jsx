@@ -318,6 +318,12 @@ function TimelineChart({ series, active, setActive }) {
           <span style={{ fontSize: 14, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
         </div>
     </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
   );
 }
 
