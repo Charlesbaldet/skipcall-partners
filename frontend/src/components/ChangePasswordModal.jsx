@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import api from '../lib/api';
 
 export default function ChangePasswordModal({ user, onSuccess }) {
   const [pwd, setPwd] = useState('');
@@ -16,13 +15,11 @@ export default function ChangePasswordModal({ user, onSuccess }) {
     if (pwd !== confirm) return setError('Les mots de passe ne correspondent pas.');
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/change-password`, {
+      const data = await api.request('/auth/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, newPassword: pwd }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur');
+      if (data.error) throw new Error(data.error);
       onSuccess();
     } catch (e) {
       setError(e.message);
