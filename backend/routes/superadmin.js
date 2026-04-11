@@ -54,6 +54,8 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
       query('SELECT status, COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE deal_value IS NOT NULL GROUP BY status'),
       query(`
         SELECT t.id, t.name, t.slug,
+               (SELECT u.full_name FROM users u WHERE u.tenant_id = t.id AND u.role = 'admin' ORDER BY u.id LIMIT 1) as admin_name,
+               (SELECT u.email FROM users u WHERE u.tenant_id = t.id AND u.role = 'admin' ORDER BY u.id LIMIT 1) as admin_email,
                COUNT(DISTINCT r.id) as lead_count,
                COALESCE(SUM(r.deal_value) FILTER (WHERE r.status = 'won'), 0) as volume_won,
                COALESCE(SUM(r.deal_value) FILTER (WHERE r.status IN ('contacted', 'meeting', 'proposal')), 0) as volume_pipeline

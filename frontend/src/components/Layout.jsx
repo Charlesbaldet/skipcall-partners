@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Trophy, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -45,6 +45,7 @@ const ADMIN_NAV = [
   { to: '/partners', icon: Users, label: 'Partenaires' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
+  { to: '/settings?tab=program', icon: Trophy, label: 'Programme' },
   { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 

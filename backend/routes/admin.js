@@ -7,6 +7,9 @@ const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const { generateApiKey, hashKey } = require('../middleware/apiKeyAuth');
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
+
+// Migration auto: must_change_password
+require('../db').query('ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false').catch(() => {});
 const router = express.Router();
 
 router.use(authenticate);
@@ -59,7 +62,7 @@ router.post('/invite', [
 
     // INSERT with tenant_id
     await query(
-      'INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, $4, $5)',
+      'INSERT INTO users (email, password_hash, full_name, role, tenant_id, must_change_password) VALUES ($1, $2, $3, $4, $5, true)',
       [email, hash, full_name, role, req.tenantId || null]
     );
     // Fire-and-forget invitation email via Resend
