@@ -1,7 +1,6 @@
 import { Trophy, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
-import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
 import {
   LayoutDashboard, FileText, DollarSign, Users, Send,
@@ -65,10 +64,7 @@ const SUPERADMIN_NAV = [
 ];
 
 export default function Layout({ children }) {
-  const { user, logout, setUser } = useAuth();
-  const handlePasswordChanged = () => {
-    if (user) setUser({ ...user, mustChangePassword: false });
-  };
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -290,11 +286,7 @@ export default function Layout({ children }) {
       }}>
         {children}
       </main>
-    
-      {user?.mustChangePassword && (
-        <ChangePasswordModal user={user} onSuccess={handlePasswordChanged} />
-      )}
-      </div>
+    </div>
   );
 }
 
