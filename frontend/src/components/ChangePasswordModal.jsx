@@ -15,7 +15,7 @@ export default function ChangePasswordModal({ onSuccess }) {
     if (pwd !== confirm) return setError('Les mots de passe ne correspondent pas.');
     setLoading(true);
     try {
-      // FIX: plus de userId dans le body — le backend utilise req.user.id depuis le JWT
+      // FIX: plus de userId dans le body  le backend utilise req.user.id depuis le JWT
       await api.request('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify({ newPassword: pwd }),
@@ -84,4 +84,4 @@ export default function ChangePasswordModal({ onSuccess }) {
       </div>
     </div>
   );
-}—
+}
