@@ -167,6 +167,10 @@ export default function Layout({ children }) {
         : `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`,
       color: '#fff',
     },
+    activeQueryLink: {
+      background: `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`,
+      color: '#fff',
+    },
   };
 
   const getBadge = (item) => {
@@ -220,7 +224,7 @@ export default function Layout({ children }) {
                 key={item.to}
                 to={item.to}
                 end={item.to === '/super-admin'}
-                style={({ isActive }) => ({ ...s.link, ...((item.to && item.to.includes('?') ? isItemActive(item) : isActive) ? s.activeLink : {}) })}
+                style={({ isActive }) => ({ ...s.link, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}
               >
                 <item.icon size={18} style={{ flexShrink: 0 }} />
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
