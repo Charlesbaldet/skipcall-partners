@@ -18,6 +18,7 @@ import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
 import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
 import SuperAdminPage from './pages/SuperAdminPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import ProgrammePage from './pages/ProgrammePage.jsx';
 import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -51,6 +52,7 @@ function AppRoutes() {
       <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminApplicationsPage /></Layout></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout><SuperAdminPage /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
+      <Route path="/programme" element={<ProtectedRoute><Layout><ProgrammePage /></Layout></ProtectedRoute>} />
       <Route path="/messaging" element={<ProtectedRoute><Layout><MessagingPage /></Layout></ProtectedRoute>} />
 
       {/* Partner */}
