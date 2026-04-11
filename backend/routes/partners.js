@@ -111,8 +111,8 @@ router.post('/', authorize('admin'), [
     const hash = await bcrypt.hash(tempPassword, 12);
 
     await client.query(
-      `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id)
-       VALUES ($1, $2, $3, 'partner', $4, $5)`,
+      `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
+       VALUES ($1, $2, $3, 'partner', $4, $5, true)`,
       [email, hash, contact_name, partner.id, req.tenantId || null]
     );
 
