@@ -168,7 +168,7 @@ export default function LandingPage() {
       
       {/* Mobile menu overlay */}
       {mobile && menuOpen && (
-        <div style={{ position:'fixed',top:58,left:0,right:0,bottom:0,zIndex:200,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
+        <div style={{ position:'fixed',top:58,left:0,right:0,height:'calc(100vh - 58px)',zIndex:200,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
           <div style={{ marginBottom:16 }}>
             <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
             {[
@@ -382,7 +382,7 @@ export default function LandingPage() {
               <Logo size={28} white/>
               <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300,fontFamily: 'inherit' }}>La plateforme de gestion de programme d’apporteurs d’affaires et de parrainage professionnel.</p>
             </div>
-            <div style={{ display:'flex',gap:48 }}>
+            <div style={{ display:'flex',gap:48 ,flexWrap:'wrap' }}>
               <div>
                 <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
                 {[
