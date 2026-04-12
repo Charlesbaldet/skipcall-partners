@@ -1,111 +1,164 @@
-import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import LandingLayout from '../../components/LandingLayout';
+import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
-const C = { p: '#8b5cf6', s: '#0f172a', m: '#64748b' };
-const g = `linear-gradient(135deg, #8b5cf6, #8b5cf6cc)`;
+const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
 
-const MOCKUP = "<svg viewBox=\"0 0 600 340\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;border-radius:12px;\">\n  <rect width=\"600\" height=\"340\" fill=\"#0f172a\" rx=\"12\"/>\n  <rect x=\"0\" y=\"0\" width=\"600\" height=\"44\" fill=\"#1e293b\" rx=\"12\"/>\n  <rect x=\"0\" y=\"32\" width=\"600\" height=\"12\" fill=\"#1e293b\"/>\n  <circle cx=\"20\" cy=\"22\" r=\"7\" fill=\"#ef4444\"/>\n  <circle cx=\"40\" cy=\"22\" r=\"7\" fill=\"#f59e0b\"/>\n  <circle cx=\"60\" cy=\"22\" r=\"7\" fill=\"#22c55e\"/>\n  <text x=\"200\" y=\"27\" font-family=\"system-ui\" font-size=\"12\" fill=\"#94a3b8\" text-anchor=\"middle\">Analytics — Programme Partenaires</text>\n  <!-- KPI row -->\n  \n  <rect x=\"12\" y=\"56\" width=\"135\" height=\"60\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"22\" y=\"74\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Leads ce mois</text>\n  <text x=\"22\" y=\"97\" font-family=\"system-ui\" font-size=\"18\" font-weight=\"800\" fill=\"#fff\">47</text>\n  <text x=\"22\" y=\"110\" font-family=\"system-ui\" font-size=\"9\" fill=\"#8b5cf6\">+18%</text>\n  \n  <rect x=\"159\" y=\"56\" width=\"135\" height=\"60\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"169\" y=\"74\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Taux conversion</text>\n  <text x=\"169\" y=\"97\" font-family=\"system-ui\" font-size=\"18\" font-weight=\"800\" fill=\"#fff\">34%</text>\n  <text x=\"169\" y=\"110\" font-family=\"system-ui\" font-size=\"9\" fill=\"#059669\">+5pts</text>\n  \n  <rect x=\"306\" y=\"56\" width=\"135\" height=\"60\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"316\" y=\"74\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">MRR généré</text>\n  <text x=\"316\" y=\"97\" font-family=\"system-ui\" font-size=\"18\" font-weight=\"800\" fill=\"#fff\">28 400 €</text>\n  <text x=\"316\" y=\"110\" font-family=\"system-ui\" font-size=\"9\" fill=\"#f59e0b\">+22%</text>\n  \n  <rect x=\"453\" y=\"56\" width=\"135\" height=\"60\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"463\" y=\"74\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">CAC partenaires</text>\n  <text x=\"463\" y=\"97\" font-family=\"system-ui\" font-size=\"18\" font-weight=\"800\" fill=\"#fff\">340 €</text>\n  <text x=\"463\" y=\"110\" font-family=\"system-ui\" font-size=\"9\" fill=\"#22c55e\">-12%</text>\n  \n  <!-- Chart -->\n  <rect x=\"12\" y=\"126\" width=\"370\" height=\"200\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"24\" y=\"148\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#e2e8f0\">Évolution du MRR</text>\n  \n  <rect x=\"32\" y=\"250\" width=\"20\" height=\"40\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.4\"/>\n  \n  <rect x=\"60\" y=\"235\" width=\"20\" height=\"55\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.45\"/>\n  \n  <rect x=\"88\" y=\"255\" width=\"20\" height=\"35\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.5\"/>\n  \n  <rect x=\"116\" y=\"220\" width=\"20\" height=\"70\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.55\"/>\n  \n  <rect x=\"144\" y=\"205\" width=\"20\" height=\"85\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.6000000000000001\"/>\n  \n  <rect x=\"172\" y=\"200\" width=\"20\" height=\"90\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.65\"/>\n  \n  <rect x=\"200\" y=\"180\" width=\"20\" height=\"110\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.7000000000000001\"/>\n  \n  <rect x=\"228\" y=\"190\" width=\"20\" height=\"100\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.75\"/>\n  \n  <rect x=\"256\" y=\"160\" width=\"20\" height=\"130\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.8\"/>\n  \n  <rect x=\"284\" y=\"170\" width=\"20\" height=\"120\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.8500000000000001\"/>\n  \n  <rect x=\"312\" y=\"140\" width=\"20\" height=\"150\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.9\"/>\n  \n  <rect x=\"340\" y=\"130\" width=\"20\" height=\"160\" fill=\"#8b5cf6\" rx=\"3\" opacity=\"0.9500000000000001\"/>\n  \n  <polyline points=\"42,250 70,235 98,255 126,220 154,205 182,200 210,180 238,190 266,160 294,170 322,140 350,130\" fill=\"none\" stroke=\"#8b5cf6\" stroke-width=\"2\"/>\n  <!-- Top apporteurs -->\n  <rect x=\"392\" y=\"126\" width=\"196\" height=\"200\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"404\" y=\"148\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#e2e8f0\">Top Apporteurs</text>\n  \n  <text x=\"404\" y=\"172\" font-family=\"system-ui\" font-size=\"9\" fill=\"#e2e8f0\">J. Dupont</text>\n  <text x=\"540\" y=\"172\" font-family=\"system-ui\" font-size=\"9\" fill=\"#059669\">12 leads</text>\n  <rect x=\"404\" y=\"178\" width=\"176\" height=\"6\" fill=\"#0f172a\" rx=\"3\"/>\n  <rect x=\"404\" y=\"178\" width=\"149.6\" height=\"6\" fill=\"#059669\" rx=\"3\"/>\n  \n  <text x=\"404\" y=\"208\" font-family=\"system-ui\" font-size=\"9\" fill=\"#e2e8f0\">M. Martin</text>\n  <text x=\"540\" y=\"208\" font-family=\"system-ui\" font-size=\"9\" fill=\"#8b5cf6\">9 leads</text>\n  <rect x=\"404\" y=\"214\" width=\"176\" height=\"6\" fill=\"#0f172a\" rx=\"3\"/>\n  <rect x=\"404\" y=\"214\" width=\"114.4\" height=\"6\" fill=\"#8b5cf6\" rx=\"3\"/>\n  \n  <text x=\"404\" y=\"244\" font-family=\"system-ui\" font-size=\"9\" fill=\"#e2e8f0\">S. Bernard</text>\n  <text x=\"540\" y=\"244\" font-family=\"system-ui\" font-size=\"9\" fill=\"#f59e0b\">7 leads</text>\n  <rect x=\"404\" y=\"250\" width=\"176\" height=\"6\" fill=\"#0f172a\" rx=\"3\"/>\n  <rect x=\"404\" y=\"250\" width=\"88\" height=\"6\" fill=\"#f59e0b\" rx=\"3\"/>\n  \n  <text x=\"404\" y=\"280\" font-family=\"system-ui\" font-size=\"9\" fill=\"#e2e8f0\">A. Leroy</text>\n  <text x=\"540\" y=\"280\" font-family=\"system-ui\" font-size=\"9\" fill=\"#3b82f6\">5 leads</text>\n  <rect x=\"404\" y=\"286\" width=\"176\" height=\"6\" fill=\"#0f172a\" rx=\"3\"/>\n  <rect x=\"404\" y=\"286\" width=\"63.36\" height=\"6\" fill=\"#3b82f6\" rx=\"3\"/>\n  \n</svg>";
+  <rect width="600" height="380" fill="#0f172a" rx="0"/>
+  <rect x="0" y="0" width="600" height="44" fill="#1e293b"/>
+  <circle cx="18" cy="22" r="6" fill="#ef4444"/><circle cx="36" cy="22" r="6" fill="#f59e0b"/><circle cx="54" cy="22" r="6" fill="#22c55e"/>
+  <text x="300" y="27" font-family="system-ui" font-size="11" fill="#475569" text-anchor="middle">Analytics & KPIs — RefBoost</text>
 
-const BENEFITS = [{"icon":"📈","title":"Performance par apporteur","text":"Identifiez vos 20% d'apporteurs qui génèrent 80% de votre pipeline. Concentrez vos efforts là où ça rapporte."},{"icon":"💹","title":"MRR et CA générés","text":"Suivez le chiffre d'affaires généré par le canal partenaires. Comparez-le à vos autres canaux et calculez votre ROI réel."},{"icon":"🎯","title":"Taux de conversion","text":"Du lead soumis au deal signé : mesurez chaque étape, identifiez les goulots d'étranglement, optimisez votre processus."}];
+  <rect x="12" y="56" width="135" height="64" fill="#1e293b" rx="8"/>
+  <text x="22" y="76" font-family="system-ui" font-size="8" fill="#64748b">Leads ce mois</text>
+  <text x="22" y="99" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">47</text>
+  <text x="22" y="113" font-family="system-ui" font-size="9" fill="#8b5cf6">+18%</text>
+
+  <rect x="159" y="56" width="135" height="64" fill="#1e293b" rx="8"/>
+  <text x="169" y="76" font-family="system-ui" font-size="8" fill="#64748b">Conv. ce mois</text>
+  <text x="169" y="99" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">34%</text>
+  <text x="169" y="113" font-family="system-ui" font-size="9" fill="#059669">+5pts</text>
+
+  <rect x="306" y="56" width="135" height="64" fill="#1e293b" rx="8"/>
+  <text x="316" y="76" font-family="system-ui" font-size="8" fill="#64748b">MRR ce mois</text>
+  <text x="316" y="99" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">28k€</text>
+  <text x="316" y="113" font-family="system-ui" font-size="9" fill="#f59e0b">+22%</text>
+
+  <rect x="453" y="56" width="135" height="64" fill="#1e293b" rx="8"/>
+  <text x="463" y="76" font-family="system-ui" font-size="8" fill="#64748b">CAC ce mois</text>
+  <text x="463" y="99" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">340€</text>
+  <text x="463" y="113" font-family="system-ui" font-size="9" fill="#22c55e">-12%</text>
+
+<rect x="12" y="130" width="370" height="190" fill="#1e293b" rx="8"/>
+<text x="24" y="150" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">MRR via partenaires</text>
+<rect x="28" y="260" width="20" height="30" fill="#8b5cf6" rx="3" opacity="0.4"/><rect x="55" y="248" width="20" height="42" fill="#8b5cf6" rx="3" opacity="0.45"/><rect x="82" y="236" width="20" height="54" fill="#8b5cf6" rx="3" opacity="0.5"/><rect x="109" y="224" width="20" height="66" fill="#8b5cf6" rx="3" opacity="0.55"/><rect x="136" y="212" width="20" height="78" fill="#8b5cf6" rx="3" opacity="0.6000000000000001"/><rect x="163" y="200" width="20" height="90" fill="#8b5cf6" rx="3" opacity="0.65"/><rect x="190" y="188" width="20" height="102" fill="#8b5cf6" rx="3" opacity="0.7000000000000001"/><rect x="217" y="176" width="20" height="114" fill="#8b5cf6" rx="3" opacity="0.75"/><rect x="244" y="164" width="20" height="126" fill="#8b5cf6" rx="3" opacity="0.8"/><rect x="271" y="152" width="20" height="138" fill="#8b5cf6" rx="3" opacity="0.8500000000000001"/><rect x="298" y="140" width="20" height="150" fill="#8b5cf6" rx="3" opacity="0.9"/><rect x="325" y="128" width="20" height="162" fill="#8b5cf6" rx="3" opacity="0.9500000000000001"/>
+<polyline points="38,260 65,248 92,236 119,224 146,212 173,200 200,188 227,176 254,164 281,152 308,140 335,128" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/>
+<rect x="392" y="130" width="196" height="190" fill="#1e293b" rx="8"/>
+<text x="404" y="150" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Top Apporteurs</text>
+
+  <text x="404" y="174" font-family="system-ui" font-size="9" fill="#e2e8f0">J. Dupont</text>
+  <text x="560" y="174" font-family="system-ui" font-size="9" fill="#059669">12 leads</text>
+  <rect x="404" y="180" width="176" height="5" fill="#0f172a" rx="3"/>
+  <rect x="404" y="180" width="149.6" height="5" fill="#059669" rx="3"/>
+
+  <text x="404" y="210" font-family="system-ui" font-size="9" fill="#e2e8f0">M. Martin</text>
+  <text x="560" y="210" font-family="system-ui" font-size="9" fill="#8b5cf6">9 leads</text>
+  <rect x="404" y="216" width="176" height="5" fill="#0f172a" rx="3"/>
+  <rect x="404" y="216" width="112.64" height="5" fill="#8b5cf6" rx="3"/>
+
+  <text x="404" y="246" font-family="system-ui" font-size="9" fill="#e2e8f0">S. Bernard</text>
+  <text x="560" y="246" font-family="system-ui" font-size="9" fill="#f59e0b">7 leads</text>
+  <rect x="404" y="252" width="176" height="5" fill="#0f172a" rx="3"/>
+  <rect x="404" y="252" width="88" height="5" fill="#f59e0b" rx="3"/>
+
+  <text x="404" y="282" font-family="system-ui" font-size="9" fill="#e2e8f0">A. Leroy</text>
+  <text x="560" y="282" font-family="system-ui" font-size="9" fill="#3b82f6">5 leads</text>
+  <rect x="404" y="288" width="176" height="5" fill="#0f172a" rx="3"/>
+  <rect x="404" y="288" width="63.36" height="5" fill="#3b82f6" rx="3"/>
+
+<rect x="12" y="330" width="576" height="1" fill="#1e293b"/>
+<text x="300" y="360" font-family="system-ui" font-size="9" fill="#475569" text-anchor="middle">Période : 30 derniers jours · Mis à jour il y a 2 min</text>
+</svg>`;
+const ILLUS = [
+`<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a">
+    <rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/>
+    <text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Entonnoir de conversion</text>
+    
+    <text x="24" y="60" font-family="system-ui" font-size="9" fill="#e2e8f0">1 284 clics</text>
+    <text x="420" y="60" font-family="system-ui" font-size="9" fill="#8b5cf6">100%</text>
+    <rect x="24" y="64" width="432" height="16" fill="#0f172a" rx="4"/>
+    <rect x="24" y="64" width="420" height="16" fill="#8b5cf6" rx="4" opacity="0.8"/>
+    
+    <text x="24" y="98" font-family="system-ui" font-size="9" fill="#e2e8f0">87 formulaires</text>
+    <text x="420" y="98" font-family="system-ui" font-size="9" fill="#3b82f6">6.8%</text>
+    <rect x="24" y="102" width="432" height="16" fill="#0f172a" rx="4"/>
+    <rect x="24" y="102" width="320" height="16" fill="#3b82f6" rx="4" opacity="0.8"/>
+    
+    <text x="24" y="136" font-family="system-ui" font-size="9" fill="#e2e8f0">47 leads qualifiés</text>
+    <text x="420" y="136" font-family="system-ui" font-size="9" fill="#f59e0b">3.7%</text>
+    <rect x="24" y="140" width="432" height="16" fill="#0f172a" rx="4"/>
+    <rect x="24" y="140" width="220" height="16" fill="#f59e0b" rx="4" opacity="0.8"/>
+    
+    <text x="24" y="174" font-family="system-ui" font-size="9" fill="#e2e8f0">23 démos</text>
+    <text x="420" y="174" font-family="system-ui" font-size="9" fill="#059669">1.8%</text>
+    <rect x="24" y="178" width="432" height="16" fill="#0f172a" rx="4"/>
+    <rect x="24" y="178" width="140" height="16" fill="#059669" rx="4" opacity="0.8"/>
+    
+    <text x="24" y="212" font-family="system-ui" font-size="9" fill="#e2e8f0">8 deals</text>
+    <text x="420" y="212" font-family="system-ui" font-size="9" fill="#4ade80">0.6%</text>
+    <rect x="24" y="216" width="432" height="16" fill="#0f172a" rx="4"/>
+    <rect x="24" y="216" width="80" height="16" fill="#4ade80" rx="4" opacity="0.8"/>
+    
+  </svg>`,
+`<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a">
+    <rect x="12" y="12" width="216" height="236" fill="#1e293b" rx="8"/>
+    <text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">CAC Partenaires</text>
+    <text x="24" y="80" font-family="system-ui" font-size="32" font-weight="900" fill="#8b5cf6">340€</text>
+    <text x="24" y="100" font-family="system-ui" font-size="9" fill="#22c55e">-12% vs trimestre dernier</text>
+    <rect x="24" y="116" width="192" height="1" fill="#0f172a"/>
+    <text x="24" y="136" font-family="system-ui" font-size="9" fill="#64748b">vs SEA: 1 240€</text>
+    <text x="24" y="154" font-family="system-ui" font-size="9" fill="#64748b">vs Inbound: 680€</text>
+    <text x="24" y="172" font-family="system-ui" font-size="9" fill="#64748b">vs Événements: 2 100€</text>
+    <rect x="24" y="186" width="160" height="36" fill="#4c1d95" rx="8"/>
+    <text x="104" y="208" font-family="system-ui" font-size="10" font-weight="700" fill="#c4b5fd" text-anchor="middle">Canal le plus rentable</text>
+    <rect x="240" y="12" width="228" height="236" fill="#1e293b" rx="8"/>
+    <text x="252" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">ROI Programme</text>
+    <text x="252" y="80" font-family="system-ui" font-size="32" font-weight="900" fill="#8b5cf6">8:1</text>
+    <text x="252" y="100" font-family="system-ui" font-size="9" fill="#64748b">Pour 1€ investi</text>
+    <text x="252" y="140" font-family="system-ui" font-size="9" fill="#e2e8f0">Coût programme: 4 280€</text>
+    <text x="252" y="158" font-family="system-ui" font-size="9" fill="#4ade80">CA généré: 34 200€</text>
+  </svg>`,
+`<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a">
+    <rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/>
+    <text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Rapport Export — Avril 2026</text>
+    <rect x="24" y="50" width="432" height="28" fill="#0f172a" rx="6"/>
+    <text x="36" y="68" font-family="system-ui" font-size="9" fill="#e2e8f0">Rapport mensuel complet</text>
+    <text x="400" y="68" font-family="system-ui" font-size="9" fill="#8b5cf6">PDF</text>
+    <rect x="24" y="84" width="432" height="28" fill="#0f172a" rx="6"/>
+    <text x="36" y="102" font-family="system-ui" font-size="9" fill="#e2e8f0">Détail par apporteur</text>
+    <text x="400" y="102" font-family="system-ui" font-size="9" fill="#22c55e">CSV</text>
+    <rect x="24" y="118" width="432" height="28" fill="#0f172a" rx="6"/>
+    <text x="36" y="136" font-family="system-ui" font-size="9" fill="#e2e8f0">Commissions à valider</text>
+    <text x="400" y="136" font-family="system-ui" font-size="9" fill="#f59e0b">CSV</text>
+    <rect x="24" y="186" width="200" height="36" fill="#4c1d95" rx="8"/>
+    <text x="124" y="208" font-family="system-ui" font-size="10" font-weight="700" fill="#c4b5fd" text-anchor="middle">Envoyer au Board</text>
+    <rect x="236" y="186" width="200" height="36" fill="#0f172a" rx="8"/>
+    <text x="336" y="208" font-family="system-ui" font-size="10" fill="#64748b" text-anchor="middle">Planifier automatique</text>
+  </svg>`,
+];
 
 export default function FeatureAnalyticsPage() {
-  const navigate = useNavigate();
   return (
-    <LandingLayout>
-      <Helmet>
-        <title>Analytics & KPIs — RefBoost</title>
-        <meta name="description" content="Taux de conversion, MRR généré, performance par apporteur, cycle de vente moyen — toutes les métriques qui comptent dans un tableau de bord actionnable." />
-        <link rel="canonical" href="https://refboost.io/fonctionnalites/analytics" />
-      </Helmet>
-
-      {/* Hero */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '80px 48px 64px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 50, background: `${C.p}20`, border: `1px solid ${C.p}40`, fontSize: 13, fontWeight: 700, color: C.p, marginBottom: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
-          📊 Fonctionnalité
-        </div>
-        <h1 style={{ margin: '0 0 20px', fontSize: 48, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -2 }}>
-          Analytics & KPIs
-        </h1>
-        <p style={{ margin: '0 auto 36px', fontSize: 20, color: '#94a3b8', maxWidth: 600, lineHeight: 1.6 }}>
-          Pilotez votre programme partenaires avec des données réelles
-        </p>
-        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/signup')} style={{ padding: '14px 32px', borderRadius: 12, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}40` }}>
-            Essayer gratuitement →
-          </button>
-          <button onClick={() => navigate('/login')} style={{ padding: '14px 32px', borderRadius: 12, border: '2px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>
-            Se connecter
-          </button>
-        </div>
-      </section>
-
-      {/* Mockup */}
-      <section style={{ background: '#f8fafc', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.15)', border: '1px solid #e2e8f0' }}
-            dangerouslySetInnerHTML={{ __html: MOCKUP }} />
-          <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#94a3b8' }}>
-            Aperçu de l'interface RefBoost — Analytics & KPIs
-          </p>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section style={{ background: '#fff', padding: '80px 48px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>Pourquoi ça change tout</p>
-            <h2 style={{ margin: 0, fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>3 raisons d'adopter cette fonctionnalité</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 28 }}>
-            {BENEFITS.map((b, i) => (
-              <div key={i} style={{ padding: 32, borderRadius: 20, background: '#f8fafc', border: '1px solid #f1f5f9', transition: 'all .2s' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 20px 60px ${C.p}15`; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
-                <div style={{ fontSize: 36, marginBottom: 16 }}>{b.icon}</div>
-                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: C.s }}>{b.title}</h3>
-                <p style={{ margin: 0, fontSize: 15, color: C.m, lineHeight: 1.7 }}>{b.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quote */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.4, color: C.p }}>"</div>
-          <p style={{ margin: '0 0 24px', fontSize: 22, color: '#fff', lineHeight: 1.6, fontStyle: 'italic' }}>
-            Pour la première fois, on a pu montrer à notre board le ROI exact du programme partenaires.
-          </p>
-          <p style={{ margin: 0, fontSize: 14, color: '#64748b', fontWeight: 600 }}>CEO, Series A</p>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section style={{ background: '#f8fafc', padding: '80px 48px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          <h2 style={{ margin: '0 0 16px', fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>
-            Prêt à tester ?
-          </h2>
-          <p style={{ margin: '0 0 36px', fontSize: 18, color: C.m, lineHeight: 1.6 }}>
-            14 jours gratuits, sans carte bancaire. Configurez votre programme en 5 minutes.
-          </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/signup')} style={{ padding: '16px 36px', borderRadius: 14, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}30` }}>
-              Créer mon compte gratuit →
-            </button>
-          </div>
-          <p style={{ marginTop: 16, fontSize: 13, color: '#94a3b8' }}>✓ Sans engagement · ✓ 14 jours gratuits · ✓ Support inclus</p>
-          <div style={{ marginTop: 24, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/fonctionnalites/pipeline" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🔄 Pipeline de leads</a>
-            <a href="/fonctionnalites/commissions" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>💰 Commissions automatiques</a>
-            <a href="/fonctionnalites/personnalisation" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🎨 Votre marque, votre plateforme</a>
-            <a href="/fonctionnalites/tracking" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🔗 Liens de tracking uniques</a>
-          </div>
-        </div>
-      </section>
-    </LandingLayout>
+    <FeaturePageTemplate
+      helmet={{ title: 'Analytics & KPIs — RefBoost', description: 'Taux de conversion, MRR généré, performance par apporteur, cycle de vente moyen — toutes les métriques qui comptent dans un tableau de bord actionnable.', canonical: 'https://refboost.io/fonctionnalites/analytics' }}
+      accentColor="#8b5cf6"
+      label="Fonctionnalité"
+      title="Analytics & KPIs"
+      subtitle="Pilotez votre programme partenaires avec des données réelles, pas des impressions. Chaque décision basée sur des faits."
+      mockupSvg={MOCKUP}
+      benefits={[
+        {
+          stat: '80%', statLabel: 'du pipeline générés par 20% des apporteurs en moyenne',
+          title: 'Entonnoir de conversion détaillé',
+          text: 'Mesurez chaque étape entre le clic sur un lien et le deal signé. Identifiez précisément où vous perdez des opportunités et corrigez en temps réel.',
+          points: ['Entonnoir complet : clic > formulaire > lead qualifié > démo > deal', 'Taux de conversion par étape et par source de trafic', 'Comparaison entre apporteurs pour identifier les meilleurs pratiques', 'Alertes automatiques si un taux chute en dessous du seuil défini'],
+          illustration: ILLUS[0]
+        },
+        {
+          stat: '8:1', statLabel: 'de ROI moyen constaté sur le canal partenaires vs autres canaux',
+          title: 'ROI et comparaison inter-canaux',
+          text: 'Pour la première fois, comparez votre canal partenaires aux autres canaux d'acquisition. Justifiez votre investissement avec des chiffres irréfutables.',
+          points: ['CAC partenaires vs SEA, inbound, événements', 'Calcul automatique du ROI par euro investi en commissions', 'Projection sur 12 mois selon les tendances actuelles', 'Rapport prêt à présenter au comité de direction'],
+          illustration: ILLUS[1]
+        },
+        {
+          stat: '15min', statLabel: 'pour préparer le rapport mensuel partenaires complet',
+          title: 'Rapports exportables et planifiables',
+          text: 'Générez vos rapports mensuels en quelques clics. Planifiez leur envoi automatique aux dirigeants chaque premier du mois. Votre programme se pilote sans friction administrative.',
+          points: ['Rapports PDF complets avec graphiques et tableaux', 'Export CSV détaillé pour analyse avancée', 'Envoi automatique programmable par email', 'Accès personnalisé pour les dirigeants et investisseurs'],
+          illustration: ILLUS[2]
+        }
+      ]}
+      quote={{ text: 'Pour la première fois, on a pu montrer à notre board le ROI exact du programme partenaires. 8€ générés pour chaque euro investi en commissions.', author: 'Thomas C., CEO — ScaleUp Agency' }}
+      currentHref="/fonctionnalites/analytics"
+    />
   );
 }
