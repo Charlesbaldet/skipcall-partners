@@ -14,7 +14,7 @@ export default function SuperAdminPage() {
   const [activeMetric, setActiveMetric] = useState('volume_won');
   const [tenants, setTenants] = useState([]);
   const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #059669)', secondary_color: '#8b5cf6', accent_color: '#f59e0b', logo_url: '' });
   const [saving, setSaving] = useState(false);
@@ -353,7 +353,7 @@ export default function SuperAdminPage() {
               <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
                 <button onClick={saveBlogPost} disabled={blogSaving || !blogForm.title || !blogForm.content}
                   style={{ padding: '12px 28px', borderRadius: 10, background: (!blogForm.title || !blogForm.content) ? '#e2e8f0' : 'var(--rb-primary, #059669)', color: (!blogForm.title || !blogForm.content) ? '#94a3b8' : '#fff', border: 'none', cursor: (!blogForm.title || !blogForm.content) ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15 }}>
-                  {blogSaving ? 'Sauvegarde…' : blogEditId ? '\u2705 Mettre à jour' : '\ud83d\ude80 Publier l'article'}
+                  {blogSaving ? 'Sauvegarde…' : blogEditId ? '\u2705 Mettre à jour' : "\ud83d\ude80 publier l'article"}
                 </button>
                 <button onClick={() => { setBlogShowForm(false); setBlogEditId(null); }}
                   style={{ padding: '12px 20px', borderRadius: 10, background: '#f1f5f9', color: '#64748b', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
