@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import LandingLayout from '../components/LandingLayout';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
+import LandingLayout from '../components/LandingLayout';
 
 const SITE = 'https://refboost.io';
 const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc' };
@@ -24,21 +24,27 @@ export default function BlogPostPage() {
     setNotFound(false);
     api.request('/blog/posts/' + slug)
       .then(d => setPost(d.post))
-      .catch(err => { if (err?.status === 404 || err?.message?.includes('404')) setNotFound(true); })
+      .catch(err => {
+        if (err?.status === 404 || err?.message?.includes('404')) setNotFound(true);
+      })
       .finally(() => setLoading(false));
   }, [slug]);
 
   if (loading) return (
-    <LandingLayout><div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m }}>
-      Chargement…
-    </div></LandingLayout>
+    <LandingLayout>
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m }}>
+        Chargement…
+      </div>
+    </LandingLayout>
   );
 
   if (notFound || !post) return (
-    <LandingLayout><div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-      <h1 style={{ color: C.s, fontSize: 24 }}>Article introuvable</h1>
-      <Link to="/blog" style={{ color: C.p, fontWeight: 600 }}>← Retour au blog</Link>
-    </div></LandingLayout>
+    <LandingLayout>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <h1 style={{ color: C.s, fontSize: 24 }}>Article introuvable</h1>
+        <Link to="/blog" style={{ color: C.p, fontWeight: 600 }}>← Retour au blog</Link>
+      </div>
+    </LandingLayout>
   );
 
   const canonicalUrl = SITE + '/blog/' + post.slug;
@@ -54,12 +60,7 @@ export default function BlogPostPage() {
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
     author: { '@type': 'Person', name: post.author || 'RefBoost' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'RefBoost',
-      url: SITE,
-      logo: { '@type': 'ImageObject', url: SITE + '/logo.png' },
-    },
+    publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE, logo: { '@type': 'ImageObject', url: SITE + '/logo.png' } },
     image: post.cover_image_url || SITE + '/og-default.png',
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
     articleSection: post.category || 'Blog',
@@ -141,11 +142,7 @@ export default function BlogPostPage() {
         )}
 
         {/* Contenu */}
-        <article
-          className="blog-content"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-          style={{ fontSize: 17, lineHeight: 1.85, color: '#1e293b' }}
-        />
+        <article className="blog-content" dangerouslySetInnerHTML={{ __html: post.content }} style={{ fontSize: 17, lineHeight: 1.85, color: '#1e293b' }} />
 
         {/* Tags */}
         {post.tags?.length > 0 && (
@@ -166,6 +163,6 @@ export default function BlogPostPage() {
           </Link>
         </div>
       </main>
-    </>
+    </LandingLayout>
   );
 }
