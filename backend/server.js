@@ -20,6 +20,7 @@ const levelsRoutes = require('./routes/levels');
 const trackingRoutes = require('./routes/tracking');
 const tenantRoutes = require('./routes/tenants');
 const superadminRoutes = require('./routes/superadmin');
+const blogRoutes = require('./routes/blog');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -96,6 +97,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ─── Error handler ───
+app.use('/api/blog', blogRoutes);
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({
