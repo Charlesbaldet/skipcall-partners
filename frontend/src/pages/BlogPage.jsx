@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
+import LandingLayout from '../components/LandingLayout';
 
 const SITE = 'https://refboost.io';
 const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
@@ -22,9 +23,7 @@ function BlogCard({ post }) {
         </Link>
       )}
       <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {post.category && (
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 1 }}>{post.category}</span>
-        )}
+        {post.category && <span style={{ fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 1 }}>{post.category}</span>}
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.s, lineHeight: 1.4 }}>
           <Link to={'/blog/' + post.slug} style={{ color: 'inherit', textDecoration: 'none' }}>{post.title}</Link>
         </h2>
@@ -62,7 +61,7 @@ export default function BlogPage() {
   }, [activeCategory]);
 
   return (
-    <>
+    <LandingLayout>
       <Helmet>
         <title>Blog RefBoost — Conseils affiliation, partenariats et croissance</title>
         <meta name="description" content="Découvrez nos articles sur l'affiliation B2B, la gestion de partenaires, les programmes de referral et les stratégies de croissance." />
@@ -72,44 +71,35 @@ export default function BlogPage() {
         <meta property="og:url" content={SITE + '/blog'} />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href={SITE + '/blog'} />
-        <script type="application/ld+json">{JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'Blog',
-          name: 'Blog RefBoost',
-          description: 'Conseils affiliation, partenariats et croissance B2B',
-          url: SITE + '/blog',
-          publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE },
-        })}</script>
+        <script type="application/ld+json">{JSON.stringify({ '@context': 'https://schema.org', '@type': 'Blog', name: 'Blog RefBoost', description: 'Conseils affiliation, partenariats et croissance B2B', url: SITE + '/blog', publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE } })}</script>
       </Helmet>
 
-      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 24px' }}>
-        {/* Header */}
-        <header style={{ textAlign: 'center', marginBottom: 48 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>Blog</p>
-          <h1 style={{ margin: '0 0 16px', fontSize: 40, fontWeight: 800, color: C.s, lineHeight: 1.2 }}>
-            Conseils & Ressources
-          </h1>
-          <p style={{ margin: 0, fontSize: 18, color: C.m, maxWidth: 560, margin: '0 auto', lineHeight: 1.6 }}>
-            Tout ce qu'il faut savoir sur l'affiliation B2B, les programmes partenaires et la croissance.
-          </p>
-        </header>
+      {/* Hero */}
+      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '72px 48px 64px', textAlign: 'center' }}>
+        <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 2 }}>Blog</p>
+        <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>Conseils & Ressources</h1>
+        <p style={{ margin: '0 auto', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
+          Tout ce qu'il faut savoir sur l'affiliation B2B, les programmes partenaires et la croissance.
+        </p>
+      </section>
 
-        {/* Filtres catégories */}
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 24px' }}>
+        {/* Filtres */}
         {categories.length > 0 && (
           <nav aria-label="Catégories" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
-            <button onClick={()=>setActiveCategory('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? C.p : '#e2e8f0', background: !activeCategory ? C.p : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            <button onClick={()=>setActiveCategory('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? '#059669' : '#e2e8f0', background: !activeCategory ? '#059669' : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
               Tous ({total})
             </button>
             {categories.map(c => (
               <button key={c.category} onClick={()=>setActiveCategory(c.category === activeCategory ? '' : c.category)}
-                style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: activeCategory === c.category ? C.p : '#e2e8f0', background: activeCategory === c.category ? C.p : 'transparent', color: activeCategory === c.category ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+                style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: activeCategory === c.category ? '#059669' : '#e2e8f0', background: activeCategory === c.category ? '#059669' : 'transparent', color: activeCategory === c.category ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
                 {c.category} ({c.count})
               </button>
             ))}
           </nav>
         )}
 
-        {/* Grille d'articles */}
+        {/* Grille */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 80, color: C.m }}>Chargement…</div>
         ) : posts.length === 0 ? (
@@ -123,6 +113,6 @@ export default function BlogPage() {
           </div>
         )}
       </main>
-    </>
+    </LandingLayout>
   );
 }
