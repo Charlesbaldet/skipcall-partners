@@ -108,8 +108,8 @@ export default function LandingPage() {
       <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',backdropFilter:'blur(20px)',borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',transition:'all .3s' }}>
         <Logo size={36}/>
         <div style={{ display:'flex',alignItems:'center',gap:32 }}>
-          {['Fonctionnalités','Tarifs','Témoignages'].map(x=>(
-            <a key={x} href={`#${x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}`} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}>{x}</a>
+          {['Fonctionnalités','Tarifs','Témoignages','Blog'].map(x=>(
+            <a key={x} href={x === 'Blog' ? '/blog' : `#${x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}`} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}>{x}</a>
           ))}
           <button onClick={()=>navigate('/login')} className="bs" style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit' }}>Connexion</button>
           <button onClick={()=>{trackClick('nav_cta');navigate('/signup')}} className="bp" style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit' }}>Essai gratuit</button>
@@ -309,7 +309,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Ressources</div>
-                {['Blog','Guide de démarrage','FAQ','Contact'].map(x=><a key={x} href="#" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>)}
+                {['Blog','Guide de démarrage','FAQ','Contact'].map(x=><a key={x} href={x === 'Blog' ? '/blog' : '#'} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>)}
               </div>
               <div>
                 <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Légal</div>
