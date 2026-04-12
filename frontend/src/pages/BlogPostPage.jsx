@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LandingLayout from '../components/LandingLayout';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
@@ -78,7 +79,7 @@ export default function BlogPostPage() {
   };
 
   return (
-    <>
+    <LandingLayout>
       <Helmet>
         <title>{metaTitle}</title>
         <meta name="description" content={metaDesc} />
