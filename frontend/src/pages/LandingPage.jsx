@@ -41,6 +41,7 @@ export default function LandingPage() {
   const mobile = useMobile();
   const [scrollY, setScrollY] = useState(0);
   const [featOpen, setFeatOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     // Analytics tracker
@@ -118,7 +119,13 @@ export default function LandingPage() {
 
       {/* ═══ NAV ═══ */}
       <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding: mobile ? '14px 20px' : '16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',backdropFilter:'blur(20px)',borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',transition:'all .3s' }}>
-        <Logo size={36}/>
+        <Logo size={mobile ? 30 : 36}/>
+        {mobile ? (
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5 }} aria-label="Menu">
+            <span style={{ display:'block',width:22,height:2,background:menuOpen?'transparent':'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(45deg) translate(5px,5px)':'none' }}/>
+            <span style={{ display:'block',width:22,height:2,background:'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(-45deg) translate(0,-1px)':'none' }}/>
+          </button>
+        ) : (
         <div style={{ display:'flex',alignItems:'center',gap:32 }}>
           {/* Fonctionnalités dropdown */}
           <div style={{ position:'relative' }}
@@ -157,7 +164,37 @@ export default function LandingPage() {
           <button onClick={()=>navigate('/login')} className="bs" style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit' }}>Connexion</button>
           <button onClick={()=>{trackClick('nav_cta');navigate('/signup')}} className="bp" style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit' }}>Essai gratuit</button>
         </div>
-      </nav>
+        )}
+      
+      {/* Mobile menu overlay */}
+      {mobile && menuOpen && (
+        <div style={{ position:'fixed',top:58,left:0,right:0,bottom:0,zIndex:99,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
+            {[
+              ['/fonctionnalites/pipeline','Pipeline de leads','Du referral au closing'],
+              ['/fonctionnalites/commissions','Commissions automatiques','Calcul et paiement sans friction'],
+              ['/fonctionnalites/analytics','Analytics & KPIs','Pilotez avec des données réelles'],
+              ['/fonctionnalites/personnalisation','Marque blanche','Votre image, votre domaine'],
+              ['/fonctionnalites/tracking','Liens de tracking','Attribution parfaite'],
+            ].map(([href,label,desc]) => (
+              <a key={href} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none' }}>
+                <div style={{ fontWeight:600,fontSize:15,color:'#0f172a' }}>{label}</div>
+                <div style={{ fontSize:13,color:'#64748b',marginTop:2 }}>{desc}</div>
+              </a>
+            ))}
+          </div>
+          <div style={{ display:'flex',flexDirection:'column',gap:2,marginTop:16 }}>
+            {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([l,h]) => (
+              <a key={l} href={h} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:'#0f172a',textDecoration:'none' }}>{l}</a>
+            ))}
+          </div>
+          <div style={{ display:'flex',flexDirection:'column',gap:12,marginTop:24 }}>
+            <button onClick={()=>{setMenuOpen(false);navigate('/login');}} style={{ padding:'14px',borderRadius:12,border:'2px solid #0f172a',background:'transparent',color:'#0f172a',fontWeight:600,fontSize:16,cursor:'pointer',width:'100%' }}>Connexion</button>
+            <button onClick={()=>{setMenuOpen(false);navigate('/signup');}} style={{ padding:'14px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#059669,#10b981)',color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',width:'100%' }}>Essai gratuit</button>
+          </div>
+        </div>
+      )}</nav>
 
       {/* ═══ HERO ═══ */}
       <section style={{ minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'140px 48px 80px',position:'relative',background:`radial-gradient(ellipse 80% 60% at 50% -20%,${C.p}12,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,${C.a}08,transparent),${C.bg}` }}>
@@ -170,7 +207,7 @@ export default function LandingPage() {
             Gérez vos apporteurs d’affaires simplement
           </div>
 
-          <h1 className="fu fu2" style={{ fontSize:68,fontWeight:900,lineHeight:1.05,letterSpacing:-3,margin:'0 0 24px',color:C.s }}>
+          <h1 className="fu fu2" style={{ fontSize: mobile ? 32 : 68,fontWeight:900,lineHeight:1.1,letterSpacing: mobile ? -1 : -3,wordBreak:'break-word',overflowWrap:'break-word',margin:'0 0 24px',color:C.s }}>
             Transformez vos<br/>
             <span style={{ background:g(C.p,C.pl),WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent' }}>recommandations en revenus</span>
           </h1>
