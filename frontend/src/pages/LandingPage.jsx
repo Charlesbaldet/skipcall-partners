@@ -168,7 +168,7 @@ export default function LandingPage() {
       
       {/* Mobile menu overlay */}
       {mobile && menuOpen && (
-        <div style={{ position:'fixed',top:58,left:0,right:0,bottom:0,zIndex:99,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
+        <div style={{ position:'fixed',top:58,left:0,right:0,bottom:0,zIndex:200,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
           <div style={{ marginBottom:16 }}>
             <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
             {[
@@ -217,11 +217,11 @@ export default function LandingPage() {
             Automatisez le suivi des referrals, les commissions et la performance de votre réseau.
           </p>
 
-          <div className="fu fu4" style={{ display:'flex',gap:16,justifyContent:'center' }}>
-            <button onClick={()=>{trackClick('hero_cta');navigate('/signup')}} className="bp" style={{ padding:'16px 36px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:17,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}30` }}>
+          <div className="fu fu4" style={{ display:'flex',gap: mobile ? 10 : 16,justifyContent:'center',flexDirection: mobile ? 'column' : 'row' }}>
+            <button onClick={()=>{trackClick('hero_cta');navigate('/signup')}} className="bp" style={{ padding: mobile ? '13px 0' : '16px 36px',width: mobile ? '100%' : 'auto',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:17,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}30` }}>
               Créer mon espace gratuitement →
             </button>
-            <button onClick={()=>document.getElementById('fonctionnalites')?.scrollIntoView({behavior:'smooth'})} className="bs" style={{ padding:'16px 36px',borderRadius:14,border:'2px solid #e2e8f0',background:'#fff',color:C.s,fontWeight:600,fontSize:17,cursor:'pointer',fontFamily:'inherit' }}>
+            <button onClick={()=>document.getElementById('fonctionnalites')?.scrollIntoView({behavior:'smooth'})} className="bs" style={{ padding: mobile ? '13px 0' : '16px 36px',width: mobile ? '100%' : 'auto',borderRadius:14,border:'2px solid #e2e8f0',background:'#fff',color:C.s,fontWeight:600,fontSize:17,cursor:'pointer',fontFamily:'inherit' }}>
               Découvrir
             </button>
           </div>
@@ -364,7 +364,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:650,margin:'0 auto',textAlign:'center',position:'relative',zIndex:1 }}>
           <h2 style={{ fontSize:44,fontWeight:800,color:'#fff',letterSpacing:-2,margin:'0 0 16px' }}>Prêt à structurer votre<br/>réseau d’apporteurs ?</h2>
           <p style={{ color:'#94a3b8',fontSize:17,lineHeight:1.6,marginBottom:36,fontFamily: 'inherit' }}>Rejoignez les entreprises qui utilisent RefBoost pour transformer leurs recommandations en revenus récurrents.</p>
-          <div style={{ display:'flex',gap:12,justifyContent:'center',maxWidth:460,margin:'0 auto' }}>
+          <div style={{ display:'flex',gap:12,justifyContent:'center',maxWidth:460,margin:'0 auto' ,flexDirection: mobile ? 'column' : 'row' }}>
             <input type="email" placeholder="votre@email.com" value={email} onChange={e=>setEmail(e.target.value)} style={{ flex:1,padding:'16px 20px',borderRadius:12,border:'2px solid rgba(255,255,255,.1)',background:'rgba(255,255,255,.06)',color:'#fff',fontSize:15,fontFamily:'inherit',outline:'none' }}/>
             <button onClick={()=>{trackClick('footer_cta');navigate('/signup'+(email?'?email='+encodeURIComponent(email):''))}} className="bp" style={{ padding:'16px 28px',borderRadius:12,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:15,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',boxShadow:`0 8px 30px ${C.p}30` }}>
               Démarrer →
