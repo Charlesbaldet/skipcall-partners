@@ -25,6 +25,11 @@ import ProgrammePage from './pages/ProgrammePage.jsx';
 import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
 import BlogPage from './pages/BlogPage.jsx';
 import BlogPostPage from './pages/BlogPostPage.jsx';
+import FeaturePipelinePage from './pages/features/FeaturePipelinePage';
+import FeatureCommissionsPage from './pages/features/FeatureCommissionsPage';
+import FeatureAnalyticsPage from './pages/features/FeatureAnalyticsPage';
+import FeaturePersonnalisationPage from './pages/features/FeaturePersonnalisationPage';
+import FeatureTrackingPage from './pages/features/FeatureTrackingPage';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -69,7 +74,12 @@ function AppRoutes() {
       <Route path="/partner/referrals" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerMyReferrals /></Layout></ProtectedRoute>} />
       <Route path="/partner/submit" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerSubmitPage /></Layout></ProtectedRoute>} />
       <Route path="/partner/payments" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerPaymentsPage /></Layout></ProtectedRoute>} />
-    </Routes>
+              <Route path="/fonctionnalites/pipeline" element={<FeaturePipelinePage />} />
+          <Route path="/fonctionnalites/commissions" element={<FeatureCommissionsPage />} />
+          <Route path="/fonctionnalites/analytics" element={<FeatureAnalyticsPage />} />
+          <Route path="/fonctionnalites/personnalisation" element={<FeaturePersonnalisationPage />} />
+          <Route path="/fonctionnalites/tracking" element={<FeatureTrackingPage />} />
+          </Routes>
   );
 }
 
