@@ -1,111 +1,113 @@
-import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import LandingLayout from '../../components/LandingLayout';
+import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
-const C = { p: '#0ea5e9', s: '#0f172a', m: '#64748b' };
-const g = `linear-gradient(135deg, #0ea5e9, #0ea5e9cc)`;
+const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
 
-const MOCKUP = "<svg viewBox=\"0 0 600 340\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;border-radius:12px;\">\n  <rect width=\"600\" height=\"340\" fill=\"#f8fafc\" rx=\"12\"/>\n  <!-- Left panel - editor -->\n  <rect x=\"0\" y=\"0\" width=\"220\" height=\"340\" fill=\"#0f172a\" rx=\"12\"/>\n  <rect x=\"220\" y=\"0\" width=\"380\" height=\"340\" fill=\"#f8fafc\"/>\n  <rect x=\"0\" y=\"0\" width=\"220\" height=\"340\" fill=\"#1e293b\" rx=\"12\"/>\n  <rect x=\"0\" y=\"20\" width=\"220\" height=\"320\" fill=\"#1e293b\"/>\n  <text x=\"16\" y=\"30\" font-family=\"system-ui\" font-size=\"11\" font-weight=\"700\" fill=\"#94a3b8\">PERSONNALISATION</text>\n  <!-- Color pickers -->\n  <text x=\"16\" y=\"56\" font-family=\"system-ui\" font-size=\"10\" fill=\"#64748b\">Couleur principale</text>\n  <rect x=\"16\" y=\"62\" width=\"185\" height=\"28\" fill=\"#0f172a\" rx=\"6\"/>\n  <rect x=\"22\" y=\"67\" width=\"18\" height=\"18\" fill=\"#0ea5e9\" rx=\"4\"/>\n  <text x=\"46\" y=\"80\" font-family=\"system-ui\" font-size=\"9\" fill=\"#94a3b8\">#0ea5e9</text>\n  <text x=\"16\" y=\"106\" font-family=\"system-ui\" font-size=\"10\" fill=\"#64748b\">Logo</text>\n  <rect x=\"16\" y=\"112\" width=\"185\" height=\"40\" fill=\"#0f172a\" rx=\"6\" stroke=\"#334155\" stroke-width=\"1\" stroke-dasharray=\"4\"/>\n  <text x=\"108\" y=\"136\" font-family=\"system-ui\" font-size=\"9\" fill=\"#64748b\" text-anchor=\"middle\">Glisser ou parcourir</text>\n  <text x=\"16\" y=\"170\" font-family=\"system-ui\" font-size=\"10\" fill=\"#64748b\">Domaine</text>\n  <rect x=\"16\" y=\"176\" width=\"185\" height=\"28\" fill=\"#0f172a\" rx=\"6\"/>\n  <text x=\"26\" y=\"194\" font-family=\"system-ui\" font-size=\"9\" fill=\"#94a3b8\">partners.votreentreprise.com</text>\n  <!-- Preview pane -->\n  <rect x=\"232\" y=\"16\" width=\"348\" height=\"308\" fill=\"#fff\" rx=\"10\" filter=\"url(#sh)\"/>\n  <defs><filter id=\"sh\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"8\" flood-opacity=\"0.08\"/></filter></defs>\n  <rect x=\"232\" y=\"16\" width=\"348\" height=\"44\" fill=\"#0ea5e9\" rx=\"10\"/>\n  <rect x=\"232\" y=\"44\" width=\"348\" height=\"16\" fill=\"#0ea5e9\"/>\n  <circle cx=\"260\" cy=\"38\" r=\"14\" fill=\"rgba(255,255,255,0.15)\"/>\n  <text x=\"260\" y=\"43\" font-family=\"system-ui\" font-size=\"12\" fill=\"white\" text-anchor=\"middle\" font-weight=\"700\">M</text>\n  <text x=\"285\" y=\"43\" font-family=\"system-ui\" font-size=\"13\" fill=\"white\" font-weight=\"700\">MonEntreprise</text>\n  <text x=\"244\" y=\"82\" font-family=\"system-ui\" font-size=\"9\" fill=\"#64748b\">Tableau de bord</text>\n  <text x=\"244\" y=\"98\" font-family=\"system-ui\" font-size=\"18\" font-weight=\"800\" fill=\"#0f172a\">Bonjour, Jean !</text>\n  \n  <rect x=\"244\" y=\"112\" width=\"108\" height=\"52\" fill=\"#f8fafc\" rx=\"8\"/>\n  <text x=\"254\" y=\"130\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Mes leads</text>\n  <text x=\"254\" y=\"152\" font-family=\"system-ui\" font-size=\"16\" font-weight=\"800\" fill=\"#0ea5e9\">12</text>\n  \n  <rect x=\"360\" y=\"112\" width=\"108\" height=\"52\" fill=\"#f8fafc\" rx=\"8\"/>\n  <text x=\"370\" y=\"130\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Commissions</text>\n  <text x=\"370\" y=\"152\" font-family=\"system-ui\" font-size=\"16\" font-weight=\"800\" fill=\"#0ea5e9\">3 400 €</text>\n  \n  <rect x=\"476\" y=\"112\" width=\"108\" height=\"52\" fill=\"#f8fafc\" rx=\"8\"/>\n  <text x=\"486\" y=\"130\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Taux conv.</text>\n  <text x=\"486\" y=\"152\" font-family=\"system-ui\" font-size=\"16\" font-weight=\"800\" fill=\"#0ea5e9\">34%</text>\n  \n</svg>";
+  <rect width="600" height="380" fill="#0f172a" rx="0"/>
+  <rect x="0" y="0" width="600" height="44" fill="#1e293b"/>
+  <circle cx="18" cy="22" r="6" fill="#ef4444"/><circle cx="36" cy="22" r="6" fill="#f59e0b"/><circle cx="54" cy="22" r="6" fill="#22c55e"/>
+  <text x="300" y="27" font-family="system-ui" font-size="11" fill="#475569" text-anchor="middle">Mon espace partenaires — Acme Corp</text>
+<rect x="0" y="44" width="140" height="336" fill="#111827"/>
+<rect x="12" y="56" width="116" height="36" fill="#1e3a2f" rx="8"/>
+<circle cx="28" cy="74" r="8" fill="#059669"/>
+<text x="42" y="78" font-family="system-ui" font-size="10" font-weight="700" fill="#4ade80">Dashboard</text>
 
-const BENEFITS = [{"icon":"🏷️","title":"White-label complet","text":"Votre logo, vos couleurs, votre domaine. Les emails envoyés à vos partenaires viennent de votre adresse, avec votre identité."},{"icon":"🌐","title":"Domaine personnalisé","text":"partners.votreentreprise.com plutôt que refboost.io. Un détail qui change la perception de votre programme."},{"icon":"🎨","title":"Thème sur mesure","text":"Couleur principale, couleur d'accentuation, logo en haute définition. L'interface s'adapte à votre charte graphique en temps réel."}];
+  <rect x="12" y="100" width="116" height="36" fill="#0f172a" rx="8"/>
+  <text x="42" y="122" font-family="system-ui" font-size="10" fill="#64748b">Pipeline</text>
+
+  <rect x="12" y="144" width="116" height="36" fill="#0f172a" rx="8"/>
+  <text x="42" y="166" font-family="system-ui" font-size="10" fill="#64748b">Commissions</text>
+
+  <rect x="12" y="188" width="116" height="36" fill="#0f172a" rx="8"/>
+  <text x="42" y="210" font-family="system-ui" font-size="10" fill="#64748b">Partenaires</text>
+
+  <rect x="12" y="232" width="116" height="36" fill="#0f172a" rx="8"/>
+  <text x="42" y="254" font-family="system-ui" font-size="10" fill="#64748b">Messagerie</text>
+
+<rect x="0" y="320" width="140" height="60" fill="#0d1117"/>
+<circle cx="24" cy="350" r="10" fill="#059669"/>
+<text x="40" y="354" font-family="system-ui" font-size="9" fill="#e2e8f0">Sophie Martin</text>
+<text x="40" y="365" font-family="system-ui" font-size="8" fill="#64748b">Partenaire Gold</text>
+<rect x="148" y="56" width="440" height="72" fill="#1e293b" rx="8"/>
+<rect x="160" y="68" width="36" height="36" fill="#059669" rx="8"/>
+<text x="170" y="90" font-family="system-ui" font-size="14" font-weight="800" fill="#fff">A</text>
+<text x="204" y="82" font-family="system-ui" font-size="13" font-weight="800" fill="#e2e8f0">Acme Corp</text>
+<text x="204" y="97" font-family="system-ui" font-size="10" fill="#64748b">Votre programme partenaires premium</text>
+<text x="540" y="82" font-family="system-ui" font-size="9" fill="#059669" text-anchor="end">Partenaire Gold</text>
+
+  <rect x="148" y="138" width="135" height="60" fill="#1e293b" rx="8"/>
+  <text x="158" y="157" font-family="system-ui" font-size="8" fill="#64748b">Leads soumis</text>
+  <text x="158" y="180" font-family="system-ui" font-size="16" font-weight="800" fill="#fff">12</text>
+  <text x="158" y="193" font-family="system-ui" font-size="8" fill="#059669">+3 ce mois</text>
+
+  <rect x="295" y="138" width="135" height="60" fill="#1e293b" rx="8"/>
+  <text x="305" y="157" font-family="system-ui" font-size="8" fill="#64748b">En cours</text>
+  <text x="305" y="180" font-family="system-ui" font-size="16" font-weight="800" fill="#fff">7</text>
+  <text x="305" y="193" font-family="system-ui" font-size="8" fill="#059669">2 relances</text>
+
+  <rect x="442" y="138" width="135" height="60" fill="#1e293b" rx="8"/>
+  <text x="452" y="157" font-family="system-ui" font-size="8" fill="#64748b">Commissions</text>
+  <text x="452" y="180" font-family="system-ui" font-size="16" font-weight="800" fill="#fff">2 840 €</text>
+  <text x="452" y="193" font-family="system-ui" font-size="8" fill="#059669">Mois en cours</text>
+
+<rect x="148" y="210" width="440" height="120" fill="#1e293b" rx="8"/>
+<text x="160" y="228" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Mes derniers leads</text>
+
+  <rect x="148" y="240" width="440" height="24" fill="#0f172a" rx="0"/>
+  <text x="160" y="256" font-family="system-ui" font-size="9" fill="#e2e8f0">DataFlow SAS</text>
+  <text x="380" y="256" font-family="system-ui" font-size="9" fill="#94a3b8">En cours</text>
+  <text x="560" y="256" font-family="system-ui" font-size="9" font-weight="700" fill="#fff" text-anchor="end">12 000 €</text>
+
+  <rect x="148" y="268" width="440" height="24" fill="#1e293b" rx="0"/>
+  <text x="160" y="284" font-family="system-ui" font-size="9" fill="#e2e8f0">Proxim Inc</text>
+  <text x="380" y="284" font-family="system-ui" font-size="9" fill="#f59e0b">Qualifié</text>
+  <text x="560" y="284" font-family="system-ui" font-size="9" font-weight="700" fill="#fff" text-anchor="end">8 500 €</text>
+
+  <rect x="148" y="296" width="440" height="24" fill="#0f172a" rx="0"/>
+  <text x="160" y="312" font-family="system-ui" font-size="9" fill="#e2e8f0">TechVision</text>
+  <text x="380" y="312" font-family="system-ui" font-size="9" fill="#4ade80">Signé</text>
+  <text x="560" y="312" font-family="system-ui" font-size="9" font-weight="700" fill="#fff" text-anchor="end">22 000 €</text>
+
+<rect x="0" y="330" width="600" height="50" fill="#0d1117"/>
+<text x="300" y="360" font-family="system-ui" font-size="9" fill="#475569" text-anchor="middle">acme-partenaires.com · Powered by RefBoost</text>
+</svg>`;
+const ILLUS0 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Personnalisation de l'interface</text><rect x="24" y="50" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="72" font-family="system-ui" font-size="10" fill="#e2e8f0">Couleur principale</text><rect x="300" y="58" width="24" height="24" rx="6" fill="#059669"/><rect x="332" y="58" width="24" height="24" rx="6" fill="#3b82f6"/><rect x="364" y="58" width="24" height="24" rx="6" fill="#f59e0b"/><rect x="396" y="58" width="24" height="24" rx="6" fill="#dc2626"/><rect x="24" y="92" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="114" font-family="system-ui" font-size="10" fill="#e2e8f0">Logo</text><rect x="300" y="100" width="148" height="20" fill="#1e293b" rx="4"/><text x="374" y="114" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Téléverser</text><rect x="24" y="134" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="156" font-family="system-ui" font-size="10" fill="#e2e8f0">Domaine personnalisé</text><text x="300" y="156" font-family="system-ui" font-size="9" fill="#3b82f6">partenaires.acme.com</text><rect x="24" y="188" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="210" font-family="system-ui" font-size="10" fill="#e2e8f0">Nom de l'espace</text><text x="300" y="210" font-family="system-ui" font-size="9" fill="#e2e8f0">Programme Acme Partners</text></svg>`;
+const ILLUS1 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Espace partenaire — Acme Corp</text><circle cx="36" cy="72" r="16" fill="#059669"/><text x="36" y="77" font-family="system-ui" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">A</text><text x="60" y="68" font-family="system-ui" font-size="13" font-weight="800" fill="#fff">Acme Corp</text><text x="60" y="84" font-family="system-ui" font-size="9" fill="#64748b">Programme partenaires premium</text><rect x="24" y="100" width="140" height="56" fill="#052e16" rx="8"/><text x="36" y="120" font-family="system-ui" font-size="8" fill="#4ade80">Vos commissions</text><text x="36" y="144" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">2 840€</text><rect x="172" y="100" width="140" height="56" fill="#0f172a" rx="8"/><text x="184" y="120" font-family="system-ui" font-size="8" fill="#64748b">Leads actifs</text><text x="184" y="144" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">7</text><rect x="320" y="100" width="148" height="56" fill="#0f172a" rx="8"/><text x="332" y="120" font-family="system-ui" font-size="8" fill="#64748b">Taux conversion</text><text x="332" y="144" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">34%</text></svg>`;
+const ILLUS2 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Formulaire public de soumission</text><text x="24" y="60" font-family="system-ui" font-size="9" fill="#64748b">partenaires.acme.com/soumettre</text><rect x="24" y="74" width="432" height="32" fill="#0f172a" rx="6"/><text x="36" y="94" font-family="system-ui" font-size="9" fill="#94a3b8">Nom de la société</text><rect x="24" y="112" width="432" height="32" fill="#0f172a" rx="6"/><text x="36" y="132" font-family="system-ui" font-size="9" fill="#94a3b8">Contact décideur</text><rect x="24" y="150" width="432" height="32" fill="#0f172a" rx="6"/><text x="36" y="170" font-family="system-ui" font-size="9" fill="#94a3b8">Contexte et besoin</text><rect x="24" y="198" width="200" height="36" fill="#059669" rx="8"/><text x="124" y="220" font-family="system-ui" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">Soumettre mon lead</text></svg>`;
 
 export default function FeaturePersonnalisationPage() {
-  const navigate = useNavigate();
   return (
-    <LandingLayout>
-      <Helmet>
-        <title>Votre marque, votre plateforme — RefBoost</title>
-        <meta name="description" content="Logo, couleurs, domaine personnalisé — en 5 minutes, RefBoost devient votre plateforme partenaires maison. Vos apporteurs ne voient jamais la marque RefBoo" />
-        <link rel="canonical" href="https://refboost.io/fonctionnalites/personnalisation" />
-      </Helmet>
-
-      {/* Hero */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '80px 48px 64px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 50, background: `${C.p}20`, border: `1px solid ${C.p}40`, fontSize: 13, fontWeight: 700, color: C.p, marginBottom: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
-          🎨 Fonctionnalité
-        </div>
-        <h1 style={{ margin: '0 0 20px', fontSize: 48, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -2 }}>
-          Votre marque, votre plateforme
-        </h1>
-        <p style={{ margin: '0 auto 36px', fontSize: 20, color: '#94a3b8', maxWidth: 600, lineHeight: 1.6 }}>
-          Vos partenaires travaillent dans votre univers, pas dans le nôtre
-        </p>
-        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/signup')} style={{ padding: '14px 32px', borderRadius: 12, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}40` }}>
-            Essayer gratuitement →
-          </button>
-          <button onClick={() => navigate('/login')} style={{ padding: '14px 32px', borderRadius: 12, border: '2px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>
-            Se connecter
-          </button>
-        </div>
-      </section>
-
-      {/* Mockup */}
-      <section style={{ background: '#f8fafc', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.15)', border: '1px solid #e2e8f0' }}
-            dangerouslySetInnerHTML={{ __html: MOCKUP }} />
-          <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#94a3b8' }}>
-            Aperçu de l'interface RefBoost — Votre marque, votre plateforme
-          </p>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section style={{ background: '#fff', padding: '80px 48px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>Pourquoi ça change tout</p>
-            <h2 style={{ margin: 0, fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>3 raisons d'adopter cette fonctionnalité</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 28 }}>
-            {BENEFITS.map((b, i) => (
-              <div key={i} style={{ padding: 32, borderRadius: 20, background: '#f8fafc', border: '1px solid #f1f5f9', transition: 'all .2s' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 20px 60px ${C.p}15`; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
-                <div style={{ fontSize: 36, marginBottom: 16 }}>{b.icon}</div>
-                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: C.s }}>{b.title}</h3>
-                <p style={{ margin: 0, fontSize: 15, color: C.m, lineHeight: 1.7 }}>{b.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quote */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.4, color: C.p }}>"</div>
-          <p style={{ margin: '0 0 24px', fontSize: 22, color: '#fff', lineHeight: 1.6, fontStyle: 'italic' }}>
-            Nos apporteurs pensent qu'on a une plateforme développée en interne. C'est exactement l'image qu'on voulait donner.
-          </p>
-          <p style={{ margin: 0, fontSize: 14, color: '#64748b', fontWeight: 600 }}>Marketing Director, PME industrielle</p>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section style={{ background: '#f8fafc', padding: '80px 48px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          <h2 style={{ margin: '0 0 16px', fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>
-            Prêt à tester ?
-          </h2>
-          <p style={{ margin: '0 0 36px', fontSize: 18, color: C.m, lineHeight: 1.6 }}>
-            14 jours gratuits, sans carte bancaire. Configurez votre programme en 5 minutes.
-          </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/signup')} style={{ padding: '16px 36px', borderRadius: 14, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}30` }}>
-              Créer mon compte gratuit →
-            </button>
-          </div>
-          <p style={{ marginTop: 16, fontSize: 13, color: '#94a3b8' }}>✓ Sans engagement · ✓ 14 jours gratuits · ✓ Support inclus</p>
-          <div style={{ marginTop: 24, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/fonctionnalites/pipeline" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🔄 Pipeline de leads</a>
-            <a href="/fonctionnalites/commissions" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>💰 Commissions automatiques</a>
-            <a href="/fonctionnalites/analytics" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>📊 Analytics & KPIs</a>
-            <a href="/fonctionnalites/tracking" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🔗 Liens de tracking uniques</a>
-          </div>
-        </div>
-      </section>
-    </LandingLayout>
+    <FeaturePageTemplate
+      helmet={{ title: 'Marque blanche — RefBoost', description: 'Logo, couleurs, domaine personnalisé : vos partenaires travaillent dans votre univers, pas celui de RefBoost. Une expérience 100% à votre image.', canonical: 'https://refboost.io/fonctionnalites/personnalisation' }}
+      accentColor="#0ea5e9"
+      label="Fonctionnalité"
+      title="Votre marque, votre plateforme"
+      subtitle="Logo, couleurs, domaine sur-mesure. Vos partenaires n'ont aucune raison de savoir que vous utilisez RefBoost."
+      mockupSvg={MOCKUP}
+      benefits={[
+        {
+          stat: '2min', statLabel: 'pour configurer entièrement l'identité visuelle de votre espace',
+          title: 'Identité visuelle complète',
+          text: 'Uploadez votre logo, choisissez vos couleurs, nommez votre espace. En moins de 2 minutes, la plateforme est à votre image. Vos partenaires verront votre marque, pas RefBoost.',
+          points: ['Logo haute résolution sur toutes les pages et emails', 'Palette de couleurs primaire, secondaire et accent entièrement personnalisable', 'Nom de l'espace configurable (ex : "Programme Acme Partners")', 'Aperçu en temps réel avant validation des changements'],
+          illustration: ILLUS0
+        },
+        {
+          stat: '100%', statLabel: 'de vos partenaires restent sur votre domaine sans jamais voir RefBoost',
+          title: 'Domaine personnalisé inclus',
+          text: 'partenaires.votreentreprise.com au lieu de votreentreprise.refboost.io. Un sous-domaine sur votre domaine existant, configuré en 10 minutes avec notre guide pas à pas.',
+          points: ['Sous-domaine de votre choix configuré en quelques minutes', 'HTTPS automatique, certificat SSL inclus et renouvelé automatiquement', 'Emails envoyés depuis votre domaine (@votreentreprise.com)', 'Compatible avec tous les enregistrements DNS'],
+          illustration: ILLUS1
+        },
+        {
+          stat: '3x', statLabel: 'plus de taux de complétion sur les formulaires à votre marque vs formulaires génériques',
+          title: 'Formulaire de soumission à votre image',
+          text: 'Le formulaire public que remplissent les prospects recommandés par vos apporteurs est entièrement à vos couleurs. Votre image de marque est préservée de bout en bout.',
+          points: ['Design du formulaire adapté à votre charte graphique', 'URL personnalisée partageable par vos apporteurs', 'Champs configurables selon vos besoins de qualification', 'Notification instantanée à votre équipe à chaque soumission'],
+          illustration: ILLUS2
+        }
+      ]}
+      quote={{ text: 'Nos apporteurs travaillent dans notre univers. Ils n'ont jamais su que c'était RefBoost derrière. C'est exactement ce qu'on cherchait.', author: 'Pierre L., CRO — SaaS Fintech' }}
+      currentHref="/fonctionnalites/personnalisation"
+    />
   );
 }
