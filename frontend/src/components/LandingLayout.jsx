@@ -32,12 +32,25 @@ export function LandingNav() {
     <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
       <a href="/" style={{ textDecoration:'none' }}><Logo size={36}/></a>
       <div style={{ display:'flex',alignItems:'center',gap:28 }}>
-        {[['Fonctionnalités','/#fonctionnalites'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
+        {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
           <a key={label} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,transition:'color .2s' }}
             onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>
             {label}
           </a>
         ))}
+        {/* Fonctionnalités dropdown */}
+        <div style={{ position:'relative' }} onMouseEnter={e=>e.currentTarget.querySelector('[data-dd]').style.display='block'} onMouseLeave={e=>e.currentTarget.querySelector('[data-dd]').style.display='none'}>
+          <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default' }}>Fonctionnalités ▾</span>
+          <div data-dd style={{ display:'none',position:'absolute',top:'100%',left:-12,background:'#fff',borderRadius:12,boxShadow:'0 8px 32px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:'8px',minWidth:240,marginTop:8,zIndex:200 }}>
+            {[['🔄','Pipeline de leads','/fonctionnalites/pipeline'],['💰','Commissions auto','/fonctionnalites/commissions'],['📊','Analytics & KPIs','/fonctionnalites/analytics'],['🎨','Personnalisation','/fonctionnalites/personnalisation'],['🔗','Liens de tracking','/fonctionnalites/tracking']].map(([icon,label,href])=>(
+              <a key={href} href={href} style={{ display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:8,color:'#0f172a',textDecoration:'none',fontSize:14,fontWeight:500 }}
+                onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <span style={{ fontSize:18 }}>{icon}</span>
+                {label}
+              </a>
+            ))}
+          </div>
+        </div>
         <button onClick={()=>navigate('/login')} style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit',transition:'all .2s' }}
           onMouseEnter={e=>{e.currentTarget.style.background=C.s;e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=C.s;}}>
           Connexion
@@ -61,8 +74,8 @@ export function LandingFooter() {
           </div>
           <div style={{ display:'flex',gap:48 }}>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Produit</div>
-              {['Fonctionnalités','Tarifs','Sécurité','API'].map(x=><a key={x} href="#" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>)}
+              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
+              {[['🔄 Pipeline','/fonctionnalites/pipeline'],['💰 Commissions','/fonctionnalites/commissions'],['📊 Analytics','/fonctionnalites/analytics'],['🎨 Personnalisation','/fonctionnalites/personnalisation'],['🔗 Tracking','/fonctionnalites/tracking']].map(([x,href])=><a key={x} href={href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>)}
             </div>
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Ressources</div>
