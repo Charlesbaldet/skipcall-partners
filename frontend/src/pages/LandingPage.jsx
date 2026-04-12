@@ -72,14 +72,14 @@ export default function LandingPage() {
   ];
 
   const testimonials = [
-    { n:'Marie Dupont', r:'Directrice Commerciale', c:'TechFlow', t:"On a multiplié par 3 notre canal apporteurs d'affaires en 4 mois. L'outil est intuitif et nos partenaires l'adorent.", a:'M' },
+    { n:'Marie Dupont', r:'Directrice Commerciale', c:'TechFlow', t:"On a multiplié par 3 notre canal apporteurs d’affaires en 4 mois. L’outil est intuitif et nos partenaires l’adorent.", a:'M' },
     { n:'Thomas Chen', r:'CEO', c:'ScaleUp Agency', t:"RefBoost nous a permis de structurer notre programme de recommandation. On ne revient plus en arrière.", a:'T' },
     { n:'Sophie Martin', r:'Head of Partnerships', c:'DataViz Pro', t:"Fini les tableurs pour tracker les commissions. Tout est automatisé, transparent, et nos partenaires sont ravis.", a:'S' },
   ];
 
   const plans = [
-    { n:'Starter', p:'99', d:'Idéal pour lancer votre programme', f:["Jusqu'à 20 apporteurs d'affaires",'100 recommandations/mois','Tableau de bord & analytics','Liens de tracking','Support email'], c:false },
-    { n:'Growth', p:'249', d:'Pour accélérer votre croissance', f:["Apporteurs d'affaires illimités",'Recommandations illimitées','Personnalisation complète','API & intégrations CRM','Support prioritaire','Multi-utilisateurs'], c:true },
+    { n:'Starter', p:'99', d:'Idéal pour lancer votre programme', f:["Jusqu’à 20 apporteurs d’affaires",'100 recommandations/mois','Tableau de bord & analytics','Liens de tracking','Support email'], c:false },
+    { n:'Growth', p:'249', d:'Pour accélérer votre croissance', f:["Apporteurs d’affaires illimités",'Recommandations illimitées','Personnalisation complète','API & intégrations CRM','Support prioritaire','Multi-utilisateurs'], c:true },
     { n:'Enterprise', p:'0', d:'Pour les grandes organisations', f:['Tout Growth +','Multi-espaces','SSO / SAML','SLA garanti','Account manager dédié','Audit & conformité'], c:false },
   ];
 
@@ -124,7 +124,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:900,textAlign:'center',position:'relative',zIndex:1 }}>
           <div className="fu fu1" style={{ display:'inline-flex',alignItems:'center',gap:8,padding:'6px 16px',borderRadius:50,background:`${C.p}10`,border:`1px solid ${C.p}20`,fontSize:13,fontWeight:600,color:C.p,marginBottom:28 }}>
             <span style={{ width:6,height:6,borderRadius:'50%',background:C.p }}/>
-            Gérez vos apporteurs d'affaires simplement
+            Gérez vos apporteurs d’affaires simplement
           </div>
 
           <h1 className="fu fu2" style={{ fontSize:68,fontWeight:900,lineHeight:1.05,letterSpacing:-3,margin:'0 0 24px',color:C.s }}>
@@ -133,7 +133,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="fu fu3" style={{ fontSize:20,color:C.m,lineHeight:1.6,maxWidth:620,margin:'0 auto 40px',fontFamily: 'inherit' }}>
-            RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires.
+            RefBoost est la plateforme SaaS de gestion de programme partenaires et d’apporteurs d’affaires.
             Automatisez le suivi des referrals, les commissions et la performance de votre réseau.
           </p>
 
@@ -163,7 +163,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:1100,margin:'0 auto' }}>
           <div style={s.center}>
             <div style={s.label}>Fonctionnalités</div>
-            <h2 style={s.h2}>Tout pour gérer votre<br/><span style={{ color:C.p }}>programme d'apporteurs d'affaires</span></h2>
+            <h2 style={s.h2}>Tout pour gérer votre<br/><span style={{ color:C.p }}>programme d’apporteurs d’affaires</span></h2>
             <p style={{ color:C.m,fontSize:16,marginTop:16,maxWidth:600,margin:'16px auto 0',fontFamily: 'inherit' }}>De la première recommandation au paiement de la commission, RefBoost automatise chaque étape.</p>
           </div>
           <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
@@ -204,7 +204,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:1100,margin:'0 auto' }}>
           <div style={s.center}>
             <div style={s.label}>Témoignages</div>
-            <h2 style={s.h2}>Ils gèrent leurs apporteurs d'affaires avec RefBoost</h2>
+            <h2 style={s.h2}>Ils gèrent leurs apporteurs d’affaires avec RefBoost</h2>
           </div>
           <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
             {testimonials.map((t,i)=>(
@@ -230,7 +230,7 @@ export default function LandingPage() {
           <div style={s.center}>
             <div style={s.label}>Tarifs</div>
             <h2 style={s.h2}>Des prix simples, sans surprise</h2>
-            <p style={{ color:C.m,fontSize:16,marginTop:16,fontFamily: 'inherit' }}>Tous les plans incluent 14 jours d'essai gratuit. Sans engagement.</p>
+            <p style={{ color:C.m,fontSize:16,marginTop:16,fontFamily: 'inherit' }}>Tous les plans incluent 14 jours d’essai gratuit. Sans engagement.</p>
           </div>
           <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
             {plans.map((p,i)=>(
@@ -261,11 +261,11 @@ export default function LandingPage() {
             <h2 style={s.h2}>Tout ce que vous devez savoir</h2>
           </div>
           {[
-            { q:"Qu'est-ce qu'un programme d'apporteurs d'affaires ?", a:"C'est un système qui rémunère des partenaires externes (apporteurs) pour chaque client qu'ils vous recommandent. RefBoost automatise tout : tracking, attribution, calcul et paiement des commissions." },
-            { q:"Combien de temps pour être opérationnel ?", a:"5 minutes. Créez votre compte, invitez vos premiers apporteurs, et commencez à recevoir des recommandations dès aujourd'hui." },
+            { q:"Qu’est-ce qu’un programme d’apporteurs d’affaires ?", a:"C’est un système qui rémunère des partenaires externes (apporteurs) pour chaque client qu’ils vous recommandent. RefBoost automatise tout : tracking, attribution, calcul et paiement des commissions." },
+            { q:"Combien de temps pour être opérationnel ?", a:"5 minutes. Créez votre compte, invitez vos premiers apporteurs, et commencez à recevoir des recommandations dès aujourd’hui." },
             { q:"Puis-je personnaliser la plateforme à mon image ?", a:"Oui. Logo, couleurs, domaine personnalisé — vos partenaires travaillent dans un environnement à votre image, pas celle de RefBoost." },
             { q:"Comment sont calculées les commissions ?", a:"Vous définissez le taux par apporteur ou globalement. À chaque deal gagné, RefBoost calcule automatiquement la prime et vous notifie pour validation." },
-            { q:"Mes données sont-elles sécurisées ?", a:"Absolument. Chiffrement AES-256, journaux d'audit complets, protection anti-brute force, conformité RGPD. Nous suivons les standards ISO 27001." },
+            { q:"Mes données sont-elles sécurisées ?", a:"Absolument. Chiffrement AES-256, journaux d’audit complets, protection anti-brute force, conformité RGPD. Nous suivons les standards ISO 27001." },
           ].map((faq,i)=>(
             <details key={i} style={{ marginBottom:12,borderRadius:16,border:'1px solid #f1f5f9',overflow:'hidden' }}>
               <summary style={{ padding:'20px 24px',fontWeight:600,fontSize:16,cursor:'pointer',background:'#fafbfc',listStyle:'none',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
@@ -282,7 +282,7 @@ export default function LandingPage() {
         <div style={{ position:'absolute',top:-100,right:-100,width:400,height:400,borderRadius:'50%',background:`${C.p}10` }}/>
         <div style={{ position:'absolute',bottom:-50,left:-50,width:250,height:250,borderRadius:'50%',background:`${C.a}08` }}/>
         <div style={{ maxWidth:650,margin:'0 auto',textAlign:'center',position:'relative',zIndex:1 }}>
-          <h2 style={{ fontSize:44,fontWeight:800,color:'#fff',letterSpacing:-2,margin:'0 0 16px' }}>Prêt à structurer votre<br/>réseau d'apporteurs ?</h2>
+          <h2 style={{ fontSize:44,fontWeight:800,color:'#fff',letterSpacing:-2,margin:'0 0 16px' }}>Prêt à structurer votre<br/>réseau d’apporteurs ?</h2>
           <p style={{ color:'#94a3b8',fontSize:17,lineHeight:1.6,marginBottom:36,fontFamily: 'inherit' }}>Rejoignez les entreprises qui utilisent RefBoost pour transformer leurs recommandations en revenus récurrents.</p>
           <div style={{ display:'flex',gap:12,justifyContent:'center',maxWidth:460,margin:'0 auto' }}>
             <input type="email" placeholder="votre@email.com" value={email} onChange={e=>setEmail(e.target.value)} style={{ flex:1,padding:'16px 20px',borderRadius:12,border:'2px solid rgba(255,255,255,.1)',background:'rgba(255,255,255,.06)',color:'#fff',fontSize:15,fontFamily:'inherit',outline:'none' }}/>
@@ -300,7 +300,7 @@ export default function LandingPage() {
           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:32 }}>
             <div>
               <Logo size={28} white/>
-              <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300,fontFamily: 'inherit' }}>La plateforme de gestion de programme d'apporteurs d'affaires et de parrainage professionnel.</p>
+              <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300,fontFamily: 'inherit' }}>La plateforme de gestion de programme d’apporteurs d’affaires et de parrainage professionnel.</p>
             </div>
             <div style={{ display:'flex',gap:48 }}>
               <div>
