@@ -63,12 +63,12 @@ export default function LandingPage() {
   const trackClick = (label) => window._rb_track?.('cta_click', { label });
 
   const features = [
-    { icon:'🚀', title:'Pipeline de referrals', desc:'Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancés, statuts en temps réel.' },
-    { icon:'💰', title:'Commissions automatiques', desc:'Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables.' },
-    { icon:'📊', title:'Tableaux de bord & KPIs', desc:'Taux de conversion, MRR généré, performance par apporteur d\'affaires. Prenez des décisions basées sur les données.' },
-    { icon:'🎨', title:'Votre marque, votre plateforme', desc:'Personnalisez entièrement l\'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers.' },
-    { icon:'🔒', title:'Sécurité de niveau entreprise', desc:'Chiffrement AES-256, journaux d\'audit, protection anti-brute force. Conforme RGPD, prêt pour l\'ISO 27001.' },
-    { icon:'🔗', title:'Liens de tracking uniques', desc:'Chaque apporteur d\'affaires a son lien personnel. Attribution automatique, formulaire public, zéro friction.' },
+    { icon:'pipeline', title:'Pipeline de referrals', desc:'Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancés, statuts en temps réel.' },
+    { icon:'commissions', title:'Commissions automatiques', desc:'Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables.' },
+    { icon:'analytics', title:'Tableaux de bord & KPIs', desc:'Taux de conversion, MRR généré, performance par apporteur d\'affaires. Prenez des décisions basées sur les données.' },
+    { icon:'branding', title:'Votre marque, votre plateforme', desc:'Personnalisez entièrement l\'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers.' },
+    { icon:'security', title:'Sécurité de niveau entreprise', desc:'Chiffrement AES-256, journaux d\'audit, protection anti-brute force. Conforme RGPD, prêt pour l\'ISO 27001.' },
+    { icon:'tracking', title:'Liens de tracking uniques', desc:'Chaque apporteur d\'affaires a son lien personnel. Attribution automatique, formulaire public, zéro friction.' },
   ];
 
   const testimonials = [
@@ -123,8 +123,8 @@ export default function LandingPage() {
 
         <div style={{ maxWidth:900,textAlign:'center',position:'relative',zIndex:1 }}>
           <div className="fu fu1" style={{ display:'inline-flex',alignItems:'center',gap:8,padding:'6px 16px',borderRadius:50,background:`${C.p}10`,border:`1px solid ${C.p}20`,fontSize:13,fontWeight:600,color:C.p,marginBottom:28 }}>
-            <span style={{ width:6,height:6,borderRadius:'50%',background:C.p,animation:'pulse 2s infinite' }}/>
-            Nouveau — Gérez vos apporteurs d'affaires simplement
+            <span style={{ width:6,height:6,borderRadius:'50%',background:C.p }}/>
+            Gérez vos apporteurs d'affaires simplement
           </div>
 
           <h1 className="fu fu2" style={{ fontSize:68,fontWeight:900,lineHeight:1.05,letterSpacing:-3,margin:'0 0 24px',color:C.s }}>
@@ -169,7 +169,7 @@ export default function LandingPage() {
           <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
             {features.map((f,i)=>(
               <div key={i} className="hl" style={{ padding:32,borderRadius:20,background:'#fff',border:'1px solid #f1f5f9',boxShadow:'0 4px 20px rgba(0,0,0,.03)',cursor:'default' }}>
-                <div style={{ fontSize:36,marginBottom:16 }}>{f.icon}</div>
+                <div style={{ width:44,height:44,borderRadius:10,background:`${C.p}15`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16 }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={C.p} strokeWidth="2"/><path d="M8 12l2.5 2.5L16 9" stroke={C.p} strokeWidth="2" strokeLinecap="round"/></svg></div>
                 <h3 style={{ fontSize:19,fontWeight:700,marginBottom:10 }}>{f.title}</h3>
                 <p style={{ color:C.m,fontSize:14,lineHeight:1.7,margin:0,fontFamily: 'inherit' }}>{f.desc}</p>
               </div>
@@ -209,7 +209,7 @@ export default function LandingPage() {
           <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
             {testimonials.map((t,i)=>(
               <div key={i} className="hl" style={{ padding:32,borderRadius:20,background:'#fafbfc',border:'1px solid #f1f5f9' }}>
-                <div style={{ display:'flex',gap:2,marginBottom:16 }}>{[1,2,3,4,5].map(s=><span key={s} style={{ color:'#fbbf24',fontSize:18 }}>★</span>)}</div>
+                <div style={{ display:'flex',gap:2,marginBottom:16 }}><svg width='88' height='16' viewBox='0 0 88 16'>{[0,1,2,3,4].map(i=><path key={i} transform={`translate(${i*18},0)`} d='M8 1l1.8 5.5H16l-5 3.6 1.9 5.9L8 12.5l-4.9 3.5 1.9-5.9-5-3.6h6.2z' fill='#fbbf24'/>)}</svg></div>
                 <p style={{ color:'#334155',fontSize:15,lineHeight:1.7,margin:'0 0 24px',fontFamily: 'inherit',fontStyle:'italic' }}>"{t.t}"</p>
                 <div style={{ display:'flex',alignItems:'center',gap:12 }}>
                   <div style={{ width:44,height:44,borderRadius:12,background:g(C.p,C.pl),display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:18 }}>{t.a}</div>
@@ -242,7 +242,7 @@ export default function LandingPage() {
                   {p.p==='0'?<span style={{ fontSize:20,fontWeight:700 }}>Sur mesure</span>:<><span style={{ fontSize:42,fontWeight:800,color:C.s }}>{p.p}</span><span style={{ color:C.m,fontSize:15 }}>€/mois</span></>}
                 </div>
                 <ul style={{ listStyle:'none',padding:0,margin:'0 0 28px' }}>
-                  {p.f.map((f,j)=><li key={j} style={{ padding:'8px 0',fontSize:14,color:'#334155',display:'flex',alignItems:'center',gap:10,fontFamily: 'inherit' }}><span style={{ color:C.p,fontWeight:700 }}>✓</span> {f}</li>)}
+                  {p.f.map((f,j)=><li key={j} style={{ padding:'8px 0',fontSize:14,color:'#334155',display:'flex',alignItems:'center',gap:10,fontFamily: 'inherit' }}><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{flexShrink:0,marginTop:2}}><circle cx="7" cy="7" r="6" fill={`${C.p}20`}/><path d="M4 7l2 2 4-4" stroke={C.p} strokeWidth="1.5" strokeLinecap="round"/></svg> {f}</li>)}
                 </ul>
                 <button onClick={()=>{trackClick('pricing_'+p.n);navigate(p.p==='0'?'/contact':'/signup')}} className={p.c?'bp':'bs'} style={{ width:'100%',padding:'14px 24px',borderRadius:12,cursor:'pointer',fontFamily:'inherit',fontSize:15,fontWeight:600,border:p.c?'none':'2px solid #e2e8f0',background:p.c?g(C.p,C.pl):'#fff',color:p.c?'#fff':C.s,boxShadow:p.c?`0 8px 30px ${C.p}25`:'none' }}>
                   {p.p==='0'?'Nous contacter':'Démarrer gratuitement'}
@@ -319,7 +319,7 @@ export default function LandingPage() {
           </div>
           <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
             <div style={{ color:'#475569',fontSize:12 }}>© 2026 RefBoost. Tous droits réservés.</div>
-            <div style={{ color:'#475569',fontSize:12 }}>Fait avec ❤️ en France</div>
+            <div style={{ color:'#475569',fontSize:12 }}>Fait avec soin en France</div>
           </div>
         </div>
       </footer>
