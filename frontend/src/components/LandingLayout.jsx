@@ -29,7 +29,7 @@ export function LandingNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   return (
-    <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.97)':'rgba(255,255,255,.92)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(0,0,0,.06)',transition:'all .3s' }}>
+    <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
       <a href="/" style={{ textDecoration:'none' }}><Logo size={36}/></a>
       <div style={{ display:'flex',alignItems:'center',gap:28 }}>
         {[['Fonctionnalités','/#fonctionnalites'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
