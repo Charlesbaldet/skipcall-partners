@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { query } = require('./db');
 
 // Routes
 const authRoutes = require('./routes/auth');
