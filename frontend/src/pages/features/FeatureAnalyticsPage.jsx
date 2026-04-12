@@ -145,7 +145,7 @@ export default function FeatureAnalyticsPage() {
         {
           stat: '8:1', statLabel: 'de ROI moyen constaté sur le canal partenaires vs autres canaux',
           title: 'ROI et comparaison inter-canaux',
-          text: 'Pour la première fois, comparez votre canal partenaires aux autres canaux d'acquisition. Justifiez votre investissement avec des chiffres irréfutables.',
+          text: 'Pour la première fois, comparez votre canal partenaires aux autres canaux d’acquisition. Justifiez votre investissement avec des chiffres irréfutables.',
           points: ['CAC partenaires vs SEA, inbound, événements', 'Calcul automatique du ROI par euro investi en commissions', 'Projection sur 12 mois selon les tendances actuelles', 'Rapport prêt à présenter au comité de direction'],
           illustration: ILLUS[1]
         },
