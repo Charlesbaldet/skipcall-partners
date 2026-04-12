@@ -209,16 +209,16 @@ router.post('/signup', [
   } catch (err) { console.error('Signup error:', err); res.status(500).json({ error: 'Erreur lors de la creation du compte.' }); }
 });
 
-// Change password (1ère connexion)
-router.post('/change-password', async (req, res) => {
+// ─── Change password (1ère connexion — JWT requis) ───
+router.post('/change-password', authenticate, async (req, res) => {
   try {
-    const { userId, newPassword } = req.body;
-    if (!userId || !newPassword) return res.status(400).json({ error: 'Paramètres manquants' });
-    if (newPassword.length < 8) return res.status(400).json({ error: 'Mot de passe trop court (8 min)' });
-    const bcrypt = require('bcryptjs');
-    const { query } = require('../db');
+    const { newPassword } = req.body;
+    if (!newPassword) return res.status(400).json({ error: 'Paramètres manquants' });
+    const policy = validatePassword(newPassword);
+    if (!policy.valid) return res.status(400).json({ error: policy.errors.join('. ') });
     const hash = await bcrypt.hash(newPassword, 12);
-    await query('UPDATE users SET password_hash = $1, must_change_password = false WHERE id = $2', [hash, userId]);
+    await query('UPDATE users SET password_hash = $1, must_change_password = false WHERE id = $2', [hash, req.user.id]);
+    auditLog(req, 'password_changed_first_login', 'user', req.user.id);
     res.json({ message: 'Mot de passe mis à jour' });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
