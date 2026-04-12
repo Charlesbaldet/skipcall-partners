@@ -88,7 +88,7 @@ export default function FeaturePipelinePage() {
         {
           stat: '3x', statLabel: 'plus de leads convertis vs sans suivi structuré',
           title: 'Vue Kanban en temps réel',
-          text: 'Visualisez l’intégralité de votre pipeline partenaires en un coup d'œil. Chaque lead avance dans les colonnes au fur et à mesure de la vente — sans tableur, sans email interminable.',
+          text: 'Visualisez l’intégralité de votre pipeline partenaires en un coup d’œil. Chaque lead avance dans les colonnes au fur et à mesure de la vente — sans tableur, sans email interminable.',
           points: ['Colonnes configurables : Nouveau, Qualification, Démo, Proposition, Signé', 'Drag & drop pour changer le statut en un geste', 'Notification automatique à l’apporteur à chaque changement d’étape', 'Valeur pondérée par probabilité de closing affichée en temps réel'],
           illustration: ILLUS[0]
         },
