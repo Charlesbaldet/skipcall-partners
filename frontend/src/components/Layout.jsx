@@ -62,6 +62,7 @@ const SUPERADMIN_NAV = [
   { to: '/super-admin?tab=clients', icon: Globe, label: 'Clients' },
   { to: '/super-admin?tab=stats', icon: BarChart2, label: 'Statistiques' },
   { to: '/super-admin?tab=logs', icon: Activity, label: 'Audit Logs' },
+  { to: '/blog', icon: Globe, label: 'Blog public' },
   { divider: true },
   { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
