@@ -12,6 +12,16 @@ const FEATURES = [
   { label: 'Liens de tracking', href: '/fonctionnalites/tracking', desc: 'Attribution parfaite' },
 ];
 
+function useMobile() {
+  const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const h = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', h, { passive: true });
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return mobile;
+}
+
 function Logo({ size = 36, white = false }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -30,54 +40,92 @@ function Logo({ size = 36, white = false }) {
 
 export function LandingNav() {
   const navigate = useNavigate();
+  const mobile = useMobile();
   const [featOpen, setFeatOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
-      <a href="/" style={{ textDecoration:'none' }}><Logo size={36}/></a>
-      <div style={{ display:'flex',alignItems:'center',gap:28 }}>
-        <div style={{ position:'relative' }} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
-          <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
-            Fonctionnalités
-            <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:featOpen?'rotate(180deg)':'none' }}>
-              <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-            </svg>
-          </span>
-          {featOpen && (
-            <div style={{ position:'absolute',top:'calc(100% + 8px)',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,minWidth:260,zIndex:200 }}>
-              {FEATURES.map(f=>(
-                <a key={f.href} href={f.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none',transition:'background .15s' }}
-                  onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
-                  onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                  <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{f.label}</div>
-                  <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{f.desc}</div>
-                </a>
-              ))}
+    <>
+      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding: mobile ? '14px 20px' : '16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
+        <a href="/" style={{ textDecoration:'none' }}><Logo size={mobile ? 30 : 36}/></a>
+
+        {mobile ? (
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5 }}>
+            <span style={{ display:'block',width:22,height:2,background: menuOpen ? 'transparent' : C.s,transition:'all .2s',transform: menuOpen ? 'rotate(45deg) translate(5px,5px)' : 'none' }}/>
+            <span style={{ display:'block',width:22,height:2,background:C.s,transition:'all .2s',transform: menuOpen ? 'rotate(-45deg) translate(0,-1px)' : 'none' }}/>
+          </button>
+        ) : (
+          <div style={{ display:'flex',alignItems:'center',gap:28 }}>
+            <div style={{ position:'relative' }} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
+              <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
+                Fonctionnalités
+                <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:featOpen?'rotate(180deg)':'none' }}>
+                  <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                </svg>
+              </span>
+              {featOpen && (
+                <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:260,zIndex:200 }}>
+                  {FEATURES.map(f=>(
+                    <a key={f.href} href={f.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
+                      onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{f.label}</div>
+                      <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{f.desc}</div>
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
+              <a key={label} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
+                onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>{label}</a>
+            ))}
+            <button onClick={()=>navigate('/login')} style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer' }}
+              onMouseEnter={e=>{e.currentTarget.style.background=C.s;e.currentTarget.style.color='#fff';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=C.s;}}>Connexion</button>
+            <button onClick={()=>navigate('/signup')} style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer' }}>Essai gratuit</button>
+          </div>
+        )}
+      </nav>
+
+      {/* Mobile menu overlay */}
+      {mobile && menuOpen && (
+        <div style={{ position:'fixed',top:58,left:0,right:0,bottom:0,zIndex:99,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
+            {FEATURES.map(f=>(
+              <a key={f.href} href={f.href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none' }}>
+                <div style={{ fontWeight:600,fontSize:15,color:C.s }}>{f.label}</div>
+                <div style={{ fontSize:13,color:C.m,marginTop:2 }}>{f.desc}</div>
+              </a>
+            ))}
+          </div>
+          <div style={{ display:'flex',flexDirection:'column',gap:4,marginTop:16 }}>
+            {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
+              <a key={label} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>{label}</a>
+            ))}
+          </div>
+          <div style={{ display:'flex',flexDirection:'column',gap:12,marginTop:24 }}>
+            <button onClick={()=>{setMenuOpen(false);navigate('/login');}} style={{ padding:'14px',borderRadius:12,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:16,cursor:'pointer',width:'100%' }}>Connexion</button>
+            <button onClick={()=>{setMenuOpen(false);navigate('/signup');}} style={{ padding:'14px',borderRadius:12,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',width:'100%' }}>Essai gratuit</button>
+          </div>
         </div>
-        {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
-          <a key={label} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
-            onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>{label}</a>
-        ))}
-        <button onClick={()=>navigate('/login')} style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer' }}
-          onMouseEnter={e=>{e.currentTarget.style.background=C.s;e.currentTarget.style.color='#fff';}}
-          onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=C.s;}}>Connexion</button>
-        <button onClick={()=>navigate('/signup')} style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer' }}>Essai gratuit</button>
-      </div>
-    </nav>
+      )}
+    </>
   );
 }
 
 export function LandingFooter() {
+  const mobile = useMobile();
   return (
-    <footer style={{ padding:'48px 48px 32px',background:C.s }}>
+    <footer style={{ padding: mobile ? '40px 20px 28px' : '48px 48px 32px',background:C.s }}>
       <div style={{ maxWidth:1100,margin:'0 auto' }}>
-        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:32 }}>
+        <div style={{ display:'flex',flexDirection: mobile ? 'column' : 'row',justifyContent:'space-between',alignItems:'flex-start',gap: mobile ? 32 : 0,marginBottom:32 }}>
           <div>
             <Logo size={28} white/>
             <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300 }}>La plateforme de gestion de programme d’apporteurs d’affaires.</p>
           </div>
-          <div style={{ display:'flex',gap:48 }}>
+          <div style={{ display:'flex',flexWrap:'wrap',gap: mobile ? 32 : 48 }}>
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
               {FEATURES.map(f=><a key={f.href} href={f.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{f.label}</a>)}
@@ -94,7 +142,7 @@ export function LandingFooter() {
             </div>
           </div>
         </div>
-        <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',justifyContent:'space-between' }}>
+        <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',flexDirection: mobile ? 'column' : 'row',justifyContent:'space-between',gap:8 }}>
           <div style={{ color:'#475569',fontSize:12 }}>© 2026 RefBoost. Tous droits réservés.</div>
           <div style={{ color:'#475569',fontSize:12 }}>Fait avec soin en France</div>
         </div>
