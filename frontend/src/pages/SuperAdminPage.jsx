@@ -21,6 +21,12 @@ export default function SuperAdminPage() {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [blogForm, setBlogForm] = useState({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' });
+  const [blogEditId, setBlogEditId] = useState(null);
+  const [blogSaving, setBlogSaving] = useState(false);
+  const [blogShowForm, setBlogShowForm] = useState(false);
+  const [blogMsg, setBlogMsg] = useState('');
   const navigate = useNavigate();
 
   const load = async () => {
@@ -39,11 +45,48 @@ export default function SuperAdminPage() {
     setLoading(false);
   };
 
+
+  const loadBlog = async () => {
+    try {
+      const d = await api.request('/blog/admin/posts');
+      setBlogPosts(d.posts || []);
+    } catch(e) {}
+  };
+
+  const saveBlogPost = async () => {
+    setBlogSaving(true); setBlogMsg('');
+    try {
+      const payload = { ...blogForm, tags: blogForm.tags ? blogForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [] };
+      if (blogEditId) {
+        await api.request('/blog/admin/posts/' + blogEditId, { method: 'PUT', body: JSON.stringify(payload) });
+      } else {
+        await api.request('/blog/admin/posts', { method: 'POST', body: JSON.stringify(payload) });
+      }
+      setBlogMsg('✅ Article sauvegardé !');
+      setBlogShowForm(false); setBlogEditId(null);
+      setBlogForm({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' });
+      loadBlog();
+    } catch(e) { setBlogMsg('❌ ' + (e.message || 'Erreur')); }
+    setBlogSaving(false);
+  };
+
+  const deleteBlogPost = async (id) => {
+    if (!confirm('Supprimer cet article ?')) return;
+    await api.request('/blog/admin/posts/' + id, { method: 'DELETE' });
+    loadBlog();
+  };
+
+  const editBlogPost = (p) => {
+    setBlogEditId(p.id);
+    setBlogForm({ title: p.title, slug: p.slug, excerpt: p.excerpt || '', content: p.content || '', author: p.author || 'RefBoost', category: p.category || '', tags: (p.tags || []).join(', '), cover_image_url: p.cover_image_url || '', published: p.published, meta_title: p.meta_title || '', meta_description: p.meta_description || '' });
+    setBlogShowForm(true);
+  };
   const loadLogs = async () => {
     try { const d = await api.request('/super-admin/audit-logs?limit=100'); setLogs(d.logs || []); } catch {}
   };
 
   useEffect(() => { load(); }, []);
+    loadBlog();
   useEffect(() => { if (tab === 'logs') loadLogs(); }, [tab]);
 
   const handleCreate = async () => {
@@ -339,6 +382,96 @@ function TimelineChart({ series, active, setActive }) {
         <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: '#64748b' }}>
           <span>Dernier mois</span>
           <span style={{ fontSize: 14, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
+
+          {tab === 'blog' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#e2e8f0' }}>Articles de blog</h2>
+                <button onClick={() => { setBlogShowForm(!blogShowForm); setBlogEditId(null); setBlogForm({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' }); }} style={{ padding: '10px 20px', borderRadius: 10, background: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+                  {blogShowForm ? 'Annuler' : '+ Nouvel article'}
+                </button>
+              </div>
+
+              {blogMsg && <div style={{ padding: '12px 16px', borderRadius: 10, background: blogMsg.startsWith('✅') ? '#052e16' : '#450a0a', color: blogMsg.startsWith('✅') ? '#4ade80' : '#fca5a5', marginBottom: 20, fontSize: 14 }}>{blogMsg}</div>}
+
+              {blogShowForm && (
+                <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 28, marginBottom: 28, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <h3 style={{ margin: '0 0 20px', color: '#e2e8f0', fontSize: 16 }}>{blogEditId ? 'Modifier l\'article' : 'Nouvel article'}</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    {[
+                      ['Titre *', 'title', 'text', 'Titre accrocheur de l\'article'],
+                      ['Slug URL', 'slug', 'text', 'mon-article-seo'],
+                      ['Catégorie', 'category', 'text', 'Stratégie, Guide, Tendances…'],
+                      ['Tags (séparés par virgule)', 'tags', 'text', 'partenariat, affiliation, B2B'],
+                      ['Auteur', 'author', 'text', 'RefBoost'],
+                      ['Image de couverture (URL)', 'cover_image_url', 'text', 'https://...'],
+                      ['Meta Title (SEO, 70 car max)', 'meta_title', 'text', 'Titre SEO optimisé'],
+                      ['Meta Description (SEO, 160 car)', 'meta_description', 'text', 'Description pour Google…'],
+                    ].map(([label, key, type, ph]) => (
+                      <div key={key}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</label>
+                        <input type={type} value={blogForm[key]} onChange={e => setBlogForm(f => ({ ...f, [key]: e.target.value }))} placeholder={ph}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.3)', color: '#e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 16 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Extrait (résumé court)</label>
+                    <textarea value={blogForm.excerpt} onChange={e => setBlogForm(f => ({ ...f, excerpt: e.target.value }))} placeholder="Résumé accrocheur de l'article (2-3 phrases)..." rows={3}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.3)', color: '#e2e8f0', fontSize: 14, boxSizing: 'border-box', resize: 'vertical' }} />
+                  </div>
+                  <div style={{ marginTop: 16 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Contenu HTML *</label>
+                    <textarea value={blogForm.content} onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))} placeholder="<h2>Introduction</h2><p>Votre contenu HTML ici...</p>" rows={12}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.3)', color: '#e2e8f0', fontSize: 13, fontFamily: 'monospace', boxSizing: 'border-box', resize: 'vertical' }} />
+                  </div>
+                  <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#e2e8f0', fontSize: 14 }}>
+                      <input type="checkbox" checked={blogForm.published} onChange={e => setBlogForm(f => ({ ...f, published: e.target.checked }))} style={{ width: 18, height: 18 }} />
+                      Publier immédiatement
+                    </label>
+                  </div>
+                  <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+                    <button onClick={saveBlogPost} disabled={blogSaving || !blogForm.title || !blogForm.content}
+                      style={{ padding: '12px 28px', borderRadius: 10, background: (!blogForm.title || !blogForm.content) ? '#374151' : '#dc2626', color: '#fff', border: 'none', cursor: (!blogForm.title || !blogForm.content) ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15 }}>
+                      {blogSaving ? 'Sauvegarde…' : blogEditId ? '✅ Mettre à jour' : '🚀 Publier l\'article'}
+                    </button>
+                    <button onClick={() => { setBlogShowForm(false); setBlogEditId(null); }}
+                      style={{ padding: '12px 20px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', color: '#94a3b8', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {blogPosts.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>
+                    <p style={{ fontSize: 16 }}>Aucun article. Créez votre premier article ci-dessus !</p>
+                  </div>
+                ) : blogPosts.map(p => (
+                  <div key={p.id} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: '16px 20px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: p.published ? '#052e16' : '#374151', color: p.published ? '#4ade80' : '#94a3b8', fontWeight: 700 }}>
+                          {p.published ? '● Publié' : '○ Brouillon'}
+                        </span>
+                        {p.category && <span style={{ fontSize: 11, color: '#f87171', fontWeight: 600 }}>{p.category}</span>}
+                        <span style={{ fontSize: 11, color: '#64748b' }}>{p.reading_time_minutes} min</span>
+                      </div>
+                      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#e2e8f0' }}>{p.title}</h3>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>/blog/{p.slug} · {p.published_at ? new Date(p.published_at).toLocaleDateString('fr-FR') : 'Non publié'}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <a href={'/blog/' + p.slug} target="_blank" rel="noopener" style={{ padding: '7px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', color: '#94a3b8', textDecoration: 'none', fontSize: 13 }}>👁️ Voir</a>
+                      <button onClick={() => editBlogPost(p)} style={{ padding: '7px 14px', borderRadius: 8, background: 'rgba(220,38,38,0.15)', color: '#f87171', border: 'none', cursor: 'pointer', fontSize: 13 }}>✏️ Modifier</button>
+                      <button onClick={() => deleteBlogPost(p.id)} style={{ padding: '7px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', color: '#64748b', border: 'none', cursor: 'pointer', fontSize: 13 }}>🗑️</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
