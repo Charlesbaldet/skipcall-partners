@@ -135,6 +135,9 @@ export default function SuperAdminPage() {
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}><p style={{ color: '#94a3b8' }}>Chargement...</p></div>;
 
+  return (
+    <div className="fade-in">
+
   
 
       {tab === 'stats' && (<>
