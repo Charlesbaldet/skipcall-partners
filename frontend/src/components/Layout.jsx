@@ -67,9 +67,9 @@ const SUPERADMIN_NAV = [
 ];
 
 export default function Layout({ children }) {
-  const { user, logout, setUser } = useAuth();
-  const handlePasswordChanged = () => {
-    if (user) setUser({ ...user, mustChangePassword: false });
+  const { user, logout } = useAuth();
+  const handlePasswordChanged = () => { window.location.reload(); };
+
   };
   const navigate = useNavigate();
   const location = useLocation();
