@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import LandingLayout from '../../components/LandingLayout';
+import LandingLayout from './LandingLayout';
 
 const FEATURE_LINKS = [
   { href: '/fonctionnalites/pipeline', label: 'Pipeline de referrals' },
