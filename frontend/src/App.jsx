@@ -23,6 +23,8 @@ import SuperAdminPage from './pages/SuperAdminPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProgrammePage from './pages/ProgrammePage.jsx';
 import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
+import BlogPage from './pages/BlogPage.jsx';
+import BlogPostPage from './pages/BlogPostPage.jsx';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -47,6 +49,8 @@ function AppRoutes() {
       <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
