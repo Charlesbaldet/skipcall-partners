@@ -189,9 +189,9 @@ router.put('/:id/iban', async (req, res) => {
 
     const { rows: [partner] } = await query(
       `UPDATE partners SET iban = $2, bic = $3, account_holder = $4
-       WHERE id = $1
+       WHERE id = $1 AND (tenant_id = $5 OR $5::uuid IS NULL)
        RETURNING id, iban, bic, account_holder`,
-      [req.params.id, iban || null, bic || null, account_holder || null]
+      [req.params.id, iban || null, bic || null, account_holder || null, req.tenantId || null]
     );
 
     if (!partner) return res.status(404).json({ error: 'Partenaire introuvable' });
@@ -229,7 +229,7 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
   try {
     await client.query('BEGIN');
     await client.query('DELETE FROM users WHERE partner_id = $1', [req.params.id]);
-    const { rowCount } = await client.query('DELETE FROM partners WHERE id = $1', [req.params.id]);
+    const { rowCount } = await client.query('DELETE FROM partners WHERE id = $1 AND (tenant_id = $2 OR $2::uuid IS NULL)', [req.params.id, req.tenantId || null]);
     await client.query('COMMIT');
 
     if (rowCount === 0) return res.status(404).json({ error: 'Partenaire introuvable' });

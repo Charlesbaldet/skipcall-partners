@@ -143,7 +143,51 @@ async function runMigrations() {
       END $$;
     `);
 
-    console.log('✅ Migrations completed');
+    
+  // ─── v16: Password reset tokens ───
+  await query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token VARCHAR(128) UNIQUE NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await query('CREATE INDEX IF NOT EXISTS idx_prt_token ON password_reset_tokens(token)');
+  await query('CREATE INDEX IF NOT EXISTS idx_prt_user ON password_reset_tokens(user_id)');
+
+  // ─── v16: must_change_password column (backup if admin.js migration removed) ───
+  await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false');
+
+  // ─── Seed: auto-populate empty DB (staging / fresh installs) ───
+  // Only runs if no tenant exists — safe to keep in production (noop when data exists)
+  try {
+    const { rows: tenants } = await query('SELECT id FROM tenants LIMIT 1');
+    if (tenants.length === 0) {
+      console.log('🌱 Empty DB detected — running seed...');
+      const bcrypt = require('bcryptjs');
+      const { rows: [tenant] } = await query(
+        `INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color, revenue_model)
+         VALUES ('Skipcall', 'skipcall', '#059669', '#10b981', NULL, 'CA')
+         ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name RETURNING id`
+      );
+      const hash = await bcrypt.hash('RefBoost2026!', 12);
+      await query(
+        `INSERT INTO users (email, password_hash, full_name, role, tenant_id, must_change_password)
+         VALUES ('admin@skipcall.com', $1, 'Admin Skipcall', 'admin', $2, true)
+         ON CONFLICT (email) DO NOTHING`,
+        [hash, tenant.id]
+      );
+      console.log('✅ Seed complete — admin@skipcall.com / RefBoost2026! (must change on first login)');
+    }
+  } catch (seedErr) {
+    console.warn('[seed] Skipped:', seedErr.message);
+  }
+
+  console.log('✅ Migrations completed');
+
   } catch (err) {
     console.error('Migration error:', err.message);
   }

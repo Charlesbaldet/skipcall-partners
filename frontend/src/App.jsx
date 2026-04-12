@@ -1,4 +1,6 @@
 import SignupPage from './pages/SignupPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
@@ -16,6 +18,7 @@ import LandingPage from './pages/LandingPage.jsx';
 import PublicApplyPage from './pages/PublicApplyPage.jsx';
 import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
 import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
+import AdminSettingsPage from './pages/AdminSettingsPage.jsx';
 import SuperAdminPage from './pages/SuperAdminPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProgrammePage from './pages/ProgrammePage.jsx';
@@ -42,7 +45,9 @@ function AppRoutes() {
           <Route path="/r/:slug" element={<PublicApplyPage />} />
       <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
       <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />
@@ -50,6 +55,7 @@ function AppRoutes() {
       <Route path="/commissions" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><CommissionsPage /></Layout></ProtectedRoute>} />
       <Route path="/partners" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><PartnersPage /></Layout></ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminApplicationsPage /></Layout></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><AdminSettingsPage /></Layout></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout><SuperAdminPage /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
       <Route path="/programme" element={<ProtectedRoute><Layout><ProgrammePage /></Layout></ProtectedRoute>} />
