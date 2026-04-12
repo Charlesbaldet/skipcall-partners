@@ -118,7 +118,7 @@ export default function LandingPage() {
               <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
             </span>
             {featOpen && (
-              <div style={{ position:'absolute',top:'calc(100% + 8px)',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,minWidth:260,zIndex:200 }}>
+              <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:260,zIndex:200 }}>
                 {[
                   ['/fonctionnalites/pipeline','Pipeline de leads','Du referral au closing'],
                   ['/fonctionnalites/commissions','Commissions automatiques','Calcul et paiement sans friction'],
@@ -336,8 +336,14 @@ export default function LandingPage() {
             </div>
             <div style={{ display:'flex',gap:48 }}>
               <div>
-                <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Produit</div>
-                {['Fonctionnalités','Tarifs','Sécurité','API'].map(x=><a key={x} href="#" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>)}
+                <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
+                {[
+                  ['/fonctionnalites/pipeline','Pipeline de leads'],
+                  ['/fonctionnalites/commissions','Commissions automatiques'],
+                  ['/fonctionnalites/analytics','Analytics & KPIs'],
+                  ['/fonctionnalites/personnalisation','Marque blanche'],
+                  ['/fonctionnalites/tracking','Liens de tracking'],
+                ].map(([href,label]) => <a key={href} href={href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{label}</a>)}
               </div>
               <div>
                 <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Ressources</div>
