@@ -1,4 +1,14 @@
 import { useState, useEffect } from 'react';
+
+function useMobile() {
+  const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const h = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', h, { passive: true });
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return mobile;
+}
 import { useNavigate } from 'react-router-dom';
 
 const C = {
@@ -28,6 +38,7 @@ function Logo({ size = 40, white = false }) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const mobile = useMobile();
   const [scrollY, setScrollY] = useState(0);
   const [featOpen, setFeatOpen] = useState(false);
 
@@ -106,7 +117,7 @@ export default function LandingPage() {
       `}</style>
 
       {/* ═══ NAV ═══ */}
-      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',backdropFilter:'blur(20px)',borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',transition:'all .3s' }}>
+      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding: mobile ? '14px 20px' : '16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',backdropFilter:'blur(20px)',borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',transition:'all .3s' }}>
         <Logo size={36}/>
         <div style={{ display:'flex',alignItems:'center',gap:32 }}>
           {/* Fonctionnalités dropdown */}
@@ -198,7 +209,7 @@ export default function LandingPage() {
             <h2 style={s.h2}>Tout pour gérer votre<br/><span style={{ color:C.p }}>programme d’apporteurs d’affaires</span></h2>
             <p style={{ color:C.m,fontSize:16,marginTop:16,maxWidth:600,margin:'16px auto 0',fontFamily: 'inherit' }}>De la première recommandation au paiement de la commission, RefBoost automatise chaque étape.</p>
           </div>
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
+          <div style={{ display:'grid',gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)',gap:24 }}>
             {features.map((f,i)=>(
               <div key={i} className="hl" style={{ padding:32,borderRadius:20,background:'#fff',border:'1px solid #f1f5f9',boxShadow:'0 4px 20px rgba(0,0,0,.03)',cursor:'default' }}>
                 <div style={{ width:44,height:44,borderRadius:10,background:`${C.p}15`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16 }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={C.p} strokeWidth="2"/><path d="M8 12l2.5 2.5L16 9" stroke={C.p} strokeWidth="2" strokeLinecap="round"/></svg></div>
@@ -215,7 +226,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:900,margin:'0 auto',textAlign:'center' }}>
           <div style={{ ...s.label, color:C.pl }}>Comment ça marche</div>
           <h2 style={{ ...s.h2, color:'#fff',marginBottom:64 }}>Lancez votre programme en 3 étapes</h2>
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:40 }}>
+          <div style={{ display:'grid',gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)',gap:40 }}>
             {[
               { step:'01', title:'Créez votre espace', desc:'Inscrivez-vous en 2 minutes. Personnalisez votre plateforme avec votre identité visuelle.' },
               { step:'02', title:'Invitez vos apporteurs', desc:'Envoyez des invitations par email. Chaque partenaire reçoit son accès et son lien de tracking.' },
@@ -238,7 +249,7 @@ export default function LandingPage() {
             <div style={s.label}>Témoignages</div>
             <h2 style={s.h2}>Ils gèrent leurs apporteurs d’affaires avec RefBoost</h2>
           </div>
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
+          <div style={{ display:'grid',gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)',gap:24 }}>
             {testimonials.map((t,i)=>(
               <div key={i} className="hl" style={{ padding:32,borderRadius:20,background:'#fafbfc',border:'1px solid #f1f5f9' }}>
                 <div style={{ display:'flex',gap:2,marginBottom:16 }}><svg width='88' height='16' viewBox='0 0 88 16'>{[0,1,2,3,4].map(i=><path key={i} transform={`translate(${i*18},0)`} d='M8 1l1.8 5.5H16l-5 3.6 1.9 5.9L8 12.5l-4.9 3.5 1.9-5.9-5-3.6h6.2z' fill='#fbbf24'/>)}</svg></div>
@@ -264,7 +275,7 @@ export default function LandingPage() {
             <h2 style={s.h2}>Des prix simples, sans surprise</h2>
             <p style={{ color:C.m,fontSize:16,marginTop:16,fontFamily: 'inherit' }}>Tous les plans incluent 14 jours d’essai gratuit. Sans engagement.</p>
           </div>
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
+          <div style={{ display:'grid',gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)',gap:24 }}>
             {plans.map((p,i)=>(
               <div key={i} className="hl" style={{ padding:36,borderRadius:24,background:'#fff',border:p.c?`2px solid ${C.p}`:'1px solid #f1f5f9',boxShadow:p.c?`0 20px 60px ${C.p}15`:'0 4px 20px rgba(0,0,0,.03)',position:'relative' }}>
                 {p.c && <div style={{ position:'absolute',top:-12,left:'50%',transform:'translateX(-50%)',background:g(C.p,C.pl),color:'#fff',fontSize:11,fontWeight:700,padding:'4px 16px',borderRadius:50,textTransform:'uppercase',letterSpacing:1 }}>Populaire</div>}
@@ -300,7 +311,7 @@ export default function LandingPage() {
             { q:"Mes données sont-elles sécurisées ?", a:"Absolument. Chiffrement AES-256, journaux d’audit complets, protection anti-brute force, conformité RGPD. Nous suivons les standards ISO 27001." },
           ].map((faq,i)=>(
             <details key={i} style={{ marginBottom:12,borderRadius:16,border:'1px solid #f1f5f9',overflow:'hidden' }}>
-              <summary style={{ padding:'20px 24px',fontWeight:600,fontSize:16,cursor:'pointer',background:'#fafbfc',listStyle:'none',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+              <summary style={{ padding:'20px 24px',fontWeight:600,fontSize:16,cursor:'pointer',background:'#fafbfc',listStyle:'none',display:'flex',flexDirection: mobile ? 'column' : 'row',justifyContent:'space-between',alignItems: mobile ? 'flex-start' : 'center',gap:8 }}>
                 {faq.q}<span style={{ color:C.p,fontSize:20 }}>+</span>
               </summary>
               <div style={{ padding:'0 24px 20px',color:C.m,fontSize:14,lineHeight:1.7,fontFamily: 'inherit' }}>{faq.a}</div>
@@ -329,7 +340,7 @@ export default function LandingPage() {
       {/* ═══ FOOTER ═══ */}
       <footer style={{ padding:'48px 48px 32px',background:C.s,borderTop:'1px solid rgba(255,255,255,.05)' }}>
         <div style={{ maxWidth:1100,margin:'0 auto' }}>
-          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:32 }}>
+          <div style={{ display:'flex',flexDirection: mobile ? 'column' : 'row',justifyContent:'space-between',alignItems:'flex-start',gap: mobile ? 32 : 0,marginBottom:32 }}>
             <div>
               <Logo size={28} white/>
               <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300,fontFamily: 'inherit' }}>La plateforme de gestion de programme d’apporteurs d’affaires et de parrainage professionnel.</p>
@@ -355,7 +366,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+          <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',flexDirection: mobile ? 'column' : 'row',justifyContent:'space-between',alignItems: mobile ? 'flex-start' : 'center',gap:8 }}>
             <div style={{ color:'#475569',fontSize:12 }}>© 2026 RefBoost. Tous droits réservés.</div>
             <div style={{ color:'#475569',fontSize:12 }}>Fait avec soin en France</div>
           </div>
