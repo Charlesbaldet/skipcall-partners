@@ -112,17 +112,17 @@ export default function FeatureCommissionsPage() {
       mockupSvg={MOCKUP}
       benefits={[
         {
-          stat: '0', statLabel: 'erreur de calcul depuis l'adoption de RefBoost (données clients)',
+          stat: '0', statLabel: 'erreur de calcul depuis l’adoption de RefBoost (données clients)',
           title: 'Calcul automatique selon vos règles',
-          text: 'Fixez votre grille de commissions une fois — taux fixe, pourcentage du MRR, paliers progressifs — et RefBoost calcule automatiquement la prime à chaque deal validé. Plus de tableur, plus d'erreur.',
-          points: ['Taux configurables par apporteur, segment ou volume', 'Paliers progressifs : 8% jusqu'à 5 deals/mois, 12% au-delà', 'Commission sur la première vente ou récurrente sur abonnement', 'Calcul instantané dès la mise à jour du statut "Signé"'],
+          text: 'Fixez votre grille de commissions une fois — taux fixe, pourcentage du MRR, paliers progressifs — et RefBoost calcule automatiquement la prime à chaque deal validé. Plus de tableur, plus d’erreur.',
+          points: ['Taux configurables par apporteur, segment ou volume', 'Paliers progressifs : 8% jusqu’à 5 deals/mois, 12% au-delà', 'Commission sur la première vente ou récurrente sur abonnement', 'Calcul instantané dès la mise à jour du statut "Signé"'],
           illustration: ILLUS[0]
         },
         {
           stat: '100%', statLabel: 'de vos règles métier modélisables sans développement',
           title: 'Règles flexibles et auditables',
           text: 'Chaque règle de commission est documentée, horodatée et traçable. Vos apporteurs voient exactement comment leur rémunération est calculée. La transparence crée la confiance.',
-          points: ['Interface no-code pour créer et modifier les règles', 'Historique complet de chaque modification de règle', 'Simulation du gain attendu avant validation d'un deal', 'Différentes règles par type de deal ou de partenaire'],
+          points: ['Interface no-code pour créer et modifier les règles', 'Historique complet de chaque modification de règle', 'Simulation du gain attendu avant validation d’un deal', 'Différentes règles par type de deal ou de partenaire'],
           illustration: ILLUS[1]
         },
         {
