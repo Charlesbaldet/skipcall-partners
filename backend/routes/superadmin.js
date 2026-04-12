@@ -15,24 +15,6 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
-// --- DEBUG: Resend diagnostic (TEMPORARY) ---
-router.get('/resend-debug', authenticate, requireSuperAdmin, async (req, res) => {
-  const diag = {
-    envKeyExists: !!process.env.RESEND_API_KEY,
-    envKeyLength: (process.env.RESEND_API_KEY || '').length,
-    envKeyPrefix: (process.env.RESEND_API_KEY || '').slice(0, 6),
-  };
-  try {
-    const { Resend } = require('resend');
-    diag.requireOk = true;
-    const client = new Resend(process.env.RESEND_API_KEY);
-    diag.clientCreated = true;
-    const { data, error } = await client.emails.send({
-      from: 'RefBoost <notifications@refboost.io>',
-      to: [req.user.email],
-      subject: 'RefBoost Resend Test',
-      html: '<p>Si vous lisez ceci, Resend fonctionne.</p>',
-    });
     diag.sendResult = { data, error };
   } catch (err) {
     diag.error = err.message;
@@ -318,28 +300,6 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
     console.error('Invite superadmin error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
-});
-
-// ─── Resend diagnostic (temporary) ───
-router.get('/debug-resend', authenticate, requireSuperAdmin, async (req, res) => {
-  const diag = { isConfigured: resend.isConfigured() };
-  try {
-    const result = await resend.sendEmail({
-      to: 'c.baldet@hotmail.fr',
-      subject: 'RefBoost Test - ' + new Date().toISOString(),
-      html: '<h2>Resend fonctionne</h2><p>Email test depuis RefBoost.</p>'
-    });
-    diag.sendResult = result;
-  } catch (e) {
-    diag.sendError = e.message;
-  }
-  try {
-    const { rows } = await query('SELECT recipient_email, sent, error, template FROM notification_queue ORDER BY id DESC LIMIT 5');
-    diag.lastNotifications = rows;
-  } catch (e) {
-    diag.notifError = e.message;
-  }
-  res.json(diag);
 });
 
 // ─── Delete superadmin ───
