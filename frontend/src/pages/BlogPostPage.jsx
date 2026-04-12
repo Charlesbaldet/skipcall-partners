@@ -29,16 +29,16 @@ export default function BlogPostPage() {
   }, [slug]);
 
   if (loading) return (
-    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m }}>
+    <LandingLayout><div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m }}>
       Chargement…
-    </div>
+    </div></LandingLayout>
   );
 
   if (notFound || !post) return (
-    <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+    <LandingLayout><div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
       <h1 style={{ color: C.s, fontSize: 24 }}>Article introuvable</h1>
       <Link to="/blog" style={{ color: C.p, fontWeight: 600 }}>← Retour au blog</Link>
-    </div>
+    </div></LandingLayout>
   );
 
   const canonicalUrl = SITE + '/blog/' + post.slug;
