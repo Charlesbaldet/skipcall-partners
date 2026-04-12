@@ -1,111 +1,96 @@
-import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import LandingLayout from '../../components/LandingLayout';
+import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
-const C = { p: '#f97316', s: '#0f172a', m: '#64748b' };
-const g = `linear-gradient(135deg, #f97316, #f97316cc)`;
+const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
 
-const MOCKUP = "<svg viewBox=\"0 0 600 340\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;border-radius:12px;\">\n  <rect width=\"600\" height=\"340\" fill=\"#0f172a\" rx=\"12\"/>\n  <rect x=\"0\" y=\"0\" width=\"600\" height=\"44\" fill=\"#1e293b\" rx=\"12\"/>\n  <rect x=\"0\" y=\"32\" width=\"600\" height=\"12\" fill=\"#1e293b\"/>\n  <circle cx=\"20\" cy=\"22\" r=\"7\" fill=\"#ef4444\"/>\n  <circle cx=\"40\" cy=\"22\" r=\"7\" fill=\"#f59e0b\"/>\n  <circle cx=\"60\" cy=\"22\" r=\"7\" fill=\"#22c55e\"/>\n  <text x=\"200\" y=\"27\" font-family=\"system-ui\" font-size=\"12\" fill=\"#94a3b8\" text-anchor=\"middle\">Mon espace partenaire — Jean Dupont</text>\n  <!-- Unique link card -->\n  <rect x=\"16\" y=\"56\" width=\"568\" height=\"68\" fill=\"#1e293b\" rx=\"10\"/>\n  <text x=\"28\" y=\"76\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#f97316\">🔗 MON LIEN DE TRACKING UNIQUE</text>\n  <rect x=\"28\" y=\"84\" width=\"440\" height=\"28\" fill=\"#0f172a\" rx=\"6\"/>\n  <text x=\"38\" y=\"102\" font-family=\"system-ui\" font-size=\"10\" fill=\"#94a3b8\">https://partners.refboost.io/r/jean-dupont-x7k2</text>\n  <rect x=\"476\" y=\"84\" width=\"90\" height=\"28\" fill=\"#f97316\" rx=\"6\"/>\n  <text x=\"521\" y=\"102\" font-family=\"system-ui\" font-size=\"10\" fill=\"white\" text-anchor=\"middle\" font-weight=\"700\">Copier</text>\n  <!-- Stats cards -->\n  \n  <rect x=\"16\" y=\"136\" width=\"131\" height=\"64\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"28\" y=\"156\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Clics ce mois</text>\n  <text x=\"28\" y=\"186\" font-family=\"system-ui\" font-size=\"24\" font-weight=\"800\" fill=\"#3b82f6\">142</text>\n  \n  <rect x=\"159\" y=\"136\" width=\"131\" height=\"64\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"171\" y=\"156\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Formulaires</text>\n  <text x=\"171\" y=\"186\" font-family=\"system-ui\" font-size=\"24\" font-weight=\"800\" fill=\"#f97316\">38</text>\n  \n  <rect x=\"302\" y=\"136\" width=\"131\" height=\"64\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"314\" y=\"156\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Leads qualifiés</text>\n  <text x=\"314\" y=\"186\" font-family=\"system-ui\" font-size=\"24\" font-weight=\"800\" fill=\"#8b5cf6\">12</text>\n  \n  <rect x=\"445\" y=\"136\" width=\"131\" height=\"64\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"457\" y=\"156\" font-family=\"system-ui\" font-size=\"8\" fill=\"#64748b\">Taux conv.</text>\n  <text x=\"457\" y=\"186\" font-family=\"system-ui\" font-size=\"24\" font-weight=\"800\" fill=\"#22c55e\">31%</text>\n  \n  <!-- Lead list -->\n  <rect x=\"16\" y=\"212\" width=\"568\" height=\"30\" fill=\"#1e293b\" rx=\"6\"/>\n  <text x=\"28\" y=\"232\" font-family=\"system-ui\" font-size=\"9\" font-weight=\"700\" fill=\"#64748b\">PROSPECT</text>\n  <text x=\"200\" y=\"232\" font-family=\"system-ui\" font-size=\"9\" font-weight=\"700\" fill=\"#64748b\">SOUMIS LE</text>\n  <text x=\"340\" y=\"232\" font-family=\"system-ui\" font-size=\"9\" font-weight=\"700\" fill=\"#64748b\">STATUT</text>\n  <text x=\"460\" y=\"232\" font-family=\"system-ui\" font-size=\"9\" font-weight=\"700\" fill=\"#64748b\">COMMISSION</text>\n  \n  <rect x=\"16\" y=\"248\" width=\"568\" height=\"32\" fill=\"#0f172a\" rx=\"4\"/>\n  <text x=\"28\" y=\"268\" font-family=\"system-ui\" font-size=\"10\" fill=\"#e2e8f0\">Acme Corp</text>\n  <text x=\"200\" y=\"268\" font-family=\"system-ui\" font-size=\"9\" fill=\"#64748b\">12 avr. 2026</text>\n  <rect x=\"336\" y=\"256\" width=\"68\" height=\"16\" fill=\"#8b5cf622\" rx=\"8\"/>\n  <text x=\"344\" y=\"268\" font-family=\"system-ui\" font-size=\"8\" fill=\"#8b5cf6\">Qualifié</text>\n  <text x=\"460\" y=\"268\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#f59e0b\">En cours</text>\n  \n  <rect x=\"16\" y=\"284\" width=\"568\" height=\"32\" fill=\"#111827\" rx=\"4\"/>\n  <text x=\"28\" y=\"304\" font-family=\"system-ui\" font-size=\"10\" fill=\"#e2e8f0\">Tech Solutions</text>\n  <text x=\"200\" y=\"304\" font-family=\"system-ui\" font-size=\"9\" fill=\"#64748b\">10 avr. 2026</text>\n  <rect x=\"336\" y=\"292\" width=\"68\" height=\"16\" fill=\"#22c55e22\" rx=\"8\"/>\n  <text x=\"344\" y=\"304\" font-family=\"system-ui\" font-size=\"8\" fill=\"#22c55e\">Gagné</text>\n  <text x=\"460\" y=\"304\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#f59e0b\">1 200 €</text>\n  \n</svg>";
+  <rect width="600" height="380" fill="#0f172a" rx="0"/>
+  <rect x="0" y="0" width="600" height="44" fill="#1e293b"/>
+  <circle cx="18" cy="22" r="6" fill="#ef4444"/><circle cx="36" cy="22" r="6" fill="#f59e0b"/><circle cx="54" cy="22" r="6" fill="#22c55e"/>
+  <text x="300" y="27" font-family="system-ui" font-size="11" fill="#475569" text-anchor="middle">Liens de tracking — RefBoost</text>
+<rect x="12" y="56" width="576" height="60" fill="#1e293b" rx="8"/>
+<text x="24" y="74" font-family="system-ui" font-size="9" fill="#64748b">MON LIEN DE PARRAINAGE</text>
+<text x="24" y="95" font-family="system-ui" font-size="11" font-weight="700" fill="#3b82f6">https://acme.refboost.io/ref/sophie-martin?src=linkedin</text>
+<rect x="488" y="64" width="88" height="28" fill="#3b82f6" rx="6"/>
+<text x="532" y="82" font-family="system-ui" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">Copier</text>
+<text x="12" y="138" font-family="system-ui" font-size="10" font-weight="700" fill="#64748b">PERFORMANCE DU LIEN — 30 JOURS</text>
 
-const BENEFITS = [{"icon":"🔗","title":"Lien unique par apporteur","text":"Un lien, un apporteur, une attribution automatique. Partageable sur LinkedIn, par email, en signature — ça marche partout."},{"icon":"📝","title":"Formulaire public intégré","text":"Vos prospects remplissent un formulaire simple. Le lead arrive directement dans votre pipeline avec toutes les informations nécessaires."},{"icon":"🕵️","title":"Tracking complet","text":"Nombre de clics, taux de conversion du formulaire, délai moyen de soumission — optimisez l'efficacité de vos apporteurs."}];
+  <rect x="12" y="150" width="135" height="60" fill="#1e293b" rx="8"/>
+  <text x="22" y="170" font-family="system-ui" font-size="8" fill="#64748b">Clics</text>
+  <text x="22" y="195" font-family="system-ui" font-size="20" font-weight="800" fill="#3b82f6">1 284</text>
+
+  <rect x="159" y="150" width="135" height="60" fill="#1e293b" rx="8"/>
+  <text x="169" y="170" font-family="system-ui" font-size="8" fill="#64748b">Formulaires</text>
+  <text x="169" y="195" font-family="system-ui" font-size="20" font-weight="800" fill="#f59e0b">87</text>
+
+  <rect x="306" y="150" width="135" height="60" fill="#1e293b" rx="8"/>
+  <text x="316" y="170" font-family="system-ui" font-size="8" fill="#64748b">Leads qualifiés</text>
+  <text x="316" y="195" font-family="system-ui" font-size="20" font-weight="800" fill="#059669">23</text>
+
+  <rect x="453" y="150" width="135" height="60" fill="#1e293b" rx="8"/>
+  <text x="463" y="170" font-family="system-ui" font-size="8" fill="#64748b">Closings</text>
+  <text x="463" y="195" font-family="system-ui" font-size="20" font-weight="800" fill="#4ade80">8</text>
+
+<rect x="12" y="222" width="576" height="120" fill="#1e293b" rx="8"/>
+<text x="24" y="242" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Clics par source</text>
+
+  <text x="24" y="268" font-family="system-ui" font-size="9" fill="#e2e8f0">LinkedIn</text>
+  <text x="120" y="268" font-family="system-ui" font-size="9" fill="#64748b">612 clics</text>
+  <rect x="200" y="260" width="340" height="8" fill="#0f172a" rx="4"/>
+  <rect x="200" y="260" width="340" height="8" fill="#0077b5" rx="4"/>
+
+  <text x="24" y="288" font-family="system-ui" font-size="9" fill="#e2e8f0">Email</text>
+  <text x="120" y="288" font-family="system-ui" font-size="9" fill="#64748b">308 clics</text>
+  <rect x="200" y="280" width="340" height="8" fill="#0f172a" rx="4"/>
+  <rect x="200" y="280" width="170" height="8" fill="#f59e0b" rx="4"/>
+
+  <text x="24" y="308" font-family="system-ui" font-size="9" fill="#e2e8f0">WhatsApp</text>
+  <text x="120" y="308" font-family="system-ui" font-size="9" fill="#64748b">214 clics</text>
+  <rect x="200" y="300" width="340" height="8" fill="#0f172a" rx="4"/>
+  <rect x="200" y="300" width="120.64516129032259" height="8" fill="#25d366" rx="4"/>
+
+  <text x="24" y="328" font-family="system-ui" font-size="9" fill="#e2e8f0">Direct</text>
+  <text x="120" y="328" font-family="system-ui" font-size="9" fill="#64748b">150 clics</text>
+  <rect x="200" y="320" width="340" height="8" fill="#0f172a" rx="4"/>
+  <rect x="200" y="320" width="82.25806451612904" height="8" fill="#64748b" rx="4"/>
+
+</svg>`;
+const ILLUS0 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Mes liens de suivi</text><rect x="24" y="50" width="432" height="40" fill="#0f172a" rx="6"/><text x="36" y="68" font-family="system-ui" font-size="9" fill="#3b82f6">https://acme.refboost.io/ref/sophie?src=linkedin</text><text x="36" y="83" font-family="system-ui" font-size="8" fill="#64748b">487 clics · 23 leads · 8 closings</text><rect x="24" y="96" width="432" height="40" fill="#0f172a" rx="6"/><text x="36" y="114" font-family="system-ui" font-size="9" fill="#3b82f6">https://acme.refboost.io/ref/sophie?src=email</text><text x="36" y="129" font-family="system-ui" font-size="8" fill="#64748b">208 clics · 14 leads · 5 closings</text><rect x="24" y="142" width="432" height="40" fill="#0f172a" rx="6"/><text x="36" y="160" font-family="system-ui" font-size="9" fill="#3b82f6">https://acme.refboost.io/ref/sophie?src=direct</text><text x="36" y="175" font-family="system-ui" font-size="8" fill="#64748b">112 clics · 6 leads · 2 closings</text><rect x="24" y="198" width="200" height="28" fill="#3b82f6" rx="8"/><text x="124" y="216" font-family="system-ui" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">+ Créer un lien</text></svg>`;
+const ILLUS1 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Attribution automatique</text><rect x="24" y="50" width="432" height="44" fill="#0f172a" rx="6"/><text x="36" y="68" font-family="system-ui" font-size="9" fill="#e2e8f0">Clic sur lien Sophie Martin · 14:32</text><text x="36" y="84" font-family="system-ui" font-size="8" fill="#64748b">Prospect: DataFlow SAS — LinkedIn</text><rect x="24" y="100" width="432" height="44" fill="#0f172a" rx="6"/><text x="36" y="118" font-family="system-ui" font-size="9" fill="#e2e8f0">Formulaire rempli · 14:47</text><text x="36" y="134" font-family="system-ui" font-size="8" fill="#22c55e">Lead créé et attribué automatiquement à Sophie Martin</text><rect x="24" y="150" width="432" height="44" fill="#052e16" rx="6"/><text x="36" y="168" font-family="system-ui" font-size="9" fill="#4ade80">Deal signé · J+18</text><text x="36" y="184" font-family="system-ui" font-size="8" fill="#64748b">Commission calculée: 1 760€ · Sophie Martin notifiée</text></svg>`;
+const ILLUS2 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Fenêtre d'attribution</text><text x="24" y="58" font-family="system-ui" font-size="9" fill="#64748b">Si un prospect clique puis remplit le formulaire dans</text><rect x="24" y="68" width="432" height="44" fill="#0f172a" rx="8"/><text x="36" y="90" font-family="system-ui" font-size="14" font-weight="800" fill="#3b82f6">90 jours</text><text x="36" y="106" font-family="system-ui" font-size="8" fill="#64748b">Configurable: 7, 14, 30, 60, 90 ou 180 jours</text><text x="24" y="134" font-family="system-ui" font-size="9" fill="#64748b">Règle en cas de multi-clic</text><rect x="24" y="144" width="432" height="36" fill="#0f172a" rx="8"/><text x="36" y="166" font-family="system-ui" font-size="9" fill="#e2e8f0">Premier clic (First-touch) ou Dernier clic (Last-touch)</text><rect x="24" y="196" width="200" height="28" fill="#3b82f6" rx="8"/><text x="124" y="214" font-family="system-ui" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">Sauvegarder les règles</text></svg>`;
 
 export default function FeatureTrackingPage() {
-  const navigate = useNavigate();
   return (
-    <LandingLayout>
-      <Helmet>
-        <title>Liens de tracking uniques — RefBoost</title>
-        <meta name="description" content="Chaque apporteur reçoit son lien personnel. Il le partage, les leads arrivent directement dans votre pipeline avec attribution automatique. Pas de saisie m" />
-        <link rel="canonical" href="https://refboost.io/fonctionnalites/tracking" />
-      </Helmet>
-
-      {/* Hero */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '80px 48px 64px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 50, background: `${C.p}20`, border: `1px solid ${C.p}40`, fontSize: 13, fontWeight: 700, color: C.p, marginBottom: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
-          🔗 Fonctionnalité
-        </div>
-        <h1 style={{ margin: '0 0 20px', fontSize: 48, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -2 }}>
-          Liens de tracking uniques
-        </h1>
-        <p style={{ margin: '0 auto 36px', fontSize: 20, color: '#94a3b8', maxWidth: 600, lineHeight: 1.6 }}>
-          Attribution automatique, zéro friction pour vos apporteurs
-        </p>
-        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/signup')} style={{ padding: '14px 32px', borderRadius: 12, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}40` }}>
-            Essayer gratuitement →
-          </button>
-          <button onClick={() => navigate('/login')} style={{ padding: '14px 32px', borderRadius: 12, border: '2px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>
-            Se connecter
-          </button>
-        </div>
-      </section>
-
-      {/* Mockup */}
-      <section style={{ background: '#f8fafc', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.15)', border: '1px solid #e2e8f0' }}
-            dangerouslySetInnerHTML={{ __html: MOCKUP }} />
-          <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#94a3b8' }}>
-            Aperçu de l'interface RefBoost — Liens de tracking uniques
-          </p>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section style={{ background: '#fff', padding: '80px 48px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>Pourquoi ça change tout</p>
-            <h2 style={{ margin: 0, fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>3 raisons d'adopter cette fonctionnalité</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 28 }}>
-            {BENEFITS.map((b, i) => (
-              <div key={i} style={{ padding: 32, borderRadius: 20, background: '#f8fafc', border: '1px solid #f1f5f9', transition: 'all .2s' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 20px 60px ${C.p}15`; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
-                <div style={{ fontSize: 36, marginBottom: 16 }}>{b.icon}</div>
-                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: C.s }}>{b.title}</h3>
-                <p style={{ margin: 0, fontSize: 15, color: C.m, lineHeight: 1.7 }}>{b.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quote */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.4, color: C.p }}>"</div>
-          <p style={{ margin: '0 0 24px', fontSize: 22, color: '#fff', lineHeight: 1.6, fontStyle: 'italic' }}>
-            Avant, on recevait des leads par email, WhatsApp, téléphone... Maintenant tout arrive au même endroit, proprement tracé.
-          </p>
-          <p style={{ margin: 0, fontSize: 14, color: '#64748b', fontWeight: 600 }}>Responsable Partenariats, Fintech</p>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section style={{ background: '#f8fafc', padding: '80px 48px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          <h2 style={{ margin: '0 0 16px', fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>
-            Prêt à tester ?
-          </h2>
-          <p style={{ margin: '0 0 36px', fontSize: 18, color: C.m, lineHeight: 1.6 }}>
-            14 jours gratuits, sans carte bancaire. Configurez votre programme en 5 minutes.
-          </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/signup')} style={{ padding: '16px 36px', borderRadius: 14, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}30` }}>
-              Créer mon compte gratuit →
-            </button>
-          </div>
-          <p style={{ marginTop: 16, fontSize: 13, color: '#94a3b8' }}>✓ Sans engagement · ✓ 14 jours gratuits · ✓ Support inclus</p>
-          <div style={{ marginTop: 24, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/fonctionnalites/pipeline" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🔄 Pipeline de leads</a>
-            <a href="/fonctionnalites/commissions" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>💰 Commissions automatiques</a>
-            <a href="/fonctionnalites/analytics" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>📊 Analytics & KPIs</a>
-            <a href="/fonctionnalites/personnalisation" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🎨 Votre marque, votre plateforme</a>
-          </div>
-        </div>
-      </section>
-    </LandingLayout>
+    <FeaturePageTemplate
+      helmet={{ title: 'Liens de tracking uniques — RefBoost', description: 'Chaque apporteur dispose de son lien personnel. Attribution automatique, formulaire public intégré, zero friction pour vos partenaires et vos prospects.', canonical: 'https://refboost.io/fonctionnalites/tracking' }}
+      accentColor="#3b82f6"
+      label="Fonctionnalité"
+      title="Liens de tracking uniques"
+      subtitle="Un lien par apporteur, une attribution parfaite. Vos partenaires partagent, les leads arrivent qualifiés et attribués automatiquement."
+      mockupSvg={MOCKUP}
+      benefits={[
+        {
+          stat: '0', statLabel: 'lead perdu ou mal attribué grâce au tracking automatique',
+          title: 'Un lien unique par apporteur et par source',
+          text: 'Chaque apporteur dispose d'un lien personnel unique qu'il peut décliner par canal (LinkedIn, email, événement). Vous savez exactement d'où vient chaque lead et qui l'a apporté.',
+          points: ['Génération automatique du lien à l'invitation de l'apporteur', 'Paramètres UTM pour distinguer les sources (LinkedIn, email, téléphone)', 'QR code téléchargeable pour les événements et présentations', 'Lien court personnalisé avec le nom de l'apporteur'],
+          illustration: ILLUS0
+        },
+        {
+          stat: '100%', statLabel: 'des leads attribués sans intervention manuelle',
+          title: 'Attribution automatique sans ambiguïté',
+          text: 'Quand un prospect clique sur le lien d'un apporteur puis remplit le formulaire, le lead lui est attribué automatiquement. Pas de dispute, pas d'ambiguïté, même des semaines plus tard.',
+          points: ['Cookie de tracking persistant configurable (7 à 180 jours)', 'Attribution même si le prospect revient plusieurs jours plus tard', 'Traçabilité complète de la source au deal signé', 'Notification instantanée à l'apporteur à chaque conversion'],
+          illustration: ILLUS1
+        },
+        {
+          stat: '6', statLabel: 'fenêtres d'attribution configurables selon votre cycle de vente',
+          title: 'Fenêtres d'attribution configurables',
+          text: 'Adaptez les règles d'attribution à votre cycle de vente. Un cycle court de 2 semaines ou un cycle long de 6 mois : définissez la fenêtre qui reflète votre réalité commerciale.',
+          points: ['Fenêtre d'attribution de 7 à 180 jours selon votre cycle de vente', 'Règle first-touch ou last-touch selon votre politique', 'Gestion des conflits d'attribution transparente et auditable', 'Rétroactivité possible sur les leads en cours'],
+          illustration: ILLUS2
+        }
+      ]}
+      quote={{ text: 'Avant RefBoost, on passait 2h par mois à réconcilier manuellement les leads avec les apporteurs. Maintenant c'est automatique et sans discussion.', author: 'Alexandre R., VP Sales — ScaleB2B' }}
+      currentHref="/fonctionnalites/tracking"
+    />
   );
 }
