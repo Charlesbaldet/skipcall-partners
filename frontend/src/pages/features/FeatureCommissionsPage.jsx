@@ -1,111 +1,140 @@
-import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import LandingLayout from '../../components/LandingLayout';
+import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
-const C = { p: '#f59e0b', s: '#0f172a', m: '#64748b' };
-const g = `linear-gradient(135deg, #f59e0b, #f59e0bcc)`;
+const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
 
-const MOCKUP = "<svg viewBox=\"0 0 600 340\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:100%;border-radius:12px;\">\n  <rect width=\"600\" height=\"340\" fill=\"#0f172a\" rx=\"12\"/>\n  <rect x=\"0\" y=\"0\" width=\"600\" height=\"44\" fill=\"#1e293b\" rx=\"12\"/>\n  <rect x=\"0\" y=\"32\" width=\"600\" height=\"12\" fill=\"#1e293b\"/>\n  <circle cx=\"20\" cy=\"22\" r=\"7\" fill=\"#ef4444\"/>\n  <circle cx=\"40\" cy=\"22\" r=\"7\" fill=\"#f59e0b\"/>\n  <circle cx=\"60\" cy=\"22\" r=\"7\" fill=\"#22c55e\"/>\n  <text x=\"200\" y=\"27\" font-family=\"system-ui\" font-size=\"12\" fill=\"#94a3b8\" text-anchor=\"middle\">Commissions — Avril 2026</text>\n  <!-- KPI cards -->\n  \n  <rect x=\"16\" y=\"56\" width=\"175\" height=\"64\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"26\" y=\"76\" font-family=\"system-ui\" font-size=\"9\" fill=\"#64748b\">Total à verser</text>\n  <text x=\"26\" y=\"104\" font-family=\"system-ui\" font-size=\"22\" font-weight=\"800\" fill=\"#f59e0b\">4 820 €</text>\n  \n  <rect x=\"206\" y=\"56\" width=\"175\" height=\"64\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"216\" y=\"76\" font-family=\"system-ui\" font-size=\"9\" fill=\"#64748b\">Validées</text>\n  <text x=\"216\" y=\"104\" font-family=\"system-ui\" font-size=\"22\" font-weight=\"800\" fill=\"#22c55e\">12</text>\n  \n  <rect x=\"396\" y=\"56\" width=\"175\" height=\"64\" fill=\"#1e293b\" rx=\"8\"/>\n  <text x=\"406\" y=\"76\" font-family=\"system-ui\" font-size=\"9\" fill=\"#64748b\">En attente</text>\n  <text x=\"406\" y=\"104\" font-family=\"system-ui\" font-size=\"22\" font-weight=\"800\" fill=\"#3b82f6\">3</text>\n  \n  <!-- Table -->\n  <rect x=\"16\" y=\"130\" width=\"568\" height=\"30\" fill=\"#1e293b\" rx=\"6\"/>\n  <text x=\"28\" y=\"150\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#64748b\">APPORTEUR</text>\n  <text x=\"220\" y=\"150\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#64748b\">LEAD</text>\n  <text x=\"360\" y=\"150\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#64748b\">COMMISSION</text>\n  <text x=\"480\" y=\"150\" font-family=\"system-ui\" font-size=\"10\" font-weight=\"700\" fill=\"#64748b\">STATUT</text>\n  \n  <rect x=\"16\" y=\"165\" width=\"568\" height=\"34\" fill=\"#0f172a\" rx=\"4\"/>\n  <text x=\"28\" y=\"187\" font-family=\"system-ui\" font-size=\"10\" fill=\"#e2e8f0\">J. Dupont</text>\n  <text x=\"220\" y=\"187\" font-family=\"system-ui\" font-size=\"10\" fill=\"#94a3b8\">Acme Corp</text>\n  <text x=\"360\" y=\"187\" font-family=\"system-ui\" font-size=\"11\" font-weight=\"700\" fill=\"#f59e0b\">1 200 €</text>\n  <rect x=\"476\" y=\"174\" width=\"70\" height=\"18\" fill=\"#22c55e22\" rx=\"9\"/>\n  <text x=\"484\" y=\"187\" font-family=\"system-ui\" font-size=\"9\" fill=\"#22c55e\">Validée</text>\n  \n  <rect x=\"16\" y=\"203\" width=\"568\" height=\"34\" fill=\"#111827\" rx=\"4\"/>\n  <text x=\"28\" y=\"225\" font-family=\"system-ui\" font-size=\"10\" fill=\"#e2e8f0\">M. Martin</text>\n  <text x=\"220\" y=\"225\" font-family=\"system-ui\" font-size=\"10\" fill=\"#94a3b8\">Tech Solutions</text>\n  <text x=\"360\" y=\"225\" font-family=\"system-ui\" font-size=\"11\" font-weight=\"700\" fill=\"#f59e0b\">850 €</text>\n  <rect x=\"476\" y=\"212\" width=\"70\" height=\"18\" fill=\"#22c55e22\" rx=\"9\"/>\n  <text x=\"484\" y=\"225\" font-family=\"system-ui\" font-size=\"9\" fill=\"#22c55e\">Validée</text>\n  \n  <rect x=\"16\" y=\"241\" width=\"568\" height=\"34\" fill=\"#0f172a\" rx=\"4\"/>\n  <text x=\"28\" y=\"263\" font-family=\"system-ui\" font-size=\"10\" fill=\"#e2e8f0\">S. Bernard</text>\n  <text x=\"220\" y=\"263\" font-family=\"system-ui\" font-size=\"10\" fill=\"#94a3b8\">DataViz Pro</text>\n  <text x=\"360\" y=\"263\" font-family=\"system-ui\" font-size=\"11\" font-weight=\"700\" fill=\"#f59e0b\">2 100 €</text>\n  <rect x=\"476\" y=\"250\" width=\"70\" height=\"18\" fill=\"#f59e0b22\" rx=\"9\"/>\n  <text x=\"484\" y=\"263\" font-family=\"system-ui\" font-size=\"9\" fill=\"#f59e0b\">En attente</text>\n  \n  <rect x=\"16\" y=\"279\" width=\"568\" height=\"34\" fill=\"#111827\" rx=\"4\"/>\n  <text x=\"28\" y=\"301\" font-family=\"system-ui\" font-size=\"10\" fill=\"#e2e8f0\">A. Leroy</text>\n  <text x=\"220\" y=\"301\" font-family=\"system-ui\" font-size=\"10\" fill=\"#94a3b8\">CloudFirst</text>\n  <text x=\"360\" y=\"301\" font-family=\"system-ui\" font-size=\"11\" font-weight=\"700\" fill=\"#f59e0b\">670 €</text>\n  <rect x=\"476\" y=\"288\" width=\"70\" height=\"18\" fill=\"#22c55e22\" rx=\"9\"/>\n  <text x=\"484\" y=\"301\" font-family=\"system-ui\" font-size=\"9\" fill=\"#22c55e\">Validée</text>\n  \n</svg>";
+  <rect width="600" height="380" fill="#0f172a" rx="0"/>
+  <rect x="0" y="0" width="600" height="44" fill="#1e293b"/>
+  <circle cx="18" cy="22" r="6" fill="#ef4444"/><circle cx="36" cy="22" r="6" fill="#f59e0b"/><circle cx="54" cy="22" r="6" fill="#22c55e"/>
+  <text x="300" y="27" font-family="system-ui" font-size="11" fill="#475569" text-anchor="middle">Commissions — RefBoost</text>
+<rect x="12" y="56" width="576" height="72" fill="#1e293b" rx="8"/>
+<text x="24" y="76" font-family="system-ui" font-size="9" fill="#64748b">COMMISSIONS À VALIDER</text>
+<text x="24" y="96" font-family="system-ui" font-size="18" font-weight="800" fill="#fff">3 en attente</text>
+<text x="24" y="114" font-family="system-ui" font-size="9" fill="#f59e0b">Total : 4 280 €</text>
+<rect x="320" y="68" width="120" height="32" fill="#f59e0b" rx="8"/>
+<text x="380" y="88" font-family="system-ui" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle">Tout valider</text>
+<rect x="12" y="140" width="576" height="1" fill="#1e293b"/>
+<text x="12" y="162" font-family="system-ui" font-size="10" font-weight="700" fill="#64748b">HISTORIQUE DES COMMISSIONS</text>
 
-const BENEFITS = [{"icon":"⚡","title":"Calcul instantané","text":"Dès qu'un lead passe en \"Gagné\", la commission est calculée automatiquement selon vos règles. Taux fixe, paliers, bonus — tout est configurable."},{"icon":"✅","title":"Validation en 1 clic","text":"Passez en revue les commissions du mois, validez d'un clic et envoyez les notifications de paiement à vos apporteurs."},{"icon":"📊","title":"Historique de paiements","text":"Chaque commission versée est archivée. Export CSV pour votre comptabilité, vue par apporteur, par période ou par montant."}];
+  <rect x="12" y="175" width="576" height="32" fill="#0f172a" rx="0"/>
+  <text x="24" y="195" font-family="system-ui" font-size="9" fill="#e2e8f0">M. Bernard</text>
+  <text x="160" y="195" font-family="system-ui" font-size="9" fill="#64748b">Deal — Nexus SAS</text>
+  <text x="400" y="195" font-family="system-ui" font-size="10" font-weight="700" fill="#fff">1 232 €</text>
+  <text x="500" y="195" font-family="system-ui" font-size="9" font-weight="600" fill="#22c55e">Payée</text>
+
+  <rect x="12" y="213" width="576" height="32" fill="#1e293b" rx="0"/>
+  <text x="24" y="233" font-family="system-ui" font-size="9" fill="#e2e8f0">S. Martin</text>
+  <text x="160" y="233" font-family="system-ui" font-size="9" fill="#64748b">Deal — TechCorp</text>
+  <text x="400" y="233" font-family="system-ui" font-size="10" font-weight="700" fill="#fff">856 €</text>
+  <text x="500" y="233" font-family="system-ui" font-size="9" font-weight="600" fill="#22c55e">Payée</text>
+
+  <rect x="12" y="251" width="576" height="32" fill="#0f172a" rx="0"/>
+  <text x="24" y="271" font-family="system-ui" font-size="9" fill="#e2e8f0">A. Leroy</text>
+  <text x="160" y="271" font-family="system-ui" font-size="9" fill="#64748b">Deal — DataFlow</text>
+  <text x="400" y="271" font-family="system-ui" font-size="10" font-weight="700" fill="#fff">2 100 €</text>
+  <text x="500" y="271" font-family="system-ui" font-size="9" font-weight="600" fill="#f59e0b">En attente</text>
+
+  <rect x="12" y="289" width="576" height="32" fill="#1e293b" rx="0"/>
+  <text x="24" y="309" font-family="system-ui" font-size="9" fill="#e2e8f0">J. Dupont</text>
+  <text x="160" y="309" font-family="system-ui" font-size="9" fill="#64748b">Deal — Proxim</text>
+  <text x="400" y="309" font-family="system-ui" font-size="10" font-weight="700" fill="#fff">640 €</text>
+  <text x="500" y="309" font-family="system-ui" font-size="9" font-weight="600" fill="#f59e0b">En attente</text>
+
+  <rect x="12" y="327" width="576" height="32" fill="#0f172a" rx="0"/>
+  <text x="24" y="347" font-family="system-ui" font-size="9" fill="#e2e8f0">C. Petit</text>
+  <text x="160" y="347" font-family="system-ui" font-size="9" fill="#64748b">Deal — Opticom</text>
+  <text x="400" y="347" font-family="system-ui" font-size="10" font-weight="700" fill="#fff">1 380 €</text>
+  <text x="500" y="347" font-family="system-ui" font-size="9" font-weight="600" fill="#3b82f6">Calculée</text>
+
+</svg>`;
+const ILLUS = [
+`<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="200" height="108" fill="#1e293b" rx="8"/>
+    <text x="24" y="34" font-family="system-ui" font-size="8" fill="#64748b">Commissions du mois</text>
+    <text x="24" y="64" font-family="system-ui" font-size="28" font-weight="800" fill="#fff">4 280 €</text>
+    <text x="24" y="84" font-family="system-ui" font-size="9" fill="#22c55e">+22% vs mois dernier</text>
+    <rect x="220" y="12" width="248" height="108" fill="#1e293b" rx="8"/>
+    <text x="232" y="34" font-family="system-ui" font-size="8" fill="#64748b">Règle active: 8% MRR deal</text>
+    <text x="232" y="54" font-family="system-ui" font-size="10" fill="#e2e8f0">Deal 22 000€ x 8% = 1 760€</text>
+    <text x="232" y="80" font-family="system-ui" font-size="10" fill="#e2e8f0">Deal 12 000€ x 8% = 960€</text>
+    <text x="232" y="106" font-family="system-ui" font-size="10" font-weight="700" fill="#f59e0b">Total automatique: 2 720€</text>
+    <rect x="12" y="130" width="456" height="24" fill="#1e293b" rx="0"/>
+    <text x="24" y="146" font-family="system-ui" font-size="9" fill="#e2e8f0">M. Bernard</text>
+    <text x="360" y="146" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">1 232 €</text>
+    <text x="436" y="146" font-family="system-ui" font-size="9" fill="#22c55e">Payée</text><rect x="12" y="158" width="456" height="24" fill="#0f172a" rx="0"/>
+    <text x="24" y="174" font-family="system-ui" font-size="9" fill="#e2e8f0">S. Martin</text>
+    <text x="360" y="174" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">856 €</text>
+    <text x="436" y="174" font-family="system-ui" font-size="9" fill="#22c55e">Payée</text><rect x="12" y="186" width="456" height="24" fill="#1e293b" rx="0"/>
+    <text x="24" y="202" font-family="system-ui" font-size="9" fill="#e2e8f0">A. Leroy</text>
+    <text x="360" y="202" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">2 100 €</text>
+    <text x="436" y="202" font-family="system-ui" font-size="9" fill="#f59e0b">Attente</text><rect x="12" y="214" width="456" height="24" fill="#0f172a" rx="0"/>
+    <text x="24" y="230" font-family="system-ui" font-size="9" fill="#e2e8f0">J. Dupont</text>
+    <text x="360" y="230" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">640 €</text>
+    <text x="436" y="230" font-family="system-ui" font-size="9" fill="#f59e0b">Attente</text></svg>`,
+`<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="300" height="236" fill="#1e293b" rx="8"/>
+    <text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Règles de commission</text>
+    <rect x="24" y="48" width="276" height="36" fill="#0f172a" rx="6"/><text x="36" y="68" font-family="system-ui" font-size="9" fill="#e2e8f0">Deal standard: 8% MRR</text>
+    <rect x="24" y="90" width="276" height="36" fill="#0f172a" rx="6"/><text x="36" y="110" font-family="system-ui" font-size="9" fill="#e2e8f0">Vol. > 5 leads/mois: 12%</text>
+    <rect x="24" y="132" width="276" height="36" fill="#0f172a" rx="6"/><text x="36" y="152" font-family="system-ui" font-size="9" fill="#e2e8f0">Bonus closing: +500€</text>
+    <rect x="24" y="192" width="120" height="28" fill="#f59e0b" rx="8"/>
+    <text x="84" y="210" font-family="system-ui" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle">+ Règle</text>
+    <rect x="320" y="12" width="148" height="236" fill="#1e293b" rx="8"/>
+    <text x="332" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Paiements</text>
+    <rect x="332" y="52" width="128" height="26" fill="#0f172a" rx="4"/>
+    <text x="344" y="68" font-family="system-ui" font-size="8" fill="#64748b">12 avril 2026</text>
+    <text x="344" y="80" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">1 232 €</text><rect x="332" y="84" width="128" height="26" fill="#0f172a" rx="4"/>
+    <text x="344" y="100" font-family="system-ui" font-size="8" fill="#64748b">12 avril 2026</text>
+    <text x="344" y="112" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">856 €</text><rect x="332" y="116" width="128" height="26" fill="#0f172a" rx="4"/>
+    <text x="344" y="132" font-family="system-ui" font-size="8" fill="#64748b">12 avril 2026</text>
+    <text x="344" y="144" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">2 100 €</text><rect x="332" y="148" width="128" height="26" fill="#0f172a" rx="4"/>
+    <text x="344" y="164" font-family="system-ui" font-size="8" fill="#64748b">12 avril 2026</text>
+    <text x="344" y="176" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">640 €</text><rect x="332" y="180" width="128" height="26" fill="#0f172a" rx="4"/>
+    <text x="344" y="196" font-family="system-ui" font-size="8" fill="#64748b">12 avril 2026</text>
+    <text x="344" y="208" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">1 380 €</text><rect x="332" y="212" width="128" height="26" fill="#0f172a" rx="4"/>
+    <text x="344" y="228" font-family="system-ui" font-size="8" fill="#64748b">12 avril 2026</text>
+    <text x="344" y="240" font-family="system-ui" font-size="9" font-weight="700" fill="#fff">720 €</text></svg>`,
+`<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/>
+    <text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Export & Comptabilité</text>
+    <rect x="24" y="50" width="200" height="36" fill="#0f172a" rx="6"/><text x="36" y="73" font-family="system-ui" font-size="10" fill="#e2e8f0">Commission_Avril_2026.csv</text>
+    <rect x="232" y="50" width="200" height="36" fill="#0f172a" rx="6"/><text x="244" y="73" font-family="system-ui" font-size="10" fill="#e2e8f0">Factures_Q1_2026.pdf</text>
+    <text x="24" y="114" font-family="system-ui" font-size="9" fill="#64748b">Intégration comptabilité</text>
+    <rect x="24" y="122" width="100" height="28" fill="#0f172a" rx="6"/><text x="74" y="140" font-family="system-ui" font-size="9" fill="#e2e8f0" text-anchor="middle">QuickBooks</text>
+    <rect x="132" y="122" width="100" height="28" fill="#0f172a" rx="6"/><text x="182" y="140" font-family="system-ui" font-size="9" fill="#e2e8f0" text-anchor="middle">Pennylane</text>
+    <rect x="240" y="122" width="100" height="28" fill="#0f172a" rx="6"/><text x="290" y="140" font-family="system-ui" font-size="9" fill="#e2e8f0" text-anchor="middle">Zapier</text></svg>`,
+];
 
 export default function FeatureCommissionsPage() {
-  const navigate = useNavigate();
   return (
-    <LandingLayout>
-      <Helmet>
-        <title>Commissions automatiques — RefBoost</title>
-        <meta name="description" content="Définissez vos règles une fois, RefBoost calcule automatiquement chaque commission dès qu'un deal est closé. Validation en un clic, historique complet, zér" />
-        <link rel="canonical" href="https://refboost.io/fonctionnalites/commissions" />
-      </Helmet>
-
-      {/* Hero */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '80px 48px 64px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 50, background: `${C.p}20`, border: `1px solid ${C.p}40`, fontSize: 13, fontWeight: 700, color: C.p, marginBottom: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
-          💰 Fonctionnalité
-        </div>
-        <h1 style={{ margin: '0 0 20px', fontSize: 48, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -2 }}>
-          Commissions automatiques
-        </h1>
-        <p style={{ margin: '0 auto 36px', fontSize: 20, color: '#94a3b8', maxWidth: 600, lineHeight: 1.6 }}>
-          Calculez, validez et payez sans jamais ouvrir un tableur
-        </p>
-        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/signup')} style={{ padding: '14px 32px', borderRadius: 12, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}40` }}>
-            Essayer gratuitement →
-          </button>
-          <button onClick={() => navigate('/login')} style={{ padding: '14px 32px', borderRadius: 12, border: '2px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>
-            Se connecter
-          </button>
-        </div>
-      </section>
-
-      {/* Mockup */}
-      <section style={{ background: '#f8fafc', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ borderRadius: 20, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.15)', border: '1px solid #e2e8f0' }}
-            dangerouslySetInnerHTML={{ __html: MOCKUP }} />
-          <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#94a3b8' }}>
-            Aperçu de l'interface RefBoost — Commissions automatiques
-          </p>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section style={{ background: '#fff', padding: '80px 48px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>Pourquoi ça change tout</p>
-            <h2 style={{ margin: 0, fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>3 raisons d'adopter cette fonctionnalité</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 28 }}>
-            {BENEFITS.map((b, i) => (
-              <div key={i} style={{ padding: 32, borderRadius: 20, background: '#f8fafc', border: '1px solid #f1f5f9', transition: 'all .2s' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 20px 60px ${C.p}15`; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
-                <div style={{ fontSize: 36, marginBottom: 16 }}>{b.icon}</div>
-                <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: C.s }}>{b.title}</h3>
-                <p style={{ margin: 0, fontSize: 15, color: C.m, lineHeight: 1.7 }}>{b.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quote */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', padding: '64px 48px' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.4, color: C.p }}>"</div>
-          <p style={{ margin: '0 0 24px', fontSize: 22, color: '#fff', lineHeight: 1.6, fontStyle: 'italic' }}>
-            Le premier mois après RefBoost, on a économisé 6 heures de travail administratif sur les commissions.
-          </p>
-          <p style={{ margin: 0, fontSize: 14, color: '#64748b', fontWeight: 600 }}>Head of Partnerships, Scale-up</p>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section style={{ background: '#f8fafc', padding: '80px 48px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          <h2 style={{ margin: '0 0 16px', fontSize: 36, fontWeight: 800, color: C.s, letterSpacing: -1 }}>
-            Prêt à tester ?
-          </h2>
-          <p style={{ margin: '0 0 36px', fontSize: 18, color: C.m, lineHeight: 1.6 }}>
-            14 jours gratuits, sans carte bancaire. Configurez votre programme en 5 minutes.
-          </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/signup')} style={{ padding: '16px 36px', borderRadius: 14, border: 'none', background: g, color: '#fff', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}30` }}>
-              Créer mon compte gratuit →
-            </button>
-          </div>
-          <p style={{ marginTop: 16, fontSize: 13, color: '#94a3b8' }}>✓ Sans engagement · ✓ 14 jours gratuits · ✓ Support inclus</p>
-          <div style={{ marginTop: 24, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/fonctionnalites/pipeline" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🔄 Pipeline de leads</a>
-            <a href="/fonctionnalites/analytics" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>📊 Analytics & KPIs</a>
-            <a href="/fonctionnalites/personnalisation" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🎨 Votre marque, votre plateforme</a>
-            <a href="/fonctionnalites/tracking" style={{ fontSize: 14, color: C.p, textDecoration: 'none', fontWeight: 600 }}>🔗 Liens de tracking uniques</a>
-          </div>
-        </div>
-      </section>
-    </LandingLayout>
+    <FeaturePageTemplate
+      helmet={{ title: 'Commissions automatiques — RefBoost', description: 'Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables. Fini les tableurs.', canonical: 'https://refboost.io/fonctionnalites/commissions' }}
+      accentColor="#f59e0b"
+      label="Fonctionnalité"
+      title="Commissions automatiques"
+      subtitle="Définissez vos règles une fois. RefBoost calcule, valide et trace chaque commission sans intervention manuelle."
+      mockupSvg={MOCKUP}
+      benefits={[
+        {
+          stat: '0', statLabel: 'erreur de calcul depuis l'adoption de RefBoost (données clients)',
+          title: 'Calcul automatique selon vos règles',
+          text: 'Fixez votre grille de commissions une fois — taux fixe, pourcentage du MRR, paliers progressifs — et RefBoost calcule automatiquement la prime à chaque deal validé. Plus de tableur, plus d'erreur.',
+          points: ['Taux configurables par apporteur, segment ou volume', 'Paliers progressifs : 8% jusqu'à 5 deals/mois, 12% au-delà', 'Commission sur la première vente ou récurrente sur abonnement', 'Calcul instantané dès la mise à jour du statut "Signé"'],
+          illustration: ILLUS[0]
+        },
+        {
+          stat: '100%', statLabel: 'de vos règles métier modélisables sans développement',
+          title: 'Règles flexibles et auditables',
+          text: 'Chaque règle de commission est documentée, horodatée et traçable. Vos apporteurs voient exactement comment leur rémunération est calculée. La transparence crée la confiance.',
+          points: ['Interface no-code pour créer et modifier les règles', 'Historique complet de chaque modification de règle', 'Simulation du gain attendu avant validation d'un deal', 'Différentes règles par type de deal ou de partenaire'],
+          illustration: ILLUS[1]
+        },
+        {
+          stat: '< 5min', statLabel: 'pour exporter et synchroniser avec votre comptabilité',
+          title: 'Export et intégrations comptabilité',
+          text: 'Générez vos états de commissions en un clic, exportez vers votre logiciel comptable et envoyez les détails directement aux apporteurs. Fin du mois sans friction.',
+          points: ['Export CSV/PDF des commissions par période ou par apporteur', 'Intégration Zapier pour synchronisation automatique', 'Emails automatiques aux apporteurs avec détail du calcul', 'Archivage réglementaire conforme RGPD'],
+          illustration: ILLUS[2]
+        }
+      ]}
+      quote={{ text: 'Fini les tableurs pour tracker les commissions. Tout est automatisé, transparent, et nos partenaires sont ravis de recevoir leurs calculs détaillés chaque mois.', author: 'Sophie M., Head of Partnerships — DataViz Pro' }}
+      currentHref="/fonctionnalites/commissions"
+    />
   );
 }
