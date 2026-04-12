@@ -15,14 +15,6 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
-    diag.sendResult = { data, error };
-  } catch (err) {
-    diag.error = err.message;
-    diag.stack = err.stack ? err.stack.split('\n').slice(0, 3) : [];
-  }
-  res.json(diag);
-});
-
 // ─── Dashboard stats (non-sensitive) ───
 router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
   try {
