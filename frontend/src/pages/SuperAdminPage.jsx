@@ -135,26 +135,7 @@ export default function SuperAdminPage() {
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}><p style={{ color: '#94a3b8' }}>Chargement...</p></div>;
 
-  const TABS = [
-    { id: 'stats', label: '\ud83d\udcca Statistiques' },
-    { id: 'clients', label: '\ud83c\udfe2 Clients' },
-    { id: 'logs', label: '\ud83d\udccb Logs' },
-    { id: 'blog', label: '\u270d\ufe0f Blog' },
-  ];
-
-  return (
-    <div className="fade-in">
-      {/* Nav tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => navigate('?tab=' + t.id)}
-            style={{ padding: '8px 18px', borderRadius: 10, border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
-              background: tab === t.id ? 'var(--rb-primary, #059669)' : '#f1f5f9',
-              color: tab === t.id ? '#fff' : '#475569' }}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+  
 
       {tab === 'stats' && (<>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 16 }}>
@@ -309,7 +290,7 @@ export default function SuperAdminPage() {
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Articles de blog</h2>
             <button onClick={() => { setBlogShowForm(!blogShowForm); setBlogEditId(null); setBlogForm({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' }); }}
               style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
-              {blogShowForm ? 'Annuler' : '+ Nouvel article'}
+              {blogShowForm ? 'Annuler' : '+ Nouvel article"}
             </button>
           </div>
           {blogMsg && <div style={{ padding: '12px 16px', borderRadius: 10, background: blogMsg.startsWith('\u2705') ? '#f0fdf4' : '#fef2f2', color: blogMsg.startsWith('\u2705') ? '#16a34a' : '#dc2626', marginBottom: 20, fontSize: 14 }}>{blogMsg}</div>}
