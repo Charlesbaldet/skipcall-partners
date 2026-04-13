@@ -313,5 +313,15 @@
     },
     "collapse": "Collapse",
     "logout": "Logout"
+  },
+  "featureTemplate": {
+    "try_free": "Try for free",
+    "login": "Sign in",
+    "detailed_features": "Detailed features",
+    "what_you_get": "What you get concretely",
+    "ready_to_test": "Ready to test it?",
+    "trial_text": "14 days free, no credit card. Set up your program in 5 minutes.",
+    "create_space": "Create my workspace for free",
+    "no_commitment": "No commitment · 14 days free · Support included"
   }
 }
