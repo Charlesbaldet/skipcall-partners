@@ -1157,5 +1157,19 @@
     "Silver": "Argento",
     "Gold": "Oro",
     "Platinum": "Platino"
+  },
+  "onboarding": {
+    "skip": "Salta questo passaggio",
+    "next": "Avanti →",
+    "back": "Indietro",
+    "finish": "Termina la configurazione",
+    "subtitle": "Configura il tuo spazio in pochi passaggi",
+    "welcome_title": "Benvenuto su RefBoost 🎉",
+    "createUser_title": "Crea il tuo team",
+    "createPartner_title": "Invita il tuo primo partner",
+    "customize_title": "Personalizza il tuo spazio",
+    "publicLink_title": "Il tuo link di referral",
+    "marketplace_title": "Il tuo programma sul marketplace",
+    "done_title": "Tutto pronto 🚀"
   }
 }
