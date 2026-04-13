@@ -158,6 +158,7 @@ export default function SettingsPage() {
               {tab === 'public-link' && isAdmin && <PublicLinkTab />}
               {tab === 'appearance' && isAdmin && <AppearanceTab />}
               {tab === 'program' && isAdmin && <ProgramTab />}
+              {tab === 'marketplace' && isAdmin && <MarketplaceTab />}
           </div>
         </div>
       </div>
