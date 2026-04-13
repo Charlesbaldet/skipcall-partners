@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Users, UserPlus, Palette, Link2, Sparkles, Rocket, Copy, Check, Store } from 'lucide-react';
 import api from '../lib/api';
 
@@ -15,7 +16,8 @@ const STEPS = [
   { id: 'done',          icon: Rocket,    title: 'Tout est prêt 🚀' },
 ];
 
-export default function OnboardingWizard({ onClose }) {
+export default function OnboardingWizard({
+  const { t } = useTranslation(); onClose }) {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -171,8 +173,8 @@ export default function OnboardingWizard({ onClose }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 8px 30px rgba(5,150,105,0.3)',
           }}><Icon size={28} color="#fff" /></div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: C.s, margin: '0 0 8px', letterSpacing: -0.5 }}>{cur.title}</h2>
-          <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Étape {step + 1} sur {STEPS.length}</p>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: C.s, margin: '0 0 8px', letterSpacing: -0.5 }}>{t('onboarding.'+cur.id+'_title', {defaultValue: cur.title})}</h2>
+          <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.step_label')}< {step + 1} sur {STEPS.length}</p>
         </div>
 
         {/* Step body */}
@@ -326,7 +328,7 @@ export default function OnboardingWizard({ onClose }) {
             <button onClick={goNext} disabled={submitting} style={{
               padding: '12px 18px', borderRadius: 12, border: 'none',
               background: 'transparent', color: C.m, fontWeight: 600, fontSize: 14, cursor: 'pointer',
-            }}>Passer cette étape</button>
+            }}>{t('onboarding.skip')}</button>
           )}
         </div>
       </div>
