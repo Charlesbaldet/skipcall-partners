@@ -1170,6 +1170,7 @@
     "customize_title": "Personaliza tu espacio",
     "publicLink_title": "Tu enlace de referido",
     "marketplace_title": "Tu programa en el marketplace",
-    "done_title": "Todo listo 🚀"
+    "done_title": "Todo listo 🚀",
+    "step_of": "Paso {{current}} de {{total}}"
   }
 }
