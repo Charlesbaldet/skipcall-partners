@@ -993,7 +993,15 @@
     "revenue_mrr": "MRR",
     "revenue_arr": "ARR",
     "revenue_ca": "Revenue",
-    "revenue_other": "Other"
+    "revenue_other": "Other",
+    "title_full": "Partner Program",
+    "subtitle_full": "Configure levels and commissions for your partner program. Partners level up automatically based on their performance.",
+    "crit_title": "Progression Criterion",
+    "crit_deals": "🎯 Number of won deals",
+    "crit_volume": "💰 Business volume (€)",
+    "reset_defaults": "Reset to default values",
+    "reset_confirm": "Reset to default values? Your custom levels will be deleted.",
+    "delete_confirm": "Delete this level? Partners will keep their current level."
   },
   "publicApply": {
     "title": "Join the program",
