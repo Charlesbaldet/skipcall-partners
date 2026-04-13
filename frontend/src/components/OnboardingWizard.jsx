@@ -271,13 +271,6 @@ export default function OnboardingWizard({ onClose }) {
         )}
 
           {step === 5 && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🚀</div>
-            <h3 style={{ fontSize: 20, fontWeight: 800, color: C.s, margin: '0 0 8px' }}>C'est parti !</h3>
-            <p style={{ color: C.m, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
-              Votre espace est prêt. Rendez-vous sur le dashboard.
-            </p>
-          </div>
           )}
         </div>
 
