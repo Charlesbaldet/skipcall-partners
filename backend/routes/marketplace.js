@@ -21,7 +21,10 @@ router.get('/sectors', async (req, res) => {
   try {
     const { rows } = await query("SELECT DISTINCT sector FROM tenants WHERE marketplace_visible = true AND sector IS NOT NULL AND sector <> '' ORDER BY sector ASC");
     res.json({ sectors: rows.map(r => r.sector) });
-  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch (err) {
+    console.error('[marketplace GET settings]', err.message, 'tenantId:', req.user?.tenantId);
+    res.status(500).json({ error: err.message || 'Erreur serveur' });
+  }
 });
 
 // Auth: get mes settings
