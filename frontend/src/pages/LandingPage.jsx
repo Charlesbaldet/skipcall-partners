@@ -38,10 +38,9 @@ function Logo({ size = 40, white = false }) {
 export default function LandingPage() {
   const [featuredPartners, setFeaturedPartners] = useState([]);
   // Load marketplace preview
-  React.useEffect(() => {
+  useEffect(() => {
     fetch('/api/marketplace').then(r=>r.ok?r.json():null).then(d=>d&&setFeaturedPartners((d.partners||[]).slice(0,3))).catch(()=>{});
   }, []);
-  const [featuredPartners, setFeaturedPartners] = React.useState ? React.useState([]) : (() => { const [s,ss] = useState([]); return [s,ss]; })();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const mobile = useMobile();
