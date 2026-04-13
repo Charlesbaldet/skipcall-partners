@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
 const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
@@ -73,40 +74,23 @@ const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" st
 const ILLUS0 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Personnalisation de l’interface</text><rect x="24" y="50" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="72" font-family="system-ui" font-size="10" fill="#e2e8f0">Couleur principale</text><rect x="300" y="58" width="24" height="24" rx="6" fill="#059669"/><rect x="332" y="58" width="24" height="24" rx="6" fill="#3b82f6"/><rect x="364" y="58" width="24" height="24" rx="6" fill="#f59e0b"/><rect x="396" y="58" width="24" height="24" rx="6" fill="#dc2626"/><rect x="24" y="92" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="114" font-family="system-ui" font-size="10" fill="#e2e8f0">Logo</text><rect x="300" y="100" width="148" height="20" fill="#1e293b" rx="4"/><text x="374" y="114" font-family="system-ui" font-size="9" fill="#64748b" text-anchor="middle">Téléverser</text><rect x="24" y="134" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="156" font-family="system-ui" font-size="10" fill="#e2e8f0">Domaine personnalisé</text><text x="300" y="156" font-family="system-ui" font-size="9" fill="#3b82f6">partenaires.acme.com</text><rect x="24" y="188" width="432" height="36" fill="#0f172a" rx="6"/><text x="36" y="210" font-family="system-ui" font-size="10" fill="#e2e8f0">Nom de l’espace</text><text x="300" y="210" font-family="system-ui" font-size="9" fill="#e2e8f0">Programme Acme Partners</text></svg>`;
 const ILLUS1 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Espace partenaire — Acme Corp</text><circle cx="36" cy="72" r="16" fill="#059669"/><text x="36" y="77" font-family="system-ui" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">A</text><text x="60" y="68" font-family="system-ui" font-size="13" font-weight="800" fill="#fff">Acme Corp</text><text x="60" y="84" font-family="system-ui" font-size="9" fill="#64748b">Programme partenaires premium</text><rect x="24" y="100" width="140" height="56" fill="#052e16" rx="8"/><text x="36" y="120" font-family="system-ui" font-size="8" fill="#4ade80">Vos commissions</text><text x="36" y="144" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">2 840€</text><rect x="172" y="100" width="140" height="56" fill="#0f172a" rx="8"/><text x="184" y="120" font-family="system-ui" font-size="8" fill="#64748b">Leads actifs</text><text x="184" y="144" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">7</text><rect x="320" y="100" width="148" height="56" fill="#0f172a" rx="8"/><text x="332" y="120" font-family="system-ui" font-size="8" fill="#64748b">Taux conversion</text><text x="332" y="144" font-family="system-ui" font-size="20" font-weight="800" fill="#fff">34%</text></svg>`;
 const ILLUS2 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Formulaire public de soumission</text><text x="24" y="60" font-family="system-ui" font-size="9" fill="#64748b">partenaires.acme.com/soumettre</text><rect x="24" y="74" width="432" height="32" fill="#0f172a" rx="6"/><text x="36" y="94" font-family="system-ui" font-size="9" fill="#94a3b8">Nom de la société</text><rect x="24" y="112" width="432" height="32" fill="#0f172a" rx="6"/><text x="36" y="132" font-family="system-ui" font-size="9" fill="#94a3b8">Contact décideur</text><rect x="24" y="150" width="432" height="32" fill="#0f172a" rx="6"/><text x="36" y="170" font-family="system-ui" font-size="9" fill="#94a3b8">Contexte et besoin</text><rect x="24" y="198" width="200" height="36" fill="#059669" rx="8"/><text x="124" y="220" font-family="system-ui" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">Soumettre mon lead</text></svg>`;
+const ILLUS = [ILLUS0, ILLUS1, ILLUS2];
 
 export default function FeaturePersonnalisationPage() {
+  const { t } = useTranslation();
+  const d = t('features.personnalisation', { returnObjects: true });
+  const benefits = d.benefits.map((b, i) => ({ ...b, illustration: ILLUS[i] }));
+
   return (
     <FeaturePageTemplate
-      helmet={{ title: 'Marque blanche — RefBoost', description: 'Logo, couleurs, domaine personnalisé : vos partenaires travaillent dans votre univers, pas celui de RefBoost. Une expérience 100% à votre image.', canonical: 'https://refboost.io/fonctionnalites/personnalisation' }}
+      helmet={{ title: d.helmet_title, description: d.helmet_desc, canonical: 'https://refboost.io/fonctionnalites/personnalisation' }}
       accentColor="#0ea5e9"
-      label="Fonctionnalité"
-      title="Votre marque, votre plateforme"
-      subtitle="Logo, couleurs, domaine sur-mesure. Vos partenaires n’ont aucune raison de savoir que vous utilisez RefBoost."
+      label={t('features.label')}
+      title={d.title}
+      subtitle={d.subtitle}
       mockupSvg={MOCKUP}
-      benefits={[
-        {
-          stat: '2min', statLabel: 'pour configurer entièrement l’identité visuelle de votre espace',
-          title: 'Identité visuelle complète',
-          text: 'Uploadez votre logo, choisissez vos couleurs, nommez votre espace. En moins de 2 minutes, la plateforme est à votre image. Vos partenaires verront votre marque, pas RefBoost.',
-          points: ['Logo haute résolution sur toutes les pages et emails', 'Palette de couleurs primaire, secondaire et accent entièrement personnalisable', 'Nom de l’espace configurable (ex : "Programme Acme Partners")', 'Aperçu en temps réel avant validation des changements'],
-          illustration: ILLUS0
-        },
-        {
-          stat: '100%', statLabel: 'de vos partenaires restent sur votre domaine sans jamais voir RefBoost',
-          title: 'Domaine personnalisé inclus',
-          text: 'partenaires.votreentreprise.com au lieu de votreentreprise.refboost.io. Un sous-domaine sur votre domaine existant, configuré en 10 minutes avec notre guide pas à pas.',
-          points: ['Sous-domaine de votre choix configuré en quelques minutes', 'HTTPS automatique, certificat SSL inclus et renouvelé automatiquement', 'Emails envoyés depuis votre domaine (@votreentreprise.com)', 'Compatible avec tous les enregistrements DNS'],
-          illustration: ILLUS1
-        },
-        {
-          stat: '3x', statLabel: 'plus de taux de complétion sur les formulaires à votre marque vs formulaires génériques',
-          title: 'Formulaire de soumission à votre image',
-          text: 'Le formulaire public que remplissent les prospects recommandés par vos apporteurs est entièrement à vos couleurs. Votre image de marque est préservée de bout en bout.',
-          points: ['Design du formulaire adapté à votre charte graphique', 'URL personnalisée partageable par vos apporteurs', 'Champs configurables selon vos besoins de qualification', 'Notification instantanée à votre équipe à chaque soumission'],
-          illustration: ILLUS2
-        }
-      ]}
-      quote={{ text: 'Nos apporteurs travaillent dans notre univers. Ils n’ont jamais su que c’était RefBoost derrière. C’est exactement ce qu’on cherchait.', author: 'Pierre L., CRO — SaaS Fintech' }}
+      benefits={benefits}
+      quote={d.quote}
       currentHref="/fonctionnalites/personnalisation"
     />
   );
