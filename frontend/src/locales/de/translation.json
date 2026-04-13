@@ -313,5 +313,15 @@
     },
     "collapse": "Einklappen",
     "logout": "Abmelden"
+  },
+  "featureTemplate": {
+    "try_free": "Kostenlos testen",
+    "login": "Anmelden",
+    "detailed_features": "Detaillierte Funktionen",
+    "what_you_get": "Was Sie konkret erhalten",
+    "ready_to_test": "Bereit zum Testen?",
+    "trial_text": "14 Tage kostenlos, ohne Kreditkarte. Richten Sie Ihr Programm in 5 Minuten ein.",
+    "create_space": "Meinen Bereich kostenlos erstellen",
+    "no_commitment": "Ohne Verpflichtung · 14 Tage kostenlos · Support inklusive"
   }
 }
