@@ -7,7 +7,7 @@ import {
   Palette,
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
-  CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink,
+  CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -16,6 +16,94 @@ const ROLE_CONFIG = {
   admin: { label: 'Admin', icon: Shield, color: '#dc2626', bg: '#fef2f2' },
   commercial: { label: 'Membre', icon: Briefcase, color: '#0891b2', bg: '#ecfeff' },
 };
+
+
+const SECTORS_MKT = ['SaaS / Logiciel','Conseil & Services','Finance & Fintech','RH & Recrutement','Marketing & Communication','Immobilier','Santé','E-commerce','Formation','Juridique','Comptabilité','Industrie','Autre'];
+
+function MarketplaceTab() {
+  const [settings, setSettings] = useState({ sector:'', website:'', icp:'', short_description:'', marketplace_visible:false });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.getMarketplaceSettings().then(d=>setSettings(s=>({...s,...d.settings}))).catch(e=>setError(e.message)).finally(()=>setLoading(false));
+  }, []);
+
+  const set = (k,v) => setSettings(s=>({...s,[k]:v}));
+
+  const handleSave = async () => {
+    setError(''); setSuccess(''); setSaving(true);
+    try {
+      const d = await api.updateMarketplaceSettings(settings);
+      setSettings(s=>({...s,...d.settings}));
+      setSuccess('Paramètres marketplace mis à jour.');
+      setTimeout(()=>setSuccess(''), 3500);
+    } catch(e) { setError(e.message); } finally { setSaving(false); }
+  };
+
+  const inp = { width:'100%', padding:'12px 14px', borderRadius:10, border:'1.5px solid #e2e8f0', fontSize:14, fontFamily:'inherit', color:'#0f172a', outline:'none', boxSizing:'border-box', transition:'border-color .2s' };
+
+  if (loading) return <div style={{textAlign:'center',padding:48,color:'#64748b'}}>Chargement…</div>;
+  return (
+    <div style={{maxWidth:640}}>
+      <div style={{marginBottom:28}}>
+        <h2 style={{fontSize:20,fontWeight:800,color:'#0f172a',margin:'0 0 6px'}}>Programme sur la Marketplace</h2>
+        <p style={{color:'#64748b',fontSize:14,margin:0,lineHeight:1.6}}>Rendez votre programme de parrainage visible sur la marketplace publique de RefBoost.</p>
+      </div>
+      {/* Toggle visibilité */}
+      <div onClick={()=>set('marketplace_visible',!settings.marketplace_visible)} style={{background:settings.marketplace_visible?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'#f8fafc',border:`1.5px solid ${settings.marketplace_visible?'#059669':'#e2e8f0'}`,borderRadius:12,padding:'14px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:28,cursor:'pointer',transition:'all .3s'}}>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <div style={{width:40,height:40,borderRadius:10,background:settings.marketplace_visible?'#059669':'#e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',transition:'background .3s'}}>
+            <Globe size={18} color={settings.marketplace_visible?'#fff':'#94a3b8'}/>
+          </div>
+          <div>
+            <div style={{fontWeight:700,fontSize:14,color:'#0f172a'}}>Visible sur la marketplace</div>
+            <div style={{fontSize:12,color:'#64748b'}}>{settings.marketplace_visible?'✅ Votre programme est affiché publiquement':'Votre programme est masqué'}</div>
+          </div>
+        </div>
+        <div style={{width:48,height:26,borderRadius:13,background:settings.marketplace_visible?'#059669':'#cbd5e1',position:'relative',transition:'background .3s',flexShrink:0}}>
+          <div style={{position:'absolute',top:3,left:settings.marketplace_visible?24:3,width:20,height:20,borderRadius:'50%',background:'#fff',boxShadow:'0 1px 4px rgba(0,0,0,.2)',transition:'left .3s'}}/>
+        </div>
+      </div>
+      {/* Secteur */}
+      <div style={{marginBottom:20}}>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>Secteur d'activité *</label>
+        <select value={settings.sector} onChange={e=>set('sector',e.target.value)} style={{...inp,background:'#fff'}} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}>
+          <option value="">— Choisir un secteur —</option>
+          {SECTORS_MKT.map(s=><option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+      {/* Site web */}
+      <div style={{marginBottom:20}}>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>Site web *</label>
+        <input type="url" value={settings.website} onChange={e=>set('website',e.target.value)} placeholder="https://votre-site.com" style={inp} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+      </div>
+      {/* ICP */}
+      <div style={{marginBottom:20}}>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>ICP principal <span style={{fontWeight:400,color:'#64748b'}}>(optionnel)</span></label>
+        <input value={settings.icp} onChange={e=>set('icp',e.target.value)} placeholder="Ex: PME françaises, startups SaaS B2B…" style={inp} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+      </div>
+      {/* Description */}
+      <div style={{marginBottom:28}}>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>Description courte *</label>
+        <textarea value={settings.short_description} onChange={e=>set('short_description',e.target.value)} placeholder="Décrivez votre service en 2-3 phrases…" rows={4} style={{...inp,resize:'vertical',lineHeight:1.6}} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+        <p style={{fontSize:11,color:'#94a3b8',margin:'4px 0 0'}}>{settings.short_description?.length||0}/500 caractères</p>
+      </div>
+      {error && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'12px 16px',color:'#dc2626',fontSize:13,marginBottom:16}}>{error}</div>}
+      {success && <div style={{background:'#ecfdf5',border:'1px solid #6ee7b7',borderRadius:10,padding:'12px 16px',color:'#059669',fontSize:13,marginBottom:16}}>{success}</div>}
+      <div style={{display:'flex',gap:12,alignItems:'center'}}>
+        <button onClick={handleSave} disabled={saving} style={{padding:'12px 28px',borderRadius:10,border:'none',background:saving?'#94a3b8':'linear-gradient(135deg,#059669,#10b981)',color:'#fff',fontWeight:700,fontSize:14,cursor:saving?'not-allowed':'pointer',fontFamily:'inherit',boxShadow:saving?'none':'0 4px 16px rgba(5,150,105,.35)'}}>
+          {saving?'Enregistrement…':'Enregistrer'}
+        </button>
+        <a href="/marketplace" target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:6,padding:'12px 20px',borderRadius:10,border:'1.5px solid #059669',color:'#059669',fontWeight:600,fontSize:13,textDecoration:'none'}}>
+          <Globe size={14}/> Voir la marketplace
+        </a>
+      </div>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -32,6 +120,7 @@ export default function SettingsPage() {
       { id: 'superadmins', icon: Users, label: 'Membres' },
     ] : []),
     ...(isAdmin ? [
+    { id: 'marketplace', icon: Store, label: 'Marketplace' },
       { id: 'members', icon: Users, label: 'Membres' },
       { id: 'integrations', icon: Plug, label: 'Intégrations' },
       { id: 'public-link', icon: Link2, label: 'Lien public' },
