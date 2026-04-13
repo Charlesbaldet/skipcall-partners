@@ -36,19 +36,22 @@ router.get('/settings', authenticate, async (req, res) => {
 
 // Auth: update settings
 router.patch('/settings', authenticate, async (req, res) => {
-  if (!['admin','superadmin'].includes(req.user.role)) return res.status(403).json({ error: 'Accès interdit' });
+  if (!['admin','superadmin'].includes(req.user.role)) return res.status(403).json({ error: 'Acces interdit' });
   const { sector, website, icp, short_description, marketplace_visible } = req.body;
-  if (marketplace_visible === true && (!sector || !website || !short_description))
-    return res.status(400).json({ error: 'Secteur, site web et description sont requis pour apparaître sur la marketplace.' });
   if (website && !/^https?:\/\/.+/.test(website))
-    return res.status(400).json({ error: "URL invalide (doit commencer par http:// ou https://)" });
+    return res.status(400).json({ error: 'URL invalide (doit commencer par http:// ou https://)' });
+  // Auto-disable visibility if required fields are missing
+  const visible = marketplace_visible === true && sector && website && short_description ? true : false;
   try {
     const { rows } = await query(
       'UPDATE tenants SET sector=$1, website=$2, icp=$3, short_description=$4, marketplace_visible=$5 WHERE id=$6 RETURNING sector, website, icp, short_description, marketplace_visible',
-      [sector||null, website||null, icp||null, short_description||null, finalVisible??false, req.user.tenantId]
+      [sector || null, website || null, icp || null, short_description || null, visible, req.user.tenantId]
     );
-    res.json({ settings: rows[0] });
-  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+    res.json({ settings: rows[0] || {} });
+  } catch (err) {
+    console.error('[marketplace PATCH]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 module.exports = router;
