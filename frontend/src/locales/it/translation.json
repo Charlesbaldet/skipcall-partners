@@ -993,7 +993,15 @@
     "revenue_mrr": "MRR",
     "revenue_arr": "ARR",
     "revenue_ca": "Fatturato",
-    "revenue_other": "Altro"
+    "revenue_other": "Altro",
+    "title_full": "Programma partner",
+    "subtitle_full": "Configura i livelli e le commissioni per il tuo programma partner. I partner salgono di livello automaticamente in base alle loro prestazioni.",
+    "crit_title": "Criterio di progressione",
+    "crit_deals": "🎯 Numero di affari vinti",
+    "crit_volume": "💰 Volume d'affari (€)",
+    "reset_defaults": "Reimposta ai valori predefiniti",
+    "reset_confirm": "Reimposta ai valori predefiniti? I tuoi livelli personalizzati verranno eliminati.",
+    "delete_confirm": "Eliminare questo livello? I partner manterranno il loro livello attuale."
   },
   "publicApply": {
     "title": "Unisciti al programma",
