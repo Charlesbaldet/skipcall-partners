@@ -271,11 +271,13 @@ export default function OnboardingWizard({ onClose }) {
         )}
 
           {step === 5 && (
-            <div style={{ textAlign: 'center', color: C.m, fontSize: 15, lineHeight: 1.7 }}>
-              Bravo, ton programme partenaires est lancé ! 🎉<br/>
-              Tu peux maintenant explorer ton dashboard, suivre tes referrals, gérer tes commissions, et faire grandir ton réseau.<br/><br/>
-              <strong style={{ color: C.s }}>On est super content de t'avoir avec nous.</strong>
-            </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🚀</div>
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: C.s, margin: '0 0 8px' }}>C'est parti !</h3>
+            <p style={{ color: C.m, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+              Votre espace est prêt. Rendez-vous sur le dashboard.
+            </p>
+          </div>
           )}
         </div>
 
