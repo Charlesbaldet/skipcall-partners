@@ -76,10 +76,9 @@ export default function OnboardingWizard({ onClose }) {
   const publicLink = typeof window !== 'undefined' ? window.location.origin + (tenantSlug ? '/r/' + tenantSlug : '/apply') : '';
   const copyLink = () => { navigator.clipboard.writeText(publicLink); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
-
   const submitMarketplace = async () => {
     if (marketplaceForm.sector || marketplaceForm.website || marketplaceForm.short_description) {
-      try { await api.updateMarketplaceSettings(marketplaceForm); } catch (e) { console.warn('[mkt]', e.message); }
+      try { await api.updateMarketplaceSettings(marketplaceForm); } catch(e) { console.warn('[mkt]', e.message); }
     }
     goNext();
   };
@@ -94,6 +93,7 @@ export default function OnboardingWizard({ onClose }) {
     if (step === 1 && !createdUser) return submitUser();
     if (step === 2 && !createdPartner) return submitPartner();
     if (step === 3 && !customized) return submitCustomize();
+    if (step === 5) return submitMarketplace();
     return goNext();
   };
 
@@ -232,6 +232,43 @@ export default function OnboardingWizard({ onClose }) {
               </div>
             </div>
           )}
+
+        {step === 5 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <p style={{ color: C.m, fontSize: 14, marginTop: 0 }}>
+              Renseignez vos informations pour apparaitre sur la marketplace. Modifiable a tout moment dans Settings.
+            </p>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>Secteur *</label>
+              <select value={marketplaceForm.sector} onChange={e => setMkt('sector', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}>
+                <option value=''>-- Choisir --</option>
+                {['SaaS / Logiciel','Conseil & Services','Finance & Fintech','RH & Recrutement','Marketing & Communication','Immobilier','Commerce','Formation','Juridique','Industrie','Autre'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>Site web *</label>
+              <input type='url' value={marketplaceForm.website} onChange={e => setMkt('website', e.target.value)} placeholder='https://votre-site.com' style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>ICP principal <span style={{ fontWeight: 400, color: C.m }}>(optionnel)</span></label>
+              <input value={marketplaceForm.icp} onChange={e => setMkt('icp', e.target.value)} placeholder='Ex: PME, startups B2B...' style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>Description courte *</label>
+              <textarea value={marketplaceForm.short_description} onChange={e => setMkt('short_description', e.target.value)} placeholder='Decrivez votre service en 2-3 phrases...' rows={3} style={{ ...{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }, resize: 'vertical' }} />
+            </div>
+            <div onClick={() => setMkt('marketplace_visible', !marketplaceForm.marketplace_visible)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: marketplaceForm.marketplace_visible ? '#ecfdf5' : '#f8fafc', border: '1.5px solid ' + (marketplaceForm.marketplace_visible ? '#059669' : '#e2e8f0'), borderRadius: 12, padding: '12px 16px', cursor: 'pointer', transition: 'all .3s' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: C.s }}>Apparaitre sur la marketplace</div>
+                <div style={{ fontSize: 12, color: C.m }}>{marketplaceForm.marketplace_visible ? 'Actif' : 'Inactif'}</div>
+              </div>
+              <div style={{ width: 40, height: 22, borderRadius: 11, background: marketplaceForm.marketplace_visible ? '#059669' : '#cbd5e1', position: 'relative', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 2, left: marketplaceForm.marketplace_visible ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .3s' }} />
+              </div>
+            </div>
+          </div>
+        )}
 
           {step === 5 && (
             <div style={{ textAlign: 'center', color: C.m, fontSize: 15, lineHeight: 1.7 }}>
