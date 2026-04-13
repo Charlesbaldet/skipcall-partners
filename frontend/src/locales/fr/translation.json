@@ -313,5 +313,15 @@
     },
     "collapse": "Réduire",
     "logout": "Déconnexion"
+  },
+  "featureTemplate": {
+    "try_free": "Essayer gratuitement",
+    "login": "Se connecter",
+    "detailed_features": "Fonctionnalités détaillées",
+    "what_you_get": "Ce que vous obtenez concrètement",
+    "ready_to_test": "Prêt à tester ?",
+    "trial_text": "14 jours gratuits, sans carte bancaire. Configurez votre programme en 5 minutes.",
+    "create_space": "Créer mon espace gratuitement",
+    "no_commitment": "Sans engagement · 14 jours gratuits · Support inclus"
   }
 }
