@@ -1128,6 +1128,11 @@
     "saved": "Sauvegardé ✓",
     "cancel": "Annuler",
     "save": "Enregistrer",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "change_pwd": "Changer le mot de passe",
+    "add": "Ajouter",
+    "branding_desc": "Personnalise les couleurs et le logo de ton espace partenaires. Ces réglages s'appliquent partout : sidebar, interface, etc.",
+    "level_saved": "Niveau enregistré ✓",
+    "levels_reset_confirm": "Réinitialiser aux valeurs par défaut (Bronze/Silver/Gold/Platinum) ? Tes niveaux personnalisés seront effacés."
   }
 }
