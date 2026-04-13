@@ -13,55 +13,55 @@
     "pricing": "Precios",
     "testimonials": "Testimonios",
     "blog": "Blog",
-    "login": "Iniciar sesión",
+    "login": "Iniciar sesiÃ³n",
     "freeTrial": "Prueba gratuita",
-    "menu": "Menú"
+    "menu": "MenÃº"
   },
   "landing": {
     "hero": {
-      "badge": "Gestiona tus socios referidores fácilmente",
+      "badge": "Gestiona tus socios referidores fÃ¡cilmente",
       "h1_start": "Convierte tus",
       "h1_highlight": "recomendaciones en ingresos",
-      "description": "RefBoost es la plataforma SaaS para la gestión de programas de socios y referidos. Automatiza el seguimiento de referidos, las comisiones y el rendimiento de tu red.",
-      "cta_primary": "Crear mi espacio gratis →",
+      "description": "RefBoost es la plataforma SaaS para la gestiÃ³n de programas de socios y referidos. Automatiza el seguimiento de referidos, las comisiones y el rendimiento de tu red.",
+      "cta_primary": "Crear mi espacio gratis â",
       "cta_secondary": "Descubrir",
       "stat1_value": "150+",
       "stat1_label": "Socios activos",
-      "stat2_value": "2.4M€",
+      "stat2_value": "2.4Mâ¬",
       "stat2_label": "Ingresos generados",
       "stat3_value": "98%",
-      "stat3_label": "Satisfacción del cliente",
-      "trial_badges": "✓ 14 días gratis · ✓ Sin tarjeta de crédito · ✓ Configuración en 5 min"
+      "stat3_label": "SatisfacciÃ³n del cliente",
+      "trial_badges": "â 14 dÃ­as gratis Â· â Sin tarjeta de crÃ©dito Â· â ConfiguraciÃ³n en 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Pipeline de leads",
       "pipeline_desc": "Del referido al cierre",
-      "commissions_label": "Comisiones automáticas",
-      "commissions_desc": "Cálculo y pago sin fricciones",
+      "commissions_label": "Comisiones automÃ¡ticas",
+      "commissions_desc": "CÃ¡lculo y pago sin fricciones",
       "analytics_label": "Analytics & KPIs",
       "analytics_desc": "Decisiones basadas en datos reales",
       "branding_label": "Marca blanca",
       "branding_desc": "Tu imagen, tu dominio",
       "tracking_label": "Links de seguimiento",
-      "tracking_desc": "Atribución perfecta"
+      "tracking_desc": "AtribuciÃ³n perfecta"
     },
     "features": {
       "label": "Funcionalidades",
       "title": "Todo para gestionar tu",
       "title_highlight": "programa de socios referidores",
-      "description": "Desde el primer referido hasta el pago de la comisión, RefBoost automatiza cada paso.",
+      "description": "Desde el primer referido hasta el pago de la comisiÃ³n, RefBoost automatiza cada paso.",
       "items": [
         {
           "title": "Pipeline de referidos",
-          "desc": "Sigue cada recomendación desde el primer contacto hasta el cierre. Vista Kanban, filtros avanzados, estados en tiempo real."
+          "desc": "Sigue cada recomendaciÃ³n desde el primer contacto hasta el cierre. Vista Kanban, filtros avanzados, estados en tiempo real."
         },
         {
-          "title": "Comisiones automáticas",
-          "desc": "Cálculo automático de primas según tus reglas. Validación con un clic, historial completo, pagos trazables."
+          "title": "Comisiones automÃ¡ticas",
+          "desc": "CÃ¡lculo automÃ¡tico de primas segÃºn tus reglas. ValidaciÃ³n con un clic, historial completo, pagos trazables."
         },
         {
           "title": "Dashboards & KPIs",
-          "desc": "Tasa de conversión, MRR generado, rendimiento por socio. Toma decisiones basadas en datos."
+          "desc": "Tasa de conversiÃ³n, MRR generado, rendimiento por socio. Toma decisiones basadas en datos."
         },
         {
           "title": "Tu marca, tu plataforma",
@@ -69,29 +69,29 @@
         },
         {
           "title": "Seguridad empresarial",
-          "desc": "Cifrado AES-256, registros de auditoría, protección anti-fuerza bruta. Cumple con el RGPD, listo para ISO 27001."
+          "desc": "Cifrado AES-256, registros de auditorÃ­a, protecciÃ³n anti-fuerza bruta. Cumple con el RGPD, listo para ISO 27001."
         },
         {
-          "title": "Links de seguimiento únicos",
-          "desc": "Cada socio tiene su enlace personal. Atribución automática, formulario público, cero fricción."
+          "title": "Links de seguimiento Ãºnicos",
+          "desc": "Cada socio tiene su enlace personal. AtribuciÃ³n automÃ¡tica, formulario pÃºblico, cero fricciÃ³n."
         }
       ]
     },
     "howItWorks": {
-      "label": "Cómo funciona",
+      "label": "CÃ³mo funciona",
       "title": "Lanza tu programa en 3 pasos",
       "steps": [
         {
           "title": "Crea tu espacio",
-          "desc": "Regístrate en 2 minutos. Personaliza tu plataforma con tu identidad visual."
+          "desc": "RegÃ­strate en 2 minutos. Personaliza tu plataforma con tu identidad visual."
         },
         {
           "title": "Invita a tus socios",
-          "desc": "Envía invitaciones por email. Cada socio recibe su acceso y su link de seguimiento."
+          "desc": "EnvÃ­a invitaciones por email. Cada socio recibe su acceso y su link de seguimiento."
         },
         {
           "title": "Sigue & remunera",
-          "desc": "Tus socios envían leads. Tú sigues la conversión y pagas las comisiones automáticamente."
+          "desc": "Tus socios envÃ­an leads. TÃº sigues la conversiÃ³n y pagas las comisiones automÃ¡ticamente."
         }
       ]
     },
@@ -111,39 +111,39 @@
           "r": "CEO",
           "c": "ScaleUp Agency",
           "a": "T",
-          "t": "RefBoost nos permitió estructurar nuestro programa de recomendación. No volvemos atrás."
+          "t": "RefBoost nos permitiÃ³ estructurar nuestro programa de recomendaciÃ³n. No volvemos atrÃ¡s."
         },
         {
           "n": "Sophie Martin",
           "r": "Head of Partnerships",
           "c": "DataViz Pro",
           "a": "S",
-          "t": "Adiós a las hojas de cálculo para rastrear comisiones. Todo está automatizado y nuestros socios encantados."
+          "t": "AdiÃ³s a las hojas de cÃ¡lculo para rastrear comisiones. Todo estÃ¡ automatizado y nuestros socios encantados."
         }
       ]
     },
     "marketplace": {
-      "badge": "✨ Nuevo — Marketplace RefBoost",
+      "badge": "â¨ Nuevo â Marketplace RefBoost",
       "title_start": "Encuentra programas de referidos",
       "title_highlight": "verificados & rentables",
-      "description": "Cientos de empresas abren su programa en RefBoost. Únete gratis.",
+      "description": "Cientos de empresas abren su programa en RefBoost. Ãnete gratis.",
       "stat1_val": "150+",
       "stat1_label": "Programas activos",
       "stat2_val": "100%",
       "stat2_label": "Gratis para socios",
-      "stat3_val": "2.4M€",
+      "stat3_val": "2.4Mâ¬",
       "stat3_label": "Comisiones generadas",
-      "cta": "Ver todos los programas →",
-      "cta_note": "Gratis · Sin registro para explorar"
+      "cta": "Ver todos los programas â",
+      "cta_note": "Gratis Â· Sin registro para explorar"
     },
     "pricing": {
       "label": "Precios",
       "title": "Precios simples, sin sorpresas",
-      "description": "Todos los planes incluyen 14 días de prueba gratuita. Sin compromiso.",
+      "description": "Todos los planes incluyen 14 dÃ­as de prueba gratuita. Sin compromiso.",
       "popular": "Popular",
       "custom": "A medida",
-      "per_month": "€/mes",
-      "cta_contact": "Contáctanos",
+      "per_month": "â¬/mes",
+      "cta_contact": "ContÃ¡ctanos",
       "cta_start": "Empezar gratis",
       "plans": [
         {
@@ -163,7 +163,7 @@
           "features": [
             "Socios ilimitados",
             "Referidos ilimitados",
-            "Personalización completa",
+            "PersonalizaciÃ³n completa",
             "API & integraciones CRM",
             "Soporte prioritario",
             "Multi-usuario"
@@ -178,7 +178,7 @@
             "SSO / SAML",
             "SLA garantizado",
             "Account manager dedicado",
-            "Auditoría & conformidad"
+            "AuditorÃ­a & conformidad"
           ]
         }
       ]
@@ -188,37 +188,37 @@
       "title": "Todo lo que necesitas saber",
       "items": [
         {
-          "q": "¿Qué es un programa de socios referidores?",
-          "a": "Es un sistema que remunera a socios externos por cada cliente que te recomiendan. RefBoost automatiza todo: seguimiento, atribución, cálculo y pago de comisiones."
+          "q": "Â¿QuÃ© es un programa de socios referidores?",
+          "a": "Es un sistema que remunera a socios externos por cada cliente que te recomiendan. RefBoost automatiza todo: seguimiento, atribuciÃ³n, cÃ¡lculo y pago de comisiones."
         },
         {
-          "q": "¿Cuánto tiempo para estar operativo?",
+          "q": "Â¿CuÃ¡nto tiempo para estar operativo?",
           "a": "5 minutos. Crea tu cuenta, invita a tus primeros socios y empieza a recibir recomendaciones hoy."
         },
         {
-          "q": "¿Puedo personalizar la plataforma con mi marca?",
-          "a": "Sí. Logo, colores, dominio personalizado — tus socios trabajan en un entorno que refleja tu marca, no la de RefBoost."
+          "q": "Â¿Puedo personalizar la plataforma con mi marca?",
+          "a": "SÃ­. Logo, colores, dominio personalizado â tus socios trabajan en un entorno que refleja tu marca, no la de RefBoost."
         },
         {
-          "q": "¿Cómo se calculan las comisiones?",
-          "a": "Defines la tasa por socio o globalmente. Con cada deal ganado, RefBoost calcula automáticamente la prima y te notifica para validación."
+          "q": "Â¿CÃ³mo se calculan las comisiones?",
+          "a": "Defines la tasa por socio o globalmente. Con cada deal ganado, RefBoost calcula automÃ¡ticamente la prima y te notifica para validaciÃ³n."
         },
         {
-          "q": "¿Están seguros mis datos?",
-          "a": "Absolutamente. Cifrado AES-256, registros de auditoría completos, protección anti-fuerza bruta, conformidad con el RGPD. Seguimos los estándares ISO 27001."
+          "q": "Â¿EstÃ¡n seguros mis datos?",
+          "a": "Absolutamente. Cifrado AES-256, registros de auditorÃ­a completos, protecciÃ³n anti-fuerza bruta, conformidad con el RGPD. Seguimos los estÃ¡ndares ISO 27001."
         }
       ]
     },
     "cta": {
-      "title": "¿Listo para estructurar tu",
+      "title": "Â¿Listo para estructurar tu",
       "title_end": "red de socios?",
-      "description": "Únete a las empresas que usan RefBoost para transformar sus recomendaciones en ingresos recurrentes.",
+      "description": "Ãnete a las empresas que usan RefBoost para transformar sus recomendaciones en ingresos recurrentes.",
       "email_placeholder": "tu@email.com",
-      "cta_btn": "Empezar →",
-      "note": "14 días gratis · Sin tarjeta de crédito · Cancelación en 1 clic"
+      "cta_btn": "Empezar â",
+      "note": "14 dÃ­as gratis Â· Sin tarjeta de crÃ©dito Â· CancelaciÃ³n en 1 clic"
     },
     "footer": {
-      "tagline": "La plataforma de gestión de programas de socios referidores y referidos profesionales.",
+      "tagline": "La plataforma de gestiÃ³n de programas de socios referidores y referidos profesionales.",
       "sections": {
         "features": "Funcionalidades",
         "resources": "Recursos",
@@ -226,35 +226,35 @@
       },
       "links": {
         "pipeline": "Pipeline de leads",
-        "commissions": "Comisiones automáticas",
+        "commissions": "Comisiones automÃ¡ticas",
         "analytics": "Analytics & KPIs",
         "whiteLabel": "Marca blanca",
         "tracking": "Links de seguimiento",
         "blog": "Blog",
-        "guide": "Guía de inicio",
+        "guide": "GuÃ­a de inicio",
         "faq": "FAQ",
         "contact": "Contacto",
-        "cgv": "Términos",
+        "cgv": "TÃ©rminos",
         "privacy": "Privacidad",
         "legal": "Aviso legal",
         "rgpd": "RGPD"
       },
-      "copyright": "© 2026 RefBoost. Todos los derechos reservados.",
+      "copyright": "Â© 2026 RefBoost. Todos los derechos reservados.",
       "madeIn": "Hecho con cuidado en Francia"
     }
   },
   "login": {
-    "title": "Iniciar sesión",
+    "title": "Iniciar sesiÃ³n",
     "subtitle": "Accede a tu programa de socios",
     "email": "Email",
     "email_placeholder": "tu@empresa.com",
-    "password": "Contraseña",
-    "forgot_password": "¿Olvidaste tu contraseña?",
-    "submit": "Entrar →",
-    "loading": "Iniciando sesión...",
-    "no_account": "¿Aún no tienes cuenta?",
-    "create_account": "Crear un espacio gratis →",
-    "back_to_site": "← Volver al sitio",
+    "password": "ContraseÃ±a",
+    "forgot_password": "Â¿Olvidaste tu contraseÃ±a?",
+    "submit": "Entrar â",
+    "loading": "Iniciando sesiÃ³n...",
+    "no_account": "Â¿AÃºn no tienes cuenta?",
+    "create_account": "Crear un espacio gratis â",
+    "back_to_site": "â Volver al sitio",
     "error_default": "Credenciales incorrectas"
   },
   "layout": {
@@ -263,18 +263,55 @@
       "pipeline": "Pipeline",
       "commissions": "Comisiones",
       "partners": "Socios",
-      "messaging": "Mensajería",
+      "messaging": "MensajerÃ­a",
       "programme": "Programa",
-      "settings": "Configuración",
+      "settings": "ConfiguraciÃ³n",
       "my_referrals": "Mis Referidos",
       "submit": "Enviar",
       "my_payments": "Mis Pagos",
       "clients": "Clientes",
-      "statistics": "Estadísticas",
-      "audit_logs": "Logs de Auditoría",
+      "statistics": "EstadÃ­sticas",
+      "audit_logs": "Logs de AuditorÃ­a",
       "blog": "Blog"
     },
     "collapse": "Reducir",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesiÃ³n"
+  },
+  "signup": {
+    "title": "Crea tu espacio",
+    "subtitle": "Tu programa de socios en 2 minutos.",
+    "company": "Nombre de tu empresa",
+    "company_ph": "Ej: Acme S.L.",
+    "fullname": "Tu nombre completo",
+    "fullname_ph": "Nombre Apellido",
+    "phone": "Teléfono (opcional)",
+    "phone_ph": "+34 600 123 456",
+    "next": "Continuar →",
+    "back": "← Volver",
+    "credentials": "Tus credenciales",
+    "credentials_sub": "Serás el administrador del espacio {{company}}.",
+    "email": "Email profesional",
+    "email_ph": "tu@empresa.com",
+    "password": "Contraseña",
+    "password_ph": "Mín. 10 caracteres",
+    "creating": "Creando...",
+    "create": "Crear mi espacio",
+    "terms": "Al crear una cuenta, aceptas nuestros",
+    "terms_cgv": "Términos",
+    "terms_and": "y nuestra",
+    "terms_privacy": "política de privacidad",
+    "success_title": "¡Bienvenido a RefBoost!",
+    "success_sub": "Tu espacio {{company}} está listo.",
+    "success_sub2": "Eres el administrador.",
+    "success_cta": "Ir a mi panel →",
+    "error_fields": "Por favor rellena los campos obligatorios.",
+    "error_creds": "Email y contraseña requeridos (10 car., may., min., dígito, especial).",
+    "have_account": "¿Ya tienes cuenta?",
+    "login_link": "Iniciar sesión",
+    "pwd_chars": "10+ car.",
+    "pwd_upper": "Mayúscula",
+    "pwd_lower": "Minúscula",
+    "pwd_digit": "Dígito",
+    "pwd_special": "Especial"
   }
 }
