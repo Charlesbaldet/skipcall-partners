@@ -23,15 +23,15 @@
       "h1_start": "Verander uw",
       "h1_highlight": "aanbevelingen in omzet",
       "description": "RefBoost is het SaaS-platform voor beheer van partnerprogramma's en referrals. Automatiseer referral-tracking, commissies en de prestaties van uw netwerk.",
-      "cta_primary": "Maak mijn gratis ruimte aan →",
+      "cta_primary": "Maak mijn gratis ruimte aan â",
       "cta_secondary": "Ontdekken",
       "stat1_value": "150+",
       "stat1_label": "Actieve partners",
-      "stat2_value": "2,4M€",
+      "stat2_value": "2,4Mâ¬",
       "stat2_label": "Gegenereerde omzet",
       "stat3_value": "98%",
       "stat3_label": "Klanttevredenheid",
-      "trial_badges": "✓ 14 dagen gratis · ✓ Geen creditcard · ✓ Instelling in 5 min"
+      "trial_badges": "â 14 dagen gratis Â· â Geen creditcard Â· â Instelling in 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Lead pipeline",
@@ -57,7 +57,7 @@
         },
         {
           "title": "Automatische commissies",
-          "desc": "Automatische bonusberekening volgens uw regels. Validatie met één klik, volledige geschiedenis, traceerbare betalingen."
+          "desc": "Automatische bonusberekening volgens uw regels. Validatie met Ã©Ã©n klik, volledige geschiedenis, traceerbare betalingen."
         },
         {
           "title": "Dashboards & KPI's",
@@ -104,7 +104,7 @@
           "r": "Commercieel Directeur",
           "c": "TechFlow",
           "a": "M",
-          "t": "We hebben ons referral kanaal in 4 maanden verdrievoudigd. De tool is intuïtief en onze partners zijn er dol op."
+          "t": "We hebben ons referral kanaal in 4 maanden verdrievoudigd. De tool is intuÃ¯tief en onze partners zijn er dol op."
         },
         {
           "n": "Thomas Chen",
@@ -123,7 +123,7 @@
       ]
     },
     "marketplace": {
-      "badge": "✨ Nieuw — RefBoost Marketplace",
+      "badge": "â¨ Nieuw â RefBoost Marketplace",
       "title_start": "Vind referral programma's",
       "title_highlight": "geverifieerd & winstgevend",
       "description": "Honderden bedrijven openen hun programma op RefBoost. Sluit u gratis aan.",
@@ -131,10 +131,10 @@
       "stat1_label": "Actieve programma's",
       "stat2_val": "100%",
       "stat2_label": "Gratis voor partners",
-      "stat3_val": "2,4M€",
+      "stat3_val": "2,4Mâ¬",
       "stat3_label": "Gegenereerde commissies",
-      "cta": "Bekijk alle programma's →",
-      "cta_note": "Gratis · Geen registratie om te bladeren"
+      "cta": "Bekijk alle programma's â",
+      "cta_note": "Gratis Â· Geen registratie om te bladeren"
     },
     "pricing": {
       "label": "Prijzen",
@@ -142,7 +142,7 @@
       "description": "Alle plannen bevatten een gratis proefperiode van 14 dagen. Geen verplichting.",
       "popular": "Populair",
       "custom": "Op maat",
-      "per_month": "€/maand",
+      "per_month": "â¬/maand",
       "cta_contact": "Neem contact op",
       "cta_start": "Gratis starten",
       "plans": [
@@ -197,7 +197,7 @@
         },
         {
           "q": "Kan ik het platform aanpassen aan mijn merk?",
-          "a": "Ja. Logo, kleuren, aangepast domein — uw partners werken in een omgeving die uw merk weerspiegelt, niet dat van RefBoost."
+          "a": "Ja. Logo, kleuren, aangepast domein â uw partners werken in een omgeving die uw merk weerspiegelt, niet dat van RefBoost."
         },
         {
           "q": "Hoe worden commissies berekend?",
@@ -214,8 +214,8 @@
       "title_end": "partnersnetwerk te structureren?",
       "description": "Sluit u aan bij bedrijven die RefBoost gebruiken om aanbevelingen te transformeren in terugkerende omzet.",
       "email_placeholder": "uw@email.nl",
-      "cta_btn": "Beginnen →",
-      "note": "14 dagen gratis · Geen creditcard · Annulering in 1 klik"
+      "cta_btn": "Beginnen â",
+      "note": "14 dagen gratis Â· Geen creditcard Â· Annulering in 1 klik"
     },
     "footer": {
       "tagline": "Het platform voor beheer van referral partnerprogramma's en professionele referrals.",
@@ -239,7 +239,7 @@
         "legal": "Juridische kennisgeving",
         "rgpd": "AVG"
       },
-      "copyright": "© 2026 RefBoost. Alle rechten voorbehouden.",
+      "copyright": "Â© 2026 RefBoost. Alle rechten voorbehouden.",
       "madeIn": "Met zorg gemaakt in Frankrijk"
     }
   },
@@ -250,11 +250,11 @@
     "email_placeholder": "u@bedrijf.nl",
     "password": "Wachtwoord",
     "forgot_password": "Wachtwoord vergeten?",
-    "submit": "Inloggen →",
+    "submit": "Inloggen â",
     "loading": "Bezig met inloggen...",
     "no_account": "Nog geen account?",
-    "create_account": "Gratis ruimte aanmaken →",
-    "back_to_site": "← Terug naar site",
+    "create_account": "Gratis ruimte aanmaken â",
+    "back_to_site": "â Terug naar site",
     "error_default": "Onjuiste inloggegevens"
   },
   "layout": {
@@ -276,5 +276,42 @@
     },
     "collapse": "Inklappen",
     "logout": "Uitloggen"
+  },
+  "signup": {
+    "title": "Maak uw ruimte aan",
+    "subtitle": "Uw partnerprogramma in 2 minuten.",
+    "company": "Bedrijfsnaam",
+    "company_ph": "Bijv. Acme BV",
+    "fullname": "Uw volledige naam",
+    "fullname_ph": "Voornaam Achternaam",
+    "phone": "Telefoon (optioneel)",
+    "phone_ph": "+31 6 12345678",
+    "next": "Doorgaan →",
+    "back": "← Terug",
+    "credentials": "Uw inloggegevens",
+    "credentials_sub": "U wordt beheerder van de {{company}}-ruimte.",
+    "email": "Zakelijk e-mailadres",
+    "email_ph": "u@bedrijf.nl",
+    "password": "Wachtwoord",
+    "password_ph": "Min. 10 tekens",
+    "creating": "Aanmaken...",
+    "create": "Mijn ruimte aanmaken",
+    "terms": "Door een account aan te maken, gaat u akkoord met onze",
+    "terms_cgv": "Voorwaarden",
+    "terms_and": "en ons",
+    "terms_privacy": "privacybeleid",
+    "success_title": "Welkom bij RefBoost!",
+    "success_sub": "Uw {{company}}-ruimte is klaar.",
+    "success_sub2": "U bent de beheerder.",
+    "success_cta": "Naar mijn dashboard →",
+    "error_fields": "Vul de verplichte velden in.",
+    "error_creds": "E-mail en wachtwoord vereist (10 tek., hfd-, kl., cijfer, speciaal).",
+    "have_account": "Al een account?",
+    "login_link": "Inloggen",
+    "pwd_chars": "10+ tek.",
+    "pwd_upper": "Hoofdletter",
+    "pwd_lower": "Kleine letter",
+    "pwd_digit": "Cijfer",
+    "pwd_special": "Speciaal"
   }
 }
