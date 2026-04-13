@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
+import { useTranslation } from 'react-i18next';
 import { fmtDateTime } from '../lib/constants';
 import { MessageCircle, Plus, Send, X, Archive, Trash2, Users } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const ROLE_BADGE = {
 };
 
 export default function MessagingPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [activeConv, setActiveConv] = useState(null);
@@ -94,7 +96,7 @@ export default function MessagingPage() {
     setNewConvForm(f => ({ ...f, participant_ids: f.participant_ids.includes(uid) ? f.participant_ids.filter(id => id !== uid) : [...f.participant_ids, uid] }));
   };
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('messaging.loading')}</div>;
 
   return (
     <div className="fade-in">
@@ -107,9 +109,9 @@ export default function MessagingPage() {
               <Trash2 size={28} color="#dc2626" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Supprimer cette conversation ?</h3>
-            <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>Tous les messages seront supprimés.</p>
+            <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>{t('messaging.delete_all')}</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, color: '#475569' }}>Annuler</button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, color: '#475569' }}>{t('messaging.cancel')}</button>
               <button onClick={() => handleDeleteConversation(deleteConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
             </div>
           </div>
@@ -118,7 +120,7 @@ export default function MessagingPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Messagerie</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('messaging.title')}</h1>
           <p style={{ color: '#64748b', marginTop: 4 }}>Échangez avec l'équipe Skipcall</p>
         </div>
         <button onClick={openNewConversation} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
@@ -136,7 +138,7 @@ export default function MessagingPage() {
             {conversations.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
                 <MessageCircle size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
-                <p>Aucune conversation</p>
+                <p>{t('messaging.no_conversations')}</p>
               </div>
             ) : conversations.map(conv => {
               const unread = parseInt(conv.unread_count || 0);
