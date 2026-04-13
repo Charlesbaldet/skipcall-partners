@@ -993,7 +993,15 @@
     "revenue_mrr": "MRR",
     "revenue_arr": "ARR",
     "revenue_ca": "Omzet",
-    "revenue_other": "Andere"
+    "revenue_other": "Andere",
+    "title_full": "Partnerprogramma",
+    "subtitle_full": "Configureer niveaus en commissies voor je partnerprogramma. Partners stijgen automatisch van niveau op basis van hun prestaties.",
+    "crit_title": "Voortgangscriterium",
+    "crit_deals": "🎯 Aantal gewonnen deals",
+    "crit_volume": "💰 Zakelijk volume (€)",
+    "reset_defaults": "Terugzetten naar standaardwaarden",
+    "reset_confirm": "Terugzetten naar standaardwaarden? Je aangepaste niveaus worden verwijderd.",
+    "delete_confirm": "Dit niveau verwijderen? Partners behouden hun huidige niveau."
   },
   "publicApply": {
     "title": "Word lid van het programma",
