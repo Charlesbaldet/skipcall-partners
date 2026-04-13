@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import api from '../lib/api';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
@@ -12,8 +11,6 @@ export default function SignupPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [marketplaceForm, setMarketplaceForm] = useState({ sector: '', website: '', icp: '', short_description: '', marketplace_visible: false });
-  const setMkt = (k, v) => setMarketplaceForm(f => ({ ...f, [k]: v }));
   const [form, setForm] = useState({
     company: '', fullName: '', email: params.get('email') || '', password: '', phone: '',
   });
@@ -49,16 +46,6 @@ export default function SignupPage() {
     }
   };
 
-
-  const SECTORS_SIGNUP = ['SaaS / Logiciel', 'Conseil & Services', 'Finance & Fintech', 'RH & Recrutement', 'Marketing & Communication', 'Immobilier', 'Commerce', 'Formation', 'Juridique', 'Industrie', 'Autre'];
-
-  const handleMarketplaceStep = async (skip = false) => {
-    if (!skip && (marketplaceForm.sector || marketplaceForm.website || marketplaceForm.short_description)) {
-      try { await api.updateMarketplaceSettings(marketplaceForm); } catch (e) { console.warn('[mkt]', e.message); }
-    }
-    setStep(4);
-  };
-
   const inputStyle = {
     width: '100%', padding: '14px 16px', borderRadius: 12,
     border: '2px solid #e2e8f0', fontSize: 15, fontFamily: 'inherit',
@@ -84,9 +71,9 @@ export default function SignupPage() {
       <div style={{ width:'100%',maxWidth:460,background:'#fff',borderRadius:24,padding:40,boxShadow:'0 20px 60px rgba(0,0,0,.08)',border:'1px solid #f1f5f9' }}>
 
         {/* Progress */}
-        {step < 4 && (
+        {step < 3 && (
           <div style={{ display:'flex',gap:8,marginBottom:32 }}>
-            {[1,2,3].map(s=>(
+            {[1,2].map(s=>(
               <div key={s} style={{ flex:1,height:4,borderRadius:2,background:step>=s?g(C.p,C.pl):'#e2e8f0',transition:'all .3s' }}/>
             ))}
           </div>
@@ -168,81 +155,7 @@ export default function SignupPage() {
         )}
 
         {/* Step 3: Success */}
-        
-      {step === 3 && (
-        <>
-          <button onClick={() => setStep(2)} style={{ background: 'none', border: 'none', color: C.m, cursor: 'pointer', fontSize: 13, marginBottom: 12, padding: 0 }}>
-            Retour
-          </button>
-          <h2 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px', color: C.s }}>
-            Votre programme sur la marketplace
-          </h2>
-          <p style={{ color: C.m, fontSize: 14, margin: '0 0 24px', fontFamily: "'DM Sans',sans-serif" }}>
-            Rendez votre programme visible. Optionnel, modifiable dans les settings.
-          </p>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>Secteur</label>
-            <select value={marketplaceForm.sector} onChange={e => setMkt('sector', e.target.value)}
-              style={{ ...inputStyle, background: '#fff' }}
-              onFocus={e => e.target.style.borderColor = C.p}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'}>
-              <option value="">-- Choisir --</option>
-              {SECTORS_SIGNUP.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>Site web</label>
-            <input type="url" value={marketplaceForm.website} onChange={e => setMkt('website', e.target.value)}
-              placeholder="https://votre-site.com" style={inputStyle}
-              onFocus={e => e.target.style.borderColor = C.p}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>
-              ICP principal <span style={{ fontWeight: 400, color: C.m }}>(optionnel)</span>
-            </label>
-            <input value={marketplaceForm.icp} onChange={e => setMkt('icp', e.target.value)}
-              placeholder="Ex: PME, startups B2B..." style={inputStyle}
-              onFocus={e => e.target.style.borderColor = C.p}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-          </div>
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>Description courte</label>
-            <textarea value={marketplaceForm.short_description} onChange={e => setMkt('short_description', e.target.value)}
-              placeholder="Decrivez votre service en 2-3 phrases..."
-              rows={3} style={{ ...inputStyle, resize: 'vertical' }}
-              onFocus={e => e.target.style.borderColor = C.p}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'} />
-          </div>
-          <div onClick={() => setMkt('marketplace_visible', !marketplaceForm.marketplace_visible)}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: marketplaceForm.marketplace_visible ? '#ecfdf5' : '#f8fafc',
-              border: '1.5px solid ' + (marketplaceForm.marketplace_visible ? C.p : '#e2e8f0'),
-              borderRadius: 12, padding: '12px 16px', cursor: 'pointer', marginBottom: 22, transition: 'all .3s'
-            }}>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 13, color: C.s }}>Apparaitre sur la marketplace</div>
-              <div style={{ fontSize: 12, color: C.m }}>
-                {marketplaceForm.marketplace_visible ? 'Actif — visible publiquement' : 'Inactif — activez dans les settings plus tard'}
-              </div>
-            </div>
-            <div style={{ width: 42, height: 24, borderRadius: 12, background: marketplaceForm.marketplace_visible ? C.p : '#cbd5e1', position: 'relative', transition: 'background .3s', flexShrink: 0 }}>
-              <div style={{ position: 'absolute', top: 2, left: marketplaceForm.marketplace_visible ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .3s' }} />
-            </div>
-          </div>
-          <button onClick={() => handleMarketplaceStep(false)}
-            style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: g(C.p, C.pl), color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 8px 30px ' + C.p + '25', marginBottom: 10 }}>
-            Continuer
-          </button>
-          <button onClick={() => handleMarketplaceStep(true)}
-            style={{ width: '100%', padding: '12px', borderRadius: 14, border: '1.5px solid #e2e8f0', background: '#fff', color: C.m, fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Passer cette etape
-          </button>
-        </>
-      )}
-
-      {step === 4 && (
+        {step === 3 && (
           <div style={{ textAlign:'center' }}>
             <div style={{ width:72,height:72,borderRadius:20,background:`${C.p}10`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}>🎉</div>
             <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>Bienvenue sur RefBoost !</h2>
