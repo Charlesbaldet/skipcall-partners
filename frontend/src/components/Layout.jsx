@@ -152,9 +152,9 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        {/* Language Switcher — toujours visible */}
+        {/* Language Switcher â toujours visible */}
         <div style={{ padding: collapsed ? '6px 8px' : '6px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <LanguageSwitcher compact={collapsed} style={{ width: '100%' }}/>
+          <LanguageSwitcher compact={collapsed} direction="up" dark={true} style={{ width: '100%' }}/>
         </div>
 
         {/* Collapse toggle */}
