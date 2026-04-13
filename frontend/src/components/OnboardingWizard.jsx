@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, UserPlus, Palette, Link2, Sparkles, Rocket, Copy, Check } from 'lucide-react';
+import { X, Users, UserPlus, Palette, Link2, Sparkles, Rocket, Copy, Check, Store } from 'lucide-react';
 import api from '../lib/api';
 
 const C = { p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)', s: '#0f172a', m: '#64748b', a: 'var(--rb-accent, #f97316)' };
@@ -27,6 +27,8 @@ export default function OnboardingWizard({ onClose }) {
 
   const [customizeForm, setCustomizeForm] = useState({ name: '', primary_color: C.p, accent_color: C.a, revenue_model: 'MRR' });
   const [customized, setCustomized] = useState(false);
+  const [marketplaceForm, setMarketplaceForm] = useState({ sector: '', website: '', icp: '', short_description: '', marketplace_visible: false });
+  const setMkt = (k, v) => setMarketplaceForm(f => ({ ...f, [k]: v }));
 
   const [copied, setCopied] = useState(false);
   const [tenantSlug, setTenantSlug] = useState('');
@@ -72,6 +74,14 @@ export default function OnboardingWizard({ onClose }) {
 
   const publicLink = typeof window !== 'undefined' ? window.location.origin + (tenantSlug ? '/r/' + tenantSlug : '/apply') : '';
   const copyLink = () => { navigator.clipboard.writeText(publicLink); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+
+  const submitMarketplace = async () => {
+    if (marketplaceForm.sector || marketplaceForm.website || marketplaceForm.short_description) {
+      try { await api.updateMarketplaceSettings(marketplaceForm); } catch (e) { console.warn('[mkt]', e.message); }
+    }
+    goNext();
+  };
 
   const cur = STEPS[step];
   const Icon = cur.icon;
