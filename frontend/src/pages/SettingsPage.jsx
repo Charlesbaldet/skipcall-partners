@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth.jsx';
 import {
   Trophy, Plus, Edit2,
@@ -46,11 +46,11 @@ function MarketplaceTab() {
 
   const inp = { width:'100%', padding:'12px 14px', borderRadius:10, border:'1.5px solid #e2e8f0', fontSize:14, fontFamily:'inherit', color:'#0f172a', outline:'none', boxSizing:'border-box', transition:'border-color .2s' };
 
-  if (loading) return <div style={{textAlign:'center',padding:48,color:'#64748b'}}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{textAlign:'center',padding:48,color:'#64748b'}}>Chargement…</div>;
   return (
     <div style={{maxWidth:640}}>
       <div style={{marginBottom:28}}>
-        <h2 style={{fontSize:20,fontWeight:800,color:'#0f172a',margin:'0 0 6px'}}>{t('settings.marketplace_section')}</h2>
+        <h2 style={{fontSize:20,fontWeight:800,color:'#0f172a',margin:'0 0 6px'}}>Programme sur la Marketplace</h2>
         <p style={{color:'#64748b',fontSize:14,margin:0,lineHeight:1.6}}>Rendez votre programme de parrainage visible sur la marketplace publique de RefBoost.</p>
       </div>
       {/* Toggle visibilité */}
@@ -60,7 +60,7 @@ function MarketplaceTab() {
             <Globe size={18} color={settings.marketplace_visible?'#fff':'#94a3b8'}/>
           </div>
           <div>
-            <div style={{fontWeight:700,fontSize:14,color:'#0f172a'}}>{t('settings.marketplace_visible')}</div>
+            <div style={{fontWeight:700,fontSize:14,color:'#0f172a'}}>Visible sur la marketplace</div>
             <div style={{fontSize:12,color:'#64748b'}}>{settings.marketplace_visible?"✅ Votre programme est affiché publiquement":'Votre programme est masqué'}</div>
           </div>
         </div>
@@ -96,7 +96,7 @@ function MarketplaceTab() {
       {success && <div style={{background:'#ecfdf5',border:'1px solid #6ee7b7',borderRadius:10,padding:'12px 16px',color:'#059669',fontSize:13,marginBottom:16}}>{success}</div>}
       <div style={{display:'flex',gap:12,alignItems:'center'}}>
         <button onClick={handleSave} disabled={saving} style={{padding:'12px 28px',borderRadius:10,border:'none',background:saving?'#94a3b8':'linear-gradient(135deg,#059669,#10b981)',color:'#fff',fontWeight:700,fontSize:14,cursor:saving?'not-allowed':'pointer',fontFamily:'inherit',boxShadow:saving?'none':'0 4px 16px rgba(5,150,105,.35)'}}>
-       {saving?t('settings.saving'):t('settings.save')}
+          {saving?'Enregistrement…':'Enregistrer'}
         </button>
         <a href="/marketplace" target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:6,padding:'12px 20px',borderRadius:10,border:'1.5px solid #059669',color:'#059669',fontWeight:600,fontSize:13,textDecoration:'none'}}>
           <Globe size={14}/> Voir la marketplace
@@ -287,7 +287,7 @@ function SuperAdminsTab() {
       <div>
         <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>Liste ({superadmins.length})</h3>
         {loading ? (
-          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>{t('settings.loading')}</div>
+          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>
         ) : superadmins.length === 0 ? (
           <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0' }}>Aucun super administrateur</div>
         ) : (
@@ -343,7 +343,7 @@ function MembersTab() {
 
   const copyToClipboard = (t) => { navigator.clipboard.writeText(t); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
 
   return (
     <div>
@@ -400,7 +400,7 @@ function MembersTab() {
             <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Supprimer cet utilisateur ?</h3>
             <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Cette action est irréversible.</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('settings.cancel')}</button>
+              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
               <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#dc2626,#b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
             </div>
           </div>
@@ -506,14 +506,14 @@ function IntegrationsTab() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? 'Création...' : 'Générer'}</button>
-            <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
+            <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
           </div>
         </div>
       ) : (
         <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> Créer une clé API</button>
       )}
 
-      {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>{t('settings.loading')}</div> : (
+      {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>Chargement...</div> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {apiKeys.filter(k => k.is_active).map(k => (
             <div key={k.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
@@ -544,7 +544,7 @@ function PublicLinkTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
   if (!tenant) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Impossible de charger les infos du tenant.</div>;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -641,7 +641,7 @@ function AppearanceTab() {
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
 
   const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', fontFamily: 'inherit' };
   const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 };
@@ -649,7 +649,7 @@ function AppearanceTab() {
   return (
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Apparence</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.branding_desc')}</p>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.branding_desc')}<</p>
 
       {msg && (
         <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
@@ -659,7 +659,7 @@ function AppearanceTab() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
         <div>
-          <label style={labelStyle}>{t('settings.general_company')}</label>
+          <label style={labelStyle}>Nom de l'entreprise</label>
           <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Mon entreprise" style={inputStyle} />
         </div>
 
@@ -675,7 +675,7 @@ function AppearanceTab() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div>
-            <label style={labelStyle}>{t('settings.branding_primary')}</label>
+            <label style={labelStyle}>Couleur principale</label>
             <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
           </div>
           <div>
@@ -685,7 +685,7 @@ function AppearanceTab() {
         </div>
 
         <div>
-          <label style={labelStyle}>{t('settings.branding_logo')}</label>
+          <label style={labelStyle}>URL du logo</label>
           <input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://exemple.com/logo.png" style={inputStyle} />
           <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>Colle l'URL d'une image hébergée. Format recommandé : PNG transparent, hauteur ~80px.</p>
           {form.logo_url && (
@@ -792,7 +792,7 @@ function ProgramTab() {
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
 
   const isDeal = data.threshold_type === 'deals';
   const unitLabel = isDeal ? 'deals gagnés' : '€ générés';
@@ -828,15 +828,15 @@ function ProgramTab() {
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.marketplace_save')}</button>
-        <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
+        <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.save')}</button>
+        <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
       </div>
     </div>
   );
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Programme partenaires</h3>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.program_section')}</h3>
       <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Configure les niveaux et les commissions de ton programme. Les partenaires montent de niveau automatiquement selon leur performance.</p>
 
       {msg && (
