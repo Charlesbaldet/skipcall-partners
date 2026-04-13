@@ -212,6 +212,16 @@ async function runMigrations() {
   await query('CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts(published, published_at DESC)');
   await query('CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON blog_posts(category)');
 
+  
+  // ─── v18: Marketplace columns on tenants ───
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS sector VARCHAR(100)`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS website VARCHAR(255)`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS icp TEXT`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS short_description TEXT`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS marketplace_visible BOOLEAN DEFAULT false`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_tenants_marketplace ON tenants(marketplace_visible) WHERE marketplace_visible = true`);
+  console.log('[marketplace] v18 columns added to tenants');
+
   console.log('✅ Migrations completed');
 
   } catch (err) {
