@@ -1128,6 +1128,11 @@
     "saved": "Guardado ✓",
     "cancel": "Cancelar",
     "save": "Guardar",
-    "saving": "Guardando..."
+    "saving": "Guardando...",
+    "change_pwd": "Cambiar contraseña",
+    "add": "Añadir",
+    "branding_desc": "Personaliza los colores y el logotipo de tu espacio de socios. Estos ajustes se aplican en todas partes: barra lateral, interfaz, etc.",
+    "level_saved": "Nivel guardado ✓",
+    "levels_reset_confirm": "¿Restablecer a los valores predeterminados (Bronze/Silver/Gold/Platinum)? Tus niveles personalizados serán eliminados."
   }
 }
