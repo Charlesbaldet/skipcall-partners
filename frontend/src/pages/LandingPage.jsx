@@ -163,7 +163,7 @@ export default function LandingPage() {
           </div>
           {['Marketplace','Tarifs','Témoignages','Blog'].map(x => (
             <a key={x} href={x === 'Blog' ? '/blog' : x === 'Marketplace' ? '/marketplace' : '#' + x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,transition:'color .2s' }}
-              style={{ color: x === 'Marketplace' ? C.p : C.m, fontWeight: x === 'Marketplace' ? 700 : 400, textDecoration: 'none', fontSize: 15, cursor: 'pointer' }}
+              style={{ color: C.m, textDecoration: 'none', fontSize: 15, cursor: 'pointer', fontWeight: 400 }}
               onMouseEnter={e => e.target.style.color=C.p}
               onMouseLeave={e => e.target.style.color=C.m}>
               {x}
