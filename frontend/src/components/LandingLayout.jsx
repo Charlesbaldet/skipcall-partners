@@ -76,7 +76,7 @@ export function LandingNav() {
                 </div>
               )}
             </div>
-            {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
+            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
               <a key={label} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
                 onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>{label}</a>
             ))}
@@ -101,7 +101,7 @@ export function LandingNav() {
             ))}
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:4,marginTop:16 }}>
-            {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
+            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href'])=>(
               <a key={label} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>{label}</a>
             ))}
           </div>
@@ -132,8 +132,8 @@ export function LandingFooter() {
             </div>
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Ressources</div>
-              {['Blog','Guide','FAQ','Contact'].map(x=>(
-                <a key={x} href={x==='Blog'?'/blog':'#'} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>
+              {['Marketplace','Blog','Guide','FAQ','Contact'].map(x=>(
+                <a key={x} href={x==='Marketplace'?'/marketplace':x==='Blog'?'/blog':'#'} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>
               ))}
             </div>
             <div>
