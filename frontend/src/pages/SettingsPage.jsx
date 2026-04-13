@@ -96,7 +96,7 @@ function MarketplaceTab() {
       {success && <div style={{background:'#ecfdf5',border:'1px solid #6ee7b7',borderRadius:10,padding:'12px 16px',color:'#059669',fontSize:13,marginBottom:16}}>{success}</div>}
       <div style={{display:'flex',gap:12,alignItems:'center'}}>
         <button onClick={handleSave} disabled={saving} style={{padding:'12px 28px',borderRadius:10,border:'none',background:saving?'#94a3b8':'linear-gradient(135deg,#059669,#10b981)',color:'#fff',fontWeight:700,fontSize:14,cursor:saving?'not-allowed':'pointer',fontFamily:'inherit',boxShadow:saving?'none':'0 4px 16px rgba(5,150,105,.35)'}}>
-          {saving?'Enregistrement…':'Enregistrer'}
+       {saving?t('settings.saving'):t('settings.save')}
         </button>
         <a href="/marketplace" target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:6,padding:'12px 20px',borderRadius:10,border:'1.5px solid #059669',color:'#059669',fontWeight:600,fontSize:13,textDecoration:'none'}}>
           <Globe size={14}/> Voir la marketplace
@@ -200,7 +200,7 @@ function AccountTab({ user }) {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
         <Lock size={16} color="#6366f1" />
-        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Changer le mot de passe</h4>
+        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{t('settings.change_pwd')}</h4>
       </div>
       {pwMsg && (<div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500, background: pwMsg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: pwMsg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${pwMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>{pwMsg.text}</div>)}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400 }}>
@@ -350,7 +350,7 @@ function MembersTab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Membres</h3>
         <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-          {showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? 'Annuler' : 'Ajouter'}
+          {showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? t('settings.cancel') : t('settings.add')}
         </button>
       </div>
 
@@ -649,7 +649,7 @@ function AppearanceTab() {
   return (
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Apparence</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Personnalise les couleurs et le logo de ton espace partenaires. Ces réglages s'appliquent partout : sidebar admin, wizard d'onboarding, et page publique d'inscription.</p>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.branding_desc')}</p>
 
       {msg && (
         <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
@@ -765,7 +765,7 @@ function ProgramTab() {
       }
       setEditing(null);
       await load();
-      setMsg({ type: 'success', text: 'Niveau enregistré ✓' });
+      setMsg({ type: 'success', text: t('settings.level_saved') });
       setTimeout(() => setMsg(null), 2000);
     } catch (e) {
       setMsg({ type: 'error', text: e.message || 'Erreur' });
@@ -783,7 +783,7 @@ function ProgramTab() {
   };
 
   const reset = async () => {
-    if (!window.confirm('Réinitialiser aux valeurs par défaut (Bronze/Silver/Gold/Platinum) ? Tes niveaux personnalisés seront effacés.')) return;
+    if (!window.confirm(t('settings.levels_reset_confirm'))) return;
     try {
       await api.resetTenantLevels();
       load();
