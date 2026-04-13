@@ -993,7 +993,15 @@
     "revenue_mrr": "MRR",
     "revenue_arr": "ARR",
     "revenue_ca": "Ingresos",
-    "revenue_other": "Otro"
+    "revenue_other": "Otro",
+    "title_full": "Programa de socios",
+    "subtitle_full": "Configura los niveles y comisiones de tu programa de socios. Los socios suben de nivel automáticamente según su rendimiento.",
+    "crit_title": "Criterio de progresión",
+    "crit_deals": "🎯 Número de acuerdos ganados",
+    "crit_volume": "💰 Volumen de negocio (€)",
+    "reset_defaults": "Restablecer valores predeterminados",
+    "reset_confirm": "¿Restablecer a los valores predeterminados? Tus niveles personalizados se eliminarán.",
+    "delete_confirm": "¿Eliminar este nivel? Los socios conservarán su nivel actual."
   },
   "publicApply": {
     "title": "Unirse al programa",
