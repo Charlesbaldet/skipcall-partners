@@ -1157,5 +1157,19 @@
     "Silver": "Zilver",
     "Gold": "Goud",
     "Platinum": "Platina"
+  },
+  "onboarding": {
+    "skip": "Stap overslaan",
+    "next": "Volgende →",
+    "back": "Terug",
+    "finish": "Installatie voltooien",
+    "subtitle": "Stel je werkruimte in een paar stappen in",
+    "welcome_title": "Welkom bij RefBoost 🎉",
+    "createUser_title": "Maak je team aan",
+    "createPartner_title": "Nodig je eerste partner uit",
+    "customize_title": "Pas je werkruimte aan",
+    "publicLink_title": "Jouw verwijzingslink",
+    "marketplace_title": "Jouw programma op de marketplace",
+    "done_title": "Alles klaar 🚀"
   }
 }
