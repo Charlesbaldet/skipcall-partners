@@ -83,10 +83,10 @@ export default function LandingPage() {
   const features = [
     { icon:'pipeline', title:'Pipeline de referrals', desc:'Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancés, statuts en temps réel.' },
     { icon:'commissions', title:'Commissions automatiques', desc:'Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables.' },
-    { icon:'analytics', title:'Tableaux de bord & KPIs', desc:'Taux de conversion, MRR généré, performance par apporteur d\'affaires. Prenez des décisions basées sur les données.' },
-    { icon:'branding', title:'Votre marque, votre plateforme', desc:'Personnalisez entièrement l\'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers.' },
-    { icon:'security', title:'Sécurité de niveau entreprise', desc:'Chiffrement AES-256, journaux d\'audit, protection anti-brute force. Conforme RGPD, prêt pour l\'ISO 27001.' },
-    { icon:'tracking', title:'Liens de tracking uniques', desc:'Chaque apporteur d\'affaires a son lien personnel. Attribution automatique, formulaire public, zéro friction.' },
+    { icon:'analytics', title:'Tableaux de bord & KPIs', desc:'Taux de conversion, MRR généré, performance par apporteur d'affaires. Prenez des décisions basées sur les données.' },
+    { icon:'branding', title:'Votre marque, votre plateforme', desc:'Personnalisez entièrement l'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers.' },
+    { icon:'security', title:'Sécurité de niveau entreprise', desc:'Chiffrement AES-256, journaux d'audit, protection anti-brute force. Conforme RGPD, prêt pour l'ISO 27001.' },
+    { icon:'tracking', title:'Liens de tracking uniques', desc:'Chaque apporteur d'affaires a son lien personnel. Attribution automatique, formulaire public, zéro friction.' },
   ];
 
   const testimonials = [
