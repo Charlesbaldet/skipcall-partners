@@ -8,7 +8,7 @@
     "noData": "Nessun dato"
   },
   "nav": {
-    "features": "Funzionalità",
+    "features": "FunzionalitÃ ",
     "marketplace": "Marketplace",
     "pricing": "Prezzi",
     "testimonials": "Testimonianze",
@@ -19,19 +19,19 @@
   },
   "landing": {
     "hero": {
-      "badge": "Gestisci i tuoi referral partner con semplicità",
+      "badge": "Gestisci i tuoi referral partner con semplicitÃ ",
       "h1_start": "Trasforma le tue",
       "h1_highlight": "raccomandazioni in fatturato",
-      "description": "RefBoost è la piattaforma SaaS per la gestione di programmi partner e referral. Automatizza il tracciamento dei referral, le commissioni e le performance della tua rete.",
-      "cta_primary": "Crea il mio spazio gratuitamente →",
+      "description": "RefBoost Ã¨ la piattaforma SaaS per la gestione di programmi partner e referral. Automatizza il tracciamento dei referral, le commissioni e le performance della tua rete.",
+      "cta_primary": "Crea il mio spazio gratuitamente â",
       "cta_secondary": "Scopri",
       "stat1_value": "150+",
       "stat1_label": "Partner attivi",
-      "stat2_value": "2.4M€",
+      "stat2_value": "2.4Mâ¬",
       "stat2_label": "Fatturato generato",
       "stat3_value": "98%",
       "stat3_label": "Soddisfazione clienti",
-      "trial_badges": "✓ 14 giorni gratis · ✓ Senza carta di credito · ✓ Configurazione in 5 min"
+      "trial_badges": "â 14 giorni gratis Â· â Senza carta di credito Â· â Configurazione in 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Pipeline lead",
@@ -46,7 +46,7 @@
       "tracking_desc": "Attribuzione perfetta"
     },
     "features": {
-      "label": "Funzionalità",
+      "label": "FunzionalitÃ ",
       "title": "Tutto per gestire il tuo",
       "title_highlight": "programma referral partner",
       "description": "Dal primo referral al pagamento della commissione, RefBoost automatizza ogni fase.",
@@ -83,7 +83,7 @@
       "steps": [
         {
           "title": "Crea il tuo spazio",
-          "desc": "Registrati in 2 minuti. Personalizza la piattaforma con la tua identità visiva."
+          "desc": "Registrati in 2 minuti. Personalizza la piattaforma con la tua identitÃ  visiva."
         },
         {
           "title": "Invita i tuoi partner",
@@ -104,7 +104,7 @@
           "r": "Direttrice Commerciale",
           "c": "TechFlow",
           "a": "M",
-          "t": "Abbiamo triplicato il canale referral in 4 mesi. Lo strumento è intuitivo e i nostri partner lo adorano."
+          "t": "Abbiamo triplicato il canale referral in 4 mesi. Lo strumento Ã¨ intuitivo e i nostri partner lo adorano."
         },
         {
           "n": "Thomas Chen",
@@ -118,12 +118,12 @@
           "r": "Head of Partnerships",
           "c": "DataViz Pro",
           "a": "S",
-          "t": "Basta fogli di calcolo per tracciare le commissioni. Tutto è automatizzato, trasparente, e i partner sono entusiasti."
+          "t": "Basta fogli di calcolo per tracciare le commissioni. Tutto Ã¨ automatizzato, trasparente, e i partner sono entusiasti."
         }
       ]
     },
     "marketplace": {
-      "badge": "✨ Nuovo — Marketplace RefBoost",
+      "badge": "â¨ Nuovo â Marketplace RefBoost",
       "title_start": "Trova programmi di referral",
       "title_highlight": "verificati & remunerativi",
       "description": "Centinaia di aziende aprono il loro programma su RefBoost. Unisciti a loro gratuitamente.",
@@ -131,10 +131,10 @@
       "stat1_label": "Programmi attivi",
       "stat2_val": "100%",
       "stat2_label": "Gratuito per i partner",
-      "stat3_val": "2.4M€",
+      "stat3_val": "2.4Mâ¬",
       "stat3_label": "Commissioni generate",
-      "cta": "Vedi tutti i programmi →",
-      "cta_note": "Gratuito · Senza registrazione per navigare"
+      "cta": "Vedi tutti i programmi â",
+      "cta_note": "Gratuito Â· Senza registrazione per navigare"
     },
     "pricing": {
       "label": "Prezzi",
@@ -142,7 +142,7 @@
       "description": "Tutti i piani includono 14 giorni di prova gratuita. Senza impegno.",
       "popular": "Popolare",
       "custom": "Su misura",
-      "per_month": "€/mese",
+      "per_month": "â¬/mese",
       "cta_contact": "Contattaci",
       "cta_start": "Inizia gratuitamente",
       "plans": [
@@ -178,7 +178,7 @@
             "SSO / SAML",
             "SLA garantito",
             "Account manager dedicato",
-            "Audit & conformità"
+            "Audit & conformitÃ "
           ]
         }
       ]
@@ -188,8 +188,8 @@
       "title": "Tutto quello che devi sapere",
       "items": [
         {
-          "q": "Cos'è un programma di referral partner?",
-          "a": "È un sistema che remunera partner esterni per ogni cliente che ti raccomandano. RefBoost automatizza tutto: tracking, attribuzione, calcolo e pagamento delle commissioni."
+          "q": "Cos'Ã¨ un programma di referral partner?",
+          "a": "Ã un sistema che remunera partner esterni per ogni cliente che ti raccomandano. RefBoost automatizza tutto: tracking, attribuzione, calcolo e pagamento delle commissioni."
         },
         {
           "q": "Quanto tempo per essere operativi?",
@@ -197,7 +197,7 @@
         },
         {
           "q": "Posso personalizzare la piattaforma con il mio brand?",
-          "a": "Sì. Logo, colori, dominio personalizzato — i tuoi partner lavorano in un ambiente che riflette il tuo brand, non quello di RefBoost."
+          "a": "SÃ¬. Logo, colori, dominio personalizzato â i tuoi partner lavorano in un ambiente che riflette il tuo brand, non quello di RefBoost."
         },
         {
           "q": "Come vengono calcolate le commissioni?",
@@ -205,7 +205,7 @@
         },
         {
           "q": "I miei dati sono al sicuro?",
-          "a": "Assolutamente. Crittografia AES-256, log di audit completi, protezione anti-brute force, conformità GDPR. Seguiamo gli standard ISO 27001."
+          "a": "Assolutamente. Crittografia AES-256, log di audit completi, protezione anti-brute force, conformitÃ  GDPR. Seguiamo gli standard ISO 27001."
         }
       ]
     },
@@ -214,13 +214,13 @@
       "title_end": "rete di referral?",
       "description": "Unisciti alle aziende che usano RefBoost per trasformare le raccomandazioni in fatturato ricorrente.",
       "email_placeholder": "tua@email.com",
-      "cta_btn": "Inizia →",
-      "note": "14 giorni gratis · Senza carta di credito · Cancellazione in 1 clic"
+      "cta_btn": "Inizia â",
+      "note": "14 giorni gratis Â· Senza carta di credito Â· Cancellazione in 1 clic"
     },
     "footer": {
       "tagline": "La piattaforma per la gestione di programmi referral partner e referral professionale.",
       "sections": {
-        "features": "Funzionalità",
+        "features": "FunzionalitÃ ",
         "resources": "Risorse",
         "legal": "Legale"
       },
@@ -239,7 +239,7 @@
         "legal": "Note legali",
         "rgpd": "GDPR"
       },
-      "copyright": "© 2026 RefBoost. Tutti i diritti riservati.",
+      "copyright": "Â© 2026 RefBoost. Tutti i diritti riservati.",
       "madeIn": "Fatto con cura in Francia"
     }
   },
@@ -250,11 +250,11 @@
     "email_placeholder": "tu@azienda.com",
     "password": "Password",
     "forgot_password": "Password dimenticata?",
-    "submit": "Accedi →",
+    "submit": "Accedi â",
     "loading": "Accesso in corso...",
     "no_account": "Non hai ancora un account?",
-    "create_account": "Crea uno spazio gratuito →",
-    "back_to_site": "← Torna al sito",
+    "create_account": "Crea uno spazio gratuito â",
+    "back_to_site": "â Torna al sito",
     "error_default": "Credenziali errate"
   },
   "layout": {
@@ -276,5 +276,42 @@
     },
     "collapse": "Comprimi",
     "logout": "Esci"
+  },
+  "signup": {
+    "title": "Crea il tuo spazio",
+    "subtitle": "Il tuo programma referral in 2 minuti.",
+    "company": "Nome dell'azienda",
+    "company_ph": "Es: Acme SRL",
+    "fullname": "Il tuo nome completo",
+    "fullname_ph": "Nome Cognome",
+    "phone": "Telefono (opzionale)",
+    "phone_ph": "+39 333 123 4567",
+    "next": "Continua →",
+    "back": "← Indietro",
+    "credentials": "Le tue credenziali",
+    "credentials_sub": "Sarai l'amministratore dello spazio {{company}}.",
+    "email": "Email professionale",
+    "email_ph": "tu@azienda.com",
+    "password": "Password",
+    "password_ph": "Min. 10 caratteri",
+    "creating": "Creazione in corso...",
+    "create": "Crea il mio spazio",
+    "terms": "Creando un account, accetti i nostri",
+    "terms_cgv": "Termini",
+    "terms_and": "e la nostra",
+    "terms_privacy": "informativa sulla privacy",
+    "success_title": "Benvenuto su RefBoost!",
+    "success_sub": "Il tuo spazio {{company}} è pronto.",
+    "success_sub2": "Sei l'amministratore.",
+    "success_cta": "Vai alla mia dashboard →",
+    "error_fields": "Compila i campi obbligatori.",
+    "error_creds": "Email e password richiesti (10 car., maius., minus., cifra, speciale).",
+    "have_account": "Hai già un account?",
+    "login_link": "Accedi",
+    "pwd_chars": "10+ car.",
+    "pwd_upper": "Maiuscola",
+    "pwd_lower": "Minuscola",
+    "pwd_digit": "Cifra",
+    "pwd_special": "Speciale"
   }
 }
