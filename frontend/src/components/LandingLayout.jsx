@@ -101,7 +101,7 @@ export function LandingNav() {
             ))}
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:4,marginTop:16 }}>
-            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href'])=>(
+            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
               <a key={label} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>{label}</a>
             ))}
           </div>
