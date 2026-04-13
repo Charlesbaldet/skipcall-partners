@@ -16,8 +16,8 @@ const STEPS = [
   { id: 'done',          icon: Rocket,    title: 'Tout est prêt 🚀' },
 ];
 
-export default function OnboardingWizard({
-  const { t } = useTranslation(); onClose }) {
+export default function OnboardingWizard({ onClose }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
