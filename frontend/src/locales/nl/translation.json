@@ -323,5 +323,248 @@
     "trial_text": "14 dagen gratis, geen creditcard. Stel uw programma in 5 minuten in.",
     "create_space": "Mijn ruimte gratis aanmaken",
     "no_commitment": "Geen verplichting · 14 dagen gratis · Support inbegrepen"
+  },
+  "features": {
+    "label": "Functie",
+    "pipeline": {
+      "helmet_title": "Referral pipeline — RefBoost",
+      "helmet_desc": "Volg elke aanbeveling van het eerste contact tot de afsluiting. Kanban-weergave, geavanceerde filters, realtime statussen.",
+      "title": "Referral pipeline",
+      "subtitle": "Van aanbeveling tot afsluiting — elke lead is gevolgd, geprioriteerd en bruikbaar in realtime.",
+      "benefits": [
+        {
+          "stat": "3x",
+          "statLabel": "meer leads geconverteerd vs ongestructureerd bijhouden",
+          "title": "Realtime Kanban-weergave",
+          "text": "Zie uw volledige partner-pipeline in één oogopslag. Elke lead beweegt door de kolommen naarmate de verkoop vordert — geen spreadsheet.",
+          "points": [
+            "Configureerbare kolommen: Nieuw, Kwalificatie, Demo, Voorstel, Getekend",
+            "Drag & drop om status in één gebaar te wijzigen",
+            "Automatische melding aan de partner bij elke fasewijziging",
+            "Gewogen waarde op basis van sluitingskans in realtime"
+          ]
+        },
+        {
+          "stat": "87%",
+          "statLabel": "van de teams verminderen hun responstijd met meer dan 2 dagen",
+          "title": "Geavanceerde filters en zoekfunctie",
+          "text": "Vind onmiddellijk elke lead onder honderden. Filter op partner, bedrag, status, datum of bron met één klik.",
+          "points": [
+            "Cumulatieve filters: partner + status + bedrag + datum",
+            "Volledige tekstzoekopdracht op bedrijfsnaam, contactpersoon, opmerkingen",
+            "Opgeslagen weergaven per verkoper of per bron",
+            "CSV-export van elke gefilterde subset"
+          ]
+        },
+        {
+          "stat": "48h",
+          "statLabel": "gemiddeld per deal bespaard dankzij meldingen",
+          "title": "Volledige geschiedenis en opmerkingen",
+          "text": "Elke lead heeft zijn eigen dossier met de geschiedenis van alle acties, opmerkingen van het verkoopteam en uitwisselingen met de partner.",
+          "points": [
+            "Volledige tijdlijn van alle statuswijzigingen",
+            "Interne opmerkingen alleen zichtbaar voor het team",
+            "Berichten zichtbaar voor de partner om hem op de hoogte te houden",
+            "Herinneringen en follow-ups planbaar in het dossier"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "We hebben ons referralkanaal in 4 maanden verdrievoudigd. Pipeline-transparantie houdt onze beste partners betrokken.",
+        "author": "Marie D., Commercieel Directeur — SaaS B2B"
+      }
+    },
+    "commissions": {
+      "helmet_title": "Automatische commissies — RefBoost",
+      "helmet_desc": "Automatische bonusberekening op basis van uw regels. Validatie met één klik, volledige geschiedenis, traceerbare betalingen.",
+      "title": "Automatische commissies",
+      "subtitle": "Stel uw regels eenmalig in. RefBoost berekent, valideert en volgt elke commissie zonder handmatige tussenkomst.",
+      "benefits": [
+        {
+          "stat": "0",
+          "statLabel": "berekeningsfouten sinds de invoering van RefBoost (klantdata)",
+          "title": "Automatische berekening op basis van uw regels",
+          "text": "Stel uw commissieraster eenmalig in — vast tarief, MRR-percentage, progressieve niveaus — en RefBoost berekent automatisch de bonus bij elk gevalideerde deal.",
+          "points": [
+            "Configureerbare tarieven per partner, segment of volume",
+            "Progressieve niveaus: 8% tot 5 deals/maand, 12% daarboven",
+            "Commissie op eerste verkoop of terugkerend op abonnement",
+            "Directe berekening bij statusupdate naar \"Getekend\""
+          ]
+        },
+        {
+          "stat": "100%",
+          "statLabel": "van uw bedrijfsregels modelleerbaar zonder ontwikkeling",
+          "title": "Flexibele en controleerbare regels",
+          "text": "Elke commissieregel is gedocumenteerd, voorzien van tijdstempel en traceerbaar. Uw partners zien precies hoe hun vergoeding wordt berekend.",
+          "points": [
+            "No-code interface voor het maken en wijzigen van regels",
+            "Volledige geschiedenis van elke regelwijziging",
+            "Simulatie van verwachte winst voor dealvalidatie",
+            "Verschillende regels per dealtype of partner"
+          ]
+        },
+        {
+          "stat": "< 5min",
+          "statLabel": "om te exporteren en te synchroniseren met uw boekhouding",
+          "title": "Export en boekhoudintegraties",
+          "text": "Genereer uw commissieoverzichten met één klik, exporteer naar uw boekhoudsoftware en stuur details rechtstreeks naar partners.",
+          "points": [
+            "CSV/PDF-export van commissies per periode of per partner",
+            "Zapier-integratie voor automatische synchronisatie",
+            "Automatische e-mails aan partners met berekeningsdetails",
+            "Reglementaire archivering conform AVG"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "Geen spreadsheets meer voor commissiebeheer. Alles geautomatiseerd, transparant, en onze partners ontvangen graag hun gedetailleerde berekeningen elke maand.",
+        "author": "Sophie M., Head of Partnerships — DataViz Pro"
+      }
+    },
+    "analytics": {
+      "helmet_title": "Analytics & KPI's — RefBoost",
+      "helmet_desc": "Conversieratio, gegenereerde MRR, prestaties per partner — alle belangrijke statistieken in een bruikbaar dashboard.",
+      "title": "Analytics & KPI's",
+      "subtitle": "Beheer uw partnerprogramma met echte data, niet met intuïtie. Elke beslissing gebaseerd op feiten.",
+      "benefits": [
+        {
+          "stat": "80%",
+          "statLabel": "van de pipeline gegenereerd door 20% van de partners gemiddeld",
+          "title": "Gedetailleerde conversiefunnel",
+          "text": "Meet elke stap tussen een klik op een link en een getekende deal. Identificeer precies waar u kansen verliest en corrigeer in realtime.",
+          "points": [
+            "Volledige funnel: klik > formulier > gekwalificeerde lead > demo > deal",
+            "Conversieratio per fase en per verkeersbron",
+            "Vergelijking tussen partners om beste praktijken te identificeren",
+            "Automatische waarschuwingen als een ratio onder de drempel valt"
+          ]
+        },
+        {
+          "stat": "8:1",
+          "statLabel": "gemiddeld ROI op het partnerkanaal vs andere kanalen",
+          "title": "ROI en vergelijking tussen kanalen",
+          "text": "Vergelijk voor het eerst uw partnerkanaal met andere acquisitiekanalen. Verantwoord uw investering met onweerlegbare cijfers.",
+          "points": [
+            "Partner-CAC vs SEA, inbound, evenementen",
+            "Automatische ROI-berekening per geïnvesteerde euro in commissies",
+            "12-maanden projectie op basis van huidige trends",
+            "Rapport klaar om te presenteren aan het bestuur"
+          ]
+        },
+        {
+          "stat": "15min",
+          "statLabel": "om het volledige maandelijkse partnerrapport voor te bereiden",
+          "title": "Exporteerbare en planbare rapporten",
+          "text": "Genereer uw maandelijkse rapporten in een paar klikken. Plan de automatische levering aan leidinggevenden op de eerste van elke maand.",
+          "points": [
+            "Volledige PDF-rapporten met grafieken en tabellen",
+            "Gedetailleerde CSV-export voor geavanceerde analyse",
+            "Programmeerbare automatische e-mailbezorging",
+            "Gepersonaliseerde toegang voor leidinggevenden en investeerders"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "Voor het eerst konden we ons bestuur de exacte ROI van het partnerprogramma laten zien. €8 gegenereerd voor elke euro geïnvesteerd in commissies.",
+        "author": "Thomas C., CEO — ScaleUp Agency"
+      }
+    },
+    "personnalisation": {
+      "helmet_title": "White label — RefBoost",
+      "helmet_desc": "Logo, kleuren, aangepast domein: uw partners werken in uw universum, niet dat van RefBoost.",
+      "title": "Uw merk, uw platform",
+      "subtitle": "Logo, kleuren, maatwerk domein. Uw partners hebben geen reden om te weten dat u RefBoost gebruikt.",
+      "benefits": [
+        {
+          "stat": "2min",
+          "statLabel": "om de visuele identiteit van uw ruimte volledig te configureren",
+          "title": "Volledige visuele identiteit",
+          "text": "Upload uw logo, kies uw kleuren, noem uw ruimte. In minder dan 2 minuten weerspiegelt het platform uw merk.",
+          "points": [
+            "Hoge resolutie logo op alle pagina's en e-mails",
+            "Volledig aanpasbaar primair, secundair en accentkleurenpalet",
+            "Configureerbare naam van de ruimte (bijv. \"Acme Partners Programma\")",
+            "Realtime preview voor bevestiging van wijzigingen"
+          ]
+        },
+        {
+          "stat": "100%",
+          "statLabel": "van uw partners blijven op uw domein zonder RefBoost ooit te zien",
+          "title": "Aangepast domein inbegrepen",
+          "text": "partners.uwbedrijf.nl in plaats van uwbedrijf.refboost.io. Een subdomein op uw bestaand domein, geconfigureerd in 10 minuten.",
+          "points": [
+            "Subdomein naar keuze geconfigureerd in minuten",
+            "Automatische HTTPS, SSL-certificaat inbegrepen en automatisch vernieuwd",
+            "E-mails verzonden vanuit uw domein (@uwbedrijf.nl)",
+            "Compatibel met alle DNS-records"
+          ]
+        },
+        {
+          "stat": "3x",
+          "statLabel": "hogere invulratio op merkformulieren vs generieke formulieren",
+          "title": "Inzendformulier in uw huisstijl",
+          "text": "Het openbare formulier dat wordt ingevuld door prospects doorverwezen door uw partners is volledig in uw kleuren.",
+          "points": [
+            "Formulierontwerp aangepast aan uw huisstijl",
+            "Gepersonaliseerde deelbare URL voor uw partners",
+            "Configureerbare velden op basis van uw kwalificatiebehoeften",
+            "Directe melding aan uw team bij elke inzending"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "Onze partners werken in ons universum. Ze hebben nooit geweten dat RefBoost erachter zat. Dat is precies wat we zochten.",
+        "author": "Pierre L., CRO — SaaS Fintech"
+      }
+    },
+    "tracking": {
+      "helmet_title": "Unieke tracking links — RefBoost",
+      "helmet_desc": "Elke partner heeft zijn persoonlijke link. Automatische attributie, geïntegreerd openbaar formulier, nul wrijving.",
+      "title": "Unieke tracking links",
+      "subtitle": "Één link per partner, perfecte attributie. Uw partners delen, leads komen gekwalificeerd en automatisch toegewezen aan.",
+      "benefits": [
+        {
+          "stat": "0",
+          "statLabel": "verloren of verkeerd toegewezen leads dankzij automatisch tracking",
+          "title": "Een unieke link per partner en bron",
+          "text": "Elke partner heeft een unieke persoonlijke link die hij per kanaal kan variëren (LinkedIn, e-mail, evenement). U weet precies waar elke lead vandaan komt.",
+          "points": [
+            "Automatische linkgeneratie bij partneruitnodiging",
+            "UTM-parameters om bronnen te onderscheiden (LinkedIn, e-mail, telefoon)",
+            "Downloadbare QR-code voor evenementen en presentaties",
+            "Korte link gepersonaliseerd met de naam van de partner"
+          ]
+        },
+        {
+          "stat": "100%",
+          "statLabel": "van de leads toegewezen zonder handmatige tussenkomst",
+          "title": "Automatische attributie zonder dubbelzinnigheid",
+          "text": "Wanneer een prospect op de link van een partner klikt en het formulier invult, wordt de lead automatisch toegewezen. Geen geschillen, geen dubbelzinnigheid.",
+          "points": [
+            "Persistente tracking cookie configureerbaar (7-180 dagen)",
+            "Attributie zelfs als de prospect dagen later terugkomt",
+            "Volledige traceerbaarheid van bron tot getekende deal",
+            "Directe melding aan de partner bij elke conversie"
+          ]
+        },
+        {
+          "stat": "6",
+          "statLabel": "configureerbare attributievensters passend bij uw verkoopcyclus",
+          "title": "Configureerbare attributievensters",
+          "text": "Pas attributieregels aan uw verkoopcyclus aan. Een korte cyclus van 2 weken of een lange van 6 maanden: definieer het venster dat uw commerciële realiteit weerspiegelt.",
+          "points": [
+            "Attributievenster van 7 tot 180 dagen op basis van uw verkoopcyclus",
+            "First-touch of last-touch regel op basis van uw beleid",
+            "Transparant en controleerbaar attributieconflictbeheer",
+            "Terugwerkende kracht mogelijk op lopende leads"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "Voor RefBoost besteedden we 2 uur per maand aan het handmatig afstemmen van leads met partners. Nu is het automatisch en conflictvrij.",
+        "author": "Alexandre R., VP Sales — ScaleB2B"
+      }
+    }
   }
 }
