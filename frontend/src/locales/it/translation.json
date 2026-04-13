@@ -1142,5 +1142,20 @@
     "branding_desc": "Personalizza i colori e il logo del tuo spazio partner. Queste impostazioni si applicano ovunque: barra laterale, interfaccia, ecc.",
     "level_saved": "Livello salvato ✓",
     "levels_reset_confirm": "Reimpostare ai valori predefiniti (Bronze/Silver/Gold/Platinum)? I tuoi livelli personalizzati saranno cancellati."
+  },
+  "status": {
+    "new": "Nuovo",
+    "contacted": "Contattato",
+    "meeting": "Riunione pianificata",
+    "proposal": "Proposta",
+    "won": "Vinto",
+    "lost": "Perso",
+    "duplicate": "Duplicato"
+  },
+  "level": {
+    "Bronze": "Bronzo",
+    "Silver": "Argento",
+    "Gold": "Oro",
+    "Platinum": "Platino"
   }
 }
