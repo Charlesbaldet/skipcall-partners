@@ -36,6 +36,13 @@ function Logo({ size = 40, white = false }) {
 }
 
 export default function LandingPage() {
+  const [featuredPartners, setFeaturedPartners] = useState([]);
+  useEffect(() => {
+    fetch('/api/marketplace')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setFeaturedPartners((d.partners || []).slice(0, 3)))
+      .catch(() => {});
+  }, []);
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const mobile = useMobile();
@@ -154,8 +161,9 @@ export default function LandingPage() {
               </div>
             )}
           </div>
-          {['Tarifs','Témoignages','Blog'].map(x => (
-            <a key={x} href={x === 'Blog' ? '/blog' : '#' + x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,transition:'color .2s' }}
+          {['Marketplace','Tarifs','Témoignages','Blog'].map(x => (
+            <a key={x} href={x === 'Blog' ? '/blog' : x === 'Marketplace' ? '/marketplace' : '#' + x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,transition:'color .2s' }}
+              style={{ color: C.m, textDecoration: 'none', fontSize: 15, cursor: 'pointer', fontWeight: 400 }}
               onMouseEnter={e => e.target.style.color=C.p}
               onMouseLeave={e => e.target.style.color=C.m}>
               {x}
@@ -185,7 +193,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:2,marginTop:16 }}>
-            {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([l,h]) => (
+            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([l,h]) => (
               <a key={l} href={h} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:'#0f172a',textDecoration:'none' }}>{l}</a>
             ))}
           </div>
@@ -305,7 +313,83 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ PRICING ═══ */}
-      <section id="tarifs" style={{ ...s.section, background:C.bg }}>
+      
+      {/* ═══ MARKETPLACE ═══ */}
+      <section id="marketplace" style={{padding:'80px 24px',background:'#fff'}}>
+        <div style={{maxWidth:1100,margin:'0 auto'}}>
+          <div style={{textAlign:'center',marginBottom:48}}>
+            <span style={{display:'inline-flex',alignItems:'center',gap:6,background:'#ecfdf5',border:'1px solid #6ee7b7',color:'#059669',borderRadius:20,padding:'6px 16px',fontSize:12,fontWeight:700,marginBottom:16}}>
+              ✨ Nouveau — Marketplace RefBoost
+            </span>
+            <h2 style={{fontSize:'clamp(26px,4vw,40px)',fontWeight:900,color:'#0f172a',margin:'0 0 16px',lineHeight:1.15}}>
+              Trouvez des programmes de parrainage<br/>
+              <span style={{color:'#059669'}}>vérifiés & rémunérateurs</span>
+            </h2>
+            <p style={{color:'#64748b',fontSize:16,maxWidth:560,margin:'0 auto'}}>
+              Des centaines d'entreprises ouvrent leur programme sur RefBoost. Rejoignez-les gratuitement.
+            </p>
+          </div>
+          {featuredPartners.length > 0 ? (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:20,marginBottom:40}}>
+              {featuredPartners.map(p => {
+                const initials = p.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+                const color = p.primary_color || '#059669';
+                return (
+                  <div key={p.id} style={{background:'#fff',borderRadius:16,padding:24,border:'1px solid #e2e8f0',boxShadow:'0 2px 10px rgba(0,0,0,.05)'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+                      {p.logo_url
+                        ? <img src={p.logo_url} alt={p.name} style={{width:44,height:44,borderRadius:10,objectFit:'contain'}}/>
+                        : <div style={{width:44,height:44,borderRadius:10,background:color+'20',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color}}>{initials}</div>}
+                      <div>
+                        <div style={{fontWeight:700,fontSize:15,color:'#0f172a'}}>{p.name}</div>
+                        {p.sector && <span style={{fontSize:11,fontWeight:600,color,background:color+'15',borderRadius:20,padding:'2px 8px'}}>{p.sector}</span>}
+                      </div>
+                    </div>
+                    <p style={{fontSize:13,color:'#64748b',lineHeight:1.6,margin:0,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}>{p.short_description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:20,marginBottom:40}}>
+              {[
+                {name:'TechFlow SaaS',sector:'SaaS / Logiciel',desc:"Solution CRM pour PME. 15% de commission sur 12 mois.",color:'#059669'},
+                {name:'ScaleUp Agency',sector:'Marketing',desc:"Agence growth B2B. 500 EUR par deal signé.",color:'#7c3aed'},
+                {name:'DataViz Pro',sector:'SaaS / Logiciel',desc:"Outil BI pour équipes data. 20% MRR sur 6 mois.",color:'#0ea5e9'}
+              ].map((p,i) => (
+                <div key={i} style={{background:'#fff',borderRadius:16,padding:24,border:'1px solid #e2e8f0',boxShadow:'0 2px 10px rgba(0,0,0,.05)'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+                    <div style={{width:44,height:44,borderRadius:10,background:p.color+'20',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:p.color}}>
+                      {p.name.split(' ').slice(0,2).map(w=>w[0]).join('')}
+                    </div>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:15,color:'#0f172a'}}>{p.name}</div>
+                      <span style={{fontSize:11,fontWeight:600,color:p.color,background:p.color+'15',borderRadius:20,padding:'2px 8px'}}>{p.sector}</span>
+                    </div>
+                  </div>
+                  <p style={{fontSize:13,color:'#64748b',lineHeight:1.6,margin:0}}>{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{display:'flex',gap:24,justifyContent:'center',marginBottom:36,flexWrap:'wrap'}}>
+            {[{val:'150+',label:'Programmes actifs'},{val:'100%',label:'Gratuit pour les apporteurs'},{val:'2.4M€',label:'Commissions générées'}].map((s,i) => (
+              <div key={i} style={{textAlign:'center',padding:'16px 32px',background:'#f8fafc',borderRadius:12}}>
+                <div style={{fontSize:28,fontWeight:900,color:'#059669'}}>{s.val}</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{textAlign:'center'}}>
+            <a href="/marketplace" style={{display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#059669,#10b981)',color:'#fff',padding:'16px 36px',borderRadius:14,fontWeight:700,fontSize:16,textDecoration:'none',boxShadow:'0 8px 30px rgba(5,150,105,.35)'}}>
+              Voir tous les programmes →
+            </a>
+            <p style={{fontSize:13,color:'#94a3b8',marginTop:12}}>Gratuit · Sans inscription pour parcourir</p>
+          </div>
+        </div>
+      </section>
+
+<section id="tarifs" style={{ ...s.section, background:C.bg }}>
         <div style={{ maxWidth:1000,margin:'0 auto' }}>
           <div style={s.center}>
             <div style={s.label}>Tarifs</div>

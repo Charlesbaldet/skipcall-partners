@@ -20,7 +20,7 @@ class ApiClient {
       this.setUser(null);
       // Don't redirect if we're already on a public page (avoids infinite reload loop)
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
-      const isPublicPath = path === '/' || path === '/login' || path === '/signup' || path.startsWith('/apply') || path.startsWith('/r/') || path.startsWith('/ref/') || path.startsWith('/setup-password/');
+      const isPublicPath = path === '/' || path === '/login' || path === '/signup' || path.startsWith('/apply') || path.startsWith('/r/') || path.startsWith('/ref/') || path.startsWith('/setup-password/') || path.startsWith('/marketplace');
       if (!isPublicPath && typeof window !== 'undefined') window.location.href = '/login';
       throw new Error('Session expirée');
     }
@@ -120,6 +120,17 @@ class ApiClient {
     return this.request('/tenants/' + tenantId, { method: 'PUT', body: JSON.stringify(data) });
   }
 
+
+  // Marketplace
+  getMarketplace(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request('/marketplace' + (qs ? '?' + qs : ''));
+  }
+  getMarketplaceSectors() { return this.request('/marketplace/sectors'); }
+  getMarketplaceSettings() { return this.request('/marketplace/settings'); }
+  updateMarketplaceSettings(data) {
+    return this.request('/marketplace/settings', { method: 'PATCH', body: JSON.stringify(data) });
+  }
 }
 
 export const api = new ApiClient();
