@@ -993,7 +993,15 @@
     "revenue_mrr": "MRR",
     "revenue_arr": "ARR",
     "revenue_ca": "Receita",
-    "revenue_other": "Outro"
+    "revenue_other": "Outro",
+    "title_full": "Programa de parceiros",
+    "subtitle_full": "Configure os níveis e comissões do seu programa de parceiros. Os parceiros sobem de nível automaticamente com base em seu desempenho.",
+    "crit_title": "Critério de progressão",
+    "crit_deals": "🎯 Número de negócios ganhos",
+    "crit_volume": "💰 Volume de negócios (€)",
+    "reset_defaults": "Redefinir para valores padrão",
+    "reset_confirm": "Redefinir para valores padrão? Seus níveis personalizados serão excluídos.",
+    "delete_confirm": "Excluir este nível? Os parceiros manterão seu nível atual."
   },
   "publicApply": {
     "title": "Juntar-se ao programa",
