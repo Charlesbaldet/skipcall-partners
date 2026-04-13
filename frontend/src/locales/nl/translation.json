@@ -1142,5 +1142,20 @@
     "branding_desc": "Pas kleuren en logo van je partnerruimte aan. Deze instellingen worden overal toegepast: zijbalk, interface, enz.",
     "level_saved": "Niveau opgeslagen ✓",
     "levels_reset_confirm": "Terugzetten naar standaardwaarden (Bronze/Silver/Gold/Platinum)? Je aangepaste niveaus worden gewist."
+  },
+  "status": {
+    "new": "Nieuw",
+    "contacted": "Gecontacteerd",
+    "meeting": "Vergadering gepland",
+    "proposal": "Voorstel",
+    "won": "Gewonnen",
+    "lost": "Verloren",
+    "duplicate": "Duplicaat"
+  },
+  "level": {
+    "Bronze": "Brons",
+    "Silver": "Zilver",
+    "Gold": "Goud",
+    "Platinum": "Platina"
   }
 }
