@@ -81,24 +81,24 @@ export default function LandingPage() {
   const trackClick = (label) => window._rb_track?.('cta_click', { label });
 
   const features = [
-    { icon:'pipeline', title:'Pipeline de referrals', desc:'Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancés, statuts en temps réel.' },
-    { icon:'commissions', title:'Commissions automatiques', desc:'Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables.' },
-    { icon:'analytics', title:'Tableaux de bord & KPIs', desc:'Taux de conversion, MRR généré, performance par apporteur d'affaires. Prenez des décisions basées sur les données.' },
-    { icon:'branding', title:'Votre marque, votre plateforme', desc:'Personnalisez entièrement l'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers.' },
-    { icon:'security', title:'Sécurité de niveau entreprise', desc:'Chiffrement AES-256, journaux d'audit, protection anti-brute force. Conforme RGPD, prêt pour l'ISO 27001.' },
-    { icon:'tracking', title:'Liens de tracking uniques', desc:'Chaque apporteur d'affaires a son lien personnel. Attribution automatique, formulaire public, zéro friction.' },
+    { icon:'pipeline', title: "Pipeline de referrals', desc:"Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancés, statuts en temps réel.' },
+    { icon: "commissions', title:"Commissions automatiques', desc:'Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables.' },
+    { icon: "analytics', title:"Tableaux de bord & KPIs', desc:"Taux de conversion, MRR généré, performance par apporteur d'affaires. Prenez des décisions basées sur les données." },
+    { icon:'branding', title:'Votre marque, votre plateforme', desc:"Personnalisez entièrement l'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers." },
+    { icon:'security', title:'Sécurité de niveau entreprise', desc:"Chiffrement AES-256, journaux d'audit, protection anti-brute force. Conforme RGPD, prêt pour l'ISO 27001." },
+    { icon:'tracking', title: "Liens de tracking uniques', desc:"Chaque apporteur d"affaires a son lien personnel. Attribution automatique, formulaire public, zéro friction." },
   ];
 
   const testimonials = [
     { n:'Marie Dupont', r:'Directrice Commerciale', c:'TechFlow', t:"On a multiplié par 3 notre canal apporteurs d’affaires en 4 mois. L’outil est intuitif et nos partenaires l’adorent.", a:'M' },
-    { n:'Thomas Chen', r:'CEO', c:'ScaleUp Agency', t:"RefBoost nous a permis de structurer notre programme de recommandation. On ne revient plus en arrière.", a:'T' },
-    { n:'Sophie Martin', r:'Head of Partnerships', c:'DataViz Pro', t:"Fini les tableurs pour tracker les commissions. Tout est automatisé, transparent, et nos partenaires sont ravis.", a:'S' },
+    { n: "Thomas Chen', r:"CEO', c:'ScaleUp Agency', t:"RefBoost nous a permis de structurer notre programme de recommandation. On ne revient plus en arrière.", a:'T' },
+    { n: "Sophie Martin', r:"Head of Partnerships', c:'DataViz Pro', t:"Fini les tableurs pour tracker les commissions. Tout est automatisé, transparent, et nos partenaires sont ravis.", a:'S' },
   ];
 
   const plans = [
     { n:'Starter', p:'99', d:'Idéal pour lancer votre programme', f:["Jusqu’à 20 apporteurs d’affaires",'100 recommandations/mois','Tableau de bord & analytics','Liens de tracking','Support email'], c:false },
     { n:'Growth', p:'249', d:'Pour accélérer votre croissance', f:["Apporteurs d’affaires illimités",'Recommandations illimitées','Personnalisation complète','API & intégrations CRM','Support prioritaire','Multi-utilisateurs'], c:true },
-    { n:'Enterprise', p:'0', d:'Pour les grandes organisations', f:['Tout Growth +','Multi-espaces','SSO / SAML','SLA garanti','Account manager dédié','Audit & conformité'], c:false },
+    { n:'Enterprise', p:'0', d: "Pour les grandes organisations', f:["Tout Growth +','Multi-espaces','SSO / SAML','SLA garanti','Account manager dédié','Audit & conformité'], c:false },
   ];
 
   const s = { // shared styles
