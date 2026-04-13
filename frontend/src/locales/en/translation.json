@@ -1170,6 +1170,7 @@
     "customize_title": "Customize your workspace",
     "publicLink_title": "Your referral link",
     "marketplace_title": "Your program on the marketplace",
-    "done_title": "All set 🚀"
+    "done_title": "All set 🚀",
+    "step_of": "Step {{current}} of {{total}}"
   }
 }
