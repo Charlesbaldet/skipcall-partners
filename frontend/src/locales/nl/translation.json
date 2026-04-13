@@ -313,5 +313,15 @@
     },
     "collapse": "Inklappen",
     "logout": "Uitloggen"
+  },
+  "featureTemplate": {
+    "try_free": "Gratis proberen",
+    "login": "Inloggen",
+    "detailed_features": "Gedetailleerde functies",
+    "what_you_get": "Wat u concreet krijgt",
+    "ready_to_test": "Klaar om het te testen?",
+    "trial_text": "14 dagen gratis, geen creditcard. Stel uw programma in 5 minuten in.",
+    "create_space": "Mijn ruimte gratis aanmaken",
+    "no_commitment": "Geen verplichting · 14 dagen gratis · Support inbegrepen"
   }
 }
