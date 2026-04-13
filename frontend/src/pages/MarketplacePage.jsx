@@ -116,7 +116,7 @@ export default function MarketplacePage() {
           <div style={{textAlign:'center',padding:'80px 24px',background:'#fff',borderRadius:20,border:'1px solid #e2e8f0'}}>
             <div style={{fontSize:48,marginBottom:16}}>🔍</div>
             <h3 style={{fontSize:20,fontWeight:700,color:C.s,margin:'0 0 8px'}}>Aucun résultat</h3>
-            <p style={{color:C.m,margin:'0 0 20px'}}>{search||activeSector?'Essayez d'autres critères.':'Aucun programme visible pour le moment.'}</p>
+            <p style={{color:C.m,margin:'0 0 20px'}}>{search||activeSector?"Essayez d'autres critères.":"Aucun programme visible pour le moment."}</p>
             {(search||activeSector) && <button onClick={reset} style={{padding:'10px 20px',borderRadius:10,background:C.p,color:'#fff',border:'none',cursor:'pointer',fontWeight:600}}>Voir tous les programmes</button>}
           </div>
         ) : (
