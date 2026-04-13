@@ -1170,6 +1170,7 @@
     "customize_title": "Personnalise ton espace",
     "publicLink_title": "Ton lien d’affiliation",
     "marketplace_title": "Votre programme sur la marketplace",
-    "done_title": "Tout est prêt 🚀"
+    "done_title": "Tout est prêt 🚀",
+    "step_of": "Étape {{current}} sur {{total}}"
   }
 }
