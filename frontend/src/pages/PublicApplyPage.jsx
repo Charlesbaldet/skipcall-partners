@@ -1,203 +1,65 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { loadThemeBySlug } from '../lib/theme';
-import { Send, CheckCircle, Building, User, Mail, Phone, Globe, Users, FileText } from 'lucide-react';
-
-export default function PublicApplyPage() {
-  const { slug } = useParams();
-  const [tenant, setTenant] = useState(null);
-
-  useEffect(() => {
-    if (slug) {
-      loadThemeBySlug(slug).then(t => {
-        if (t) setTenant(t);
-      });
-    }
-  }, [slug]);
-  const [step, setStep] = useState(1);
-  const [submitted, setSubmitted] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [form, setForm] = useState({
-    company_name: '', contact_name: '', email: '', phone: '',
-    company_website: '', company_size: '', motivation: '',
-  });
-
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
-  const canSubmit = form.company_name && form.contact_name && form.email;
-
-  const handleSubmit = async () => {
-    setSaving(true);
-    setError('');
-    try {
-      const res = await fetch('/api/applications/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, tenant_slug: slug }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur');
-      setSubmitted(true);
-    } catch (err) {
-      setError(err.message);
-    }
-    setSaving(false);
-  };
-
-  if (submitted) {
-    return (
-      <Page>
-        <div style={{ textAlign: 'center', maxWidth: 520, margin: '0 auto', padding: '60px 24px' }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
-            <CheckCircle size={36} color="#fff" />
+import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
+import api from '../lib/api';
+export default function PublicApplyPage(){
+  const {t}=useTranslation();
+  const [step,setStep]=useState(1); const [sent,setSent]=useState(false); const [submitting,setSubmitting]=useState(false);
+  const [tenant,setTenant]=useState(null);
+  const [form,setForm]=useState({full_name:'',company_name:'',email:'',phone:'',company_size:'',role:'',motivation:''});
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  useEffect(()=>{const host=window.location.hostname;const parts=host.split('.');const sub=parts.length>=3?parts[0]:null;if(sub&&sub!=='www')api.getTenantByDomain(sub).then(d=>setTenant(d.tenant||d)).catch(()=>{});
+    const params=new URLSearchParams(window.location.search);const tid=params.get('tenant');if(tid)api.getTenantById(tid).then(d=>setTenant(d.tenant||d)).catch(()=>{});},[]);
+  const handleSubmit=async(e)=>{e.preventDefault();setSubmitting(true);try{await api.applyPartner({...form,tenant_id:tenant?.id});setSent(true);}catch(err){alert(err.message);}setSubmitting(false);};
+  const inp=(k,type='text',ph='',req=false)=>(<input type={type} value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={ph} required={req} style={{width:'100%',padding:'12px 16px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:15,color:'#0f172a',outline:'none',boxSizing:'border-box'}}/>);
+  const C={p:tenant?.primary_color||'#059669',s:'#0f172a',m:'#64748b',bg:'#fafbfc'};
+  if(sent) return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,padding:24}}>
+    <div style={{maxWidth:480,width:'100%',background:'#fff',borderRadius:24,padding:48,textAlign:'center',boxShadow:'0 20px 60px rgba(0,0,0,0.08)'}}>
+      <div style={{fontSize:52,marginBottom:16}}>🎉</div>
+      <h2 style={{fontSize:24,fontWeight:800,color:C.s,marginBottom:12}}>{t('publicApply.sent_title')}</h2>
+      <p style={{color:C.m,lineHeight:1.6}}>{t('publicApply.sent_text')}</p>
+    </div></div>);
+  return(<div style={{minHeight:'100vh',background:C.bg}}>
+    <Helmet><title>{tenant?.name?tenant.name+' — ':''}{t('publicApply.title')}</title></Helmet>
+    <div style={{maxWidth:900,margin:'0 auto',padding:'40px 24px'}}>
+      <div style={{textAlign:'center',marginBottom:40}}>
+        {tenant?.logo_url&&<img src={tenant.logo_url} alt={tenant.name} style={{height:48,marginBottom:16,objectFit:'contain'}}/>}
+        <h1 style={{fontSize:32,fontWeight:800,color:C.s,marginBottom:8}}>{t('publicApply.title')}</h1>
+        <p style={{color:C.m,fontSize:17}}>{t('publicApply.subtitle')}</p>
+        <p style={{marginTop:12,fontSize:14,color:C.m}}>{t('publicApply.already')} <a href="/login" style={{color:C.p,fontWeight:600,textDecoration:'none'}}>{t('publicApply.login_link')}</a></p>
+      </div>
+      <form onSubmit={handleSubmit}>
+        <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:24,alignItems:'start'}}>
+          <div style={{background:'#fff',borderRadius:20,padding:32,border:'1px solid #e2e8f0',boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
+            {step===1&&(<div>
+              <h2 style={{fontSize:18,fontWeight:700,color:C.s,marginBottom:20}}>{t('publicApply.step1')}</h2>
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                <div><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{t('publicApply.name')}</label>{inp('full_name','text',t('publicApply.name_ph'),true)}</div>
+                <div><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{t('publicApply.company')}</label>{inp('company_name','text',t('publicApply.company_ph'),true)}</div>
+                <div><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{t('publicApply.email')}</label>{inp('email','email',t('publicApply.email_ph'),true)}</div>
+                <div><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{t('publicApply.phone')}</label>{inp('phone','tel',t('publicApply.phone_ph'))}</div>
+                <div><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{t('publicApply.size')}</label>
+                  <select value={form.company_size} onChange={e=>set('company_size',e.target.value)} style={{width:'100%',padding:'12px 16px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:15,color:form.company_size?'#0f172a':'#94a3b8',background:'#fff',outline:'none'}}>
+                    <option value="">{t('publicApply.size_ph')}</option>
+                    {['1-10','11-50','51-200','200+'].map(s=><option key={s} value={s}>{s}</option>)}
+                  </select></div>
+                <div><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{t('publicApply.role')}</label>{inp('role','text',t('publicApply.role_ph'))}</div>
+              </div>
+              <button type="button" onClick={()=>setStep(2)} style={{width:'100%',padding:'14px',borderRadius:12,background:C.p,color:'#fff',border:'none',fontWeight:700,fontSize:15,cursor:'pointer',marginTop:20}}>{t('publicApply.continue')}</button>
+            </div>)}
+            {step===2&&(<div>
+              <h2 style={{fontSize:18,fontWeight:700,color:C.s,marginBottom:20}}>{t('publicApply.step2')}</h2>
+              <textarea value={form.motivation} onChange={e=>set('motivation',e.target.value)} placeholder={t('publicApply.motivation_ph')} rows={6} style={{width:'100%',padding:'12px 16px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:15,color:'#0f172a',outline:'none',boxSizing:'border-box',resize:'vertical'}}/>
+              <div style={{display:'flex',gap:12,marginTop:20}}>
+                <button type="button" onClick={()=>setStep(1)} style={{flex:1,padding:'14px',borderRadius:12,background:'#f1f5f9',color:'#475569',border:'none',fontWeight:600,fontSize:15,cursor:'pointer'}}>{t('publicApply.back')}</button>
+                <button type="submit" disabled={submitting} style={{flex:2,padding:'14px',borderRadius:12,background:submitting?'#94a3b8':C.p,color:'#fff',border:'none',fontWeight:700,fontSize:15,cursor:submitting?'not-allowed':'pointer'}}>{submitting?t('publicApply.submitting'):t('publicApply.submit')}</button>
+              </div>
+            </div>)}
           </div>
-          <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Candidature envoyée !</h2>
-          <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.7, marginBottom: 32 }}>
-            Merci pour votre intérêt. Notre équipe va examiner votre candidature et vous recevrez un email de confirmation dans les 48 heures.
-          </p>
-          <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
-            Déjà partenaire ? Se connecter
-          </a>
+          <div style={{background:'#fff',borderRadius:20,padding:24,border:'1px solid #e2e8f0',boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
+            <h3 style={{fontSize:16,fontWeight:700,color:C.s,marginBottom:16}}>{t('publicApply.why_title')}</h3>
+            {[['💰','Commissions attractives'],['📊','Dashboard dédié'],['🔗','Lien de tracking unique'],['💬','Support dédié']].map(([icon,txt])=>(<div key={txt} style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}><span style={{fontSize:20}}>{icon}</span><span style={{color:C.m,fontSize:14}}>{txt}</span></div>))}
+          </div>
         </div>
-      </Page>
-    );
-  }
-
-  return (
-    <Page>
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '40px 24px' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              {tenant?.logo_url ? (
-                <img src={tenant.logo_url} alt="Logo" style={{ height: 44, maxWidth: 160, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
-              ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>{(tenant?.name || 'S').charAt(0).toUpperCase()}</div>
-              )}
-              <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>{tenant?.name || 'Skipcall'}</span>
-            </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Devenir partenaire</h1>
-          <p style={{ color: '#94a3b8', fontSize: 15 }}>Rejoignez notre programme et générez des revenus récurrents</p>
-        </div>
-
-        {/* Progress */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 36 }}>
-          {[1, 2].map(s => (
-            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? 'linear-gradient(90deg,#6366f1,#a855f7)' : 'rgba(255,255,255,0.1)', transition: 'all .3s' }} />
-          ))}
-        </div>
-
-        {error && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '12px 16px', color: '#fca5a5', fontSize: 14, marginBottom: 20 }}>{error}</div>
-        )}
-
-        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}>
-          {step === 1 && (
-            <div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>Vos informations</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <Field icon={Building} label="Nom de la société *" value={form.company_name} onChange={set('company_name')} placeholder="Ex: TechConseil SAS" />
-                <Field icon={User} label="Votre nom *" value={form.contact_name} onChange={set('contact_name')} placeholder="Prénom Nom" />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <Field icon={Mail} label="Email *" value={form.email} onChange={set('email')} placeholder="vous@entreprise.com" type="email" />
-                  <Field icon={Phone} label="Téléphone" value={form.phone} onChange={set('phone')} placeholder="+33 6 ..." />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <Field icon={Globe} label="Site web" value={form.company_website} onChange={set('company_website')} placeholder="https://..." />
-                  <div>
-                    <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Taille de l'entreprise</label>
-                    <select value={form.company_size} onChange={set('company_size')} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box', appearance: 'none' }}>
-                      <option value="" style={{ background: '#1e293b' }}>Sélectionner</option>
-                      <option value="1-10" style={{ background: '#1e293b' }}>1-10 employés</option>
-                      <option value="11-50" style={{ background: '#1e293b' }}>11-50 employés</option>
-                      <option value="51-200" style={{ background: '#1e293b' }}>51-200 employés</option>
-                      <option value="200+" style={{ background: '#1e293b' }}>200+ employés</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <button disabled={!canSubmit} onClick={() => setStep(2)} style={{
-                marginTop: 28, width: '100%', padding: '14px', borderRadius: 12,
-                background: canSubmit ? 'var(--rb-primary, #059669)' : 'rgba(255,255,255,0.06)',
-                color: canSubmit ? '#fff' : '#64748b', border: 'none', fontWeight: 600, fontSize: 15,
-                cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 15px rgba(5,150,105,0.3)' : 'none',
-              }}>Continuer</button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>Pourquoi devenir partenaire ?</h2>
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Parlez-nous de votre activité et de votre motivation</label>
-                <textarea value={form.motivation} onChange={set('motivation')} rows={5}
-                  placeholder="Décrivez votre activité, votre réseau de clients, et ce qui vous motive à rejoindre notre programme partenaires..."
-                  style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, resize: 'vertical', fontFamily: 'inherit', color: '#fff', boxSizing: 'border-box' }} />
-              </div>
-
-              {/* Recap */}
-              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontWeight: 700, color: '#fff', fontSize: 14, marginBottom: 14 }}>Récapitulatif</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', fontSize: 14 }}>
-                  <RecapRow label="Société" value={form.company_name} />
-                  <RecapRow label="Contact" value={form.contact_name} />
-                  <RecapRow label="Email" value={form.email} />
-                  <RecapRow label="Téléphone" value={form.phone || '—'} />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Retour</button>
-                <button onClick={handleSubmit} disabled={saving} style={{
-                  flex: 2, padding: '14px', borderRadius: 12,
-                  background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff',
-                  border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
-                  boxShadow: '0 4px 15px rgba(34,197,94,0.3)', opacity: saving ? 0.7 : 1,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}>
-                  <Send size={16} /> {saving ? 'Envoi...' : 'Envoyer ma candidature'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <a href="/login" style={{ color: '#64748b', fontSize: 14, textDecoration: 'none' }}>
-            Déjà partenaire ? <span style={{ color: '#818cf8' }}>Se connecter</span>
-          </a>
-        </div>
-      </div>
-    </Page>
-  );
-}
-
-function Page({ children }) {
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(168deg, #0a0a0f 0%, #111827 50%, #0f172a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {children}
-    </div>
-  );
-}
-
-function Field({ icon: Icon, label, value, onChange, placeholder, type = 'text' }) {
-  return (
-    <div>
-      <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{label}</label>
-      <div style={{ position: 'relative' }}>
-        {Icon && <Icon size={16} color="#64748b" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />}
-        <input type={type} value={value} onChange={onChange} placeholder={placeholder}
-          style={{ width: '100%', padding: `12px ${Icon ? '16px' : '16px'} 12px ${Icon ? '40px' : '16px'}`, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box' }} />
-      </div>
-    </div>
-  );
-}
-
-function RecapRow({ label, value }) {
-  return (
-    <div>
-      <div style={{ color: '#64748b', fontSize: 12 }}>{label}</div>
-      <div style={{ color: '#fff', fontWeight: 600 }}>{value}</div>
-    </div>
-  );
-}
+      </form>
+    </div></div>);}
