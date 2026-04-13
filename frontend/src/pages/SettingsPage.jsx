@@ -60,7 +60,7 @@ function MarketplaceTab() {
           </div>
           <div>
             <div style={{fontWeight:700,fontSize:14,color:'#0f172a'}}>Visible sur la marketplace</div>
-            <div style={{fontSize:12,color:'#64748b'}}>{settings.marketplace_visible?'✅ Votre programme est affiché publiquement':'Votre programme est masqué'}</div>
+            <div style={{fontSize:12,color:'#64748b'}}>{settings.marketplace_visible?"✅ Votre programme est affiché publiquement":'Votre programme est masqué'}</div>
           </div>
         </div>
         <div style={{width:48,height:26,borderRadius:13,background:settings.marketplace_visible?'#059669':'#cbd5e1',position:'relative',transition:'background .3s',flexShrink:0}}>
