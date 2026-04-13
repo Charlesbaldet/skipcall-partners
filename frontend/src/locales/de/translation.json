@@ -993,7 +993,15 @@
     "revenue_mrr": "MRR",
     "revenue_arr": "ARR",
     "revenue_ca": "Umsatz",
-    "revenue_other": "Andere"
+    "revenue_other": "Andere",
+    "title_full": "Partnerprogramm",
+    "subtitle_full": "Konfiguriere Stufen und Provisionen für dein Partnerprogramm. Partner steigen automatisch auf, basierend auf ihrer Leistung.",
+    "crit_title": "Fortschrittskriterium",
+    "crit_deals": "🎯 Anzahl gewonnener Deals",
+    "crit_volume": "💰 Geschäftsvolumen (€)",
+    "reset_defaults": "Auf Standardwerte zurücksetzen",
+    "reset_confirm": "Auf Standardwerte zurücksetzen? Deine benutzerdefinierten Stufen werden gelöscht.",
+    "delete_confirm": "Diese Stufe löschen? Partner behalten ihre aktuelle Stufe."
   },
   "publicApply": {
     "title": "Dem Programm beitreten",
