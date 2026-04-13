@@ -13,7 +13,8 @@ import {
 
 export default function ProgrammePage() {
   const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]
+  const { t } = useTranslation(); = useState(true);
   const [editing, setEditing] = useState(null); // level id or 'new'
   const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
   const [msg, setMsg] = useState(null);
