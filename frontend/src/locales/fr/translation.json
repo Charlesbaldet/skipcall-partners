@@ -5,13 +5,13 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "back": "Retour",
-    "noData": "Aucune donnÃ©e"
+    "noData": "Aucune donnée"
   },
   "nav": {
-    "features": "FonctionnalitÃ©s",
+    "features": "Fonctionnalités",
     "marketplace": "Marketplace",
     "pricing": "Tarifs",
-    "testimonials": "TÃ©moignages",
+    "testimonials": "Témoignages",
     "blog": "Blog",
     "login": "Connexion",
     "freeTrial": "Essai gratuit",
@@ -19,19 +19,19 @@
   },
   "landing": {
     "hero": {
-      "badge": "GÃ©rez vos apporteurs d'affaires simplement",
+      "badge": "Gérez vos apporteurs d'affaires simplement",
       "h1_start": "Transformez vos",
       "h1_highlight": "recommandations en revenus",
-      "description": "RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, les commissions et la performance de votre rÃ©seau.",
-      "cta_primary": "CrÃ©er mon espace gratuitement â",
-      "cta_secondary": "DÃ©couvrir",
+      "description": "RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, les commissions et la performance de votre réseau.",
+      "cta_primary": "Créer mon espace gratuitement →",
+      "cta_secondary": "Découvrir",
       "stat1_value": "150+",
       "stat1_label": "Apporteurs actifs",
-      "stat2_value": "2.4Mâ¬",
-      "stat2_label": "Revenus gÃ©nÃ©rÃ©s",
+      "stat2_value": "2.4M€",
+      "stat2_label": "Revenus générés",
       "stat3_value": "98%",
       "stat3_label": "Satisfaction client",
-      "trial_badges": "â 14 jours gratuits Â· â Sans carte bancaire Â· â Configuration en 5 min"
+      "trial_badges": "✓ 14 jours gratuits · ✓ Sans carte bancaire · ✓ Configuration en 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Pipeline de leads",
@@ -39,102 +39,102 @@
       "commissions_label": "Commissions automatiques",
       "commissions_desc": "Calcul et paiement sans friction",
       "analytics_label": "Analytics & KPIs",
-      "analytics_desc": "Pilotez avec des donnÃ©es rÃ©elles",
+      "analytics_desc": "Pilotez avec des données réelles",
       "branding_label": "Marque blanche",
       "branding_desc": "Votre image, votre domaine",
       "tracking_label": "Liens de tracking",
       "tracking_desc": "Attribution parfaite"
     },
     "features": {
-      "label": "FonctionnalitÃ©s",
-      "title": "Tout pour gÃ©rer votre",
+      "label": "Fonctionnalités",
+      "title": "Tout pour gérer votre",
       "title_highlight": "programme d'apporteurs d'affaires",
-      "description": "De la premiÃ¨re recommandation au paiement de la commission, RefBoost automatise chaque Ã©tape.",
+      "description": "De la première recommandation au paiement de la commission, RefBoost automatise chaque étape.",
       "items": [
         {
           "title": "Pipeline de referrals",
-          "desc": "Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancÃ©s, statuts en temps rÃ©el."
+          "desc": "Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancés, statuts en temps réel."
         },
         {
           "title": "Commissions automatiques",
-          "desc": "Calcul automatique des primes selon vos rÃ¨gles. Validation en un clic, historique complet, paiements traÃ§ables."
+          "desc": "Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables."
         },
         {
           "title": "Tableaux de bord & KPIs",
-          "desc": "Taux de conversion, MRR gÃ©nÃ©rÃ©, performance par apporteur d'affaires. Prenez des dÃ©cisions basÃ©es sur les donnÃ©es."
+          "desc": "Taux de conversion, MRR généré, performance par apporteur d'affaires. Prenez des décisions basées sur les données."
         },
         {
           "title": "Votre marque, votre plateforme",
-          "desc": "Personnalisez entiÃ¨rement l'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers."
+          "desc": "Personnalisez entièrement l'interface : logo, couleurs, domaine. Vos partenaires travaillent dans votre univers."
         },
         {
-          "title": "SÃ©curitÃ© de niveau entreprise",
-          "desc": "Chiffrement AES-256, journaux d'audit, protection anti-brute force. Conforme RGPD, prÃªt pour l'ISO 27001."
+          "title": "Sécurité de niveau entreprise",
+          "desc": "Chiffrement AES-256, journaux d'audit, protection anti-brute force. Conforme RGPD, prêt pour l'ISO 27001."
         },
         {
           "title": "Liens de tracking uniques",
-          "desc": "Chaque apporteur d'affaires a son lien personnel. Attribution automatique, formulaire public, zÃ©ro friction."
+          "desc": "Chaque apporteur d'affaires a son lien personnel. Attribution automatique, formulaire public, zéro friction."
         }
       ]
     },
     "howItWorks": {
-      "label": "Comment Ã§a marche",
-      "title": "Lancez votre programme en 3 Ã©tapes",
+      "label": "Comment ça marche",
+      "title": "Lancez votre programme en 3 étapes",
       "steps": [
         {
-          "title": "CrÃ©ez votre espace",
-          "desc": "Inscrivez-vous en 2 minutes. Personnalisez votre plateforme avec votre identitÃ© visuelle."
+          "title": "Créez votre espace",
+          "desc": "Inscrivez-vous en 2 minutes. Personnalisez votre plateforme avec votre identité visuelle."
         },
         {
           "title": "Invitez vos apporteurs",
-          "desc": "Envoyez des invitations par email. Chaque partenaire reÃ§oit son accÃ¨s et son lien de tracking."
+          "desc": "Envoyez des invitations par email. Chaque partenaire reçoit son accès et son lien de tracking."
         },
         {
-          "title": "Suivez & rÃ©munÃ©rez",
+          "title": "Suivez & rémunérez",
           "desc": "Vos apporteurs soumettent des leads. Vous suivez la conversion et versez les commissions automatiquement."
         }
       ]
     },
     "testimonials": {
-      "label": "TÃ©moignages",
-      "title": "Ils gÃ¨rent leurs apporteurs d'affaires avec RefBoost",
+      "label": "Témoignages",
+      "title": "Ils gèrent leurs apporteurs d'affaires avec RefBoost",
       "items": [
         {
           "n": "Marie Dupont",
           "r": "Directrice Commerciale",
           "c": "TechFlow",
           "a": "M",
-          "t": "On a multipliÃ© par 3 notre canal apporteurs d'affaires en 4 mois. L'outil est intuitif et nos partenaires l'adorent."
+          "t": "On a multiplié par 3 notre canal apporteurs d'affaires en 4 mois. L'outil est intuitif et nos partenaires l'adorent."
         },
         {
           "n": "Thomas Chen",
           "r": "CEO",
           "c": "ScaleUp Agency",
           "a": "T",
-          "t": "RefBoost nous a permis de structurer notre programme de recommandation. On ne revient plus en arriÃ¨re."
+          "t": "RefBoost nous a permis de structurer notre programme de recommandation. On ne revient plus en arrière."
         },
         {
           "n": "Sophie Martin",
           "r": "Head of Partnerships",
           "c": "DataViz Pro",
           "a": "S",
-          "t": "Fini les tableurs pour tracker les commissions. Tout est automatisÃ©, transparent, et nos partenaires sont ravis."
+          "t": "Fini les tableurs pour tracker les commissions. Tout est automatisé, transparent, et nos partenaires sont ravis."
         }
       ]
     },
     "marketplace": {
-      "badge": "â¨ Nouveau â Marketplace RefBoost",
+      "badge": "✨ Nouveau — Marketplace RefBoost",
       "title_start": "Trouvez des programmes de parrainage",
-      "title_highlight": "vÃ©rifiÃ©s & rÃ©munÃ©rateurs",
+      "title_highlight": "vérifiés & rémunérateurs",
       "description": "Des centaines d'entreprises ouvrent leur programme sur RefBoost. Rejoignez-les gratuitement.",
       "stat1_val": "150+",
       "stat1_label": "Programmes actifs",
       "stat2_val": "100%",
       "stat2_label": "Gratuit pour les apporteurs",
-      "stat3_val": "2.4Mâ¬",
-      "stat3_label": "Commissions gÃ©nÃ©rÃ©es",
-      "cta": "Voir tous les programmes â",
-      "cta_note": "Gratuit Â· Sans inscription pour parcourir"
+      "stat3_val": "2.4M€",
+      "stat3_label": "Commissions générées",
+      "cta": "Voir tous les programmes →",
+      "cta_note": "Gratuit · Sans inscription pour parcourir"
     },
     "pricing": {
       "label": "Tarifs",
@@ -142,15 +142,15 @@
       "description": "Tous les plans incluent 14 jours d'essai gratuit. Sans engagement.",
       "popular": "Populaire",
       "custom": "Sur mesure",
-      "per_month": "â¬/mois",
+      "per_month": "€/mois",
       "cta_contact": "Nous contacter",
-      "cta_start": "DÃ©marrer gratuitement",
+      "cta_start": "Démarrer gratuitement",
       "plans": [
         {
           "name": "Starter",
-          "desc": "IdÃ©al pour lancer votre programme",
+          "desc": "Idéal pour lancer votre programme",
           "features": [
-            "Jusqu'Ã  20 apporteurs d'affaires",
+            "Jusqu'à 20 apporteurs d'affaires",
             "100 recommandations/mois",
             "Tableau de bord & analytics",
             "Liens de tracking",
@@ -159,12 +159,12 @@
         },
         {
           "name": "Growth",
-          "desc": "Pour accÃ©lÃ©rer votre croissance",
+          "desc": "Pour accélérer votre croissance",
           "features": [
-            "Apporteurs d'affaires illimitÃ©s",
-            "Recommandations illimitÃ©es",
-            "Personnalisation complÃ¨te",
-            "API & intÃ©grations CRM",
+            "Apporteurs d'affaires illimités",
+            "Recommandations illimitées",
+            "Personnalisation complète",
+            "API & intégrations CRM",
             "Support prioritaire",
             "Multi-utilisateurs"
           ]
@@ -177,52 +177,52 @@
             "Multi-espaces",
             "SSO / SAML",
             "SLA garanti",
-            "Account manager dÃ©diÃ©",
-            "Audit & conformitÃ©"
+            "Account manager dédié",
+            "Audit & conformité"
           ]
         }
       ]
     },
     "faq": {
-      "label": "Questions frÃ©quentes",
+      "label": "Questions fréquentes",
       "title": "Tout ce que vous devez savoir",
       "items": [
         {
           "q": "Qu'est-ce qu'un programme d'apporteurs d'affaires ?",
-          "a": "C'est un systÃ¨me qui rÃ©munÃ¨re des partenaires externes (apporteurs) pour chaque client qu'ils vous recommandent. RefBoost automatise tout : tracking, attribution, calcul et paiement des commissions."
+          "a": "C'est un système qui rémunère des partenaires externes (apporteurs) pour chaque client qu'ils vous recommandent. RefBoost automatise tout : tracking, attribution, calcul et paiement des commissions."
         },
         {
-          "q": "Combien de temps pour Ãªtre opÃ©rationnel ?",
-          "a": "5 minutes. CrÃ©ez votre compte, invitez vos premiers apporteurs, et commencez Ã  recevoir des recommandations dÃ¨s aujourd'hui."
+          "q": "Combien de temps pour être opérationnel ?",
+          "a": "5 minutes. Créez votre compte, invitez vos premiers apporteurs, et commencez à recevoir des recommandations dès aujourd'hui."
         },
         {
-          "q": "Puis-je personnaliser la plateforme Ã  mon image ?",
-          "a": "Oui. Logo, couleurs, domaine personnalisÃ© â vos partenaires travaillent dans un environnement Ã  votre image, pas celle de RefBoost."
+          "q": "Puis-je personnaliser la plateforme à mon image ?",
+          "a": "Oui. Logo, couleurs, domaine personnalisé — vos partenaires travaillent dans un environnement à votre image, pas celle de RefBoost."
         },
         {
-          "q": "Comment sont calculÃ©es les commissions ?",
-          "a": "Vous dÃ©finissez le taux par apporteur ou globalement. Ã chaque deal gagnÃ©, RefBoost calcule automatiquement la prime et vous notifie pour validation."
+          "q": "Comment sont calculées les commissions ?",
+          "a": "Vous définissez le taux par apporteur ou globalement. À chaque deal gagné, RefBoost calcule automatiquement la prime et vous notifie pour validation."
         },
         {
-          "q": "Mes donnÃ©es sont-elles sÃ©curisÃ©es ?",
-          "a": "Absolument. Chiffrement AES-256, journaux d'audit complets, protection anti-brute force, conformitÃ© RGPD. Nous suivons les standards ISO 27001."
+          "q": "Mes données sont-elles sécurisées ?",
+          "a": "Absolument. Chiffrement AES-256, journaux d'audit complets, protection anti-brute force, conformité RGPD. Nous suivons les standards ISO 27001."
         }
       ]
     },
     "cta": {
-      "title": "PrÃªt Ã  structurer votre",
-      "title_end": "rÃ©seau d'apporteurs ?",
-      "description": "Rejoignez les entreprises qui utilisent RefBoost pour transformer leurs recommandations en revenus rÃ©currents.",
+      "title": "Prêt à structurer votre",
+      "title_end": "réseau d'apporteurs ?",
+      "description": "Rejoignez les entreprises qui utilisent RefBoost pour transformer leurs recommandations en revenus récurrents.",
       "email_placeholder": "votre@email.com",
-      "cta_btn": "DÃ©marrer â",
-      "note": "14 jours gratuits Â· Sans carte bancaire Â· Annulation en 1 clic"
+      "cta_btn": "Démarrer →",
+      "note": "14 jours gratuits · Sans carte bancaire · Annulation en 1 clic"
     },
     "footer": {
       "tagline": "La plateforme de gestion de programme d'apporteurs d'affaires et de parrainage professionnel.",
       "sections": {
-        "features": "FonctionnalitÃ©s",
+        "features": "Fonctionnalités",
         "resources": "Ressources",
-        "legal": "LÃ©gal"
+        "legal": "Légal"
       },
       "links": {
         "pipeline": "Pipeline de leads",
@@ -231,51 +231,31 @@
         "whiteLabel": "Marque blanche",
         "tracking": "Liens de tracking",
         "blog": "Blog",
-        "guide": "Guide de dÃ©marrage",
+        "guide": "Guide de démarrage",
         "faq": "FAQ",
         "contact": "Contact",
         "cgv": "CGV",
-        "privacy": "ConfidentialitÃ©",
-        "legal": "Mentions lÃ©gales",
+        "privacy": "Confidentialité",
+        "legal": "Mentions légales",
         "rgpd": "RGPD"
       },
-      "copyright": "Â© 2026 RefBoost. Tous droits rÃ©servÃ©s.",
+      "copyright": "© 2026 RefBoost. Tous droits réservés.",
       "madeIn": "Fait avec soin en France"
     }
   },
   "login": {
     "title": "Connexion",
-    "subtitle": "AccÃ©dez Ã  votre programme partenaires",
+    "subtitle": "Accédez à votre programme partenaires",
     "email": "Email",
     "email_placeholder": "vous@entreprise.com",
     "password": "Mot de passe",
-    "forgot_password": "Mot de passe oubliÃ© ?",
-    "submit": "Se connecter â",
+    "forgot_password": "Mot de passe oublié ?",
+    "submit": "Se connecter →",
     "loading": "Connexion en cours...",
     "no_account": "Pas encore de compte ?",
-    "create_account": "CrÃ©er un espace gratuit â",
-    "back_to_site": "â Retour au site",
+    "create_account": "Créer un espace gratuit →",
+    "back_to_site": "← Retour au site",
     "error_default": "Identifiants incorrects"
-  },
-  "layout": {
-    "nav": {
-      "dashboard": "Dashboard",
-      "pipeline": "Pipeline",
-      "commissions": "Commissions",
-      "partners": "Partenaires",
-      "messaging": "Messagerie",
-      "programme": "Programme",
-      "settings": "ParamÃ¨tres",
-      "my_referrals": "Mes Referrals",
-      "submit": "Soumettre",
-      "my_payments": "Mes Paiements",
-      "clients": "Clients",
-      "statistics": "Statistiques",
-      "audit_logs": "Audit Logs",
-      "blog": "Blog"
-    },
-    "collapse": "RÃ©duire",
-    "logout": "DÃ©connexion"
   },
   "signup": {
     "title": "Créez votre espace",
@@ -313,5 +293,25 @@
     "pwd_lower": "Minuscule",
     "pwd_digit": "Chiffre",
     "pwd_special": "Spécial"
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Commissions",
+      "partners": "Partenaires",
+      "messaging": "Messagerie",
+      "programme": "Programme",
+      "settings": "Paramètres",
+      "my_referrals": "Mes Referrals",
+      "submit": "Soumettre",
+      "my_payments": "Mes Paiements",
+      "clients": "Clients",
+      "statistics": "Statistiques",
+      "audit_logs": "Audit Logs",
+      "blog": "Blog"
+    },
+    "collapse": "Réduire",
+    "logout": "Déconnexion"
   }
 }
