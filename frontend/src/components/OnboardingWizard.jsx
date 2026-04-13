@@ -38,6 +38,25 @@ export default function OnboardingWizard({ onClose }) {
     api.getMyTenant().then(d => { if (d && d.tenant) setTenantSlug(d.tenant.slug || ''); }).catch(() => {});
   }, []);
 
+  // Preload marketplace settings when wizard reaches step 5
+  useEffect(() => {
+    if (step === 5) {
+      api.getMarketplaceSettings()
+        .then(d => {
+          if (d && d.settings) {
+            setMarketplaceForm(f => ({
+              sector: d.settings.sector || f.sector,
+              website: d.settings.website || f.website,
+              icp: d.settings.icp || f.icp,
+              short_description: d.settings.short_description || f.short_description,
+              marketplace_visible: d.settings.marketplace_visible ?? f.marketplace_visible,
+            }));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [step]);
+
   const goNext = () => { setError(''); if (step < STEPS.length - 1) setStep(step + 1); else handleClose(); };
   const goBack = () => { setError(''); if (step > 0) setStep(step - 1); };
   const handleClose = () => { localStorage.removeItem('refboost_onboarding_pending'); onClose(); };
@@ -77,9 +96,15 @@ export default function OnboardingWizard({ onClose }) {
   const copyLink = () => { navigator.clipboard.writeText(publicLink); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   const submitMarketplace = async () => {
-    if (marketplaceForm.sector || marketplaceForm.website || marketplaceForm.short_description) {
-      try { await api.updateMarketplaceSettings(marketplaceForm); } catch(e) { console.warn('[mkt]', e.message); }
+    if (marketplaceForm.sector || marketplaceForm.website || marketplaceForm.short_description || marketplaceForm.marketplace_visible) {
+      try {
+        await api.updateMarketplaceSettings(marketplaceForm);
+      } catch(e) {
+        setError(e.message || 'Erreur lors de la sauvegarde');
+        return; // stay on step so user can fix
+      }
     }
+    setError('');
     goNext();
   };
 
