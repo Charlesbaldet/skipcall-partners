@@ -1142,5 +1142,20 @@
     "branding_desc": "Customize colors and logo for your partner space. These settings apply everywhere: sidebar, interface, etc.",
     "level_saved": "Level saved ✓",
     "levels_reset_confirm": "Reset to default values (Bronze/Silver/Gold/Platinum)? Your custom levels will be erased."
+  },
+  "status": {
+    "new": "New",
+    "contacted": "Contacted",
+    "meeting": "Meeting planned",
+    "proposal": "Proposal",
+    "won": "Won",
+    "lost": "Lost",
+    "duplicate": "Duplicate"
+  },
+  "level": {
+    "Bronze": "Bronze",
+    "Silver": "Silver",
+    "Gold": "Gold",
+    "Platinum": "Platinum"
   }
 }
