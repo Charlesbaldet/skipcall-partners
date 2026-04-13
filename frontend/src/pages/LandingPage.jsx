@@ -193,7 +193,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:2,marginTop:16 }}>
-            {[['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([l,h]) => (
+            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([l,h]) => (
               <a key={l} href={h} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:'#0f172a',textDecoration:'none' }}>{l}</a>
             ))}
           </div>
