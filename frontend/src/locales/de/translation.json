@@ -4,7 +4,7 @@
     "error": "Fehler",
     "save": "Speichern",
     "cancel": "Abbrechen",
-    "back": "ZurÃ¼ck",
+    "back": "Zurück",
     "noData": "Keine Daten"
   },
   "nav": {
@@ -15,23 +15,23 @@
     "blog": "Blog",
     "login": "Anmelden",
     "freeTrial": "Kostenlos testen",
-    "menu": "MenÃ¼"
+    "menu": "Menü"
   },
   "landing": {
     "hero": {
       "badge": "Verwalten Sie Ihre Empfehlungspartner einfach",
       "h1_start": "Verwandeln Sie Ihre",
       "h1_highlight": "Empfehlungen in Umsatz",
-      "description": "RefBoost ist die SaaS-Plattform fÃ¼r Partner- und Empfehlungsprogramm-Management. Automatisieren Sie Referral-Tracking, Provisionen und die Leistung Ihres Netzwerks.",
-      "cta_primary": "Meinen kostenlosen Bereich erstellen â",
+      "description": "RefBoost ist die SaaS-Plattform für Partner- und Empfehlungsprogramm-Management. Automatisieren Sie Referral-Tracking, Provisionen und die Leistung Ihres Netzwerks.",
+      "cta_primary": "Meinen kostenlosen Bereich erstellen →",
       "cta_secondary": "Entdecken",
       "stat1_value": "150+",
       "stat1_label": "Aktive Partner",
-      "stat2_value": "2,4 Mio.â¬",
+      "stat2_value": "2,4 Mio.€",
       "stat2_label": "Generierter Umsatz",
       "stat3_value": "98%",
       "stat3_label": "Kundenzufriedenheit",
-      "trial_badges": "â 14 Tage kostenlos Â· â Keine Kreditkarte Â· â Einrichtung in 5 Min."
+      "trial_badges": "✓ 14 Tage kostenlos · ✓ Keine Kreditkarte · ✓ Einrichtung in 5 Min."
     },
     "featuresDropdown": {
       "pipeline_label": "Lead-Pipeline",
@@ -57,7 +57,7 @@
         },
         {
           "title": "Automatische Provisionen",
-          "desc": "Automatische PrÃ¤mienberechnung nach Ihren Regeln. Ein-Klick-Validierung, vollstÃ¤ndige Historie, rÃ¼ckverfolgbare Zahlungen."
+          "desc": "Automatische Prämienberechnung nach Ihren Regeln. Ein-Klick-Validierung, vollständige Historie, rückverfolgbare Zahlungen."
         },
         {
           "title": "Dashboards & KPIs",
@@ -65,15 +65,15 @@
         },
         {
           "title": "Ihre Marke, Ihre Plattform",
-          "desc": "Passen Sie die OberflÃ¤che vollstÃ¤ndig an: Logo, Farben, Domain. Ihre Partner arbeiten in Ihrer Welt."
+          "desc": "Passen Sie die Oberfläche vollständig an: Logo, Farben, Domain. Ihre Partner arbeiten in Ihrer Welt."
         },
         {
           "title": "Unternehmenssicherheit",
-          "desc": "AES-256-VerschlÃ¼sselung, Audit-Protokolle, Anti-Brute-Force-Schutz. DSGVO-konform, ISO 27001 bereit."
+          "desc": "AES-256-Verschlüsselung, Audit-Protokolle, Anti-Brute-Force-Schutz. DSGVO-konform, ISO 27001 bereit."
         },
         {
           "title": "Einzigartige Tracking-Links",
-          "desc": "Jeder Partner hat seinen persÃ¶nlichen Link. Automatische Attribution, Ã¶ffentliches Formular, null Reibung."
+          "desc": "Jeder Partner hat seinen persönlichen Link. Automatische Attribution, öffentliches Formular, null Reibung."
         }
       ]
     },
@@ -83,14 +83,14 @@
       "steps": [
         {
           "title": "Erstellen Sie Ihren Bereich",
-          "desc": "Registrieren Sie sich in 2 Minuten. Passen Sie Ihre Plattform an Ihre visuelle IdentitÃ¤t an."
+          "desc": "Registrieren Sie sich in 2 Minuten. Passen Sie Ihre Plattform an Ihre visuelle Identität an."
         },
         {
           "title": "Partner einladen",
-          "desc": "Senden Sie E-Mail-Einladungen. Jeder Partner erhÃ¤lt seinen Zugang und seinen Tracking-Link."
+          "desc": "Senden Sie E-Mail-Einladungen. Jeder Partner erhält seinen Zugang und seinen Tracking-Link."
         },
         {
-          "title": "Verfolgen & vergÃ¼ten",
+          "title": "Verfolgen & vergüten",
           "desc": "Ihre Partner senden Leads. Sie verfolgen die Konversion und zahlen Provisionen automatisch aus."
         }
       ]
@@ -111,44 +111,44 @@
           "r": "CEO",
           "c": "ScaleUp Agency",
           "a": "T",
-          "t": "RefBoost ermÃ¶glichte uns, unser Empfehlungsprogramm zu strukturieren. Wir gehen nie zurÃ¼ck."
+          "t": "RefBoost ermöglichte uns, unser Empfehlungsprogramm zu strukturieren. Wir gehen nie zurück."
         },
         {
           "n": "Sophie Martin",
           "r": "Head of Partnerships",
           "c": "DataViz Pro",
           "a": "S",
-          "t": "Keine Tabellenkalkulationen mehr fÃ¼r die Provisionsverfolgung. Alles automatisiert, transparent, Partner begeistert."
+          "t": "Keine Tabellenkalkulationen mehr für die Provisionsverfolgung. Alles automatisiert, transparent, Partner begeistert."
         }
       ]
     },
     "marketplace": {
-      "badge": "â¨ Neu â RefBoost Marketplace",
+      "badge": "✨ Neu — RefBoost Marketplace",
       "title_start": "Finden Sie Empfehlungsprogramme",
-      "title_highlight": "geprÃ¼ft & lohnend",
-      "description": "Hunderte von Unternehmen Ã¶ffnen ihr Programm auf RefBoost. Treten Sie kostenlos bei.",
+      "title_highlight": "geprüft & lohnend",
+      "description": "Hunderte von Unternehmen öffnen ihr Programm auf RefBoost. Treten Sie kostenlos bei.",
       "stat1_val": "150+",
       "stat1_label": "Aktive Programme",
       "stat2_val": "100%",
-      "stat2_label": "Kostenlos fÃ¼r Partner",
-      "stat3_val": "2,4 Mio.â¬",
+      "stat2_label": "Kostenlos für Partner",
+      "stat3_val": "2,4 Mio.€",
       "stat3_label": "Generierte Provisionen",
-      "cta": "Alle Programme ansehen â",
-      "cta_note": "Kostenlos Â· Keine Registrierung zum StÃ¶bern"
+      "cta": "Alle Programme ansehen →",
+      "cta_note": "Kostenlos · Keine Registrierung zum Stöbern"
     },
     "pricing": {
       "label": "Preise",
-      "title": "Einfache Preise, keine Ãberraschungen",
-      "description": "Alle PlÃ¤ne beinhalten eine 14-tÃ¤gige kostenlose Testphase. Ohne Verpflichtung.",
+      "title": "Einfache Preise, keine Überraschungen",
+      "description": "Alle Pläne beinhalten eine 14-tägige kostenlose Testphase. Ohne Verpflichtung.",
       "popular": "Beliebt",
       "custom": "Individuell",
-      "per_month": "â¬/Monat",
+      "per_month": "€/Monat",
       "cta_contact": "Kontakt aufnehmen",
       "cta_start": "Kostenlos starten",
       "plans": [
         {
           "name": "Starter",
-          "desc": "Ideal fÃ¼r den Programmstart",
+          "desc": "Ideal für den Programmstart",
           "features": [
             "Bis zu 20 Empfehlungspartner",
             "100 Empfehlungen/Monat",
@@ -159,19 +159,19 @@
         },
         {
           "name": "Growth",
-          "desc": "FÃ¼r beschleunigtes Wachstum",
+          "desc": "Für beschleunigtes Wachstum",
           "features": [
             "Unbegrenzte Partner",
             "Unbegrenzte Empfehlungen",
-            "VollstÃ¤ndige Anpassung",
+            "Vollständige Anpassung",
             "API & CRM-Integrationen",
-            "PrioritÃ¤tssupport",
+            "Prioritätssupport",
             "Multi-Nutzer"
           ]
         },
         {
           "name": "Enterprise",
-          "desc": "FÃ¼r groÃe Organisationen",
+          "desc": "Für große Organisationen",
           "features": [
             "Alles aus Growth +",
             "Multi-Workspace",
@@ -184,12 +184,12 @@
       ]
     },
     "faq": {
-      "label": "HÃ¤ufige Fragen",
-      "title": "Alles, was Sie wissen mÃ¼ssen",
+      "label": "Häufige Fragen",
+      "title": "Alles, was Sie wissen müssen",
       "items": [
         {
           "q": "Was ist ein Empfehlungspartnerprogramm?",
-          "a": "Ein System, das externe Partner fÃ¼r jeden empfohlenen Kunden vergÃ¼tet. RefBoost automatisiert alles: Tracking, Attribution, Berechnung und Zahlung von Provisionen."
+          "a": "Ein System, das externe Partner für jeden empfohlenen Kunden vergütet. RefBoost automatisiert alles: Tracking, Attribution, Berechnung und Zahlung von Provisionen."
         },
         {
           "q": "Wie lange dauert die Einrichtung?",
@@ -197,28 +197,28 @@
         },
         {
           "q": "Kann ich die Plattform an meine Marke anpassen?",
-          "a": "Ja. Logo, Farben, individuelle Domain â Ihre Partner arbeiten in einer Umgebung, die Ihre Marke widerspiegelt."
+          "a": "Ja. Logo, Farben, individuelle Domain — Ihre Partner arbeiten in einer Umgebung, die Ihre Marke widerspiegelt."
         },
         {
           "q": "Wie werden Provisionen berechnet?",
-          "a": "Sie legen den Satz pro Partner oder global fest. Bei jedem gewonnenen Deal berechnet RefBoost automatisch die PrÃ¤mie und benachrichtigt Sie zur Validierung."
+          "a": "Sie legen den Satz pro Partner oder global fest. Bei jedem gewonnenen Deal berechnet RefBoost automatisch die Prämie und benachrichtigt Sie zur Validierung."
         },
         {
           "q": "Sind meine Daten sicher?",
-          "a": "Absolut. AES-256-VerschlÃ¼sselung, vollstÃ¤ndige Audit-Protokolle, Anti-Brute-Force-Schutz, DSGVO-KonformitÃ¤t. Wir folgen den ISO 27001-Standards."
+          "a": "Absolut. AES-256-Verschlüsselung, vollständige Audit-Protokolle, Anti-Brute-Force-Schutz, DSGVO-Konformität. Wir folgen den ISO 27001-Standards."
         }
       ]
     },
     "cta": {
       "title": "Bereit, Ihr",
       "title_end": "Partnernetzwerk zu strukturieren?",
-      "description": "SchlieÃen Sie sich Unternehmen an, die RefBoost nutzen, um Empfehlungen in wiederkehrende UmsÃ¤tze umzuwandeln.",
+      "description": "Schließen Sie sich Unternehmen an, die RefBoost nutzen, um Empfehlungen in wiederkehrende Umsätze umzuwandeln.",
       "email_placeholder": "ihre@email.de",
-      "cta_btn": "Loslegen â",
-      "note": "14 Tage kostenlos Â· Keine Kreditkarte Â· Jederzeit kÃ¼ndbar"
+      "cta_btn": "Loslegen →",
+      "note": "14 Tage kostenlos · Keine Kreditkarte · Jederzeit kündbar"
     },
     "footer": {
-      "tagline": "Die Plattform fÃ¼r Empfehlungspartnerprogramm-Management und professionelle Empfehlungen.",
+      "tagline": "Die Plattform für Empfehlungspartnerprogramm-Management und professionelle Empfehlungen.",
       "sections": {
         "features": "Funktionen",
         "resources": "Ressourcen",
@@ -239,7 +239,7 @@
         "legal": "Impressum",
         "rgpd": "DSGVO"
       },
-      "copyright": "Â© 2026 RefBoost. Alle Rechte vorbehalten.",
+      "copyright": "© 2026 RefBoost. Alle Rechte vorbehalten.",
       "madeIn": "Mit Sorgfalt in Frankreich gemacht"
     }
   },
@@ -250,32 +250,12 @@
     "email_placeholder": "sie@unternehmen.de",
     "password": "Passwort",
     "forgot_password": "Passwort vergessen?",
-    "submit": "Einloggen â",
-    "loading": "Anmeldung lÃ¤uft...",
+    "submit": "Einloggen →",
+    "loading": "Anmeldung läuft...",
     "no_account": "Noch kein Konto?",
-    "create_account": "Kostenlosen Bereich erstellen â",
-    "back_to_site": "â ZurÃ¼ck zur Website",
+    "create_account": "Kostenlosen Bereich erstellen →",
+    "back_to_site": "← Zurück zur Website",
     "error_default": "Falsche Anmeldedaten"
-  },
-  "layout": {
-    "nav": {
-      "dashboard": "Dashboard",
-      "pipeline": "Pipeline",
-      "commissions": "Provisionen",
-      "partners": "Partner",
-      "messaging": "Nachrichten",
-      "programme": "Programm",
-      "settings": "Einstellungen",
-      "my_referrals": "Meine Referrals",
-      "submit": "Einreichen",
-      "my_payments": "Meine Zahlungen",
-      "clients": "Kunden",
-      "statistics": "Statistiken",
-      "audit_logs": "Audit-Protokolle",
-      "blog": "Blog"
-    },
-    "collapse": "Einklappen",
-    "logout": "Abmelden"
   },
   "signup": {
     "title": "Erstellen Sie Ihren Bereich",
@@ -313,5 +293,25 @@
     "pwd_lower": "Kleinbuchst.",
     "pwd_digit": "Ziffer",
     "pwd_special": "Sonderz."
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Provisionen",
+      "partners": "Partner",
+      "messaging": "Nachrichten",
+      "programme": "Programm",
+      "settings": "Einstellungen",
+      "my_referrals": "Meine Referrals",
+      "submit": "Einreichen",
+      "my_payments": "Meine Zahlungen",
+      "clients": "Kunden",
+      "statistics": "Statistiken",
+      "audit_logs": "Audit-Protokolle",
+      "blog": "Blog"
+    },
+    "collapse": "Einklappen",
+    "logout": "Abmelden"
   }
 }
