@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "noData": "No data"
+  },
+  "nav": {
+    "features": "Features",
+    "marketplace": "Marketplace",
+    "pricing": "Pricing",
+    "testimonials": "Testimonials",
+    "blog": "Blog",
+    "login": "Login",
+    "freeTrial": "Free trial",
+    "menu": "Menu"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Manage your referral partners effortlessly",
+      "h1_start": "Turn your",
+      "h1_highlight": "referrals into revenue",
+      "description": "RefBoost is the SaaS platform for partner program management and referral tracking. Automate referral tracking, commissions and your network's performance.",
+      "cta_primary": "Create my free workspace →",
+      "cta_secondary": "Discover",
+      "stat1_value": "150+",
+      "stat1_label": "Active partners",
+      "stat2_value": "2.4M€",
+      "stat2_label": "Revenue generated",
+      "stat3_value": "98%",
+      "stat3_label": "Customer satisfaction",
+      "trial_badges": "✓ 14 days free · ✓ No credit card · ✓ Setup in 5 min"
+    },
+    "featuresDropdown": {
+      "pipeline_label": "Lead Pipeline",
+      "pipeline_desc": "From referral to closing",
+      "commissions_label": "Automatic commissions",
+      "commissions_desc": "Frictionless calculation and payment",
+      "analytics_label": "Analytics & KPIs",
+      "analytics_desc": "Drive decisions with real data",
+      "branding_label": "White label",
+      "branding_desc": "Your brand, your domain",
+      "tracking_label": "Tracking links",
+      "tracking_desc": "Perfect attribution"
+    },
+    "features": {
+      "label": "Features",
+      "title": "Everything to manage your",
+      "title_highlight": "referral partner program",
+      "description": "From the first referral to the commission payment, RefBoost automates every step.",
+      "items": [
+        {
+          "title": "Referral Pipeline",
+          "desc": "Track every referral from first contact to closing. Kanban view, advanced filters, real-time statuses."
+        },
+        {
+          "title": "Automatic Commissions",
+          "desc": "Automatic bonus calculation based on your rules. One-click validation, full history, traceable payments."
+        },
+        {
+          "title": "Dashboards & KPIs",
+          "desc": "Conversion rate, generated MRR, performance by partner. Make data-driven decisions."
+        },
+        {
+          "title": "Your brand, your platform",
+          "desc": "Fully customize the interface: logo, colors, domain. Your partners work in your universe."
+        },
+        {
+          "title": "Enterprise-grade security",
+          "desc": "AES-256 encryption, audit logs, anti-brute force protection. GDPR compliant, ISO 27001 ready."
+        },
+        {
+          "title": "Unique tracking links",
+          "desc": "Each partner has their personal link. Automatic attribution, public form, zero friction."
+        }
+      ]
+    },
+    "howItWorks": {
+      "label": "How it works",
+      "title": "Launch your program in 3 steps",
+      "steps": [
+        {
+          "title": "Create your workspace",
+          "desc": "Sign up in 2 minutes. Customize your platform with your visual identity."
+        },
+        {
+          "title": "Invite your partners",
+          "desc": "Send email invitations. Each partner receives their access and tracking link."
+        },
+        {
+          "title": "Track & reward",
+          "desc": "Your partners submit leads. You track conversion and pay commissions automatically."
+        }
+      ]
+    },
+    "testimonials": {
+      "label": "Testimonials",
+      "title": "They manage their referral partners with RefBoost",
+      "items": [
+        {
+          "n": "Marie Dupont",
+          "r": "Sales Director",
+          "c": "TechFlow",
+          "a": "M",
+          "t": "We tripled our referral partner channel in 4 months. The tool is intuitive and our partners love it."
+        },
+        {
+          "n": "Thomas Chen",
+          "r": "CEO",
+          "c": "ScaleUp Agency",
+          "a": "T",
+          "t": "RefBoost allowed us to structure our referral program. We could never go back."
+        },
+        {
+          "n": "Sophie Martin",
+          "r": "Head of Partnerships",
+          "c": "DataViz Pro",
+          "a": "S",
+          "t": "No more spreadsheets for tracking commissions. Everything is automated, transparent, and our partners are thrilled."
+        }
+      ]
+    },
+    "marketplace": {
+      "badge": "✨ New — RefBoost Marketplace",
+      "title_start": "Find referral programs",
+      "title_highlight": "verified & rewarding",
+      "description": "Hundreds of companies open their program on RefBoost. Join them for free.",
+      "stat1_val": "150+",
+      "stat1_label": "Active programs",
+      "stat2_val": "100%",
+      "stat2_label": "Free for partners",
+      "stat3_val": "2.4M€",
+      "stat3_label": "Commissions generated",
+      "cta": "View all programs →",
+      "cta_note": "Free · No registration to browse"
+    },
+    "pricing": {
+      "label": "Pricing",
+      "title": "Simple pricing, no surprises",
+      "description": "All plans include a 14-day free trial. No commitment.",
+      "popular": "Popular",
+      "custom": "Custom",
+      "per_month": "€/month",
+      "cta_contact": "Contact us",
+      "cta_start": "Start for free",
+      "plans": [
+        {
+          "name": "Starter",
+          "desc": "Ideal for launching your program",
+          "features": [
+            "Up to 20 referral partners",
+            "100 referrals/month",
+            "Dashboard & analytics",
+            "Tracking links",
+            "Email support"
+          ]
+        },
+        {
+          "name": "Growth",
+          "desc": "To accelerate your growth",
+          "features": [
+            "Unlimited referral partners",
+            "Unlimited referrals",
+            "Full customization",
+            "API & CRM integrations",
+            "Priority support",
+            "Multi-users"
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "desc": "For large organizations",
+          "features": [
+            "Everything in Growth +",
+            "Multi-workspace",
+            "SSO / SAML",
+            "Guaranteed SLA",
+            "Dedicated account manager",
+            "Audit & compliance"
+          ]
+        }
+      ]
+    },
+    "faq": {
+      "label": "Frequently asked questions",
+      "title": "Everything you need to know",
+      "items": [
+        {
+          "q": "What is a referral partner program?",
+          "a": "It's a system that rewards external partners for every customer they refer to you. RefBoost automates everything: tracking, attribution, commission calculation and payment."
+        },
+        {
+          "q": "How long to get started?",
+          "a": "5 minutes. Create your account, invite your first partners, and start receiving referrals today."
+        },
+        {
+          "q": "Can I customize the platform to match my brand?",
+          "a": "Yes. Logo, colors, custom domain — your partners work in an environment that reflects your brand, not RefBoost's."
+        },
+        {
+          "q": "How are commissions calculated?",
+          "a": "You set the rate per partner or globally. With each won deal, RefBoost automatically calculates the bonus and notifies you for validation."
+        },
+        {
+          "q": "Is my data secure?",
+          "a": "Absolutely. AES-256 encryption, full audit logs, anti-brute force protection, GDPR compliance. We follow ISO 27001 standards."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Ready to structure your",
+      "title_end": "referral network?",
+      "description": "Join the companies using RefBoost to turn their referrals into recurring revenue.",
+      "email_placeholder": "your@email.com",
+      "cta_btn": "Get started →",
+      "note": "14 days free · No credit card · Cancel anytime"
+    },
+    "footer": {
+      "tagline": "The platform for referral partner program management and professional referrals.",
+      "sections": {
+        "features": "Features",
+        "resources": "Resources",
+        "legal": "Legal"
+      },
+      "links": {
+        "pipeline": "Lead Pipeline",
+        "commissions": "Automatic commissions",
+        "analytics": "Analytics & KPIs",
+        "whiteLabel": "White label",
+        "tracking": "Tracking links",
+        "blog": "Blog",
+        "guide": "Getting started guide",
+        "faq": "FAQ",
+        "contact": "Contact",
+        "cgv": "Terms",
+        "privacy": "Privacy",
+        "legal": "Legal notice",
+        "rgpd": "GDPR"
+      },
+      "copyright": "© 2026 RefBoost. All rights reserved.",
+      "madeIn": "Made with care in France"
+    }
+  },
+  "login": {
+    "title": "Login",
+    "subtitle": "Access your partner program",
+    "email": "Email",
+    "email_placeholder": "you@company.com",
+    "password": "Password",
+    "forgot_password": "Forgot password?",
+    "submit": "Sign in →",
+    "loading": "Signing in...",
+    "no_account": "Don't have an account yet?",
+    "create_account": "Create a free workspace →",
+    "back_to_site": "← Back to site",
+    "error_default": "Incorrect credentials"
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Commissions",
+      "partners": "Partners",
+      "messaging": "Messaging",
+      "programme": "Program",
+      "settings": "Settings",
+      "my_referrals": "My Referrals",
+      "submit": "Submit",
+      "my_payments": "My Payments",
+      "clients": "Clients",
+      "statistics": "Statistics",
+      "audit_logs": "Audit Logs",
+      "blog": "Blog"
+    },
+    "collapse": "Collapse",
+    "logout": "Logout"
+  }
+}

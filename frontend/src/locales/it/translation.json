@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "back": "Indietro",
+    "noData": "Nessun dato"
+  },
+  "nav": {
+    "features": "Funzionalità",
+    "marketplace": "Marketplace",
+    "pricing": "Prezzi",
+    "testimonials": "Testimonianze",
+    "blog": "Blog",
+    "login": "Accedi",
+    "freeTrial": "Prova gratuita",
+    "menu": "Menu"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Gestisci i tuoi referral partner con semplicità",
+      "h1_start": "Trasforma le tue",
+      "h1_highlight": "raccomandazioni in fatturato",
+      "description": "RefBoost è la piattaforma SaaS per la gestione di programmi partner e referral. Automatizza il tracciamento dei referral, le commissioni e le performance della tua rete.",
+      "cta_primary": "Crea il mio spazio gratuitamente →",
+      "cta_secondary": "Scopri",
+      "stat1_value": "150+",
+      "stat1_label": "Partner attivi",
+      "stat2_value": "2.4M€",
+      "stat2_label": "Fatturato generato",
+      "stat3_value": "98%",
+      "stat3_label": "Soddisfazione clienti",
+      "trial_badges": "✓ 14 giorni gratis · ✓ Senza carta di credito · ✓ Configurazione in 5 min"
+    },
+    "featuresDropdown": {
+      "pipeline_label": "Pipeline lead",
+      "pipeline_desc": "Dal referral alla chiusura",
+      "commissions_label": "Commissioni automatiche",
+      "commissions_desc": "Calcolo e pagamento senza attrito",
+      "analytics_label": "Analytics & KPI",
+      "analytics_desc": "Decisioni basate su dati reali",
+      "branding_label": "White label",
+      "branding_desc": "Il tuo brand, il tuo dominio",
+      "tracking_label": "Link di tracking",
+      "tracking_desc": "Attribuzione perfetta"
+    },
+    "features": {
+      "label": "Funzionalità",
+      "title": "Tutto per gestire il tuo",
+      "title_highlight": "programma referral partner",
+      "description": "Dal primo referral al pagamento della commissione, RefBoost automatizza ogni fase.",
+      "items": [
+        {
+          "title": "Pipeline referral",
+          "desc": "Segui ogni raccomandazione dal primo contatto alla chiusura. Vista Kanban, filtri avanzati, stati in tempo reale."
+        },
+        {
+          "title": "Commissioni automatiche",
+          "desc": "Calcolo automatico dei bonus secondo le tue regole. Validazione in un clic, storico completo, pagamenti tracciabili."
+        },
+        {
+          "title": "Dashboard & KPI",
+          "desc": "Tasso di conversione, MRR generato, performance per partner. Prendi decisioni basate sui dati."
+        },
+        {
+          "title": "Il tuo brand, la tua piattaforma",
+          "desc": "Personalizza completamente l'interfaccia: logo, colori, dominio. I tuoi partner lavorano nel tuo universo."
+        },
+        {
+          "title": "Sicurezza enterprise",
+          "desc": "Crittografia AES-256, log di audit, protezione anti-brute force. Conforme GDPR, pronto per ISO 27001."
+        },
+        {
+          "title": "Link di tracking univoci",
+          "desc": "Ogni partner ha il suo link personale. Attribuzione automatica, modulo pubblico, zero attrito."
+        }
+      ]
+    },
+    "howItWorks": {
+      "label": "Come funziona",
+      "title": "Avvia il tuo programma in 3 passi",
+      "steps": [
+        {
+          "title": "Crea il tuo spazio",
+          "desc": "Registrati in 2 minuti. Personalizza la piattaforma con la tua identità visiva."
+        },
+        {
+          "title": "Invita i tuoi partner",
+          "desc": "Invia inviti via email. Ogni partner riceve il suo accesso e il link di tracking."
+        },
+        {
+          "title": "Monitora & remunera",
+          "desc": "I tuoi partner inviano lead. Monitori le conversioni e paghi le commissioni automaticamente."
+        }
+      ]
+    },
+    "testimonials": {
+      "label": "Testimonianze",
+      "title": "Gestiscono i loro referral partner con RefBoost",
+      "items": [
+        {
+          "n": "Marie Dupont",
+          "r": "Direttrice Commerciale",
+          "c": "TechFlow",
+          "a": "M",
+          "t": "Abbiamo triplicato il canale referral in 4 mesi. Lo strumento è intuitivo e i nostri partner lo adorano."
+        },
+        {
+          "n": "Thomas Chen",
+          "r": "CEO",
+          "c": "ScaleUp Agency",
+          "a": "T",
+          "t": "RefBoost ci ha permesso di strutturare il programma di raccomandazione. Non torneremmo mai indietro."
+        },
+        {
+          "n": "Sophie Martin",
+          "r": "Head of Partnerships",
+          "c": "DataViz Pro",
+          "a": "S",
+          "t": "Basta fogli di calcolo per tracciare le commissioni. Tutto è automatizzato, trasparente, e i partner sono entusiasti."
+        }
+      ]
+    },
+    "marketplace": {
+      "badge": "✨ Nuovo — Marketplace RefBoost",
+      "title_start": "Trova programmi di referral",
+      "title_highlight": "verificati & remunerativi",
+      "description": "Centinaia di aziende aprono il loro programma su RefBoost. Unisciti a loro gratuitamente.",
+      "stat1_val": "150+",
+      "stat1_label": "Programmi attivi",
+      "stat2_val": "100%",
+      "stat2_label": "Gratuito per i partner",
+      "stat3_val": "2.4M€",
+      "stat3_label": "Commissioni generate",
+      "cta": "Vedi tutti i programmi →",
+      "cta_note": "Gratuito · Senza registrazione per navigare"
+    },
+    "pricing": {
+      "label": "Prezzi",
+      "title": "Prezzi semplici, senza sorprese",
+      "description": "Tutti i piani includono 14 giorni di prova gratuita. Senza impegno.",
+      "popular": "Popolare",
+      "custom": "Su misura",
+      "per_month": "€/mese",
+      "cta_contact": "Contattaci",
+      "cta_start": "Inizia gratuitamente",
+      "plans": [
+        {
+          "name": "Starter",
+          "desc": "Ideale per avviare il tuo programma",
+          "features": [
+            "Fino a 20 referral partner",
+            "100 referral/mese",
+            "Dashboard & analytics",
+            "Link di tracking",
+            "Supporto email"
+          ]
+        },
+        {
+          "name": "Growth",
+          "desc": "Per accelerare la tua crescita",
+          "features": [
+            "Partner illimitati",
+            "Referral illimitati",
+            "Personalizzazione completa",
+            "API & integrazioni CRM",
+            "Supporto prioritario",
+            "Multi-utenti"
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "desc": "Per grandi organizzazioni",
+          "features": [
+            "Tutto Growth +",
+            "Multi-spazio",
+            "SSO / SAML",
+            "SLA garantito",
+            "Account manager dedicato",
+            "Audit & conformità"
+          ]
+        }
+      ]
+    },
+    "faq": {
+      "label": "Domande frequenti",
+      "title": "Tutto quello che devi sapere",
+      "items": [
+        {
+          "q": "Cos'è un programma di referral partner?",
+          "a": "È un sistema che remunera partner esterni per ogni cliente che ti raccomandano. RefBoost automatizza tutto: tracking, attribuzione, calcolo e pagamento delle commissioni."
+        },
+        {
+          "q": "Quanto tempo per essere operativi?",
+          "a": "5 minuti. Crea il tuo account, invita i primi partner e inizia a ricevere raccomandazioni oggi stesso."
+        },
+        {
+          "q": "Posso personalizzare la piattaforma con il mio brand?",
+          "a": "Sì. Logo, colori, dominio personalizzato — i tuoi partner lavorano in un ambiente che riflette il tuo brand, non quello di RefBoost."
+        },
+        {
+          "q": "Come vengono calcolate le commissioni?",
+          "a": "Definisci il tasso per partner o globalmente. Ad ogni deal vinto, RefBoost calcola automaticamente il bonus e ti notifica per la validazione."
+        },
+        {
+          "q": "I miei dati sono al sicuro?",
+          "a": "Assolutamente. Crittografia AES-256, log di audit completi, protezione anti-brute force, conformità GDPR. Seguiamo gli standard ISO 27001."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Pronto a strutturare la tua",
+      "title_end": "rete di referral?",
+      "description": "Unisciti alle aziende che usano RefBoost per trasformare le raccomandazioni in fatturato ricorrente.",
+      "email_placeholder": "tua@email.com",
+      "cta_btn": "Inizia →",
+      "note": "14 giorni gratis · Senza carta di credito · Cancellazione in 1 clic"
+    },
+    "footer": {
+      "tagline": "La piattaforma per la gestione di programmi referral partner e referral professionale.",
+      "sections": {
+        "features": "Funzionalità",
+        "resources": "Risorse",
+        "legal": "Legale"
+      },
+      "links": {
+        "pipeline": "Pipeline lead",
+        "commissions": "Commissioni automatiche",
+        "analytics": "Analytics & KPI",
+        "whiteLabel": "White label",
+        "tracking": "Link di tracking",
+        "blog": "Blog",
+        "guide": "Guida introduttiva",
+        "faq": "FAQ",
+        "contact": "Contatto",
+        "cgv": "Termini",
+        "privacy": "Privacy",
+        "legal": "Note legali",
+        "rgpd": "GDPR"
+      },
+      "copyright": "© 2026 RefBoost. Tutti i diritti riservati.",
+      "madeIn": "Fatto con cura in Francia"
+    }
+  },
+  "login": {
+    "title": "Accedi",
+    "subtitle": "Accedi al tuo programma partner",
+    "email": "Email",
+    "email_placeholder": "tu@azienda.com",
+    "password": "Password",
+    "forgot_password": "Password dimenticata?",
+    "submit": "Accedi →",
+    "loading": "Accesso in corso...",
+    "no_account": "Non hai ancora un account?",
+    "create_account": "Crea uno spazio gratuito →",
+    "back_to_site": "← Torna al sito",
+    "error_default": "Credenziali errate"
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Commissioni",
+      "partners": "Partner",
+      "messaging": "Messaggistica",
+      "programme": "Programma",
+      "settings": "Impostazioni",
+      "my_referrals": "I Miei Referral",
+      "submit": "Invia",
+      "my_payments": "I Miei Pagamenti",
+      "clients": "Clienti",
+      "statistics": "Statistiche",
+      "audit_logs": "Log Audit",
+      "blog": "Blog"
+    },
+    "collapse": "Comprimi",
+    "logout": "Esci"
+  }
+}

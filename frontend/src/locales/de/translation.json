@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "back": "Zurück",
+    "noData": "Keine Daten"
+  },
+  "nav": {
+    "features": "Funktionen",
+    "marketplace": "Marketplace",
+    "pricing": "Preise",
+    "testimonials": "Kundenstimmen",
+    "blog": "Blog",
+    "login": "Anmelden",
+    "freeTrial": "Kostenlos testen",
+    "menu": "Menü"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Verwalten Sie Ihre Empfehlungspartner einfach",
+      "h1_start": "Verwandeln Sie Ihre",
+      "h1_highlight": "Empfehlungen in Umsatz",
+      "description": "RefBoost ist die SaaS-Plattform für Partner- und Empfehlungsprogramm-Management. Automatisieren Sie Referral-Tracking, Provisionen und die Leistung Ihres Netzwerks.",
+      "cta_primary": "Meinen kostenlosen Bereich erstellen →",
+      "cta_secondary": "Entdecken",
+      "stat1_value": "150+",
+      "stat1_label": "Aktive Partner",
+      "stat2_value": "2,4 Mio.€",
+      "stat2_label": "Generierter Umsatz",
+      "stat3_value": "98%",
+      "stat3_label": "Kundenzufriedenheit",
+      "trial_badges": "✓ 14 Tage kostenlos · ✓ Keine Kreditkarte · ✓ Einrichtung in 5 Min."
+    },
+    "featuresDropdown": {
+      "pipeline_label": "Lead-Pipeline",
+      "pipeline_desc": "Vom Referral bis zum Abschluss",
+      "commissions_label": "Automatische Provisionen",
+      "commissions_desc": "Reibungslose Berechnung und Zahlung",
+      "analytics_label": "Analytics & KPIs",
+      "analytics_desc": "Entscheidungen auf Datenbasis",
+      "branding_label": "White Label",
+      "branding_desc": "Ihre Marke, Ihre Domain",
+      "tracking_label": "Tracking-Links",
+      "tracking_desc": "Perfekte Attribution"
+    },
+    "features": {
+      "label": "Funktionen",
+      "title": "Alles zur Verwaltung Ihres",
+      "title_highlight": "Empfehlungspartnerprogramms",
+      "description": "Vom ersten Referral bis zur Provisionszahlung automatisiert RefBoost jeden Schritt.",
+      "items": [
+        {
+          "title": "Referral-Pipeline",
+          "desc": "Verfolgen Sie jede Empfehlung vom Erstkontakt bis zum Abschluss. Kanban-Ansicht, erweiterte Filter, Echtzeit-Status."
+        },
+        {
+          "title": "Automatische Provisionen",
+          "desc": "Automatische Prämienberechnung nach Ihren Regeln. Ein-Klick-Validierung, vollständige Historie, rückverfolgbare Zahlungen."
+        },
+        {
+          "title": "Dashboards & KPIs",
+          "desc": "Konversionsrate, generierter MRR, Leistung pro Partner. Datenbasierte Entscheidungen treffen."
+        },
+        {
+          "title": "Ihre Marke, Ihre Plattform",
+          "desc": "Passen Sie die Oberfläche vollständig an: Logo, Farben, Domain. Ihre Partner arbeiten in Ihrer Welt."
+        },
+        {
+          "title": "Unternehmenssicherheit",
+          "desc": "AES-256-Verschlüsselung, Audit-Protokolle, Anti-Brute-Force-Schutz. DSGVO-konform, ISO 27001 bereit."
+        },
+        {
+          "title": "Einzigartige Tracking-Links",
+          "desc": "Jeder Partner hat seinen persönlichen Link. Automatische Attribution, öffentliches Formular, null Reibung."
+        }
+      ]
+    },
+    "howItWorks": {
+      "label": "So funktioniert es",
+      "title": "Starten Sie Ihr Programm in 3 Schritten",
+      "steps": [
+        {
+          "title": "Erstellen Sie Ihren Bereich",
+          "desc": "Registrieren Sie sich in 2 Minuten. Passen Sie Ihre Plattform an Ihre visuelle Identität an."
+        },
+        {
+          "title": "Partner einladen",
+          "desc": "Senden Sie E-Mail-Einladungen. Jeder Partner erhält seinen Zugang und seinen Tracking-Link."
+        },
+        {
+          "title": "Verfolgen & vergüten",
+          "desc": "Ihre Partner senden Leads. Sie verfolgen die Konversion und zahlen Provisionen automatisch aus."
+        }
+      ]
+    },
+    "testimonials": {
+      "label": "Kundenstimmen",
+      "title": "Sie verwalten ihre Empfehlungspartner mit RefBoost",
+      "items": [
+        {
+          "n": "Marie Dupont",
+          "r": "Vertriebsleiterin",
+          "c": "TechFlow",
+          "a": "M",
+          "t": "Wir haben unseren Empfehlungskanal in 4 Monaten verdreifacht. Das Tool ist intuitiv und unsere Partner lieben es."
+        },
+        {
+          "n": "Thomas Chen",
+          "r": "CEO",
+          "c": "ScaleUp Agency",
+          "a": "T",
+          "t": "RefBoost ermöglichte uns, unser Empfehlungsprogramm zu strukturieren. Wir gehen nie zurück."
+        },
+        {
+          "n": "Sophie Martin",
+          "r": "Head of Partnerships",
+          "c": "DataViz Pro",
+          "a": "S",
+          "t": "Keine Tabellenkalkulationen mehr für die Provisionsverfolgung. Alles automatisiert, transparent, Partner begeistert."
+        }
+      ]
+    },
+    "marketplace": {
+      "badge": "✨ Neu — RefBoost Marketplace",
+      "title_start": "Finden Sie Empfehlungsprogramme",
+      "title_highlight": "geprüft & lohnend",
+      "description": "Hunderte von Unternehmen öffnen ihr Programm auf RefBoost. Treten Sie kostenlos bei.",
+      "stat1_val": "150+",
+      "stat1_label": "Aktive Programme",
+      "stat2_val": "100%",
+      "stat2_label": "Kostenlos für Partner",
+      "stat3_val": "2,4 Mio.€",
+      "stat3_label": "Generierte Provisionen",
+      "cta": "Alle Programme ansehen →",
+      "cta_note": "Kostenlos · Keine Registrierung zum Stöbern"
+    },
+    "pricing": {
+      "label": "Preise",
+      "title": "Einfache Preise, keine Überraschungen",
+      "description": "Alle Pläne beinhalten eine 14-tägige kostenlose Testphase. Ohne Verpflichtung.",
+      "popular": "Beliebt",
+      "custom": "Individuell",
+      "per_month": "€/Monat",
+      "cta_contact": "Kontakt aufnehmen",
+      "cta_start": "Kostenlos starten",
+      "plans": [
+        {
+          "name": "Starter",
+          "desc": "Ideal für den Programmstart",
+          "features": [
+            "Bis zu 20 Empfehlungspartner",
+            "100 Empfehlungen/Monat",
+            "Dashboard & Analytics",
+            "Tracking-Links",
+            "E-Mail-Support"
+          ]
+        },
+        {
+          "name": "Growth",
+          "desc": "Für beschleunigtes Wachstum",
+          "features": [
+            "Unbegrenzte Partner",
+            "Unbegrenzte Empfehlungen",
+            "Vollständige Anpassung",
+            "API & CRM-Integrationen",
+            "Prioritätssupport",
+            "Multi-Nutzer"
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "desc": "Für große Organisationen",
+          "features": [
+            "Alles aus Growth +",
+            "Multi-Workspace",
+            "SSO / SAML",
+            "Garantiertes SLA",
+            "Dedizierter Account Manager",
+            "Audit & Compliance"
+          ]
+        }
+      ]
+    },
+    "faq": {
+      "label": "Häufige Fragen",
+      "title": "Alles, was Sie wissen müssen",
+      "items": [
+        {
+          "q": "Was ist ein Empfehlungspartnerprogramm?",
+          "a": "Ein System, das externe Partner für jeden empfohlenen Kunden vergütet. RefBoost automatisiert alles: Tracking, Attribution, Berechnung und Zahlung von Provisionen."
+        },
+        {
+          "q": "Wie lange dauert die Einrichtung?",
+          "a": "5 Minuten. Erstellen Sie Ihr Konto, laden Sie Ihre ersten Partner ein und empfangen Sie noch heute Empfehlungen."
+        },
+        {
+          "q": "Kann ich die Plattform an meine Marke anpassen?",
+          "a": "Ja. Logo, Farben, individuelle Domain — Ihre Partner arbeiten in einer Umgebung, die Ihre Marke widerspiegelt."
+        },
+        {
+          "q": "Wie werden Provisionen berechnet?",
+          "a": "Sie legen den Satz pro Partner oder global fest. Bei jedem gewonnenen Deal berechnet RefBoost automatisch die Prämie und benachrichtigt Sie zur Validierung."
+        },
+        {
+          "q": "Sind meine Daten sicher?",
+          "a": "Absolut. AES-256-Verschlüsselung, vollständige Audit-Protokolle, Anti-Brute-Force-Schutz, DSGVO-Konformität. Wir folgen den ISO 27001-Standards."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Bereit, Ihr",
+      "title_end": "Partnernetzwerk zu strukturieren?",
+      "description": "Schließen Sie sich Unternehmen an, die RefBoost nutzen, um Empfehlungen in wiederkehrende Umsätze umzuwandeln.",
+      "email_placeholder": "ihre@email.de",
+      "cta_btn": "Loslegen →",
+      "note": "14 Tage kostenlos · Keine Kreditkarte · Jederzeit kündbar"
+    },
+    "footer": {
+      "tagline": "Die Plattform für Empfehlungspartnerprogramm-Management und professionelle Empfehlungen.",
+      "sections": {
+        "features": "Funktionen",
+        "resources": "Ressourcen",
+        "legal": "Rechtliches"
+      },
+      "links": {
+        "pipeline": "Lead-Pipeline",
+        "commissions": "Automatische Provisionen",
+        "analytics": "Analytics & KPIs",
+        "whiteLabel": "White Label",
+        "tracking": "Tracking-Links",
+        "blog": "Blog",
+        "guide": "Startanleitung",
+        "faq": "FAQ",
+        "contact": "Kontakt",
+        "cgv": "AGB",
+        "privacy": "Datenschutz",
+        "legal": "Impressum",
+        "rgpd": "DSGVO"
+      },
+      "copyright": "© 2026 RefBoost. Alle Rechte vorbehalten.",
+      "madeIn": "Mit Sorgfalt in Frankreich gemacht"
+    }
+  },
+  "login": {
+    "title": "Anmelden",
+    "subtitle": "Zugang zu Ihrem Partnerprogramm",
+    "email": "E-Mail",
+    "email_placeholder": "sie@unternehmen.de",
+    "password": "Passwort",
+    "forgot_password": "Passwort vergessen?",
+    "submit": "Einloggen →",
+    "loading": "Anmeldung läuft...",
+    "no_account": "Noch kein Konto?",
+    "create_account": "Kostenlosen Bereich erstellen →",
+    "back_to_site": "← Zurück zur Website",
+    "error_default": "Falsche Anmeldedaten"
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Provisionen",
+      "partners": "Partner",
+      "messaging": "Nachrichten",
+      "programme": "Programm",
+      "settings": "Einstellungen",
+      "my_referrals": "Meine Referrals",
+      "submit": "Einreichen",
+      "my_payments": "Meine Zahlungen",
+      "clients": "Kunden",
+      "statistics": "Statistiken",
+      "audit_logs": "Audit-Protokolle",
+      "blog": "Blog"
+    },
+    "collapse": "Einklappen",
+    "logout": "Abmelden"
+  }
+}

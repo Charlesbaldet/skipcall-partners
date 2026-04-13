@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fout",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "back": "Terug",
+    "noData": "Geen gegevens"
+  },
+  "nav": {
+    "features": "Functies",
+    "marketplace": "Marketplace",
+    "pricing": "Prijzen",
+    "testimonials": "Getuigenissen",
+    "blog": "Blog",
+    "login": "Inloggen",
+    "freeTrial": "Gratis proberen",
+    "menu": "Menu"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Beheer uw referral partners eenvoudig",
+      "h1_start": "Verander uw",
+      "h1_highlight": "aanbevelingen in omzet",
+      "description": "RefBoost is het SaaS-platform voor beheer van partnerprogramma's en referrals. Automatiseer referral-tracking, commissies en de prestaties van uw netwerk.",
+      "cta_primary": "Maak mijn gratis ruimte aan →",
+      "cta_secondary": "Ontdekken",
+      "stat1_value": "150+",
+      "stat1_label": "Actieve partners",
+      "stat2_value": "2,4M€",
+      "stat2_label": "Gegenereerde omzet",
+      "stat3_value": "98%",
+      "stat3_label": "Klanttevredenheid",
+      "trial_badges": "✓ 14 dagen gratis · ✓ Geen creditcard · ✓ Instelling in 5 min"
+    },
+    "featuresDropdown": {
+      "pipeline_label": "Lead pipeline",
+      "pipeline_desc": "Van referral tot afsluiting",
+      "commissions_label": "Automatische commissies",
+      "commissions_desc": "Berekening en betaling zonder wrijving",
+      "analytics_label": "Analytics & KPI's",
+      "analytics_desc": "Beslissingen op basis van echte data",
+      "branding_label": "White label",
+      "branding_desc": "Uw merk, uw domein",
+      "tracking_label": "Tracking links",
+      "tracking_desc": "Perfecte attributie"
+    },
+    "features": {
+      "label": "Functies",
+      "title": "Alles voor het beheer van uw",
+      "title_highlight": "referral partnerprogramma",
+      "description": "Van de eerste referral tot de commissiebetaling, RefBoost automatiseert elke stap.",
+      "items": [
+        {
+          "title": "Referral pipeline",
+          "desc": "Volg elke aanbeveling van het eerste contact tot de afsluiting. Kanban-weergave, geavanceerde filters, realtime statussen."
+        },
+        {
+          "title": "Automatische commissies",
+          "desc": "Automatische bonusberekening volgens uw regels. Validatie met één klik, volledige geschiedenis, traceerbare betalingen."
+        },
+        {
+          "title": "Dashboards & KPI's",
+          "desc": "Conversieratio, gegenereerde MRR, prestaties per partner. Neem datagestuurde beslissingen."
+        },
+        {
+          "title": "Uw merk, uw platform",
+          "desc": "Pas de interface volledig aan: logo, kleuren, domein. Uw partners werken in uw universum."
+        },
+        {
+          "title": "Enterprise beveiliging",
+          "desc": "AES-256-codering, auditlogs, anti-brute force bescherming. AVG-conform, ISO 27001 gereed."
+        },
+        {
+          "title": "Unieke tracking links",
+          "desc": "Elke partner heeft zijn persoonlijke link. Automatische attributie, openbaar formulier, nul wrijving."
+        }
+      ]
+    },
+    "howItWorks": {
+      "label": "Hoe het werkt",
+      "title": "Start uw programma in 3 stappen",
+      "steps": [
+        {
+          "title": "Maak uw ruimte aan",
+          "desc": "Registreer u in 2 minuten. Pas uw platform aan uw visuele identiteit aan."
+        },
+        {
+          "title": "Nodig uw partners uit",
+          "desc": "Stuur e-mailuitnodigingen. Elke partner ontvangt toegang en een tracking link."
+        },
+        {
+          "title": "Volg & beloon",
+          "desc": "Uw partners sturen leads in. U volgt de conversie en betaalt commissies automatisch uit."
+        }
+      ]
+    },
+    "testimonials": {
+      "label": "Getuigenissen",
+      "title": "Zij beheren hun referral partners met RefBoost",
+      "items": [
+        {
+          "n": "Marie Dupont",
+          "r": "Commercieel Directeur",
+          "c": "TechFlow",
+          "a": "M",
+          "t": "We hebben ons referral kanaal in 4 maanden verdrievoudigd. De tool is intuïtief en onze partners zijn er dol op."
+        },
+        {
+          "n": "Thomas Chen",
+          "r": "CEO",
+          "c": "ScaleUp Agency",
+          "a": "T",
+          "t": "RefBoost stelde ons in staat ons aanbevelingsprogramma te structureren. We gaan nooit meer terug."
+        },
+        {
+          "n": "Sophie Martin",
+          "r": "Head of Partnerships",
+          "c": "DataViz Pro",
+          "a": "S",
+          "t": "Geen spreadsheets meer voor commissie-tracking. Alles geautomatiseerd, transparant, partners tevreden."
+        }
+      ]
+    },
+    "marketplace": {
+      "badge": "✨ Nieuw — RefBoost Marketplace",
+      "title_start": "Vind referral programma's",
+      "title_highlight": "geverifieerd & winstgevend",
+      "description": "Honderden bedrijven openen hun programma op RefBoost. Sluit u gratis aan.",
+      "stat1_val": "150+",
+      "stat1_label": "Actieve programma's",
+      "stat2_val": "100%",
+      "stat2_label": "Gratis voor partners",
+      "stat3_val": "2,4M€",
+      "stat3_label": "Gegenereerde commissies",
+      "cta": "Bekijk alle programma's →",
+      "cta_note": "Gratis · Geen registratie om te bladeren"
+    },
+    "pricing": {
+      "label": "Prijzen",
+      "title": "Eenvoudige prijzen, geen verrassingen",
+      "description": "Alle plannen bevatten een gratis proefperiode van 14 dagen. Geen verplichting.",
+      "popular": "Populair",
+      "custom": "Op maat",
+      "per_month": "€/maand",
+      "cta_contact": "Neem contact op",
+      "cta_start": "Gratis starten",
+      "plans": [
+        {
+          "name": "Starter",
+          "desc": "Ideaal om uw programma te starten",
+          "features": [
+            "Tot 20 referral partners",
+            "100 referrals/maand",
+            "Dashboard & analytics",
+            "Tracking links",
+            "E-mailondersteuning"
+          ]
+        },
+        {
+          "name": "Growth",
+          "desc": "Om uw groei te versnellen",
+          "features": [
+            "Onbeperkte partners",
+            "Onbeperkte referrals",
+            "Volledige aanpassing",
+            "API & CRM-integraties",
+            "Prioriteitsondersteuning",
+            "Multi-gebruikers"
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "desc": "Voor grote organisaties",
+          "features": [
+            "Alles uit Growth +",
+            "Multi-workspace",
+            "SSO / SAML",
+            "Gegarandeerde SLA",
+            "Toegewijde account manager",
+            "Audit & compliance"
+          ]
+        }
+      ]
+    },
+    "faq": {
+      "label": "Veelgestelde vragen",
+      "title": "Alles wat u moet weten",
+      "items": [
+        {
+          "q": "Wat is een referral partnerprogramma?",
+          "a": "Een systeem dat externe partners beloont voor elke klant die zij aanbevelen. RefBoost automatiseert alles: tracking, attributie, berekening en betaling van commissies."
+        },
+        {
+          "q": "Hoe lang duurt de installatie?",
+          "a": "5 minuten. Maak uw account aan, nodig uw eerste partners uit en begin vandaag nog aanbevelingen te ontvangen."
+        },
+        {
+          "q": "Kan ik het platform aanpassen aan mijn merk?",
+          "a": "Ja. Logo, kleuren, aangepast domein — uw partners werken in een omgeving die uw merk weerspiegelt, niet dat van RefBoost."
+        },
+        {
+          "q": "Hoe worden commissies berekend?",
+          "a": "U stelt het tarief per partner of globaal in. Bij elke gewonnen deal berekent RefBoost automatisch de bonus en informeert u voor validatie."
+        },
+        {
+          "q": "Zijn mijn gegevens veilig?",
+          "a": "Absoluut. AES-256-codering, volledige auditlogs, anti-brute force bescherming, AVG-conformiteit. We volgen ISO 27001-normen."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Klaar om uw",
+      "title_end": "partnersnetwerk te structureren?",
+      "description": "Sluit u aan bij bedrijven die RefBoost gebruiken om aanbevelingen te transformeren in terugkerende omzet.",
+      "email_placeholder": "uw@email.nl",
+      "cta_btn": "Beginnen →",
+      "note": "14 dagen gratis · Geen creditcard · Annulering in 1 klik"
+    },
+    "footer": {
+      "tagline": "Het platform voor beheer van referral partnerprogramma's en professionele referrals.",
+      "sections": {
+        "features": "Functies",
+        "resources": "Resources",
+        "legal": "Juridisch"
+      },
+      "links": {
+        "pipeline": "Lead pipeline",
+        "commissions": "Automatische commissies",
+        "analytics": "Analytics & KPI's",
+        "whiteLabel": "White label",
+        "tracking": "Tracking links",
+        "blog": "Blog",
+        "guide": "Startgids",
+        "faq": "FAQ",
+        "contact": "Contact",
+        "cgv": "Voorwaarden",
+        "privacy": "Privacy",
+        "legal": "Juridische kennisgeving",
+        "rgpd": "AVG"
+      },
+      "copyright": "© 2026 RefBoost. Alle rechten voorbehouden.",
+      "madeIn": "Met zorg gemaakt in Frankrijk"
+    }
+  },
+  "login": {
+    "title": "Inloggen",
+    "subtitle": "Toegang tot uw partnerprogramma",
+    "email": "E-mail",
+    "email_placeholder": "u@bedrijf.nl",
+    "password": "Wachtwoord",
+    "forgot_password": "Wachtwoord vergeten?",
+    "submit": "Inloggen →",
+    "loading": "Bezig met inloggen...",
+    "no_account": "Nog geen account?",
+    "create_account": "Gratis ruimte aanmaken →",
+    "back_to_site": "← Terug naar site",
+    "error_default": "Onjuiste inloggegevens"
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Commissies",
+      "partners": "Partners",
+      "messaging": "Berichten",
+      "programme": "Programma",
+      "settings": "Instellingen",
+      "my_referrals": "Mijn Referrals",
+      "submit": "Indienen",
+      "my_payments": "Mijn Betalingen",
+      "clients": "Klanten",
+      "statistics": "Statistieken",
+      "audit_logs": "Auditlogboeken",
+      "blog": "Blog"
+    },
+    "collapse": "Inklappen",
+    "logout": "Uitloggen"
+  }
+}

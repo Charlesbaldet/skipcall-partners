@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "back": "Voltar",
+    "noData": "Sem dados"
+  },
+  "nav": {
+    "features": "Funcionalidades",
+    "marketplace": "Marketplace",
+    "pricing": "Preços",
+    "testimonials": "Depoimentos",
+    "blog": "Blog",
+    "login": "Entrar",
+    "freeTrial": "Teste grátis",
+    "menu": "Menu"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Gerencie seus parceiros de indicação com simplicidade",
+      "h1_start": "Transforme suas",
+      "h1_highlight": "indicações em receita",
+      "description": "RefBoost é a plataforma SaaS para gestão de programas de parceiros e indicações. Automatize o rastreamento de indicações, comissões e o desempenho da sua rede.",
+      "cta_primary": "Criar meu espaço gratuitamente →",
+      "cta_secondary": "Descobrir",
+      "stat1_value": "150+",
+      "stat1_label": "Parceiros ativos",
+      "stat2_value": "2,4M€",
+      "stat2_label": "Receita gerada",
+      "stat3_value": "98%",
+      "stat3_label": "Satisfação dos clientes",
+      "trial_badges": "✓ 14 dias grátis · ✓ Sem cartão de crédito · ✓ Configuração em 5 min"
+    },
+    "featuresDropdown": {
+      "pipeline_label": "Pipeline de leads",
+      "pipeline_desc": "Da indicação ao fechamento",
+      "commissions_label": "Comissões automáticas",
+      "commissions_desc": "Cálculo e pagamento sem atrito",
+      "analytics_label": "Analytics & KPIs",
+      "analytics_desc": "Decisões baseadas em dados reais",
+      "branding_label": "Marca branca",
+      "branding_desc": "Sua imagem, seu domínio",
+      "tracking_label": "Links de rastreamento",
+      "tracking_desc": "Atribuição perfeita"
+    },
+    "features": {
+      "label": "Funcionalidades",
+      "title": "Tudo para gerenciar seu",
+      "title_highlight": "programa de parceiros indicadores",
+      "description": "Da primeira indicação ao pagamento da comissão, o RefBoost automatiza cada etapa.",
+      "items": [
+        {
+          "title": "Pipeline de indicações",
+          "desc": "Acompanhe cada recomendação do primeiro contato ao fechamento. Visão Kanban, filtros avançados, status em tempo real."
+        },
+        {
+          "title": "Comissões automáticas",
+          "desc": "Cálculo automático de prêmios conforme suas regras. Validação em um clique, histórico completo, pagamentos rastreáveis."
+        },
+        {
+          "title": "Dashboards & KPIs",
+          "desc": "Taxa de conversão, MRR gerado, desempenho por parceiro. Tome decisões baseadas em dados."
+        },
+        {
+          "title": "Sua marca, sua plataforma",
+          "desc": "Personalize completamente a interface: logo, cores, domínio. Seus parceiros trabalham no seu universo."
+        },
+        {
+          "title": "Segurança empresarial",
+          "desc": "Criptografia AES-256, logs de auditoria, proteção anti-brute force. Conforme LGPD, pronto para ISO 27001."
+        },
+        {
+          "title": "Links de rastreamento únicos",
+          "desc": "Cada parceiro tem seu link pessoal. Atribuição automática, formulário público, zero atrito."
+        }
+      ]
+    },
+    "howItWorks": {
+      "label": "Como funciona",
+      "title": "Lance seu programa em 3 etapas",
+      "steps": [
+        {
+          "title": "Crie seu espaço",
+          "desc": "Cadastre-se em 2 minutos. Personalize sua plataforma com sua identidade visual."
+        },
+        {
+          "title": "Convide seus parceiros",
+          "desc": "Envie convites por e-mail. Cada parceiro recebe seu acesso e link de rastreamento."
+        },
+        {
+          "title": "Acompanhe & recompense",
+          "desc": "Seus parceiros enviam leads. Você acompanha a conversão e paga as comissões automaticamente."
+        }
+      ]
+    },
+    "testimonials": {
+      "label": "Depoimentos",
+      "title": "Eles gerenciam seus parceiros indicadores com RefBoost",
+      "items": [
+        {
+          "n": "Marie Dupont",
+          "r": "Diretora Comercial",
+          "c": "TechFlow",
+          "a": "M",
+          "t": "Triplicamos nosso canal de parceiros em 4 meses. A ferramenta é intuitiva e nossos parceiros adoram."
+        },
+        {
+          "n": "Thomas Chen",
+          "r": "CEO",
+          "c": "ScaleUp Agency",
+          "a": "T",
+          "t": "O RefBoost nos permitiu estruturar nosso programa de indicação. Não voltamos mais atrás."
+        },
+        {
+          "n": "Sophie Martin",
+          "r": "Head of Partnerships",
+          "c": "DataViz Pro",
+          "a": "S",
+          "t": "Chega de planilhas para rastrear comissões. Tudo automatizado, transparente e parceiros satisfeitos."
+        }
+      ]
+    },
+    "marketplace": {
+      "badge": "✨ Novo — Marketplace RefBoost",
+      "title_start": "Encontre programas de indicação",
+      "title_highlight": "verificados & lucrativos",
+      "description": "Centenas de empresas abrem seu programa no RefBoost. Junte-se a elas gratuitamente.",
+      "stat1_val": "150+",
+      "stat1_label": "Programas ativos",
+      "stat2_val": "100%",
+      "stat2_label": "Grátis para parceiros",
+      "stat3_val": "2,4M€",
+      "stat3_label": "Comissões geradas",
+      "cta": "Ver todos os programas →",
+      "cta_note": "Grátis · Sem cadastro para navegar"
+    },
+    "pricing": {
+      "label": "Preços",
+      "title": "Preços simples, sem surpresas",
+      "description": "Todos os planos incluem 14 dias de teste gratuito. Sem compromisso.",
+      "popular": "Popular",
+      "custom": "Personalizado",
+      "per_month": "€/mês",
+      "cta_contact": "Entrar em contato",
+      "cta_start": "Começar gratuitamente",
+      "plans": [
+        {
+          "name": "Starter",
+          "desc": "Ideal para lançar seu programa",
+          "features": [
+            "Até 20 parceiros indicadores",
+            "100 indicações/mês",
+            "Dashboard & analytics",
+            "Links de rastreamento",
+            "Suporte por e-mail"
+          ]
+        },
+        {
+          "name": "Growth",
+          "desc": "Para acelerar seu crescimento",
+          "features": [
+            "Parceiros ilimitados",
+            "Indicações ilimitadas",
+            "Personalização completa",
+            "API & integrações CRM",
+            "Suporte prioritário",
+            "Multi-usuários"
+          ]
+        },
+        {
+          "name": "Enterprise",
+          "desc": "Para grandes organizações",
+          "features": [
+            "Tudo do Growth +",
+            "Multi-espaço",
+            "SSO / SAML",
+            "SLA garantido",
+            "Account manager dedicado",
+            "Auditoria & conformidade"
+          ]
+        }
+      ]
+    },
+    "faq": {
+      "label": "Perguntas frequentes",
+      "title": "Tudo o que você precisa saber",
+      "items": [
+        {
+          "q": "O que é um programa de parceiros indicadores?",
+          "a": "É um sistema que remunera parceiros externos por cada cliente que eles indicam. O RefBoost automatiza tudo: rastreamento, atribuição, cálculo e pagamento de comissões."
+        },
+        {
+          "q": "Quanto tempo para estar operacional?",
+          "a": "5 minutos. Crie sua conta, convide seus primeiros parceiros e comece a receber indicações hoje."
+        },
+        {
+          "q": "Posso personalizar a plataforma com minha marca?",
+          "a": "Sim. Logo, cores, domínio personalizado — seus parceiros trabalham em um ambiente que reflete sua marca, não a do RefBoost."
+        },
+        {
+          "q": "Como são calculadas as comissões?",
+          "a": "Você define a taxa por parceiro ou globalmente. A cada negócio ganho, o RefBoost calcula automaticamente o prêmio e notifica você para validação."
+        },
+        {
+          "q": "Meus dados estão seguros?",
+          "a": "Absolutamente. Criptografia AES-256, logs de auditoria completos, proteção anti-brute force, conformidade com LGPD. Seguimos os padrões ISO 27001."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Pronto para estruturar sua",
+      "title_end": "rede de parceiros?",
+      "description": "Junte-se às empresas que usam o RefBoost para transformar indicações em receita recorrente.",
+      "email_placeholder": "seu@email.com",
+      "cta_btn": "Começar →",
+      "note": "14 dias grátis · Sem cartão de crédito · Cancelamento em 1 clique"
+    },
+    "footer": {
+      "tagline": "A plataforma de gestão de programas de parceiros indicadores e indicações profissionais.",
+      "sections": {
+        "features": "Funcionalidades",
+        "resources": "Recursos",
+        "legal": "Legal"
+      },
+      "links": {
+        "pipeline": "Pipeline de leads",
+        "commissions": "Comissões automáticas",
+        "analytics": "Analytics & KPIs",
+        "whiteLabel": "Marca branca",
+        "tracking": "Links de rastreamento",
+        "blog": "Blog",
+        "guide": "Guia de início",
+        "faq": "FAQ",
+        "contact": "Contato",
+        "cgv": "Termos",
+        "privacy": "Privacidade",
+        "legal": "Aviso legal",
+        "rgpd": "LGPD"
+      },
+      "copyright": "© 2026 RefBoost. Todos os direitos reservados.",
+      "madeIn": "Feito com cuidado na França"
+    }
+  },
+  "login": {
+    "title": "Entrar",
+    "subtitle": "Acesse seu programa de parceiros",
+    "email": "E-mail",
+    "email_placeholder": "voce@empresa.com",
+    "password": "Senha",
+    "forgot_password": "Esqueceu a senha?",
+    "submit": "Entrar →",
+    "loading": "Entrando...",
+    "no_account": "Ainda não tem conta?",
+    "create_account": "Criar espaço gratuito →",
+    "back_to_site": "← Voltar ao site",
+    "error_default": "Credenciais incorretas"
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Comissões",
+      "partners": "Parceiros",
+      "messaging": "Mensagens",
+      "programme": "Programa",
+      "settings": "Configurações",
+      "my_referrals": "Minhas Indicações",
+      "submit": "Enviar",
+      "my_payments": "Meus Pagamentos",
+      "clients": "Clientes",
+      "statistics": "Estatísticas",
+      "audit_logs": "Logs de Auditoria",
+      "blog": "Blog"
+    },
+    "collapse": "Recolher",
+    "logout": "Sair"
+  }
+}
