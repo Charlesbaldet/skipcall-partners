@@ -30,7 +30,7 @@ router.get('/settings', authenticate, async (req, res) => {
   try {
     const { rows } = await query('SELECT sector, website, icp, short_description, marketplace_visible FROM tenants WHERE id = $1', [req.user.tenantId]);
     if (!rows.length) return res.status(404).json({ error: 'Tenant non trouvé' });
-    res.json({ settings: rows[0] });
+    res.json({ settings: rows[0], autoDisabledVisibility: marketplace_visible === true && !finalVisible });
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -45,7 +45,7 @@ router.patch('/settings', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
       'UPDATE tenants SET sector=$1, website=$2, icp=$3, short_description=$4, marketplace_visible=$5 WHERE id=$6 RETURNING sector, website, icp, short_description, marketplace_visible',
-      [sector||null, website||null, icp||null, short_description||null, marketplace_visible??false, req.user.tenantId]
+      [sector||null, website||null, icp||null, short_description||null, finalVisible??false, req.user.tenantId]
     );
     res.json({ settings: rows[0] });
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
