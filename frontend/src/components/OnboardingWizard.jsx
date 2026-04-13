@@ -174,7 +174,7 @@ export default function OnboardingWizard({ onClose }) {
             boxShadow: '0 8px 30px rgba(5,150,105,0.3)',
           }}><Icon size={28} color="#fff" /></div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: C.s, margin: '0 0 8px', letterSpacing: -0.5 }}>{t('onboarding.'+cur.id+'_title', {defaultValue: cur.title})}</h2>
-          <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.step_label')}< {step + 1} sur {STEPS.length}</p>
+          <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.step_of', {current: step + 1, total: STEPS.length})}</p>
         </div>
 
         {/* Step body */}
