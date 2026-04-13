@@ -1170,6 +1170,7 @@
     "customize_title": "Passe deinen Bereich an",
     "publicLink_title": "Dein Empfehlungslink",
     "marketplace_title": "Dein Programm auf dem Marketplace",
-    "done_title": "Alles bereit 🚀"
+    "done_title": "Alles bereit 🚀",
+    "step_of": "Schritt {{current}} von {{total}}"
   }
 }
