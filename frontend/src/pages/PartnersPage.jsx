@@ -12,6 +12,7 @@ export default function PartnersPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
+  const [tempPwd, setTempPwd] = useState(null);
   const [saving, setSaving] = useState(false);
   const [createdEmail, setCreatedEmail] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -52,7 +53,9 @@ export default function PartnersPage() {
       const data = await api.createPartner(form);
       setPartners(prev => [...prev, { ...data.partner, total_referrals: '0', won_deals: '0', total_revenue: '0' }]);
       setCreatedEmail(data.partner.email || form.email);
+      setTempPwd(data.partner.temp_password || null);
             setForm({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
+    setTempPwd(null);
     } catch (err) { console.error(err); }
     setSaving(false);
   };
