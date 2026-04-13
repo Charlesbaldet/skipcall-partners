@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
 const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
@@ -76,38 +77,20 @@ const ILLUS = [
 ];
 
 export default function FeaturePipelinePage() {
+  const { t } = useTranslation();
+  const d = t('features.pipeline', { returnObjects: true });
+  const benefits = d.benefits.map((b, i) => ({ ...b, illustration: ILLUS[i] }));
+
   return (
     <FeaturePageTemplate
-      helmet={{ title: 'Pipeline de referrals — RefBoost', description: 'Suivez chaque recommandation du premier contact au closing. Vue Kanban, filtres avancés, statuts en temps réel pour ne manquer aucune opportunité.', canonical: 'https://refboost.io/fonctionnalites/pipeline' }}
+      helmet={{ title: d.helmet_title, description: d.helmet_desc, canonical: 'https://refboost.io/fonctionnalites/pipeline' }}
       accentColor="#059669"
-      label="Fonctionnalité"
-      title="Pipeline de referrals"
-      subtitle="De la recommandation au closing, chaque lead est tracé, priorisé et actionnable en temps réel."
+      label={t('features.label')}
+      title={d.title}
+      subtitle={d.subtitle}
       mockupSvg={MOCKUP}
-      benefits={[
-        {
-          stat: '3x', statLabel: 'plus de leads convertis vs sans suivi structuré',
-          title: 'Vue Kanban en temps réel',
-          text: 'Visualisez l’intégralité de votre pipeline partenaires en un coup d’œil. Chaque lead avance dans les colonnes au fur et à mesure de la vente — sans tableur, sans email interminable.',
-          points: ['Colonnes configurables : Nouveau, Qualification, Démo, Proposition, Signé', 'Drag & drop pour changer le statut en un geste', 'Notification automatique à l’apporteur à chaque changement d’étape', 'Valeur pondérée par probabilité de closing affichée en temps réel'],
-          illustration: ILLUS[0]
-        },
-        {
-          stat: '87%', statLabel: 'des équipes réduisent leur délai de réponse de plus de 2 jours',
-          title: 'Filtres et recherche avancés',
-          text: 'Trouvez instantanément n’importe quel lead parmi des centaines. Filtrez par apporteur, montant, statut, date ou source en un clic. Aucune opportunité ne tombe dans les oubliettes.',
-          points: ['Filtres cumulables : apporteur + statut + montant + date', 'Recherche plein texte sur nom de société, contact, commentaires', 'Vues sauvegardées par commercial ou par source', 'Export CSV de tout sous-ensemble filtré'],
-          illustration: ILLUS[1]
-        },
-        {
-          stat: '48h', statLabel: 'de délai économisé en moyenne par deal grâce aux notifications',
-          title: 'Historique complet et commentaires',
-          text: 'Chaque lead a sa propre fiche avec l’historique de toutes les actions, les commentaires de l’équipe commerciale et les échanges avec l’apporteur. La mémoire de votre équipe externalisée.',
-          points: ['Timeline complète de toutes les modifications de statut', 'Commentaires internes visibles uniquement par l’équipe', 'Messages visibles par l’apporteur pour le tenir informé', 'Rappels et relances planifiables directement sur la fiche'],
-          illustration: ILLUS[2]
-        }
-      ]}
-      quote={{ text: 'On a multiplié par 3 notre canal apporteurs d’affaires en 4 mois. La transparence du pipeline retient nos meilleurs partenaires.', author: 'Marie D., Directrice Commerciale — SaaS B2B' }}
+      benefits={benefits}
+      quote={d.quote}
       currentHref="/fonctionnalites/pipeline"
     />
   );
