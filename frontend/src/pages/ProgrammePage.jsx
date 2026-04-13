@@ -76,7 +76,7 @@ export default function ProgrammePage() {
   };
 
   const del = async (id) => {
-    if (!window.confirm(t('programme.delete_confirm')) return;
+    if (!window.confirm(t('programme.delete_confirm'))) return;
     try {
       await api.deleteTenantLevel(id);
       load();
@@ -86,7 +86,7 @@ export default function ProgrammePage() {
   };
 
   const reset = async () => {
-    if (!window.confirm(t('programme.reset_confirm')) return;
+    if (!window.confirm(t('programme.reset_confirm'))) return;
     try {
       await api.resetTenantLevels();
       load();
