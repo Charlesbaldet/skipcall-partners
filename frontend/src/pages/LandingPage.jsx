@@ -36,6 +36,12 @@ function Logo({ size = 40, white = false }) {
 }
 
 export default function LandingPage() {
+  const [featuredPartners, setFeaturedPartners] = useState([]);
+  // Load marketplace preview
+  React.useEffect(() => {
+    fetch('/api/marketplace').then(r=>r.ok?r.json():null).then(d=>d&&setFeaturedPartners((d.partners||[]).slice(0,3))).catch(()=>{});
+  }, []);
+  const [featuredPartners, setFeaturedPartners] = React.useState ? React.useState([]) : (() => { const [s,ss] = useState([]); return [s,ss]; })();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const mobile = useMobile();
@@ -305,6 +311,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ PRICING ═══ */}
+      <section id="marketplace-prev" style={{display:'none'}}/>
+      {/* placeholder */}
       <section id="tarifs" style={{ ...s.section, background:C.bg }}>
         <div style={{ maxWidth:1000,margin:'0 auto' }}>
           <div style={s.center}>
