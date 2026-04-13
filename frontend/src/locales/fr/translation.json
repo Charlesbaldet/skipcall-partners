@@ -1142,5 +1142,20 @@
     "branding_desc": "Personnalise les couleurs et le logo de ton espace partenaires. Ces réglages s'appliquent partout : sidebar, interface, etc.",
     "level_saved": "Niveau enregistré ✓",
     "levels_reset_confirm": "Réinitialiser aux valeurs par défaut (Bronze/Silver/Gold/Platinum) ? Tes niveaux personnalisés seront effacés."
+  },
+  "status": {
+    "new": "Nouveau",
+    "contacted": "Contacté",
+    "meeting": "RDV planifié",
+    "proposal": "Proposition",
+    "won": "Gagné",
+    "lost": "Perdu",
+    "duplicate": "Doublon"
+  },
+  "level": {
+    "Bronze": "Bronze",
+    "Silver": "Argent",
+    "Gold": "Or",
+    "Platinum": "Platine"
   }
 }
