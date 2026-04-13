@@ -1170,6 +1170,7 @@
     "customize_title": "Pas je werkruimte aan",
     "publicLink_title": "Jouw verwijzingslink",
     "marketplace_title": "Jouw programma op de marketplace",
-    "done_title": "Alles klaar 🚀"
+    "done_title": "Alles klaar 🚀",
+    "step_of": "Stap {{current}} van {{total}}"
   }
 }
