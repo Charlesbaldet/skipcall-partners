@@ -116,6 +116,7 @@ export default function Layout({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
       <aside style={s.sidebar}>
+        {/* Logo */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
           {isSuperAdmin ? (
             <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #dc2626, #ef4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
@@ -123,12 +124,19 @@ export default function Layout({ children }) {
             </div>
           ) : (
             <div style={{ flexShrink: 0, filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
-              {tenant?.logo_url ? <img src={tenant.logo_url} alt="Logo" style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }}/> : <RefBoostLogo size={36}/>}
+              {tenant?.logo_url
+                ? <img src={tenant.logo_url} alt="Logo" style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }}/>
+                : <RefBoostLogo size={36}/>}
             </div>
           )}
-          {!collapsed && <span style={{ fontSize: isSuperAdmin ? 16 : 18, fontWeight: 800, letterSpacing: -0.5, fontFamily: 'inherit' }}>{isSuperAdmin ? 'Super Admin' : (tenant?.name || 'RefBoost')}</span>}
+          {!collapsed && (
+            <span style={{ fontSize: isSuperAdmin ? 16 : 18, fontWeight: 800, letterSpacing: -0.5, fontFamily: 'inherit' }}>
+              {isSuperAdmin ? 'Super Admin' : (tenant?.name || 'RefBoost')}
+            </span>
+          )}
         </div>
 
+        {/* Nav */}
         <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
           {nav.map((item, i) => {
             if (item.divider) return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }}/>;
@@ -144,16 +152,17 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        {!collapsed && (
-          <div style={{ padding: '8px 16px 4px' }}>
-            <LanguageSwitcher compact={collapsed} style={{ width: '100%' }}/>
-          </div>
-        )}
+        {/* Language Switcher — toujours visible */}
+        <div style={{ padding: collapsed ? '6px 8px' : '6px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <LanguageSwitcher compact={collapsed} style={{ width: '100%' }}/>
+        </div>
 
+        {/* Collapse toggle */}
         <button onClick={() => setCollapsed(!collapsed)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', margin: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 13 }}>
           {collapsed ? <ChevronRight size={16}/> : <><ChevronLeft size={16}/> <span>{t('layout.collapse')}</span></>}
         </button>
 
+        {/* User */}
         <div style={{ padding: '12px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? C.p : user?.role === 'commercial' ? '#0891b2' : C.pl, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14 }}>
