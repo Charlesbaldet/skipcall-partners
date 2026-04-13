@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
 const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
@@ -126,38 +127,20 @@ const ILLUS = [
 ];
 
 export default function FeatureAnalyticsPage() {
+  const { t } = useTranslation();
+  const d = t('features.analytics', { returnObjects: true });
+  const benefits = d.benefits.map((b, i) => ({ ...b, illustration: ILLUS[i] }));
+
   return (
     <FeaturePageTemplate
-      helmet={{ title: 'Analytics & KPIs — RefBoost', description: 'Taux de conversion, MRR généré, performance par apporteur, cycle de vente moyen — toutes les métriques qui comptent dans un tableau de bord actionnable.', canonical: 'https://refboost.io/fonctionnalites/analytics' }}
+      helmet={{ title: d.helmet_title, description: d.helmet_desc, canonical: 'https://refboost.io/fonctionnalites/analytics' }}
       accentColor="#8b5cf6"
-      label="Fonctionnalité"
-      title="Analytics & KPIs"
-      subtitle="Pilotez votre programme partenaires avec des données réelles, pas des impressions. Chaque décision basée sur des faits."
+      label={t('features.label')}
+      title={d.title}
+      subtitle={d.subtitle}
       mockupSvg={MOCKUP}
-      benefits={[
-        {
-          stat: '80%', statLabel: 'du pipeline générés par 20% des apporteurs en moyenne',
-          title: 'Entonnoir de conversion détaillé',
-          text: 'Mesurez chaque étape entre le clic sur un lien et le deal signé. Identifiez précisément où vous perdez des opportunités et corrigez en temps réel.',
-          points: ['Entonnoir complet : clic > formulaire > lead qualifié > démo > deal', 'Taux de conversion par étape et par source de trafic', 'Comparaison entre apporteurs pour identifier les meilleurs pratiques', 'Alertes automatiques si un taux chute en dessous du seuil défini'],
-          illustration: ILLUS[0]
-        },
-        {
-          stat: '8:1', statLabel: 'de ROI moyen constaté sur le canal partenaires vs autres canaux',
-          title: 'ROI et comparaison inter-canaux',
-          text: 'Pour la première fois, comparez votre canal partenaires aux autres canaux d’acquisition. Justifiez votre investissement avec des chiffres irréfutables.',
-          points: ['CAC partenaires vs SEA, inbound, événements', 'Calcul automatique du ROI par euro investi en commissions', 'Projection sur 12 mois selon les tendances actuelles', 'Rapport prêt à présenter au comité de direction'],
-          illustration: ILLUS[1]
-        },
-        {
-          stat: '15min', statLabel: 'pour préparer le rapport mensuel partenaires complet',
-          title: 'Rapports exportables et planifiables',
-          text: 'Générez vos rapports mensuels en quelques clics. Planifiez leur envoi automatique aux dirigeants chaque premier du mois. Votre programme se pilote sans friction administrative.',
-          points: ['Rapports PDF complets avec graphiques et tableaux', 'Export CSV détaillé pour analyse avancée', 'Envoi automatique programmable par email', 'Accès personnalisé pour les dirigeants et investisseurs'],
-          illustration: ILLUS[2]
-        }
-      ]}
-      quote={{ text: 'Pour la première fois, on a pu montrer à notre board le ROI exact du programme partenaires. 8€ générés pour chaque euro investi en commissions.', author: 'Thomas C., CEO — ScaleUp Agency' }}
+      benefits={benefits}
+      quote={d.quote}
       currentHref="/fonctionnalites/analytics"
     />
   );
