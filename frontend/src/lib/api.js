@@ -20,7 +20,7 @@ class ApiClient {
       this.setUser(null);
       // Don't redirect if we're already on a public page (avoids infinite reload loop)
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
-      const isPublicPath = path === '/' || path === '/login' || path === '/signup' || path.startsWith('/apply') || path.startsWith('/r/') || path.startsWith('/ref/') || path.startsWith('/setup-password/');
+      const isPublicPath = path === '/' || path === '/login' || path === '/signup' || path.startsWith('/apply') || path.startsWith('/r/') || path.startsWith('/ref/') || path.startsWith('/setup-password/') || path.startsWith('/marketplace');
       if (!isPublicPath && typeof window !== 'undefined') window.location.href = '/login';
       throw new Error('Session expirée');
     }
