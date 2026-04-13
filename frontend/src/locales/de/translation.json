@@ -1142,5 +1142,20 @@
     "branding_desc": "Passe Farben und Logo deines Partner-Bereichs an. Diese Einstellungen gelten überall: Sidebar, Interface, usw.",
     "level_saved": "Stufe gespeichert ✓",
     "levels_reset_confirm": "Auf Standardwerte zurücksetzen (Bronze/Silver/Gold/Platinum)? Deine benutzerdefinierten Stufen werden gelöscht."
+  },
+  "status": {
+    "new": "Neu",
+    "contacted": "Kontaktiert",
+    "meeting": "Meeting geplant",
+    "proposal": "Angebot",
+    "won": "Gewonnen",
+    "lost": "Verloren",
+    "duplicate": "Duplikat"
+  },
+  "level": {
+    "Bronze": "Bronze",
+    "Silver": "Silber",
+    "Gold": "Gold",
+    "Platinum": "Platin"
   }
 }
