@@ -33,7 +33,7 @@ router.get('/settings', authenticate, async (req, res) => {
   try {
     const { rows } = await query('SELECT sector, website, icp, short_description, marketplace_visible FROM tenants WHERE id = $1', [req.user.tenantId]);
     if (!rows.length) return res.status(404).json({ error: 'Tenant non trouvé' });
-    res.json({ settings: rows[0], autoDisabledVisibility: marketplace_visible === true && !finalVisible });
+    res.json({ settings: rows[0] });
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
