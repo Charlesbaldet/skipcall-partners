@@ -23,15 +23,15 @@
       "h1_start": "Turn your",
       "h1_highlight": "referrals into revenue",
       "description": "RefBoost is the SaaS platform for partner program management and referral tracking. Automate referral tracking, commissions and your network's performance.",
-      "cta_primary": "Create my free workspace â",
+      "cta_primary": "Create my free workspace →",
       "cta_secondary": "Discover",
       "stat1_value": "150+",
       "stat1_label": "Active partners",
-      "stat2_value": "2.4Mâ¬",
+      "stat2_value": "2.4M€",
       "stat2_label": "Revenue generated",
       "stat3_value": "98%",
       "stat3_label": "Customer satisfaction",
-      "trial_badges": "â 14 days free Â· â No credit card Â· â Setup in 5 min"
+      "trial_badges": "✓ 14 days free · ✓ No credit card · ✓ Setup in 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Lead Pipeline",
@@ -123,7 +123,7 @@
       ]
     },
     "marketplace": {
-      "badge": "â¨ New â RefBoost Marketplace",
+      "badge": "✨ New — RefBoost Marketplace",
       "title_start": "Find referral programs",
       "title_highlight": "verified & rewarding",
       "description": "Hundreds of companies open their program on RefBoost. Join them for free.",
@@ -131,10 +131,10 @@
       "stat1_label": "Active programs",
       "stat2_val": "100%",
       "stat2_label": "Free for partners",
-      "stat3_val": "2.4Mâ¬",
+      "stat3_val": "2.4M€",
       "stat3_label": "Commissions generated",
-      "cta": "View all programs â",
-      "cta_note": "Free Â· No registration to browse"
+      "cta": "View all programs →",
+      "cta_note": "Free · No registration to browse"
     },
     "pricing": {
       "label": "Pricing",
@@ -142,7 +142,7 @@
       "description": "All plans include a 14-day free trial. No commitment.",
       "popular": "Popular",
       "custom": "Custom",
-      "per_month": "â¬/month",
+      "per_month": "€/month",
       "cta_contact": "Contact us",
       "cta_start": "Start for free",
       "plans": [
@@ -184,7 +184,7 @@
       ]
     },
     "faq": {
-      "label": "Frequently asked questions",
+      "label": "FAQ",
       "title": "Everything you need to know",
       "items": [
         {
@@ -197,7 +197,7 @@
         },
         {
           "q": "Can I customize the platform to match my brand?",
-          "a": "Yes. Logo, colors, custom domain â your partners work in an environment that reflects your brand, not RefBoost's."
+          "a": "Yes. Logo, colors, custom domain — your partners work in an environment that reflects your brand, not RefBoost's."
         },
         {
           "q": "How are commissions calculated?",
@@ -214,8 +214,8 @@
       "title_end": "referral network?",
       "description": "Join the companies using RefBoost to turn their referrals into recurring revenue.",
       "email_placeholder": "your@email.com",
-      "cta_btn": "Get started â",
-      "note": "14 days free Â· No credit card Â· Cancel anytime"
+      "cta_btn": "Get started →",
+      "note": "14 days free · No credit card · Cancel anytime"
     },
     "footer": {
       "tagline": "The platform for referral partner program management and professional referrals.",
@@ -239,7 +239,7 @@
         "legal": "Legal notice",
         "rgpd": "GDPR"
       },
-      "copyright": "Â© 2026 RefBoost. All rights reserved.",
+      "copyright": "© 2026 RefBoost. All rights reserved.",
       "madeIn": "Made with care in France"
     }
   },
@@ -250,32 +250,12 @@
     "email_placeholder": "you@company.com",
     "password": "Password",
     "forgot_password": "Forgot password?",
-    "submit": "Sign in â",
+    "submit": "Sign in →",
     "loading": "Signing in...",
     "no_account": "Don't have an account yet?",
-    "create_account": "Create a free workspace â",
-    "back_to_site": "â Back to site",
+    "create_account": "Create a free workspace →",
+    "back_to_site": "← Back to site",
     "error_default": "Incorrect credentials"
-  },
-  "layout": {
-    "nav": {
-      "dashboard": "Dashboard",
-      "pipeline": "Pipeline",
-      "commissions": "Commissions",
-      "partners": "Partners",
-      "messaging": "Messaging",
-      "programme": "Program",
-      "settings": "Settings",
-      "my_referrals": "My Referrals",
-      "submit": "Submit",
-      "my_payments": "My Payments",
-      "clients": "Clients",
-      "statistics": "Statistics",
-      "audit_logs": "Audit Logs",
-      "blog": "Blog"
-    },
-    "collapse": "Collapse",
-    "logout": "Logout"
   },
   "signup": {
     "title": "Create your workspace",
@@ -313,5 +293,25 @@
     "pwd_lower": "Lowercase",
     "pwd_digit": "Digit",
     "pwd_special": "Special"
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "commissions": "Commissions",
+      "partners": "Partners",
+      "messaging": "Messaging",
+      "programme": "Program",
+      "settings": "Settings",
+      "my_referrals": "My Referrals",
+      "submit": "Submit",
+      "my_payments": "My Payments",
+      "clients": "Clients",
+      "statistics": "Statistics",
+      "audit_logs": "Audit Logs",
+      "blog": "Blog"
+    },
+    "collapse": "Collapse",
+    "logout": "Logout"
   }
 }
