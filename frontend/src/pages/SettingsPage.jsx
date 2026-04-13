@@ -28,7 +28,7 @@ function MarketplaceTab() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.getMarketplaceSettings().then(d=>setSettings(s=>({...s,...d.settings}))).catch(e=>setError(e.message)).finally(()=>setLoading(false));
+    api.getMarketplaceSettings().then(d=>setSettings(s=>({...s,...d.settings}))).catch(()=>{/* route not yet on backend */}).finally(()=>setLoading(false));
   }, []);
 
   const set = (k,v) => setSettings(s=>({...s,[k]:v}));
@@ -40,7 +40,7 @@ function MarketplaceTab() {
       setSettings(s=>({...s,...d.settings}));
       setSuccess('Paramètres marketplace mis à jour.');
       setTimeout(()=>setSuccess(''), 3500);
-    } catch(e) { setError(e.message); } finally { setSaving(false); }
+    } catch(e) { setError(e.message?.includes('DOCTYPE') ? 'Route API non disponible - déployez le backend feat/marketplace' : e.message); } finally { setSaving(false); }
   };
 
   const inp = { width:'100%', padding:'12px 14px', borderRadius:10, border:'1.5px solid #e2e8f0', fontSize:14, fontFamily:'inherit', color:'#0f172a', outline:'none', boxSizing:'border-box', transition:'border-color .2s' };
