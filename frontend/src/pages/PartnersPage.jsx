@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { useTranslation } from 'react-i18next';
 import { fmt, fmtDate } from '../lib/constants';
 import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 export default function PartnersPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
   const [tab, setTab] = useState('partners');
@@ -71,7 +73,7 @@ export default function PartnersPage() {
   const archivedPartners = partners.filter(p => p.is_active === false);
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>t('common.loading')</div>;
 
   return (
     <div className="fade-in">
@@ -80,7 +82,7 @@ export default function PartnersPage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={() => setEditingId(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 480, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0f172a' }}>Modifier le partenaire</h3>
+            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0f172a' }}>{t('partners.edit_title')}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[['name', 'Entreprise'], ['contact_name', 'Contact'], ['email', 'Email'], ['phone', 'Téléphone'], ['company_website', 'Site web'], ['commission_rate', 'Taux (%)'], ['account_holder', 'Titulaire compte'], ['iban', 'IBAN'], ['bic', 'BIC']].map(([key, label]) => (
                 <div key={key} style={{ gridColumn: key === 'iban' ? '1 / -1' : undefined }}>
@@ -90,8 +92,8 @@ export default function PartnersPage() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
-              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Sauvegarder</button>
+              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.cancel')}</button>
+              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.save')}</button>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
               <button onClick={() => { handleArchive(editingId); setEditingId(null); }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fcd34d', background: '#fffbeb', color: '#b45309', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Archive size={14} /> Archiver</button>
@@ -157,7 +159,7 @@ export default function PartnersPage() {
             <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Supprimer ce partenaire ?</h3>
             <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>Cette action est <strong style={{ color: '#dc2626' }}>irréversible</strong>. Toutes les données associées seront perdues.</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, color: '#475569' }}>Annuler</button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, color: '#475569' }}>{t('partners.cancel')}</button>
               <button onClick={() => { handleDeletePartner(deleteConfirm); setDeleteConfirm(null); setEditingId(null); }} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
             </div>
           </div>
@@ -166,7 +168,7 @@ export default function PartnersPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Partenaires</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('partners.title')}</h1>
           <p style={{ color: '#64748b', marginTop: 4 }}>{activePartners.length} partenaire{activePartners.length > 1 ? 's' : ''} actif{activePartners.length > 1 ? 's' : ''}</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -215,7 +217,7 @@ export default function PartnersPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 20 }}>Nouveau partenaire</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 20 }}>{t('partners.add_title')}</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                     <FormField label="Nom de la société *" value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} required />
                     <FormField label="Contact principal *" value={form.contact_name} onChange={v => setForm(f => ({ ...f, contact_name: v }))} required />
@@ -274,7 +276,7 @@ export default function PartnersPage() {
           </div>
 
           {appLoading ? (
-            <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>
+            <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>t('common.loading')</div>
           ) : applications.length === 0 ? (
             <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>Aucune candidature</div>
           ) : (
