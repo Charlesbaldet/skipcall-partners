@@ -649,7 +649,7 @@ function AppearanceTab() {
   return (
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Apparence</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.branding_desc')}<</p>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.branding_desc')}</p>
 
       {msg && (
         <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
