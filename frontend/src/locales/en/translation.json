@@ -323,5 +323,248 @@
     "trial_text": "14 days free, no credit card. Set up your program in 5 minutes.",
     "create_space": "Create my workspace for free",
     "no_commitment": "No commitment · 14 days free · Support included"
+  },
+  "features": {
+    "label": "Feature",
+    "pipeline": {
+      "helmet_title": "Referral Pipeline — RefBoost",
+      "helmet_desc": "Track every referral from first contact to closing. Kanban view, advanced filters, real-time statuses — never miss an opportunity.",
+      "title": "Referral Pipeline",
+      "subtitle": "From referral to closing, every lead is tracked, prioritized and actionable in real time.",
+      "benefits": [
+        {
+          "stat": "3x",
+          "statLabel": "more leads converted vs unstructured tracking",
+          "title": "Real-time Kanban View",
+          "text": "See your entire partner pipeline at a glance. Each lead moves through columns as the sale progresses — no spreadsheet, no endless email chains.",
+          "points": [
+            "Configurable columns: New, Qualification, Demo, Proposal, Signed",
+            "Drag & drop to change status in one gesture",
+            "Automatic notification to the partner at each stage change",
+            "Weighted value by closing probability displayed in real time"
+          ]
+        },
+        {
+          "stat": "87%",
+          "statLabel": "of teams reduce their response time by more than 2 days",
+          "title": "Advanced Filters and Search",
+          "text": "Instantly find any lead among hundreds. Filter by partner, amount, status, date or source in one click. No opportunity falls through the cracks.",
+          "points": [
+            "Cumulative filters: partner + status + amount + date",
+            "Full-text search on company name, contact, comments",
+            "Saved views by sales rep or by source",
+            "CSV export of any filtered subset"
+          ]
+        },
+        {
+          "stat": "48h",
+          "statLabel": "saved on average per deal thanks to notifications",
+          "title": "Complete History and Comments",
+          "text": "Each lead has its own record with the history of all actions, sales team comments and exchanges with the partner. Your team's outsourced memory.",
+          "points": [
+            "Full timeline of all status changes",
+            "Internal comments visible only to the team",
+            "Messages visible to the partner to keep them informed",
+            "Reminders and follow-ups schedulable directly on the record"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "We tripled our referral partner channel in 4 months. Pipeline transparency keeps our best partners engaged.",
+        "author": "Marie D., Sales Director — SaaS B2B"
+      }
+    },
+    "commissions": {
+      "helmet_title": "Automatic Commissions — RefBoost",
+      "helmet_desc": "Automatic bonus calculation based on your rules. One-click validation, full history, traceable payments. No more spreadsheets.",
+      "title": "Automatic Commissions",
+      "subtitle": "Set your rules once. RefBoost calculates, validates and tracks every commission without manual intervention.",
+      "benefits": [
+        {
+          "stat": "0",
+          "statLabel": "calculation errors since adopting RefBoost (client data)",
+          "title": "Automatic calculation based on your rules",
+          "text": "Set your commission grid once — fixed rate, MRR percentage, progressive tiers — and RefBoost automatically calculates the bonus at each validated deal. No more spreadsheet, no more errors.",
+          "points": [
+            "Configurable rates per partner, segment or volume",
+            "Progressive tiers: 8% up to 5 deals/month, 12% beyond",
+            "Commission on first sale or recurring on subscription",
+            "Instant calculation when status updated to \"Signed\""
+          ]
+        },
+        {
+          "stat": "100%",
+          "statLabel": "of your business rules modelable without development",
+          "title": "Flexible and auditable rules",
+          "text": "Every commission rule is documented, timestamped and traceable. Your partners see exactly how their compensation is calculated. Transparency builds trust.",
+          "points": [
+            "No-code interface to create and modify rules",
+            "Complete history of every rule change",
+            "Simulation of expected earnings before deal validation",
+            "Different rules by deal type or partner"
+          ]
+        },
+        {
+          "stat": "< 5min",
+          "statLabel": "to export and sync with your accounting software",
+          "title": "Export and accounting integrations",
+          "text": "Generate your commission statements in one click, export to your accounting software and send details directly to partners. End of month without friction.",
+          "points": [
+            "CSV/PDF export of commissions by period or by partner",
+            "Zapier integration for automatic synchronization",
+            "Automatic emails to partners with calculation details",
+            "Regulatory archiving compliant with GDPR"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "No more spreadsheets for tracking commissions. Everything is automated, transparent, and our partners love receiving their detailed calculations every month.",
+        "author": "Sophie M., Head of Partnerships — DataViz Pro"
+      }
+    },
+    "analytics": {
+      "helmet_title": "Analytics & KPIs — RefBoost",
+      "helmet_desc": "Conversion rate, generated MRR, performance by partner, average sales cycle — all the metrics that matter in an actionable dashboard.",
+      "title": "Analytics & KPIs",
+      "subtitle": "Manage your partner program with real data, not gut feelings. Every decision based on facts.",
+      "benefits": [
+        {
+          "stat": "80%",
+          "statLabel": "of pipeline generated by 20% of partners on average",
+          "title": "Detailed Conversion Funnel",
+          "text": "Measure every step between a link click and a signed deal. Pinpoint exactly where you're losing opportunities and correct in real time.",
+          "points": [
+            "Complete funnel: click > form > qualified lead > demo > deal",
+            "Conversion rate per stage and per traffic source",
+            "Comparison between partners to identify best practices",
+            "Automatic alerts if a rate falls below a defined threshold"
+          ]
+        },
+        {
+          "stat": "8:1",
+          "statLabel": "average ROI observed on the partner channel vs other channels",
+          "title": "ROI and cross-channel comparison",
+          "text": "For the first time, compare your partner channel to other acquisition channels. Justify your investment with irrefutable numbers.",
+          "points": [
+            "Partner CAC vs SEA, inbound, events",
+            "Automatic ROI calculation per euro invested in commissions",
+            "12-month projection based on current trends",
+            "Report ready to present to the board"
+          ]
+        },
+        {
+          "stat": "15min",
+          "statLabel": "to prepare the complete monthly partner report",
+          "title": "Exportable and schedulable reports",
+          "text": "Generate your monthly reports in a few clicks. Schedule their automatic delivery to executives on the first of each month. Your program runs without administrative friction.",
+          "points": [
+            "Complete PDF reports with charts and tables",
+            "Detailed CSV export for advanced analysis",
+            "Programmable automatic email delivery",
+            "Personalized access for executives and investors"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "For the first time, we could show our board the exact ROI of the partner program. €8 generated for every euro invested in commissions.",
+        "author": "Thomas C., CEO — ScaleUp Agency"
+      }
+    },
+    "personnalisation": {
+      "helmet_title": "White Label — RefBoost",
+      "helmet_desc": "Logo, colors, custom domain: your partners work in your universe, not RefBoost's. A 100% branded experience.",
+      "title": "Your brand, your platform",
+      "subtitle": "Logo, colors, custom domain. Your partners have no reason to know you're using RefBoost.",
+      "benefits": [
+        {
+          "stat": "2min",
+          "statLabel": "to fully configure the visual identity of your workspace",
+          "title": "Complete visual identity",
+          "text": "Upload your logo, choose your colors, name your workspace. In less than 2 minutes, the platform reflects your brand. Your partners will see your brand, not RefBoost.",
+          "points": [
+            "High-resolution logo on all pages and emails",
+            "Fully customizable primary, secondary and accent color palette",
+            "Configurable workspace name (e.g. \"Acme Partners Program\")",
+            "Real-time preview before confirming changes"
+          ]
+        },
+        {
+          "stat": "100%",
+          "statLabel": "of your partners stay on your domain without ever seeing RefBoost",
+          "title": "Custom domain included",
+          "text": "partners.yourcompany.com instead of yourcompany.refboost.io. A subdomain on your existing domain, configured in 10 minutes with our step-by-step guide.",
+          "points": [
+            "Subdomain of your choice configured in minutes",
+            "Automatic HTTPS, SSL certificate included and auto-renewed",
+            "Emails sent from your domain (@yourcompany.com)",
+            "Compatible with all DNS records"
+          ]
+        },
+        {
+          "stat": "3x",
+          "statLabel": "higher completion rate on branded forms vs generic forms",
+          "title": "Submission form in your brand colors",
+          "text": "The public form filled in by prospects referred by your partners is entirely in your colors. Your brand image is preserved end to end.",
+          "points": [
+            "Form design adapted to your visual guidelines",
+            "Personalized shareable URL for your partners",
+            "Configurable fields based on your qualification needs",
+            "Instant notification to your team at each submission"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "Our partners work in our universe. They never knew it was RefBoost behind it. That's exactly what we were looking for.",
+        "author": "Pierre L., CRO — SaaS Fintech"
+      }
+    },
+    "tracking": {
+      "helmet_title": "Unique Tracking Links — RefBoost",
+      "helmet_desc": "Each partner has their personal link. Automatic attribution, integrated public form, zero friction for your partners and prospects.",
+      "title": "Unique tracking links",
+      "subtitle": "One link per partner, perfect attribution. Your partners share, leads arrive qualified and automatically attributed.",
+      "benefits": [
+        {
+          "stat": "0",
+          "statLabel": "lead lost or misattributed thanks to automatic tracking",
+          "title": "A unique link per partner and source",
+          "text": "Each partner has a unique personal link they can vary by channel (LinkedIn, email, event). You know exactly where each lead came from and who brought it.",
+          "points": [
+            "Automatic link generation when the partner is invited",
+            "UTM parameters to distinguish sources (LinkedIn, email, phone)",
+            "Downloadable QR code for events and presentations",
+            "Short link personalized with the partner's name"
+          ]
+        },
+        {
+          "stat": "100%",
+          "statLabel": "of leads attributed without manual intervention",
+          "title": "Automatic attribution without ambiguity",
+          "text": "When a prospect clicks a partner's link and fills in the form, the lead is automatically attributed to them. No disputes, no ambiguity, even weeks later.",
+          "points": [
+            "Persistent tracking cookie configurable (7 to 180 days)",
+            "Attribution even if the prospect returns several days later",
+            "Full traceability from source to signed deal",
+            "Instant notification to the partner at each conversion"
+          ]
+        },
+        {
+          "stat": "6",
+          "statLabel": "configurable attribution windows to match your sales cycle",
+          "title": "Configurable attribution windows",
+          "text": "Adapt attribution rules to your sales cycle. A short 2-week cycle or a long 6-month cycle: define the window that reflects your commercial reality.",
+          "points": [
+            "Attribution window from 7 to 180 days based on your sales cycle",
+            "First-touch or last-touch rule based on your policy",
+            "Transparent and auditable attribution conflict management",
+            "Retroactivity possible on leads in progress"
+          ]
+        }
+      ],
+      "quote": {
+        "text": "Before RefBoost, we spent 2 hours a month manually reconciling leads with partners. Now it's automatic and dispute-free.",
+        "author": "Alexandre R., VP Sales — ScaleB2B"
+      }
+    }
   }
 }
