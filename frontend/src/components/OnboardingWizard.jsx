@@ -11,6 +11,7 @@ const STEPS = [
   { id: 'createPartner', icon: UserPlus,  title: 'Invite ton premier partenaire' },
   { id: 'customize',     icon: Palette,   title: 'Personnalise ton espace' },
   { id: 'publicLink',    icon: Link2,     title: 'Ton lien d\'inscription public' },
+  { id: 'marketplace',  icon: Store,     title: 'Votre programme sur la marketplace' },
   { id: 'done',          icon: Rocket,    title: 'Tout est prêt 🚀' },
 ];
 
