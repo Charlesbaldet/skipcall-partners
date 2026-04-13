@@ -313,5 +313,15 @@
     },
     "collapse": "Reducir",
     "logout": "Cerrar sesión"
+  },
+  "featureTemplate": {
+    "try_free": "Probar gratis",
+    "login": "Iniciar sesión",
+    "detailed_features": "Funcionalidades detalladas",
+    "what_you_get": "Lo que obtienes concretamente",
+    "ready_to_test": "¿Listo para probarlo?",
+    "trial_text": "14 días gratis, sin tarjeta de crédito. Configura tu programa en 5 minutos.",
+    "create_space": "Crear mi espacio gratis",
+    "no_commitment": "Sin compromiso · 14 días gratis · Soporte incluido"
   }
 }
