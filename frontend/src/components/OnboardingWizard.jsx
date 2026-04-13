@@ -270,8 +270,7 @@ export default function OnboardingWizard({ onClose }) {
           </div>
         )}
 
-          {step === 5 && (
-          )}
+        {null /* done step - no content */}
         </div>
 
         {/* Error */}
