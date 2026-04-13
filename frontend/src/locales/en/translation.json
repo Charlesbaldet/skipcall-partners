@@ -1157,5 +1157,19 @@
     "Silver": "Silver",
     "Gold": "Gold",
     "Platinum": "Platinum"
+  },
+  "onboarding": {
+    "skip": "Skip this step",
+    "next": "Next →",
+    "back": "Back",
+    "finish": "Finish setup",
+    "subtitle": "Set up your workspace in a few steps",
+    "welcome_title": "Welcome to RefBoost 🎉",
+    "createUser_title": "Create your team",
+    "createPartner_title": "Invite your first partner",
+    "customize_title": "Customize your workspace",
+    "publicLink_title": "Your referral link",
+    "marketplace_title": "Your program on the marketplace",
+    "done_title": "All set 🚀"
   }
 }
