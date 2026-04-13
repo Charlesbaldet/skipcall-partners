@@ -1142,5 +1142,20 @@
     "branding_desc": "Personalize as cores e o logotipo do seu espaço de parceiros. Essas configurações se aplicam em todo lugar: barra lateral, interface, etc.",
     "level_saved": "Nível salvo ✓",
     "levels_reset_confirm": "Redefinir para os valores padrão (Bronze/Silver/Gold/Platinum)? Seus níveis personalizados serão apagados."
+  },
+  "status": {
+    "new": "Novo",
+    "contacted": "Contactado",
+    "meeting": "Reunião planeada",
+    "proposal": "Proposta",
+    "won": "Ganho",
+    "lost": "Perdido",
+    "duplicate": "Duplicado"
+  },
+  "level": {
+    "Bronze": "Bronze",
+    "Silver": "Prata",
+    "Gold": "Ouro",
+    "Platinum": "Platina"
   }
 }
