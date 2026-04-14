@@ -1166,7 +1166,8 @@
     "password_min8": "Minimaal 8 tekens",
     "password_updated": "Wachtwoord bijgewerkt!",
     "update": "Bijwerken",
-    "copy_link": "Link kopiëren"
+    "copy_link": "Link kopiëren",
+    "confirm_delete_level": "Dit niveau verwijderen? Partners worden herberekend."
   },
   "status": {
     "new": "Nieuw",
