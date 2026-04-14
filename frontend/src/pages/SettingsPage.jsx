@@ -260,7 +260,7 @@ function SuperAdminsTab() {
   };
 
   const handleDeleteSA = async (sa) => {
-    if (!window.confirm('Supprimer ' + (sa.full_name || sa.email) + ' des super admins ?')) return;
+    if (!window.confirm(t('settings.confirm_remove_superadmin', {name: sa.full_name || sa.email}))) return;
     try {
       await api.request('/super-admin/delete-superadmin/' + sa.id, { method: 'DELETE' });
       alert('Super admin supprim\u00e9');
@@ -282,7 +282,7 @@ function SuperAdminsTab() {
         <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b21a8' }}>Donne accès à la gestion de tous les tenants de la plateforme.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input type="email" value={saEmail} onChange={e => setSaEmail(e.target.value)} placeholder="email@exemple.com" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
-          <input type="text" value={saName} onChange={e => setSaName(e.target.value)} placeholder="Nom complet" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
+          <input type="text" value={saName} onChange={e => setSaName(e.target.value)} placeholder={t('onboarding.full_name')} style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
           <button disabled={saSubmitting || !saEmail} onClick={handleInvite} style={{ padding: '10px 20px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saSubmitting ? 'not-allowed' : 'pointer', opacity: saSubmitting ? 0.6 : 1, whiteSpace: 'nowrap' }}>{saSubmitting ? 'Envoi...' : 'Inviter'}</button>
         </div>
       </div>
@@ -306,7 +306,7 @@ function SuperAdminsTab() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ padding: '4px 10px', borderRadius: 999, background: sa.is_active ? '#d1fae5' : '#fee2e2', color: sa.is_active ? '#065f46' : '#991b1b', fontSize: 12, fontWeight: 600 }}>{sa.is_active ? 'Actif' : 'Inactif'}</span>
-                  {sa.id !== user?.id && <button onClick={() => handleDeleteSA(sa)} style={{ padding: '4px 10px', borderRadius: 999, background: '#fee2e2', color: '#991b1b', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}>Supprimer</button>}
+                  {sa.id !== user?.id && <button onClick={() => handleDeleteSA(sa)} style={{ padding: '4px 10px', borderRadius: 999, background: '#fee2e2', color: '#991b1b', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}>{t('common.delete')}</button>}
                 </div>
               </div>
             ))}
@@ -367,7 +367,7 @@ function MembersTab() {
               <h4 style={{ fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>Membre créé !</h4>
               <div style={{ background: '#fff', borderRadius: 10, padding: 16, display: 'inline-block', textAlign: 'left', border: '1px solid #e2e8f0' }}>
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Email</span><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{inviteResult.email}</div></div>
-                <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Mot de passe provisoire</span>
+                <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>{t('settings.temp_password')}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <code style={{ background: '#eef2ff', padding: '4px 10px', borderRadius: 6, color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
                     <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 5, padding: 4, cursor: 'pointer', display: 'flex' }}>{copied ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} color="#6366f1" />}</button>
@@ -655,7 +655,7 @@ function AppearanceTab() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Apparence</h3>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.tab_appearance')}</h3>
       <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.branding_desc')}</p>
 
       {msg && (
@@ -803,8 +803,8 @@ function ProgramTab() {
   if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Chargement...</div>;
 
   const isDeal = data.threshold_type === 'deals';
-  const unitLabel = isDeal ? 'deals gagnés' : '€ générés';
-  const thresholdInputLabel = isDeal ? 'Deals gagnés requis' : 'Volume (€) requis';
+  const unitLabel = isDeal ? t('programme.unit_deals') : t('programme.unit_volume');
+  const thresholdInputLabel = isDeal ? t('programme.threshold_deals') : t('programme.threshold_volume');
 
   const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' };
   const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 11, marginBottom: 4 };
