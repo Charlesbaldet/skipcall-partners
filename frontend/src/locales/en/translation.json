@@ -1010,7 +1010,8 @@
     "threshold_volume": "Volume (€) required",
     "name_required": "Name is required",
     "level_saved": "Level saved ✓",
-    "reset_done": "Reset to default values"
+    "reset_done": "Reset to default values",
+    "level_desc": "From {{min}} {{unit}} · {{rate}}% commission"
   },
   "publicApply": {
     "title": "Join the program",
@@ -1161,7 +1162,11 @@
     "invite": "Invite",
     "invite_superadmin": "Invite a super administrator",
     "link_copied": "Link copied!",
-    "field_required": "Required field"
+    "field_required": "Required field",
+    "password_min8": "Minimum 8 characters",
+    "password_updated": "Password updated!",
+    "update": "Update",
+    "copy_link": "Copy link"
   },
   "status": {
     "new": "New",
