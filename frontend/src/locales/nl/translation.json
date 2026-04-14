@@ -1313,5 +1313,17 @@
     "icp": "Hoofd-ICP",
     "short_description": "Korte beschrijving *",
     "marketplace_visible": "Tonen in marketplace"
+  },
+  "blog": {
+    "subtitle": "Tips, strategieën & bronnen",
+    "loading": "Laden…",
+    "no_posts": "Nog geen artikelen.",
+    "come_back": "Kom snel terug!",
+    "not_found": "Artikel niet gevonden",
+    "back": "← Terug naar blog",
+    "home": "Home",
+    "by": "Door",
+    "tags": "Tags",
+    "read_time": "min lezen"
   }
 }
