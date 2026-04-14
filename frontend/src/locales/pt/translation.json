@@ -1166,7 +1166,8 @@
     "password_min8": "Mínimo 8 caracteres",
     "password_updated": "Senha atualizada!",
     "update": "Atualizar",
-    "copy_link": "Copiar link"
+    "copy_link": "Copiar link",
+    "confirm_delete_level": "Excluir este nível? Os parceiros serão recalculados."
   },
   "status": {
     "new": "Novo",
