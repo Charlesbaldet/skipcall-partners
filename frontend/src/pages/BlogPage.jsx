@@ -10,7 +10,7 @@ const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff
 
 function formatDate(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function BlogCard({ post }) {
@@ -42,7 +42,7 @@ function BlogCard({ post }) {
 }
 
 export default function BlogPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('');
