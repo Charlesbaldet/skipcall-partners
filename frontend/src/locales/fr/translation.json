@@ -1176,7 +1176,8 @@
     "marketplace_website_ph": "https://votre-site.com",
     "marketplace_target_ph": "Ex: PME françaises, startups SaaS B2B...",
     "marketplace_desc_ph": "Décrivez votre service en 2-3 phrases...",
-    "marketplace_chars": "caractères"
+    "marketplace_chars": "caractères",
+    "public_link_title": "Lien public d'inscription"
   },
   "status": {
     "new": "Nouveau",
