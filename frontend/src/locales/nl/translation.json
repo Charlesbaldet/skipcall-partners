@@ -1178,7 +1178,8 @@
     "marketplace_desc_ph": "Beschrijf je dienst in 2-3 zinnen...",
     "marketplace_chars": "tekens",
     "public_link_title": "Openbare aanmeldingslink",
-    "marketplace_visible_shown": "✅ Je programma is openbaar zichtbaar"
+    "marketplace_visible_shown": "✅ Je programma is openbaar zichtbaar",
+    "branding_accent": "Accentkleur"
   },
   "status": {
     "new": "Nieuw",
