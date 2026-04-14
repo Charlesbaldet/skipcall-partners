@@ -60,7 +60,7 @@ export default function ProgrammePage() {
   };
 
   const save = async () => {
-    if (!form.name) { setMsg({ type: 'error', text: 'Le nom est requis' }); return; }
+    if (!form.name) { setMsg({ type: 'error', text: t('programme.name_required') }); return; }
     try {
       if (editing === 'new') {
         await api.createTenantLevel({ ...form, position: data.levels.length });
@@ -69,7 +69,7 @@ export default function ProgrammePage() {
       }
       setEditing(null);
       await load();
-      setMsg({ type: 'success', text: 'Niveau enregistré ✓' });
+      setMsg({ type: 'success', text: t('programme.level_saved') });
       setTimeout(() => setMsg(null), 2000);
     } catch (e) {
       setMsg({ type: 'error', text: e.message || 'Erreur' });
@@ -99,8 +99,8 @@ export default function ProgrammePage() {
   if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('programme.loading')}</div>;
 
   const isDeal = data.threshold_type === 'deals';
-  const unitLabel = isDeal ? 'deals gagnés' : '€ générés';
-  const thresholdInputLabel = isDeal ? 'Deals gagnés requis' : 'Volume (€) requis';
+  const unitLabel = isDeal ? t('programme.unit_deals') : t('programme.unit_volume');
+  const thresholdInputLabel = isDeal ? t('programme.threshold_deals') : t('programme.threshold_volume');
 
   const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' };
   const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 11, marginBottom: 4 };
@@ -113,7 +113,7 @@ export default function ProgrammePage() {
           <input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('programme.level_name_placeholder')} />
         </div>
         <div>
-          <label style={labelStyle}>Icône</label>
+          <label style={labelStyle}>{t('programme.level_icon')}</label>
           <input style={{ ...inputStyle, textAlign: 'center', fontSize: 18 }} value={form.icon} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} maxLength="2" />
         </div>
       </div>
