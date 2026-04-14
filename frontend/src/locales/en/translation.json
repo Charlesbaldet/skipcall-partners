@@ -31,15 +31,15 @@
       "h1_start": "Turn your",
       "h1_highlight": "referrals into revenue",
       "description": "RefBoost is the SaaS platform for partner program management and referral tracking. Automate referral tracking, commissions and your network's performance.",
-      "cta_primary": "Create my free workspace â",
+      "cta_primary": "Create my free workspace →",
       "cta_secondary": "Discover",
       "stat1_value": "150+",
       "stat1_label": "Active partners",
-      "stat2_value": "2.4Mâ¬",
+      "stat2_value": "2.4M€",
       "stat2_label": "Revenue generated",
       "stat3_value": "98%",
       "stat3_label": "Customer satisfaction",
-      "trial_badges": "â 14 days free Â· â No credit card Â· â Setup in 5 min"
+      "trial_badges": "✓ 14 days free · ✓ No credit card · ✓ Setup in 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Lead Pipeline",
@@ -131,7 +131,7 @@
       ]
     },
     "marketplace": {
-      "badge": "â¨ New â RefBoost Marketplace",
+      "badge": "✨ New — RefBoost Marketplace",
       "title_start": "Find referral programs",
       "title_highlight": "verified & rewarding",
       "description": "Hundreds of companies open their program on RefBoost. Join them for free.",
@@ -139,10 +139,10 @@
       "stat1_label": "Active programs",
       "stat2_val": "100%",
       "stat2_label": "Free for partners",
-      "stat3_val": "2.4Mâ¬",
+      "stat3_val": "2.4M€",
       "stat3_label": "Commissions generated",
-      "cta": "View all programs â",
-      "cta_note": "Free Â· No registration to browse"
+      "cta": "View all programs →",
+      "cta_note": "Free · No registration to browse"
     },
     "pricing": {
       "label": "Pricing",
@@ -150,7 +150,7 @@
       "description": "All plans include a 14-day free trial. No commitment.",
       "popular": "Popular",
       "custom": "Custom",
-      "per_month": "â¬/month",
+      "per_month": "€/month",
       "cta_contact": "Contact us",
       "cta_start": "Start for free",
       "plans": [
@@ -205,7 +205,7 @@
         },
         {
           "q": "Can I customize the platform to match my brand?",
-          "a": "Yes. Logo, colors, custom domain â your partners work in an environment that reflects your brand, not RefBoost's."
+          "a": "Yes. Logo, colors, custom domain — your partners work in an environment that reflects your brand, not RefBoost's."
         },
         {
           "q": "How are commissions calculated?",
@@ -222,8 +222,8 @@
       "title_end": "referral network?",
       "description": "Join the companies using RefBoost to turn their referrals into recurring revenue.",
       "email_placeholder": "your@email.com",
-      "cta_btn": "Get started â",
-      "note": "14 days free Â· No credit card Â· Cancel anytime"
+      "cta_btn": "Get started →",
+      "note": "14 days free · No credit card · Cancel anytime"
     },
     "footer": {
       "tagline": "The platform for referral partner program management and professional referrals.",
@@ -247,7 +247,7 @@
         "legal": "Legal notice",
         "rgpd": "GDPR"
       },
-      "copyright": "Â© 2026 RefBoost. All rights reserved.",
+      "copyright": "© 2026 RefBoost. All rights reserved.",
       "madeIn": "Made with care in France"
     },
     "blog": {
@@ -266,11 +266,11 @@
     "email_placeholder": "you@company.com",
     "password": "Password",
     "forgot_password": "Forgot password?",
-    "submit": "Sign in â",
+    "submit": "Sign in →",
     "loading": "Signing in...",
     "no_account": "Don't have an account yet?",
-    "create_account": "Create a free workspace â",
-    "back_to_site": "â Back to site",
+    "create_account": "Create a free workspace →",
+    "back_to_site": "← Back to site",
     "error_default": "Incorrect credentials"
   },
   "signup": {
@@ -282,8 +282,8 @@
     "fullname_ph": "First Last",
     "phone": "Phone (optional)",
     "phone_ph": "+1 555 123 4567",
-    "next": "Continue â",
-    "back": "â Back",
+    "next": "Continue →",
+    "back": "← Back",
     "credentials": "Your credentials",
     "credentials_sub": "You will be the administrator of the {{company}} workspace.",
     "email": "Professional email",
@@ -299,7 +299,7 @@
     "success_title": "Welcome to RefBoost!",
     "success_sub": "Your {{company}} workspace is ready.",
     "success_sub2": "You are the administrator.",
-    "success_cta": "Go to my dashboard â",
+    "success_cta": "Go to my dashboard →",
     "error_fields": "Please fill in the required fields.",
     "error_creds": "Email and password required (10 chars, upper, lower, digit, special).",
     "have_account": "Already have an account?",
@@ -338,13 +338,13 @@
     "ready_to_test": "Ready to test it?",
     "trial_text": "14 days free, no credit card. Set up your program in 5 minutes.",
     "create_space": "Create my workspace for free",
-    "no_commitment": "No commitment Â· 14 days free Â· Support included"
+    "no_commitment": "No commitment · 14 days free · Support included"
   },
   "features": {
     "label": "Feature",
     "pipeline": {
-      "helmet_title": "Referral Pipeline â RefBoost",
-      "helmet_desc": "Track every referral from first contact to closing. Kanban view, advanced filters, real-time statuses â never miss an opportunity.",
+      "helmet_title": "Referral Pipeline — RefBoost",
+      "helmet_desc": "Track every referral from first contact to closing. Kanban view, advanced filters, real-time statuses — never miss an opportunity.",
       "title": "Referral Pipeline",
       "subtitle": "From referral to closing, every lead is tracked, prioritized and actionable in real time.",
       "benefits": [
@@ -352,7 +352,7 @@
           "stat": "3x",
           "statLabel": "more leads converted vs unstructured tracking",
           "title": "Real-time Kanban View",
-          "text": "See your entire partner pipeline at a glance. Each lead moves through columns as the sale progresses â no spreadsheet, no endless email chains.",
+          "text": "See your entire partner pipeline at a glance. Each lead moves through columns as the sale progresses — no spreadsheet, no endless email chains.",
           "points": [
             "Configurable columns: New, Qualification, Demo, Proposal, Signed",
             "Drag & drop to change status in one gesture",
@@ -387,11 +387,11 @@
       ],
       "quote": {
         "text": "We tripled our referral partner channel in 4 months. Pipeline transparency keeps our best partners engaged.",
-        "author": "Marie D., Sales Director â SaaS B2B"
+        "author": "Marie D., Sales Director — SaaS B2B"
       }
     },
     "commissions": {
-      "helmet_title": "Automatic Commissions â RefBoost",
+      "helmet_title": "Automatic Commissions — RefBoost",
       "helmet_desc": "Automatic bonus calculation based on your rules. One-click validation, full history, traceable payments. No more spreadsheets.",
       "title": "Automatic Commissions",
       "subtitle": "Set your rules once. RefBoost calculates, validates and tracks every commission without manual intervention.",
@@ -400,7 +400,7 @@
           "stat": "0",
           "statLabel": "calculation errors since adopting RefBoost (client data)",
           "title": "Automatic calculation based on your rules",
-          "text": "Set your commission grid once â fixed rate, MRR percentage, progressive tiers â and RefBoost automatically calculates the bonus at each validated deal. No more spreadsheet, no more errors.",
+          "text": "Set your commission grid once — fixed rate, MRR percentage, progressive tiers — and RefBoost automatically calculates the bonus at each validated deal. No more spreadsheet, no more errors.",
           "points": [
             "Configurable rates per partner, segment or volume",
             "Progressive tiers: 8% up to 5 deals/month, 12% beyond",
@@ -435,12 +435,12 @@
       ],
       "quote": {
         "text": "No more spreadsheets for tracking commissions. Everything is automated, transparent, and our partners love receiving their detailed calculations every month.",
-        "author": "Sophie M., Head of Partnerships â DataViz Pro"
+        "author": "Sophie M., Head of Partnerships — DataViz Pro"
       }
     },
     "analytics": {
-      "helmet_title": "Analytics & KPIs â RefBoost",
-      "helmet_desc": "Conversion rate, generated MRR, performance by partner, average sales cycle â all the metrics that matter in an actionable dashboard.",
+      "helmet_title": "Analytics & KPIs — RefBoost",
+      "helmet_desc": "Conversion rate, generated MRR, performance by partner, average sales cycle — all the metrics that matter in an actionable dashboard.",
       "title": "Analytics & KPIs",
       "subtitle": "Manage your partner program with real data, not gut feelings. Every decision based on facts.",
       "benefits": [
@@ -482,12 +482,12 @@
         }
       ],
       "quote": {
-        "text": "For the first time, we could show our board the exact ROI of the partner program. â¬8 generated for every euro invested in commissions.",
-        "author": "Thomas C., CEO â ScaleUp Agency"
+        "text": "For the first time, we could show our board the exact ROI of the partner program. €8 generated for every euro invested in commissions.",
+        "author": "Thomas C., CEO — ScaleUp Agency"
       }
     },
     "personnalisation": {
-      "helmet_title": "White Label â RefBoost",
+      "helmet_title": "White Label — RefBoost",
       "helmet_desc": "Logo, colors, custom domain: your partners work in your universe, not RefBoost's. A 100% branded experience.",
       "title": "Your brand, your platform",
       "subtitle": "Logo, colors, custom domain. Your partners have no reason to know you're using RefBoost.",
@@ -531,11 +531,11 @@
       ],
       "quote": {
         "text": "Our partners work in our universe. They never knew it was RefBoost behind it. That's exactly what we were looking for.",
-        "author": "Pierre L., CRO â SaaS Fintech"
+        "author": "Pierre L., CRO — SaaS Fintech"
       }
     },
     "tracking": {
-      "helmet_title": "Unique Tracking Links â RefBoost",
+      "helmet_title": "Unique Tracking Links — RefBoost",
       "helmet_desc": "Each partner has their personal link. Automatic attribution, integrated public form, zero friction for your partners and prospects.",
       "title": "Unique tracking links",
       "subtitle": "One link per partner, perfect attribution. Your partners share, leads arrive qualified and automatically attributed.",
@@ -579,7 +579,7 @@
       ],
       "quote": {
         "text": "Before RefBoost, we spent 2 hours a month manually reconciling leads with partners. Now it's automatic and dispute-free.",
-        "author": "Alexandre R., VP Sales â ScaleB2B"
+        "author": "Alexandre R., VP Sales — ScaleB2B"
       }
     }
   },
@@ -588,11 +588,11 @@
     "subtitle": "Enter your email. If an account exists, we'll send you a link to reset your password.",
     "sent_title": "Email sent!",
     "sent_text": "If an account exists with this email, you'll receive a reset link in a few minutes.",
-    "back_to_login": "â Back to login",
+    "back_to_login": "← Back to login",
     "email": "Email",
     "email_ph": "you@company.com",
     "loading": "Sending...",
-    "submit": "Send reset link â",
+    "submit": "Send reset link →",
     "submitting": "Sending..."
   },
   "resetPwd": {
@@ -600,14 +600,14 @@
     "subtitle": "Choose a secure password for your account.",
     "new_pwd": "New password",
     "confirm_pwd": "Confirm password",
-    "submit": "Reset â",
+    "submit": "Reset →",
     "loading": "Resetting...",
     "success_title": "Password updated!",
     "success_text": "Redirecting to login in a few seconds...",
-    "login_now": "Sign in now â",
+    "login_now": "Sign in now →",
     "invalid": "Invalid or expired link.",
     "request_new": "Request a new link",
-    "back_to_login": "â Back to login",
+    "back_to_login": "← Back to login",
     "mismatch": "Passwords do not match.",
     "weak": "Password too weak.",
     "invalid_title": "Invalid or expired link.",
@@ -625,7 +625,7 @@
     "subtitle": "Create your password to access your partner space.",
     "pwd_label": "Password",
     "confirm_label": "Confirm",
-    "submit": "Activate my account â",
+    "submit": "Activate my account →",
     "submitting": "Activating...",
     "mismatch": "Passwords do not match.",
     "invalid_title": "Invalid link",
@@ -638,7 +638,7 @@
     "current": "Current password",
     "new_pwd": "New password",
     "confirm": "Confirm new password",
-    "submit": "Change â",
+    "submit": "Change →",
     "submitting": "Saving...",
     "mismatch": "Passwords do not match.",
     "weak": "Password too weak (min. 10 chars, upper, lower, digit, special)."
@@ -656,7 +656,7 @@
     "kpi_rate": "Conversion rate",
     "chart_monthly": "Monthly evolution",
     "chart_pipeline": "Pipeline by status",
-    "chart_revenue_label": "Generated (â¬)",
+    "chart_revenue_label": "Generated (€)",
     "chart_levels": "Performance by level",
     "chart_monthly_tab": "Monthly",
     "chart_cumul_tab": "Cumulative",
@@ -677,7 +677,7 @@
     "loading": "Loading...",
     "deals": "Deals",
     "commissions_label": "Commissions",
-    "max": "Max â¨",
+    "max": "Max ✨",
     "no_data": "No data"
   },
   "referrals": {
@@ -695,7 +695,7 @@
     "tab_history": "History",
     "save": "Save",
     "saving": "Saving...",
-    "saved": "Changes saved â",
+    "saved": "Changes saved ✓",
     "error_save": "Error saving",
     "delete_btn": "Delete",
     "prospect": "Prospect",
@@ -744,7 +744,7 @@
     "commission_est": "Estimated commission",
     "of": "of",
     "delete": "Delete",
-    "saved_ok": "Changes saved â",
+    "saved_ok": "Changes saved ✓",
     "save_error": "Error saving"
   },
   "commissions": {
@@ -916,9 +916,9 @@
     "role_ph": "Ex: CTO, Sales Director...",
     "notes": "Notes / Context",
     "notes_ph": "Describe the need or context of this referral...",
-    "continue": "Continue â",
-    "back": "â Back",
-    "submit": "Send my referral â",
+    "continue": "Continue →",
+    "back": "← Back",
+    "submit": "Send my referral →",
     "submitting": "Sending..."
   },
   "partnerPayments": {
@@ -939,7 +939,7 @@
     "tbl_commission": "Commission",
     "tbl_rate": "Rate",
     "tbl_status": "Status",
-    "iban_saved": "Saved â",
+    "iban_saved": "Saved ✓",
     "tbl_prospect": "Prospect",
     "tbl_amount": "Commission",
     "no_data": "No payments",
@@ -996,7 +996,7 @@
     "add_level": "+ Add a level",
     "delete_level": "Delete",
     "no_levels": "No levels configured",
-    "saved": "Saved â",
+    "saved": "Saved ✓",
     "level_min_deals": "Min deals",
     "level_delete": "Delete",
     "revenue_model": "Revenue model",
@@ -1007,20 +1007,20 @@
     "title_full": "Partner Program",
     "subtitle_full": "Configure levels and commissions for your partner program. Partners level up automatically based on their performance.",
     "crit_title": "Progression Criterion",
-    "crit_deals": "ð¯ Number of won deals",
-    "crit_volume": "ð° Business volume (â¬)",
+    "crit_deals": "🎯 Number of won deals",
+    "crit_volume": "💰 Business volume (€)",
     "reset_defaults": "Reset to default values",
     "reset_confirm": "Reset to default values? Your custom levels will be deleted.",
     "delete_confirm": "Delete this level? Partners will keep their current level.",
     "level_name_placeholder": "Bronze, Diamond...",
     "unit_deals": "deals won",
-    "unit_volume": "â¬ generated",
+    "unit_volume": "€ generated",
     "threshold_deals": "Won deals required",
-    "threshold_volume": "Volume (â¬) required",
+    "threshold_volume": "Volume (€) required",
     "name_required": "Name is required",
-    "level_saved": "Level saved â",
+    "level_saved": "Level saved ✓",
     "reset_done": "Reset to default values",
-    "level_desc": "From {{min}} {{unit}} Â· {{rate}}% commission"
+    "level_desc": "From {{min}} {{unit}} · {{rate}}% commission"
   },
   "publicApply": {
     "title": "Join the program",
@@ -1044,8 +1044,8 @@
     "role_ph": "Ex: Consultant, Referral partner...",
     "motivation": "Tell us about your activity and motivation",
     "motivation_ph": "Describe your network, your activity...",
-    "continue": "Continue â",
-    "back": "â Back",
+    "continue": "Continue →",
+    "back": "← Back",
     "submit": "Send my application",
     "submitting": "Submitting...",
     "why_title": "Why join us?",
@@ -1088,7 +1088,7 @@
     "company": "Company",
     "role": "Role",
     "message": "Message (optional)",
-    "submit": "Send â",
+    "submit": "Send →",
     "submitting": "Sending...",
     "powered_by": "Powered by",
     "invalid_title": "Invalid link",
@@ -1106,17 +1106,17 @@
     "all": "All",
     "reset": "Reset",
     "no_result": "No program found",
-    "see_all": "View program â",
+    "see_all": "View program →",
     "target": "Target:",
     "website": "Visit website",
-    "join": "Join â",
+    "join": "Join →",
     "add_program": "Do you have a program?",
     "add_program_sub": "Join the RefBoost Marketplace and reach thousands of referral partners.",
     "add_program_cta": "Create my program",
     "stat_programs": "Active programs",
     "stat_free": "Free for partners",
     "stat_commissions": "Commissions generated",
-    "helmet_title": "Marketplace â Referral Programs | RefBoost",
+    "helmet_title": "Marketplace — Referral Programs | RefBoost",
     "loading": "Loading...",
     "stat_active": "Active programs",
     "stat_avg_rate": "Average rate",
@@ -1134,7 +1134,7 @@
     "marketplace_logo": "Logo URL",
     "marketplace_save": "Save",
     "marketplace_saving": "Saving...",
-    "marketplace_saved": "Settings saved â",
+    "marketplace_saved": "Settings saved ✓",
     "branding_section": "Customization (White Label)",
     "branding_logo": "Logo URL",
     "branding_primary": "Primary color",
@@ -1152,14 +1152,14 @@
     "general_email": "Contact email",
     "general_save": "Save",
     "loading": "Loading...",
-    "saved": "Saved â",
+    "saved": "Saved ✓",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving...",
     "change_pwd": "Change password",
     "add": "Add",
     "branding_desc": "Customize colors and logo for your partner space. These settings apply everywhere: sidebar, interface, etc.",
-    "level_saved": "Level saved â",
+    "level_saved": "Level saved ✓",
     "levels_reset_confirm": "Reset to default values (Bronze/Silver/Gold/Platinum)? Your custom levels will be erased.",
     "tab_account": "My account",
     "tab_members": "Members",
@@ -1180,13 +1180,13 @@
     "marketplace_hidden": "Your program is hidden",
     "marketplace_website": "Website",
     "marketplace_icp": "Main ICP",
-    "marketplace_choose_sector": "â Choose a sector â",
+    "marketplace_choose_sector": "— Choose a sector —",
     "marketplace_website_ph": "https://your-site.com",
     "marketplace_target_ph": "Ex: B2B SMEs, SaaS Startups...",
     "marketplace_desc_ph": "Describe your service in 2-3 sentences...",
     "marketplace_chars": "characters",
     "public_link_title": "Public referral link",
-    "marketplace_visible_shown": "â Your program is publicly displayed",
+    "marketplace_visible_shown": "✅ Your program is publicly displayed",
     "branding_accent": "Accent color",
     "marketplace_view": "View marketplace",
     "superadmins_title": "Super administrators",
@@ -1221,7 +1221,7 @@
     "webhook_saved": "Webhook saved!",
     "confirm_remove_superadmin": "Remove {{name}} from super admins?",
     "revenue_deals": "Number of deals won",
-    "revenue_volume": "Business volume (â¬)",
+    "revenue_volume": "Business volume (€)",
     "revenue_fixed": "Fixed commission",
     "email_col": "Email",
     "name_col": "Name",
@@ -1240,9 +1240,9 @@
     "copy_code": "Copy code",
     "link_share_hint": "You can put it in your emails, signatures, LinkedIn posts, etc.",
     "embed_hint": "Paste this snippet in your site (WordPress, Webflow, Notion, etc.) to embed the form directly.",
-    "revenue_model_hint": "Main revenue type â used to adapt dashboard labels",
-    "revenue_ca": "Revenue â One-shot business",
-    "revenue_mrr": "MRR â Recurring revenue (SaaS)",
+    "revenue_model_hint": "Main revenue type — used to adapt dashboard labels",
+    "revenue_ca": "Revenue — One-shot business",
+    "revenue_mrr": "MRR — Recurring revenue (SaaS)",
     "revenue_deals_opt": "Number of deals (commission per deal)",
     "logo_ph": "https://example.com/logo.png",
     "logo_hint": "Paste the URL of a hosted image. Recommended format: transparent PNG, height ~80px.",
@@ -1265,17 +1265,17 @@
   },
   "onboarding": {
     "skip": "Skip this step",
-    "next": "Next â",
+    "next": "Next →",
     "back": "Back",
     "finish": "Finish setup",
     "subtitle": "Set up your workspace in a few steps",
-    "welcome_title": "Welcome to RefBoost ð",
+    "welcome_title": "Welcome to RefBoost 🎉",
     "createUser_title": "Create your team",
     "createPartner_title": "Invite your first partner",
     "customize_title": "Customize your workspace",
     "publicLink_title": "Your referral link",
     "marketplace_title": "Your program on the marketplace",
-    "done_title": "All set ð",
+    "done_title": "All set 🚀",
     "step_of": "Step {{current}} of {{total}}",
     "step_2_desc": "Add a team member (admin or commercial). They will receive an email with their credentials.",
     "step_3_desc": "Customize the appearance of your workspace",
@@ -1296,8 +1296,8 @@
     "role_commercial": "Sales",
     "role_admin_opt": "Admin",
     "role_partner_opt": "Partner",
-    "create_user": "Create user â",
-    "create_partner": "Create partner â",
+    "create_user": "Create user →",
+    "create_partner": "Create partner →",
     "user_created": "User created successfully",
     "partner_added": "Partner added successfully",
     "config_saved": "Configuration saved",
