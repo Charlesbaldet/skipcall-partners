@@ -127,13 +127,13 @@ export default function OnboardingWizard({ onClose }) {
   const primaryLabel = () => {
     if (submitting) return 'En cours...';
     if (step === 1 && !createdUser) return t('onboarding.create_user');
-    if (step === 1 && createdUser) return 'Continuer â';
+    if (step === 1 && createdUser) return t('onboarding.next');
     if (step === 2 && !createdPartner) return t('onboarding.create_partner');
-    if (step === 2 && createdPartner) return 'Continuer â';
+    if (step === 2 && createdPartner) return t('onboarding.next');
     if (step === 3 && !customized) return t('settings.save')+' â';
-    if (step === 3 && customized) return 'Continuer â';
+    if (step === 3 && customized) return t('onboarding.next');
     if (isLast) return 'C\'est parti !';
-    return 'Continuer â';
+    return t('onboarding.next');
   };
 
   return (
