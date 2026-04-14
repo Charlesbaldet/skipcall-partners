@@ -181,7 +181,7 @@ export default function OnboardingWizard({ onClose }) {
         <div style={{ marginBottom: 24 }}>
           {step === 0 && (
             <div style={{ textAlign: 'center', color: C.m, fontSize: 15, lineHeight: 1.7 }}>
-              {t('onboarding.step_1_desc')} : crÃ©er ton Ã©quipe, inviter un premier partenaire, personnaliser tes couleurs, et rÃ©cupÃ©rer ton lien public d'inscription. Ãa prend 3 minutes maximum, et tu peux passer chaque Ã©tape si tu veux.
+              {t('onboarding.step_1_desc')}
             </div>
           )}
 
