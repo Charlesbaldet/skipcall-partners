@@ -229,7 +229,7 @@ export default function OnboardingWizard({ onClose }) {
                     onChange={e => setCustomizeForm({...customizeForm, primary_color: e.target.value})}
                     style={{ ...inputStyle, height: 44, padding: 4 }} />
                 </Field>
-                <Field label="Couleur d'accent">
+                <Field label={t('settings.branding_accent')}>
                   <input type="color" value={customizeForm.accent_color}
                     onChange={e => setCustomizeForm({...customizeForm, accent_color: e.target.value})}
                     style={{ ...inputStyle, height: 44, padding: 4 }} />
