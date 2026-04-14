@@ -1010,7 +1010,8 @@
     "threshold_volume": "Volumen (€) erforderlich",
     "name_required": "Name ist erforderlich",
     "level_saved": "Stufe gespeichert ✓",
-    "reset_done": "Auf Standardwerte zurückgesetzt"
+    "reset_done": "Auf Standardwerte zurückgesetzt",
+    "level_desc": "Ab {{min}} {{unit}} · {{rate}}% Provision"
   },
   "publicApply": {
     "title": "Dem Programm beitreten",
@@ -1161,7 +1162,11 @@
     "invite": "Einladen",
     "invite_superadmin": "Super-Administrator einladen",
     "link_copied": "Link kopiert!",
-    "field_required": "Pflichtfeld"
+    "field_required": "Pflichtfeld",
+    "password_min8": "Mindestens 8 Zeichen",
+    "password_updated": "Passwort aktualisiert!",
+    "update": "Aktualisieren",
+    "copy_link": "Link kopieren"
   },
   "status": {
     "new": "Neu",
