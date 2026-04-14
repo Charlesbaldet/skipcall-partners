@@ -169,8 +169,8 @@ export default function SettingsPage() {
 }
 
 // ═══ MON COMPTE ═══
-function AccountTab({
-  const { t } = useTranslation(); user }) {
+function AccountTab({ user }) {
+  const { t } = useTranslation();
   const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
