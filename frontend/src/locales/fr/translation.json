@@ -11,7 +11,8 @@
     "archive": "Archiver",
     "restore": "Réactiver",
     "close": "Fermer",
-    "no_data": "Aucune donnée"
+    "no_data": "Aucune donnée",
+    "edit": "Modifier"
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -979,7 +980,7 @@
     "level_name": "Nom du niveau",
     "level_icon": "Icône",
     "level_color": "Couleur",
-    "level_rate": "Taux (%)",
+    "level_rate": "Commission (%)",
     "level_min": "Deals min.",
     "save": "Sauvegarder les modifications",
     "saving": "Enregistrement...",
@@ -1001,7 +1002,8 @@
     "crit_volume": "💰 Volume d'affaires (€)",
     "reset_defaults": "Réinitialiser aux valeurs par défaut",
     "reset_confirm": "Réinitialiser aux valeurs par défaut ? Cela supprimera tes niveaux personnalisés.",
-    "delete_confirm": "Supprimer ce niveau ? Les partenaires conserveront leur niveau actuel."
+    "delete_confirm": "Supprimer ce niveau ? Les partenaires conserveront leur niveau actuel.",
+    "level_name_placeholder": "Bronze, Diamant..."
   },
   "publicApply": {
     "title": "Rejoindre le programme",
@@ -1141,7 +1143,15 @@
     "add": "Ajouter",
     "branding_desc": "Personnalise les couleurs et le logo de ton espace partenaires. Ces réglages s'appliquent partout : sidebar, interface, etc.",
     "level_saved": "Niveau enregistré ✓",
-    "levels_reset_confirm": "Réinitialiser aux valeurs par défaut (Bronze/Silver/Gold/Platinum) ? Tes niveaux personnalisés seront effacés."
+    "levels_reset_confirm": "Réinitialiser aux valeurs par défaut (Bronze/Silver/Gold/Platinum) ? Tes niveaux personnalisés seront effacés.",
+    "tab_account": "Mon compte",
+    "tab_members": "Membres",
+    "tab_marketplace": "Marketplace",
+    "tab_integrations": "Intégrations",
+    "tab_public_link": "Lien public",
+    "tab_appearance": "Apparence",
+    "tab_program": "Programme",
+    "invite": "Inviter"
   },
   "status": {
     "new": "Nouveau",
