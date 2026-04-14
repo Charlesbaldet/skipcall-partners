@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', a: '#f97316' };
+const C = { p:'#059669', pl:'#10b981', s:'#0f172a', m:'#64748b', a:'#f97316' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
-
-const FEATURES = [
-  { label: 'Pipeline de leads', href: '/fonctionnalites/pipeline', desc: 'Du referral au closing' },
-  { label: 'Commissions automatiques', href: '/fonctionnalites/commissions', desc: 'Calcul et paiement sans friction' },
-  { label: 'Analytics & KPIs', href: '/fonctionnalites/analytics', desc: 'Pilotez avec des données réelles' },
-  { label: 'Marque blanche', href: '/fonctionnalites/personnalisation', desc: 'Votre image, votre domaine' },
-  { label: 'Liens de tracking', href: '/fonctionnalites/tracking', desc: 'Attribution parfaite' },
-];
 
 function useMobile() {
   const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
@@ -39,26 +33,34 @@ function Logo({ size = 36, white = false }) {
 }
 
 export function LandingNav() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const mobile = useMobile();
   const [featOpen, setFeatOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const FEATURES = [
+    { label: t('landing.featuresDropdown.pipeline_label'), href: '/fonctionnalites/pipeline', desc: t('landing.featuresDropdown.pipeline_desc') },
+    { label: t('landing.featuresDropdown.commissions_label'), href: '/fonctionnalites/commissions', desc: t('landing.featuresDropdown.commissions_desc') },
+    { label: t('landing.featuresDropdown.analytics_label'), href: '/fonctionnalites/analytics', desc: t('landing.featuresDropdown.analytics_desc') },
+    { label: t('landing.featuresDropdown.branding_label'), href: '/fonctionnalites/personnalisation', desc: t('landing.featuresDropdown.branding_desc') },
+    { label: t('landing.featuresDropdown.tracking_label'), href: '/fonctionnalites/tracking', desc: t('landing.featuresDropdown.tracking_desc') },
+  ];
+
   return (
     <>
-      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding: mobile ? '14px 20px' : '16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
-        <a href="/" style={{ textDecoration:'none' }}><Logo size={mobile ? 30 : 36}/></a>
-
+      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:mobile?'14px 20px':'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
+        <a href="/" style={{ textDecoration:'none' }}><Logo size={mobile?30:36}/></a>
         {mobile ? (
           <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5 }}>
-            <span style={{ display:'block',width:22,height:2,background: menuOpen ? 'transparent' : C.s,transition:'all .2s',transform: menuOpen ? 'rotate(45deg) translate(5px,5px)' : 'none' }}/>
-            <span style={{ display:'block',width:22,height:2,background:C.s,transition:'all .2s',transform: menuOpen ? 'rotate(-45deg) translate(0,-1px)' : 'none' }}/>
+            <span style={{ display:'block',width:22,height:2,background:menuOpen?'transparent':C.s,transition:'all .2s',transform:menuOpen?'rotate(45deg) translate(5px,5px)':'none' }}/>
+            <span style={{ display:'block',width:22,height:2,background:C.s,transition:'all .2s',transform:menuOpen?'rotate(-45deg) translate(0,-1px)':'none' }}/>
           </button>
         ) : (
-          <div style={{ display:'flex',alignItems:'center',gap:28 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:24 }}>
             <div style={{ position:'relative' }} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
               <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
-                Fonctionnalités
+                {t('nav.features')}
                 <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:featOpen?'rotate(180deg)':'none' }}>
                   <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
                 </svg>
@@ -76,23 +78,32 @@ export function LandingNav() {
                 </div>
               )}
             </div>
-            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
-              <a key={label} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
-                onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>{label}</a>
+            {[['nav.marketplace','/marketplace'],['nav.pricing','/#tarifs'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+              <a key={key} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
+                onMouseEnter={e=>e.target.style.color=C.p}
+                onMouseLeave={e=>e.target.style.color=C.m}>
+                {t(key)}
+              </a>
             ))}
-            <button onClick={()=>navigate('/login')} style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer' }}
+            <LanguageSwitcher direction="down" dark={false}/>
+            <button onClick={()=>navigate('/login')}
+              style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer' }}
               onMouseEnter={e=>{e.currentTarget.style.background=C.s;e.currentTarget.style.color='#fff';}}
-              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=C.s;}}>Connexion</button>
-            <button onClick={()=>navigate('/signup')} style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer' }}>Essai gratuit</button>
+              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=C.s;}}>
+              {t('nav.login')}
+            </button>
+            <button onClick={()=>navigate('/signup')}
+              style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer' }}>
+              {t('nav.freeTrial')}
+            </button>
           </div>
         )}
       </nav>
 
-      {/* Mobile menu overlay */}
       {mobile && menuOpen && (
         <div style={{ position:'fixed',top:58,left:0,right:0,bottom:0,zIndex:99,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
           <div style={{ marginBottom:16 }}>
-            <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
+            <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('nav.features')}</div>
             {FEATURES.map(f=>(
               <a key={f.href} href={f.href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none' }}>
                 <div style={{ fontWeight:600,fontSize:15,color:C.s }}>{f.label}</div>
@@ -101,13 +112,18 @@ export function LandingNav() {
             ))}
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:4,marginTop:16 }}>
-            {[['Marketplace','/marketplace'],['Tarifs','/#tarifs'],['Témoignages','/#temoignages'],['Blog','/blog']].map(([label,href])=>(
-              <a key={label} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>{label}</a>
+            {[['nav.marketplace','/marketplace'],['nav.pricing','/#tarifs'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+              <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>
+                {t(key)}
+              </a>
             ))}
           </div>
+          <div style={{ padding:'16px 0',borderBottom:'1px solid #f1f5f9' }}>
+            <LanguageSwitcher direction="down" dark={false}/>
+          </div>
           <div style={{ display:'flex',flexDirection:'column',gap:12,marginTop:24 }}>
-            <button onClick={()=>{setMenuOpen(false);navigate('/login');}} style={{ padding:'14px',borderRadius:12,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:16,cursor:'pointer',width:'100%' }}>Connexion</button>
-            <button onClick={()=>{setMenuOpen(false);navigate('/signup');}} style={{ padding:'14px',borderRadius:12,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',width:'100%' }}>Essai gratuit</button>
+            <button onClick={()=>{setMenuOpen(false);navigate('/login');}} style={{ padding:'14px',borderRadius:12,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:16,cursor:'pointer',width:'100%' }}>{t('nav.login')}</button>
+            <button onClick={()=>{setMenuOpen(false);navigate('/signup');}} style={{ padding:'14px',borderRadius:12,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',width:'100%' }}>{t('nav.freeTrial')}</button>
           </div>
         </div>
       )}
@@ -116,35 +132,52 @@ export function LandingNav() {
 }
 
 export function LandingFooter() {
+  const { t } = useTranslation();
   const mobile = useMobile();
+
+  const FEATURES = [
+    { label: t('landing.featuresDropdown.pipeline_label'), href: '/fonctionnalites/pipeline' },
+    { label: t('landing.featuresDropdown.commissions_label'), href: '/fonctionnalites/commissions' },
+    { label: t('landing.featuresDropdown.analytics_label'), href: '/fonctionnalites/analytics' },
+    { label: t('landing.featuresDropdown.branding_label'), href: '/fonctionnalites/personnalisation' },
+    { label: t('landing.featuresDropdown.tracking_label'), href: '/fonctionnalites/tracking' },
+  ];
+
   return (
-    <footer style={{ padding: mobile ? '40px 20px 28px' : '48px 48px 32px',background:C.s }}>
-      <div style={{ maxWidth:1100,margin:'0 auto' }}>
-        <div style={{ display:'flex',flexDirection: mobile ? 'column' : 'row',justifyContent:'space-between',alignItems:'flex-start',gap: mobile ? 32 : 0,marginBottom:32 }}>
+    <footer style={{ padding:mobile?'40px 20px 28px':'48px 48px 32px', background:C.s }}>
+      <div style={{ maxWidth:1100, margin:'0 auto' }}>
+        <div style={{ display:'flex',flexDirection:mobile?'column':'row',justifyContent:'space-between',alignItems:'flex-start',gap:mobile?32:0,marginBottom:32 }}>
           <div>
             <Logo size={28} white/>
-            <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300 }}>La plateforme de gestion de programme d’apporteurs d’affaires.</p>
+            <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300 }}>{t('landing.footer.tagline')}</p>
           </div>
-          <div style={{ display:'flex',flexWrap:'wrap',gap: mobile ? 32 : 48 }}>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:mobile?32:48 }}>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Fonctionnalités</div>
+              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.features')}</div>
               {FEATURES.map(f=><a key={f.href} href={f.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{f.label}</a>)}
             </div>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Ressources</div>
-              {['Marketplace','Blog','Guide','FAQ','Contact'].map(x=>(
-                <a key={x} href={x==='Marketplace'?'/marketplace':x==='Blog'?'/blog':'#'} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>
+              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.resources')}</div>
+              {['blog','guide','faq','contact'].map(key=>(
+                <a key={key} href={key==='blog'?'/blog':key==='marketplace'?'/marketplace':'#'} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+                  {t(`landing.footer.links.${key}`)}
+                </a>
               ))}
             </div>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>Légal</div>
-              {['CGV','Confidentialité','Mentions légales','RGPD'].map(x=><a key={x} href="#" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{x}</a>)}
+              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.legal')}</div>
+              {['cgv','privacy','legal','rgpd'].map(key=>(
+                <a key={key} href="#" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+                  {t(`landing.footer.links.${key}`)}
+                </a>
+              ))}
             </div>
           </div>
         </div>
-        <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',flexDirection: mobile ? 'column' : 'row',justifyContent:'space-between',gap:8 }}>
-          <div style={{ color:'#475569',fontSize:12 }}>© 2026 RefBoost. Tous droits réservés.</div>
-          <div style={{ color:'#475569',fontSize:12 }}>Fait avec soin en France</div>
+        <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',flexDirection:mobile?'column':'row',justifyContent:'space-between',alignItems:mobile?'flex-start':'center',gap:12 }}>
+          <div style={{ color:'#475569',fontSize:12 }}>{t('landing.footer.copyright')}</div>
+          <LanguageSwitcher direction="up" dark={true}/>
+          <div style={{ color:'#475569',fontSize:12 }}>{t('landing.footer.madeIn')}</div>
         </div>
       </div>
     </footer>

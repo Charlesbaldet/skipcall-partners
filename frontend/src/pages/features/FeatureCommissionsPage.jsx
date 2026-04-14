@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
 const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
@@ -102,38 +103,20 @@ const ILLUS = [
 ];
 
 export default function FeatureCommissionsPage() {
+  const { t } = useTranslation();
+  const d = t('features.commissions', { returnObjects: true });
+  const benefits = d.benefits.map((b, i) => ({ ...b, illustration: ILLUS[i] }));
+
   return (
     <FeaturePageTemplate
-      helmet={{ title: 'Commissions automatiques — RefBoost', description: 'Calcul automatique des primes selon vos règles. Validation en un clic, historique complet, paiements traçables. Fini les tableurs.', canonical: 'https://refboost.io/fonctionnalites/commissions' }}
+      helmet={{ title: d.helmet_title, description: d.helmet_desc, canonical: 'https://refboost.io/fonctionnalites/commissions' }}
       accentColor="#f59e0b"
-      label="Fonctionnalité"
-      title="Commissions automatiques"
-      subtitle="Définissez vos règles une fois. RefBoost calcule, valide et trace chaque commission sans intervention manuelle."
+      label={t('features.label')}
+      title={d.title}
+      subtitle={d.subtitle}
       mockupSvg={MOCKUP}
-      benefits={[
-        {
-          stat: '0', statLabel: 'erreur de calcul depuis l’adoption de RefBoost (données clients)',
-          title: 'Calcul automatique selon vos règles',
-          text: 'Fixez votre grille de commissions une fois — taux fixe, pourcentage du MRR, paliers progressifs — et RefBoost calcule automatiquement la prime à chaque deal validé. Plus de tableur, plus d’erreur.',
-          points: ['Taux configurables par apporteur, segment ou volume', 'Paliers progressifs : 8% jusqu’à 5 deals/mois, 12% au-delà', 'Commission sur la première vente ou récurrente sur abonnement', 'Calcul instantané dès la mise à jour du statut "Signé"'],
-          illustration: ILLUS[0]
-        },
-        {
-          stat: '100%', statLabel: 'de vos règles métier modélisables sans développement',
-          title: 'Règles flexibles et auditables',
-          text: 'Chaque règle de commission est documentée, horodatée et traçable. Vos apporteurs voient exactement comment leur rémunération est calculée. La transparence crée la confiance.',
-          points: ['Interface no-code pour créer et modifier les règles', 'Historique complet de chaque modification de règle', 'Simulation du gain attendu avant validation d’un deal', 'Différentes règles par type de deal ou de partenaire'],
-          illustration: ILLUS[1]
-        },
-        {
-          stat: '< 5min', statLabel: 'pour exporter et synchroniser avec votre comptabilité',
-          title: 'Export et intégrations comptabilité',
-          text: 'Générez vos états de commissions en un clic, exportez vers votre logiciel comptable et envoyez les détails directement aux apporteurs. Fin du mois sans friction.',
-          points: ['Export CSV/PDF des commissions par période ou par apporteur', 'Intégration Zapier pour synchronisation automatique', 'Emails automatiques aux apporteurs avec détail du calcul', 'Archivage réglementaire conforme RGPD'],
-          illustration: ILLUS[2]
-        }
-      ]}
-      quote={{ text: 'Fini les tableurs pour tracker les commissions. Tout est automatisé, transparent, et nos partenaires sont ravis de recevoir leurs calculs détaillés chaque mois.', author: 'Sophie M., Head of Partnerships — DataViz Pro' }}
+      benefits={benefits}
+      quote={d.quote}
       currentHref="/fonctionnalites/commissions"
     />
   );
