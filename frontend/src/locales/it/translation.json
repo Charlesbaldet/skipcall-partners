@@ -1134,7 +1134,7 @@
     "branding_domain": "Dominio personalizzato",
     "branding_save": "Salva identità",
     "branding_saving": "Salvataggio...",
-    "branding_saved": "Identità salvata ✓",
+    "branding_saved": "Aspetto salvato!",
     "program_section": "Programma partner",
     "program_name": "Nome del programma",
     "program_desc": "Descrizione",
@@ -1198,7 +1198,29 @@
     "integrations_webhook_desc": "Ricevi notifiche in tempo reale",
     "integrations_webhook_ph": "https://il-tuo-webhook.com",
     "public_link_desc": "I partner possono iscriversi tramite questo link",
-    "revenue_model": "Modello di ricavo"
+    "revenue_model": "Modello di ricavo",
+    "create": "Crea",
+    "creating": "Creazione...",
+    "sending": "Invio...",
+    "member_added": "Membro aggiunto!",
+    "member_removed": "Membro rimosso!",
+    "invite_sent": "Invito inviato!",
+    "temp_password": "Password temporanea",
+    "delete_user_confirm": "Eliminare questo utente?",
+    "api_generate": "Genera",
+    "api_key_create": "Crea chiave API",
+    "api_key_copied": "Chiave copiata!",
+    "webhook_saved": "Webhook salvato!",
+    "confirm_remove_superadmin": "Rimuovere {{name}} dai super admin?",
+    "revenue_deals": "Numero di deal vinti",
+    "revenue_volume": "Volume d'affari (€)",
+    "revenue_fixed": "Commissione fissa",
+    "email_col": "Email",
+    "name_col": "Nome",
+    "status_col": "Stato",
+    "actions_col": "Azioni",
+    "pending": "In attesa",
+    "active": "Attivo"
   },
   "status": {
     "new": "Nuovo",
@@ -1252,6 +1274,8 @@
     "create_partner": "Crea partner →",
     "user_created": "Utente creato con successo",
     "partner_added": "Partner aggiunto con successo",
-    "config_saved": "Configurazione salvata"
+    "config_saved": "Configurazione salvata",
+    "level_name": "Nome del livello",
+    "team_label": "team"
   }
 }
