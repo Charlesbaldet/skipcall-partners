@@ -1312,7 +1312,18 @@
     "sector": "Secteur *",
     "icp": "ICP principal",
     "short_description": "Description courte *",
-    "marketplace_visible": "Apparaître sur la marketplace"
+    "marketplace_visible": "Apparaître sur la marketplace",
+    "createPartner_desc_long": "Ajoute un partenaire (apporteur d'affaires). Il aura accès à son propre espace pour soumettre des leads.",
+    "customize_desc_long": "Adapte les couleurs à ta marque (optionnel — tu pourras changer plus tard dans Paramètres).",
+    "customize_company_placeholder": "Ton entreprise",
+    "customize_revenue_label": "Modèle de revenus",
+    "marketplace_desc_long": "Renseignez vos informations pour apparaître sur la marketplace. Modifiable à tout moment dans les Paramètres.",
+    "marketplace_choose": "-- Choisir --",
+    "marketplace_website_placeholder": "https://votre-site.com",
+    "marketplace_icp_placeholder": "Ex : PME, startups B2B…",
+    "marketplace_description_placeholder": "Décrivez votre service en 2-3 phrases…",
+    "marketplace_active": "Actif",
+    "marketplace_inactive": "Inactif"
   },
   "blog": {
     "subtitle": "Conseils & Ressources",
