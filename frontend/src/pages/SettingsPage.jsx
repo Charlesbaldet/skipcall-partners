@@ -22,6 +22,7 @@ const ROLE_CONFIG = {
 const SECTORS_MKT = ['SaaS / Logiciel','Conseil & Services','Finance & Fintech','RH & Recrutement','Marketing & Communication','Immobilier','Santé','E-commerce','Formation','Juridique','Comptabilité','Industrie','Autre'];
 
 function MarketplaceTab() {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState({ sector:'', website:'', icp:'', short_description:'', marketplace_visible:false });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
