@@ -12,7 +12,8 @@
     "restore": "Réactiver",
     "close": "Fermer",
     "no_data": "Aucune donnée",
-    "edit": "Modifier"
+    "edit": "Modifier",
+    "optional": "optionnel"
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -1167,7 +1168,15 @@
     "password_updated": "Mot de passe mis à jour !",
     "update": "Mettre à jour",
     "copy_link": "Copier le lien",
-    "confirm_delete_level": "Supprimer ce niveau ? Les partenaires seront recalculés."
+    "confirm_delete_level": "Supprimer ce niveau ? Les partenaires seront recalculés.",
+    "marketplace_hidden": "Votre programme est masqué",
+    "marketplace_website": "Site web",
+    "marketplace_icp": "ICP principal",
+    "marketplace_choose_sector": "— Choisir un secteur —",
+    "marketplace_website_ph": "https://votre-site.com",
+    "marketplace_target_ph": "Ex: PME françaises, startups SaaS B2B...",
+    "marketplace_desc_ph": "Décrivez votre service en 2-3 phrases...",
+    "marketplace_chars": "caractères"
   },
   "status": {
     "new": "Nouveau",
