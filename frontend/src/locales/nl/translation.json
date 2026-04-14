@@ -1324,6 +1324,9 @@
     "home": "Home",
     "by": "Door",
     "tags": "Tags",
-    "read_time": "min lezen"
+    "read_time": "min lezen",
+    "page_subtitle": "Alles wat u moet weten over B2B-affiliateprogramma's, partnerprogramma's en groei.",
+    "filter_all": "Alle",
+    "read_article": "Artikel lezen →"
   }
 }
