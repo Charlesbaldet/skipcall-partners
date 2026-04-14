@@ -214,7 +214,7 @@ function AccountTab({ user }) {
         </div>
         <div><label style={labelStyle}>{t('changePwd.new_pwd')}</label><input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder={t('settings.password_min8')} style={inputStyle} /></div>
         <div><label style={labelStyle}>{t('changePwd.confirm')}</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} style={inputStyle} /></div>
-        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}</button>
+        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? t('settings.saving') : t('settings.update')}</button>
       </div>
     </div>
   );
@@ -574,7 +574,7 @@ function PublicLinkTab() {
             color: copied === 'link' ? '#166534' : '#fff',
             fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
           }}>
-            {copied === 'link' ? <><CheckCircle size={14}/> Copié</> : <><Copy size={14}/> Copier</>}
+            {copied === 'link' ? <><CheckCircle size={14}/>{t('settings.link_copied')}</> : <><Copy size={14}/>{t('settings.copy_link')}</>}
           </button>
         </div>
         <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Tu peux le mettre dans tes emails, signatures, posts LinkedIn, etc.</p>
@@ -590,7 +590,7 @@ function PublicLinkTab() {
             color: copied === 'embed' ? '#166534' : '#fff',
             fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
           }}>
-            {copied === 'embed' ? <><CheckCircle size={14}/> Copié</> : <><Copy size={14}/> Copier le code</>}
+            {copied === 'embed' ? <><CheckCircle size={14}/>{t('settings.link_copied')}</> : <><Copy size={14}/> Copier le code</>}
           </button>
         </div>
         <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Colle ce snippet dans ton site (WordPress, Webflow, Notion, etc.) pour intégrer le formulaire directement.</p>
@@ -777,7 +777,7 @@ function ProgramTab() {
   };
 
   const del = async (id) => {
-    if (!window.confirm('Supprimer ce niveau ? Les partenaires seront recalculés.')) return;
+    if (!window.confirm(t('settings.confirm_delete_level'))) return;
     try {
       await api.deleteTenantLevel(id);
       load();
@@ -875,7 +875,7 @@ function ProgramTab() {
             <div style={{ width: 40, height: 40, borderRadius: 10, background: (l.color || '#94a3b8') + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{l.icon || '⭐'}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: l.color || '#0f172a', fontSize: 15 }}>{l.name}</div>
-              <div style={{ color: '#64748b', fontSize: 12 }}>À partir de {parseFloat(l.min_threshold)} {unitLabel} · {parseFloat(l.commission_rate)}% de commission</div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>{t('programme.level_desc', {min: parseFloat(l.min_threshold), unit: unitLabel, rate: parseFloat(l.commission_rate)})}</div>
             </div>
             <button onClick={() => startEdit(l)} title="Éditer" style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef2ff', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#6366f1" /></button>
             <button onClick={() => del(l.id)} title="Supprimer" style={{ padding: 8, borderRadius: 8, border: 'none', background: '#fef2f2', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
