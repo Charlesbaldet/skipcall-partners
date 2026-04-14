@@ -1003,7 +1003,14 @@
     "reset_defaults": "Terugzetten naar standaardwaarden",
     "reset_confirm": "Terugzetten naar standaardwaarden? Je aangepaste niveaus worden verwijderd.",
     "delete_confirm": "Dit niveau verwijderen? Partners behouden hun huidige niveau.",
-    "level_name_placeholder": "Brons, Diamant..."
+    "level_name_placeholder": "Brons, Diamant...",
+    "unit_deals": "gewonnen deals",
+    "unit_volume": "€ gegenereerd",
+    "threshold_deals": "Gewonnen deals vereist",
+    "threshold_volume": "Omzet (€) vereist",
+    "name_required": "Naam is verplicht",
+    "level_saved": "Niveau opgeslagen ✓",
+    "reset_done": "Teruggezet naar standaardwaarden"
   },
   "publicApply": {
     "title": "Word lid van het programma",
