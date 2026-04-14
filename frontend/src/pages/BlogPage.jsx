@@ -31,10 +31,10 @@ function BlogCard({ post }) {
         {post.excerpt && <p style={{ margin: 0, fontSize: 14, color: C.m, lineHeight: 1.6, flex: 1 }}>{post.excerpt}</p>}
         <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           <time dateTime={post.published_at} style={{ fontSize: 13, color: C.m }}>{formatDate(post.published_at)}</time>
-          <span style={{ fontSize: 13, color: C.m }}>{post.reading_time_minutes} min de lecture</span>
+          <span style={{ fontSize: 13, color: C.m }}>{post.reading_time_minutes} ` ${t('blog.read_time')}`</span>
         </footer>
         <Link to={'/blog/' + post.slug} style={{ marginTop: 4, fontSize: 14, fontWeight: 600, color: C.p, textDecoration: 'none' }}>
-          Lire l'article →
+          {t('blog.read_article')}
         </Link>
       </div>
     </article>
@@ -79,9 +79,9 @@ export default function BlogPage() {
       {/* Hero */}
       <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '72px 48px 64px', textAlign: 'center' }}>
         <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 2 }}>Blog</p>
-        <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>{t('blog.subtitle')}</h1>
+        <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>Conseils & Ressources</h1>
         <p style={{ margin: '0 auto', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
-          Tout ce qu'il faut savoir sur l'affiliation B2B, les programmes partenaires et la croissance.
+          {t('blog.page_subtitle')}
         </p>
       </section>
 
@@ -103,11 +103,11 @@ export default function BlogPage() {
 
         {/* Grille */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 80, color: C.m }}>{t('blog.loading')}</div>
+          <div style={{ textAlign: 'center', padding: 80, color: C.m }}>Chargement…</div>
         ) : posts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80 }}>
-            <p style={{ fontSize: 18, color: C.m }}>{t('blog.no_posts')}</p>
-            <p style={{ color: C.m, fontSize: 14 }}>{t('blog.come_back')}</p>
+            <p style={{ fontSize: 18, color: C.m }}>Aucun article pour le moment.</p>
+            <p style={{ color: C.m, fontSize: 14 }}>Revenez bientôt !</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 28 }}>
