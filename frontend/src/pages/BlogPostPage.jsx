@@ -14,6 +14,7 @@ function formatDate(iso) {
 }
 
 export default function BlogPostPage() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
