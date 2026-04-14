@@ -11,7 +11,8 @@
     "archive": "Archiveren",
     "restore": "Herstellen",
     "close": "Sluiten",
-    "no_data": "Geen gegevens"
+    "no_data": "Geen gegevens",
+    "edit": "Bewerken"
   },
   "nav": {
     "features": "Functies",
@@ -979,7 +980,7 @@
     "level_name": "Niveaunaam",
     "level_icon": "Pictogram",
     "level_color": "Kleur",
-    "level_rate": "Tarief (%)",
+    "level_rate": "Commissie (%)",
     "level_min": "Min. deals",
     "save": "Wijzigingen opslaan",
     "saving": "Opslaan...",
@@ -1001,7 +1002,8 @@
     "crit_volume": "💰 Zakelijk volume (€)",
     "reset_defaults": "Terugzetten naar standaardwaarden",
     "reset_confirm": "Terugzetten naar standaardwaarden? Je aangepaste niveaus worden verwijderd.",
-    "delete_confirm": "Dit niveau verwijderen? Partners behouden hun huidige niveau."
+    "delete_confirm": "Dit niveau verwijderen? Partners behouden hun huidige niveau.",
+    "level_name_placeholder": "Brons, Diamant..."
   },
   "publicApply": {
     "title": "Word lid van het programma",
@@ -1141,7 +1143,15 @@
     "add": "Toevoegen",
     "branding_desc": "Pas kleuren en logo van je partnerruimte aan. Deze instellingen worden overal toegepast: zijbalk, interface, enz.",
     "level_saved": "Niveau opgeslagen ✓",
-    "levels_reset_confirm": "Terugzetten naar standaardwaarden (Bronze/Silver/Gold/Platinum)? Je aangepaste niveaus worden gewist."
+    "levels_reset_confirm": "Terugzetten naar standaardwaarden (Bronze/Silver/Gold/Platinum)? Je aangepaste niveaus worden gewist.",
+    "tab_account": "Mijn account",
+    "tab_members": "Leden",
+    "tab_marketplace": "Marketplace",
+    "tab_integrations": "Integraties",
+    "tab_public_link": "Openbare link",
+    "tab_appearance": "Uiterlijk",
+    "tab_program": "Programma",
+    "invite": "Uitnodigen"
   },
   "status": {
     "new": "Nieuw",
