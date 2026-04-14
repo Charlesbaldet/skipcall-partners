@@ -11,7 +11,8 @@
     "archive": "Archivar",
     "restore": "Reactivar",
     "close": "Cerrar",
-    "no_data": "Sin datos"
+    "no_data": "Sin datos",
+    "edit": "Editar"
   },
   "nav": {
     "features": "Funcionalidades",
@@ -979,11 +980,11 @@
     "level_name": "Nombre del nivel",
     "level_icon": "Icono",
     "level_color": "Color",
-    "level_rate": "Tasa (%)",
+    "level_rate": "Comisión (%)",
     "level_min": "Deals mín.",
     "save": "Guardar cambios",
     "saving": "Guardando...",
-    "add_level": "+ Añadir nivel",
+    "add_level": "+ Añadir un nivel",
     "delete_level": "Eliminar",
     "no_levels": "Sin niveles configurados",
     "saved": "Guardado ✓",
@@ -1001,7 +1002,8 @@
     "crit_volume": "💰 Volumen de negocio (€)",
     "reset_defaults": "Restablecer valores predeterminados",
     "reset_confirm": "¿Restablecer a los valores predeterminados? Tus niveles personalizados se eliminarán.",
-    "delete_confirm": "¿Eliminar este nivel? Los socios conservarán su nivel actual."
+    "delete_confirm": "¿Eliminar este nivel? Los socios conservarán su nivel actual.",
+    "level_name_placeholder": "Bronce, Diamante..."
   },
   "publicApply": {
     "title": "Unirse al programa",
@@ -1141,7 +1143,15 @@
     "add": "Añadir",
     "branding_desc": "Personaliza los colores y el logotipo de tu espacio de socios. Estos ajustes se aplican en todas partes: barra lateral, interfaz, etc.",
     "level_saved": "Nivel guardado ✓",
-    "levels_reset_confirm": "¿Restablecer a los valores predeterminados (Bronze/Silver/Gold/Platinum)? Tus niveles personalizados serán eliminados."
+    "levels_reset_confirm": "¿Restablecer a los valores predeterminados (Bronze/Silver/Gold/Platinum)? Tus niveles personalizados serán eliminados.",
+    "tab_account": "Mi cuenta",
+    "tab_members": "Miembros",
+    "tab_marketplace": "Marketplace",
+    "tab_integrations": "Integraciones",
+    "tab_public_link": "Enlace público",
+    "tab_appearance": "Apariencia",
+    "tab_program": "Programa",
+    "invite": "Invitar"
   },
   "status": {
     "new": "Nuevo",
