@@ -1237,7 +1237,8 @@
     "revenue_mrr": "MRR — Ricavi ricorrenti (SaaS)",
     "revenue_deals_opt": "Numero di deal (commissione per deal)",
     "logo_ph": "https://esempio.com/logo.png",
-    "logo_hint": "Incolla l'URL di un'immagine ospitata. Formato consigliato: PNG trasparente, altezza ~80px."
+    "logo_hint": "Incolla l'URL di un'immagine ospitata. Formato consigliato: PNG trasparente, altezza ~80px.",
+    "confirm_remove_member": "Rimuovere questo membro?"
   },
   "status": {
     "new": "Nuovo",
