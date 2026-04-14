@@ -817,13 +817,13 @@ function ProgramTab() {
           <input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Bronze, Diamant..." />
         </div>
         <div>
-          <label style={labelStyle}>Icône</label>
+          <label style={labelStyle}>{t('programme.level_icon')}</label>
           <input style={{ ...inputStyle, textAlign: 'center', fontSize: 18 }} value={form.icon} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} maxLength="2" />
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr', gap: 10, marginBottom: 12 }}>
         <div>
-          <label style={labelStyle}>Couleur</label>
+          <label style={labelStyle}>{t('programme.level_color')}</label>
           <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} style={{ ...inputStyle, height: 36, padding: 2, cursor: 'pointer' }} />
         </div>
         <div>
@@ -831,7 +831,7 @@ function ProgramTab() {
           <input type="number" min="0" step={isDeal ? '1' : '100'} style={inputStyle} value={form.min_threshold} onChange={e => setForm(f => ({ ...f, min_threshold: parseFloat(e.target.value) || 0 }))} />
         </div>
         <div>
-          <label style={labelStyle}>Commission (%)</label>
+          <label style={labelStyle}>{t('programme.level_rate')}</label>
           <input type="number" min="0" max="100" step="0.5" style={inputStyle} value={form.commission_rate} onChange={e => setForm(f => ({ ...f, commission_rate: parseFloat(e.target.value) || 0 }))} />
         </div>
       </div>
