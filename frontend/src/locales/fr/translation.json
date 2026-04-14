@@ -1324,6 +1324,9 @@
     "home": "Accueil",
     "by": "Par",
     "tags": "Tags",
-    "read_time": "min de lecture"
+    "read_time": "min de lecture",
+    "page_subtitle": "Tout ce qu'il faut savoir sur l'affiliation B2B, les programmes partenaires et la croissance.",
+    "filter_all": "Tous",
+    "read_article": "Lire l'article →"
   }
 }
