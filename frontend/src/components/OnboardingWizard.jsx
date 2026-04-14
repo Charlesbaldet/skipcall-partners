@@ -8,12 +8,12 @@ const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 const STEPS = [
   { id: 'welcome',       icon: Sparkles,  title: 'Bienvenue sur RefBoost ð' },
-  { id: 'createUser',    icon: Users,     title: 'CrÃ©e ton Ã©quipe' },
+  { id: 'createUser',    icon: Users,     title: 'Crée ton équipe' },
   { id: 'createPartner', icon: UserPlus,  title: 'Invite ton premier partenaire' },
   { id: 'customize',     icon: Palette,   title: 'Personnalise ton espace' },
   { id: 'publicLink',    icon: Link2,     title: 'Ton lien d\'inscription public' },
   { id: 'marketplace',  icon: Store,     title: 'Votre programme sur la marketplace' },
-  { id: 'done',          icon: Rocket,    title: 'Tout est prÃªt ð' },
+  { id: 'done',          icon: Rocket,    title: 'Tout est prêt ð' },
 ];
 
 export default function OnboardingWizard({ onClose }) {
@@ -199,12 +199,12 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 1 && createdUser && (
-            <SuccessBox text={'Utilisateur crÃ©Ã© !'} code={'â Identifiants envoyÃ©s par email Ã  ' + createdUser.email} />
+            <SuccessBox text={'Utilisateur créé !'} code={'â Identifiants envoyés par email à ' + createdUser.email} />
           )}
 
           {step === 2 && !createdPartner && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Ajoute un partenaire (apporteur d'affaires). Il aura accÃ¨s Ã  son propre espace pour soumettre des leads.</p>
+              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Ajoute un partenaire (apporteur d'affaires). Il aura accès à son propre espace pour soumettre des leads.</p>
               <Field label={t('onboarding.company_name')}><Input value={partnerForm.name} onChange={v => setPartnerForm({...partnerForm, name: v})} placeholder="Acme Consulting" /></Field>
               <Field label={t('onboarding.contact_name')}><Input value={partnerForm.contact_name} onChange={v => setPartnerForm({...partnerForm, contact_name: v})} placeholder="Marie Dupont" /></Field>
               <Field label={t('onboarding.email')}><Input type="email" value={partnerForm.email} onChange={v => setPartnerForm({...partnerForm, email: v})} placeholder="marie@acme.com" /></Field>
@@ -216,12 +216,12 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 2 && createdPartner && (
-            <SuccessBox text={t('onboarding.partner_added')} code={'â Identifiants envoyÃ©s par email Ã  ' + createdPartner.email} />
+            <SuccessBox text={t('onboarding.partner_added')} code={'â Identifiants envoyés par email à ' + createdPartner.email} />
           )}
 
           {step === 3 && !customized && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Adapte les couleurs Ã  ta marque (optionnel â tu pourras changer plus tard dans ParamÃ¨tres).</p>
+              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Adapte les couleurs à ta marque (optionnel — tu pourras changer plus tard dans Paramètres).</p>
               <Field label={t('onboarding.company_name')}><Input value={customizeForm.name} onChange={v => setCustomizeForm({...customizeForm, name: v})} placeholder="Ton entreprise" /></Field>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <Field label={t('settings.branding_primary')}>
@@ -235,12 +235,12 @@ export default function OnboardingWizard({ onClose }) {
                     style={{ ...inputStyle, height: 44, padding: 4 }} />
                 </Field>
               </div>
-              <Field label="ModÃ¨le de revenus"><select value={customizeForm.revenue_model} onChange={e => setCustomizeForm({...customizeForm, revenue_model: e.target.value})} style={inputStyle}><option value="MRR">{t('onboarding.mrr_label')}</option><option value="ARR">{t('onboarding.arr_label')}</option><option value="CA">{t('onboarding.ca_label')}</option><option value="Other">Autre</option></select></Field>
+              <Field label="Modèle de revenus"><select value={customizeForm.revenue_model} onChange={e => setCustomizeForm({...customizeForm, revenue_model: e.target.value})} style={inputStyle}><option value="MRR">{t('onboarding.mrr_label')}</option><option value="ARR">{t('onboarding.arr_label')}</option><option value="CA">{t('onboarding.ca_label')}</option><option value="Other">Autre</option></select></Field>
             </div>
           )}
           {step === 3 && customized && (
             <div style={{ textAlign: 'center', padding: 20, background: '#f0fdf4', borderRadius: 12, color: '#166534' }}>
-              â Ton espace est personnalisÃ© !
+              â Ton espace est personnalisé !
             </div>
           )}
 
@@ -362,4 +362,4 @@ function SuccessBox({ text, code }) {
       <code style={{ display: 'inline-block', padding: '8px 14px', background: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#0f172a', border: '1px solid #bbf7d0' }}>{code}</code>
     </div>
   );
-}
+        }
