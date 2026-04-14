@@ -1010,7 +1010,8 @@
     "threshold_volume": "Omzet (€) vereist",
     "name_required": "Naam is verplicht",
     "level_saved": "Niveau opgeslagen ✓",
-    "reset_done": "Teruggezet naar standaardwaarden"
+    "reset_done": "Teruggezet naar standaardwaarden",
+    "level_desc": "Vanaf {{min}} {{unit}} · {{rate}}% commissie"
   },
   "publicApply": {
     "title": "Word lid van het programma",
@@ -1161,7 +1162,11 @@
     "invite": "Uitnodigen",
     "invite_superadmin": "Beheerder uitnodigen",
     "link_copied": "Link gekopieerd!",
-    "field_required": "Verplicht veld"
+    "field_required": "Verplicht veld",
+    "password_min8": "Minimaal 8 tekens",
+    "password_updated": "Wachtwoord bijgewerkt!",
+    "update": "Bijwerken",
+    "copy_link": "Link kopiëren"
   },
   "status": {
     "new": "Nieuw",
