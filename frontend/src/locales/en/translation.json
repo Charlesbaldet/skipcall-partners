@@ -1324,6 +1324,9 @@
     "home": "Home",
     "by": "By",
     "tags": "Tags",
-    "read_time": "min read"
+    "read_time": "min read",
+    "page_subtitle": "Everything you need to know about B2B affiliate programs, partner programs and growth.",
+    "filter_all": "All",
+    "read_article": "Read article →"
   }
 }
