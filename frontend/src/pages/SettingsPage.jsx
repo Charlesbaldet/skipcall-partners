@@ -764,7 +764,7 @@ function ProgramTab() {
   };
 
   const save = async () => {
-    if (!form.name) { setMsg({ type: 'error', text: 'Le nom est requis' }); return; }
+    if (!form.name) { setMsg({ type: 'error', text: t('programme.name_required') }); return; }
     try {
       if (editing === 'new') {
         await api.createTenantLevel({ ...form, position: data.levels.length });
