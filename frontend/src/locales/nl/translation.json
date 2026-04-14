@@ -1176,7 +1176,8 @@
     "marketplace_website_ph": "https://jouw-website.nl",
     "marketplace_target_ph": "Bijv: B2B MKB, SaaS Startups...",
     "marketplace_desc_ph": "Beschrijf je dienst in 2-3 zinnen...",
-    "marketplace_chars": "tekens"
+    "marketplace_chars": "tekens",
+    "public_link_title": "Openbare aanmeldingslink"
   },
   "status": {
     "new": "Nieuw",
