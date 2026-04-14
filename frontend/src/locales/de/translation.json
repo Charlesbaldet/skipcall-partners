@@ -1177,7 +1177,8 @@
     "marketplace_target_ph": "Z.B.: B2B KMUs, SaaS-Startups...",
     "marketplace_desc_ph": "Beschreibe deinen Service in 2-3 Sätzen...",
     "marketplace_chars": "Zeichen",
-    "public_link_title": "Öffentlicher Anmeldelink"
+    "public_link_title": "Öffentlicher Anmeldelink",
+    "marketplace_visible_shown": "✅ Dein Programm wird öffentlich angezeigt"
   },
   "status": {
     "new": "Neu",
