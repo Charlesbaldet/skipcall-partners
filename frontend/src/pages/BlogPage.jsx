@@ -43,6 +43,7 @@ function BlogCard({ post }) {
 
 export default function BlogPage() {
   const { t } = useTranslation();
+  const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('');
