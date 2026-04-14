@@ -1158,7 +1158,10 @@
     "tab_public_link": "Public link",
     "tab_appearance": "Appearance",
     "tab_program": "Program",
-    "invite": "Invite"
+    "invite": "Invite",
+    "invite_superadmin": "Invite a super administrator",
+    "link_copied": "Link copied!",
+    "field_required": "Required field"
   },
   "status": {
     "new": "New",
