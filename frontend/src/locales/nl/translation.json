@@ -1158,7 +1158,10 @@
     "tab_public_link": "Openbare link",
     "tab_appearance": "Uiterlijk",
     "tab_program": "Programma",
-    "invite": "Uitnodigen"
+    "invite": "Uitnodigen",
+    "invite_superadmin": "Beheerder uitnodigen",
+    "link_copied": "Link gekopieerd!",
+    "field_required": "Verplicht veld"
   },
   "status": {
     "new": "Nieuw",
