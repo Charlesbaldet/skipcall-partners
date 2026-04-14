@@ -1003,7 +1003,14 @@
     "reset_defaults": "Restablecer valores predeterminados",
     "reset_confirm": "¿Restablecer a los valores predeterminados? Tus niveles personalizados se eliminarán.",
     "delete_confirm": "¿Eliminar este nivel? Los socios conservarán su nivel actual.",
-    "level_name_placeholder": "Bronce, Diamante..."
+    "level_name_placeholder": "Bronce, Diamante...",
+    "unit_deals": "deals ganados",
+    "unit_volume": "€ generados",
+    "threshold_deals": "Deals ganados requeridos",
+    "threshold_volume": "Volumen (€) requerido",
+    "name_required": "El nombre es obligatorio",
+    "level_saved": "Nivel guardado ✓",
+    "reset_done": "Restablecido a los valores por defecto"
   },
   "publicApply": {
     "title": "Unirse al programa",
