@@ -130,7 +130,7 @@ export default function OnboardingWizard({ onClose }) {
     if (step === 1 && createdUser) return 'Continuer →';
     if (step === 2 && !createdPartner) return t('onboarding.create_partner');
     if (step === 2 && createdPartner) return 'Continuer →';
-    if (step === 3 && !customized) return 'Sauvegarder →';
+    if (step === 3 && !customized) return t('settings.save')+' →';
     if (step === 3 && customized) return 'Continuer →';
     if (isLast) return 'C\'est parti !';
     return 'Continuer →';
@@ -208,7 +208,7 @@ export default function OnboardingWizard({ onClose }) {
               <Field label={t('onboarding.company_name')}><Input value={partnerForm.name} onChange={v => setPartnerForm({...partnerForm, name: v})} placeholder="Acme Consulting" /></Field>
               <Field label={t('onboarding.contact_name')}><Input value={partnerForm.contact_name} onChange={v => setPartnerForm({...partnerForm, contact_name: v})} placeholder="Marie Dupont" /></Field>
               <Field label={t('onboarding.email')}><Input type="email" value={partnerForm.email} onChange={v => setPartnerForm({...partnerForm, email: v})} placeholder="marie@acme.com" /></Field>
-              <Field label="Taux de commission (%)">
+              <Field label={t('programme.level_rate')}>
                 <input type="number" min="0" max="50" value={partnerForm.commission_rate}
                   onChange={e => setPartnerForm({...partnerForm, commission_rate: parseFloat(e.target.value) || 0})}
                   style={inputStyle} />
@@ -216,15 +216,15 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 2 && createdPartner && (
-            <SuccessBox text={'Partenaire créé !'} code={'✓ Identifiants envoyés par email à ' + createdPartner.email} />
+            <SuccessBox text={t('onboarding.partner_added')} code={'✓ Identifiants envoyés par email à ' + createdPartner.email} />
           )}
 
           {step === 3 && !customized && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Adapte les couleurs à ta marque (optionnel — tu pourras changer plus tard dans Paramètres).</p>
-              <Field label="Nom de l'entreprise affiché"><Input value={customizeForm.name} onChange={v => setCustomizeForm({...customizeForm, name: v})} placeholder="Ton entreprise" /></Field>
+              <Field label={t('onboarding.company_name')}><Input value={customizeForm.name} onChange={v => setCustomizeForm({...customizeForm, name: v})} placeholder="Ton entreprise" /></Field>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <Field label="Couleur principale">
+                <Field label={t('settings.branding_primary')}>
                   <input type="color" value={customizeForm.primary_color}
                     onChange={e => setCustomizeForm({...customizeForm, primary_color: e.target.value})}
                     style={{ ...inputStyle, height: 44, padding: 4 }} />
@@ -254,7 +254,7 @@ export default function OnboardingWizard({ onClose }) {
                   background: copied ? '#dcfce7' : '#059669', color: copied ? '#166534' : '#fff',
                   fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
                 }}>
-                  {copied ? <><Check size={14}/> Copié</> : <><Copy size={14}/> Copier</>}
+                  {copied ? <><Check size={14}/>{t('settings.link_copied')}</> : <><Copy size={14}/>{t('settings.copy_link')}</>}
                 </button>
               </div>
             </div>
