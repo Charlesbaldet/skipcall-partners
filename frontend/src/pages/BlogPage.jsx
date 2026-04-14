@@ -14,6 +14,7 @@ function formatDate(iso) {
 }
 
 function BlogCard({ post }) {
+  const { t } = useTranslation();
   return (
     <article style={{ background: C.card, borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', transition: 'transform .2s, box-shadow .2s' }}
       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.12)';}}
