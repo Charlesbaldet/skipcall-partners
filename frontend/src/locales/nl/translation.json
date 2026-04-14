@@ -1312,7 +1312,18 @@
     "sector": "Sector *",
     "icp": "Hoofd-ICP",
     "short_description": "Korte beschrijving *",
-    "marketplace_visible": "Tonen in marketplace"
+    "marketplace_visible": "Tonen in marketplace",
+    "createPartner_desc_long": "Voeg een partner (zakelijke verwijzer) toe. Hij krijgt toegang tot zijn eigen ruimte om leads in te dienen.",
+    "customize_desc_long": "Pas de kleuren aan jouw merk aan (optioneel — je kunt dit later wijzigen in Instellingen).",
+    "customize_company_placeholder": "Jouw bedrijf",
+    "customize_revenue_label": "Omzetmodel",
+    "marketplace_desc_long": "Vul je gegevens in om op de marketplace te verschijnen. Op elk moment aan te passen in Instellingen.",
+    "marketplace_choose": "-- Kiezen --",
+    "marketplace_website_placeholder": "https://jouw-site.nl",
+    "marketplace_icp_placeholder": "Bijv. mkb, B2B-startups…",
+    "marketplace_description_placeholder": "Beschrijf je dienst in 2-3 zinnen…",
+    "marketplace_active": "Actief",
+    "marketplace_inactive": "Inactief"
   },
   "blog": {
     "subtitle": "Tips, strategieën & bronnen",
