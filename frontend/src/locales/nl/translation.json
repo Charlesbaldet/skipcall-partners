@@ -1134,7 +1134,7 @@
     "branding_domain": "Aangepast domein",
     "branding_save": "Huisstijl opslaan",
     "branding_saving": "Opslaan...",
-    "branding_saved": "Huisstijl opgeslagen ✓",
+    "branding_saved": "Uiterlijk opgeslagen!",
     "program_section": "Partnerprogramma",
     "program_name": "Programmanaam",
     "program_desc": "Beschrijving",
@@ -1198,7 +1198,29 @@
     "integrations_webhook_desc": "Ontvang realtime meldingen",
     "integrations_webhook_ph": "https://jouw-webhook.nl",
     "public_link_desc": "Partners kunnen zich aanmelden via deze link",
-    "revenue_model": "Inkomstenmodel"
+    "revenue_model": "Inkomstenmodel",
+    "create": "Aanmaken",
+    "creating": "Aanmaken...",
+    "sending": "Verzenden...",
+    "member_added": "Lid toegevoegd!",
+    "member_removed": "Lid verwijderd!",
+    "invite_sent": "Uitnodiging verzonden!",
+    "temp_password": "Tijdelijk wachtwoord",
+    "delete_user_confirm": "Deze gebruiker verwijderen?",
+    "api_generate": "Genereren",
+    "api_key_create": "API-sleutel aanmaken",
+    "api_key_copied": "Sleutel gekopieerd!",
+    "webhook_saved": "Webhook opgeslagen!",
+    "confirm_remove_superadmin": "{{name}} verwijderen uit super admins?",
+    "revenue_deals": "Aantal gewonnen deals",
+    "revenue_volume": "Omzetvolume (€)",
+    "revenue_fixed": "Vaste commissie",
+    "email_col": "E-mail",
+    "name_col": "Naam",
+    "status_col": "Status",
+    "actions_col": "Acties",
+    "pending": "In behandeling",
+    "active": "Actief"
   },
   "status": {
     "new": "Nieuw",
@@ -1252,6 +1274,8 @@
     "create_partner": "Partner aanmaken →",
     "user_created": "Gebruiker succesvol aangemaakt",
     "partner_added": "Partner succesvol toegevoegd",
-    "config_saved": "Configuratie opgeslagen"
+    "config_saved": "Configuratie opgeslagen",
+    "level_name": "Naam van het niveau",
+    "team_label": "team"
   }
 }
