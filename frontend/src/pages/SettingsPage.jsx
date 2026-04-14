@@ -223,6 +223,7 @@ function AccountTab({ user }) {
 
 // ═══ SUPER ADMINS (vue superadmin) ═══
 function SuperAdminsTab() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [superadmins, setSuperadmins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -441,6 +442,7 @@ function MembersTab() {
 
 // ═══ INTÉGRATIONS ═══
 function IntegrationsTab() {
+  const { t } = useTranslation();
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -536,6 +538,7 @@ function IntegrationsTab() {
 
 // ═══ LIEN PUBLIC ═══
 function PublicLinkTab() {
+  const { t } = useTranslation();
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(null);
