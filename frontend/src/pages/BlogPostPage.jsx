@@ -17,7 +17,6 @@ export default function BlogPostPage() {
   const { t } = useTranslation();
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -128,7 +127,7 @@ export default function BlogPostPage() {
             <span>·</span>
             <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
             <span>·</span>
-            <span>{post.reading_time_minutes || 5} ` ${t('blog.read_time')}`</span>
+            <span>{post.reading_time_minutes || 5} min de lecture</span>
           </div>
           {post.excerpt && (
             <p style={{ margin: '24px 0 0', fontSize: 18, color: C.m, lineHeight: 1.7, fontStyle: 'italic', borderLeft: '3px solid ' + C.p, paddingLeft: 20 }}>
