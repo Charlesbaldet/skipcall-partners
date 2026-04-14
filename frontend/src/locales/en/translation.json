@@ -1313,5 +1313,17 @@
     "icp": "Main ICP",
     "short_description": "Short description *",
     "marketplace_visible": "Show on marketplace"
+  },
+  "blog": {
+    "subtitle": "Tips, strategies and insights",
+    "loading": "Loading…",
+    "no_posts": "No articles yet.",
+    "come_back": "Come back soon!",
+    "not_found": "Article not found",
+    "back": "← Back to blog",
+    "home": "Home",
+    "by": "By",
+    "tags": "Tags",
+    "read_time": "min read"
   }
 }
