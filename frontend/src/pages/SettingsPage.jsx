@@ -169,7 +169,8 @@ export default function SettingsPage() {
 }
 
 // ═══ MON COMPTE ═══
-function AccountTab({ user }) {
+function AccountTab({
+  const { t } = useTranslation(); user }) {
   const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
@@ -316,6 +317,7 @@ function SuperAdminsTab() {
 
 // ═══ MEMBRES ═══
 function MembersTab() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
@@ -599,6 +601,7 @@ function PublicLinkTab() {
 
 // ═══ APPARENCE ═══
 function AppearanceTab() {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ name: '', revenue_model: 'CA', primary_color: '#059669', accent_color: '#f97316', logo_url: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -709,6 +712,7 @@ function AppearanceTab() {
 
 // ═══ PROGRAMME ═══
 function ProgramTab() {
+  const { t } = useTranslation();
   const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // level id or 'new'
