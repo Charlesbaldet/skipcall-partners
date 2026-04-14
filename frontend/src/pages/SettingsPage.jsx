@@ -686,7 +686,7 @@ function AppearanceTab() {
             <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
           </div>
           <div>
-            <label style={labelStyle}>Couleur d'accent</label>
+            <label style={labelStyle}>{t('settings.branding_accent')}</label>
             <input type="color" value={form.accent_color} onChange={e => setForm(f => ({ ...f, accent_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
           </div>
         </div>
