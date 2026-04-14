@@ -12,7 +12,8 @@
     "restore": "Restore",
     "close": "Close",
     "no_data": "No data",
-    "edit": "Edit"
+    "edit": "Edit",
+    "optional": "optional"
   },
   "nav": {
     "features": "Features",
@@ -1167,7 +1168,15 @@
     "password_updated": "Password updated!",
     "update": "Update",
     "copy_link": "Copy link",
-    "confirm_delete_level": "Delete this level? Partners will be recalculated."
+    "confirm_delete_level": "Delete this level? Partners will be recalculated.",
+    "marketplace_hidden": "Your program is hidden",
+    "marketplace_website": "Website",
+    "marketplace_icp": "Main ICP",
+    "marketplace_choose_sector": "— Choose a sector —",
+    "marketplace_website_ph": "https://your-site.com",
+    "marketplace_target_ph": "Ex: B2B SMEs, SaaS Startups...",
+    "marketplace_desc_ph": "Describe your service in 2-3 sentences...",
+    "marketplace_chars": "characters"
   },
   "status": {
     "new": "New",
