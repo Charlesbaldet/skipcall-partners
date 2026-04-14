@@ -1313,5 +1313,17 @@
     "icp": "ICP principal",
     "short_description": "Description courte *",
     "marketplace_visible": "Apparaître sur la marketplace"
+  },
+  "blog": {
+    "subtitle": "Conseils & Ressources",
+    "loading": "Chargement…",
+    "no_posts": "Aucun article pour le moment.",
+    "come_back": "Revenez bientôt !",
+    "not_found": "Article introuvable",
+    "back": "← Retour au blog",
+    "home": "Accueil",
+    "by": "Par",
+    "tags": "Tags",
+    "read_time": "min de lecture"
   }
 }
