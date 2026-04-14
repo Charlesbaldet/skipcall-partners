@@ -11,7 +11,8 @@
     "archive": "Archivia",
     "restore": "Riattiva",
     "close": "Chiudi",
-    "no_data": "Nessun dato"
+    "no_data": "Nessun dato",
+    "edit": "Modifica"
   },
   "nav": {
     "features": "Funzionalità",
@@ -979,11 +980,11 @@
     "level_name": "Nome livello",
     "level_icon": "Icona",
     "level_color": "Colore",
-    "level_rate": "Tasso (%)",
+    "level_rate": "Commissione (%)",
     "level_min": "Deal min.",
     "save": "Salva modifiche",
     "saving": "Salvataggio...",
-    "add_level": "+ Aggiungi livello",
+    "add_level": "+ Aggiungi un livello",
     "delete_level": "Elimina",
     "no_levels": "Nessun livello configurato",
     "saved": "Salvato ✓",
@@ -1001,7 +1002,8 @@
     "crit_volume": "💰 Volume d'affari (€)",
     "reset_defaults": "Reimposta ai valori predefiniti",
     "reset_confirm": "Reimposta ai valori predefiniti? I tuoi livelli personalizzati verranno eliminati.",
-    "delete_confirm": "Eliminare questo livello? I partner manterranno il loro livello attuale."
+    "delete_confirm": "Eliminare questo livello? I partner manterranno il loro livello attuale.",
+    "level_name_placeholder": "Bronzo, Diamante..."
   },
   "publicApply": {
     "title": "Unisciti al programma",
@@ -1141,7 +1143,15 @@
     "add": "Aggiungi",
     "branding_desc": "Personalizza i colori e il logo del tuo spazio partner. Queste impostazioni si applicano ovunque: barra laterale, interfaccia, ecc.",
     "level_saved": "Livello salvato ✓",
-    "levels_reset_confirm": "Reimpostare ai valori predefiniti (Bronze/Silver/Gold/Platinum)? I tuoi livelli personalizzati saranno cancellati."
+    "levels_reset_confirm": "Reimpostare ai valori predefiniti (Bronze/Silver/Gold/Platinum)? I tuoi livelli personalizzati saranno cancellati.",
+    "tab_account": "Il mio account",
+    "tab_members": "Membri",
+    "tab_marketplace": "Marketplace",
+    "tab_integrations": "Integrazioni",
+    "tab_public_link": "Link pubblico",
+    "tab_appearance": "Aspetto",
+    "tab_program": "Programma",
+    "invite": "Invita"
   },
   "status": {
     "new": "Nuovo",
