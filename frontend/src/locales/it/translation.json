@@ -16,7 +16,7 @@
     "optional": "opzionale"
   },
   "nav": {
-    "features": "Funzionalità",
+    "features": "FunzionalitÃ ",
     "marketplace": "Marketplace",
     "pricing": "Prezzi",
     "testimonials": "Testimonianze",
@@ -27,19 +27,19 @@
   },
   "landing": {
     "hero": {
-      "badge": "Gestisci i tuoi referral partner con semplicità",
+      "badge": "Gestisci i tuoi referral partner con semplicitÃ ",
       "h1_start": "Trasforma le tue",
       "h1_highlight": "raccomandazioni in fatturato",
-      "description": "RefBoost è la piattaforma SaaS per la gestione di programmi partner e referral. Automatizza il tracciamento dei referral, le commissioni e le performance della tua rete.",
-      "cta_primary": "Crea il mio spazio gratuitamente →",
+      "description": "RefBoost Ã¨ la piattaforma SaaS per la gestione di programmi partner e referral. Automatizza il tracciamento dei referral, le commissioni e le performance della tua rete.",
+      "cta_primary": "Crea il mio spazio gratuitamente â",
       "cta_secondary": "Scopri",
       "stat1_value": "150+",
       "stat1_label": "Partner attivi",
-      "stat2_value": "2.4M€",
+      "stat2_value": "2.4Mâ¬",
       "stat2_label": "Fatturato generato",
       "stat3_value": "98%",
       "stat3_label": "Soddisfazione clienti",
-      "trial_badges": "✓ 14 giorni gratis · ✓ Senza carta di credito · ✓ Configurazione in 5 min"
+      "trial_badges": "â 14 giorni gratis Â· â Senza carta di credito Â· â Configurazione in 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Pipeline lead",
@@ -54,7 +54,7 @@
       "tracking_desc": "Attribuzione perfetta"
     },
     "features": {
-      "label": "Funzionalità",
+      "label": "FunzionalitÃ ",
       "title": "Tutto per gestire il tuo",
       "title_highlight": "programma referral partner",
       "description": "Dal primo referral al pagamento della commissione, RefBoost automatizza ogni fase.",
@@ -91,7 +91,7 @@
       "steps": [
         {
           "title": "Crea il tuo spazio",
-          "desc": "Registrati in 2 minuti. Personalizza la piattaforma con la tua identità visiva."
+          "desc": "Registrati in 2 minuti. Personalizza la piattaforma con la tua identitÃ  visiva."
         },
         {
           "title": "Invita i tuoi partner",
@@ -112,7 +112,7 @@
           "r": "Direttrice Commerciale",
           "c": "TechFlow",
           "a": "M",
-          "t": "Abbiamo triplicato il canale referral in 4 mesi. Lo strumento è intuitivo e i nostri partner lo adorano."
+          "t": "Abbiamo triplicato il canale referral in 4 mesi. Lo strumento Ã¨ intuitivo e i nostri partner lo adorano."
         },
         {
           "n": "Thomas Chen",
@@ -126,12 +126,12 @@
           "r": "Head of Partnerships",
           "c": "DataViz Pro",
           "a": "S",
-          "t": "Basta fogli di calcolo per tracciare le commissioni. Tutto è automatizzato, trasparente, e i partner sono entusiasti."
+          "t": "Basta fogli di calcolo per tracciare le commissioni. Tutto Ã¨ automatizzato, trasparente, e i partner sono entusiasti."
         }
       ]
     },
     "marketplace": {
-      "badge": "✨ Nuovo — Marketplace RefBoost",
+      "badge": "â¨ Nuovo â Marketplace RefBoost",
       "title_start": "Trova programmi di referral",
       "title_highlight": "verificati & remunerativi",
       "description": "Centinaia di aziende aprono il loro programma su RefBoost. Unisciti a loro gratuitamente.",
@@ -139,10 +139,10 @@
       "stat1_label": "Programmi attivi",
       "stat2_val": "100%",
       "stat2_label": "Gratuito per i partner",
-      "stat3_val": "2.4M€",
+      "stat3_val": "2.4Mâ¬",
       "stat3_label": "Commissioni generate",
-      "cta": "Vedi tutti i programmi →",
-      "cta_note": "Gratuito · Senza registrazione per navigare"
+      "cta": "Vedi tutti i programmi â",
+      "cta_note": "Gratuito Â· Senza registrazione per navigare"
     },
     "pricing": {
       "label": "Prezzi",
@@ -150,7 +150,7 @@
       "description": "Tutti i piani includono 14 giorni di prova gratuita. Senza impegno.",
       "popular": "Popolare",
       "custom": "Su misura",
-      "per_month": "€/mese",
+      "per_month": "â¬/mese",
       "cta_contact": "Contattaci",
       "cta_start": "Inizia gratuitamente",
       "plans": [
@@ -186,7 +186,7 @@
             "SSO / SAML",
             "SLA garantito",
             "Account manager dedicato",
-            "Audit & conformità"
+            "Audit & conformitÃ "
           ]
         }
       ]
@@ -196,8 +196,8 @@
       "title": "Tutto quello che devi sapere",
       "items": [
         {
-          "q": "Cos'è un programma di referral partner?",
-          "a": "È un sistema che remunera partner esterni per ogni cliente che ti raccomandano. RefBoost automatizza tutto: tracking, attribuzione, calcolo e pagamento delle commissioni."
+          "q": "Cos'Ã¨ un programma di referral partner?",
+          "a": "Ã un sistema che remunera partner esterni per ogni cliente che ti raccomandano. RefBoost automatizza tutto: tracking, attribuzione, calcolo e pagamento delle commissioni."
         },
         {
           "q": "Quanto tempo per essere operativi?",
@@ -205,7 +205,7 @@
         },
         {
           "q": "Posso personalizzare la piattaforma con il mio brand?",
-          "a": "Sì. Logo, colori, dominio personalizzato — i tuoi partner lavorano in un ambiente che riflette il tuo brand, non quello di RefBoost."
+          "a": "SÃ¬. Logo, colori, dominio personalizzato â i tuoi partner lavorano in un ambiente che riflette il tuo brand, non quello di RefBoost."
         },
         {
           "q": "Come vengono calcolate le commissioni?",
@@ -213,7 +213,7 @@
         },
         {
           "q": "I miei dati sono al sicuro?",
-          "a": "Assolutamente. Crittografia AES-256, log di audit completi, protezione anti-brute force, conformità GDPR. Seguiamo gli standard ISO 27001."
+          "a": "Assolutamente. Crittografia AES-256, log di audit completi, protezione anti-brute force, conformitÃ  GDPR. Seguiamo gli standard ISO 27001."
         }
       ]
     },
@@ -222,13 +222,13 @@
       "title_end": "rete di referral?",
       "description": "Unisciti alle aziende che usano RefBoost per trasformare le raccomandazioni in fatturato ricorrente.",
       "email_placeholder": "tua@email.com",
-      "cta_btn": "Inizia →",
-      "note": "14 giorni gratis · Senza carta di credito · Cancellazione in 1 clic"
+      "cta_btn": "Inizia â",
+      "note": "14 giorni gratis Â· Senza carta di credito Â· Cancellazione in 1 clic"
     },
     "footer": {
       "tagline": "La piattaforma per la gestione di programmi referral partner e referral professionale.",
       "sections": {
-        "features": "Funzionalità",
+        "features": "FunzionalitÃ ",
         "resources": "Risorse",
         "legal": "Legale"
       },
@@ -247,8 +247,16 @@
         "legal": "Note legali",
         "rgpd": "GDPR"
       },
-      "copyright": "© 2026 RefBoost. Tutti i diritti riservati.",
+      "copyright": "Â© 2026 RefBoost. Tutti i diritti riservati.",
       "madeIn": "Fatto con cura in Francia"
+    },
+    "blog": {
+      "label": "Blog",
+      "title": "Ultimi articoli",
+      "subtitle": "Consigli, strategie e approfondimenti per far crescere il tuo programma partner",
+      "cta": "Vedi tutti gli articoli →",
+      "read_more": "Leggi →",
+      "no_posts": "Nessun articolo ancora."
     }
   },
   "login": {
@@ -258,11 +266,11 @@
     "email_placeholder": "tu@azienda.com",
     "password": "Password",
     "forgot_password": "Password dimenticata?",
-    "submit": "Accedi →",
+    "submit": "Accedi â",
     "loading": "Accesso in corso...",
     "no_account": "Non hai ancora un account?",
-    "create_account": "Crea uno spazio gratuito →",
-    "back_to_site": "← Torna al sito",
+    "create_account": "Crea uno spazio gratuito â",
+    "back_to_site": "â Torna al sito",
     "error_default": "Credenziali errate"
   },
   "signup": {
@@ -274,8 +282,8 @@
     "fullname_ph": "Nome Cognome",
     "phone": "Telefono (opzionale)",
     "phone_ph": "+39 333 123 4567",
-    "next": "Continua →",
-    "back": "← Indietro",
+    "next": "Continua â",
+    "back": "â Indietro",
     "credentials": "Le tue credenziali",
     "credentials_sub": "Sarai l'amministratore dello spazio {{company}}.",
     "email": "Email professionale",
@@ -289,12 +297,12 @@
     "terms_and": "e la nostra",
     "terms_privacy": "informativa sulla privacy",
     "success_title": "Benvenuto su RefBoost!",
-    "success_sub": "Il tuo spazio {{company}} è pronto.",
+    "success_sub": "Il tuo spazio {{company}} Ã¨ pronto.",
     "success_sub2": "Sei l'amministratore.",
-    "success_cta": "Vai alla mia dashboard →",
+    "success_cta": "Vai alla mia dashboard â",
     "error_fields": "Compila i campi obbligatori.",
     "error_creds": "Email e password richiesti (10 car., maius., minus., cifra, speciale).",
-    "have_account": "Hai già un account?",
+    "have_account": "Hai giÃ  un account?",
     "login_link": "Accedi",
     "pwd_chars": "10+ car.",
     "pwd_upper": "Maiuscola",
@@ -325,38 +333,38 @@
   "featureTemplate": {
     "try_free": "Prova gratuitamente",
     "login": "Accedi",
-    "detailed_features": "Funzionalità dettagliate",
+    "detailed_features": "FunzionalitÃ  dettagliate",
     "what_you_get": "Quello che ottieni concretamente",
     "ready_to_test": "Pronto a provare?",
     "trial_text": "14 giorni gratis, senza carta di credito. Configura il tuo programma in 5 minuti.",
     "create_space": "Crea il mio spazio gratuitamente",
-    "no_commitment": "Senza impegno · 14 giorni gratis · Supporto incluso"
+    "no_commitment": "Senza impegno Â· 14 giorni gratis Â· Supporto incluso"
   },
   "features": {
-    "label": "Funzionalità",
+    "label": "FunzionalitÃ ",
     "pipeline": {
-      "helmet_title": "Pipeline referral — RefBoost",
+      "helmet_title": "Pipeline referral â RefBoost",
       "helmet_desc": "Segui ogni raccomandazione dal primo contatto alla chiusura. Vista Kanban, filtri avanzati, stati in tempo reale.",
       "title": "Pipeline referral",
-      "subtitle": "Dalla raccomandazione alla chiusura, ogni lead è tracciato, prioritizzato e azionabile in tempo reale.",
+      "subtitle": "Dalla raccomandazione alla chiusura, ogni lead Ã¨ tracciato, prioritizzato e azionabile in tempo reale.",
       "benefits": [
         {
           "stat": "3x",
-          "statLabel": "più lead convertiti vs tracciamento non strutturato",
+          "statLabel": "piÃ¹ lead convertiti vs tracciamento non strutturato",
           "title": "Vista Kanban in tempo reale",
-          "text": "Visualizza l'intero pipeline partner in un colpo d'occhio. Ogni lead avanza nelle colonne man mano che la vendita progredisce — senza fogli di calcolo.",
+          "text": "Visualizza l'intero pipeline partner in un colpo d'occhio. Ogni lead avanza nelle colonne man mano che la vendita progredisce â senza fogli di calcolo.",
           "points": [
             "Colonne configurabili: Nuovo, Qualificazione, Demo, Proposta, Firmato",
             "Drag & drop per cambiare stato in un gesto",
             "Notifica automatica al partner ad ogni cambio di fase",
-            "Valore ponderato per probabilità di chiusura"
+            "Valore ponderato per probabilitÃ  di chiusura"
           ]
         },
         {
           "stat": "87%",
           "statLabel": "dei team riducono il tempo di risposta di oltre 2 giorni",
           "title": "Filtri e ricerca avanzata",
-          "text": "Trova istantaneamente qualsiasi lead tra centinaia. Filtra per partner, importo, stato, data o fonte in un clic. Nessuna opportunità va persa.",
+          "text": "Trova istantaneamente qualsiasi lead tra centinaia. Filtra per partner, importo, stato, data o fonte in un clic. Nessuna opportunitÃ  va persa.",
           "points": [
             "Filtri cumulabili: partner + stato + importo + data",
             "Ricerca full-text su nome azienda, contatto, commenti",
@@ -379,11 +387,11 @@
       ],
       "quote": {
         "text": "Abbiamo triplicato il nostro canale referral in 4 mesi. La trasparenza del pipeline fidelizza i nostri migliori partner.",
-        "author": "Marie D., Direttrice Commerciale — SaaS B2B"
+        "author": "Marie D., Direttrice Commerciale â SaaS B2B"
       }
     },
     "commissions": {
-      "helmet_title": "Commissioni automatiche — RefBoost",
+      "helmet_title": "Commissioni automatiche â RefBoost",
       "helmet_desc": "Calcolo automatico dei bonus secondo le tue regole. Validazione in un clic, storico completo, pagamenti tracciabili.",
       "title": "Commissioni automatiche",
       "subtitle": "Definisci le tue regole una volta. RefBoost calcola, valida e traccia ogni commissione senza intervento manuale.",
@@ -392,7 +400,7 @@
           "stat": "0",
           "statLabel": "errori di calcolo dall'adozione di RefBoost (dati clienti)",
           "title": "Calcolo automatico secondo le tue regole",
-          "text": "Imposta la tua griglia commissioni una volta — tasso fisso, percentuale MRR, livelli progressivi — e RefBoost calcola automaticamente il bonus ad ogni deal validato.",
+          "text": "Imposta la tua griglia commissioni una volta â tasso fisso, percentuale MRR, livelli progressivi â e RefBoost calcola automaticamente il bonus ad ogni deal validato.",
           "points": [
             "Tassi configurabili per partner, segmento o volume",
             "Livelli progressivi: 8% fino a 5 deal/mese, 12% oltre",
@@ -404,7 +412,7 @@
           "stat": "100%",
           "statLabel": "delle tue regole di business modellabili senza sviluppo",
           "title": "Regole flessibili e verificabili",
-          "text": "Ogni regola commissione è documentata, con timestamp e tracciabile. I tuoi partner vedono esattamente come viene calcolata la loro remunerazione.",
+          "text": "Ogni regola commissione Ã¨ documentata, con timestamp e tracciabile. I tuoi partner vedono esattamente come viene calcolata la loro remunerazione.",
           "points": [
             "Interfaccia no-code per creare e modificare le regole",
             "Storico completo di ogni modifica regola",
@@ -414,9 +422,9 @@
         },
         {
           "stat": "< 5min",
-          "statLabel": "per esportare e sincronizzare con la tua contabilità",
-          "title": "Export e integrazioni contabilità",
-          "text": "Genera i tuoi estratti commissioni in un clic, esporta verso il tuo software di contabilità e invia i dettagli direttamente ai partner.",
+          "statLabel": "per esportare e sincronizzare con la tua contabilitÃ ",
+          "title": "Export e integrazioni contabilitÃ ",
+          "text": "Genera i tuoi estratti commissioni in un clic, esporta verso il tuo software di contabilitÃ  e invia i dettagli direttamente ai partner.",
           "points": [
             "Export CSV/PDF delle commissioni per periodo o per partner",
             "Integrazione Zapier per sincronizzazione automatica",
@@ -427,12 +435,12 @@
       ],
       "quote": {
         "text": "Basta fogli di calcolo per tracciare le commissioni. Tutto automatizzato, trasparente, e i nostri partner adorano ricevere i calcoli dettagliati ogni mese.",
-        "author": "Sophie M., Head of Partnerships — DataViz Pro"
+        "author": "Sophie M., Head of Partnerships â DataViz Pro"
       }
     },
     "analytics": {
-      "helmet_title": "Analytics & KPI — RefBoost",
-      "helmet_desc": "Tasso di conversione, MRR generato, performance per partner — tutte le metriche che contano in una dashboard azionabile.",
+      "helmet_title": "Analytics & KPI â RefBoost",
+      "helmet_desc": "Tasso di conversione, MRR generato, performance per partner â tutte le metriche che contano in una dashboard azionabile.",
       "title": "Analytics & KPI",
       "subtitle": "Gestisci il tuo programma partner con dati reali, non impressioni. Ogni decisione basata sui fatti.",
       "benefits": [
@@ -440,7 +448,7 @@
           "stat": "80%",
           "statLabel": "del pipeline generato dal 20% dei partner in media",
           "title": "Imbuto di conversione dettagliato",
-          "text": "Misura ogni step tra il clic su un link e il deal firmato. Identifica esattamente dove perdi opportunità e correggi in tempo reale.",
+          "text": "Misura ogni step tra il clic su un link e il deal firmato. Identifica esattamente dove perdi opportunitÃ  e correggi in tempo reale.",
           "points": [
             "Imbuto completo: clic > modulo > lead qualificato > demo > deal",
             "Tasso di conversione per fase e per fonte di traffico",
@@ -474,20 +482,20 @@
         }
       ],
       "quote": {
-        "text": "Per la prima volta abbiamo potuto mostrare al nostro board il ROI esatto del programma partner. 8€ generati per ogni euro investito in commissioni.",
-        "author": "Thomas C., CEO — ScaleUp Agency"
+        "text": "Per la prima volta abbiamo potuto mostrare al nostro board il ROI esatto del programma partner. 8â¬ generati per ogni euro investito in commissioni.",
+        "author": "Thomas C., CEO â ScaleUp Agency"
       }
     },
     "personnalisation": {
-      "helmet_title": "White label — RefBoost",
+      "helmet_title": "White label â RefBoost",
       "helmet_desc": "Logo, colori, dominio personalizzato: i tuoi partner lavorano nel tuo universo, non in quello di RefBoost.",
       "title": "Il tuo brand, la tua piattaforma",
       "subtitle": "Logo, colori, dominio su misura. I tuoi partner non hanno motivo di sapere che usi RefBoost.",
       "benefits": [
         {
           "stat": "2min",
-          "statLabel": "per configurare completamente l'identità visiva del tuo spazio",
-          "title": "Identità visiva completa",
+          "statLabel": "per configurare completamente l'identitÃ  visiva del tuo spazio",
+          "title": "IdentitÃ  visiva completa",
           "text": "Carica il tuo logo, scegli i tuoi colori, nomina il tuo spazio. In meno di 2 minuti la piattaforma riflette il tuo brand.",
           "points": [
             "Logo ad alta risoluzione su tutte le pagine e email",
@@ -510,11 +518,11 @@
         },
         {
           "stat": "3x",
-          "statLabel": "tasso di completamento più alto sui moduli brandizzati vs generici",
+          "statLabel": "tasso di completamento piÃ¹ alto sui moduli brandizzati vs generici",
           "title": "Modulo di invio a tuo marchio",
-          "text": "Il modulo pubblico compilato dai prospect segnalati dai tuoi partner è interamente nei tuoi colori.",
+          "text": "Il modulo pubblico compilato dai prospect segnalati dai tuoi partner Ã¨ interamente nei tuoi colori.",
           "points": [
-            "Design modulo adattato alla tua identità visiva",
+            "Design modulo adattato alla tua identitÃ  visiva",
             "URL personalizzata condivisibile dai tuoi partner",
             "Campi configurabili in base alle tue esigenze di qualificazione",
             "Notifica istantanea al tuo team ad ogni invio"
@@ -522,12 +530,12 @@
         }
       ],
       "quote": {
-        "text": "I nostri partner lavorano nel nostro universo. Non hanno mai saputo che era RefBoost dietro. È esattamente quello che cercavamo.",
-        "author": "Pierre L., CRO — SaaS Fintech"
+        "text": "I nostri partner lavorano nel nostro universo. Non hanno mai saputo che era RefBoost dietro. Ã esattamente quello che cercavamo.",
+        "author": "Pierre L., CRO â SaaS Fintech"
       }
     },
     "tracking": {
-      "helmet_title": "Link di tracking unici — RefBoost",
+      "helmet_title": "Link di tracking unici â RefBoost",
       "helmet_desc": "Ogni partner ha il suo link personale. Attribuzione automatica, modulo pubblico integrato, zero attrito.",
       "title": "Link di tracking unici",
       "subtitle": "Un link per partner, un'attribuzione perfetta. I tuoi partner condividono, i lead arrivano qualificati e attribuiti automaticamente.",
@@ -536,7 +544,7 @@
           "stat": "0",
           "statLabel": "lead perso o mal attribuito grazie al tracking automatico",
           "title": "Un link unico per partner e per fonte",
-          "text": "Ogni partner ha un link personale unico che può declinare per canale (LinkedIn, email, evento). Sai esattamente da dove viene ogni lead.",
+          "text": "Ogni partner ha un link personale unico che puÃ² declinare per canale (LinkedIn, email, evento). Sai esattamente da dove viene ogni lead.",
           "points": [
             "Generazione automatica del link all'invito del partner",
             "Parametri UTM per distinguere le fonti (LinkedIn, email, telefono)",
@@ -547,12 +555,12 @@
         {
           "stat": "100%",
           "statLabel": "dei lead attribuiti senza intervento manuale",
-          "title": "Attribuzione automatica senza ambiguità",
-          "text": "Quando un prospect clicca sul link di un partner e compila il modulo, il lead viene attribuito automaticamente. Nessuna disputa, nessuna ambiguità.",
+          "title": "Attribuzione automatica senza ambiguitÃ ",
+          "text": "Quando un prospect clicca sul link di un partner e compila il modulo, il lead viene attribuito automaticamente. Nessuna disputa, nessuna ambiguitÃ .",
           "points": [
             "Cookie di tracking persistente configurabile (7-180 giorni)",
             "Attribuzione anche se il prospect torna giorni dopo",
-            "Tracciabilità completa dalla fonte al deal firmato",
+            "TracciabilitÃ  completa dalla fonte al deal firmato",
             "Notifica istantanea al partner ad ogni conversione"
           ]
         },
@@ -560,18 +568,18 @@
           "stat": "6",
           "statLabel": "finestre di attribuzione configurabili secondo il tuo ciclo di vendita",
           "title": "Finestre di attribuzione configurabili",
-          "text": "Adatta le regole di attribuzione al tuo ciclo di vendita. Un ciclo breve di 2 settimane o lungo 6 mesi: definisci la finestra che riflette la tua realtà commerciale.",
+          "text": "Adatta le regole di attribuzione al tuo ciclo di vendita. Un ciclo breve di 2 settimane o lungo 6 mesi: definisci la finestra che riflette la tua realtÃ  commerciale.",
           "points": [
             "Finestra di attribuzione da 7 a 180 giorni",
             "Regola first-touch o last-touch secondo la tua policy",
             "Gestione dei conflitti di attribuzione trasparente e verificabile",
-            "Retroattività possibile sui lead in corso"
+            "RetroattivitÃ  possibile sui lead in corso"
           ]
         }
       ],
       "quote": {
-        "text": "Prima di RefBoost, passavamo 2 ore al mese a riconciliare manualmente i lead con i partner. Ora è automatico e senza discussioni.",
-        "author": "Alexandre R., VP Sales — ScaleB2B"
+        "text": "Prima di RefBoost, passavamo 2 ore al mese a riconciliare manualmente i lead con i partner. Ora Ã¨ automatico e senza discussioni.",
+        "author": "Alexandre R., VP Sales â ScaleB2B"
       }
     }
   },
@@ -580,11 +588,11 @@
     "subtitle": "Inserisci la tua email. Se esiste un account, ti invieremo un link per reimpostare la password.",
     "sent_title": "Email inviata!",
     "sent_text": "Se esiste un account con questa email, riceverai un link di reimpostazione in pochi minuti.",
-    "back_to_login": "← Torna al login",
+    "back_to_login": "â Torna al login",
     "email": "Email",
     "email_ph": "tu@azienda.com",
     "loading": "Invio in corso...",
-    "submit": "Invia link di reimpostazione →",
+    "submit": "Invia link di reimpostazione â",
     "submitting": "Invio..."
   },
   "resetPwd": {
@@ -592,18 +600,18 @@
     "subtitle": "Scegli una password sicura per il tuo account.",
     "new_pwd": "Nuova password",
     "confirm_pwd": "Conferma password",
-    "submit": "Reimposta →",
+    "submit": "Reimposta â",
     "loading": "Reimpostazione...",
     "success_title": "Password aggiornata!",
     "success_text": "Reindirizzamento al login in pochi secondi...",
-    "login_now": "Accedi ora →",
+    "login_now": "Accedi ora â",
     "invalid": "Link non valido o scaduto.",
     "request_new": "Richiedi un nuovo link",
-    "back_to_login": "← Torna al login",
+    "back_to_login": "â Torna al login",
     "mismatch": "Le password non corrispondono.",
     "weak": "Password troppo debole.",
     "invalid_title": "Link non valido o scaduto.",
-    "invalid_subtitle": "Questo link di reimpostazione non è più valido.",
+    "invalid_subtitle": "Questo link di reimpostazione non Ã¨ piÃ¹ valido.",
     "redirect": "Reindirizzamento al login in pochi secondi...",
     "submitting": "Reimpostazione..."
   },
@@ -612,16 +620,16 @@
     "invalid": "Link non valido",
     "back_to_login": "Torna al login",
     "success_title": "Account creato!",
-    "success_text": "La tua password è stata impostata. Reindirizzamento al login...",
+    "success_text": "La tua password Ã¨ stata impostata. Reindirizzamento al login...",
     "title": "Benvenuto!",
     "subtitle": "Crea la tua password per accedere al tuo spazio partner.",
     "pwd_label": "Password",
     "confirm_label": "Conferma",
-    "submit": "Attiva il mio account →",
+    "submit": "Attiva il mio account â",
     "submitting": "Attivazione...",
     "mismatch": "Le password non corrispondono.",
     "invalid_title": "Link non valido",
-    "invalid_subtitle": "Questo link di invito non è più valido.",
+    "invalid_subtitle": "Questo link di invito non Ã¨ piÃ¹ valido.",
     "pwd_ph": "Min. 10 caratteri"
   },
   "changePwd": {
@@ -630,7 +638,7 @@
     "current": "Password attuale",
     "new_pwd": "Nuova password",
     "confirm": "Conferma nuova password",
-    "submit": "Cambia →",
+    "submit": "Cambia â",
     "submitting": "Salvataggio...",
     "mismatch": "Le password non corrispondono.",
     "weak": "Password troppo debole (min. 10 car., maiusc., minusc., cifra, speciale)."
@@ -648,7 +656,7 @@
     "kpi_rate": "Tasso di conversione",
     "chart_monthly": "Evoluzione mensile",
     "chart_pipeline": "Pipeline per stato",
-    "chart_revenue_label": "Generato (€)",
+    "chart_revenue_label": "Generato (â¬)",
     "chart_levels": "Prestazioni per livello",
     "chart_monthly_tab": "Mensile",
     "chart_cumul_tab": "Cumulato",
@@ -669,7 +677,7 @@
     "loading": "Caricamento...",
     "deals": "Deal",
     "commissions_label": "Commissioni",
-    "max": "Max ✨",
+    "max": "Max â¨",
     "no_data": "Nessun dato"
   },
   "referrals": {
@@ -687,7 +695,7 @@
     "tab_history": "Cronologia",
     "save": "Salva",
     "saving": "Salvataggio...",
-    "saved": "Modifiche salvate ✓",
+    "saved": "Modifiche salvate â",
     "error_save": "Errore durante il salvataggio",
     "delete_btn": "Elimina",
     "prospect": "Prospect",
@@ -709,7 +717,7 @@
     "quarterly": "Trimestrale",
     "yearly": "Annuale",
     "est_commission": "Commissione stimata",
-    "no_activity": "Nessuna attività",
+    "no_activity": "Nessuna attivitÃ ",
     "act_created": "Indicazione creata",
     "act_status": "Stato",
     "act_value": "Valore aggiornato",
@@ -736,7 +744,7 @@
     "commission_est": "Commissione stimata",
     "of": "di",
     "delete": "Elimina",
-    "saved_ok": "Modifiche salvate ✓",
+    "saved_ok": "Modifiche salvate â",
     "save_error": "Errore durante il salvataggio"
   },
   "commissions": {
@@ -836,7 +844,7 @@
     "restore": "Riattiva",
     "delete": "Elimina",
     "delete_confirm_title": "Eliminare questo partner?",
-    "delete_confirm_body": "Questa azione è irreversibile. Tutti i dati associati andranno persi.",
+    "delete_confirm_body": "Questa azione Ã¨ irreversibile. Tutti i dati associati andranno persi.",
     "temp_created": "Partner creato!",
     "temp_creds": "Credenziali temporanee:",
     "temp_email": "Email:",
@@ -893,7 +901,7 @@
     "title": "Nuovo referral",
     "subtitle": "Segnala un prospect al nostro team commerciale",
     "sent_title": "Referral inviato!",
-    "sent_text": "Il nostro team ti contatterà a breve.",
+    "sent_text": "Il nostro team ti contatterÃ  a breve.",
     "new_recommend": "Nuovo referral",
     "prospect_info": "Informazioni sul prospect",
     "name": "Nome completo",
@@ -908,9 +916,9 @@
     "role_ph": "Es: CTO, Direttore Commerciale...",
     "notes": "Note / Contesto",
     "notes_ph": "Descrivi il bisogno o il contesto di questo referral...",
-    "continue": "Continua →",
-    "back": "← Indietro",
-    "submit": "Invia il mio referral →",
+    "continue": "Continua â",
+    "back": "â Indietro",
+    "submit": "Invia il mio referral â",
     "submitting": "Invio in corso..."
   },
   "partnerPayments": {
@@ -931,7 +939,7 @@
     "tbl_commission": "Commissione",
     "tbl_rate": "Tasso",
     "tbl_status": "Stato",
-    "iban_saved": "Salvato ✓",
+    "iban_saved": "Salvato â",
     "tbl_prospect": "Prospect",
     "tbl_amount": "Commissione",
     "no_data": "Nessun pagamento",
@@ -988,7 +996,7 @@
     "add_level": "+ Aggiungi un livello",
     "delete_level": "Elimina",
     "no_levels": "Nessun livello configurato",
-    "saved": "Salvato ✓",
+    "saved": "Salvato â",
     "level_min_deals": "Deal min.",
     "level_delete": "Elimina",
     "revenue_model": "Modello fatturato",
@@ -999,26 +1007,26 @@
     "title_full": "Programma partner",
     "subtitle_full": "Configura i livelli e le commissioni per il tuo programma partner. I partner salgono di livello automaticamente in base alle loro prestazioni.",
     "crit_title": "Criterio di progressione",
-    "crit_deals": "🎯 Numero di affari vinti",
-    "crit_volume": "💰 Volume d'affari (€)",
+    "crit_deals": "ð¯ Numero di affari vinti",
+    "crit_volume": "ð° Volume d'affari (â¬)",
     "reset_defaults": "Reimposta ai valori predefiniti",
     "reset_confirm": "Reimposta ai valori predefiniti? I tuoi livelli personalizzati verranno eliminati.",
     "delete_confirm": "Eliminare questo livello? I partner manterranno il loro livello attuale.",
     "level_name_placeholder": "Bronzo, Diamante...",
     "unit_deals": "deal vinti",
-    "unit_volume": "€ generati",
+    "unit_volume": "â¬ generati",
     "threshold_deals": "Deal vinti richiesti",
-    "threshold_volume": "Volume (€) richiesto",
-    "name_required": "Il nome è obbligatorio",
-    "level_saved": "Livello salvato ✓",
+    "threshold_volume": "Volume (â¬) richiesto",
+    "name_required": "Il nome Ã¨ obbligatorio",
+    "level_saved": "Livello salvato â",
     "reset_done": "Reimpostato ai valori predefiniti",
-    "level_desc": "A partire da {{min}} {{unit}} · {{rate}}% di commissione"
+    "level_desc": "A partire da {{min}} {{unit}} Â· {{rate}}% di commissione"
   },
   "publicApply": {
     "title": "Unisciti al programma",
     "subtitle": "Invia la tua candidatura per diventare partner indicatore.",
     "sent_title": "Candidatura inviata!",
-    "sent_text": "Abbiamo ricevuto la tua candidatura. Il team ti contatterà nei prossimi giorni.",
+    "sent_text": "Abbiamo ricevuto la tua candidatura. Il team ti contatterÃ  nei prossimi giorni.",
     "step1": "Le tue informazioni",
     "step2": "La tua motivazione",
     "step_summary": "Riepilogo",
@@ -1034,14 +1042,14 @@
     "size_ph": "Seleziona",
     "role": "Il tuo ruolo",
     "role_ph": "Es: Consulente, Partner...",
-    "motivation": "Parlaci della tua attività e motivazione",
-    "motivation_ph": "Descrivi la tua rete, la tua attività...",
-    "continue": "Continua →",
-    "back": "← Indietro",
+    "motivation": "Parlaci della tua attivitÃ  e motivazione",
+    "motivation_ph": "Descrivi la tua rete, la tua attivitÃ ...",
+    "continue": "Continua â",
+    "back": "â Indietro",
     "submit": "Invia la mia candidatura",
     "submitting": "Invio...",
-    "why_title": "Perché unirsi a noi?",
-    "already": "Già partner?",
+    "why_title": "PerchÃ© unirsi a noi?",
+    "already": "GiÃ  partner?",
     "login_link": "Accedi",
     "size_1_10": "1-10",
     "size_11_50": "11-50",
@@ -1056,7 +1064,7 @@
     "field_phone": "Telefono",
     "field_website": "Sito web",
     "field_size": "Dimensione azienda",
-    "field_motivation": "Perché vuoi unirti a questo programma?",
+    "field_motivation": "PerchÃ© vuoi unirti a questo programma?",
     "size_1": "1-10 dipendenti",
     "size_2": "10-50 dipendenti",
     "size_3": "50-200 dipendenti",
@@ -1064,9 +1072,9 @@
   },
   "publicTracking": {
     "loading": "Caricamento...",
-    "invalid": "Questo link di referral non è valido.",
+    "invalid": "Questo link di referral non Ã¨ valido.",
     "thank_you": "Grazie per il tuo interesse!",
-    "team_contact": "Il nostro team ti contatterà molto presto.",
+    "team_contact": "Il nostro team ti contatterÃ  molto presto.",
     "fill_form": "Compila questo modulo e ti ricontatteremo.",
     "name_ph": "Mario Rossi",
     "email_ph": "mario@esempio.com",
@@ -1080,11 +1088,11 @@
     "company": "Azienda",
     "role": "Ruolo",
     "message": "Messaggio (opzionale)",
-    "submit": "Invia →",
+    "submit": "Invia â",
     "submitting": "Invio...",
     "powered_by": "Fornito da",
     "invalid_title": "Link non valido",
-    "invalid_text": "Questo link di tracciamento non è valido.",
+    "invalid_text": "Questo link di tracciamento non Ã¨ valido.",
     "field_name": "Il tuo nome *",
     "field_company": "Azienda",
     "field_email": "Email *",
@@ -1098,17 +1106,17 @@
     "all": "Tutti",
     "reset": "Reimposta",
     "no_result": "Nessun programma trovato",
-    "see_all": "Vedi programma →",
+    "see_all": "Vedi programma â",
     "target": "Target:",
     "website": "Visita il sito",
-    "join": "Unisciti →",
+    "join": "Unisciti â",
     "add_program": "Hai un programma?",
     "add_program_sub": "Unisciti al Marketplace RefBoost e raggiungi migliaia di partner.",
     "add_program_cta": "Crea il mio programma",
     "stat_programs": "Programmi attivi",
     "stat_free": "Gratuito per i partner",
     "stat_commissions": "Commissioni generate",
-    "helmet_title": "Marketplace — Programmi di referral | RefBoost",
+    "helmet_title": "Marketplace â Programmi di referral | RefBoost",
     "loading": "Caricamento...",
     "stat_active": "Programmi attivi",
     "stat_avg_rate": "Tasso medio",
@@ -1126,13 +1134,13 @@
     "marketplace_logo": "URL logo",
     "marketplace_save": "Salva",
     "marketplace_saving": "Salvataggio...",
-    "marketplace_saved": "Impostazioni salvate ✓",
+    "marketplace_saved": "Impostazioni salvate â",
     "branding_section": "Personalizzazione (White Label)",
     "branding_logo": "URL logo",
     "branding_primary": "Colore principale",
     "branding_name": "Nome spazio",
     "branding_domain": "Dominio personalizzato",
-    "branding_save": "Salva identità",
+    "branding_save": "Salva identitÃ ",
     "branding_saving": "Salvataggio...",
     "branding_saved": "Aspetto salvato!",
     "program_section": "Programma partner",
@@ -1144,14 +1152,14 @@
     "general_email": "Email di contatto",
     "general_save": "Salva",
     "loading": "Caricamento...",
-    "saved": "Salvato ✓",
+    "saved": "Salvato â",
     "cancel": "Annulla",
     "save": "Salva",
     "saving": "Salvataggio...",
     "change_pwd": "Cambia password",
     "add": "Aggiungi",
     "branding_desc": "Personalizza i colori e il logo del tuo spazio partner. Queste impostazioni si applicano ovunque: barra laterale, interfaccia, ecc.",
-    "level_saved": "Livello salvato ✓",
+    "level_saved": "Livello salvato â",
     "levels_reset_confirm": "Reimpostare ai valori predefiniti (Bronze/Silver/Gold/Platinum)? I tuoi livelli personalizzati saranno cancellati.",
     "tab_account": "Il mio account",
     "tab_members": "Membri",
@@ -1169,16 +1177,16 @@
     "update": "Aggiorna",
     "copy_link": "Copia link",
     "confirm_delete_level": "Eliminare questo livello? I partner verranno ricalcolati.",
-    "marketplace_hidden": "Il tuo programma è nascosto",
+    "marketplace_hidden": "Il tuo programma Ã¨ nascosto",
     "marketplace_website": "Sito web",
     "marketplace_icp": "ICP principale",
-    "marketplace_choose_sector": "— Scegli un settore —",
+    "marketplace_choose_sector": "â Scegli un settore â",
     "marketplace_website_ph": "https://il-tuo-sito.com",
     "marketplace_target_ph": "Es: PMI B2B, Startup SaaS...",
     "marketplace_desc_ph": "Descrivi il tuo servizio in 2-3 frasi...",
     "marketplace_chars": "caratteri",
     "public_link_title": "Link pubblico di iscrizione",
-    "marketplace_visible_shown": "✅ Il tuo programma è visualizzato pubblicamente",
+    "marketplace_visible_shown": "â Il tuo programma Ã¨ visualizzato pubblicamente",
     "branding_accent": "Colore d'accento",
     "marketplace_view": "Vedi marketplace",
     "superadmins_title": "Super amministratori",
@@ -1213,7 +1221,7 @@
     "webhook_saved": "Webhook salvato!",
     "confirm_remove_superadmin": "Rimuovere {{name}} dai super admin?",
     "revenue_deals": "Numero di deal vinti",
-    "revenue_volume": "Volume d'affari (€)",
+    "revenue_volume": "Volume d'affari (â¬)",
     "revenue_fixed": "Commissione fissa",
     "email_col": "Email",
     "name_col": "Nome",
@@ -1226,15 +1234,15 @@
     "pipedrive_desc": "Importa i tuoi prospect e monitora i tuoi deal",
     "api_desc": "Crea chiavi API per integrare Skipcall con i tuoi strumenti.",
     "api_no_keys": "Nessuna chiave API attiva",
-    "public_link_full_desc": "Condividi questo link con i tuoi partner affinché possano iscriversi autonomamente. Potrai validare le loro candidature dalla tua dashboard.",
+    "public_link_full_desc": "Condividi questo link con i tuoi partner affinchÃ© possano iscriversi autonomamente. Potrai validare le loro candidature dalla tua dashboard.",
     "direct_link": "Link diretto",
     "embed_code": "Codice da incorporare (iframe)",
     "copy_code": "Copia il codice",
     "link_share_hint": "Puoi inserirlo nelle tue email, firme, post LinkedIn, ecc.",
     "embed_hint": "Incolla questo snippet nel tuo sito (WordPress, Webflow, Notion, ecc.) per incorporare il modulo direttamente.",
-    "revenue_model_hint": "Tipo di ricavo principale — utilizzato per adattare le etichette della dashboard",
-    "revenue_ca": "CA — Fatturato (one-shot)",
-    "revenue_mrr": "MRR — Ricavi ricorrenti (SaaS)",
+    "revenue_model_hint": "Tipo di ricavo principale â utilizzato per adattare le etichette della dashboard",
+    "revenue_ca": "CA â Fatturato (one-shot)",
+    "revenue_mrr": "MRR â Ricavi ricorrenti (SaaS)",
     "revenue_deals_opt": "Numero di deal (commissione per deal)",
     "logo_ph": "https://esempio.com/logo.png",
     "logo_hint": "Incolla l'URL di un'immagine ospitata. Formato consigliato: PNG trasparente, altezza ~80px.",
@@ -1257,19 +1265,19 @@
   },
   "onboarding": {
     "skip": "Salta questo passaggio",
-    "next": "Avanti →",
+    "next": "Avanti â",
     "back": "Indietro",
     "finish": "Termina la configurazione",
     "subtitle": "Configura il tuo spazio in pochi passaggi",
-    "welcome_title": "Benvenuto su RefBoost 🎉",
+    "welcome_title": "Benvenuto su RefBoost ð",
     "createUser_title": "Crea il tuo team",
     "createPartner_title": "Invita il tuo primo partner",
     "customize_title": "Personalizza il tuo spazio",
     "publicLink_title": "Il tuo link di referral",
     "marketplace_title": "Il tuo programma sul marketplace",
-    "done_title": "Tutto pronto 🚀",
+    "done_title": "Tutto pronto ð",
     "step_of": "Passo {{current}} di {{total}}",
-    "step_2_desc": "Aggiungi un membro del team (admin o commerciale). Riceverà un'email con le sue credenziali.",
+    "step_2_desc": "Aggiungi un membro del team (admin o commerciale). RiceverÃ  un'email con le sue credenziali.",
     "step_3_desc": "Personalizza l'aspetto del tuo spazio",
     "step_4_desc": "Configura il tuo programma di referral",
     "step_5_desc": "Aggiungi partner al tuo programma",
@@ -1288,12 +1296,22 @@
     "role_commercial": "Commerciale",
     "role_admin_opt": "Admin",
     "role_partner_opt": "Partner",
-    "create_user": "Crea utente →",
-    "create_partner": "Crea partner →",
+    "create_user": "Crea utente â",
+    "create_partner": "Crea partner â",
     "user_created": "Utente creato con successo",
     "partner_added": "Partner aggiunto con successo",
     "config_saved": "Configurazione salvata",
     "level_name": "Nome del livello",
-    "team_label": "team"
+    "team_label": "team",
+    "prev": "Precedente",
+    "step_1_desc": "Crea il tuo team, invita il tuo primo partner, personalizza i colori e ottieni il tuo link pubblico di iscrizione. Ci vogliono al massimo 3 minuti e puoi saltare qualsiasi passaggio.",
+    "mrr_label": "MRR — Entrate ricorrenti mensili",
+    "arr_label": "ARR — Entrate ricorrenti annuali",
+    "ca_label": "Ricavi — Ricavi totali",
+    "link_desc": "Condividi questo link con i tuoi partner di referral. Possono registrarsi da soli e tu convaliderai le loro candidature.",
+    "sector": "Settore *",
+    "icp": "ICP principale",
+    "short_description": "Breve descrizione *",
+    "marketplace_visible": "Mostra nel marketplace"
   }
 }
