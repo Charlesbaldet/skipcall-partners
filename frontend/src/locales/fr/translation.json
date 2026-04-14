@@ -1166,7 +1166,8 @@
     "password_min8": "Minimum 8 caractères",
     "password_updated": "Mot de passe mis à jour !",
     "update": "Mettre à jour",
-    "copy_link": "Copier le lien"
+    "copy_link": "Copier le lien",
+    "confirm_delete_level": "Supprimer ce niveau ? Les partenaires seront recalculés."
   },
   "status": {
     "new": "Nouveau",
