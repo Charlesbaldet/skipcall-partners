@@ -73,7 +73,7 @@ function MarketplaceTab() {
       <div style={{marginBottom:20}}>
         <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>{t('settings.marketplace_sector')}*</label>
         <select value={settings.sector} onChange={e=>set('sector',e.target.value)} style={{...inp,background:'#fff'}} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}>
-          <option value="">— Choisir un secteur —</option>
+          <option value="">{t('settings.marketplace_choose_sector')}</option>
           {SECTORS_MKT.map(s=><option key={s} value={s}>{s}</option>)}
         </select>
       </div>
@@ -565,7 +565,7 @@ function PublicLinkTab() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Lien public d'inscription</h3>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.public_link_title')}</h3>
       <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Partage ce lien avec tes apporteurs d'affaires pour qu'ils puissent s'inscrire eux-mêmes. Tu valideras leurs candidatures depuis ton dashboard.</p>
 
       <div style={{ marginBottom: 28 }}>
@@ -682,7 +682,7 @@ function AppearanceTab() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div>
-            <label style={labelStyle}>Couleur principale</label>
+            <label style={labelStyle}>{t('settings.branding_primary')}</label>
             <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} style={{ ...inputStyle, height: 44, padding: 4, cursor: 'pointer' }} />
           </div>
           <div>
@@ -692,7 +692,7 @@ function AppearanceTab() {
         </div>
 
         <div>
-          <label style={labelStyle}>URL du logo</label>
+          <label style={labelStyle}>{t('settings.branding_logo')}</label>
           <input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://exemple.com/logo.png" style={inputStyle} />
           <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>Colle l'URL d'une image hébergée. Format recommandé : PNG transparent, hauteur ~80px.</p>
           {form.logo_url && (
