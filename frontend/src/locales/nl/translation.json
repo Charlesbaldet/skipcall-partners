@@ -31,15 +31,15 @@
       "h1_start": "Verander uw",
       "h1_highlight": "aanbevelingen in omzet",
       "description": "RefBoost is het SaaS-platform voor beheer van partnerprogramma's en referrals. Automatiseer referral-tracking, commissies en de prestaties van uw netwerk.",
-      "cta_primary": "Maak mijn gratis ruimte aan →",
+      "cta_primary": "Maak mijn gratis ruimte aan â",
       "cta_secondary": "Ontdekken",
       "stat1_value": "150+",
       "stat1_label": "Actieve partners",
-      "stat2_value": "2,4M€",
+      "stat2_value": "2,4Mâ¬",
       "stat2_label": "Gegenereerde omzet",
       "stat3_value": "98%",
       "stat3_label": "Klanttevredenheid",
-      "trial_badges": "✓ 14 dagen gratis · ✓ Geen creditcard · ✓ Instelling in 5 min"
+      "trial_badges": "â 14 dagen gratis Â· â Geen creditcard Â· â Instelling in 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Lead pipeline",
@@ -65,7 +65,7 @@
         },
         {
           "title": "Automatische commissies",
-          "desc": "Automatische bonusberekening volgens uw regels. Validatie met één klik, volledige geschiedenis, traceerbare betalingen."
+          "desc": "Automatische bonusberekening volgens uw regels. Validatie met Ã©Ã©n klik, volledige geschiedenis, traceerbare betalingen."
         },
         {
           "title": "Dashboards & KPI's",
@@ -112,7 +112,7 @@
           "r": "Commercieel Directeur",
           "c": "TechFlow",
           "a": "M",
-          "t": "We hebben ons referral kanaal in 4 maanden verdrievoudigd. De tool is intuïtief en onze partners zijn er dol op."
+          "t": "We hebben ons referral kanaal in 4 maanden verdrievoudigd. De tool is intuÃ¯tief en onze partners zijn er dol op."
         },
         {
           "n": "Thomas Chen",
@@ -131,7 +131,7 @@
       ]
     },
     "marketplace": {
-      "badge": "✨ Nieuw — RefBoost Marketplace",
+      "badge": "â¨ Nieuw â RefBoost Marketplace",
       "title_start": "Vind referral programma's",
       "title_highlight": "geverifieerd & winstgevend",
       "description": "Honderden bedrijven openen hun programma op RefBoost. Sluit u gratis aan.",
@@ -139,10 +139,10 @@
       "stat1_label": "Actieve programma's",
       "stat2_val": "100%",
       "stat2_label": "Gratis voor partners",
-      "stat3_val": "2,4M€",
+      "stat3_val": "2,4Mâ¬",
       "stat3_label": "Gegenereerde commissies",
-      "cta": "Bekijk alle programma's →",
-      "cta_note": "Gratis · Geen registratie om te bladeren"
+      "cta": "Bekijk alle programma's â",
+      "cta_note": "Gratis Â· Geen registratie om te bladeren"
     },
     "pricing": {
       "label": "Prijzen",
@@ -150,7 +150,7 @@
       "description": "Alle plannen bevatten een gratis proefperiode van 14 dagen. Geen verplichting.",
       "popular": "Populair",
       "custom": "Op maat",
-      "per_month": "€/maand",
+      "per_month": "â¬/maand",
       "cta_contact": "Neem contact op",
       "cta_start": "Gratis starten",
       "plans": [
@@ -205,7 +205,7 @@
         },
         {
           "q": "Kan ik het platform aanpassen aan mijn merk?",
-          "a": "Ja. Logo, kleuren, aangepast domein — uw partners werken in een omgeving die uw merk weerspiegelt, niet dat van RefBoost."
+          "a": "Ja. Logo, kleuren, aangepast domein â uw partners werken in een omgeving die uw merk weerspiegelt, niet dat van RefBoost."
         },
         {
           "q": "Hoe worden commissies berekend?",
@@ -222,8 +222,8 @@
       "title_end": "partnersnetwerk te structureren?",
       "description": "Sluit u aan bij bedrijven die RefBoost gebruiken om aanbevelingen te transformeren in terugkerende omzet.",
       "email_placeholder": "uw@email.nl",
-      "cta_btn": "Beginnen →",
-      "note": "14 dagen gratis · Geen creditcard · Annulering in 1 klik"
+      "cta_btn": "Beginnen â",
+      "note": "14 dagen gratis Â· Geen creditcard Â· Annulering in 1 klik"
     },
     "footer": {
       "tagline": "Het platform voor beheer van referral partnerprogramma's en professionele referrals.",
@@ -247,8 +247,16 @@
         "legal": "Juridische kennisgeving",
         "rgpd": "AVG"
       },
-      "copyright": "© 2026 RefBoost. Alle rechten voorbehouden.",
+      "copyright": "Â© 2026 RefBoost. Alle rechten voorbehouden.",
       "madeIn": "Met zorg gemaakt in Frankrijk"
+    },
+    "blog": {
+      "label": "Blog",
+      "title": "Laatste artikelen",
+      "subtitle": "Tips, strategieën en inzichten om uw partnerprogramma te laten groeien",
+      "cta": "Alle artikelen bekijken →",
+      "read_more": "Lezen →",
+      "no_posts": "Nog geen artikelen."
     }
   },
   "login": {
@@ -258,11 +266,11 @@
     "email_placeholder": "u@bedrijf.nl",
     "password": "Wachtwoord",
     "forgot_password": "Wachtwoord vergeten?",
-    "submit": "Inloggen →",
+    "submit": "Inloggen â",
     "loading": "Bezig met inloggen...",
     "no_account": "Nog geen account?",
-    "create_account": "Gratis ruimte aanmaken →",
-    "back_to_site": "← Terug naar site",
+    "create_account": "Gratis ruimte aanmaken â",
+    "back_to_site": "â Terug naar site",
     "error_default": "Onjuiste inloggegevens"
   },
   "signup": {
@@ -274,8 +282,8 @@
     "fullname_ph": "Voornaam Achternaam",
     "phone": "Telefoon (optioneel)",
     "phone_ph": "+31 6 12345678",
-    "next": "Doorgaan →",
-    "back": "← Terug",
+    "next": "Doorgaan â",
+    "back": "â Terug",
     "credentials": "Uw inloggegevens",
     "credentials_sub": "U wordt beheerder van de {{company}}-ruimte.",
     "email": "Zakelijk e-mailadres",
@@ -291,7 +299,7 @@
     "success_title": "Welkom bij RefBoost!",
     "success_sub": "Uw {{company}}-ruimte is klaar.",
     "success_sub2": "U bent de beheerder.",
-    "success_cta": "Naar mijn dashboard →",
+    "success_cta": "Naar mijn dashboard â",
     "error_fields": "Vul de verplichte velden in.",
     "error_creds": "E-mail en wachtwoord vereist (10 tek., hfd-, kl., cijfer, speciaal).",
     "have_account": "Al een account?",
@@ -330,24 +338,24 @@
     "ready_to_test": "Klaar om het te testen?",
     "trial_text": "14 dagen gratis, geen creditcard. Stel uw programma in 5 minuten in.",
     "create_space": "Mijn ruimte gratis aanmaken",
-    "no_commitment": "Geen verplichting · 14 dagen gratis · Support inbegrepen"
+    "no_commitment": "Geen verplichting Â· 14 dagen gratis Â· Support inbegrepen"
   },
   "features": {
     "label": "Functie",
     "pipeline": {
-      "helmet_title": "Referral pipeline — RefBoost",
+      "helmet_title": "Referral pipeline â RefBoost",
       "helmet_desc": "Volg elke aanbeveling van het eerste contact tot de afsluiting. Kanban-weergave, geavanceerde filters, realtime statussen.",
       "title": "Referral pipeline",
-      "subtitle": "Van aanbeveling tot afsluiting — elke lead is gevolgd, geprioriteerd en bruikbaar in realtime.",
+      "subtitle": "Van aanbeveling tot afsluiting â elke lead is gevolgd, geprioriteerd en bruikbaar in realtime.",
       "benefits": [
         {
           "stat": "3x",
           "statLabel": "meer leads geconverteerd vs ongestructureerd bijhouden",
           "title": "Realtime Kanban-weergave",
-          "text": "Zie uw volledige partner-pipeline in één oogopslag. Elke lead beweegt door de kolommen naarmate de verkoop vordert — geen spreadsheet.",
+          "text": "Zie uw volledige partner-pipeline in Ã©Ã©n oogopslag. Elke lead beweegt door de kolommen naarmate de verkoop vordert â geen spreadsheet.",
           "points": [
             "Configureerbare kolommen: Nieuw, Kwalificatie, Demo, Voorstel, Getekend",
-            "Drag & drop om status in één gebaar te wijzigen",
+            "Drag & drop om status in Ã©Ã©n gebaar te wijzigen",
             "Automatische melding aan de partner bij elke fasewijziging",
             "Gewogen waarde op basis van sluitingskans in realtime"
           ]
@@ -356,7 +364,7 @@
           "stat": "87%",
           "statLabel": "van de teams verminderen hun responstijd met meer dan 2 dagen",
           "title": "Geavanceerde filters en zoekfunctie",
-          "text": "Vind onmiddellijk elke lead onder honderden. Filter op partner, bedrag, status, datum of bron met één klik.",
+          "text": "Vind onmiddellijk elke lead onder honderden. Filter op partner, bedrag, status, datum of bron met Ã©Ã©n klik.",
           "points": [
             "Cumulatieve filters: partner + status + bedrag + datum",
             "Volledige tekstzoekopdracht op bedrijfsnaam, contactpersoon, opmerkingen",
@@ -379,12 +387,12 @@
       ],
       "quote": {
         "text": "We hebben ons referralkanaal in 4 maanden verdrievoudigd. Pipeline-transparantie houdt onze beste partners betrokken.",
-        "author": "Marie D., Commercieel Directeur — SaaS B2B"
+        "author": "Marie D., Commercieel Directeur â SaaS B2B"
       }
     },
     "commissions": {
-      "helmet_title": "Automatische commissies — RefBoost",
-      "helmet_desc": "Automatische bonusberekening op basis van uw regels. Validatie met één klik, volledige geschiedenis, traceerbare betalingen.",
+      "helmet_title": "Automatische commissies â RefBoost",
+      "helmet_desc": "Automatische bonusberekening op basis van uw regels. Validatie met Ã©Ã©n klik, volledige geschiedenis, traceerbare betalingen.",
       "title": "Automatische commissies",
       "subtitle": "Stel uw regels eenmalig in. RefBoost berekent, valideert en volgt elke commissie zonder handmatige tussenkomst.",
       "benefits": [
@@ -392,7 +400,7 @@
           "stat": "0",
           "statLabel": "berekeningsfouten sinds de invoering van RefBoost (klantdata)",
           "title": "Automatische berekening op basis van uw regels",
-          "text": "Stel uw commissieraster eenmalig in — vast tarief, MRR-percentage, progressieve niveaus — en RefBoost berekent automatisch de bonus bij elk gevalideerde deal.",
+          "text": "Stel uw commissieraster eenmalig in â vast tarief, MRR-percentage, progressieve niveaus â en RefBoost berekent automatisch de bonus bij elk gevalideerde deal.",
           "points": [
             "Configureerbare tarieven per partner, segment of volume",
             "Progressieve niveaus: 8% tot 5 deals/maand, 12% daarboven",
@@ -416,7 +424,7 @@
           "stat": "< 5min",
           "statLabel": "om te exporteren en te synchroniseren met uw boekhouding",
           "title": "Export en boekhoudintegraties",
-          "text": "Genereer uw commissieoverzichten met één klik, exporteer naar uw boekhoudsoftware en stuur details rechtstreeks naar partners.",
+          "text": "Genereer uw commissieoverzichten met Ã©Ã©n klik, exporteer naar uw boekhoudsoftware en stuur details rechtstreeks naar partners.",
           "points": [
             "CSV/PDF-export van commissies per periode of per partner",
             "Zapier-integratie voor automatische synchronisatie",
@@ -427,14 +435,14 @@
       ],
       "quote": {
         "text": "Geen spreadsheets meer voor commissiebeheer. Alles geautomatiseerd, transparant, en onze partners ontvangen graag hun gedetailleerde berekeningen elke maand.",
-        "author": "Sophie M., Head of Partnerships — DataViz Pro"
+        "author": "Sophie M., Head of Partnerships â DataViz Pro"
       }
     },
     "analytics": {
-      "helmet_title": "Analytics & KPI's — RefBoost",
-      "helmet_desc": "Conversieratio, gegenereerde MRR, prestaties per partner — alle belangrijke statistieken in een bruikbaar dashboard.",
+      "helmet_title": "Analytics & KPI's â RefBoost",
+      "helmet_desc": "Conversieratio, gegenereerde MRR, prestaties per partner â alle belangrijke statistieken in een bruikbaar dashboard.",
       "title": "Analytics & KPI's",
-      "subtitle": "Beheer uw partnerprogramma met echte data, niet met intuïtie. Elke beslissing gebaseerd op feiten.",
+      "subtitle": "Beheer uw partnerprogramma met echte data, niet met intuÃ¯tie. Elke beslissing gebaseerd op feiten.",
       "benefits": [
         {
           "stat": "80%",
@@ -455,7 +463,7 @@
           "text": "Vergelijk voor het eerst uw partnerkanaal met andere acquisitiekanalen. Verantwoord uw investering met onweerlegbare cijfers.",
           "points": [
             "Partner-CAC vs SEA, inbound, evenementen",
-            "Automatische ROI-berekening per geïnvesteerde euro in commissies",
+            "Automatische ROI-berekening per geÃ¯nvesteerde euro in commissies",
             "12-maanden projectie op basis van huidige trends",
             "Rapport klaar om te presenteren aan het bestuur"
           ]
@@ -474,12 +482,12 @@
         }
       ],
       "quote": {
-        "text": "Voor het eerst konden we ons bestuur de exacte ROI van het partnerprogramma laten zien. €8 gegenereerd voor elke euro geïnvesteerd in commissies.",
-        "author": "Thomas C., CEO — ScaleUp Agency"
+        "text": "Voor het eerst konden we ons bestuur de exacte ROI van het partnerprogramma laten zien. â¬8 gegenereerd voor elke euro geÃ¯nvesteerd in commissies.",
+        "author": "Thomas C., CEO â ScaleUp Agency"
       }
     },
     "personnalisation": {
-      "helmet_title": "White label — RefBoost",
+      "helmet_title": "White label â RefBoost",
       "helmet_desc": "Logo, kleuren, aangepast domein: uw partners werken in uw universum, niet dat van RefBoost.",
       "title": "Uw merk, uw platform",
       "subtitle": "Logo, kleuren, maatwerk domein. Uw partners hebben geen reden om te weten dat u RefBoost gebruikt.",
@@ -523,20 +531,20 @@
       ],
       "quote": {
         "text": "Onze partners werken in ons universum. Ze hebben nooit geweten dat RefBoost erachter zat. Dat is precies wat we zochten.",
-        "author": "Pierre L., CRO — SaaS Fintech"
+        "author": "Pierre L., CRO â SaaS Fintech"
       }
     },
     "tracking": {
-      "helmet_title": "Unieke tracking links — RefBoost",
-      "helmet_desc": "Elke partner heeft zijn persoonlijke link. Automatische attributie, geïntegreerd openbaar formulier, nul wrijving.",
+      "helmet_title": "Unieke tracking links â RefBoost",
+      "helmet_desc": "Elke partner heeft zijn persoonlijke link. Automatische attributie, geÃ¯ntegreerd openbaar formulier, nul wrijving.",
       "title": "Unieke tracking links",
-      "subtitle": "Één link per partner, perfecte attributie. Uw partners delen, leads komen gekwalificeerd en automatisch toegewezen aan.",
+      "subtitle": "ÃÃ©n link per partner, perfecte attributie. Uw partners delen, leads komen gekwalificeerd en automatisch toegewezen aan.",
       "benefits": [
         {
           "stat": "0",
           "statLabel": "verloren of verkeerd toegewezen leads dankzij automatisch tracking",
           "title": "Een unieke link per partner en bron",
-          "text": "Elke partner heeft een unieke persoonlijke link die hij per kanaal kan variëren (LinkedIn, e-mail, evenement). U weet precies waar elke lead vandaan komt.",
+          "text": "Elke partner heeft een unieke persoonlijke link die hij per kanaal kan variÃ«ren (LinkedIn, e-mail, evenement). U weet precies waar elke lead vandaan komt.",
           "points": [
             "Automatische linkgeneratie bij partneruitnodiging",
             "UTM-parameters om bronnen te onderscheiden (LinkedIn, e-mail, telefoon)",
@@ -560,7 +568,7 @@
           "stat": "6",
           "statLabel": "configureerbare attributievensters passend bij uw verkoopcyclus",
           "title": "Configureerbare attributievensters",
-          "text": "Pas attributieregels aan uw verkoopcyclus aan. Een korte cyclus van 2 weken of een lange van 6 maanden: definieer het venster dat uw commerciële realiteit weerspiegelt.",
+          "text": "Pas attributieregels aan uw verkoopcyclus aan. Een korte cyclus van 2 weken of een lange van 6 maanden: definieer het venster dat uw commerciÃ«le realiteit weerspiegelt.",
           "points": [
             "Attributievenster van 7 tot 180 dagen op basis van uw verkoopcyclus",
             "First-touch of last-touch regel op basis van uw beleid",
@@ -571,7 +579,7 @@
       ],
       "quote": {
         "text": "Voor RefBoost besteedden we 2 uur per maand aan het handmatig afstemmen van leads met partners. Nu is het automatisch en conflictvrij.",
-        "author": "Alexandre R., VP Sales — ScaleB2B"
+        "author": "Alexandre R., VP Sales â ScaleB2B"
       }
     }
   },
@@ -580,11 +588,11 @@
     "subtitle": "Voer uw e-mail in. Als er een account bestaat, sturen we u een link om uw wachtwoord opnieuw in te stellen.",
     "sent_title": "E-mail verzonden!",
     "sent_text": "Als er een account bestaat met dit e-mailadres, ontvangt u binnen enkele minuten een resetlink.",
-    "back_to_login": "← Terug naar aanmelden",
+    "back_to_login": "â Terug naar aanmelden",
     "email": "E-mail",
     "email_ph": "u@bedrijf.nl",
     "loading": "Verzenden...",
-    "submit": "Resetlink verzenden →",
+    "submit": "Resetlink verzenden â",
     "submitting": "Verzenden..."
   },
   "resetPwd": {
@@ -592,14 +600,14 @@
     "subtitle": "Kies een veilig wachtwoord voor uw account.",
     "new_pwd": "Nieuw wachtwoord",
     "confirm_pwd": "Wachtwoord bevestigen",
-    "submit": "Opnieuw instellen →",
+    "submit": "Opnieuw instellen â",
     "loading": "Resetten...",
     "success_title": "Wachtwoord bijgewerkt!",
     "success_text": "Doorsturen naar inloggen in enkele seconden...",
-    "login_now": "Nu aanmelden →",
+    "login_now": "Nu aanmelden â",
     "invalid": "Ongeldige of verlopen link.",
     "request_new": "Nieuwe link aanvragen",
-    "back_to_login": "← Terug naar inloggen",
+    "back_to_login": "â Terug naar inloggen",
     "mismatch": "Wachtwoorden komen niet overeen.",
     "weak": "Wachtwoord te zwak.",
     "invalid_title": "Ongeldige of verlopen link.",
@@ -617,7 +625,7 @@
     "subtitle": "Maak uw wachtwoord aan voor toegang tot uw partnerruimte.",
     "pwd_label": "Wachtwoord",
     "confirm_label": "Bevestigen",
-    "submit": "Mijn account activeren →",
+    "submit": "Mijn account activeren â",
     "submitting": "Activeren...",
     "mismatch": "Wachtwoorden komen niet overeen.",
     "invalid_title": "Ongeldige link",
@@ -630,7 +638,7 @@
     "current": "Huidig wachtwoord",
     "new_pwd": "Nieuw wachtwoord",
     "confirm": "Nieuw wachtwoord bevestigen",
-    "submit": "Wijzigen →",
+    "submit": "Wijzigen â",
     "submitting": "Opslaan...",
     "mismatch": "Wachtwoorden komen niet overeen.",
     "weak": "Wachtwoord te zwak (min. 10 tek., hfd., kl., cijfer, speciaal)."
@@ -648,7 +656,7 @@
     "kpi_rate": "Conversieratio",
     "chart_monthly": "Maandelijkse evolutie",
     "chart_pipeline": "Pipeline per status",
-    "chart_revenue_label": "Gegenereerd (€)",
+    "chart_revenue_label": "Gegenereerd (â¬)",
     "chart_levels": "Prestaties per niveau",
     "chart_monthly_tab": "Maandelijks",
     "chart_cumul_tab": "Cumulatief",
@@ -669,7 +677,7 @@
     "loading": "Laden...",
     "deals": "Deals",
     "commissions_label": "Commissies",
-    "max": "Max ✨",
+    "max": "Max â¨",
     "no_data": "Geen gegevens"
   },
   "referrals": {
@@ -687,7 +695,7 @@
     "tab_history": "Geschiedenis",
     "save": "Opslaan",
     "saving": "Opslaan...",
-    "saved": "Wijzigingen opgeslagen ✓",
+    "saved": "Wijzigingen opgeslagen â",
     "error_save": "Fout bij opslaan",
     "delete_btn": "Verwijderen",
     "prospect": "Prospect",
@@ -736,7 +744,7 @@
     "commission_est": "Geschatte commissie",
     "of": "van",
     "delete": "Verwijderen",
-    "saved_ok": "Wijzigingen opgeslagen ✓",
+    "saved_ok": "Wijzigingen opgeslagen â",
     "save_error": "Fout bij opslaan"
   },
   "commissions": {
@@ -824,7 +832,7 @@
     "tbl_revenue": "Gegenereerde omzet",
     "tbl_commissions": "Commissies",
     "tbl_link": "Link",
-    "copy": "Kopiëren",
+    "copy": "KopiÃ«ren",
     "copied": "Gekopieerd!",
     "actions": "Acties",
     "contact": "Contact",
@@ -908,9 +916,9 @@
     "role_ph": "Bijv. CTO, Sales Director...",
     "notes": "Notities / Context",
     "notes_ph": "Beschrijf de behoefte of context van deze referral...",
-    "continue": "Doorgaan →",
-    "back": "← Terug",
-    "submit": "Mijn referral verzenden →",
+    "continue": "Doorgaan â",
+    "back": "â Terug",
+    "submit": "Mijn referral verzenden â",
     "submitting": "Verzenden..."
   },
   "partnerPayments": {
@@ -931,7 +939,7 @@
     "tbl_commission": "Commissie",
     "tbl_rate": "Tarief",
     "tbl_status": "Status",
-    "iban_saved": "Opgeslagen ✓",
+    "iban_saved": "Opgeslagen â",
     "tbl_prospect": "Prospect",
     "tbl_amount": "Commissie",
     "no_data": "Geen betalingen",
@@ -988,7 +996,7 @@
     "add_level": "+ Niveau toevoegen",
     "delete_level": "Verwijderen",
     "no_levels": "Geen niveaus geconfigureerd",
-    "saved": "Opgeslagen ✓",
+    "saved": "Opgeslagen â",
     "level_min_deals": "Min. deals",
     "level_delete": "Verwijderen",
     "revenue_model": "Omzetmodel",
@@ -999,20 +1007,20 @@
     "title_full": "Partnerprogramma",
     "subtitle_full": "Configureer niveaus en commissies voor je partnerprogramma. Partners stijgen automatisch van niveau op basis van hun prestaties.",
     "crit_title": "Voortgangscriterium",
-    "crit_deals": "🎯 Aantal gewonnen deals",
-    "crit_volume": "💰 Zakelijk volume (€)",
+    "crit_deals": "ð¯ Aantal gewonnen deals",
+    "crit_volume": "ð° Zakelijk volume (â¬)",
     "reset_defaults": "Terugzetten naar standaardwaarden",
     "reset_confirm": "Terugzetten naar standaardwaarden? Je aangepaste niveaus worden verwijderd.",
     "delete_confirm": "Dit niveau verwijderen? Partners behouden hun huidige niveau.",
     "level_name_placeholder": "Brons, Diamant...",
     "unit_deals": "gewonnen deals",
-    "unit_volume": "€ gegenereerd",
+    "unit_volume": "â¬ gegenereerd",
     "threshold_deals": "Gewonnen deals vereist",
-    "threshold_volume": "Omzet (€) vereist",
+    "threshold_volume": "Omzet (â¬) vereist",
     "name_required": "Naam is verplicht",
-    "level_saved": "Niveau opgeslagen ✓",
+    "level_saved": "Niveau opgeslagen â",
     "reset_done": "Teruggezet naar standaardwaarden",
-    "level_desc": "Vanaf {{min}} {{unit}} · {{rate}}% commissie"
+    "level_desc": "Vanaf {{min}} {{unit}} Â· {{rate}}% commissie"
   },
   "publicApply": {
     "title": "Word lid van het programma",
@@ -1036,8 +1044,8 @@
     "role_ph": "Bijv. Consultant, Partner...",
     "motivation": "Vertel ons over uw activiteit en motivatie",
     "motivation_ph": "Beschrijf uw netwerk, uw activiteit...",
-    "continue": "Doorgaan →",
-    "back": "← Terug",
+    "continue": "Doorgaan â",
+    "back": "â Terug",
     "submit": "Mijn aanvraag verzenden",
     "submitting": "Verzenden...",
     "why_title": "Waarom deelnemen?",
@@ -1080,7 +1088,7 @@
     "company": "Bedrijf",
     "role": "Rol",
     "message": "Bericht (optioneel)",
-    "submit": "Verzenden →",
+    "submit": "Verzenden â",
     "submitting": "Verzenden...",
     "powered_by": "Aangedreven door",
     "invalid_title": "Ongeldige link",
@@ -1098,17 +1106,17 @@
     "all": "Alle",
     "reset": "Resetten",
     "no_result": "Geen programma gevonden",
-    "see_all": "Programma bekijken →",
+    "see_all": "Programma bekijken â",
     "target": "Doelgroep:",
     "website": "Website bezoeken",
-    "join": "Deelnemen →",
+    "join": "Deelnemen â",
     "add_program": "Heeft u een programma?",
     "add_program_sub": "Sluit u aan bij de RefBoost Marketplace en bereik duizenden partners.",
     "add_program_cta": "Mijn programma aanmaken",
     "stat_programs": "Actieve programma's",
     "stat_free": "Gratis voor partners",
     "stat_commissions": "Gegenereerde commissies",
-    "helmet_title": "Marketplace — Referralprogramma's | RefBoost",
+    "helmet_title": "Marketplace â Referralprogramma's | RefBoost",
     "loading": "Laden...",
     "stat_active": "Actieve programma's",
     "stat_avg_rate": "Gemiddeld tarief",
@@ -1126,7 +1134,7 @@
     "marketplace_logo": "Logo URL",
     "marketplace_save": "Opslaan",
     "marketplace_saving": "Opslaan...",
-    "marketplace_saved": "Instellingen opgeslagen ✓",
+    "marketplace_saved": "Instellingen opgeslagen â",
     "branding_section": "Aanpassing (White Label)",
     "branding_logo": "Logo URL",
     "branding_primary": "Primaire kleur",
@@ -1144,14 +1152,14 @@
     "general_email": "Contacte-mailadres",
     "general_save": "Opslaan",
     "loading": "Laden...",
-    "saved": "Opgeslagen ✓",
+    "saved": "Opgeslagen â",
     "cancel": "Annuleren",
     "save": "Opslaan",
     "saving": "Opslaan...",
     "change_pwd": "Wachtwoord wijzigen",
     "add": "Toevoegen",
     "branding_desc": "Pas kleuren en logo van je partnerruimte aan. Deze instellingen worden overal toegepast: zijbalk, interface, enz.",
-    "level_saved": "Niveau opgeslagen ✓",
+    "level_saved": "Niveau opgeslagen â",
     "levels_reset_confirm": "Terugzetten naar standaardwaarden (Bronze/Silver/Gold/Platinum)? Je aangepaste niveaus worden gewist.",
     "tab_account": "Mijn account",
     "tab_members": "Leden",
@@ -1167,18 +1175,18 @@
     "password_min8": "Minimaal 8 tekens",
     "password_updated": "Wachtwoord bijgewerkt!",
     "update": "Bijwerken",
-    "copy_link": "Link kopiëren",
+    "copy_link": "Link kopiÃ«ren",
     "confirm_delete_level": "Dit niveau verwijderen? Partners worden herberekend.",
     "marketplace_hidden": "Je programma is verborgen",
     "marketplace_website": "Website",
     "marketplace_icp": "Hoofd ICP",
-    "marketplace_choose_sector": "— Kies een sector —",
+    "marketplace_choose_sector": "â Kies een sector â",
     "marketplace_website_ph": "https://jouw-website.nl",
     "marketplace_target_ph": "Bijv: B2B MKB, SaaS Startups...",
     "marketplace_desc_ph": "Beschrijf je dienst in 2-3 zinnen...",
     "marketplace_chars": "tekens",
     "public_link_title": "Openbare aanmeldingslink",
-    "marketplace_visible_shown": "✅ Je programma is openbaar zichtbaar",
+    "marketplace_visible_shown": "â Je programma is openbaar zichtbaar",
     "branding_accent": "Accentkleur",
     "marketplace_view": "Bekijk marketplace",
     "superadmins_title": "Super beheerders",
@@ -1190,7 +1198,7 @@
     "member_email_ph": "E-mail van nieuw lid",
     "api_keys_title": "API-sleutels",
     "api_key_public": "Publieke API-sleutel",
-    "api_key_private": "Privé API-sleutel",
+    "api_key_private": "PrivÃ© API-sleutel",
     "integrations_zapier": "Zapier",
     "integrations_zapier_desc": "Verbind RefBoost met Zapier",
     "integrations_zapier_ph": "Bijv: Zapier",
@@ -1213,7 +1221,7 @@
     "webhook_saved": "Webhook opgeslagen!",
     "confirm_remove_superadmin": "{{name}} verwijderen uit super admins?",
     "revenue_deals": "Aantal gewonnen deals",
-    "revenue_volume": "Omzetvolume (€)",
+    "revenue_volume": "Omzetvolume (â¬)",
     "revenue_fixed": "Vaste commissie",
     "email_col": "E-mail",
     "name_col": "Naam",
@@ -1229,12 +1237,12 @@
     "public_link_full_desc": "Deel deze link met je partners zodat ze zichzelf kunnen aanmelden. Je valideert hun aanvragen vanuit je dashboard.",
     "direct_link": "Directe link",
     "embed_code": "Insluitcode (iframe)",
-    "copy_code": "Code kopiëren",
+    "copy_code": "Code kopiÃ«ren",
     "link_share_hint": "Je kunt het in je e-mails, handtekeningen, LinkedIn-posts, enz. plaatsen.",
     "embed_hint": "Plak dit snippet in je site (WordPress, Webflow, Notion, enz.) om het formulier direct in te sluiten.",
-    "revenue_model_hint": "Hoofd inkomstentype — gebruikt om dashboardlabels aan te passen",
-    "revenue_ca": "Omzet — Eenmalig (one-shot)",
-    "revenue_mrr": "MRR — Terugkerende inkomsten (SaaS)",
+    "revenue_model_hint": "Hoofd inkomstentype â gebruikt om dashboardlabels aan te passen",
+    "revenue_ca": "Omzet â Eenmalig (one-shot)",
+    "revenue_mrr": "MRR â Terugkerende inkomsten (SaaS)",
     "revenue_deals_opt": "Aantal deals (commissie per deal)",
     "logo_ph": "https://voorbeeld.nl/logo.png",
     "logo_hint": "Plak de URL van een gehost afbeelding. Aanbevolen formaat: transparante PNG, hoogte ~80px.",
@@ -1257,17 +1265,17 @@
   },
   "onboarding": {
     "skip": "Stap overslaan",
-    "next": "Volgende →",
+    "next": "Volgende â",
     "back": "Terug",
     "finish": "Installatie voltooien",
     "subtitle": "Stel je werkruimte in een paar stappen in",
-    "welcome_title": "Welkom bij RefBoost 🎉",
+    "welcome_title": "Welkom bij RefBoost ð",
     "createUser_title": "Maak je team aan",
     "createPartner_title": "Nodig je eerste partner uit",
     "customize_title": "Pas je werkruimte aan",
     "publicLink_title": "Jouw verwijzingslink",
     "marketplace_title": "Jouw programma op de marketplace",
-    "done_title": "Alles klaar 🚀",
+    "done_title": "Alles klaar ð",
     "step_of": "Stap {{current}} van {{total}}",
     "step_2_desc": "Voeg een teamlid toe (admin of commercieel). Ze ontvangen een e-mail met hun inloggegevens.",
     "step_3_desc": "Pas het uiterlijk van je werkruimte aan",
@@ -1288,12 +1296,22 @@
     "role_commercial": "Commercieel",
     "role_admin_opt": "Admin",
     "role_partner_opt": "Partner",
-    "create_user": "Gebruiker aanmaken →",
-    "create_partner": "Partner aanmaken →",
+    "create_user": "Gebruiker aanmaken â",
+    "create_partner": "Partner aanmaken â",
     "user_created": "Gebruiker succesvol aangemaakt",
     "partner_added": "Partner succesvol toegevoegd",
     "config_saved": "Configuratie opgeslagen",
     "level_name": "Naam van het niveau",
-    "team_label": "team"
+    "team_label": "team",
+    "prev": "Vorige",
+    "step_1_desc": "Maak je team aan, nodig je eerste partner uit, pas je kleuren aan en ontvang je openbare aanmeldingslink. Dit duurt maximaal 3 minuten en je kunt elke stap overslaan.",
+    "mrr_label": "MRR — Maandelijks terugkerende omzet",
+    "arr_label": "ARR — Jaarlijks terugkerende omzet",
+    "ca_label": "Omzet — Totale omzet",
+    "link_desc": "Deel deze link met je referralpartners. Ze kunnen zichzelf aanmelden en jij valideert hun aanvragen.",
+    "sector": "Sector *",
+    "icp": "Hoofd-ICP",
+    "short_description": "Korte beschrijving *",
+    "marketplace_visible": "Tonen in marketplace"
   }
 }
