@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
@@ -9,12 +10,13 @@ const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc' };
 
 function formatDate(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export default function BlogPostPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -41,8 +43,8 @@ export default function BlogPostPage() {
   if (notFound || !post) return (
     <LandingLayout>
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <h1 style={{ color: C.s, fontSize: 24 }}>Article introuvable</h1>
-        <Link to="/blog" style={{ color: C.p, fontWeight: 600 }}>← Retour au blog</Link>
+        <h1 style={{ color: C.s, fontSize: 24 }}>{t('blog.not_found')}</h1>
+        <Link to="/blog" style={{ color: C.p, fontWeight: 600 }}>{t('blog.back')}</Link>
       </div>
     </LandingLayout>
   );
@@ -105,7 +107,7 @@ export default function BlogPostPage() {
       <main style={{ maxWidth: 780, margin: '0 auto', padding: '48px 24px 80px' }}>
         {/* Breadcrumb */}
         <nav aria-label="Fil d'Ariane" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 32, fontSize: 14, color: C.m }}>
-          <Link to="/" style={{ color: C.m, textDecoration: 'none' }}>Accueil</Link>
+          <Link to="/" style={{ color: C.m, textDecoration: 'none' }}>{t('blog.home')}</Link>
           <span>›</span>
           <Link to="/blog" style={{ color: C.m, textDecoration: 'none' }}>Blog</Link>
           <span>›</span>
@@ -125,7 +127,7 @@ export default function BlogPostPage() {
             <span>·</span>
             <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
             <span>·</span>
-            <span>{post.reading_time_minutes || 5} min de lecture</span>
+            <span>{post.reading_time_minutes || 5} ` ${t('blog.read_time')}`</span>
           </div>
           {post.excerpt && (
             <p style={{ margin: '24px 0 0', fontSize: 18, color: C.m, lineHeight: 1.7, fontStyle: 'italic', borderLeft: '3px solid ' + C.p, paddingLeft: 20 }}>
@@ -147,7 +149,7 @@ export default function BlogPostPage() {
         {/* Tags */}
         {post.tags?.length > 0 && (
           <footer style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid #e2e8f0' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: C.m, textTransform: 'uppercase', letterSpacing: 1 }}>Tags</p>
+            <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: C.m, textTransform: 'uppercase', letterSpacing: 1 }}>{t('blog.tags')}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {post.tags.map(t => (
                 <span key={t} style={{ padding: '4px 12px', background: '#f0fdf4', color: C.p, borderRadius: 20, fontSize: 13, fontWeight: 600 }}>{t}</span>
