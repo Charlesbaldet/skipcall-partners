@@ -1178,7 +1178,8 @@
     "marketplace_desc_ph": "Describe your service in 2-3 sentences...",
     "marketplace_chars": "characters",
     "public_link_title": "Public referral link",
-    "marketplace_visible_shown": "✅ Your program is publicly displayed"
+    "marketplace_visible_shown": "✅ Your program is publicly displayed",
+    "branding_accent": "Accent color"
   },
   "status": {
     "new": "New",
