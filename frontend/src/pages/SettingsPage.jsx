@@ -352,7 +352,7 @@ function MembersTab() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Membres</h3>
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{t('settings.members_title')}</h3>
         <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           {showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? t('settings.cancel') : t('settings.add')}
         </button>
@@ -471,19 +471,19 @@ function IntegrationsTab() {
   const copyToClipboard = (t) => { navigator.clipboard.writeText(t); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   const CRM_CARDS = [
-    { name: 'HubSpot', desc: 'Synchronisez vos contacts et deals automatiquement', color: '#ff7a59', soon: true },
-    { name: 'Pipedrive', desc: 'Importez vos prospects et suivez vos deals', color: '#017737', soon: true },
+    { name: 'HubSpot', desc: '{t('settings.hubspot_desc')}', color: '#ff7a59', soon: true },
+    { name: 'Pipedrive', desc: '{t('settings.pipedrive_desc')}', color: '#017737', soon: true },
   ];
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>Intégrations</h3>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>{t('settings.tab_integrations')}</h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 28 }}>
         {CRM_CARDS.map(crm => (
           <div key={crm.name} style={{ padding: 20, borderRadius: 14, border: '1px solid #e2e8f0', background: '#fff', opacity: 0.7 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: crm.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, color: crm.color }}>{crm.name[0]}</div>
-              <div><div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{crm.name}</div>{crm.soon && <span style={{ fontSize: 10, fontWeight: 600, color: '#f59e0b', background: '#fffbeb', padding: '2px 6px', borderRadius: 4 }}>Bientôt</span>}</div>
+              <div><div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{crm.name}</div>{crm.soon && <span style={{ fontSize: 10, fontWeight: 600, color: '#f59e0b', background: '#fffbeb', padding: '2px 6px', borderRadius: 4 }}>{t('settings.coming_soon')}</span>}</div>
             </div>
             <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.5 }}>{crm.desc}</p>
           </div>
@@ -491,7 +491,7 @@ function IntegrationsTab() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}><Key size={16} color="#6366f1" /><h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Open API</h4></div>
-      <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>Créez des clés API pour intégrer Skipcall avec vos outils. <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>POST /api/v1/referrals</code> · <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>GET /api/v1/referrals</code></p>
+      <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>{t('settings.api_desc')} <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>POST /api/v1/referrals</code> · <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>GET /api/v1/referrals</code></p>
 
       {newKey && (
         <div style={{ background: '#fffbeb', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #fde68a' }} className="fade-in">
@@ -529,7 +529,7 @@ function IntegrationsTab() {
               <button onClick={() => handleRevoke(k.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
             </div>
           ))}
-          {apiKeys.filter(k => k.is_active).length === 0 && <div style={{ color: '#94a3b8', fontSize: 13, padding: 16, textAlign: 'center' }}>Aucune clé API active</div>}
+          {apiKeys.filter(k => k.is_active).length === 0 && <div style={{ color: '#94a3b8', fontSize: 13, padding: 16, textAlign: 'center' }}>{t('settings.api_no_keys')}</div>}
         </div>
       )}
     </div>
@@ -566,10 +566,10 @@ function PublicLinkTab() {
   return (
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.public_link_title')}</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Partage ce lien avec tes apporteurs d'affaires pour qu'ils puissent s'inscrire eux-mêmes. Tu valideras leurs candidatures depuis ton dashboard.</p>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.public_link_full_desc')}</p>
 
       <div style={{ marginBottom: 28 }}>
-        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>Lien direct</h4>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>{t('settings.direct_link')}</h4>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
           <code style={{ flex: 1, fontSize: 13, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{directLink}</code>
           <button onClick={() => copy('link', directLink)} style={{
@@ -581,11 +581,11 @@ function PublicLinkTab() {
             {copied === 'link' ? <><CheckCircle size={14}/>{t('settings.link_copied')}</> : <><Copy size={14}/>{t('settings.copy_link')}</>}
           </button>
         </div>
-        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Tu peux le mettre dans tes emails, signatures, posts LinkedIn, etc.</p>
+        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>{t('settings.link_share_hint')}</p>
       </div>
 
       <div>
-        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>Code à intégrer (iframe)</h4>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>{t('settings.embed_code')}</h4>
         <div style={{ padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
           <code style={{ display: 'block', fontSize: 12, color: '#0f172a', marginBottom: 12, fontFamily: 'monospace', wordBreak: 'break-all', lineHeight: 1.6 }}>{embedCode}</code>
           <button onClick={() => copy('embed', embedCode)} style={{
@@ -597,7 +597,7 @@ function PublicLinkTab() {
             {copied === 'embed' ? <><CheckCircle size={14}/>{t('settings.link_copied')}</> : <><Copy size={14}/> Copier le code</>}
           </button>
         </div>
-        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>Colle ce snippet dans ton site (WordPress, Webflow, Notion, etc.) pour intégrer le formulaire directement.</p>
+        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>{t('settings.embed_hint')}</p>
       </div>
     </div>
   );
@@ -671,14 +671,14 @@ function AppearanceTab() {
         </div>
 
         <div>
-          <label style={labelStyle}>Modèle de revenus</label>
+          <label style={labelStyle}>{t('settings.revenue_model')}</label>
           <select value={form.revenue_model || 'CA'} onChange={e => setForm(f => ({ ...f, revenue_model: e.target.value }))} style={inputStyle}>
             <option value="MRR">MRR — Revenu mensuel récurrent</option>
             <option value="ARR">ARR — Revenu annuel récurrent</option>
-            <option value="CA">CA — Chiffre d'affaires (one-shot)</option>
+            <option value="CA">{t('settings.revenue_ca')}</option>
             <option value="Other">Autre</option>
           </select>
-          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#64748b' }}>Type de revenus principal — utilisé pour adapter les libellés du dashboard</p>
+          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#64748b' }}>{t('settings.revenue_model_hint')}</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div>
@@ -693,8 +693,8 @@ function AppearanceTab() {
 
         <div>
           <label style={labelStyle}>{t('settings.branding_logo')}</label>
-          <input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://exemple.com/logo.png" style={inputStyle} />
-          <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>Colle l'URL d'une image hébergée. Format recommandé : PNG transparent, hauteur ~80px.</p>
+          <input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder={t('settings.logo_ph')} style={inputStyle} />
+          <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>{t('settings.logo_hint')}</p>
           {form.logo_url && (
             <div style={{ marginTop: 12, padding: 16, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', textAlign: 'center' }}>
               <img src={form.logo_url} alt="Aperçu" style={{ maxHeight: 60, maxWidth: '100%' }} onError={e => { e.target.style.display = 'none'; }} />
