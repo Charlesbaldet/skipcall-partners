@@ -471,8 +471,8 @@ function IntegrationsTab() {
   const copyToClipboard = (t) => { navigator.clipboard.writeText(t); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   const CRM_CARDS = [
-    { name: 'HubSpot', desc: '{t('settings.hubspot_desc')}', color: '#ff7a59', soon: true },
-    { name: 'Pipedrive', desc: '{t('settings.pipedrive_desc')}', color: '#017737', soon: true },
+    { name: 'HubSpot', desc: t('settings.hubspot_desc'), color: '#ff7a59', soon: true },
+    { name: 'Pipedrive', desc: t('settings.pipedrive_desc'), color: '#017737', soon: true },
   ];
 
   return (
