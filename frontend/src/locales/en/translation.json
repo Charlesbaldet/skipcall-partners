@@ -1312,7 +1312,18 @@
     "sector": "Sector *",
     "icp": "Main ICP",
     "short_description": "Short description *",
-    "marketplace_visible": "Show on marketplace"
+    "marketplace_visible": "Show on marketplace",
+    "createPartner_desc_long": "Add a partner (business referrer). They'll get access to their own space to submit leads.",
+    "customize_desc_long": "Customize your brand colors (optional — you can change this later in Settings).",
+    "customize_company_placeholder": "Your company",
+    "customize_revenue_label": "Revenue model",
+    "marketplace_desc_long": "Fill in your information to appear on the marketplace. You can edit this anytime in Settings.",
+    "marketplace_choose": "-- Choose --",
+    "marketplace_website_placeholder": "https://your-site.com",
+    "marketplace_icp_placeholder": "E.g. SMBs, B2B startups…",
+    "marketplace_description_placeholder": "Describe your service in 2-3 sentences…",
+    "marketplace_active": "Active",
+    "marketplace_inactive": "Inactive"
   },
   "blog": {
     "subtitle": "Tips, strategies and insights",
