@@ -1313,5 +1313,17 @@
     "icp": "ICP principal",
     "short_description": "Descripción breve *",
     "marketplace_visible": "Mostrar en el marketplace"
+  },
+  "blog": {
+    "subtitle": "Consejos, estrategias y recursos",
+    "loading": "Cargando…",
+    "no_posts": "Aún no hay artículos.",
+    "come_back": "¡Vuelve pronto!",
+    "not_found": "Artículo no encontrado",
+    "back": "← Volver al blog",
+    "home": "Inicio",
+    "by": "Por",
+    "tags": "Etiquetas",
+    "read_time": "min de lectura"
   }
 }
