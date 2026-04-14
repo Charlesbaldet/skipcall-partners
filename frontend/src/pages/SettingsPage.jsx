@@ -96,7 +96,7 @@ function MarketplaceTab() {
       {success && <div style={{background:'#ecfdf5',border:'1px solid #6ee7b7',borderRadius:10,padding:'12px 16px',color:'#059669',fontSize:13,marginBottom:16}}>{success}</div>}
       <div style={{display:'flex',gap:12,alignItems:'center'}}>
         <button onClick={handleSave} disabled={saving} style={{padding:'12px 28px',borderRadius:10,border:'none',background:saving?'#94a3b8':'linear-gradient(135deg,#059669,#10b981)',color:'#fff',fontWeight:700,fontSize:14,cursor:saving?'not-allowed':'pointer',fontFamily:'inherit',boxShadow:saving?'none':'0 4px 16px rgba(5,150,105,.35)'}}>
-          {saving?'Enregistrement…':'Enregistrer'}
+          {saving?t('settings.saving'):t('settings.save')}
         </button>
         <a href="/marketplace" target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:6,padding:'12px 20px',borderRadius:10,border:'1.5px solid #059669',color:'#059669',fontWeight:600,fontSize:13,textDecoration:'none'}}>
           <Globe size={14}/> Voir la marketplace
@@ -276,7 +276,7 @@ function SuperAdminsTab() {
       </div>
 
       <div style={{ marginBottom: 24, padding: 20, background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 12 }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: '#581c87' }}>Inviter un super administrateur</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: '#581c87' }}>{t('settings.invite_superadmin')}</h3>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6b21a8' }}>Donne accès à la gestion de tous les tenants de la plateforme.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input type="email" value={saEmail} onChange={e => setSaEmail(e.target.value)} placeholder="email@exemple.com" style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid #e9d5ff', fontSize: 14, boxSizing: 'border-box' }} />
@@ -892,7 +892,7 @@ function ProgramTab() {
           color: editing !== null ? '#94a3b8' : '#fff',
           fontWeight: 600, fontSize: 13, cursor: editing !== null ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', gap: 6,
-        }}><Plus size={14} /> Ajouter un niveau</button>
+        }}><Plus size={14} />{t('programme.add_level')}</button>
         <button onClick={reset} style={{
           padding: '10px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
           background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
