@@ -33,7 +33,7 @@ function Logo({ size = 40, white = false }) {
 }
 
 
-function BlogPreview({ t, isDark, C }) {
+function BlogPreview({ t, C }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,24 +44,24 @@ function BlogPreview({ t, isDark, C }) {
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={{textAlign:'center',padding:'40px 0',color:isDark?'#94a3b8':'#64748b'}}>...</div>;
-  if (!posts.length) return <p style={{textAlign:'center',color:isDark?'#94a3b8':'#64748b'}}>{t('landing.blog.no_posts')}</p>;
+  if (loading) return <div style={{textAlign:'center',padding:'40px 0',color:'#64748b'}}>...</div>;
+  if (!posts.length) return <p style={{textAlign:'center',color:'#64748b'}}>{t('landing.blog.no_posts')}</p>;
 
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:24}}>
       {posts.map(post => (
-        <a key={post.id} href={'/blog/' + post.slug} style={{textDecoration:'none',display:'block',background:isDark?'#1e293b':'#fff',borderRadius:16,overflow:'hidden',boxShadow:isDark?'0 2px 16px #0004':'0 2px 16px #0001',transition:'transform .2s,box-shadow .2s'}}
-          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow=isDark?'0 8px 32px #0006':'0 8px 32px #0003';}}
-          onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow=isDark?'0 2px 16px #0004':'0 2px 16px #0001';}}>
+        <a key={post.id} href={'/blog/' + post.slug} style={{textDecoration:'none',display:'block',background:'#fff',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 16px rgba(0,0,0,0.08)',border:'1px solid #e2e8f0',transition:'transform .2s,box-shadow .2s'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.15)';}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 2px 16px rgba(0,0,0,0.08)';}}>
           {post.cover_image_url && <img src={post.cover_image_url} alt={post.title} style={{width:'100%',height:180,objectFit:'cover'}} />}
-          {!post.cover_image_url && <div style={{height:8,background:'linear-gradient(90deg,'+C.p+','+C.s+')'}} />}
+          {!post.cover_image_url && <div style={{height:6,background:'linear-gradient(90deg,'+(C&&C.p?C.p:'#6366f1')+','+(C&&C.s?C.s:'#8b5cf6')+')'}} />}
           <div style={{padding:24}}>
-            {post.category && <span style={{fontSize:12,fontWeight:600,color:C.p,textTransform:'uppercase',letterSpacing:1}}>{post.category}</span>}
-            <h3 style={{fontSize:17,fontWeight:700,margin:'8px 0 10px',color:isDark?'#f1f5f9':'#0f172a',lineHeight:1.4}}>{post.title}</h3>
-            {post.excerpt && <p style={{fontSize:14,color:isDark?'#94a3b8':'#64748b',margin:'0 0 16px',lineHeight:1.6,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{post.excerpt}</p>}
+            {post.category && <span style={{fontSize:12,fontWeight:600,color:(C&&C.p?C.p:'#6366f1'),textTransform:'uppercase',letterSpacing:1}}>{post.category}</span>}
+            <h3 style={{fontSize:17,fontWeight:700,margin:'8px 0 10px',color:'#0f172a',lineHeight:1.4}}>{post.title}</h3>
+            {post.excerpt && <p style={{fontSize:14,color:'#64748b',margin:'0 0 16px',lineHeight:1.6,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{post.excerpt}</p>}
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:12,color:isDark?'#64748b':'#94a3b8'}}>{post.reading_time_minutes} min</span>
-              <span style={{fontSize:13,fontWeight:600,color:C.p}}>{t('landing.blog.read_more')}</span>
+              <span style={{fontSize:12,color:'#94a3b8'}}>{post.reading_time_minutes} min</span>
+              <span style={{fontSize:13,fontWeight:600,color:(C&&C.p?C.p:'#6366f1')}}>{t('landing.blog.read_more')}</span>
             </div>
           </div>
         </a>
@@ -69,6 +69,7 @@ function BlogPreview({ t, isDark, C }) {
     </div>
   );
 }
+
 
 export default function LandingPage() {
   const { t } = useTranslation();
@@ -139,7 +140,7 @@ export default function LandingPage() {
         .bs:hover{background:${C.s}!important;color:#fff!important}
       `}</style>
 
-      {/* âââ NAV âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ NAV Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,padding:mobile?'14px 20px':'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',backdropFilter:'blur(20px)',borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',transition:'all .3s'}}>
         <Logo size={mobile?30:36}/>
         {mobile ? (
@@ -149,7 +150,7 @@ export default function LandingPage() {
           </button>
         ) : (
           <div style={{display:'flex',alignItems:'center',gap:28}}>
-            {/* FonctionnalitÃ©s dropdown */}
+            {/* FonctionnalitÃÂ©s dropdown */}
             <div style={{position:'relative'}} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
               <span style={{color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4}}>
                 {t('nav.features')} <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
@@ -201,7 +202,7 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* âââ HERO âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HERO Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'140px 48px 80px',position:'relative',background:`radial-gradient(ellipse 80% 60% at 50% -20%,${C.p}12,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,${C.a}08,transparent),${C.bg}`}}>
         <div style={{position:'absolute',top:120,left:80,width:300,height:300,borderRadius:'50%',background:`${C.p}06`,animation:'float 6s ease-in-out infinite'}}/>
         <div style={{position:'absolute',bottom:100,right:120,width:200,height:200,borderRadius:'50%',background:`${C.a}08`,animation:'float 8s ease-in-out infinite 2s'}}/>
@@ -229,7 +230,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* âââ FEATURES âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ FEATURES Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section id="fonctionnalites" style={{...s.section,background:'#fff'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={s.center}>
@@ -251,7 +252,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* âââ HOW IT WORKS âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HOW IT WORKS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section style={{...s.section,background:C.s}}>
         <div style={{maxWidth:900,margin:'0 auto',textAlign:'center'}}>
           <div style={{...s.label,color:C.pl}}>{t('landing.howItWorks.label')}</div>
@@ -268,7 +269,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* âââ TESTIMONIALS âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ TESTIMONIALS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section id="temoignages" style={{...s.section,background:'#fff'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={s.center}>
@@ -284,7 +285,7 @@ export default function LandingPage() {
                   <div style={{width:44,height:44,borderRadius:12,background:g(C.p,C.pl),display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:18}}>{t2.a}</div>
                   <div>
                     <div style={{fontWeight:700,fontSize:14,color:C.s}}>{t2.n}</div>
-                    <div style={{fontSize:12,color:C.m}}>{t2.r} Â· {t2.c}</div>
+                    <div style={{fontSize:12,color:C.m}}>{t2.r} ÃÂ· {t2.c}</div>
                   </div>
                 </div>
               </div>
@@ -293,7 +294,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* âââ MARKETPLACE âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ MARKETPLACE Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section id="marketplace" style={{padding:'80px 24px',background:'#fff'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:48}}>
@@ -319,7 +320,7 @@ export default function LandingPage() {
             </div>
           ) : (
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:20,marginBottom:40}}>
-              {[{name:'TechFlow SaaS',sector:'SaaS',desc:'Solution CRM pour PME. 15% de commission sur 12 mois.',color:'#059669'},{name:'ScaleUp Agency',sector:'Marketing',desc:'Agence growth B2B. 500 EUR par deal signÃ©.',color:'#7c3aed'},{name:'DataViz Pro',sector:'SaaS',desc:'Outil BI pour Ã©quipes data. 20% MRR sur 6 mois.',color:'#0ea5e9'}].map((p,i)=>(
+              {[{name:'TechFlow SaaS',sector:'SaaS',desc:'Solution CRM pour PME. 15% de commission sur 12 mois.',color:'#059669'},{name:'ScaleUp Agency',sector:'Marketing',desc:'Agence growth B2B. 500 EUR par deal signÃÂ©.',color:'#7c3aed'},{name:'DataViz Pro',sector:'SaaS',desc:'Outil BI pour ÃÂ©quipes data. 20% MRR sur 6 mois.',color:'#0ea5e9'}].map((p,i)=>(
                 <div key={i} style={{background:'#fff',borderRadius:16,padding:24,border:'1px solid #e2e8f0',boxShadow:'0 2px 10px rgba(0,0,0,.05)'}}>
                   <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
                     <div style={{width:44,height:44,borderRadius:10,background:p.color+'20',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:p.color}}>{p.name.split(' ').slice(0,2).map(w=>w[0]).join('')}</div>
@@ -345,7 +346,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* âââ PRICING âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ PRICING Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section id="tarifs" style={{...s.section,background:C.bg}}>
         <div style={{maxWidth:1000,margin:'0 auto'}}>
           <div style={s.center}>
@@ -381,7 +382,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* âââ FAQ âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ FAQ Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section style={{...s.section,background:'#fff'}}>
         <div style={{maxWidth:700,margin:'0 auto'}}>
           <div style={s.center}>
@@ -400,14 +401,14 @@ export default function LandingPage() {
       </section>
 
       {/* --- Blog Preview --- */}
-      <section style={{padding:'80px 48px',background:isDark?'#0f172a':'#f8fafc'}}>
+      <section style={{padding:'80px 48px',background:'#f8fafc'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:48}}>
             <span style={{display:'inline-block',padding:'6px 16px',background:C.p+'22',color:C.p,borderRadius:999,fontSize:13,fontWeight:600,marginBottom:12}}>{t('landing.blog.label')}</span>
-            <h2 style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:800,margin:'0 0 12px',color:isDark?'#f1f5f9':'#0f172a'}}>{t('landing.blog.title')}</h2>
-            <p style={{fontSize:17,color:isDark?'#94a3b8':'#64748b',maxWidth:560,margin:'0 auto'}}>{t('landing.blog.subtitle')}</p>
+            <h2 style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:800,margin:'0 0 12px',color:'#0f172a'}}>{t('landing.blog.title')}</h2>
+            <p style={{fontSize:17,color:'#64748b',maxWidth:560,margin:'0 auto'}}>{t('landing.blog.subtitle')}</p>
           </div>
-          <BlogPreview t={t} isDark={isDark} C={C} />
+          <BlogPreview t={t} C={C} />
           <div style={{textAlign:'center',marginTop:40}}>
             <a href="/blog" style={{display:'inline-block',padding:'14px 32px',background:C.p,color:'#fff',borderRadius:12,textDecoration:'none',fontWeight:700,fontSize:15,transition:'opacity .2s'}} onMouseEnter={e=>e.currentTarget.style.opacity='.85'} onMouseLeave={e=>e.currentTarget.style.opacity='1'}>{t('landing.blog.cta')}</a>
           </div>
@@ -415,7 +416,7 @@ export default function LandingPage() {
       </section>
 
 
-      {/* âââ CTA âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CTA Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section style={{padding:'100px 48px',background:g(C.s,'#1e293b'),position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',top:-100,right:-100,width:400,height:400,borderRadius:'50%',background:`${C.p}10`}}/>
         <div style={{position:'absolute',bottom:-50,left:-50,width:250,height:250,borderRadius:'50%',background:`${C.a}08`}}/>
@@ -430,7 +431,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* âââ FOOTER âââ */}
+      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ FOOTER Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <footer style={{padding:'48px 48px 32px',background:C.s,borderTop:'1px solid rgba(255,255,255,.05)'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={{display:'flex',flexDirection:mobile?'column':'row',justifyContent:'space-between',alignItems:'flex-start',gap:mobile?32:0,marginBottom:32}}>
