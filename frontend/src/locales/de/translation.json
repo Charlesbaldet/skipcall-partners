@@ -11,7 +11,8 @@
     "archive": "Archivieren",
     "restore": "Wiederherstellen",
     "close": "Schließen",
-    "no_data": "Keine Daten"
+    "no_data": "Keine Daten",
+    "edit": "Bearbeiten"
   },
   "nav": {
     "features": "Funktionen",
@@ -979,7 +980,7 @@
     "level_name": "Stufenname",
     "level_icon": "Symbol",
     "level_color": "Farbe",
-    "level_rate": "Satz (%)",
+    "level_rate": "Provision (%)",
     "level_min": "Min. Deals",
     "save": "Änderungen speichern",
     "saving": "Wird gespeichert...",
@@ -1001,7 +1002,8 @@
     "crit_volume": "💰 Geschäftsvolumen (€)",
     "reset_defaults": "Auf Standardwerte zurücksetzen",
     "reset_confirm": "Auf Standardwerte zurücksetzen? Deine benutzerdefinierten Stufen werden gelöscht.",
-    "delete_confirm": "Diese Stufe löschen? Partner behalten ihre aktuelle Stufe."
+    "delete_confirm": "Diese Stufe löschen? Partner behalten ihre aktuelle Stufe.",
+    "level_name_placeholder": "Bronze, Diamant..."
   },
   "publicApply": {
     "title": "Dem Programm beitreten",
@@ -1141,7 +1143,15 @@
     "add": "Hinzufügen",
     "branding_desc": "Passe Farben und Logo deines Partner-Bereichs an. Diese Einstellungen gelten überall: Sidebar, Interface, usw.",
     "level_saved": "Stufe gespeichert ✓",
-    "levels_reset_confirm": "Auf Standardwerte zurücksetzen (Bronze/Silver/Gold/Platinum)? Deine benutzerdefinierten Stufen werden gelöscht."
+    "levels_reset_confirm": "Auf Standardwerte zurücksetzen (Bronze/Silver/Gold/Platinum)? Deine benutzerdefinierten Stufen werden gelöscht.",
+    "tab_account": "Mein Konto",
+    "tab_members": "Mitglieder",
+    "tab_marketplace": "Marketplace",
+    "tab_integrations": "Integrationen",
+    "tab_public_link": "Öffentlicher Link",
+    "tab_appearance": "Erscheinungsbild",
+    "tab_program": "Programm",
+    "invite": "Einladen"
   },
   "status": {
     "new": "Neu",
