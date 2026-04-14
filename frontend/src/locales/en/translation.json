@@ -1176,7 +1176,8 @@
     "marketplace_website_ph": "https://your-site.com",
     "marketplace_target_ph": "Ex: B2B SMEs, SaaS Startups...",
     "marketplace_desc_ph": "Describe your service in 2-3 sentences...",
-    "marketplace_chars": "characters"
+    "marketplace_chars": "characters",
+    "public_link_title": "Public referral link"
   },
   "status": {
     "new": "New",
