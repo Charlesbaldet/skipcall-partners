@@ -117,16 +117,16 @@ export default function SettingsPage() {
   const handleClose = () => navigate(-1);
 
   const NAV = [
-    { id: 'account', icon: User, label: 'Mon compte' },
+    { id: 'account', icon: User, label: t('settings.tab_account') },
     ...(isSuperadmin ? [
-      { id: 'superadmins', icon: Users, label: 'Membres' },
+      { id: 'superadmins', icon: Users, label: t('settings.tab_members') },
     ] : []),
     ...(isAdmin ? [
-    { id: 'marketplace', icon: Store, label: 'Marketplace' },
-      { id: 'members', icon: Users, label: 'Membres' },
-      { id: 'integrations', icon: Plug, label: 'Intégrations' },
-      { id: 'public-link', icon: Link2, label: 'Lien public' },
-      { id: 'appearance', icon: Palette, label: 'Apparence' },
+    { id: 'marketplace', icon: Store, label: t('settings.tab_marketplace') },
+      { id: 'members', icon: Users, label: t('settings.tab_members') },
+      { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
+      { id: 'public-link', icon: Link2, label: t('settings.tab_public_link') },
+      { id: 'appearance', icon: Palette, label: t('settings.tab_appearance') },
     ] : []),
   ];
 
@@ -402,7 +402,7 @@ function MembersTab() {
             <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Supprimer cet utilisateur ?</h3>
             <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>Cette action est irréversible.</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Annuler</button>
+              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('settings.cancel')}</button>
               <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#dc2626,#b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> Supprimer</button>
             </div>
           </div>
@@ -508,7 +508,7 @@ function IntegrationsTab() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? 'Création...' : 'Générer'}</button>
-            <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
+            <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
           </div>
         </div>
       ) : (
@@ -833,7 +833,7 @@ function ProgramTab() {
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.save')}</button>
-        <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Annuler</button>
+        <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
       </div>
     </div>
   );
