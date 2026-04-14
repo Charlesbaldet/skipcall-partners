@@ -204,7 +204,7 @@ export default function OnboardingWizard({ onClose }) {
 
           {step === 2 && !createdPartner && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Ajoute un partenaire (apporteur d'affaires). Il aura accès à son propre espace pour soumettre des leads.</p>
+              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.createPartner.description')}</p>
               <Field label={t('onboarding.company_name')}><Input value={partnerForm.name} onChange={v => setPartnerForm({...partnerForm, name: v})} placeholder="Acme Consulting" /></Field>
               <Field label={t('onboarding.contact_name')}><Input value={partnerForm.contact_name} onChange={v => setPartnerForm({...partnerForm, contact_name: v})} placeholder="Marie Dupont" /></Field>
               <Field label={t('onboarding.email')}><Input type="email" value={partnerForm.email} onChange={v => setPartnerForm({...partnerForm, email: v})} placeholder="marie@acme.com" /></Field>
@@ -221,8 +221,8 @@ export default function OnboardingWizard({ onClose }) {
 
           {step === 3 && !customized && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Adapte les couleurs à ta marque (optionnel — tu pourras changer plus tard dans Paramètres).</p>
-              <Field label={t('onboarding.company_name')}><Input value={customizeForm.name} onChange={v => setCustomizeForm({...customizeForm, name: v})} placeholder="Ton entreprise" /></Field>
+              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.customize.description')}</p>
+              <Field label={t('onboarding.company_name')}><Input value={customizeForm.name} onChange={v => setCustomizeForm({...customizeForm, name: v})} placeholder={t('onboarding.customize.companyPlaceholder')} /></Field>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <Field label={t('settings.branding_primary')}>
                   <input type="color" value={customizeForm.primary_color}
@@ -235,7 +235,7 @@ export default function OnboardingWizard({ onClose }) {
                     style={{ ...inputStyle, height: 44, padding: 4 }} />
                 </Field>
               </div>
-              <Field label="Modèle de revenus"><select value={customizeForm.revenue_model} onChange={e => setCustomizeForm({...customizeForm, revenue_model: e.target.value})} style={inputStyle}><option value="MRR">{t('onboarding.mrr_label')}</option><option value="ARR">{t('onboarding.arr_label')}</option><option value="CA">{t('onboarding.ca_label')}</option><option value="Other">Autre</option></select></Field>
+              <Field label={t('onboarding.customize.revenueLabel')}><select value={customizeForm.revenue_model} onChange={e => setCustomizeForm({...customizeForm, revenue_model: e.target.value})} style={inputStyle}><option value="MRR">{t('onboarding.mrr_label')}</option><option value="ARR">{t('onboarding.arr_label')}</option><option value="CA">{t('onboarding.ca_label')}</option><option value="Other">Autre</option></select></Field>
             </div>
           )}
           {step === 3 && customized && (
@@ -263,32 +263,32 @@ export default function OnboardingWizard({ onClose }) {
         {step === 5 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <p style={{ color: C.m, fontSize: 14, marginTop: 0 }}>
-              Renseignez vos informations pour apparaitre sur la marketplace. Modifiable a tout moment dans Settings.
+              {t('onboarding.marketplace.description')}
             </p>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.sector')}</label>
               <select value={marketplaceForm.sector} onChange={e => setMkt('sector', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}>
-                <option value=''>-- Choisir --</option>
+                <option value=''>{t('onboarding.marketplace.choose')}</option>
                 {['SaaS / Logiciel','Conseil & Services','Finance & Fintech','RH & Recrutement','Marketing & Communication','Immobilier','Commerce','Formation','Juridique','Industrie','Autre'].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.website')}</label>
-              <input type='url' value={marketplaceForm.website} onChange={e => setMkt('website', e.target.value)} placeholder='https://votre-site.com' style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              <input type='url' value={marketplaceForm.website} onChange={e => setMkt('website', e.target.value)} placeholder={t('onboarding.marketplace.websitePlaceholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.icp')} <span style={{ fontWeight: 400, color: C.m }}>(optionnel)</span></label>
-              <input value={marketplaceForm.icp} onChange={e => setMkt('icp', e.target.value)} placeholder='Ex: PME, startups B2B...' style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              <input value={marketplaceForm.icp} onChange={e => setMkt('icp', e.target.value)} placeholder={t('onboarding.marketplace.icpPlaceholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.short_description')}</label>
-              <textarea value={marketplaceForm.short_description} onChange={e => setMkt('short_description', e.target.value)} placeholder='Decrivez votre service en 2-3 phrases...' rows={3} style={{ ...{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }, resize: 'vertical' }} />
+              <textarea value={marketplaceForm.short_description} onChange={e => setMkt('short_description', e.target.value)} placeholder={t('onboarding.marketplace.descriptionPlaceholder')} rows={3} style={{ ...{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }, resize: 'vertical' }} />
             </div>
             <div onClick={() => setMkt('marketplace_visible', !marketplaceForm.marketplace_visible)}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: marketplaceForm.marketplace_visible ? '#ecfdf5' : '#f8fafc', border: '1.5px solid ' + (marketplaceForm.marketplace_visible ? '#059669' : '#e2e8f0'), borderRadius: 12, padding: '12px 16px', cursor: 'pointer', transition: 'all .3s' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: C.s }}>{t('onboarding.marketplace_visible')}</div>
-                <div style={{ fontSize: 12, color: C.m }}>{marketplaceForm.marketplace_visible ? 'Actif' : 'Inactif'}</div>
+                <div style={{ fontSize: 12, color: C.m }}>{marketplaceForm.marketplace_visible ? t('onboarding.marketplace.active') : t('onboarding.marketplace.inactive')}</div>
               </div>
               <div style={{ width: 40, height: 22, borderRadius: 11, background: marketplaceForm.marketplace_visible ? '#059669' : '#cbd5e1', position: 'relative', flexShrink: 0 }}>
                 <div style={{ position: 'absolute', top: 2, left: marketplaceForm.marketplace_visible ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .3s' }} />
@@ -362,4 +362,4 @@ function SuccessBox({ text, code }) {
       <code style={{ display: 'inline-block', padding: '8px 14px', background: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#0f172a', border: '1px solid #bbf7d0' }}>{code}</code>
     </div>
   );
-        }
+}
