@@ -11,7 +11,8 @@
     "archive": "Archive",
     "restore": "Restore",
     "close": "Close",
-    "no_data": "No data"
+    "no_data": "No data",
+    "edit": "Edit"
   },
   "nav": {
     "features": "Features",
@@ -979,7 +980,7 @@
     "level_name": "Level name",
     "level_icon": "Icon",
     "level_color": "Color",
-    "level_rate": "Rate (%)",
+    "level_rate": "Commission (%)",
     "level_min": "Min deals",
     "save": "Save changes",
     "saving": "Saving...",
@@ -1001,7 +1002,8 @@
     "crit_volume": "💰 Business volume (€)",
     "reset_defaults": "Reset to default values",
     "reset_confirm": "Reset to default values? Your custom levels will be deleted.",
-    "delete_confirm": "Delete this level? Partners will keep their current level."
+    "delete_confirm": "Delete this level? Partners will keep their current level.",
+    "level_name_placeholder": "Bronze, Diamond..."
   },
   "publicApply": {
     "title": "Join the program",
@@ -1141,7 +1143,15 @@
     "add": "Add",
     "branding_desc": "Customize colors and logo for your partner space. These settings apply everywhere: sidebar, interface, etc.",
     "level_saved": "Level saved ✓",
-    "levels_reset_confirm": "Reset to default values (Bronze/Silver/Gold/Platinum)? Your custom levels will be erased."
+    "levels_reset_confirm": "Reset to default values (Bronze/Silver/Gold/Platinum)? Your custom levels will be erased.",
+    "tab_account": "My account",
+    "tab_members": "Members",
+    "tab_marketplace": "Marketplace",
+    "tab_integrations": "Integrations",
+    "tab_public_link": "Public link",
+    "tab_appearance": "Appearance",
+    "tab_program": "Program",
+    "invite": "Invite"
   },
   "status": {
     "new": "New",
