@@ -1134,7 +1134,7 @@
     "branding_domain": "Custom domain",
     "branding_save": "Save branding",
     "branding_saving": "Saving...",
-    "branding_saved": "Branding saved ✓",
+    "branding_saved": "Appearance saved!",
     "program_section": "Partner program",
     "program_name": "Program name",
     "program_desc": "Description",
@@ -1198,7 +1198,29 @@
     "integrations_webhook_desc": "Receive real-time notifications",
     "integrations_webhook_ph": "https://your-webhook.com",
     "public_link_desc": "Partners can sign up via this link",
-    "revenue_model": "Revenue model"
+    "revenue_model": "Revenue model",
+    "create": "Create",
+    "creating": "Creating...",
+    "sending": "Sending...",
+    "member_added": "Member added!",
+    "member_removed": "Member removed!",
+    "invite_sent": "Invitation sent!",
+    "temp_password": "Temporary password",
+    "delete_user_confirm": "Delete this user?",
+    "api_generate": "Generate",
+    "api_key_create": "Create API key",
+    "api_key_copied": "Key copied!",
+    "webhook_saved": "Webhook saved!",
+    "confirm_remove_superadmin": "Remove {{name}} from super admins?",
+    "revenue_deals": "Number of deals won",
+    "revenue_volume": "Business volume (€)",
+    "revenue_fixed": "Fixed commission",
+    "email_col": "Email",
+    "name_col": "Name",
+    "status_col": "Status",
+    "actions_col": "Actions",
+    "pending": "Pending",
+    "active": "Active"
   },
   "status": {
     "new": "New",
@@ -1252,6 +1274,8 @@
     "create_partner": "Create partner →",
     "user_created": "User created successfully",
     "partner_added": "Partner added successfully",
-    "config_saved": "Configuration saved"
+    "config_saved": "Configuration saved",
+    "level_name": "Level name",
+    "team_label": "team"
   }
 }
