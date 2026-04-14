@@ -12,7 +12,8 @@
     "restore": "Herstellen",
     "close": "Sluiten",
     "no_data": "Geen gegevens",
-    "edit": "Bewerken"
+    "edit": "Bewerken",
+    "optional": "optioneel"
   },
   "nav": {
     "features": "Functies",
@@ -1167,7 +1168,15 @@
     "password_updated": "Wachtwoord bijgewerkt!",
     "update": "Bijwerken",
     "copy_link": "Link kopiëren",
-    "confirm_delete_level": "Dit niveau verwijderen? Partners worden herberekend."
+    "confirm_delete_level": "Dit niveau verwijderen? Partners worden herberekend.",
+    "marketplace_hidden": "Je programma is verborgen",
+    "marketplace_website": "Website",
+    "marketplace_icp": "Hoofd ICP",
+    "marketplace_choose_sector": "— Kies een sector —",
+    "marketplace_website_ph": "https://jouw-website.nl",
+    "marketplace_target_ph": "Bijv: B2B MKB, SaaS Startups...",
+    "marketplace_desc_ph": "Beschrijf je dienst in 2-3 zinnen...",
+    "marketplace_chars": "tekens"
   },
   "status": {
     "new": "Nieuw",
