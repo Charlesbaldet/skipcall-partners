@@ -1237,7 +1237,8 @@
     "revenue_mrr": "MRR — Terugkerende inkomsten (SaaS)",
     "revenue_deals_opt": "Aantal deals (commissie per deal)",
     "logo_ph": "https://voorbeeld.nl/logo.png",
-    "logo_hint": "Plak de URL van een gehost afbeelding. Aanbevolen formaat: transparante PNG, hoogte ~80px."
+    "logo_hint": "Plak de URL van een gehost afbeelding. Aanbevolen formaat: transparante PNG, hoogte ~80px.",
+    "confirm_remove_member": "Dit lid verwijderen?"
   },
   "status": {
     "new": "Nieuw",
