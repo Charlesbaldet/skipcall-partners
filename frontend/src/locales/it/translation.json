@@ -1003,7 +1003,14 @@
     "reset_defaults": "Reimposta ai valori predefiniti",
     "reset_confirm": "Reimposta ai valori predefiniti? I tuoi livelli personalizzati verranno eliminati.",
     "delete_confirm": "Eliminare questo livello? I partner manterranno il loro livello attuale.",
-    "level_name_placeholder": "Bronzo, Diamante..."
+    "level_name_placeholder": "Bronzo, Diamante...",
+    "unit_deals": "deal vinti",
+    "unit_volume": "€ generati",
+    "threshold_deals": "Deal vinti richiesti",
+    "threshold_volume": "Volume (€) richiesto",
+    "name_required": "Il nome è obbligatorio",
+    "level_saved": "Livello salvato ✓",
+    "reset_done": "Reimpostato ai valori predefiniti"
   },
   "publicApply": {
     "title": "Unisciti al programma",
