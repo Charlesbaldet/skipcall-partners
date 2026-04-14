@@ -1177,7 +1177,8 @@
     "marketplace_target_ph": "Ej: PyMEs B2B, Startups SaaS...",
     "marketplace_desc_ph": "Describe tu servicio en 2-3 frases...",
     "marketplace_chars": "caracteres",
-    "public_link_title": "Enlace público de registro"
+    "public_link_title": "Enlace público de registro",
+    "marketplace_visible_shown": "✅ Tu programa está visible públicamente"
   },
   "status": {
     "new": "Nuevo",
