@@ -110,7 +110,7 @@ export default function ProgrammePage() {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 60px', gap: 10, marginBottom: 10 }}>
         <div>
           <label style={labelStyle}>{t('programme.level_name')}</label>
-          <input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Bronze, Diamant..." />
+          <input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('programme.level_name_placeholder')} />
         </div>
         <div>
           <label style={labelStyle}>Icône</label>
@@ -119,7 +119,7 @@ export default function ProgrammePage() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr', gap: 10, marginBottom: 12 }}>
         <div>
-          <label style={labelStyle}>Couleur</label>
+          <label style={labelStyle}>{t('programme.level_color')}</label>
           <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} style={{ ...inputStyle, height: 36, padding: 2, cursor: 'pointer' }} />
         </div>
         <div>
@@ -127,7 +127,7 @@ export default function ProgrammePage() {
           <input type="number" min="0" step={isDeal ? '1' : '100'} style={inputStyle} value={form.min_threshold} onChange={e => setForm(f => ({ ...f, min_threshold: parseFloat(e.target.value) || 0 }))} />
         </div>
         <div>
-          <label style={labelStyle}>Commission (%)</label>
+          <label style={labelStyle}>{t('programme.level_rate')}</label>
           <input type="number" min="0" max="100" step="0.5" style={inputStyle} value={form.commission_rate} onChange={e => setForm(f => ({ ...f, commission_rate: parseFloat(e.target.value) || 0 }))} />
         </div>
       </div>
@@ -177,8 +177,8 @@ export default function ProgrammePage() {
               <div style={{ fontWeight: 700, color: l.color || '#0f172a', fontSize: 15 }}>{l.name}</div>
               <div style={{ color: '#64748b', fontSize: 12 }}>À partir de {parseFloat(l.min_threshold)} {unitLabel} · {parseFloat(l.commission_rate)}% de commission</div>
             </div>
-            <button onClick={() => startEdit(l)} title="Éditer" style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef2ff', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#6366f1" /></button>
-            <button onClick={() => del(l.id)} title="Supprimer" style={{ padding: 8, borderRadius: 8, border: 'none', background: '#fef2f2', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
+            <button onClick={() => startEdit(l)} title={t('common.edit')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef2ff', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#6366f1" /></button>
+            <button onClick={() => del(l.id)} title={t('common.delete')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#fef2f2', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
           </div>
         ))}
         {editing === 'new' && formBlock}
@@ -192,7 +192,7 @@ export default function ProgrammePage() {
           color: editing !== null ? '#94a3b8' : '#fff',
           fontWeight: 600, fontSize: 13, cursor: editing !== null ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', gap: 6,
-        }}><Plus size={14} /> Ajouter un niveau</button>
+        }}><Plus size={14} />{t('programme.add_level')}</button>
         <button onClick={reset} style={{
           padding: '10px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
           background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
