@@ -1177,7 +1177,8 @@
     "marketplace_target_ph": "Bijv: B2B MKB, SaaS Startups...",
     "marketplace_desc_ph": "Beschrijf je dienst in 2-3 zinnen...",
     "marketplace_chars": "tekens",
-    "public_link_title": "Openbare aanmeldingslink"
+    "public_link_title": "Openbare aanmeldingslink",
+    "marketplace_visible_shown": "✅ Je programma is openbaar zichtbaar"
   },
   "status": {
     "new": "Nieuw",
