@@ -20,6 +20,8 @@ const levelsRoutes = require('./routes/levels');
 const trackingRoutes = require('./routes/tracking');
 const tenantRoutes = require('./routes/tenants');
 const superadminRoutes = require('./routes/superadmin');
+const blogRoutes = require('./routes/blog');
+const marketplaceRoutes = require('./routes/marketplace');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -40,7 +42,22 @@ app.use(helmet());
 
 // ─── CORS ───
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    const allowed = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+    // Allow all Vercel preview deployments for the project
+    const isVercelPreview = origin && origin.endsWith('.vercel.app');
+    if (allowed.includes(origin) || isVercelPreview) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS: ' + origin));
+    }
+  },
   credentials: true,
 }));
 
@@ -96,6 +113,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // ─── Error handler ───
+app.use('/api/blog', blogRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({

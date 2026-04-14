@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/
+
+# Protect app routes
+Disallow: /dashboard
+Disallow: /referrals
+Disallow: /commissions
+Disallow: /partners
+Disallow: /messaging
+Disallow: /settings
+Disallow: /partner/
+Disallow: /super-admin
+Disallow: /applications
+Disallow: /reset-password
+
+# Sitemap
+Sitemap: https://refboost.io/api/blog/sitemap

@@ -186,6 +186,42 @@ async function runMigrations() {
     console.warn('[seed] Skipped:', seedErr.message);
   }
 
+  
+  // ─── v17: Blog posts table ───
+  await query(`
+    CREATE TABLE IF NOT EXISTS blog_posts (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      slug VARCHAR(255) UNIQUE NOT NULL,
+      title VARCHAR(500) NOT NULL,
+      excerpt TEXT,
+      content TEXT NOT NULL DEFAULT '',
+      author VARCHAR(255) DEFAULT 'RefBoost',
+      category VARCHAR(100),
+      tags TEXT[] DEFAULT '{}',
+      cover_image_url TEXT,
+      published BOOLEAN DEFAULT false,
+      published_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      meta_title VARCHAR(70),
+      meta_description VARCHAR(160),
+      reading_time_minutes INTEGER DEFAULT 5
+    )
+  `);
+  await query('CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug)');
+  await query('CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts(published, published_at DESC)');
+  await query('CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON blog_posts(category)');
+
+  
+  // ─── v18: Marketplace columns on tenants ───
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS sector VARCHAR(100)`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS website VARCHAR(255)`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS icp TEXT`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS short_description TEXT`);
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS marketplace_visible BOOLEAN DEFAULT false`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_tenants_marketplace ON tenants(marketplace_visible) WHERE marketplace_visible = true`);
+  console.log('[marketplace] v18 columns added to tenants');
+
   console.log('✅ Migrations completed');
 
   } catch (err) {

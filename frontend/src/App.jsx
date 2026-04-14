@@ -23,6 +23,14 @@ import SuperAdminPage from './pages/SuperAdminPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProgrammePage from './pages/ProgrammePage.jsx';
 import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
+import BlogPage from './pages/BlogPage.jsx';
+import BlogPostPage from './pages/BlogPostPage.jsx';
+import MarketplacePage from './pages/MarketplacePage.jsx';
+import FeaturePipelinePage from './pages/features/FeaturePipelinePage';
+import FeatureCommissionsPage from './pages/features/FeatureCommissionsPage';
+import FeatureAnalyticsPage from './pages/features/FeatureAnalyticsPage';
+import FeaturePersonnalisationPage from './pages/features/FeaturePersonnalisationPage';
+import FeatureTrackingPage from './pages/features/FeatureTrackingPage';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -47,6 +55,9 @@ function AppRoutes() {
       <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
@@ -65,7 +76,12 @@ function AppRoutes() {
       <Route path="/partner/referrals" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerMyReferrals /></Layout></ProtectedRoute>} />
       <Route path="/partner/submit" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerSubmitPage /></Layout></ProtectedRoute>} />
       <Route path="/partner/payments" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerPaymentsPage /></Layout></ProtectedRoute>} />
-    </Routes>
+              <Route path="/fonctionnalites/pipeline" element={<FeaturePipelinePage />} />
+          <Route path="/fonctionnalites/commissions" element={<FeatureCommissionsPage />} />
+          <Route path="/fonctionnalites/analytics" element={<FeatureAnalyticsPage />} />
+          <Route path="/fonctionnalites/personnalisation" element={<FeaturePersonnalisationPage />} />
+          <Route path="/fonctionnalites/tracking" element={<FeatureTrackingPage />} />
+          </Routes>
   );
 }
 
