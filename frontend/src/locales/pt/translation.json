@@ -1003,7 +1003,14 @@
     "reset_defaults": "Redefinir para valores padrão",
     "reset_confirm": "Redefinir para valores padrão? Seus níveis personalizados serão excluídos.",
     "delete_confirm": "Excluir este nível? Os parceiros manterão seu nível atual.",
-    "level_name_placeholder": "Bronze, Diamante..."
+    "level_name_placeholder": "Bronze, Diamante...",
+    "unit_deals": "negócios ganhos",
+    "unit_volume": "€ gerados",
+    "threshold_deals": "Negócios ganhos necessários",
+    "threshold_volume": "Volume (€) necessário",
+    "name_required": "O nome é obrigatório",
+    "level_saved": "Nível salvo ✓",
+    "reset_done": "Redefinido para os valores padrão"
   },
   "publicApply": {
     "title": "Juntar-se ao programa",
