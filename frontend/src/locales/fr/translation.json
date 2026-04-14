@@ -1003,7 +1003,14 @@
     "reset_defaults": "Réinitialiser aux valeurs par défaut",
     "reset_confirm": "Réinitialiser aux valeurs par défaut ? Cela supprimera tes niveaux personnalisés.",
     "delete_confirm": "Supprimer ce niveau ? Les partenaires conserveront leur niveau actuel.",
-    "level_name_placeholder": "Bronze, Diamant..."
+    "level_name_placeholder": "Bronze, Diamant...",
+    "unit_deals": "deals gagnés",
+    "unit_volume": "€ générés",
+    "threshold_deals": "Deals gagnés requis",
+    "threshold_volume": "Volume (€) requis",
+    "name_required": "Le nom est requis",
+    "level_saved": "Niveau enregistré ✓",
+    "reset_done": "Réinitialisé aux valeurs par défaut"
   },
   "publicApply": {
     "title": "Rejoindre le programme",
