@@ -1003,7 +1003,14 @@
     "reset_defaults": "Reset to default values",
     "reset_confirm": "Reset to default values? Your custom levels will be deleted.",
     "delete_confirm": "Delete this level? Partners will keep their current level.",
-    "level_name_placeholder": "Bronze, Diamond..."
+    "level_name_placeholder": "Bronze, Diamond...",
+    "unit_deals": "deals won",
+    "unit_volume": "€ generated",
+    "threshold_deals": "Won deals required",
+    "threshold_volume": "Volume (€) required",
+    "name_required": "Name is required",
+    "level_saved": "Level saved ✓",
+    "reset_done": "Reset to default values"
   },
   "publicApply": {
     "title": "Join the program",
