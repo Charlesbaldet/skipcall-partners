@@ -51,8 +51,8 @@ function MarketplaceTab() {
   return (
     <div style={{maxWidth:640}}>
       <div style={{marginBottom:28}}>
-        <h2 style={{fontSize:20,fontWeight:800,color:'#0f172a',margin:'0 0 6px'}}>Programme sur la Marketplace</h2>
-        <p style={{color:'#64748b',fontSize:14,margin:0,lineHeight:1.6}}>Rendez votre programme de parrainage visible sur la marketplace publique de RefBoost.</p>
+        <h2 style={{fontSize:20,fontWeight:800,color:'#0f172a',margin:'0 0 6px'}}>{t('settings.marketplace_section')}</h2>
+        <p style={{color:'#64748b',fontSize:14,margin:0,lineHeight:1.6}}>{t('settings.marketplace_desc')}</p>
       </div>
       {/* Toggle visibilité */}
       <div onClick={()=>set('marketplace_visible',!settings.marketplace_visible)} style={{background:settings.marketplace_visible?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'#f8fafc',border:`1.5px solid ${settings.marketplace_visible?'#059669':'#e2e8f0'}`,borderRadius:12,padding:'14px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:28,cursor:'pointer',transition:'all .3s'}}>
@@ -61,8 +61,8 @@ function MarketplaceTab() {
             <Globe size={18} color={settings.marketplace_visible?'#fff':'#94a3b8'}/>
           </div>
           <div>
-            <div style={{fontWeight:700,fontSize:14,color:'#0f172a'}}>Visible sur la marketplace</div>
-            <div style={{fontSize:12,color:'#64748b'}}>{settings.marketplace_visible?"✅ Votre programme est affiché publiquement":'Votre programme est masqué'}</div>
+            <div style={{fontWeight:700,fontSize:14,color:'#0f172a'}}>{t('settings.marketplace_visible')}</div>
+            <div style={{fontSize:12,color:'#64748b'}}>{settings.marketplace_visible?"✅ Votre programme est affiché publiquement":'{t('settings.marketplace_hidden')}'}</div>
           </div>
         </div>
         <div style={{width:48,height:26,borderRadius:13,background:settings.marketplace_visible?'#059669':'#cbd5e1',position:'relative',transition:'background .3s',flexShrink:0}}>
@@ -71,16 +71,16 @@ function MarketplaceTab() {
       </div>
       {/* Secteur */}
       <div style={{marginBottom:20}}>
-        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>Secteur d'activité *</label>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>{t('settings.marketplace_sector')}*</label>
         <select value={settings.sector} onChange={e=>set('sector',e.target.value)} style={{...inp,background:'#fff'}} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}>
           <option value="">— Choisir un secteur —</option>
           {SECTORS_MKT.map(s=><option key={s} value={s}>{s}</option>)}
         </select>
       </div>
-      {/* Site web */}
+      {/* {t('settings.marketplace_website')} */}
       <div style={{marginBottom:20}}>
-        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>Site web *</label>
-        <input type="url" value={settings.website} onChange={e=>set('website',e.target.value)} placeholder="https://votre-site.com" style={inp} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>{t('settings.marketplace_website')} *</label>
+        <input type="url" value={settings.website} onChange={e=>set('website',e.target.value)} placeholder={t('settings.marketplace_website_ph')} style={inp} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
       </div>
       {/* ICP */}
       <div style={{marginBottom:20}}>
@@ -89,9 +89,9 @@ function MarketplaceTab() {
       </div>
       {/* Description */}
       <div style={{marginBottom:28}}>
-        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>Description courte *</label>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>{t('settings.marketplace_desc_label')} *</label>
         <textarea value={settings.short_description} onChange={e=>set('short_description',e.target.value)} placeholder="Décrivez votre service en 2-3 phrases…" rows={4} style={{...inp,resize:'vertical',lineHeight:1.6}} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
-        <p style={{fontSize:11,color:'#94a3b8',margin:'4px 0 0'}}>{settings.short_description?.length||0}/500 caractères</p>
+        <p style={{fontSize:11,color:'#94a3b8',margin:'4px 0 0'}}>{settings.short_description?.length||0}/500 {t('settings.marketplace_chars')}</p>
       </div>
       {error && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'12px 16px',color:'#dc2626',fontSize:13,marginBottom:16}}>{error}</div>}
       {success && <div style={{background:'#ecfdf5',border:'1px solid #6ee7b7',borderRadius:10,padding:'12px 16px',color:'#059669',fontSize:13,marginBottom:16}}>{success}</div>}
