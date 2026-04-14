@@ -1134,7 +1134,7 @@
     "branding_domain": "Individuelle Domain",
     "branding_save": "Corporate Design speichern",
     "branding_saving": "Speichern...",
-    "branding_saved": "Corporate Design gespeichert ✓",
+    "branding_saved": "Erscheinungsbild gespeichert!",
     "program_section": "Partnerprogramm",
     "program_name": "Programmname",
     "program_desc": "Beschreibung",
@@ -1198,7 +1198,29 @@
     "integrations_webhook_desc": "Echtzeit-Benachrichtigungen empfangen",
     "integrations_webhook_ph": "https://dein-webhook.de",
     "public_link_desc": "Partner können sich über diesen Link anmelden",
-    "revenue_model": "Umsatzmodell"
+    "revenue_model": "Umsatzmodell",
+    "create": "Erstellen",
+    "creating": "Erstelle...",
+    "sending": "Sende...",
+    "member_added": "Mitglied hinzugefügt!",
+    "member_removed": "Mitglied entfernt!",
+    "invite_sent": "Einladung gesendet!",
+    "temp_password": "Temporäres Passwort",
+    "delete_user_confirm": "Diesen Benutzer löschen?",
+    "api_generate": "Generieren",
+    "api_key_create": "API-Schlüssel erstellen",
+    "api_key_copied": "Schlüssel kopiert!",
+    "webhook_saved": "Webhook gespeichert!",
+    "confirm_remove_superadmin": "{{name}} aus den Super-Admins entfernen?",
+    "revenue_deals": "Anzahl gewonnener Deals",
+    "revenue_volume": "Geschäftsvolumen (€)",
+    "revenue_fixed": "Feste Provision",
+    "email_col": "E-Mail",
+    "name_col": "Name",
+    "status_col": "Status",
+    "actions_col": "Aktionen",
+    "pending": "Ausstehend",
+    "active": "Aktiv"
   },
   "status": {
     "new": "Neu",
@@ -1252,6 +1274,8 @@
     "create_partner": "Partner erstellen →",
     "user_created": "Benutzer erfolgreich erstellt",
     "partner_added": "Partner erfolgreich hinzugefügt",
-    "config_saved": "Konfiguration gespeichert"
+    "config_saved": "Konfiguration gespeichert",
+    "level_name": "Stufenname",
+    "team_label": "Team"
   }
 }
