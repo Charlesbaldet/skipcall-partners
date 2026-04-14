@@ -1313,5 +1313,17 @@
     "icp": "Haupt-ICP",
     "short_description": "Kurzbeschreibung *",
     "marketplace_visible": "Im Marketplace anzeigen"
+  },
+  "blog": {
+    "subtitle": "Tipps, Strategien & Ressourcen",
+    "loading": "Wird geladen…",
+    "no_posts": "Noch keine Artikel.",
+    "come_back": "Schauen Sie bald wieder vorbei!",
+    "not_found": "Artikel nicht gefunden",
+    "back": "← Zurück zum Blog",
+    "home": "Startseite",
+    "by": "Von",
+    "tags": "Tags",
+    "read_time": "Min. Lesezeit"
   }
 }
