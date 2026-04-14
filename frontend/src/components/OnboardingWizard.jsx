@@ -126,9 +126,9 @@ export default function OnboardingWizard({ onClose }) {
 
   const primaryLabel = () => {
     if (submitting) return 'En cours...';
-    if (step === 1 && !createdUser) return 'Créer l\'utilisateur →';
+    if (step === 1 && !createdUser) return t('onboarding.create_user');
     if (step === 1 && createdUser) return 'Continuer →';
-    if (step === 2 && !createdPartner) return 'Créer le partenaire →';
+    if (step === 2 && !createdPartner) return t('onboarding.create_partner');
     if (step === 2 && createdPartner) return 'Continuer →';
     if (step === 3 && !customized) return 'Sauvegarder →';
     if (step === 3 && customized) return 'Continuer →';
@@ -177,23 +177,23 @@ export default function OnboardingWizard({ onClose }) {
           <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.step_of', {current: step + 1, total: STEPS.length})}</p>
         </div>
 
-        {/* Step body */}
+        {/* body */}
         <div style={{ marginBottom: 24 }}>
           {step === 0 && (
             <div style={{ textAlign: 'center', color: C.m, fontSize: 15, lineHeight: 1.7 }}>
-              On va configurer ton espace en quelques étapes : créer ton équipe, inviter un premier partenaire, personnaliser tes couleurs, et récupérer ton lien public d'inscription. Ça prend 3 minutes maximum, et tu peux passer chaque étape si tu veux.
+              {t('onboarding.step_1_desc')} : créer ton équipe, inviter un premier partenaire, personnaliser tes couleurs, et récupérer ton lien public d'inscription. Ça prend 3 minutes maximum, et tu peux passer chaque étape si tu veux.
             </div>
           )}
 
           {step === 1 && !createdUser && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Ajoute un membre de ton équipe (admin ou commercial). Il recevra un email avec ses identifiants.</p>
-              <Field label="Email"><Input type="email" value={userForm.email} onChange={v => setUserForm({...userForm, email: v})} placeholder="jean@entreprise.com" /></Field>
-              <Field label="Nom complet"><Input value={userForm.full_name} onChange={v => setUserForm({...userForm, full_name: v})} placeholder="Jean Dupont" /></Field>
-              <Field label="Rôle">
+              <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.step_2_desc')}</p>
+              <Field label={t('onboarding.email')}><Input type="email" value={userForm.email} onChange={v => setUserForm({...userForm, email: v})} placeholder="jean@entreprise.com" /></Field>
+              <Field label={t('onboarding.full_name')}><Input value={userForm.full_name} onChange={v => setUserForm({...userForm, full_name: v})} placeholder="Jean Dupont" /></Field>
+              <Field label={t('onboarding.role')}>
                 <select value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})} style={inputStyle}>
-                  <option value="commercial">Commercial</option>
-                  <option value="admin">Admin</option>
+                  <option value="commercial">{t('onboarding.role_commercial')}</option>
+                  <option value="admin">{t('onboarding.role_admin_opt')}</option>
                 </select>
               </Field>
             </div>
@@ -205,9 +205,9 @@ export default function OnboardingWizard({ onClose }) {
           {step === 2 && !createdPartner && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ color: C.m, fontSize: 14, margin: 0 }}>Ajoute un partenaire (apporteur d'affaires). Il aura accès à son propre espace pour soumettre des leads.</p>
-              <Field label="Nom de l'entreprise"><Input value={partnerForm.name} onChange={v => setPartnerForm({...partnerForm, name: v})} placeholder="Acme Consulting" /></Field>
-              <Field label="Contact (nom complet)"><Input value={partnerForm.contact_name} onChange={v => setPartnerForm({...partnerForm, contact_name: v})} placeholder="Marie Dupont" /></Field>
-              <Field label="Email"><Input type="email" value={partnerForm.email} onChange={v => setPartnerForm({...partnerForm, email: v})} placeholder="marie@acme.com" /></Field>
+              <Field label={t('onboarding.company_name')}><Input value={partnerForm.name} onChange={v => setPartnerForm({...partnerForm, name: v})} placeholder="Acme Consulting" /></Field>
+              <Field label={t('onboarding.contact_name')}><Input value={partnerForm.contact_name} onChange={v => setPartnerForm({...partnerForm, contact_name: v})} placeholder="Marie Dupont" /></Field>
+              <Field label={t('onboarding.email')}><Input type="email" value={partnerForm.email} onChange={v => setPartnerForm({...partnerForm, email: v})} placeholder="marie@acme.com" /></Field>
               <Field label="Taux de commission (%)">
                 <input type="number" min="0" max="50" value={partnerForm.commission_rate}
                   onChange={e => setPartnerForm({...partnerForm, commission_rate: parseFloat(e.target.value) || 0})}
@@ -315,7 +315,7 @@ export default function OnboardingWizard({ onClose }) {
                 padding: '14px 18px', borderRadius: 12, border: '1.5px solid #e2e8f0',
                 background: '#fff', color: C.m, fontWeight: 600, fontSize: 14,
                 cursor: submitting ? 'wait' : 'pointer',
-              }}>← Précédent</button>
+              }}>{t('onboarding.prev')}</button>
             )}
             <button onClick={primaryAction} disabled={submitting} style={{
               flex: 1, padding: '14px 24px', borderRadius: 12, border: 'none',
