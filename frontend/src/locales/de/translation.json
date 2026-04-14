@@ -1158,7 +1158,10 @@
     "tab_public_link": "Öffentlicher Link",
     "tab_appearance": "Erscheinungsbild",
     "tab_program": "Programm",
-    "invite": "Einladen"
+    "invite": "Einladen",
+    "invite_superadmin": "Super-Administrator einladen",
+    "link_copied": "Link kopiert!",
+    "field_required": "Pflichtfeld"
   },
   "status": {
     "new": "Neu",
