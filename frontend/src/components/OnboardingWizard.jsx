@@ -7,13 +7,13 @@ const C = { p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b98
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 const STEPS = [
-  { id: 'welcome',       icon: Sparkles,  title: 'Bienvenue sur RefBoost ð' },
+  { id: 'welcome',       icon: Sparkles,  title: 'Bienvenue sur RefBoost 🎉' },
   { id: 'createUser',    icon: Users,     title: 'Crée ton équipe' },
   { id: 'createPartner', icon: UserPlus,  title: 'Invite ton premier partenaire' },
   { id: 'customize',     icon: Palette,   title: 'Personnalise ton espace' },
   { id: 'publicLink',    icon: Link2,     title: 'Ton lien d\'inscription public' },
   { id: 'marketplace',  icon: Store,     title: 'Votre programme sur la marketplace' },
-  { id: 'done',          icon: Rocket,    title: 'Tout est prêt ð' },
+  { id: 'done',          icon: Rocket,    title: 'Tout est prêt 🚀' },
 ];
 
 export default function OnboardingWizard({ onClose }) {
@@ -130,7 +130,7 @@ export default function OnboardingWizard({ onClose }) {
     if (step === 1 && createdUser) return t('onboarding.next');
     if (step === 2 && !createdPartner) return t('onboarding.create_partner');
     if (step === 2 && createdPartner) return t('onboarding.next');
-    if (step === 3 && !customized) return t('settings.save')+' â';
+    if (step === 3 && !customized) return t('settings.save')+' →';
     if (step === 3 && customized) return t('onboarding.next');
     if (isLast) return 'C\'est parti !';
     return t('onboarding.next');
@@ -199,7 +199,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 1 && createdUser && (
-            <SuccessBox text={'Utilisateur créé !'} code={'â Identifiants envoyés par email à ' + createdUser.email} />
+            <SuccessBox text={'Utilisateur créé !'} code={'✓ Identifiants envoyés par email à ' + createdUser.email} />
           )}
 
           {step === 2 && !createdPartner && (
@@ -216,7 +216,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 2 && createdPartner && (
-            <SuccessBox text={t('onboarding.partner_added')} code={'â Identifiants envoyés par email à ' + createdPartner.email} />
+            <SuccessBox text={t('onboarding.partner_added')} code={'✓ Identifiants envoyés par email à ' + createdPartner.email} />
           )}
 
           {step === 3 && !customized && (
@@ -235,12 +235,12 @@ export default function OnboardingWizard({ onClose }) {
                     style={{ ...inputStyle, height: 44, padding: 4 }} />
                 </Field>
               </div>
-              <Field label={t('onboarding.customize_revenue_label')}><select value={customizeForm.revenue_model} onChange={e => setCustomizeForm({...customizeForm, revenue_model: e.target.value})} style={inputStyle}><option value="MRR">{t('onboarding.mrr_label')}</option><option value="ARR">{t('onboarding.arr_label')}</option><option value="CA">{t('onboarding.ca_label')}</option><option value="Other">Autre</option></select></Field>
+              <Field label={t('onboarding.customize_revenue_label')}><select value={customizeForm.revenue_model} onChange={e => setCustomizeForm({...customizeForm, revenue_model: e.target.value})} style={inputStyle}><option value="MRR">{t('onboarding.mrr_label')}</option><option value="ARR">{t('onboarding.arr_label')}</option><option value="CA">{t('onboarding.ca_label')}</option><option value="Other">{t('onboarding.revenue_other')}</option></select></Field>
             </div>
           )}
           {step === 3 && customized && (
             <div style={{ textAlign: 'center', padding: 20, background: '#f0fdf4', borderRadius: 12, color: '#166534' }}>
-              â Ton espace est personnalisé !
+              ✓ Ton espace est personnalisé !
             </div>
           )}
 
@@ -269,7 +269,7 @@ export default function OnboardingWizard({ onClose }) {
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.sector')}</label>
               <select value={marketplaceForm.sector} onChange={e => setMkt('sector', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}>
                 <option value=''>{t('onboarding.marketplace_choose')}</option>
-                {['SaaS / Logiciel','Conseil & Services','Finance & Fintech','RH & Recrutement','Marketing & Communication','Immobilier','Commerce','Formation','Juridique','Industrie','Autre'].map(s => <option key={s} value={s}>{s}</option>)}
+                {[['SaaS / Logiciel','saas_logiciel'],['Conseil & Services','conseil_services'],['Finance & Fintech','finance_fintech'],['RH & Recrutement','rh_recrutement'],['Marketing & Communication','marketing_communication'],['Immobilier','immobilier'],['Commerce','commerce'],['Formation','formation'],['Juridique','juridique'],['Industrie','industrie'],['Autre','autre']].map(([v, k]) => <option key={v} value={v}>{t('onboarding.sector_' + k)}</option>)}
               </select>
             </div>
             <div>
@@ -358,7 +358,7 @@ function Input({ value, onChange, placeholder, type = 'text' }) {
 function SuccessBox({ text, code }) {
   return (
     <div style={{ padding: 16, background: '#f0fdf4', borderRadius: 12, border: '1px solid #bbf7d0', textAlign: 'center' }}>
-      <div style={{ color: '#166534', fontSize: 14, marginBottom: 8 }}>â {text}</div>
+      <div style={{ color: '#166534', fontSize: 14, marginBottom: 8 }}>✓ {text}</div>
       <code style={{ display: 'inline-block', padding: '8px 14px', background: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#0f172a', border: '1px solid #bbf7d0' }}>{code}</code>
     </div>
   );
