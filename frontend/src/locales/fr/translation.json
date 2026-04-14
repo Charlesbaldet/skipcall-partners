@@ -1237,7 +1237,8 @@
     "revenue_mrr": "MRR — Revenus récurrents (SaaS)",
     "revenue_deals_opt": "Nombre de deals (commission par deal)",
     "logo_ph": "https://exemple.com/logo.png",
-    "logo_hint": "Colle l’URL d’une image hébergée. Format recommandé : PNG transparent, hauteur ~80px."
+    "logo_hint": "Colle l’URL d’une image hébergée. Format recommandé : PNG transparent, hauteur ~80px.",
+    "confirm_remove_member": "Supprimer ce membre ?"
   },
   "status": {
     "new": "Nouveau",
