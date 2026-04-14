@@ -84,7 +84,7 @@ function MarketplaceTab() {
       </div>
       {/* ICP */}
       <div style={{marginBottom:20}}>
-        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>ICP principal <span style={{fontWeight:400,color:'#64748b'}}>(optionnel)</span></label>
+        <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>{t('settings.marketplace_icp')} <span style={{fontWeight:400,color:'#6474b'}}>({t('common.optional')})</span></label>
         <input value={settings.icp} onChange={e=>set('icp',e.target.value)} placeholder="Ex: PME françaises, startups SaaS B2B…" style={inp} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
       </div>
       {/* Description */}
@@ -666,7 +666,7 @@ function AppearanceTab() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
         <div>
-          <label style={labelStyle}>Nom de l'entreprise</label>
+          <label style={labelStyle}>{t('settings.branding_name')}</label>
           <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Mon entreprise" style={inputStyle} />
         </div>
 
