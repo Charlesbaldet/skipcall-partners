@@ -31,7 +31,7 @@ function BlogCard({ post }) {
         {post.excerpt && <p style={{ margin: 0, fontSize: 14, color: C.m, lineHeight: 1.6, flex: 1 }}>{post.excerpt}</p>}
         <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           <time dateTime={post.published_at} style={{ fontSize: 13, color: C.m }}>{formatDate(post.published_at)}</time>
-          <span style={{ fontSize: 13, color: C.m }}>{post.reading_time_minutes} ` ${t('blog.read_time')}`</span>
+          <span style={{ fontSize: 13, color: C.m }}>{post.reading_time_minutes} min de lecture</span>
         </footer>
         <Link to={'/blog/' + post.slug} style={{ marginTop: 4, fontSize: 14, fontWeight: 600, color: C.p, textDecoration: 'none' }}>
           Lire l'article →
@@ -42,7 +42,6 @@ function BlogCard({ post }) {
 }
 
 export default function BlogPage() {
-  const { t } = useTranslation();
   const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
