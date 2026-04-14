@@ -175,7 +175,7 @@ export default function ProgrammePage() {
             <div style={{ width: 40, height: 40, borderRadius: 10, background: (l.color || '#94a3b8') + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{l.icon || '⭐'}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: l.color || '#0f172a', fontSize: 15 }}>{l.name}</div>
-              <div style={{ color: '#64748b', fontSize: 12 }}>À partir de {parseFloat(l.min_threshold)} {unitLabel} · {parseFloat(l.commission_rate)}% de commission</div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>{t('programme.level_desc', {min: parseFloat(l.min_threshold), unit: unitLabel, rate: parseFloat(l.commission_rate)})}</div>
             </div>
             <button onClick={() => startEdit(l)} title={t('common.edit')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef2ff', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#6366f1" /></button>
             <button onClick={() => del(l.id)} title={t('common.delete')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#fef2f2', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
