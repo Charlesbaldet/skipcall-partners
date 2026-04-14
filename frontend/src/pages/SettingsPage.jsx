@@ -85,12 +85,12 @@ function MarketplaceTab() {
       {/* ICP */}
       <div style={{marginBottom:20}}>
         <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>{t('settings.marketplace_icp')} <span style={{fontWeight:400,color:'#6474b'}}>({t('common.optional')})</span></label>
-        <input value={settings.icp} onChange={e=>set('icp',e.target.value)} placeholder="Ex: PME françaises, startups SaaS B2B…" style={inp} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+        <input value={settings.icp} onChange={e=>set('icp',e.target.value)} placeholder={t('settings.marketplace_target_ph')} style={inp} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
       </div>
       {/* Description */}
       <div style={{marginBottom:28}}>
         <label style={{fontSize:13,fontWeight:700,color:'#0f172a',display:'block',marginBottom:6}}>{t('settings.marketplace_desc_label')} *</label>
-        <textarea value={settings.short_description} onChange={e=>set('short_description',e.target.value)} placeholder="Décrivez votre service en 2-3 phrases…" rows={4} style={{...inp,resize:'vertical',lineHeight:1.6}} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+        <textarea value={settings.short_description} onChange={e=>set('short_description',e.target.value)} placeholder={t('settings.marketplace_desc_ph')} rows={4} style={{...inp,resize:'vertical',lineHeight:1.6}} onFocus={e=>e.target.style.borderColor='#059669'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
         <p style={{fontSize:11,color:'#94a3b8',margin:'4px 0 0'}}>{settings.short_description?.length||0}/500 {t('settings.marketplace_chars')}</p>
       </div>
       {error && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'12px 16px',color:'#dc2626',fontSize:13,marginBottom:16}}>{error}</div>}
