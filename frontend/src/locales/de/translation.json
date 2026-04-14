@@ -1003,7 +1003,14 @@
     "reset_defaults": "Auf Standardwerte zurücksetzen",
     "reset_confirm": "Auf Standardwerte zurücksetzen? Deine benutzerdefinierten Stufen werden gelöscht.",
     "delete_confirm": "Diese Stufe löschen? Partner behalten ihre aktuelle Stufe.",
-    "level_name_placeholder": "Bronze, Diamant..."
+    "level_name_placeholder": "Bronze, Diamant...",
+    "unit_deals": "gewonnene Deals",
+    "unit_volume": "€ generiert",
+    "threshold_deals": "Gewonnene Deals erforderlich",
+    "threshold_volume": "Volumen (€) erforderlich",
+    "name_required": "Name ist erforderlich",
+    "level_saved": "Stufe gespeichert ✓",
+    "reset_done": "Auf Standardwerte zurückgesetzt"
   },
   "publicApply": {
     "title": "Dem Programm beitreten",
