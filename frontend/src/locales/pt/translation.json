@@ -1178,7 +1178,8 @@
     "marketplace_desc_ph": "Descreva o seu serviço em 2-3 frases...",
     "marketplace_chars": "caracteres",
     "public_link_title": "Link público de inscrição",
-    "marketplace_visible_shown": "✅ O seu programa está exibido publicamente"
+    "marketplace_visible_shown": "✅ O seu programa está exibido publicamente",
+    "branding_accent": "Cor de destaque"
   },
   "status": {
     "new": "Novo",
