@@ -1176,7 +1176,8 @@
     "marketplace_website_ph": "https://deine-website.de",
     "marketplace_target_ph": "Z.B.: B2B KMUs, SaaS-Startups...",
     "marketplace_desc_ph": "Beschreibe deinen Service in 2-3 Sätzen...",
-    "marketplace_chars": "Zeichen"
+    "marketplace_chars": "Zeichen",
+    "public_link_title": "Öffentlicher Anmeldelink"
   },
   "status": {
     "new": "Neu",
