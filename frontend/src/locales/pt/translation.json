@@ -1323,7 +1323,19 @@
     "marketplace_icp_placeholder": "Ex.: PMEs, startups B2B…",
     "marketplace_description_placeholder": "Descreva o seu serviço em 2-3 frases…",
     "marketplace_active": "Ativo",
-    "marketplace_inactive": "Inativo"
+    "marketplace_inactive": "Inativo",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Consultoria & Serviços",
+    "sector_finance_fintech": "Finanças & Fintech",
+    "sector_rh_recrutement": "RH & Recrutamento",
+    "sector_marketing_communication": "Marketing & Comunicação",
+    "sector_immobilier": "Imobiliário",
+    "sector_commerce": "Comércio",
+    "sector_formation": "Formação",
+    "sector_juridique": "Jurídico",
+    "sector_industrie": "Indústria",
+    "sector_autre": "Outro",
+    "revenue_other": "Outro"
   },
   "blog": {
     "subtitle": "Dicas, estratégias e recursos",
