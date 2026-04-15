@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Aantal deals (commissie per deal)",
     "logo_ph": "https://voorbeeld.nl/logo.png",
     "logo_hint": "Plak de URL van een gehost afbeelding. Aanbevolen formaat: transparante PNG, hoogte ~80px.",
-    "confirm_remove_member": "Dit lid verwijderen?"
+    "confirm_remove_member": "Dit lid verwijderen?",
+    "no_super_admin": "Geen super-administrator",
+    "member_created": "Lid aangemaakt!",
+    "full_name": "Naam",
+    "email": "E-mail",
+    "role_member": "Lid",
+    "api_key_name": "Naam",
+    "copy_this_key_now": "Kopieer deze sleutel nu"
   },
   "status": {
     "new": "Nieuw",
