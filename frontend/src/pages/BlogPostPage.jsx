@@ -35,7 +35,7 @@ export default function BlogPostPage() {
   if (loading) return (
     <LandingLayout>
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m }}>
-        Chargement…
+        {t('common.loading')}
       </div>
     </LandingLayout>
   );
@@ -161,7 +161,7 @@ export default function BlogPostPage() {
         {/* Retour */}
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <Link to="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 12, border: '1.5px solid ' + C.p, color: C.p, fontWeight: 700, textDecoration: 'none', fontSize: 15 }}>
-            ← Retour au blog
+            ← {t('blog.back_to_blog')}
           </Link>
         </div>
       </main>
