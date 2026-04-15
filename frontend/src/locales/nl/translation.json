@@ -1323,7 +1323,19 @@
     "marketplace_icp_placeholder": "Bijv. mkb, B2B-startups…",
     "marketplace_description_placeholder": "Beschrijf je dienst in 2-3 zinnen…",
     "marketplace_active": "Actief",
-    "marketplace_inactive": "Inactief"
+    "marketplace_inactive": "Inactief",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Advies & Diensten",
+    "sector_finance_fintech": "Financiën & Fintech",
+    "sector_rh_recrutement": "HR & Werving",
+    "sector_marketing_communication": "Marketing & Communicatie",
+    "sector_immobilier": "Vastgoed",
+    "sector_commerce": "Handel",
+    "sector_formation": "Opleiding",
+    "sector_juridique": "Juridisch",
+    "sector_industrie": "Industrie",
+    "sector_autre": "Anders",
+    "revenue_other": "Anders"
   },
   "blog": {
     "subtitle": "Tips, strategieën & bronnen",
