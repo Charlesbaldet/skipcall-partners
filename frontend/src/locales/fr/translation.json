@@ -1357,6 +1357,12 @@
     "read_time": "min de lecture",
     "page_subtitle": "Tout ce qu'il faut savoir sur l'affiliation B2B, les programmes partenaires et la croissance.",
     "filter_all": "Tous",
-    "read_article": "Lire l'article →"
+    "read_article": "Lire l'article →",
+    "min_read": "min de lecture",
+    "all_categories": "Tous",
+    "no_articles": "Aucun article pour le moment.",
+    "come_back_soon": "Revenez bientôt !",
+    "categories": "Catégories",
+    "back_to_blog": "Retour au blog"
   }
 }
