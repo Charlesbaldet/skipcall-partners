@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Número de deals (comisión por deal)",
     "logo_ph": "https://ejemplo.com/logo.png",
     "logo_hint": "Pega la URL de una imagen alojada. Formato recomendado: PNG transparente, altura ~80px.",
-    "confirm_remove_member": "¿Eliminar este miembro?"
+    "confirm_remove_member": "¿Eliminar este miembro?",
+    "no_super_admin": "Ningún super administrador",
+    "member_created": "¡Miembro creado!",
+    "full_name": "Nombre",
+    "email": "Email",
+    "role_member": "Miembro",
+    "api_key_name": "Nombre",
+    "copy_this_key_now": "Copia esta clave ahora"
   },
   "status": {
     "new": "Nuevo",
