@@ -1357,6 +1357,12 @@
     "read_time": "Min. Lesezeit",
     "page_subtitle": "Alles, was Sie über B2B-Affiliate-Programme, Partnerprogramme und Wachstum wissen müssen.",
     "filter_all": "Alle",
-    "read_article": "Artikel lesen →"
+    "read_article": "Artikel lesen →",
+    "min_read": "Min. Lesezeit",
+    "all_categories": "Alle",
+    "no_articles": "Noch keine Artikel.",
+    "come_back_soon": "Schauen Sie bald wieder vorbei!",
+    "categories": "Kategorien",
+    "back_to_blog": "Zurück zum Blog"
   }
 }
