@@ -1357,6 +1357,12 @@
     "read_time": "min de leitura",
     "page_subtitle": "Tudo o que você precisa saber sobre programas de afiliados B2B, programas de parceiros e crescimento.",
     "filter_all": "Todos",
-    "read_article": "Ler artigo →"
+    "read_article": "Ler artigo →",
+    "min_read": "min de leitura",
+    "all_categories": "Todos",
+    "no_articles": "Nenhum artigo ainda.",
+    "come_back_soon": "Volte em breve!",
+    "categories": "Categorias",
+    "back_to_blog": "Voltar ao blog"
   }
 }
