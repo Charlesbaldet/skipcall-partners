@@ -1357,6 +1357,12 @@
     "read_time": "min di lettura",
     "page_subtitle": "Tutto ciò che devi sapere sui programmi di affiliazione B2B, programmi partner e crescita.",
     "filter_all": "Tutti",
-    "read_article": "Leggi articolo →"
+    "read_article": "Leggi articolo →",
+    "min_read": "min di lettura",
+    "all_categories": "Tutti",
+    "no_articles": "Nessun articolo al momento.",
+    "come_back_soon": "Torna presto!",
+    "categories": "Categorie",
+    "back_to_blog": "Torna al blog"
   }
 }
