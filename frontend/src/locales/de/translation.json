@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Anzahl der Deals (Provision pro Deal)",
     "logo_ph": "https://beispiel.de/logo.png",
     "logo_hint": "Füge die URL eines gehosteten Bildes ein. Empfohlenes Format: transparentes PNG, Höhe ~80px.",
-    "confirm_remove_member": "Dieses Mitglied entfernen?"
+    "confirm_remove_member": "Dieses Mitglied entfernen?",
+    "no_super_admin": "Kein Super-Administrator",
+    "member_created": "Mitglied erstellt!",
+    "full_name": "Name",
+    "email": "E-Mail",
+    "role_member": "Mitglied",
+    "api_key_name": "Name",
+    "copy_this_key_now": "Diesen Schlüssel jetzt kopieren"
   },
   "status": {
     "new": "Neu",
