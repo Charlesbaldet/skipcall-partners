@@ -1357,6 +1357,12 @@
     "read_time": "min lezen",
     "page_subtitle": "Alles wat u moet weten over B2B-affiliateprogramma's, partnerprogramma's en groei.",
     "filter_all": "Alle",
-    "read_article": "Artikel lezen →"
+    "read_article": "Artikel lezen →",
+    "min_read": "min leestijd",
+    "all_categories": "Alle",
+    "no_articles": "Nog geen artikelen.",
+    "come_back_soon": "Kom snel terug!",
+    "categories": "Categorieën",
+    "back_to_blog": "Terug naar blog"
   }
 }
