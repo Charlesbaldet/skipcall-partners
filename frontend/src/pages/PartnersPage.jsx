@@ -15,7 +15,7 @@ export default function PartnersPage(){
   const handleDeletePartner=async(id)=>{try{await api.deletePartner(id);setPartners(prev=>prev.filter(p=>p.id!==id));}catch(e){alert(e.message);}};
   const startEdit=(p)=>{setEditingId(p.id);setEditForm({name:p.name,contact_name:p.contact_name,email:p.email,phone:p.phone||'',company_website:p.company_website||'',commission_rate:p.commission_rate,iban:p.iban||'',bic:p.bic||'',account_holder:p.account_holder||''});};
   const saveEdit=async()=>{try{await api.updatePartner(editingId,editForm);setEditingId(null);await loadPartners(showArchived);}catch(e){alert(e.message);}};
-  const handleSubmit=async(e)=>{e.preventDefault();setSaving(true);try{const data=await api.createPartner(form);setPartners(prev=>[...prev,{...data.partner,total_referrals:'0',won_deals:'0',total_revenue:'0'}]);setTempPwd(data.partner.temp_password||null);}catch(err){console.error(err);}setSaving(false);};
+  const handleSubmit=async(e)=>{e.preventDefault();setSaving(true);try{const data=await api.createPartner(form);setPartners(prev=>[...prev,{...data.partner,total_referrals:'0',won_deals:'0',total_revenue:'0'}]);setTempPwd(data.partner.temp_password||null);setShowForm(false);}catch(err){console.error(err);}setSaving(false);};
   const handleApprove=async()=>{try{await api.approveApplication(selectedApp.id,commissionRate);setSelectedApp(null);loadApplications();}catch(e){alert(e.message);}};
   const handleReject=async()=>{try{await api.rejectApplication(selectedApp.id,'');setSelectedApp(null);loadApplications();}catch(e){alert(e.message);}};
   const activePartners=partners.filter(p=>p.is_active!==false);const archivedPartners=partners.filter(p=>p.is_active===false);const pendingCount=applications.filter(a=>a.status==='pending').length;
