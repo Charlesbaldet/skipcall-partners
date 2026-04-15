@@ -1323,7 +1323,19 @@
     "marketplace_icp_placeholder": "E.g. SMBs, B2B startups…",
     "marketplace_description_placeholder": "Describe your service in 2-3 sentences…",
     "marketplace_active": "Active",
-    "marketplace_inactive": "Inactive"
+    "marketplace_inactive": "Inactive",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Consulting & Services",
+    "sector_finance_fintech": "Finance & Fintech",
+    "sector_rh_recrutement": "HR & Recruitment",
+    "sector_marketing_communication": "Marketing & Communication",
+    "sector_immobilier": "Real Estate",
+    "sector_commerce": "Commerce",
+    "sector_formation": "Training",
+    "sector_juridique": "Legal",
+    "sector_industrie": "Industry",
+    "sector_autre": "Other",
+    "revenue_other": "Other"
   },
   "blog": {
     "subtitle": "Tips, strategies and insights",
