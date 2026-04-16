@@ -13,15 +13,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
-function useMobile() {
-  const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-  useEffect(() => {
-    const h = () => setMobile(window.innerWidth < 768);
-    window.addEventListener('resize', h, { passive: true });
-    return () => window.removeEventListener('resize', h);
-  }, []);
-  return mobile;
-}
 
 const C = { p:'#059669',pl:'#10b981',pd:'#047857',s:'#0f172a',sl:'#1e293b',a:'#f97316',al:'#fb923c',m:'#64748b',bg:'#fafbfc' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
@@ -86,7 +77,6 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const mobile = useMobile();
   const [email, setEmail] = useState('');
-  const mobile = useMobile();
   const [scrollY, setScrollY] = useState(0);
   const [featOpen, setFeatOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
