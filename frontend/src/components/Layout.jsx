@@ -54,6 +54,7 @@ const SUPERADMIN_NAV = [
 ];
 
 export default function Layout({ children }) {
+  const { t } = useTranslation();
   const { user, logout, spaces, currentSpace, switchSpace } = useAuth();
   const handlePasswordChanged = () => { window.location.reload(); };
   const navigate = useNavigate();
