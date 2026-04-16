@@ -194,14 +194,47 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
       [app.company_name, app.contact_name, app.email, app.phone, app.company_website, commission_rate, req.tenantId || null]
     );
 
-    // Create user account with tenant_id
-    const tempPassword = Math.random().toString(36).slice(2, 10) + '!A1';
-    const hash = await bcrypt.hash(tempPassword, 12);
-    await client.query(
-      `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
-       VALUES ($1, $2, $3, 'partner', $4, $5, true)`,
-      [app.email, hash, app.contact_name, partner.id, req.tenantId || null]
+    // Multi-role: link existing user OR create new account
+    const existingRows = await client.query(
+      `SELECT id FROM users WHERE email = $1 LIMIT 1`,
+      [app.email]
     );
+    const existingUser = existingRows.rows[0];
+
+    let tempPassword = null;
+    let userId;
+    const isNewUser = !existingUser;
+
+    if (existingUser) {
+      // User already exists (e.g. customer/admin) - link them as partner
+      userId = existingUser.id;
+      await client.query(
+        `UPDATE users SET partner_id = COALESCE(partner_id, $1), updated_at = NOW() WHERE id = $2`,
+        [partner.id, userId]
+      );
+    } else {
+      // Brand new user - create account with temp password
+      tempPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
+      const hash = await bcrypt.hash(tempPassword, 10);
+      const newUserRows = await client.query(
+        `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
+         VALUES ($1, $2, $3, 'partner', $4, $5, true)
+         RETURNING id`,
+        [app.email, hash, app.contact_name, partner.id, req.tenantId || null]
+      );
+      userId = newUserRows.rows[0].id;
+    }
+
+    // Always: register the 'partner' role for this user in this tenant (idempotent)
+    if (req.tenantId) {
+      await client.query(
+        `INSERT INTO user_roles (user_id, tenant_id, role, partner_id)
+         VALUES ($1, $2, 'partner', $3)
+         ON CONFLICT (user_id, role, tenant_id)
+         DO UPDATE SET partner_id = EXCLUDED.partner_id, is_active = true`,
+        [userId, req.tenantId, partner.id]
+      );
+    }
 
     // Update application status
     await client.query(
@@ -225,7 +258,7 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
           <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Email</div>
           <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:15px;color:#1f2937;margin-bottom:12px;">${app.email}</div>
           <div style="font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Mot de passe temporaire</div>
-          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:17px;font-weight:600;color:#059669;">${tempPassword}</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:17px;font-weight:600;color:#059669;">${tempPassword || '(inchange - utilisez votre mot de passe actuel)'}</div>
         </div>
         <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Modifiez ce mot de passe dès votre première connexion.</p>`;
       const _html = templates.baseLayout({
@@ -245,7 +278,7 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
 Votre candidature a été approuvée !
 
 Email: ${app.email}
-Mot de passe temporaire: ${tempPassword}
+Mot de passe temporaire: ${tempPassword || '(inchange - utilisez votre mot de passe actuel)'}
 
 Connexion: ${_loginUrl}`,
         template: 'application_approved',
@@ -256,11 +289,11 @@ Connexion: ${_loginUrl}`,
       console.error('[applications.approve] email error:', _emailErr.message);
     }
 
-    res.json({ partner, tempPassword });
+    res.json({ partner, tempPassword, isNewUser, userId });
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.code === '23505') {
-      return res.status(409).json({ error: 'Un partenaire avec cet email existe déjà' });
+      return res.status(409).json({ error: 'Conflit: cet email est deja lie a un partenaire dans ce tenant' });
     }
     console.error('Approve application error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
