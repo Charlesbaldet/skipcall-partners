@@ -1,16 +1,142 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import api from '../lib/api';
-const C={p:'#059669',s:'#0f172a',m:'#64748b',bg:'#fafbfc'};
-export default function SetupPasswordPage(){
-  const{t}=useTranslation();
-  const[params]=useSearchParams();const navigate=useNavigate();
-  const token=params.get('token');const[pw,setPw]=useState('');const[loading,setLoading]=useState(false);const[checking,setChecking]=useState(true);const[valid,setValid]=useState(false);const[partnerName,setPartnerName]=useState('');const[done,setDone]=useState(false);const[error,setError]=useState('');
-  useEffect(()=>{if(!token){setChecking(false);return;}api.request(`/auth/verify-invite?token=${token}`).then(d=>{setValid(true);setPartnerName(d.name||'');}).catch(()=>setValid(false)).finally(()=>setChecking(false));},[token]);
-  const handleSubmit=async(e)=>{e.preventDefault();setLoading(true);try{await api.request('/auth/setup-password',{method:'POST',body:JSON.stringify({token,password:pw})});setDone(true);setTimeout(()=>navigate('/login'),3000);}catch(err){setError(err.message||t('common.error'));}setLoading(false);};
-  if(checking)return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg}}><p style={{color:C.m}}>{t('setupPwd.loading')}</p></div>);
-  if(!valid)return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:C.bg}}><div style={{maxWidth:440,width:'100%',textAlign:'center',background:'#fff',borderRadius:24,padding:48,boxShadow:'0 20px 60px rgba(0,0,0,0.08)'}}><div style={{fontSize:52,marginBottom:16}}>🔐</div><h2 style={{fontWeight:800,fontSize:24,color:C.s,marginBottom:12}}>{t('setupPwd.invalid_title')}</h2><p style={{color:C.m,marginBottom:32}}>{t('setupPwd.invalid_subtitle')}</p><a href="/login" style={{color:C.p,fontWeight:700,textDecoration:'none'}}>{t('setupPwd.back_to_login')}</a></div></div>);
-  if(done)return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:C.bg}}><div style={{maxWidth:440,width:'100%',textAlign:'center',background:'#fff',borderRadius:24,padding:48,boxShadow:'0 20px 60px rgba(0,0,0,0.08)'}}><div style={{fontSize:52,marginBottom:16}}>🎉</div><h2 style={{fontWeight:800,fontSize:24,color:C.s,marginBottom:12}}>{t('setupPwd.success_title')}</h2><p style={{color:C.m}}>{t('setupPwd.success_text')}</p></div></div>);
-  return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:C.bg}}><div style={{width:'100%',maxWidth:440,background:'#fff',borderRadius:24,padding:48,boxShadow:'0 20px 60px rgba(0,0,0,0.08)'}}><h1 style={{fontWeight:800,fontSize:28,color:C.s,margin:'0 0 8px'}}>{t('setupPwd.title')}</h1><p style={{color:C.m,margin:'0 0 32px',lineHeight:1.6}}>{t('setupPwd.subtitle')}</p><form onSubmit={handleSubmit}><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:8}}>{t('setupPwd.pwd_label')}</label><input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder={t('setupPwd.pwd_ph')} required style={{width:'100%',padding:'14px 16px',borderRadius:12,border:'1.5px solid #e2e8f0',background:C.bg,fontSize:15,color:C.s,outline:'none',boxSizing:'border-box',marginBottom:16}}/>{error&&<p style={{color:'#dc2626',fontSize:13,marginBottom:12}}>{error}</p>}<button type="submit" disabled={loading} style={{width:'100%',padding:15,borderRadius:12,border:'none',background:loading?'#94a3b8':C.p,color:'#fff',fontWeight:700,fontSize:15,cursor:loading?'not-allowed':'pointer'}}>{loading?t('setupPwd.submitting'):t('setupPwd.submit')}</button></form></div></div>);
+import { useParams, useNavigate } from 'react-router-dom';
+import { Lock, CheckCircle, AlertTriangle } from 'lucide-react';
+
+export default function SetupPasswordPage() {
+  const { token } = useParams();
+  const navigate = useNavigate();
+  const [invitation, setInvitation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/auth/invitation/${token}`)
+      .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error(data.error);
+        setInvitation(data.invitation);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (password.length < 8) return setError('Le mot de passe doit contenir au moins 8 caractères');
+    if (password !== confirmPassword) return setError('Les mots de passe ne correspondent pas');
+
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/setup-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSuccess(true);
+      setTimeout(() => navigate('/login'), 3000);
+    } catch (err) {
+      setError(err.message);
+    }
+    setSaving(false);
+  };
+
+  const s = {
+    page: { minHeight: '100vh', background: 'linear-gradient(168deg, #0a0a0f 0%, #111827 50%, #0f172a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 },
+    card: { width: 440, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 40, backdropFilter: 'blur(20px)' },
+    input: { width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box' },
+  };
+
+  if (loading) {
+    return (
+      <div style={s.page}>
+        <p style={{ color: '#94a3b8' }}>Chargement...</p>
+      </div>
+    );
+  }
+
+  if (error && !invitation) {
+    return (
+      <div style={s.page}>
+        <div style={s.card}>
+          <div style={{ textAlign: 'center' }}>
+            <AlertTriangle size={48} color="#f59e0b" style={{ marginBottom: 16 }} />
+            <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Lien invalide</h2>
+            <p style={{ color: '#94a3b8', fontSize: 15, marginBottom: 24 }}>{error}</p>
+            <a href="/login" style={{ color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}>Retour à la connexion</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div style={s.page}>
+        <div style={s.card}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
+              <CheckCircle size={28} color="#fff" />
+            </div>
+            <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Compte créé !</h2>
+            <p style={{ color: '#94a3b8', fontSize: 15, marginBottom: 8 }}>Votre mot de passe a été configuré. Redirection vers la connexion...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.page}>
+      <div style={s.card} className="fade-in">
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>S</div>
+            <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>Skipcall</span>
+          </div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Créer votre mot de passe</h1>
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>
+            Bienvenue <strong style={{ color: '#fff' }}>{invitation.fullName}</strong> ! Vous avez été invité en tant que <strong style={{ color: '#818cf8' }}>{invitation.role === 'admin' ? 'Administrateur' : 'Commercial'}</strong>.
+          </p>
+        </div>
+
+        {error && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '10px 14px', color: '#fca5a5', fontSize: 13, marginBottom: 16 }}>{error}</div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Email</label>
+            <input type="email" value={invitation.email} disabled
+              style={{ ...s.input, opacity: 0.5, cursor: 'not-allowed' }} />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Mot de passe</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="Minimum 8 caractères" style={s.input} required minLength={8} />
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Confirmer le mot de passe</label>
+            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="Retapez le mot de passe" style={s.input} required />
+          </div>
+          <button type="submit" disabled={saving} style={{
+            width: '100%', padding: '14px', borderRadius: 12,
+            background: 'var(--rb-primary, #059669)', color: '#fff',
+            border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+            <Lock size={16} /> {saving ? 'Création...' : 'Créer mon compte'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }

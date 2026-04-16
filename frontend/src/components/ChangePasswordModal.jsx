@@ -1,9 +1,87 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
-export default function ChangePasswordModal({onClose}){
-  const{t}=useTranslation();
-  const[current,setCurrent]=useState('');const[next,setNext]=useState('');const[confirm,setConfirm]=useState('');const[loading,setLoading]=useState(false);const[error,setError]=useState('');const[done,setDone]=useState(false);
-  const handleSubmit=async(e)=>{e.preventDefault();setError('');if(next!==confirm){setError(t('changePwd.mismatch'));return;}if(next.length<10||!/[A-Z]/.test(next)||!/[a-z]/.test(next)||!/[0-9]/.test(next)||!/[^A-Za-z0-9]/.test(next)){setError(t('changePwd.weak'));return;}setLoading(true);try{await api.request('/auth/change-password',{method:'POST',body:JSON.stringify({current_password:current,new_password:next})});setDone(true);}catch(err){setError(err.message||t('common.error'));}setLoading(false);};
-  return(<div style={{position:'fixed',inset:0,zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}><div onClick={onClose} style={{position:'absolute',inset:0,background:'rgba(15,23,42,0.6)',backdropFilter:'blur(8px)'}}/><div className="fade-in" style={{position:'relative',background:'#fff',borderRadius:24,width:460,maxWidth:'100%',boxShadow:'0 25px 80px rgba(0,0,0,0.25)',padding:36}}>{done?(<div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>✅</div><h2 style={{fontWeight:800,color:'#0f172a',marginBottom:8}}>{t('changePwd.title')}</h2><p style={{color:'#64748b',marginBottom:24}}>{t('changePwd.mismatch')}</p><button onClick={onClose} style={{padding:'12px 28px',borderRadius:12,background:'var(--rb-primary,#059669)',color:'#fff',border:'none',fontWeight:700,cursor:'pointer'}}>{t('common.close')}</button></div>):(<><h2 style={{fontWeight:800,fontSize:22,color:'#0f172a',marginBottom:6}}>{t('changePwd.title')}</h2><p style={{color:'#64748b',fontSize:14,marginBottom:28}}>{t('changePwd.subtitle')}</p><form onSubmit={handleSubmit}><div style={{marginBottom:16}}><label style={{display:'block',fontWeight:600,fontSize:13,color:'#334155',marginBottom:6}}>{t('changePwd.current')}</label><input type="password" value={current} onChange={e=>setCurrent(e.target.value)} required style={{width:'100%',padding:'12px 14px',borderRadius:10,border:'2px solid #e2e8f0',fontSize:14,boxSizing:'border-box'}}/></div><div style={{marginBottom:16}}><label style={{display:'block',fontWeight:600,fontSize:13,color:'#334155',marginBottom:6}}>{t('changePwd.new_pwd')}</label><input type="password" value={next} onChange={e=>setNext(e.target.value)} required style={{width:'100%',padding:'12px 14px',borderRadius:10,border:'2px solid #e2e8f0',fontSize:14,boxSizing:'border-box'}}/></div><div style={{marginBottom:24}}><label style={{display:'block',fontWeight:600,fontSize:13,color:'#334155',marginBottom:6}}>{t('changePwd.confirm')}</label><input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} required style={{width:'100%',padding:'12px 14px',borderRadius:10,border:'2px solid #e2e8f0',fontSize:14,boxSizing:'border-box'}}/></div>{error&&<p style={{color:'#dc2626',fontSize:13,marginBottom:16}}>{error}</p>}<div style={{display:'flex',gap:12}}><button type="button" onClick={onClose} style={{flex:1,padding:'13px',borderRadius:12,border:'2px solid #e2e8f0',background:'#fff',fontWeight:600,cursor:'pointer',fontSize:14,color:'#475569'}}>{t('common.cancel')}</button><button type="submit" disabled={loading} style={{flex:2,padding:'13px',borderRadius:12,border:'none',background:'var(--rb-primary,#059669)',color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer',opacity:loading?0.7:1}}>{loading?t('changePwd.submitting'):t('changePwd.submit')}</button></div></form></>)}</div></div>);
+
+export default function ChangePasswordModal({ onSuccess }) {
+  const [pwd, setPwd] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    setError('');
+    if (pwd.length < 8) return setError('Le mot de passe doit faire au moins 8 caractères.');
+    if (pwd !== confirm) return setError('Les mots de passe ne correspondent pas.');
+    setLoading(true);
+    try {
+      // FIX: plus de userId dans le body  le backend utilise req.user.id depuis le JWT
+      await api.request('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ newPassword: pwd }),
+      });
+      onSuccess();
+    } catch (e) {
+      setError(e.message);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)' }}>
+      <div style={{ background: '#fff', borderRadius: 24, padding: 40, width: 420, maxWidth: '100%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Lock size={24} color="#059669" />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Choisissez votre mot de passe</h2>
+          <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5 }}>Bienvenue ! Pour sécuriser votre compte, définissez un nouveau mot de passe avant de continuer.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#334155', marginBottom: 6 }}>Nouveau mot de passe</label>
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showPwd ? 'text' : 'password'}
+              value={pwd}
+              onChange={e => setPwd(e.target.value)}
+              placeholder="8 caractères minimum"
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              style={{ width: '100%', padding: '12px 44px 12px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+            />
+            <button onClick={() => setShowPwd(!showPwd)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}>
+              {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#334155', marginBottom: 6 }}>Confirmer le mot de passe</label>
+          <input
+            type={showPwd ? 'text' : 'password'}
+            value={confirm}
+            onChange={e => setConfirm(e.target.value)}
+            placeholder="Répétez le mot de passe"
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${confirm && confirm !== pwd ? '#dc2626' : confirm && confirm === pwd ? '#059669' : '#e2e8f0'}`, fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+          />
+          {confirm && confirm === pwd && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, color: '#059669', fontSize: 13 }}>
+              <CheckCircle size={14} /> Mots de passe identiques
+            </div>
+          )}
+        </div>
+
+        {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', color: '#dc2626', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={loading || !pwd || !confirm}
+          style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: loading || !pwd || !confirm ? '#94a3b8' : '#059669', color: '#fff', fontWeight: 700, fontSize: 16, cursor: loading || !pwd || !confirm ? 'not-allowed' : 'pointer' }}
+        >
+          {loading ? 'Enregistrement...' : 'Définir mon mot de passe'}
+        </button>
+      </div>
+    </div>
+  );
 }
