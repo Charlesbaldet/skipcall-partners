@@ -9,7 +9,7 @@ import {
   UserPlus, Settings, Globe, Activity, BarChart2, Trophy, Shield,
 } from 'lucide-react';
 
-// âââ RefBoost design tokens (sync avec LandingPage) âââ
+// ─── RefBoost design tokens (sync avec LandingPage) ───
 const C = {
   p: 'var(--rb-primary, #059669)',
   pl: 'var(--rb-primary-light, #10b981)',
@@ -46,7 +46,7 @@ const ADMIN_NAV = [
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
   { to: '/programme', icon: Trophy, label: 'Programme' },
-  { to: '/settings', icon: Settings, label: 'ParamÃ¨tres' },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 const PARTNER_NAV = [
@@ -55,7 +55,7 @@ const PARTNER_NAV = [
   { to: '/partner/payments', icon: DollarSign, label: 'Mes Paiements' },
   { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
   { divider: true },
-  { to: '/settings', icon: Settings, label: 'ParamÃ¨tres' },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 const SUPERADMIN_NAV = [
@@ -64,11 +64,11 @@ const SUPERADMIN_NAV = [
   { to: '/super-admin?tab=logs', icon: Activity, label: 'Audit Logs' },
   { to: '/super-admin?tab=blog', icon: FileText, label: 'Blog' },
   { divider: true },
-  { to: '/settings', icon: Settings, label: 'ParamÃ¨tres' },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 export default function Layout({ children }) {
-  const { user, logout, spaces, currentSpace, switchSpace } = useAuth();
+  const { user, logout } = useAuth();
   const handlePasswordChanged = () => { window.location.reload(); };
   const navigate = useNavigate();
   const location = useLocation();
@@ -181,76 +181,6 @@ export default function Layout({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
       <aside style={s.sidebar}>
-        {/* Phase B: multi-role space switcher */}
-        {spaces && spaces.length > 1 && (
-          <div style={{
-            padding: collapsed ? '12px 0 8px' : '12px 12px 8px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            {spaces.map((space) => {
-              const isActive =
-                currentSpace &&
-                currentSpace.tenant_id === space.tenant_id &&
-                currentSpace.role === space.role &&
-                (currentSpace.partner_id || null) === (space.partner_id || null);
-              const label = space.role === 'partner'
-                ? (space.partner_name || 'Partenaire')
-                : (space.tenant_name || 'Espace');
-              const initials = (label || '??').slice(0, 2).toUpperCase();
-              return (
-                <button
-                  key={`${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
-                  onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
-                  title={`${label} · ${space.role}`}
-                  style={{
-                    width: '100%',
-                    padding: collapsed ? '6px' : '6px 10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    borderRadius: 10,
-                    border: 'none',
-                    background: isActive
-                      ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`
-                      : 'transparent',
-                    color: '#fff',
-                    cursor: isActive ? 'default' : 'pointer',
-                    textAlign: 'left',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                  }}
-                >
-                  <div style={{
-                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                    background: space.role === 'partner'
-                      ? `linear-gradient(135deg, ${C.a}, ${C.al})`
-                      : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 800, color: '#fff',
-                    boxShadow: isActive ? '0 0 12px rgba(16,185,129,0.35)' : 'none',
-                  }}>
-                    {initials}
-                  </div>
-                  {!collapsed && (
-                    <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                      <div style={{
-                        fontSize: 12, fontWeight: 600,
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>{label}</div>
-                      <div style={{
-                        fontSize: 9, color: '#94a3b8',
-                        textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700,
-                      }}>{space.role}</div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Logo */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
           {isSuperAdmin ? (
@@ -318,7 +248,7 @@ export default function Layout({ children }) {
             color: '#64748b', cursor: 'pointer', fontSize: 13,
           }}
         >
-          {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> <span>RÃ©duire</span></>}
+          {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> <span>Réduire</span></>}
         </button>
 
         {/* User */}
@@ -351,7 +281,7 @@ export default function Layout({ children }) {
             )}
             <button
               onClick={handleLogout}
-              title="DÃ©connexion"
+              title="Déconnexion"
               style={{
                 background: 'transparent', border: 'none',
                 color: '#64748b', cursor: 'pointer', padding: 6,
