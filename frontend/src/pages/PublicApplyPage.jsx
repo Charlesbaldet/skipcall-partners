@@ -134,19 +134,19 @@ export default function PublicApplyPage() {
 
           {step === 2 && (
             <div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>Pourquoi devenir partenaire ?</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>{t("publicApply.why_title")}</h2>
               <div style={{ marginBottom: 24 }}>
                 <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.motivation")}</label>
                 <textarea value={form.motivation} onChange={set('motivation')} rows={5}
-                  placeholder="Décrivez votre activité, votre réseau de clients, et ce qui vous motive à rejoindre notre programme partenaires..."
+                  placeholder={t("publicApply.motivation_ph")}
                   style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, resize: 'vertical', fontFamily: 'inherit', color: '#fff', boxSizing: 'border-box' }} />
               </div>
 
               {/* Recap */}
               <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontWeight: 700, color: '#fff', fontSize: 14, marginBottom: 14 }}>Récapitulatif</div>
+                <div style={{ fontWeight: 700, color: '#fff', fontSize: 14, marginBottom: 14 }}>{t("publicApply.step_summary")}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', fontSize: 14 }}>
-                  <RecapRow label="Société" value={form.company_name} />
+                  <RecapRow label=t("publicApply.company") value={form.company_name} />
                   <RecapRow label="Contact" value={form.contact_name} />
                   <RecapRow label="Email" value={form.email} />
                   <RecapRow label={t("publicApply.phone")} value={form.phone || '—'} />
@@ -162,7 +162,7 @@ export default function PublicApplyPage() {
                   boxShadow: '0 4px 15px rgba(34,197,94,0.3)', opacity: saving ? 0.7 : 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}>
-                  <Send size={16} /> {saving ? 'Envoi...' : '{t("publicApply.submit")}'}
+                  <Send size={16} /> {saving ? t("publicApply.submitting") : t("publicApply.submit")}
                 </button>
               </div>
             </div>
