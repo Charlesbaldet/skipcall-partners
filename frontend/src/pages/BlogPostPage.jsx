@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
@@ -13,6 +14,7 @@ function formatDate(iso) {
 }
 
 export default function BlogPostPage() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
@@ -33,7 +35,7 @@ export default function BlogPostPage() {
   if (loading) return (
     <LandingLayout>
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m }}>
-        Chargement…
+        {t('common.loading')}
       </div>
     </LandingLayout>
   );
@@ -41,8 +43,8 @@ export default function BlogPostPage() {
   if (notFound || !post) return (
     <LandingLayout>
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <h1 style={{ color: C.s, fontSize: 24 }}>Article introuvable</h1>
-        <Link to="/blog" style={{ color: C.p, fontWeight: 600 }}>← Retour au blog</Link>
+        <h1 style={{ color: C.s, fontSize: 24 }}>{t('blog.not_found')}</h1>
+        <Link to="/blog" style={{ color: C.p, fontWeight: 600 }}>{t('blog.back')}</Link>
       </div>
     </LandingLayout>
   );
@@ -105,7 +107,7 @@ export default function BlogPostPage() {
       <main style={{ maxWidth: 780, margin: '0 auto', padding: '48px 24px 80px' }}>
         {/* Breadcrumb */}
         <nav aria-label="Fil d'Ariane" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 32, fontSize: 14, color: C.m }}>
-          <Link to="/" style={{ color: C.m, textDecoration: 'none' }}>Accueil</Link>
+          <Link to="/" style={{ color: C.m, textDecoration: 'none' }}>{t('blog.home')}</Link>
           <span>›</span>
           <Link to="/blog" style={{ color: C.m, textDecoration: 'none' }}>Blog</Link>
           <span>›</span>
@@ -147,7 +149,7 @@ export default function BlogPostPage() {
         {/* Tags */}
         {post.tags?.length > 0 && (
           <footer style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid #e2e8f0' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: C.m, textTransform: 'uppercase', letterSpacing: 1 }}>Tags</p>
+            <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: C.m, textTransform: 'uppercase', letterSpacing: 1 }}>{t('blog.tags')}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {post.tags.map(t => (
                 <span key={t} style={{ padding: '4px 12px', background: '#f0fdf4', color: C.p, borderRadius: 20, fontSize: 13, fontWeight: 600 }}>{t}</span>
@@ -159,7 +161,7 @@ export default function BlogPostPage() {
         {/* Retour */}
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <Link to="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 12, border: '1.5px solid ' + C.p, color: C.p, fontWeight: 700, textDecoration: 'none', fontSize: 15 }}>
-            ← Retour au blog
+            ← {t('blog.back_to_blog')}
           </Link>
         </div>
       </main>

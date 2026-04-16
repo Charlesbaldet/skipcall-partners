@@ -1,126 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { CheckCircle, Send, AlertTriangle } from 'lucide-react';
-
-export default function PublicTrackingPage() {
-  const { code } = useParams();
-  const [partner, setPartner] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [form, setForm] = useState({
-    prospect_name: '', prospect_email: '', prospect_phone: '',
-    prospect_company: '', prospect_role: '', notes: '',
-  });
-
-  useEffect(() => {
-    fetch(`/api/track/${code}`)
-      .then(r => r.json())
-      .then(d => { if (d.partner) setPartner(d.partner); else setError('Lien invalide'); })
-      .catch(() => setError('Erreur de connexion'))
-      .finally(() => setLoading(false));
-  }, [code]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.prospect_name || !form.prospect_email) return;
-    setSending(true);
-    try {
-      const res = await fetch(`/api/track/${code}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) { setSubmitted(true); } else { alert(data.error || 'Erreur'); }
-    } catch { alert('Erreur de connexion'); }
-    setSending(false);
-  };
-
-  const inputStyle = { width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 15, boxSizing: 'border-box', transition: 'border 0.2s' };
-  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 6 };
-
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}><div style={{ color: '#94a3b8' }}>Chargement...</div></div>;
-
-  if (error) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-      <div style={{ textAlign: 'center' }}>
-        <AlertTriangle size={48} color="#f59e0b" />
-        <h2 style={{ color: '#0f172a', marginTop: 16 }}>{error}</h2>
-        <p style={{ color: '#64748b' }}>Ce lien de recommandation n'est pas valide.</p>
-      </div>
+import api from '../lib/api';
+const C={p:'#059669',pl:'#10b981',s:'#0f172a',m:'#64748b',bg:'#fafbfc'};
+export default function PublicTrackingPage(){
+  const{t}=useTranslation();
+  const{code}=useParams();const[loading,setLoading]=useState(true);const[valid,setValid]=useState(false);const[tenant,setTenant]=useState(null);const[submitted,setSubmitted]=useState(false);const[submitting,setSubmitting]=useState(false);
+  const[form,setForm]=useState({name:'',company:'',email:'',phone:'',needs:''});
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  useEffect(()=>{if(!code){setLoading(false);return;}api.request(`/public/track/${code}`).then(d=>{setTenant(d.tenant||d);setValid(true);}).catch(()=>setValid(false)).finally(()=>setLoading(false));},[code]);
+  const handleSubmit=async(e)=>{e.preventDefault();setSubmitting(true);try{await api.request(`/public/track/${code}`,{method:'POST',body:JSON.stringify(form)});setSubmitted(true);}catch(err){alert(err.message);}setSubmitting(false);};
+  const accent=tenant?.primary_color||C.p;
+  if(loading)return<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg}}><p style={{color:C.m}}>{t('publicTracking.loading')}</p></div>;
+  if(!valid)return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:C.bg}}><div style={{maxWidth:440,width:'100%',textAlign:'center',background:'#fff',borderRadius:24,padding:48,boxShadow:'0 20px 60px rgba(0,0,0,0.08)'}}><div style={{fontSize:48,marginBottom:16}}>🔗</div><h2 style={{fontWeight:800,fontSize:22,color:C.s,marginBottom:12}}>{t('publicTracking.invalid_title')}</h2><p style={{color:C.m}}>{t('publicTracking.invalid_text')}</p></div></div>);
+  if(submitted)return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:C.bg}}><div style={{maxWidth:480,width:'100%',textAlign:'center',background:'#fff',borderRadius:24,padding:48,boxShadow:'0 20px 60px rgba(0,0,0,0.08)'}}><div style={{fontSize:56,marginBottom:20}}>✅</div><h2 style={{fontSize:24,fontWeight:800,color:C.s,marginBottom:12}}>{t('publicTracking.thank_you')}</h2><p style={{color:C.m,lineHeight:1.6}}>{t('publicTracking.team_contact')}</p></div></div>);
+  return(<div style={{minHeight:'100vh',background:C.bg}}>
+    <div style={{background:accent,padding:'32px 24px',textAlign:'center'}}>
+      {tenant?.logo_url&&<img src={tenant.logo_url} alt={tenant.name} style={{height:48,marginBottom:16,borderRadius:8}}/>}
+      <h1 style={{color:'#fff',fontSize:24,fontWeight:800,marginBottom:8}}>{tenant?.name||'RefBoost'}</h1>
     </div>
-  );
-
-  if (submitted) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-      <div style={{ textAlign: 'center', maxWidth: 400 }} className="fade-in">
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <CheckCircle size={40} color="#16a34a" />
-        </div>
-        <h2 style={{ color: '#0f172a', fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Merci !</h2>
-        <p style={{ color: '#64748b', lineHeight: 1.6 }}>Votre demande a été envoyée. L'équipe de <strong>{partner.name}</strong> vous contactera très prochainement.</p>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: '#fff', borderRadius: 28, maxWidth: 520, width: '100%', padding: 40, boxShadow: '0 25px 80px rgba(0,0,0,0.3)' }} className="fade-in">
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 0 30px rgba(5,150,105,0.3)' }}>
-            <span style={{ color: '#fff', fontWeight: 800, fontSize: 22 }}>S</span>
+    <div style={{maxWidth:520,margin:'0 auto',padding:'32px 24px'}}>
+      <div style={{background:'#fff',borderRadius:20,padding:32,boxShadow:'0 4px 20px rgba(0,0,0,0.06)',border:'1px solid #e2e8f0'}}>
+        <h2 style={{fontSize:20,fontWeight:700,color:C.s,marginBottom:6}}>{t('publicTracking.thank_you')}</h2>
+        <p style={{color:C.m,marginBottom:24,lineHeight:1.6}}>{t('publicTracking.fill_form')}</p>
+        <form onSubmit={handleSubmit}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            {[[t('publicTracking.field_name'),'name','text',true],[t('publicTracking.field_company'),'company','text',false],[t('publicTracking.field_email'),'email','email',true],[t('publicTracking.field_phone'),'phone','tel',false]].map(([label,key,type,req])=>(<div key={key}><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{label}</label><input type={type} value={form[key]} onChange={e=>set(key,e.target.value)} required={req} style={{width:'100%',padding:'12px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:15,color:C.s,outline:'none',boxSizing:'border-box'}}/></div>))}
+            <div><label style={{display:'block',fontWeight:600,fontSize:13,color:C.s,marginBottom:6}}>{t('publicTracking.field_needs')}</label><textarea value={form.needs} onChange={e=>set('needs',e.target.value)} rows={3} style={{width:'100%',padding:'12px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:15,color:C.s,outline:'none',boxSizing:'border-box',resize:'vertical',fontFamily:'inherit'}}/></div>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>Recommandé par {partner.name}</h1>
-          <p style={{ color: '#64748b', fontSize: 15 }}>Remplissez ce formulaire et nous vous recontacterons</p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={labelStyle}>Nom complet *</label>
-              <input value={form.prospect_name} onChange={e => setForm(f => ({ ...f, prospect_name: e.target.value }))} placeholder="Jean Dupont" required style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Email *</label>
-              <input type="email" value={form.prospect_email} onChange={e => setForm(f => ({ ...f, prospect_email: e.target.value }))} placeholder="jean@entreprise.com" required style={inputStyle} />
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={labelStyle}>Téléphone</label>
-              <input value={form.prospect_phone} onChange={e => setForm(f => ({ ...f, prospect_phone: e.target.value }))} placeholder="+33 6 12 34 56 78" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Entreprise</label>
-              <input value={form.prospect_company} onChange={e => setForm(f => ({ ...f, prospect_company: e.target.value }))} placeholder="Nom de l'entreprise" style={inputStyle} />
-            </div>
-          </div>
-          <div>
-            <label style={labelStyle}>Votre rôle</label>
-            <input value={form.prospect_role} onChange={e => setForm(f => ({ ...f, prospect_role: e.target.value }))} placeholder="CEO, CTO, DG..." style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Message (optionnel)</label>
-            <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Décrivez votre besoin..." rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
-          </div>
-          <button type="submit" disabled={sending || !form.prospect_name || !form.prospect_email} style={{
-            padding: '14px', borderRadius: 14, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer',
-            background: 'var(--rb-primary, #059669)', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            opacity: sending ? 0.7 : 1, boxShadow: '0 4px 20px rgba(5,150,105,0.3)',
-          }}>
-            <Send size={18} /> {sending ? 'Envoi...' : 'Envoyer ma demande'}
-          </button>
+          <button type="submit" disabled={submitting} style={{width:'100%',marginTop:20,padding:'14px',borderRadius:12,border:'none',background:submitting?'#94a3b8':accent,color:'#fff',fontWeight:700,fontSize:15,cursor:submitting?'not-allowed':'pointer'}}>{submitting?t('publicTracking.submitting'):t('publicTracking.submit')}</button>
         </form>
-
-        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12, marginTop: 20 }}>
-          Powered by <strong style={{ color: 'var(--rb-primary, #059669)' }}>Skipcall</strong>
-        </p>
       </div>
     </div>
-  );
+  </div>);
 }

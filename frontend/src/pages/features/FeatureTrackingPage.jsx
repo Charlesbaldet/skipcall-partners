@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FeaturePageTemplate from '../../components/FeaturePageTemplate';
 
 const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
@@ -56,40 +57,23 @@ const MOCKUP = `<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" st
 const ILLUS0 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Mes liens de suivi</text><rect x="24" y="50" width="432" height="40" fill="#0f172a" rx="6"/><text x="36" y="68" font-family="system-ui" font-size="9" fill="#3b82f6">https://acme.refboost.io/ref/sophie?src=linkedin</text><text x="36" y="83" font-family="system-ui" font-size="8" fill="#64748b">487 clics · 23 leads · 8 closings</text><rect x="24" y="96" width="432" height="40" fill="#0f172a" rx="6"/><text x="36" y="114" font-family="system-ui" font-size="9" fill="#3b82f6">https://acme.refboost.io/ref/sophie?src=email</text><text x="36" y="129" font-family="system-ui" font-size="8" fill="#64748b">208 clics · 14 leads · 5 closings</text><rect x="24" y="142" width="432" height="40" fill="#0f172a" rx="6"/><text x="36" y="160" font-family="system-ui" font-size="9" fill="#3b82f6">https://acme.refboost.io/ref/sophie?src=direct</text><text x="36" y="175" font-family="system-ui" font-size="8" fill="#64748b">112 clics · 6 leads · 2 closings</text><rect x="24" y="198" width="200" height="28" fill="#3b82f6" rx="8"/><text x="124" y="216" font-family="system-ui" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">+ Créer un lien</text></svg>`;
 const ILLUS1 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Attribution automatique</text><rect x="24" y="50" width="432" height="44" fill="#0f172a" rx="6"/><text x="36" y="68" font-family="system-ui" font-size="9" fill="#e2e8f0">Clic sur lien Sophie Martin · 14:32</text><text x="36" y="84" font-family="system-ui" font-size="8" fill="#64748b">Prospect: DataFlow SAS — LinkedIn</text><rect x="24" y="100" width="432" height="44" fill="#0f172a" rx="6"/><text x="36" y="118" font-family="system-ui" font-size="9" fill="#e2e8f0">Formulaire rempli · 14:47</text><text x="36" y="134" font-family="system-ui" font-size="8" fill="#22c55e">Lead créé et attribué automatiquement à Sophie Martin</text><rect x="24" y="150" width="432" height="44" fill="#052e16" rx="6"/><text x="36" y="168" font-family="system-ui" font-size="9" fill="#4ade80">Deal signé · J+18</text><text x="36" y="184" font-family="system-ui" font-size="8" fill="#64748b">Commission calculée: 1 760€ · Sophie Martin notifiée</text></svg>`;
 const ILLUS2 = `<svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;background:#0f172a"><rect x="12" y="12" width="456" height="236" fill="#1e293b" rx="8"/><text x="24" y="36" font-family="system-ui" font-size="10" font-weight="700" fill="#e2e8f0">Fenêtre d’attribution</text><text x="24" y="58" font-family="system-ui" font-size="9" fill="#64748b">Si un prospect clique puis remplit le formulaire dans</text><rect x="24" y="68" width="432" height="44" fill="#0f172a" rx="8"/><text x="36" y="90" font-family="system-ui" font-size="14" font-weight="800" fill="#3b82f6">90 jours</text><text x="36" y="106" font-family="system-ui" font-size="8" fill="#64748b">Configurable: 7, 14, 30, 60, 90 ou 180 jours</text><text x="24" y="134" font-family="system-ui" font-size="9" fill="#64748b">Règle en cas de multi-clic</text><rect x="24" y="144" width="432" height="36" fill="#0f172a" rx="8"/><text x="36" y="166" font-family="system-ui" font-size="9" fill="#e2e8f0">Premier clic (First-touch) ou Dernier clic (Last-touch)</text><rect x="24" y="196" width="200" height="28" fill="#3b82f6" rx="8"/><text x="124" y="214" font-family="system-ui" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">Sauvegarder les règles</text></svg>`;
+const ILLUS = [ILLUS0, ILLUS1, ILLUS2];
 
 export default function FeatureTrackingPage() {
+  const { t } = useTranslation();
+  const d = t('features.tracking', { returnObjects: true });
+  const benefits = d.benefits.map((b, i) => ({ ...b, illustration: ILLUS[i] }));
+
   return (
     <FeaturePageTemplate
-      helmet={{ title: 'Liens de tracking uniques — RefBoost', description: 'Chaque apporteur dispose de son lien personnel. Attribution automatique, formulaire public intégré, zero friction pour vos partenaires et vos prospects.', canonical: 'https://refboost.io/fonctionnalites/tracking' }}
+      helmet={{ title: d.helmet_title, description: d.helmet_desc, canonical: 'https://refboost.io/fonctionnalites/tracking' }}
       accentColor="#3b82f6"
-      label="Fonctionnalité"
-      title="Liens de tracking uniques"
-      subtitle="Un lien par apporteur, une attribution parfaite. Vos partenaires partagent, les leads arrivent qualifiés et attribués automatiquement."
+      label={t('features.label')}
+      title={d.title}
+      subtitle={d.subtitle}
       mockupSvg={MOCKUP}
-      benefits={[
-        {
-          stat: '0', statLabel: 'lead perdu ou mal attribué grâce au tracking automatique',
-          title: 'Un lien unique par apporteur et par source',
-          text: 'Chaque apporteur dispose d’un lien personnel unique qu’il peut décliner par canal (LinkedIn, email, événement). Vous savez exactement d’où vient chaque lead et qui l’a apporté.',
-          points: ['Génération automatique du lien à l’invitation de l’apporteur', 'Paramètres UTM pour distinguer les sources (LinkedIn, email, téléphone)', 'QR code téléchargeable pour les événements et présentations', 'Lien court personnalisé avec le nom de l’apporteur'],
-          illustration: ILLUS0
-        },
-        {
-          stat: '100%', statLabel: 'des leads attribués sans intervention manuelle',
-          title: 'Attribution automatique sans ambiguïté',
-          text: 'Quand un prospect clique sur le lien d’un apporteur puis remplit le formulaire, le lead lui est attribué automatiquement. Pas de dispute, pas d’ambiguïté, même des semaines plus tard.',
-          points: ['Cookie de tracking persistant configurable (7 à 180 jours)', 'Attribution même si le prospect revient plusieurs jours plus tard', 'Traçabilité complète de la source au deal signé', 'Notification instantanée à l’apporteur à chaque conversion'],
-          illustration: ILLUS1
-        },
-        {
-          stat: '6', statLabel: 'fenêtres d’attribution configurables selon votre cycle de vente',
-          title: 'Fenêtres d’attribution configurables',
-          text: 'Adaptez les règles d’attribution à votre cycle de vente. Un cycle court de 2 semaines ou un cycle long de 6 mois : définissez la fenêtre qui reflète votre réalité commerciale.',
-          points: ['Fenêtre d’attribution de 7 à 180 jours selon votre cycle de vente', 'Règle first-touch ou last-touch selon votre politique', 'Gestion des conflits d’attribution transparente et auditable', 'Rétroactivité possible sur les leads en cours'],
-          illustration: ILLUS2
-        }
-      ]}
-      quote={{ text: 'Avant RefBoost, on passait 2h par mois à réconcilier manuellement les leads avec les apporteurs. Maintenant c’est automatique et sans discussion.', author: 'Alexandre R., VP Sales — ScaleB2B' }}
+      benefits={benefits}
+      quote={d.quote}
       currentHref="/fonctionnalites/tracking"
     />
   );

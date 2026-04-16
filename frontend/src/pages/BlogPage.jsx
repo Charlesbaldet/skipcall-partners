@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
@@ -13,6 +14,7 @@ function formatDate(iso) {
 }
 
 function BlogCard({ post }) {
+  const { t } = useTranslation();
   return (
     <article style={{ background: C.card, borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', transition: 'transform .2s, box-shadow .2s' }}
       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.12)';}}
@@ -30,10 +32,10 @@ function BlogCard({ post }) {
         {post.excerpt && <p style={{ margin: 0, fontSize: 14, color: C.m, lineHeight: 1.6, flex: 1 }}>{post.excerpt}</p>}
         <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           <time dateTime={post.published_at} style={{ fontSize: 13, color: C.m }}>{formatDate(post.published_at)}</time>
-          <span style={{ fontSize: 13, color: C.m }}>{post.reading_time_minutes} min de lecture</span>
+          <span style={{ fontSize: 13, color: C.m }}>{post.reading_time_minutes} {t('blog.min_read')}</span>
         </footer>
         <Link to={'/blog/' + post.slug} style={{ marginTop: 4, fontSize: 14, fontWeight: 600, color: C.p, textDecoration: 'none' }}>
-          Lire l'article →
+          {t('blog.read_article')}
         </Link>
       </div>
     </article>
@@ -41,6 +43,7 @@ function BlogCard({ post }) {
 }
 
 export default function BlogPage() {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('');
@@ -79,16 +82,16 @@ export default function BlogPage() {
         <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 2 }}>Blog</p>
         <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>Conseils & Ressources</h1>
         <p style={{ margin: '0 auto', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
-          Tout ce qu'il faut savoir sur l'affiliation B2B, les programmes partenaires et la croissance.
+          {t('blog.page_subtitle')}
         </p>
       </section>
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 24px' }}>
         {/* Filtres */}
         {categories.length > 0 && (
-          <nav aria-label="Catégories" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
+          <nav aria-label={t('blog.categories')} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
             <button onClick={()=>setActiveCategory('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? '#059669' : '#e2e8f0', background: !activeCategory ? '#059669' : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-              Tous ({total})
+              {t('blog.all_categories')} ({total})
             </button>
             {categories.map(c => (
               <button key={c.category} onClick={()=>setActiveCategory(c.category === activeCategory ? '' : c.category)}
@@ -101,11 +104,11 @@ export default function BlogPage() {
 
         {/* Grille */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 80, color: C.m }}>Chargement…</div>
+          <div style={{ textAlign: 'center', padding: 80, color: C.m }}>{t('common.loading')}</div>
         ) : posts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80 }}>
-            <p style={{ fontSize: 18, color: C.m }}>Aucun article pour le moment.</p>
-            <p style={{ color: C.m, fontSize: 14 }}>Revenez bientôt !</p>
+            <p style={{ fontSize: 18, color: C.m }}>{t('blog.no_articles')}</p>
+            <p style={{ color: C.m, fontSize: 14 }}>{t('blog.come_back_soon')}</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 28 }}>
