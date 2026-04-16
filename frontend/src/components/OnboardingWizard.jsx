@@ -132,7 +132,7 @@ export default function OnboardingWizard({ onClose }) {
     if (step === 2 && createdPartner) return t('onboarding.next');
     if (step === 3 && !customized) return t('settings.save')+' →';
     if (step === 3 && customized) return t('onboarding.next');
-    if (isLast) return 'C\'est parti !';
+    if (isLast) return t('onboarding.finish');
     return t('onboarding.next');
   };
 
