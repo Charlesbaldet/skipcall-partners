@@ -85,10 +85,10 @@ export default function SignupPage() {
         {step === 1 && (
           <>
             <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.title")}</h2>
-            <p style={{ color:C.m,fontSize:14,margin:'0 0 28px',fontFamily:"'DM Sans',sans-serif" }}>Votre programme d'apporteurs d'affaires en 2 minutes.</p>
+            <p style={{ color:C.m,fontSize:14,margin:'0 0 28px',fontFamily:"'DM Sans',sans-serif" }}>{t("signup.subtitle")}</p>
 
             <div style={{ marginBottom:20 }}>
-              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>Nom de votre entreprise *</label>
+              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.company")} *</label>
               <input value={form.company} onChange={e=>set('company',e.target.value)} placeholder="Ex: Acme SAS" style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
             <div style={{ marginBottom:20 }}>
