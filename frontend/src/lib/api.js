@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+
 const API_BASE = '/api';
 
 class ApiClient {
@@ -14,6 +16,10 @@ class ApiClient {
   async request(path, options = {}) {
     const headers = { 'Content-Type': 'application/json', ...options.headers };
     if (this.token) { headers['Authorization'] = `Bearer ${this.token}`; }
+    // Send the current UI language so the backend can return localized
+    // dynamic content (marketplace descriptions, blog articles, etc.).
+    const lang = i18n?.language;
+    if (lang && !headers['Accept-Language']) headers['Accept-Language'] = lang;
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
     if (res.status === 401) {
       this.setToken(null);

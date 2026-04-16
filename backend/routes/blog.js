@@ -1,7 +1,17 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { resolveLang } = require('../middleware/i18n-lang');
 const router = express.Router();
+
+// Build SELECT fragments that swap in `<col>_<lang>` (with fallback to the
+// base column) when the caller's lang is not fr. `lang` must come from
+// resolveLang() — whitelisted, safe to interpolate.
+function localizedCol(col, lang) {
+  return lang === 'fr'
+    ? col
+    : `COALESCE(NULLIF(${col}_${lang}, ''), ${col})`;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -28,6 +38,7 @@ function generateSlug(title) {
 router.get('/posts', async (req, res) => {
   try {
     const { category, limit = 20, offset = 0 } = req.query;
+    const lang = resolveLang(req);
     let where = 'WHERE published = true';
     const params = [];
     let i = 1;
@@ -36,9 +47,12 @@ router.get('/posts', async (req, res) => {
       params.push(category);
     }
     const { rows } = await query(
-      `SELECT id, slug, title, excerpt, author, category, tags,
+      `SELECT id, slug,
+              ${localizedCol('title', lang)} AS title,
+              excerpt, author, category, tags,
               cover_image_url, published_at, reading_time_minutes,
-              meta_title, meta_description
+              meta_title,
+              ${localizedCol('meta_description', lang)} AS meta_description
        FROM blog_posts ${where}
        ORDER BY published_at DESC
        LIMIT $${i++} OFFSET $${i++}`,
@@ -73,8 +87,17 @@ router.get('/categories', async (req, res) => {
 // GET /api/blog/posts/:slug — article individuel
 router.get('/posts/:slug', async (req, res) => {
   try {
+    const lang = resolveLang(req);
     const { rows } = await query(
-      `SELECT * FROM blog_posts WHERE slug = $1 AND published = true`,
+      `SELECT id, slug,
+              ${localizedCol('title', lang)} AS title,
+              excerpt, author, category, tags, cover_image_url,
+              published, published_at, created_at, updated_at,
+              meta_title,
+              ${localizedCol('meta_description', lang)} AS meta_description,
+              ${localizedCol('content', lang)} AS content,
+              reading_time_minutes
+       FROM blog_posts WHERE slug = $1 AND published = true`,
       [req.params.slug]
     );
     if (!rows.length) return res.status(404).json({ error: 'Article introuvable' });

@@ -1,12 +1,20 @@
 const router = require('express').Router();
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { resolveLang } = require('../middleware/i18n-lang');
 
 // Public: liste tenants marketplace
 router.get('/', async (req, res) => {
   try {
     const { sector, q } = req.query;
-    let sql = `SELECT id, name, slug, logo_url, primary_color, sector, website, icp, short_description, created_at FROM tenants WHERE marketplace_visible = true AND short_description IS NOT NULL AND short_description <> ''`;
+    const lang = resolveLang(req);
+    // Serve `short_description` in the caller's language with fallback to
+    // the original (French) column. Only the whitelisted lang from
+    // resolveLang() reaches this interpolation — safe for SQL.
+    const descCol = lang === 'fr'
+      ? 'short_description'
+      : `COALESCE(NULLIF(short_description_${lang}, ''), short_description)`;
+    let sql = `SELECT id, name, slug, logo_url, primary_color, sector, website, icp, ${descCol} AS short_description, created_at FROM tenants WHERE marketplace_visible = true AND short_description IS NOT NULL AND short_description <> ''`;
     const params = [];
     if (sector) { params.push(sector); sql += ` AND sector = $${params.length}`; }
     if (q) { params.push(`%${q.toLowerCase()}%`); sql += ` AND (LOWER(name) LIKE $${params.length} OR LOWER(short_description) LIKE $${params.length} OR LOWER(icp) LIKE $${params.length})`; }
