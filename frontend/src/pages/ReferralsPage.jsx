@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
@@ -6,6 +7,7 @@ import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical } from '
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
 
 export default function ReferralsPage() {
+  const { t } = useTranslation();
   const [referrals, setReferrals] = useState([]);
   const [partners, setPartners] = useState([]);
   const [total, setTotal] = useState(0);

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
@@ -6,6 +7,7 @@ import { FileText, TrendingUp, DollarSign, Trash2, LayoutGrid, List, ChevronRigh
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
 
 export default function PartnerMyReferrals() {
+  const { t } = useTranslation();
   const [referrals, setReferrals] = useState([]);
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);

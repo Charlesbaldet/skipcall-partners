@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
@@ -11,6 +12,7 @@ const ROLE_BADGE = {
 };
 
 export default function MessagingPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [activeConv, setActiveConv] = useState(null);

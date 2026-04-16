@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 
 export default function ProgrammePage() {
+  const { t } = useTranslation();
   const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // level id or 'new'

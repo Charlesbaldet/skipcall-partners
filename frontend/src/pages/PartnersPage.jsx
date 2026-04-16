@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
@@ -5,6 +6,7 @@ import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, Chec
 import { useAuth } from '../hooks/useAuth.jsx';
 
 export default function PartnersPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
   const [tab, setTab] = useState('partners');

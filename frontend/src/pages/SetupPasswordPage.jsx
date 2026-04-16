@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Lock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export default function SetupPasswordPage() {
+  const { t } = useTranslation();
   const { token } = useParams();
   const navigate = useNavigate();
   const [invitation, setInvitation] = useState(null);

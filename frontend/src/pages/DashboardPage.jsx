@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, CheckCircle } from 'lucide-react';
@@ -15,6 +16,7 @@ const LEVEL_COLORS = {
 };
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const [kpis, setKpis] = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [pipeline, setPipeline] = useState([]);

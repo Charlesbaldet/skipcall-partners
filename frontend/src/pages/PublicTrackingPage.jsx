@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckCircle, Send, AlertTriangle } from 'lucide-react';
 
 export default function PublicTrackingPage() {
+  const { t } = useTranslation();
   const { code } = useParams();
   const [partner, setPartner] = useState(null);
   const [loading, setLoading] = useState(true);

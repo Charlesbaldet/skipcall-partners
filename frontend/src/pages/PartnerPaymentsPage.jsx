@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
@@ -11,6 +12,7 @@ const PAY_STATUS = {
 };
 
 export default function PartnerPaymentsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [commissions, setCommissions] = useState([]);
   const [totals, setTotals] = useState({ pending: 0, paid: 0 });

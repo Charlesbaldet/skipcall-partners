@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import api from '../lib/api';
@@ -5,6 +6,7 @@ import api from '../lib/api';
 const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#fafbfc' };
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const token = params.get('token');
   const navigate = useNavigate();

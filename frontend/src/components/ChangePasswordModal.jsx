@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
 
 export default function ChangePasswordModal({ onSuccess }) {
+  const { t } = useTranslation();
   const [pwd, setPwd] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPwd, setShowPwd] = useState(false);

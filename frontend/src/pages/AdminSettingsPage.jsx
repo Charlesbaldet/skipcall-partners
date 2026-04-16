@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -11,6 +12,7 @@ const ROLE_CONFIG = {
 };
 
 export default function AdminSettingsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [invitations, setInvitations] = useState([]);

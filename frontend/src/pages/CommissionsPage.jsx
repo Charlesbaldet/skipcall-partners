@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
@@ -10,6 +11,7 @@ const COM_STATUS = {
 };
 
 export default function CommissionsPage() {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState([]);
   const [commissions, setCommissions] = useState([]);
   const [totals, setTotals] = useState({ pending: 0, paid: 0 });
