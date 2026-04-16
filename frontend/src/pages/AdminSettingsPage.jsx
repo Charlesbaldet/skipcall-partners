@@ -4,16 +4,14 @@ import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { Settings, UserPlus, Shield, Briefcase, Mail, X, CheckCircle, Clock, Copy, Trash2, ToggleLeft, ToggleRight, Lock, Eye, EyeOff } from 'lucide-react';
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-
-const ROLE_CONFIG = {
-  admin: { label: 'Admin', icon: Shield, color: '#dc2626', bg: '#fef2f2' },
-  commercial: { label: 'Membre', icon: Briefcase, color: '#0891b2', bg: '#ecfeff' },
-};
-
 export default function AdminSettingsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(t('admin.fmt_locale'), { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  const ROLE_CONFIG = {
+    admin: { label: t('admin.role_admin'), icon: Shield, color: '#dc2626', bg: '#fef2f2' },
+    commercial: { label: t('admin.role_member'), icon: Briefcase, color: '#0891b2', bg: '#ecfeff' },
+  };
   const [users, setUsers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,12 +68,12 @@ export default function AdminSettingsPage() {
   };
 
   const handlePasswordChange = async () => {
-    if (pwForm.newPw.length < 8) { setPwMsg({ type: 'error', text: 'Minimum 8 caractères' }); return; }
-    if (pwForm.newPw !== pwForm.confirm) { setPwMsg({ type: 'error', text: 'Les mots de passe ne correspondent pas' }); return; }
+    if (pwForm.newPw.length < 8) { setPwMsg({ type: 'error', text: t('admin.min_8_chars') }); return; }
+    if (pwForm.newPw !== pwForm.confirm) { setPwMsg({ type: 'error', text: t('admin.pwd_mismatch') }); return; }
     setPwSaving(true); setPwMsg(null);
     try {
       await api.changePassword(pwForm.current, pwForm.newPw);
-      setPwMsg({ type: 'success', text: 'Mot de passe mis à jour !' });
+      setPwMsg({ type: 'success', text: t('admin.pwd_updated') });
       setPwForm({ current: '', newPw: '', confirm: '' });
     } catch (err) { setPwMsg({ type: 'error', text: err.message }); }
     setPwSaving(false);
@@ -87,14 +85,14 @@ export default function AdminSettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.loading')}</div>;
 
   return (
     <div className="fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Paramètres</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{isAdmin ? 'Gestion des utilisateurs et des accès' : 'Mon compte'}</p>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('admin.settings_title')}</h1>
+          <p style={{ color: '#64748b', marginTop: 4 }}>{isAdmin ? t('admin.settings_subtitle_admin') : t('admin.settings_subtitle_member')}</p>
         </div>
         {isAdmin && (
         <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{
@@ -103,7 +101,7 @@ export default function AdminSettingsPage() {
           color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
         }}>
           {showInvite ? <X size={16} /> : <UserPlus size={16} />}
-          {showInvite ? 'Annuler' : 'Ajouter un utilisateur'}
+          {showInvite ? t('admin.cancel') : t('admin.add_user')}
         </button>
         )}
       </div>
@@ -116,17 +114,17 @@ export default function AdminSettingsPage() {
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <CheckCircle size={24} color="#16a34a" />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Utilisateur créé !</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('admin.user_created')}</h3>
               <p style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>
-                Partagez ces identifiants de connexion :
+                {t('admin.share_credentials')}
               </p>
               <div style={{ background: '#f8fafc', borderRadius: 12, padding: 20, display: 'inline-block', textAlign: 'left', border: '1px solid #e2e8f0' }}>
                 <div style={{ marginBottom: 10 }}>
-                  <span style={{ color: '#64748b', fontSize: 12 }}>Email</span>
+                  <span style={{ color: '#64748b', fontSize: 12 }}>{t('admin.email')}</span>
                   <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 15 }}>{inviteResult.email}</div>
                 </div>
                 <div style={{ marginBottom: 12 }}>
-                  <span style={{ color: '#64748b', fontSize: 12 }}>Mot de passe provisoire</span>
+                  <span style={{ color: '#64748b', fontSize: 12 }}>{t('admin.temp_password')}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <code style={{ background: '#eef2ff', padding: '6px 12px', borderRadius: 8, color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 16, letterSpacing: 1 }}>{inviteResult.tempPassword}</code>
                     <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
@@ -135,29 +133,29 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
                 <div style={{ fontSize: 12, color: '#f59e0b', background: '#fffbeb', padding: '6px 10px', borderRadius: 6 }}>
-                  L'utilisateur pourra changer ce mot de passe dans Paramètres.
+                  {t('admin.user_can_change_pwd')}
                 </div>
               </div>
               <div style={{ marginTop: 16 }}>
-                <button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Fermer</button>
+                <button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>{t('admin.close')}</button>
               </div>
             </div>
           ) : (
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 20 }}>Nouvel utilisateur</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 20 }}>{t('admin.new_user')}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Nom complet *</label>
-                  <input value={inviteForm.full_name} onChange={e => setInviteForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Prénom Nom"
+                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.full_name')}</label>
+                  <input value={inviteForm.full_name} onChange={e => setInviteForm(f => ({ ...f, full_name: e.target.value }))} placeholder={t('admin.full_name_ph')}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Email *</label>
-                  <input value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder="email@skipcall.com" type="email"
+                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.email_required')}</label>
+                  <input value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder={t('admin.email_ph')} type="email"
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Rôle *</label>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.role_required')}</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {Object.entries(ROLE_CONFIG).map(([k, v]) => (
                       <button key={k} onClick={() => setInviteForm(f => ({ ...f, role: k }))} style={{
@@ -177,7 +175,7 @@ export default function AdminSettingsPage() {
                 color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: sending ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <UserPlus size={16} /> {sending ? 'Création...' : 'Créer l\'utilisateur'}
+                <UserPlus size={16} /> {sending ? t('admin.creating') : t('admin.create_user')}
               </button>
             </div>
           )}
@@ -188,14 +186,14 @@ export default function AdminSettingsPage() {
       {isAdmin && (
       <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
         {[
-          { id: 'users', label: `Membres (${users.length})` },
-          { id: 'password', label: 'Mon compte' },
-        ].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
+          { id: 'users', label: t('admin.tab_members_count', { count: users.length }) },
+          { id: 'password', label: t('admin.tab_my_account') },
+        ].map(tb => (
+          <button key={tb.id} onClick={() => setTab(tb.id)} style={{
             padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#0f172a' : '#64748b',
-            boxShadow: tab === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-          }}>{t.label}</button>
+            background: tab === tb.id ? '#fff' : 'transparent', color: tab === tb.id ? '#0f172a' : '#64748b',
+            boxShadow: tab === tb.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+          }}>{tb.label}</button>
         ))}
       </div>
       )}
@@ -205,7 +203,7 @@ export default function AdminSettingsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Utilisateur', 'Rôle', 'Statut', 'Créé le', 'Actions'].map((h, i) => (
+                {[t('admin.th_user'), t('admin.th_role'), t('admin.th_status'), t('admin.th_created_at'), t('admin.th_actions')].map((h, i) => (
                   <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                 ))}
               </tr>
@@ -222,18 +220,18 @@ export default function AdminSettingsPage() {
                     <td style={{ padding: '13px 16px' }}>
                       <select value={u.role} onChange={e => handleRoleChange(u, e.target.value)}
                         style={{ padding: '4px 8px', borderRadius: 6, border: `1px solid ${role.color}30`, background: role.bg, color: role.color, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
-                        <option value="admin">Admin</option>
-                        <option value="commercial">Membre</option>
+                        <option value="admin">{t('admin.role_admin')}</option>
+                        <option value="commercial">{t('admin.role_member')}</option>
                       </select>
                     </td>
                     <td style={{ padding: '13px 16px' }}>
                       <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: u.is_active ? '#f0fdf4' : '#fef2f2', color: u.is_active ? '#16a34a' : '#dc2626' }}>
-                        {u.is_active ? 'Actif' : 'Désactivé'}
+                        {u.is_active ? t('admin.status_active') : t('admin.status_disabled')}
                       </span>
                     </td>
                     <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{fmtDate(u.created_at)}</td>
                     <td style={{ padding: '13px 16px' }}>
-                      <button onClick={() => handleToggleActive(u)} title={u.is_active ? 'Désactiver' : 'Activer'} style={{
+                      <button onClick={() => handleToggleActive(u)} title={u.is_active ? t('admin.action_deactivate') : t('admin.action_activate')} style={{
                         background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
                       }}>
                         {u.is_active ? <ToggleRight size={20} color="#16a34a" /> : <ToggleLeft size={20} color="#dc2626" />}
@@ -251,7 +249,7 @@ export default function AdminSettingsPage() {
         <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #e2e8f0', maxWidth: 480 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
             <Lock size={20} color="#6366f1" />
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>Changer mon mot de passe</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{t('admin.change_my_password')}</h3>
           </div>
 
           {pwMsg && (
@@ -264,7 +262,7 @@ export default function AdminSettingsPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Mot de passe actuel</label>
+              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.current_password')}</label>
               <div style={{ position: 'relative' }}>
                 <input type={showPw ? 'text' : 'password'} value={pwForm.current} onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
                   style={{ width: '100%', padding: '10px 40px 10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
@@ -274,13 +272,13 @@ export default function AdminSettingsPage() {
               </div>
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Nouveau mot de passe</label>
-              <input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder="Minimum 8 caractères"
+              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.new_password')}</label>
+              <input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder={t('admin.min_8_chars')}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>Confirmer</label>
-              <input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} placeholder="Retapez le mot de passe"
+              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.confirm_password')}</label>
+              <input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} placeholder={t('admin.retype_password')}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
             </div>
             <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{
@@ -288,7 +286,7 @@ export default function AdminSettingsPage() {
               color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
-              <Lock size={16} /> {pwSaving ? 'Mise à jour...' : 'Mettre à jour'}
+              <Lock size={16} /> {pwSaving ? t('admin.updating') : t('admin.update')}
             </button>
           </div>
         </div>

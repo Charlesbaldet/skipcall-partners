@@ -83,7 +83,7 @@ export default function BlogPage() {
         <meta property="og:url" content={SITE + '/blog'} />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href={SITE + '/blog'} />
-        <script type="application/ld+json">{JSON.stringify({ '@context': 'https://schema.org', '@type': 'Blog', name: 'Blog RefBoost', description: 'Conseils affiliation, partenariats et croissance B2B', url: SITE + '/blog', publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE } })}</script>
+        <script type="application/ld+json">{JSON.stringify({ '@context': 'https://schema.org', '@type': 'Blog', name: 'Blog RefBoost', description: t('blog.page_subtitle'), url: SITE + '/blog', publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE } })}</script>
       </Helmet>
 
       {/* Hero */}

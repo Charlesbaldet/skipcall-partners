@@ -7,13 +7,13 @@ const C = { p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b98
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 const STEPS = [
-  { id: 'welcome',       icon: Sparkles,  title: 'Bienvenue sur RefBoost 🎉' },
-  { id: 'createUser',    icon: Users,     title: 'Crée ton équipe' },
-  { id: 'createPartner', icon: UserPlus,  title: 'Invite ton premier partenaire' },
-  { id: 'customize',     icon: Palette,   title: 'Personnalise ton espace' },
-  { id: 'publicLink',    icon: Link2,     title: 'Ton lien d\'inscription public' },
-  { id: 'marketplace',  icon: Store,     title: 'Votre programme sur la marketplace' },
-  { id: 'done',          icon: Rocket,    title: 'Tout est prêt 🚀' },
+  { id: 'welcome',       icon: Sparkles },
+  { id: 'createUser',    icon: Users },
+  { id: 'createPartner', icon: UserPlus },
+  { id: 'customize',     icon: Palette },
+  { id: 'publicLink',    icon: Link2 },
+  { id: 'marketplace',   icon: Store },
+  { id: 'done',          icon: Rocket },
 ];
 
 export default function OnboardingWizard({ onClose }) {
@@ -64,18 +64,18 @@ export default function OnboardingWizard({ onClose }) {
   const handleClose = () => { localStorage.removeItem('refboost_onboarding_pending'); onClose(); };
 
   const submitUser = async () => {
-    if (!userForm.email || !userForm.full_name) { setError('Email et nom requis'); return; }
+    if (!userForm.email || !userForm.full_name) { setError(t('onboarding.error_email_name_required')); return; }
     setSubmitting(true); setError('');
     try { const r = await api.inviteUser(userForm); setCreatedUser(r); }
-    catch (e) { setError(e.message || 'Erreur'); }
+    catch (e) { setError(e.message || t('onboarding.error_generic')); }
     finally { setSubmitting(false); }
   };
 
   const submitPartner = async () => {
-    if (!partnerForm.name || !partnerForm.contact_name || !partnerForm.email) { setError('Tous les champs requis'); return; }
+    if (!partnerForm.name || !partnerForm.contact_name || !partnerForm.email) { setError(t('onboarding.error_all_fields_required')); return; }
     setSubmitting(true); setError('');
     try { const r = await api.createPartner(partnerForm); setCreatedPartner(r); }
-    catch (e) { setError(e.message || 'Erreur'); }
+    catch (e) { setError(e.message || t('onboarding.error_generic')); }
     finally { setSubmitting(false); }
   };
 
@@ -90,7 +90,7 @@ export default function OnboardingWizard({ onClose }) {
       await api.updateMyTenant(payload);
       setCustomized(true);
       if (typeof window !== 'undefined' && window.__rbLoadTheme) window.__rbLoadTheme();
-    } catch (e) { setError(e.message || 'Erreur'); }
+    } catch (e) { setError(e.message || t('onboarding.error_generic')); }
     finally { setSubmitting(false); }
   };
 
@@ -102,7 +102,7 @@ export default function OnboardingWizard({ onClose }) {
       try {
         await api.updateMarketplaceSettings(marketplaceForm);
       } catch(e) {
-        setError(e.message || 'Erreur lors de la sauvegarde');
+        setError(e.message || t('onboarding.error_save_failed'));
         return; // stay on step so user can fix
       }
     }
@@ -125,7 +125,7 @@ export default function OnboardingWizard({ onClose }) {
   };
 
   const primaryLabel = () => {
-    if (submitting) return 'En cours...';
+    if (submitting) return t('onboarding.in_progress');
     if (step === 1 && !createdUser) return t('onboarding.create_user');
     if (step === 1 && createdUser) return t('onboarding.next');
     if (step === 2 && !createdPartner) return t('onboarding.create_partner');
@@ -148,7 +148,7 @@ export default function OnboardingWizard({ onClose }) {
         boxShadow: '0 30px 80px rgba(15,23,42,0.25)', position: 'relative',
         animation: 'rbSlideUp 0.3s ease-out',
       }}>
-        <button onClick={handleClose} aria-label="Fermer" style={{
+        <button onClick={handleClose} aria-label={t('onboarding.close_aria')} style={{
           position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 8,
           background: '#f1f5f9', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m,
@@ -173,7 +173,7 @@ export default function OnboardingWizard({ onClose }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 8px 30px rgba(5,150,105,0.3)',
           }}><Icon size={28} color="#fff" /></div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: C.s, margin: '0 0 8px', letterSpacing: -0.5 }}>{t('onboarding.'+cur.id+'_title', {defaultValue: cur.title})}</h2>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: C.s, margin: '0 0 8px', letterSpacing: -0.5 }}>{t('onboarding.'+cur.id+'_title')}</h2>
           <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.step_of', {current: step + 1, total: STEPS.length})}</p>
         </div>
 
@@ -188,8 +188,8 @@ export default function OnboardingWizard({ onClose }) {
           {step === 1 && !createdUser && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.step_2_desc')}</p>
-              <Field label={t('onboarding.email')}><Input type="email" value={userForm.email} onChange={v => setUserForm({...userForm, email: v})} placeholder="jean@entreprise.com" /></Field>
-              <Field label={t('onboarding.full_name')}><Input value={userForm.full_name} onChange={v => setUserForm({...userForm, full_name: v})} placeholder="Jean Dupont" /></Field>
+              <Field label={t('onboarding.email')}><Input type="email" value={userForm.email} onChange={v => setUserForm({...userForm, email: v})} placeholder={t('onboarding.email_placeholder_user')} /></Field>
+              <Field label={t('onboarding.full_name')}><Input value={userForm.full_name} onChange={v => setUserForm({...userForm, full_name: v})} placeholder={t('onboarding.name_placeholder_user')} /></Field>
               <Field label={t('onboarding.role')}>
                 <select value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})} style={inputStyle}>
                   <option value="commercial">{t('onboarding.role_commercial')}</option>
@@ -199,15 +199,15 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 1 && createdUser && (
-            <SuccessBox text={'Utilisateur créé !'} code={'✓ Identifiants envoyés par email à ' + createdUser.email} />
+            <SuccessBox text={t('onboarding.user_created')} code={'✓ ' + t('onboarding.user_created_success_code', { email: createdUser.email })} />
           )}
 
           {step === 2 && !createdPartner && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ color: C.m, fontSize: 14, margin: 0 }}>{t('onboarding.createPartner_desc_long')}</p>
-              <Field label={t('onboarding.company_name')}><Input value={partnerForm.name} onChange={v => setPartnerForm({...partnerForm, name: v})} placeholder="Acme Consulting" /></Field>
-              <Field label={t('onboarding.contact_name')}><Input value={partnerForm.contact_name} onChange={v => setPartnerForm({...partnerForm, contact_name: v})} placeholder="Marie Dupont" /></Field>
-              <Field label={t('onboarding.email')}><Input type="email" value={partnerForm.email} onChange={v => setPartnerForm({...partnerForm, email: v})} placeholder="marie@acme.com" /></Field>
+              <Field label={t('onboarding.company_name')}><Input value={partnerForm.name} onChange={v => setPartnerForm({...partnerForm, name: v})} placeholder={t('onboarding.company_placeholder_example')} /></Field>
+              <Field label={t('onboarding.contact_name')}><Input value={partnerForm.contact_name} onChange={v => setPartnerForm({...partnerForm, contact_name: v})} placeholder={t('onboarding.contact_placeholder_example')} /></Field>
+              <Field label={t('onboarding.email')}><Input type="email" value={partnerForm.email} onChange={v => setPartnerForm({...partnerForm, email: v})} placeholder={t('onboarding.partner_email_placeholder')} /></Field>
               <Field label={t('programme.level_rate')}>
                 <input type="number" min="0" max="50" value={partnerForm.commission_rate}
                   onChange={e => setPartnerForm({...partnerForm, commission_rate: parseFloat(e.target.value) || 0})}
@@ -216,7 +216,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 2 && createdPartner && (
-            <SuccessBox text={t('onboarding.partner_added')} code={'✓ Identifiants envoyés par email à ' + createdPartner.email} />
+            <SuccessBox text={t('onboarding.partner_added')} code={'✓ ' + t('onboarding.partner_added_success_code', { email: createdPartner.email })} />
           )}
 
           {step === 3 && !customized && (
@@ -240,7 +240,7 @@ export default function OnboardingWizard({ onClose }) {
           )}
           {step === 3 && customized && (
             <div style={{ textAlign: 'center', padding: 20, background: '#f0fdf4', borderRadius: 12, color: '#166534' }}>
-              ✓ Ton espace est personnalisé !
+              ✓ {t('onboarding.space_customized')}
             </div>
           )}
 
@@ -277,7 +277,7 @@ export default function OnboardingWizard({ onClose }) {
               <input type='url' value={marketplaceForm.website} onChange={e => setMkt('website', e.target.value)} placeholder={t('onboarding.marketplace_website_placeholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.icp')} <span style={{ fontWeight: 400, color: C.m }}>(optionnel)</span></label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.icp')} <span style={{ fontWeight: 400, color: C.m }}>({t('onboarding.optional')})</span></label>
               <input value={marketplaceForm.icp} onChange={e => setMkt('icp', e.target.value)} placeholder={t('onboarding.marketplace_icp_placeholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>

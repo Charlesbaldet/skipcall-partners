@@ -51,7 +51,7 @@ export default function BlogPostPage() {
 
   const canonicalUrl = SITE + '/blog/' + post.slug;
   const metaTitle = post.meta_title || (post.title + ' — Blog RefBoost');
-  const metaDesc = post.meta_description || post.excerpt || 'Découvrez cet article sur le blog RefBoost.';
+  const metaDesc = post.meta_description || post.excerpt || t('blog.default_meta_desc');
 
   const jsonLd = {
     '@context': 'https://schema.org',

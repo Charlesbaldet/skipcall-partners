@@ -13,11 +13,10 @@ export default function ChangePasswordModal({ onSuccess }) {
 
   const handleSubmit = async () => {
     setError('');
-    if (pwd.length < 8) return setError('Le mot de passe doit faire au moins 8 caractères.');
-    if (pwd !== confirm) return setError('Les mots de passe ne correspondent pas.');
+    if (pwd.length < 8) return setError(t('changePwd.min_chars'));
+    if (pwd !== confirm) return setError(t('changePwd.mismatch'));
     setLoading(true);
     try {
-      // FIX: plus de userId dans le body  le backend utilise req.user.id depuis le JWT
       await api.request('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify({ newPassword: pwd }),
@@ -36,18 +35,18 @@ export default function ChangePasswordModal({ onSuccess }) {
           <div style={{ width: 56, height: 56, borderRadius: 16, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <Lock size={24} color="#059669" />
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Choisissez votre mot de passe</h2>
-          <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5 }}>Bienvenue ! Pour sécuriser votre compte, définissez un nouveau mot de passe avant de continuer.</p>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{t('changePwd.choose_title')}</h2>
+          <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5 }}>{t('changePwd.welcome_text')}</p>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#334155', marginBottom: 6 }}>Nouveau mot de passe</label>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#334155', marginBottom: 6 }}>{t('changePwd.new_pwd')}</label>
           <div style={{ position: 'relative' }}>
             <input
               type={showPwd ? 'text' : 'password'}
               value={pwd}
               onChange={e => setPwd(e.target.value)}
-              placeholder="8 caractères minimum"
+              placeholder={t('changePwd.pwd_ph')}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
               style={{ width: '100%', padding: '12px 44px 12px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
             />
@@ -58,18 +57,18 @@ export default function ChangePasswordModal({ onSuccess }) {
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#334155', marginBottom: 6 }}>Confirmer le mot de passe</label>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: '#334155', marginBottom: 6 }}>{t('changePwd.confirm')}</label>
           <input
             type={showPwd ? 'text' : 'password'}
             value={confirm}
             onChange={e => setConfirm(e.target.value)}
-            placeholder="Répétez le mot de passe"
+            placeholder={t('changePwd.confirm_ph')}
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
             style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${confirm && confirm !== pwd ? '#dc2626' : confirm && confirm === pwd ? '#059669' : '#e2e8f0'}`, fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
           />
           {confirm && confirm === pwd && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, color: '#059669', fontSize: 13 }}>
-              <CheckCircle size={14} /> Mots de passe identiques
+              <CheckCircle size={14} /> {t('changePwd.match_ok')}
             </div>
           )}
         </div>
@@ -81,7 +80,7 @@ export default function ChangePasswordModal({ onSuccess }) {
           disabled={loading || !pwd || !confirm}
           style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: loading || !pwd || !confirm ? '#94a3b8' : '#059669', color: '#fff', fontWeight: 700, fontSize: 16, cursor: loading || !pwd || !confirm ? 'not-allowed' : 'pointer' }}
         >
-          {loading ? 'Enregistrement...' : 'Définir mon mot de passe'}
+          {loading ? t('changePwd.submitting') : t('changePwd.set_password')}
         </button>
       </div>
     </div>

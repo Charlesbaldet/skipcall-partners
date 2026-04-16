@@ -33,7 +33,7 @@ export default function SignupPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur lors de la création');
+      if (!res.ok) throw new Error(data.error || t('signup.error_generic'));
       // Auto-login
       localStorage.setItem('skipcall_token', data.token);
       localStorage.setItem('skipcall_user', JSON.stringify(data.user));
@@ -89,7 +89,7 @@ export default function SignupPage() {
 
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.company")} *</label>
-              <input value={form.company} onChange={e=>set('company',e.target.value)} placeholder="Ex: Acme SAS" style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <input value={form.company} onChange={e=>set('company',e.target.value)} placeholder={t("signup.company_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.fullname")} *</label>
@@ -100,7 +100,7 @@ export default function SignupPage() {
               <input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder={t("signup.phone_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
 
-            <button onClick={()=>{ if(form.company && form.fullName) setStep(2); else setError('{t("signup.error_fields")}'); }}
+            <button onClick={()=>{ if(form.company && form.fullName) setStep(2); else setError(t("signup.error_fields")); }}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
               {t("signup.next")}
             </button>
@@ -144,14 +144,14 @@ export default function SignupPage() {
 
             {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#fef2f2',color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
 
-            <button onClick={()=>{ if(!form.email||!passwordOk) setError('{t("signup.error_creds")}'); else handleSubmit(); }}
+            <button onClick={()=>{ if(!form.email||!passwordOk) setError(t("signup.error_creds")); else handleSubmit(); }}
               disabled={loading}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#94a3b8':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
               {loading ? t("signup.creating") : t("signup.create")}
             </button>
 
             <p style={{ color:'#94a3b8',fontSize:11,textAlign:'center',marginTop:16,fontFamily:"'DM Sans',sans-serif" }}>
-              {t("signup.terms")} <a href="#" style={{ color:C.p }}>CGV</a> {t("signup.terms_and")} <a href="#" style={{ color:C.p }}>{t("signup.terms_privacy")}</a>.
+              {t("signup.terms")} <a href="#" style={{ color:C.p }}>{t("signup.terms_cgv")}</a> {t("signup.terms_and")} <a href="#" style={{ color:C.p }}>{t("signup.terms_privacy")}</a>.
             </p>
           </>
         )}

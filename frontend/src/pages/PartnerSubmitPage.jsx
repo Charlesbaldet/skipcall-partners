@@ -31,7 +31,7 @@ export default function PartnerSubmitPage() {
       });
       setSubmitted(true);
     } catch (err) {
-      setError(err.message || 'Erreur lors de la soumission');
+      setError(err.message || t('partnerSubmit.submission_error'));
     }
     setSaving(false);
   };
@@ -43,14 +43,14 @@ export default function PartnerSubmitPage() {
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
             <CheckCircle size={36} color="#fff" />
           </div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>Recommandation envoyée !</h2>
+          <h2 style={{ fontSize: 28, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>{t('partnerSubmit.sent_title')}</h2>
           <p style={{ color: '#64748b', fontSize: 16, lineHeight: 1.6, marginBottom: 32 }}>
-            Merci pour votre recommandation. L'équipe Skipcall va prendre contact avec le prospect rapidement. Vous serez notifié des mises à jour par email.
+            {t('partnerSubmit.sent_text_long')}
           </p>
           <button onClick={() => { setForm({ prospect_name: '', prospect_email: '', prospect_phone: '', prospect_company: '', prospect_role: '', recommendation_level: 'warm', notes: '' }); setStep(1); setSubmitted(false); }}
             style={{ padding: '12px 28px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
             <Send size={14} style={{ marginRight: 8, verticalAlign: -2 }} />
-            Nouvelle recommandation
+            {t('partnerSubmit.new_recommend')}
           </button>
         </div>
       </div>
@@ -59,8 +59,8 @@ export default function PartnerSubmitPage() {
 
   return (
     <div className="fade-in" style={{ maxWidth: 640, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Nouvelle recommandation</h1>
-      <p style={{ color: '#64748b', marginBottom: 32 }}>Recommandez un prospect à l'équipe Skipcall</p>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerSubmit.title')}</h1>
+      <p style={{ color: '#64748b', marginBottom: 32 }}>{t('partnerSubmit.subtitle')}</p>
 
       {/* Progress */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 36 }}>
@@ -75,34 +75,34 @@ export default function PartnerSubmitPage() {
 
       {step === 1 && (
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>Informations du prospect</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>{t('partnerSubmit.prospect_info')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <Field label="Nom du contact *" value={form.prospect_name} onChange={set('prospect_name')} placeholder="Jean Dupont" />
-              <Field label="Entreprise *" value={form.prospect_company} onChange={set('prospect_company')} placeholder="Nom de la société" />
+              <Field label={t('partnerSubmit.contact_name')} value={form.prospect_name} onChange={set('prospect_name')} placeholder={t('partnerSubmit.name_ph')} />
+              <Field label={t('partnerSubmit.company_required')} value={form.prospect_company} onChange={set('prospect_company')} placeholder={t('partnerSubmit.company_short_ph')} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <Field label="Email *" value={form.prospect_email} onChange={set('prospect_email')} placeholder="email@entreprise.fr" type="email" />
-              <Field label="Téléphone" value={form.prospect_phone} onChange={set('prospect_phone')} placeholder="+33 6 ..." />
+              <Field label={t('partnerSubmit.email_required')} value={form.prospect_email} onChange={set('prospect_email')} placeholder={t('partnerSubmit.email_ph')} type="email" />
+              <Field label={t('partnerSubmit.phone')} value={form.prospect_phone} onChange={set('prospect_phone')} placeholder={t('partnerSubmit.phone_short_ph')} />
             </div>
-            <Field label="Fonction / Rôle" value={form.prospect_role} onChange={set('prospect_role')} placeholder="Ex: Directeur IT, CEO..." />
+            <Field label={t('partnerSubmit.role_function')} value={form.prospect_role} onChange={set('prospect_role')} placeholder={t('partnerSubmit.role_ph')} />
           </div>
           <button disabled={!canNext1} onClick={() => setStep(2)} style={{
             marginTop: 32, width: '100%', padding: '14px', borderRadius: 12,
             background: canNext1 ? 'var(--rb-primary, #059669)' : '#e2e8f0',
             color: canNext1 ? '#fff' : '#94a3b8', border: 'none', fontWeight: 600, fontSize: 15,
             cursor: canNext1 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}>Continuer <ArrowRight size={16} /></button>
+          }}>{t('partnerSubmit.continue_short')} <ArrowRight size={16} /></button>
         </div>
       )}
 
       {step === 2 && (
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>Niveau & contexte</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>{t('partnerSubmit.level_context')}</h2>
 
           {/* Level selector */}
           <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 10 }}>Niveau de recommandation</label>
+            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 10 }}>{t('partnerSubmit.level_label')}</label>
             <div style={{ display: 'flex', gap: 12 }}>
               {Object.entries(LEVEL_CONFIG).map(([k, v]) => (
                 <div key={k} onClick={() => setForm(f => ({ ...f, recommendation_level: k }))} style={{
@@ -119,28 +119,28 @@ export default function PartnerSubmitPage() {
 
           {/* Notes */}
           <div style={{ marginBottom: 32 }}>
-            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 8 }}>Notes & contexte</label>
+            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 8 }}>{t('partnerSubmit.notes_label')}</label>
             <textarea value={form.notes} onChange={set('notes')} rows={4}
-              placeholder="Contexte de la recommandation, besoins identifiés, timing, budget..."
+              placeholder={t('partnerSubmit.notes_ph_long')}
               style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 15, resize: 'vertical', fontFamily: 'inherit', color: '#0f172a', boxSizing: 'border-box' }} />
           </div>
 
           {/* Recap */}
           <div style={{ background: '#f8fafc', borderRadius: 16, padding: 24, marginBottom: 28, border: '1px solid #e2e8f0' }}>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 16 }}>📋 Récapitulatif</div>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 16 }}>📋 {t('partnerSubmit.recap_title')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', fontSize: 14 }}>
-              <RecapRow label="Contact" value={form.prospect_name} />
-              <RecapRow label="Entreprise" value={form.prospect_company} />
-              <RecapRow label="Email" value={form.prospect_email} />
-              <RecapRow label="Téléphone" value={form.prospect_phone || '—'} />
-              <RecapRow label="Rôle" value={form.prospect_role || '—'} />
-              <RecapRow label="Niveau" value={LEVEL_CONFIG[form.recommendation_level]?.label} />
+              <RecapRow label={t('partnerSubmit.recap_contact')} value={form.prospect_name} />
+              <RecapRow label={t('partnerSubmit.company')} value={form.prospect_company} />
+              <RecapRow label={t('partnerSubmit.email')} value={form.prospect_email} />
+              <RecapRow label={t('partnerSubmit.phone')} value={form.prospect_phone || '—'} />
+              <RecapRow label={t('partnerSubmit.role')} value={form.prospect_role || '—'} />
+              <RecapRow label={t('partnerSubmit.recap_level')} value={LEVEL_CONFIG[form.recommendation_level]?.label} />
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', borderRadius: 12, background: '#f1f5f9', color: '#475569', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <ArrowLeft size={16} /> Retour
+              <ArrowLeft size={16} /> {t('partnerSubmit.back_short')}
             </button>
             <button onClick={handleSubmit} disabled={saving} style={{
               flex: 2, padding: '14px', borderRadius: 12,
@@ -149,7 +149,7 @@ export default function PartnerSubmitPage() {
               boxShadow: '0 4px 15px rgba(34,197,94,0.3)', opacity: saving ? 0.7 : 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
-              <CheckCircle size={16} /> {saving ? 'Envoi...' : 'Envoyer la recommandation'}
+              <CheckCircle size={16} /> {saving ? t('partnerSubmit.submitting') : t('partnerSubmit.submit_recommendation')}
             </button>
           </div>
         </div>

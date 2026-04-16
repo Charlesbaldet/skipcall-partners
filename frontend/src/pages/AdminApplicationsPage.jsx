@@ -1,17 +1,17 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; const fmtDateTime = (d) => d ? new Date(d).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 import { UserPlus, CheckCircle, XCircle, Clock, Building, Mail, Phone, Globe, Users, User, X } from 'lucide-react';
-
-const STATUS_BADGE = {
-  pending: { label: 'En attente', color: '#f59e0b', bg: '#fffbeb' },
-  approved: { label: 'Acceptée', color: '#16a34a', bg: '#f0fdf4' },
-  rejected: { label: 'Refusée', color: '#dc2626', bg: '#fef2f2' },
-};
 
 export default function AdminApplicationsPage() {
   const { t } = useTranslation();
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(t('admin.fmt_locale'), { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  const fmtDateTime = (d) => d ? new Date(d).toLocaleString(t('admin.fmt_locale'), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  const STATUS_BADGE = {
+    pending: { label: t('admin.app_status_pending'), color: '#f59e0b', bg: '#fffbeb' },
+    approved: { label: t('admin.app_status_approved'), color: '#16a34a', bg: '#f0fdf4' },
+    rejected: { label: t('admin.app_status_rejected'), color: '#dc2626', bg: '#fef2f2' },
+  };
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -53,24 +53,24 @@ export default function AdminApplicationsPage() {
 
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.loading')}</div>;
 
   return (
     <div className="fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Candidatures</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('admin.applications_title')}</h1>
           <p style={{ color: '#64748b', marginTop: 4 }}>
-            {pendingCount > 0 ? `${pendingCount} candidature${pendingCount > 1 ? 's' : ''} en attente` : 'Aucune candidature en attente'}
+            {pendingCount > 0 ? t(pendingCount > 1 ? 'admin.applications_pending_plural' : 'admin.applications_pending', { count: pendingCount }) : t('admin.applications_none_pending')}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-          {[{ id: 'pending', label: 'En attente' }, { id: 'all', label: 'Toutes' }, { id: 'approved', label: 'Acceptées' }, { id: 'rejected', label: 'Refusées' }].map(t => (
-            <button key={t.id} onClick={() => setFilter(t.id)} style={{
+          {[{ id: 'pending', label: t('admin.app_filter_pending') }, { id: 'all', label: t('admin.app_filter_all') }, { id: 'approved', label: t('admin.app_filter_approved') }, { id: 'rejected', label: t('admin.app_filter_rejected') }].map(tab => (
+            <button key={tab.id} onClick={() => setFilter(tab.id)} style={{
               padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: filter === t.id ? '#fff' : 'transparent', color: filter === t.id ? '#0f172a' : '#64748b',
-              boxShadow: filter === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}>{t.label}</button>
+              background: filter === tab.id ? '#fff' : 'transparent', color: filter === tab.id ? '#0f172a' : '#64748b',
+              boxShadow: filter === tab.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            }}>{tab.label}</button>
           ))}
         </div>
       </div>
@@ -78,7 +78,7 @@ export default function AdminApplicationsPage() {
       {applications.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
           <UserPlus size={40} color="#94a3b8" style={{ marginBottom: 16, opacity: 0.3 }} />
-          <p style={{ color: '#94a3b8', fontSize: 15 }}>Aucune candidature</p>
+          <p style={{ color: '#94a3b8', fontSize: 15 }}>{t('admin.app_none')}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -109,7 +109,7 @@ export default function AdminApplicationsPage() {
                       <button onClick={(e) => { e.stopPropagation(); setSelected(app); }} style={{
                         padding: '8px 16px', borderRadius: 10, background: '#f0fdf4', border: 'none',
                         color: '#16a34a', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                      }}><CheckCircle size={14} /> Examiner</button>
+                      }}><CheckCircle size={14} /> {t('admin.app_review')}</button>
                     </div>
                   )}
                 </div>
@@ -127,7 +127,7 @@ export default function AdminApplicationsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a' }}>{selected.company_name}</h2>
-                <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>Candidature du {fmtDate(selected.created_at)}</p>
+                <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>{t('admin.app_submitted_on', { date: fmtDate(selected.created_at) })}</p>
               </div>
               <button onClick={() => setSelected(null)} style={{ background: '#f1f5f9', border: 'none', width: 38, height: 38, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={18} color="#475569" />
@@ -135,17 +135,17 @@ export default function AdminApplicationsPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
-              <InfoRow icon={User} label="Contact" value={selected.contact_name} />
-              <InfoRow icon={Mail} label="Email" value={selected.email} />
-              <InfoRow icon={Phone} label="Téléphone" value={selected.phone || '—'} />
-              <InfoRow icon={Globe} label="Site web" value={selected.company_website || '—'} />
-              <InfoRow icon={Users} label="Taille" value={selected.company_size || '—'} />
-              <InfoRow icon={Clock} label="Soumis le" value={fmtDateTime(selected.created_at)} />
+              <InfoRow icon={User} label={t('admin.app_field_contact')} value={selected.contact_name} />
+              <InfoRow icon={Mail} label={t('admin.app_field_email')} value={selected.email} />
+              <InfoRow icon={Phone} label={t('admin.app_field_phone')} value={selected.phone || '—'} />
+              <InfoRow icon={Globe} label={t('admin.app_field_website')} value={selected.company_website || '—'} />
+              <InfoRow icon={Users} label={t('admin.app_field_size')} value={selected.company_size || '—'} />
+              <InfoRow icon={Clock} label={t('admin.app_field_submitted_on')} value={fmtDateTime(selected.created_at)} />
             </div>
 
             {selected.motivation && (
               <div style={{ marginBottom: 24 }}>
-                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Motivation</div>
+                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('admin.app_motivation')}</div>
                 <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, color: '#334155', fontSize: 14, lineHeight: 1.6, borderLeft: '3px solid var(--rb-primary, #059669)' }}>{selected.motivation}</div>
               </div>
             )}
@@ -153,15 +153,15 @@ export default function AdminApplicationsPage() {
             {approvedEmail && (
               <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #bbf7d0', textAlign: 'center' }}>
                 <CheckCircle size={24} color="#16a34a" style={{ marginBottom: 8 }} />
-                <div style={{ fontWeight: 700, color: '#16a34a', marginBottom: 4 }}>Partenaire créé !</div>
-                <div style={{ color: '#059669', fontSize: 13 }}>✓ Identifiants envoyés par email à {selected?.email}</div>
+                <div style={{ fontWeight: 700, color: '#16a34a', marginBottom: 4 }}>{t('admin.app_partner_created')}</div>
+                <div style={{ color: '#059669', fontSize: 13 }}>{t('admin.app_credentials_sent', { email: selected?.email })}</div>
               </div>
             )}
 
             {selected.status === 'pending' && !approvedEmail && (
               <div>
                 <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>Taux de commission (%)</label>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('admin.app_commission_rate')}</label>
                   <input type="number" value={commissionRate} onChange={e => setCommissionRate(e.target.value)} min="0" max="50"
                     style={{ width: 120, padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
                 </div>
@@ -174,7 +174,7 @@ export default function AdminApplicationsPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     opacity: processing ? 0.7 : 1,
                   }}>
-                    <CheckCircle size={18} /> Accepter
+                    <CheckCircle size={18} /> {t('admin.app_accept')}
                   </button>
                   <button onClick={() => handleReject(selected.id)} disabled={processing} style={{
                     flex: 1, padding: '14px', borderRadius: 12,
@@ -183,7 +183,7 @@ export default function AdminApplicationsPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     opacity: processing ? 0.7 : 1,
                   }}>
-                    <XCircle size={18} /> Refuser
+                    <XCircle size={18} /> {t('admin.app_reject')}
                   </button>
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function AdminApplicationsPage() {
 
             {selected.status === 'rejected' && selected.rejection_reason && (
               <div style={{ background: '#fef2f2', borderRadius: 12, padding: 16, borderLeft: '3px solid #dc2626' }}>
-                <div style={{ fontWeight: 600, color: '#dc2626', fontSize: 13, marginBottom: 4 }}>Motif du refus</div>
+                <div style={{ fontWeight: 600, color: '#dc2626', fontSize: 13, marginBottom: 4 }}>{t('admin.app_rejection_reason')}</div>
                 <div style={{ color: '#991b1b', fontSize: 14 }}>{selected.rejection_reason}</div>
               </div>
             )}

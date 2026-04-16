@@ -106,8 +106,8 @@ export default function PublicApplyPage() {
                 <Field icon={Building} label={t("publicApply.field_company")} value={form.company_name} onChange={set('company_name')} placeholder={t("publicApply.company_ph")} />
                 <Field icon={User} label={t("publicApply.field_contact")} value={form.contact_name} onChange={set('contact_name')} placeholder={t("publicApply.name_ph")} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <Field icon={Mail} label="Email *" value={form.email} onChange={set('email')} placeholder={t("publicApply.email_ph")} type="email" />
-                  <Field icon={Phone} label={t("publicApply.phone")} value={form.phone} onChange={set('phone')} placeholder="+33 6 ..." />
+                  <Field icon={Mail} label={t("publicApply.field_email")} value={form.email} onChange={set('email')} placeholder={t("publicApply.email_ph")} type="email" />
+                  <Field icon={Phone} label={t("publicApply.phone")} value={form.phone} onChange={set('phone')} placeholder={t("partnerSubmit.phone_short_ph")} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <Field icon={Globe} label={t("publicApply.field_website")} value={form.company_website} onChange={set('company_website')} placeholder="https://..." />
@@ -115,10 +115,10 @@ export default function PublicApplyPage() {
                     <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.size")}</label>
                     <select value={form.company_size} onChange={set('company_size')} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box', appearance: 'none' }}>
                       <option value="" style={{ background: '#1e293b' }}>{t("publicApply.size_ph")}</option>
-                      <option value="1-10" style={{ background: '#1e293b' }}>t("publicApply.size_1_10")</option>
-                      <option value="11-50" style={{ background: '#1e293b' }}>11-50 employés</option>
-                      <option value="51-200" style={{ background: '#1e293b' }}>51-200 employés</option>
-                      <option value="200+" style={{ background: '#1e293b' }}>t("publicApply.size_200plus")</option>
+                      <option value="1-10" style={{ background: '#1e293b' }}>{t("publicApply.size_1")}</option>
+                      <option value="11-50" style={{ background: '#1e293b' }}>{t("publicApply.size_2")}</option>
+                      <option value="51-200" style={{ background: '#1e293b' }}>{t("publicApply.size_3")}</option>
+                      <option value="200+" style={{ background: '#1e293b' }}>{t("publicApply.size_4")}</option>
                     </select>
                   </div>
                 </div>

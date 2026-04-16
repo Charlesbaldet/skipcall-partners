@@ -177,8 +177,8 @@ export default function MarketplacePage() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           {/* Stats bar */}
           <p style={{ textAlign: 'center', color: C.m, fontSize: 14, margin: '0 0 32px' }}>
-            {loading ? 'Chargement...' : (
-              <><strong style={{ color: C.s }}>{partners.length}</strong>{' programme'}{partners.length !== 1 ? 's' : ''}{' trouvé'}{partners.length !== 1 ? 's' : ''}{activeSector ? ' dans "' + activeSector + '"' : ''}{search ? ' pour "' + search + '"' : ''}</>
+            {loading ? t('marketplace.loading') : (
+              <><strong style={{ color: C.s }}>{partners.length}</strong> {t('marketplace.results_count', { count: partners.length })}{activeSector ? ` ${t('marketplace.results_in')} "${activeSector}"` : ''}{search ? ` ${t('marketplace.results_for')} "${search}"` : ''}</>
             )}
           </p>
 
@@ -198,7 +198,7 @@ export default function MarketplacePage() {
           ) : partners.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px', background: C.card, borderRadius: 20, boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, color: C.s, margin: '0 0 8px' }}>Aucun résultat</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: C.s, margin: '0 0 8px' }}>{t('marketplace.no_result')}</h3>
               <p style={{ color: C.m, margin: '0 0 20px' }}>
                 {(search || activeSector) ? t("marketplace.reset") : t("marketplace.no_result")}
               </p>

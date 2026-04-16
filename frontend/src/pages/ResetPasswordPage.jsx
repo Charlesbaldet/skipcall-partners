@@ -21,8 +21,8 @@ export default function ResetPasswordPage() {
   if (!token) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: C.bg }}>
       <div style={{ textAlign: 'center' }}>
-        <p style={{ color: C.m, marginBottom: 16 }}>Lien invalide ou expiré.</p>
-        <Link to="/forgot-password" style={{ color: C.p, fontWeight: 700, textDecoration: 'none' }}>Demander un nouveau lien</Link>
+        <p style={{ color: C.m, marginBottom: 16 }}>{t('resetPwd.invalid')}</p>
+        <Link to="/forgot-password" style={{ color: C.p, fontWeight: 700, textDecoration: 'none' }}>{t('resetPwd.request_new')}</Link>
       </div>
     </div>
   );
@@ -30,7 +30,7 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (password !== confirm) return setError('Les mots de passe ne correspondent pas.');
+    if (password !== confirm) return setError(t('resetPwd.mismatch'));
     setLoading(true);
     try {
       await api.request('/auth/reset-password', {
@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       setDone(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      setError(err.message || 'Erreur serveur');
+      setError(err.message || t('common.server_error'));
     }
     setLoading(false);
   };
@@ -49,9 +49,9 @@ export default function ResetPasswordPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: C.bg }}>
       <div style={{ maxWidth: 440, width: '100%', textAlign: 'center', background: '#fff', borderRadius: 24, padding: 48, boxShadow: '0 20px 60px rgba(0,0,0,0.08)' }}>
         <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
-        <h2 style={{ fontWeight: 800, fontSize: 24, color: C.s, margin: '0 0 12px' }}>Mot de passe mis à jour !</h2>
-        <p style={{ color: C.m, marginBottom: 24 }}>Redirection vers la connexion dans quelques secondes...</p>
-        <Link to="/login" style={{ color: C.p, fontWeight: 700, textDecoration: 'none' }}>Se connecter maintenant →</Link>
+        <h2 style={{ fontWeight: 800, fontSize: 24, color: C.s, margin: '0 0 12px' }}>{t('resetPwd.success_title')}</h2>
+        <p style={{ color: C.m, marginBottom: 24 }}>{t('resetPwd.redirect')}</p>
+        <Link to="/login" style={{ color: C.p, fontWeight: 700, textDecoration: 'none' }}>{t('resetPwd.login_now')}</Link>
       </div>
     </div>
   );
@@ -59,9 +59,9 @@ export default function ResetPasswordPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: C.bg }}>
       <div style={{ width: '100%', maxWidth: 440, background: '#fff', borderRadius: 24, padding: 48, boxShadow: '0 20px 60px rgba(0,0,0,0.08)' }}>
-        <h1 style={{ fontWeight: 800, fontSize: 28, color: C.s, margin: '0 0 8px' }}>Nouveau mot de passe</h1>
+        <h1 style={{ fontWeight: 800, fontSize: 28, color: C.s, margin: '0 0 8px' }}>{t('resetPwd.title')}</h1>
         <p style={{ color: C.m, margin: '0 0 32px', lineHeight: 1.6 }}>
-          Choisissez un mot de passe fort : 10 caractères minimum, avec majuscule, chiffre et caractère spécial.
+          {t('resetPwd.strong_hint')}
         </p>
         {error && (
           <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 14px', color: '#dc2626', fontSize: 14, marginBottom: 20 }}>
@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: C.s, marginBottom: 8 }}>Nouveau mot de passe</label>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: C.s, marginBottom: 8 }}>{t('resetPwd.new_pwd')}</label>
           <div style={{ position: 'relative' }}>
               <input
             type={showPwd ? "text" : "password"}
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
                 }
               </button>
             </div>
-          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: C.s, marginBottom: 8 }}>Confirmer le mot de passe</label>
+          <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: C.s, marginBottom: 8 }}>{t('resetPwd.confirm_pwd')}</label>
           <div style={{ position: 'relative' }}>
               <input
             type={showConfirm ? "text" : "password"}
@@ -108,7 +108,7 @@ export default function ResetPasswordPage() {
             disabled={loading}
             style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: loading ? '#94a3b8' : C.p, color: '#fff', fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: loading ? 'none' : '0 8px 30px rgba(5,150,105,0.3)' }}
           >
-            {loading ? 'Mise à jour...' : 'Réinitialiser mon mot de passe →'}
+            {loading ? t('resetPwd.submitting') : t('resetPwd.submit_full')}
           </button>
         </form>
       </div>

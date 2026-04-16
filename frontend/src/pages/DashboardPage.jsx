@@ -36,8 +36,8 @@ export default function DashboardPage() {
     Promise.all([
       api.getKPIs(), api.getTimeline(6), api.getPipeline(),
       api.getTopPartners(), api.getLevels(), api.getMyTenant(),
-    ]).then(([k, t, p, tp, l, mt]) => {
-      setKpis(k); setMyTenant(mt && (mt.tenant || mt)); setTimeline(t.timeline); setPipeline(p.pipeline);
+    ]).then(([k, tl, p, tp, l, mt]) => {
+      setKpis(k); setMyTenant(mt && (mt.tenant || mt)); setTimeline(tl.timeline); setPipeline(p.pipeline);
       setTopPartners(tp.topPartners); setLevels(l.levels);
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
@@ -51,9 +51,9 @@ export default function DashboardPage() {
       .finally(() => setLbLoading(false));
   };
 
-  const handleTabChange = (t) => {
-    setTab(t);
-    if (t === 'classement') loadLeaderboard();
+  const handleTabChange = (id) => {
+    setTab(id);
+    if (id === 'classement') loadLeaderboard();
   };
 
   const copyLink = (code) => {
@@ -81,14 +81,14 @@ export default function DashboardPage() {
     };
   });
 
-  const timelineData = timeline.map(t => ({
-    month: new Date(t.month + '-01').toLocaleDateString('fr-FR', { month: 'short' }),
-    total: parseInt(t.total), won: parseInt(t.won), lost: parseInt(t.lost),
-    revenue: parseFloat(t.revenue),
+  const timelineData = timeline.map(tl => ({
+    month: new Date(tl.month + '-01').toLocaleDateString('fr-FR', { month: 'short' }),
+    total: parseInt(tl.total), won: parseInt(tl.won), lost: parseInt(tl.lost),
+    revenue: parseFloat(tl.revenue),
   }));
 
   const revenueData = revenueCumul
-    ? timelineData.reduce((acc, t, i) => { acc.push({ ...t, revenue: (i > 0 ? acc[i - 1].revenue : 0) + t.revenue }); return acc; }, [])
+    ? timelineData.reduce((acc, tl, i) => { acc.push({ ...tl, revenue: (i > 0 ? acc[i - 1].revenue : 0) + tl.revenue }); return acc; }, [])
     : timelineData;
 
   return (
@@ -96,23 +96,23 @@ export default function DashboardPage() {
       {showWizard && <OnboardingWizard onClose={() => setShowWizard(false)} />}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>Dashboard</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>Vue d'ensemble de votre programme partenaires</p>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('dashboard.title')}</h1>
+          <p style={{ color: '#64748b', marginTop: 4 }}>{t('dashboard.subtitle')}</p>
         </div>
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
           {[
-            { id: 'overview', label: 'Vue d\'ensemble', icon: Target },
-            { id: 'classement', label: 'Classement', icon: Trophy },
-          ].map(t => (
-            <button key={t.id} onClick={() => handleTabChange(t.id)} style={{
+            { id: 'overview', label: t('dashboard.tab_overview'), icon: Target },
+            { id: 'classement', label: t('dashboard.tab_leaderboard'), icon: Trophy },
+          ].map(tab_ => (
+            <button key={tab_.id} onClick={() => handleTabChange(tab_.id)} style={{
               padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: tab === t.id ? '#fff' : 'transparent', color: tab === t.id ? '#0f172a' : '#64748b',
-              boxShadow: tab === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              background: tab === tab_.id ? '#fff' : 'transparent', color: tab === tab_.id ? '#0f172a' : '#64748b',
+              boxShadow: tab === tab_.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
-              <t.icon size={14} /> {t.label}
+              <tab_.icon size={14} /> {tab_.label}
             </button>
           ))}
         </div>
@@ -141,23 +141,24 @@ export default function DashboardPage() {
 // VUE D'ENSEMBLE TAB
 // ═══════════════════════════════════════
 function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData, revenueCumul, setRevenueCumul, topPartners, myTenant }) {
+  const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
-  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
+  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
   return (
     <>
       {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <KPICard icon={FileText} label="Total Referrals" value={kpis?.total_referrals} color="#6366f1" />
-        <KPICard icon={Zap} label="Nouveaux" value={kpis?.new_count} color="#f59e0b" />
-        <KPICard icon={Target} label="Pipeline actif" value={kpis?.active_count} sub={fmt(kpis?.pipeline_value || 0)} color="#0ea5e9" />
-        <KPICard icon={TrendingUp} label="Deals gagnés" value={kpis?.won_count} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
-        <KPICard icon={DollarSign} label="Commissions dues" value={fmt(kpis?.pending_commission || 0)} color="#f59e0b" highlight />
-        <KPICard icon={Users} label="Taux de conversion" value={`${kpis?.win_rate || 0}%`} color="#c026d3" />
+        <KPICard icon={FileText} label={t('dashboard.kpi_total')} value={kpis?.total_referrals} color="#6366f1" />
+        <KPICard icon={Zap} label={t('dashboard.kpi_new')} value={kpis?.new_count} color="#f59e0b" />
+        <KPICard icon={Target} label={t('dashboard.kpi_pipeline')} value={kpis?.active_count} sub={fmt(kpis?.pipeline_value || 0)} color="#0ea5e9" />
+        <KPICard icon={TrendingUp} label={t('dashboard.kpi_won')} value={kpis?.won_count} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
+        <KPICard icon={DollarSign} label={t('dashboard.kpi_commissions')} value={fmt(kpis?.pending_commission || 0)} color="#f59e0b" highlight />
+        <KPICard icon={Users} label={t('dashboard.kpi_rate')} value={`${kpis?.win_rate || 0}%`} color="#c026d3" />
       </div>
 
       {/* Charts Row 1 */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
-        <ChartCard title="Évolution mensuelle">
+        <ChartCard title={t('dashboard.chart_monthly')}>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={timelineData} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -165,20 +166,20 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="total" name="Total" fill="#6366f1" radius={[4,4,0,0]}>
+              <Bar dataKey="total" name={t('dashboard.chart_total')} fill="#6366f1" radius={[4,4,0,0]}>
                 <LabelList dataKey="total" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#6366f1' }} />
               </Bar>
-              <Bar dataKey="won" name="Gagnés" fill="#16a34a" radius={[4,4,0,0]}>
+              <Bar dataKey="won" name={t('dashboard.chart_won')} fill="#16a34a" radius={[4,4,0,0]}>
                 <LabelList dataKey="won" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#16a34a' }} />
               </Bar>
-              <Bar dataKey="lost" name="Perdus" fill="#dc2626" radius={[4,4,0,0]}>
+              <Bar dataKey="lost" name={t('dashboard.chart_lost')} fill="#dc2626" radius={[4,4,0,0]}>
                 <LabelList dataKey="lost" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#dc2626' }} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Pipeline par statut">
+        <ChartCard title={t('dashboard.chart_pipeline')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 4 }}>
             {pipelineData.filter(p => p.count > 0).map((p, i) => {
               const total = pipelineData.reduce((s, d) => s + d.count, 0);
@@ -201,16 +202,16 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
                 </div>
               );
             })}
-            {pipelineData.every(p => p.count === 0) && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32 }}>Aucune donnée</div>}
+            {pipelineData.every(p => p.count === 0) && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32 }}>{t('dashboard.no_data')}</div>}
           </div>
         </ChartCard>
       </div>
 
       {/* Charts Row 2 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-        <ChartCard title={`${rLabel} Généré (€)`} action={
+        <ChartCard title={`${rLabel} ${t('dashboard.chart_revenue_label')}`} action={
           <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 8, padding: 2 }}>
-            {[{ key: false, label: 'Mensuel' }, { key: true, label: 'Cumulé' }].map(opt => (
+            {[{ key: false, label: t('dashboard.chart_monthly_tab') }, { key: true, label: t('dashboard.chart_cumul_tab') }].map(opt => (
               <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
                 padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
                 background: revenueCumul === opt.key ? '#fff' : 'transparent',
@@ -226,20 +227,20 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} formatter={v => fmt(v)} />
-              <Line type="monotone" dataKey="revenue" name={revenueCumul ? `${rLabel} Cumulé` : `${rLabel} Mensuel`} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
+              <Line type="monotone" dataKey="revenue" name={revenueCumul ? `${rLabel} ${t('dashboard.chart_cumul_tab')}` : `${rLabel} ${t('dashboard.chart_monthly_tab')}`} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Performance par niveau de reco">
+        <ChartCard title={t('dashboard.chart_levels')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 4 }}>
             {levelData.map((l, idx) => (
               <div key={idx}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <span style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{l.name}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
-                    <span style={{ color: '#64748b' }}>{l.total} referrals</span>
-                    <span style={{ color: '#16a34a', fontWeight: 700 }}>{l.won} gagnés</span>
+                    <span style={{ color: '#64748b' }}>{l.total} {t('dashboard.kpi_total').toLowerCase()}</span>
+                    <span style={{ color: '#16a34a', fontWeight: 700 }}>{l.won} {t('dashboard.chart_won').toLowerCase()}</span>
                     <span style={{ padding: '2px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12,
                       background: l.convRate >= 50 ? '#f0fdf4' : l.convRate >= 25 ? '#fffbeb' : '#fef2f2',
                       color: l.convRate >= 50 ? '#16a34a' : l.convRate >= 25 ? '#f59e0b' : '#dc2626',
@@ -256,11 +257,11 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
                 </div>
               </div>
             ))}
-            {levelData.length === 0 && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 14 }}>Aucune donnée</div>}
+            {levelData.length === 0 && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 14 }}>{t('dashboard.no_data')}</div>}
             {levelData.length > 0 && (
               <div style={{ display: 'flex', gap: 16, justifyContent: 'center', fontSize: 12 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a' }} /><span style={{ color: '#64748b' }}>Gagnés</span></span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#e2e8f0' }} /><span style={{ color: '#64748b' }}>Autres</span></span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a' }} /><span style={{ color: '#64748b' }}>{t('dashboard.chart_won')}</span></span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#e2e8f0' }} /><span style={{ color: '#64748b' }}>{t('dashboard.chart_others')}</span></span>
               </div>
             )}
           </div>
@@ -276,9 +277,10 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
 // CLASSEMENT TAB
 // ═══════════════════════════════════════
 function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenant }) {
+  const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
-  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? 'CA' : rModel === 'Other' ? 'Revenus' : 'MRR';
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('dashboard.loading')}</div>;
 
   const topThree = leaderboard.slice(0, 3);
 
@@ -293,7 +295,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
               <span style={{ fontSize: 18 }}>{l.icon}</span>
               <div>
                 <div style={{ fontWeight: 700, color: lc.color, fontSize: 13 }}>{l.name}</div>
-                <div style={{ color: '#94a3b8', fontSize: 11 }}>{l.min}+ deals · {l.rate}% com.</div>
+                <div style={{ color: '#94a3b8', fontSize: 11 }}>{l.min}+ {t('dashboard.deals').toLowerCase()} · {l.rate}% com.</div>
               </div>
             </div>
           );
@@ -314,7 +316,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
             <tr style={{ background: '#f8fafc' }}>
-              {['#', 'Partenaire', 'Niveau', 'Deals gagnés', `${rLabel} Généré`, 'Commissions', 'Conversion', 'Lien', 'Progression'].map((h, i) => (
+              {[t('dashboard.tbl_rank'), t('dashboard.tbl_partner'), t('dashboard.tbl_level'), t('dashboard.tbl_won'), `${rLabel} ${t('dashboard.tbl_generated')}`, t('dashboard.tbl_commissions'), t('dashboard.tbl_conversion'), t('dashboard.tbl_link'), t('dashboard.tbl_progression')].map((h, i) => (
                 <th key={i} style={{ padding: '13px 14px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr>
@@ -362,7 +364,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
                         <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{p.next_level.deals_needed} → {p.next_level.icon}</span>
                       </div>
                     ) : (
-                      <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>Max ✨</span>
+                      <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{t('dashboard.max')}</span>
                     )}
                   </td>
                 </tr>
@@ -370,7 +372,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
             })}
           </tbody>
         </table>
-        {leaderboard.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Aucun partenaire</div>}
+        {leaderboard.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('dashboard.no_partner')}</div>}
       </div>
     </>
   );
@@ -380,6 +382,7 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
 // SHARED COMPONENTS
 // ═══════════════════════════════════════
 function PodiumCard({ partner: p, isFirst }) {
+  const { t } = useTranslation();
   const lc = LEVEL_COLORS[p.level] || LEVEL_COLORS.Bronze;
   return (
     <div style={{
@@ -393,11 +396,11 @@ function PodiumCard({ partner: p, isFirst }) {
       <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 16 }}>
         <div>
           <div style={{ fontSize: isFirst ? 24 : 20, fontWeight: 800, color: '#0f172a' }}>{p.won_deals}</div>
-          <div style={{ color: '#94a3b8', fontSize: 11 }}>Deals</div>
+          <div style={{ color: '#94a3b8', fontSize: 11 }}>{t('dashboard.deals')}</div>
         </div>
         <div>
           <div style={{ fontSize: isFirst ? 24 : 20, fontWeight: 800, color: '#16a34a' }}>{fmt(p.total_commissions)}</div>
-          <div style={{ color: '#94a3b8', fontSize: 11 }}>Commissions</div>
+          <div style={{ color: '#94a3b8', fontSize: 11 }}>{t('dashboard.commissions_label')}</div>
         </div>
       </div>
     </div>
@@ -434,9 +437,10 @@ function ChartCard({ title, action, children }) {
 }
 
 function PageLoader() {
+  const { t } = useTranslation();
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-      <p style={{ color: '#94a3b8' }}>Chargement...</p>
+      <p style={{ color: '#94a3b8' }}>{t('dashboard.loading')}</p>
     </div>
   );
 }

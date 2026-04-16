@@ -24,35 +24,6 @@ function RefBoostLogo({ size = 36 }) {
   );
 }
 
-const ADMIN_NAV = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/referrals', icon: FileText, label: 'Pipeline' },
-  { to: '/commissions', icon: DollarSign, label: 'Commissions' },
-  { to: '/partners', icon: Users, label: 'Partenaires' },
-  { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
-  { divider: true },
-  { to: '/programme', icon: Trophy, label: 'Programme' },
-  { to: '/settings', icon: Settings, label: 'Paramètres' },
-];
-
-const PARTNER_NAV = [
-  { to: '/partner/referrals', icon: FileText, label: 'Mes Referrals' },
-  { to: '/partner/submit', icon: Send, label: 'Soumettre' },
-  { to: '/partner/payments', icon: DollarSign, label: 'Mes Paiements' },
-  { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
-  { divider: true },
-  { to: '/settings', icon: Settings, label: 'Paramètres' },
-];
-
-const SUPERADMIN_NAV = [
-  { to: '/super-admin?tab=clients', icon: Globe, label: 'Clients' },
-  { to: '/super-admin?tab=stats', icon: BarChart2, label: 'Statistiques' },
-  { to: '/super-admin?tab=logs', icon: Activity, label: 'Audit Logs' },
-  { to: '/super-admin?tab=blog', icon: FileText, label: 'Blog' },
-  { divider: true },
-  { to: '/settings', icon: Settings, label: 'Paramètres' },
-];
-
 export default function Layout({ children }) {
   const { t } = useTranslation();
   const { user, logout, spaces, currentSpace, switchSpace } = useAuth();
@@ -125,7 +96,8 @@ export default function Layout({ children }) {
   useEffect(() => {
     if (isSuperAdmin) { document.title = 'RefBoost - Super Admin'; return; }
     const total = unread + pendingApps;
-    document.title = total > 0 ? `(${total}) RefBoost - Programme Partenaires` : 'RefBoost - Programme Partenaires';
+    const baseTitle = 'RefBoost';
+    document.title = total > 0 ? `(${total}) ${baseTitle}` : baseTitle;
   }, [unread, pendingApps, isSuperAdmin, tenant]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
@@ -155,13 +127,13 @@ export default function Layout({ children }) {
           ) : (
             <div style={{ flexShrink: 0, filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
               {tenant?.logo_url
-                ? <img src={tenant.logo_url} alt="Logo" style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }}/>
+                ? <img src={tenant.logo_url} alt={t('layout_extra.logo_alt')} style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }}/>
                 : <RefBoostLogo size={36}/>}
             </div>
           )}
           {!collapsed && (
             <span style={{ fontSize: isSuperAdmin ? 16 : 18, fontWeight: 800, letterSpacing: -0.5, fontFamily: 'inherit' }}>
-              {isSuperAdmin ? 'Super Admin' : (tenant?.name || 'RefBoost')}
+              {isSuperAdmin ? t('layout_extra.super_admin') : (tenant?.name || 'RefBoost')}
             </span>
           )}
         </div>
@@ -195,7 +167,7 @@ export default function Layout({ children }) {
                 {!collapsed && (
                   <div style={{ overflow: 'hidden', minWidth: 0, textAlign: 'left' }}>
                     <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {currentSpace ? (currentSpace.role === 'partner' ? (currentSpace.partner_name || 'Partenaire') : (currentSpace.tenant_name || 'Espace')) : 'Changer d\'espace'}
+                      {currentSpace ? (currentSpace.role === 'partner' ? (currentSpace.partner_name || t('layout_extra.space_partner')) : (currentSpace.tenant_name || t('layout_extra.space_space'))) : t('layout_extra.switch_space')}
                     </div>
                     <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>
                       {currentSpace?.role || ''}
@@ -218,7 +190,7 @@ export default function Layout({ children }) {
               }}>
                 {spaces.map((space) => {
                   const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && currentSpace.role === space.role && (currentSpace.partner_id || null) === (space.partner_id || null);
-                  const label = space.role === 'partner' ? (space.partner_name || 'Partenaire') : (space.tenant_name || 'Espace');
+                  const label = space.role === 'partner' ? (space.partner_name || t('layout_extra.space_partner')) : (space.tenant_name || t('layout_extra.space_space'));
                   const initials = (label || '??').slice(0, 2).toUpperCase();
                   return (
                     <button
@@ -277,7 +249,7 @@ export default function Layout({ children }) {
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />
                   {spaces.filter(s => s.role === 'partner').map((space) => {
                     const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && (currentSpace.partner_id || null) === (space.partner_id || null);
-                    const label = space.tenant_name || 'Programme';
+                    const label = space.tenant_name || t('layout_extra.program');
                     const initials = (label || '??').slice(0, 2).toUpperCase();
                     return (
                       <button
@@ -317,7 +289,7 @@ export default function Layout({ children }) {
                       }}
                     >
                       <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>+</span>
-                      <span>Découvrir d'autres programmes</span>
+                      <span>{t('layout_extra.discover_other_programs')}</span>
                     </button>
                   )}
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />

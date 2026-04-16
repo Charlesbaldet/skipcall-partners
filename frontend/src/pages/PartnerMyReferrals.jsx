@@ -26,7 +26,7 @@ export default function PartnerMyReferrals() {
   useEffect(() => { load().finally(() => setLoading(false)); }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm('Supprimer cette recommandation ?')) return;
+    if (!confirm(t('partnerReferrals.confirm_delete'))) return;
     setDeleting(id);
     try {
       await api.deleteReferral(id);
@@ -38,31 +38,31 @@ export default function PartnerMyReferrals() {
     setDeleting(null);
   };
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerReferrals.loading')}</div>;
 
   return (
     <div className="fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Mes recommandations</h1>
-          <p style={{ color: '#64748b' }}>Suivez l'avancement de vos mises en relation</p>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerReferrals.title')}</h1>
+          <p style={{ color: '#64748b' }}>{t('partnerReferrals.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-          <button onClick={() => setViewMode('kanban')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><LayoutGrid size={14} /> Kanban</button>
-          <button onClick={() => setViewMode('table')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><List size={14} /> Table</button>
+          <button onClick={() => setViewMode('kanban')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><LayoutGrid size={14} /> {t('partnerReferrals.view_kanban')}</button>
+          <button onClick={() => setViewMode('table')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><List size={14} /> {t('partnerReferrals.view_table')}</button>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <PKPI icon={FileText} label="Total" value={kpis?.total_referrals || 0} color="var(--rb-primary, #059669)" />
-        <PKPI icon={TrendingUp} label="Gagnés" value={kpis?.won_count || 0} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
-        <PKPI icon={DollarSign} label="Ma Commission" value={fmt(kpis?.total_commission || 0)} color="var(--rb-accent, #f97316)" />
+        <PKPI icon={FileText} label={t('partnerReferrals.kpi_total')} value={kpis?.total_referrals || 0} color="var(--rb-primary, #059669)" />
+        <PKPI icon={TrendingUp} label={t('partnerReferrals.kpi_won')} value={kpis?.won_count || 0} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
+        <PKPI icon={DollarSign} label={t('partnerReferrals.kpi_commission')} value={fmt(kpis?.total_commission || 0)} color="var(--rb-accent, #f97316)" />
       </div>
 
       {referrals.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
-          <p style={{ color: '#94a3b8', marginBottom: 16 }}>Aucune recommandation pour le moment.</p>
-          <a href="/partner/submit" style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>Créer ma première recommandation →</a>
+          <p style={{ color: '#94a3b8', marginBottom: 16 }}>{t('partnerReferrals.empty_message')}</p>
+          <a href="/partner/submit" style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{t('partnerReferrals.empty_cta')}</a>
         </div>
       ) : viewMode === 'kanban' ? (
         <KanbanView referrals={referrals} onSelect={setSelected} />
@@ -83,6 +83,7 @@ export default function PartnerMyReferrals() {
 }
 
 function KanbanView({ referrals, onSelect }) {
+  const { t } = useTranslation();
   return (
     <div style={{ overflow: 'hidden', borderRadius: 16 }}>
       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 320px)', minHeight: 400 }}>
@@ -106,7 +107,7 @@ function KanbanView({ referrals, onSelect }) {
                     {r.deal_value > 0 && <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</div>}
                   </div>
                 ))}
-                {cards.length === 0 && <div style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', padding: 16 }}>Aucune</div>}
+                {cards.length === 0 && <div style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', padding: 16 }}>{t('partnerReferrals.empty_col')}</div>}
               </div>
             </div>
           );
@@ -117,12 +118,13 @@ function KanbanView({ referrals, onSelect }) {
 }
 
 function TableView({ referrals, onSelect }) {
+  const { t } = useTranslation();
   return (
     <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
         <thead>
           <tr style={{ background: '#f8fafc' }}>
-            {['Prospect', 'Niveau', 'Statut', 'Valeur', 'Date', ''].map((h, i) => (
+            {[t('partnerReferrals.tbl_prospect'), t('referrals.tbl_level'), t('partnerReferrals.tbl_status'), t('partnerReferrals.tbl_value'), t('partnerReferrals.tbl_date'), ''].map((h, i) => (
               <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
             ))}
           </tr>
@@ -148,6 +150,7 @@ function TableView({ referrals, onSelect }) {
 }
 
 function DetailModal({ referral, onClose, onDelete, deleting }) {
+  const { t } = useTranslation();
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
@@ -165,11 +168,11 @@ function DetailModal({ referral, onClose, onDelete, deleting }) {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
-          <Field label="Email" value={referral.prospect_email} />
-          <Field label="Téléphone" value={referral.prospect_phone || '—'} />
-          <Field label="Rôle" value={referral.prospect_role || '—'} />
-          <Field label="Date" value={fmtDate(referral.created_at)} />
-          {referral.deal_value > 0 && <Field label="Valeur deal" value={fmt(referral.deal_value)} />}
+          <Field label={t('referrals.field_email')} value={referral.prospect_email} />
+          <Field label={t('referrals.field_phone')} value={referral.prospect_phone || '—'} />
+          <Field label={t('referrals.field_role')} value={referral.prospect_role || '—'} />
+          <Field label={t('partnerReferrals.tbl_date')} value={fmtDate(referral.created_at)} />
+          {referral.deal_value > 0 && <Field label={t('partnerReferrals.deal_value')} value={fmt(referral.deal_value)} />}
         </div>
 
         {referral.notes && (
@@ -179,13 +182,13 @@ function DetailModal({ referral, onClose, onDelete, deleting }) {
         {referral.status === 'won' && referral.deal_value > 0 && (
           <div style={{ background: '#f0fdf4', borderRadius: 10, padding: 12, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
             <DollarSign size={16} color="#16a34a" />
-            <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>Deal gagné — Commission en attente de traitement</span>
+            <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>{t('partnerReferrals.deal_won_msg')}</span>
           </div>
         )}
 
         {onDelete && (
           <button onClick={onDelete} disabled={deleting} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: deleting ? 0.5 : 1 }}>
-            <Trash2 size={14} /> {deleting ? 'Suppression...' : 'Supprimer'}
+            <Trash2 size={14} /> {deleting ? t('partnerReferrals.deleting') : t('partnerReferrals.delete')}
           </button>
         )}
       </div>
