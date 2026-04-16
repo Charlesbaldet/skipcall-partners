@@ -146,7 +146,7 @@ export default function PublicApplyPage() {
               <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ fontWeight: 700, color: '#fff', fontSize: 14, marginBottom: 14 }}>{t("publicApply.step_summary")}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', fontSize: 14 }}>
-                  <RecapRow label=t("publicApply.company") value={form.company_name} />
+                  <RecapRow label={t("publicApply.company")} value={form.company_name} />
                   <RecapRow label="Contact" value={form.contact_name} />
                   <RecapRow label="Email" value={form.email} />
                   <RecapRow label={t("publicApply.phone")} value={form.phone || '—'} />
