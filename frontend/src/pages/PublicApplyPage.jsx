@@ -7,6 +7,7 @@ import { Send, CheckCircle, Building, User, Mail, Phone, Globe, Users, FileText 
 
 export default function PublicApplyPage() {
   const { t } = useTranslation();
+
   const { slug } = useParams();
   const [tenant, setTenant] = useState(null);
 
@@ -50,6 +51,7 @@ export default function PublicApplyPage() {
   if (submitted) {
     return (
       <Page>
+        <div style={{ position:"absolute", top:16, right:16, zIndex:10 }}><LanguageSwitcher /></div>
         <div style={{ textAlign: 'center', maxWidth: 520, margin: '0 auto', padding: '60px 24px' }}>
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
             <CheckCircle size={36} color="#fff" />
