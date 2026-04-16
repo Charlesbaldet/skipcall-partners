@@ -121,7 +121,7 @@ export default function LoginPage() {
           fontSize: 32, fontWeight: 800, letterSpacing: -1.5,
           textAlign: 'center', margin: '0 0 8px', color: C.s,
         }}>
-          Connexion
+          {t("login.title")}
         </h1>
         <p style={{
           color: C.m, fontSize: 15, textAlign: 'center',
@@ -174,7 +174,7 @@ export default function LoginPage() {
               display: 'block', color: C.s, fontSize: 13, fontWeight: 600,
               marginBottom: 8, fontFamily: 'inherit',
             }}>
-              Mot de passe
+              {t("login.password")}
             </label>
             <div style={{ position: 'relative' }}>
               <input
@@ -233,7 +233,7 @@ export default function LoginPage() {
         }}>
           <span style={{ display: 'block', marginBottom: 4 }}>{t("login.no_account")}</span>
           <Link to="/signup" style={{ color: C.p, fontWeight: 700, textDecoration: 'none', display: 'block' }}>
-            Créer un espace gratuit →
+            {t("login.create_account")}
           </Link>
         </p>
       </div>
