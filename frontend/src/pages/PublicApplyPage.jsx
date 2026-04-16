@@ -103,8 +103,8 @@ export default function PublicApplyPage() {
             <div>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>{t("publicApply.step1")}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <Field icon={Building} label={t("publicApply.field_company") + " *"} value={form.company_name} onChange={set('company_name')} placeholder={t("publicApply.company_ph")} />
-                <Field icon={User} label={t("publicApply.field_contact") + " *"} value={form.contact_name} onChange={set('contact_name')} placeholder={t("publicApply.name_ph")} />
+                <Field icon={Building} label={t("publicApply.field_company")} value={form.company_name} onChange={set('company_name')} placeholder={t("publicApply.company_ph")} />
+                <Field icon={User} label={t("publicApply.field_contact")} value={form.contact_name} onChange={set('contact_name')} placeholder={t("publicApply.name_ph")} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <Field icon={Mail} label="Email *" value={form.email} onChange={set('email')} placeholder={t("publicApply.email_ph")} type="email" />
                   <Field icon={Phone} label={t("publicApply.phone")} value={form.phone} onChange={set('phone')} placeholder="+33 6 ..." />
