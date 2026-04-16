@@ -81,6 +81,7 @@ export default function Layout({ children }) {
       [...itemParams].every(([k, v]) => currentSearchParams.get(k) === v);
   };
   const [collapsed, setCollapsed] = useState(false);
+  const [spaceSwitcherOpen, setSpaceSwitcherOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
   const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
@@ -181,50 +182,6 @@ export default function Layout({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
       <aside style={s.sidebar}>
-        {/* Phase B: multi-role space switcher */}
-        {spaces && spaces.length > 1 && (
-          <div style={{
-            padding: collapsed ? '12px 0 8px' : '12px 12px 8px',
-            display: 'flex', flexDirection: 'column', gap: 4,
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            {spaces.map((space) => {
-              const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && currentSpace.role === space.role && (currentSpace.partner_id || null) === (space.partner_id || null);
-              const label = space.role === 'partner' ? (space.partner_name || 'Partenaire') : (space.tenant_name || 'Espace');
-              const initials = (label || '??').slice(0, 2).toUpperCase();
-              return (
-                <button
-                  key={`${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
-                  onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
-                  title={`${label} · ${space.role}`}
-                  style={{
-                    width: '100%', padding: collapsed ? '6px' : '6px 10px',
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    borderRadius: 10, border: 'none',
-                    background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
-                    color: '#fff', cursor: isActive ? 'default' : 'pointer',
-                    textAlign: 'left', justifyContent: collapsed ? 'center' : 'flex-start',
-                  }}
-                >
-                  <div style={{
-                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                    background: space.role === 'partner' ? `linear-gradient(135deg, ${C.a}, ${C.al})` : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 800, color: '#fff',
-                    boxShadow: isActive ? '0 0 12px rgba(16,185,129,0.35)' : 'none',
-                  }}>{initials}</div>
-                  {!collapsed && (
-                    <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-                      <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>{space.role}</div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Logo */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
           {isSuperAdmin ? (
@@ -255,6 +212,95 @@ export default function Layout({ children }) {
             </span>
           )}
         </div>
+
+        {/* Phase B: space switcher dropdown (below logo) */}
+        {spaces && spaces.length > 1 && (
+          <div style={{ padding: collapsed ? '0 4px 8px' : '0 12px 8px', position: 'relative' }}>
+            <button
+              onClick={() => setSpaceSwitcherOpen(v => !v)}
+              style={{
+                width: '100%',
+                padding: collapsed ? '8px' : '8px 10px',
+                display: 'flex', alignItems: 'center', gap: 10,
+                borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.03)', color: '#fff',
+                cursor: 'pointer', fontSize: 13,
+                justifyContent: collapsed ? 'center' : 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', flex: 1 }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                  background: currentSpace && currentSpace.role === 'partner'
+                    ? `linear-gradient(135deg, ${C.a}, ${C.al})`
+                    : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, fontWeight: 800, color: '#fff',
+                }}>
+                  {((currentSpace && (currentSpace.role === 'partner' ? currentSpace.partner_name : currentSpace.tenant_name)) || '??').slice(0, 2).toUpperCase()}
+                </div>
+                {!collapsed && (
+                  <div style={{ overflow: 'hidden', minWidth: 0, textAlign: 'left' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {currentSpace ? (currentSpace.role === 'partner' ? (currentSpace.partner_name || 'Partenaire') : (currentSpace.tenant_name || 'Espace')) : 'Changer d\'espace'}
+                    </div>
+                    <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>
+                      {currentSpace?.role || ''}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {!collapsed && (
+                <span style={{ color: '#94a3b8', fontSize: 10, marginLeft: 4 }}>{spaceSwitcherOpen ? '▲' : '▼'}</span>
+              )}
+            </button>
+            {spaceSwitcherOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: collapsed ? 4 : 12, right: collapsed ? 4 : 12,
+                marginTop: 4, zIndex: 60,
+                background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 10, padding: 6,
+                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
+                maxHeight: '60vh', overflowY: 'auto',
+              }}>
+                {spaces.map((space) => {
+                  const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && currentSpace.role === space.role && (currentSpace.partner_id || null) === (space.partner_id || null);
+                  const label = space.role === 'partner' ? (space.partner_name || 'Partenaire') : (space.tenant_name || 'Espace');
+                  const initials = (label || '??').slice(0, 2).toUpperCase();
+                  return (
+                    <button
+                      key={`sw-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
+                      onClick={() => {
+                        setSpaceSwitcherOpen(false);
+                        if (!isActive) switchSpace(space).then(() => window.location.reload());
+                      }}
+                      style={{
+                        width: '100%', padding: '8px 10px',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        borderRadius: 8, border: 'none',
+                        background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
+                        color: '#fff', cursor: isActive ? 'default' : 'pointer',
+                        textAlign: 'left', fontSize: 13, marginBottom: 2,
+                      }}
+                    >
+                      <div style={{
+                        width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                        background: space.role === 'partner' ? `linear-gradient(135deg, ${C.a}, ${C.al})` : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 10, fontWeight: 800, color: '#fff',
+                      }}>{initials}</div>
+                      <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                        <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>{space.role}</div>
+                      </div>
+                      {isActive && <span style={{ color: '#10b981', fontSize: 12 }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>

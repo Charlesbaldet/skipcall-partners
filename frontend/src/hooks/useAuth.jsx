@@ -51,6 +51,9 @@ export function AuthProvider({ children }) {
       role: space.role,
       partnerId: space.partner_id || null,
     });
+    // Persist new JWT and user so subsequent requests use the new role
+    if (data.token) api.setToken(data.token);
+    if (data.user) api.setUser(data.user);
     setUser(data.user);
     return data;
   };
