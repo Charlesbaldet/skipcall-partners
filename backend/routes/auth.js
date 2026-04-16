@@ -8,7 +8,7 @@ const { auditLog, recordLoginAttempt, isAccountLocked, validatePassword } = requ
 
 const router = express.Router();
 
-// ─── Login (ISO 27001 A.9.4 - brute force protection) ───
+// âââ Login (ISO 27001 A.9.4 - brute force protection) âââ
 router.post('/login', [
   body('email').isEmail().normalizeEmail(),
   body('password').notEmpty(),
@@ -24,7 +24,7 @@ router.post('/login', [
     const locked = await isAccountLocked(email);
     if (locked) {
       auditLog(req, 'login_blocked_locked', 'user', null, { email });
-      return res.status(423).json({ error: 'Compte temporairement verrouillé suite à trop de tentatives. Réessayez dans 30 minutes.' });
+      return res.status(423).json({ error: 'Compte temporairement verrouillÃ© suite Ã  trop de tentatives. RÃ©essayez dans 30 minutes.' });
     }
 
     const { rows } = await query(
@@ -45,7 +45,7 @@ router.post('/login', [
 
     if (!user.is_active) {
       auditLog(req, 'login_blocked_inactive', 'user', user.id, { email });
-      return res.status(403).json({ error: 'Compte désactivé' });
+      return res.status(403).json({ error: 'Compte dÃ©sactivÃ©' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password_hash);
@@ -55,7 +55,7 @@ router.post('/login', [
       return res.status(401).json({ error: 'Identifiants incorrects' });
     }
 
-    // Success — reset failed attempts
+    // Success â reset failed attempts
     await recordLoginAttempt(email, ip, true);
 
     const token = jwt.sign(
@@ -76,7 +76,7 @@ router.post('/login', [
   }
 });
 
-// ─── Get current user profile ───
+// âââ Get current user profile âââ
 router.get('/me', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
@@ -89,14 +89,14 @@ router.get('/me', authenticate, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// ─── Change password (ISO 27001 A.9.4 - password policy) ───
+// âââ Change password (ISO 27001 A.9.4 - password policy) âââ
 router.put('/password', authenticate, [
   body('currentPassword').notEmpty(),
   body('newPassword').notEmpty(),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données manquantes' });
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'DonnÃ©es manquantes' });
 
     const { currentPassword, newPassword } = req.body;
 
@@ -116,7 +116,7 @@ router.put('/password', authenticate, [
       );
       for (const h of history) {
         if (await bcrypt.compare(newPassword, h.password_hash)) {
-          return res.status(400).json({ error: 'Ce mot de passe a déjà été utilisé récemment' });
+          return res.status(400).json({ error: 'Ce mot de passe a dÃ©jÃ  Ã©tÃ© utilisÃ© rÃ©cemment' });
         }
       }
     } catch {} // password_history table may not exist yet
@@ -128,11 +128,11 @@ router.put('/password', authenticate, [
     try { await query('INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)', [req.user.id, hash]); } catch {}
 
     auditLog(req, 'password_changed', 'user', req.user.id);
-    res.json({ message: 'Mot de passe mis à jour' });
+    res.json({ message: 'Mot de passe mis Ã  jour' });
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// ─── Validate invitation token ───
+// âââ Validate invitation token âââ
 router.get('/invitation/:token', async (req, res) => {
   try {
     const { rows } = await query(
@@ -140,13 +140,13 @@ router.get('/invitation/:token', async (req, res) => {
       [req.params.token]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Invitation introuvable' });
-    if (rows[0].accepted_at) return res.status(400).json({ error: 'Invitation déjà utilisée' });
-    if (new Date(rows[0].expires_at) < new Date()) return res.status(400).json({ error: 'Invitation expirée' });
+    if (rows[0].accepted_at) return res.status(400).json({ error: 'Invitation dÃ©jÃ  utilisÃ©e' });
+    if (new Date(rows[0].expires_at) < new Date()) return res.status(400).json({ error: 'Invitation expirÃ©e' });
     res.json({ invitation: { email: rows[0].email, fullName: rows[0].full_name, role: rows[0].role } });
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// ─── Setup password from invitation (with password policy) ───
+// âââ Setup password from invitation (with password policy) âââ
 router.post('/setup-password', async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -158,8 +158,8 @@ router.post('/setup-password', async (req, res) => {
     const { rows } = await query('SELECT * FROM user_invitations WHERE token = $1', [token]);
     if (rows.length === 0) return res.status(404).json({ error: 'Invitation introuvable' });
     const inv = rows[0];
-    if (inv.accepted_at) return res.status(400).json({ error: 'Invitation déjà utilisée' });
-    if (new Date(inv.expires_at) < new Date()) return res.status(400).json({ error: 'Invitation expirée' });
+    if (inv.accepted_at) return res.status(400).json({ error: 'Invitation dÃ©jÃ  utilisÃ©e' });
+    if (new Date(inv.expires_at) < new Date()) return res.status(400).json({ error: 'Invitation expirÃ©e' });
 
     const hash = await bcrypt.hash(password, 12);
     await query(
@@ -169,7 +169,7 @@ router.post('/setup-password', async (req, res) => {
     await query('UPDATE user_invitations SET accepted_at = NOW() WHERE id = $1', [inv.id]);
 
     auditLog(req, 'account_setup', 'user', null, { email: inv.email });
-    res.json({ message: 'Compte créé avec succès' });
+    res.json({ message: 'Compte crÃ©Ã© avec succÃ¨s' });
   } catch (err) {
     console.error('Setup password error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -177,7 +177,7 @@ router.post('/setup-password', async (req, res) => {
 });
 
 
-// ─── SIGNUP - Create new tenant + admin user ───
+// âââ SIGNUP - Create new tenant + admin user âââ
 router.post('/signup', [
   body('company').trim().notEmpty(),
   body('fullName').trim().notEmpty(),
@@ -209,29 +209,29 @@ router.post('/signup', [
   } catch (err) { console.error('Signup error:', err); res.status(500).json({ error: 'Erreur lors de la creation du compte.' }); }
 });
 
-// ─── Change password (1ère connexion — JWT requis) ───
+// âââ Change password (1Ã¨re connexion â JWT requis) âââ
 router.post('/change-password', authenticate, async (req, res) => {
   try {
     const { newPassword } = req.body;
-    if (!newPassword) return res.status(400).json({ error: 'Paramètres manquants' });
+    if (!newPassword) return res.status(400).json({ error: 'ParamÃ¨tres manquants' });
     const policy = validatePassword(newPassword);
     if (!policy.valid) return res.status(400).json({ error: policy.errors.join('. ') });
     const hash = await bcrypt.hash(newPassword, 12);
     await query('UPDATE users SET password_hash = $1, must_change_password = false WHERE id = $2', [hash, req.user.id]);
     auditLog(req, 'password_changed_first_login', 'user', req.user.id);
-    res.json({ message: 'Mot de passe mis à jour' });
+    res.json({ message: 'Mot de passe mis Ã  jour' });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
 
-// ─── Forgot password ───
+// âââ Forgot password âââ
 router.post('/forgot-password', [
   body('email').isEmail().normalizeEmail(),
 ], async (req, res) => {
   // Always return 200 to avoid email enumeration
-  res.json({ message: 'Si un compte existe, un email de réinitialisation a été envoyé.' });
+  res.json({ message: 'Si un compte existe, un email de rÃ©initialisation a Ã©tÃ© envoyÃ©.' });
 
   try {
     const errors = validationResult(req);
@@ -246,7 +246,7 @@ router.post('/forgot-password', [
     const token = crypto.randomBytes(48).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1h
 
-    // Invalider les anciens tokens non utilisés
+    // Invalider les anciens tokens non utilisÃ©s
     await query('UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = $1 AND used_at IS NULL', [user.id]);
 
     // Stocker le nouveau token
@@ -265,33 +265,33 @@ router.post('/forgot-password', [
             <span style="font-size:22px;font-weight:800;color:#0f172a;">Ref<span style="color:#059669;">Boost</span></span>
           </div>
         </div>
-        <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin:0 0 8px;">Réinitialisation de mot de passe</h2>
+        <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin:0 0 8px;">RÃ©initialisation de mot de passe</h2>
         <p style="color:#64748b;margin:0 0 24px;">Bonjour ${user.full_name},</p>
-        <p style="color:#334155;margin:0 0 24px;">Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.</p>
+        <p style="color:#334155;margin:0 0 24px;">Vous avez demandÃ© Ã  rÃ©initialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.</p>
         <div style="text-align:center;margin:32px 0;">
           <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:#059669;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
-            Réinitialiser mon mot de passe
+            RÃ©initialiser mon mot de passe
           </a>
         </div>
         <p style="color:#94a3b8;font-size:13px;margin:0 0 8px;">Ce lien expire dans <strong>1 heure</strong>.</p>
-        <p style="color:#94a3b8;font-size:13px;margin:0;">Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email — votre mot de passe restera inchangé.</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0;">Si vous n'avez pas demandÃ© cette rÃ©initialisation, ignorez simplement cet email â votre mot de passe restera inchangÃ©.</p>
         <hr style="border:none;border-top:1px solid #f1f5f9;margin:24px 0;"/>
-        <p style="color:#cbd5e1;font-size:12px;text-align:center;">RefBoost · notifications@refboost.io</p>
+        <p style="color:#cbd5e1;font-size:12px;text-align:center;">RefBoost Â· notifications@refboost.io</p>
       </div>
     `;
 
     await resend.sendEmail({
       to: email,
-      subject: 'Réinitialisation de votre mot de passe RefBoost',
+      subject: 'RÃ©initialisation de votre mot de passe RefBoost',
       html,
-      text: `Bonjour ${user.full_name}, cliquez sur ce lien pour réinitialiser votre mot de passe (valide 1h) : ${resetUrl}`,
+      text: `Bonjour ${user.full_name}, cliquez sur ce lien pour rÃ©initialiser votre mot de passe (valide 1h) : ${resetUrl}`,
     });
   } catch (err) {
     console.error('[forgot-password] error:', err.message);
   }
 });
 
-// ─── Reset password (via token email) ───
+// âââ Reset password (via token email) âââ
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -307,22 +307,113 @@ router.post('/reset-password', async (req, res) => {
       [token]
     );
 
-    if (rows.length === 0) return res.status(400).json({ error: 'Lien invalide ou expiré' });
+    if (rows.length === 0) return res.status(400).json({ error: 'Lien invalide ou expirÃ©' });
     const resetToken = rows[0];
 
-    if (resetToken.used_at) return res.status(400).json({ error: 'Ce lien a déjà été utilisé' });
-    if (new Date(resetToken.expires_at) < new Date()) return res.status(400).json({ error: 'Lien expiré — demandez un nouveau' });
+    if (resetToken.used_at) return res.status(400).json({ error: 'Ce lien a dÃ©jÃ  Ã©tÃ© utilisÃ©' });
+    if (new Date(resetToken.expires_at) < new Date()) return res.status(400).json({ error: 'Lien expirÃ© â demandez un nouveau' });
 
     const hash = await bcrypt.hash(password, 12);
     await query('UPDATE users SET password_hash = $1, password_changed_at = NOW(), must_change_password = false WHERE id = $2', [hash, resetToken.user_id]);
     await query('UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1', [resetToken.id]);
 
     auditLog({ ip: null, headers: {} }, 'password_reset', 'user', resetToken.user_id);
-    res.json({ message: 'Mot de passe mis à jour avec succès' });
+    res.json({ message: 'Mot de passe mis Ã  jour avec succÃ¨s' });
   } catch (err) {
     console.error('[reset-password] error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
+
+// ─── Phase B: Multi-role space switcher ─────────────────────────────
+// GET /api/auth/me/spaces
+// Returns all the (tenant, role, partner?) combinations the current user has access to.
+router.get('/me/spaces', authenticate, async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT
+         ur.id, ur.tenant_id, ur.role, ur.partner_id, ur.is_active,
+         t.name AS tenant_name,
+         p.name AS partner_name
+       FROM user_roles ur
+       LEFT JOIN tenants t ON t.id = ur.tenant_id
+       LEFT JOIN partners p ON p.id = ur.partner_id
+       WHERE ur.user_id = $1 AND ur.is_active = TRUE
+       ORDER BY ur.created_at ASC`,
+      [req.user.id]
+    );
+    res.json({ spaces: rows });
+  } catch (err) {
+    console.error('[GET /me/spaces] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/auth/switch-space
+// Body: { tenantId, role, partnerId? }
+// Validates the user really has this role in user_roles, then signs a new JWT
+router.post('/switch-space',
+  authenticate,
+  [
+    body('tenantId').isUUID(),
+    body('role').isIn(['admin', 'commercial', 'partner']),
+    body('partnerId').optional({ nullable: true }).isUUID()
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+      const { tenantId, role, partnerId } = req.body;
+
+      // Verify the user really has this role on this tenant
+      const { rows } = await query(
+        `SELECT id FROM user_roles
+         WHERE user_id = $1 AND tenant_id = $2 AND role = $3
+         AND ($4::uuid IS NULL OR partner_id = $4) AND is_active = TRUE
+         LIMIT 1`,
+        [req.user.id, tenantId, role, partnerId || null]
+      );
+      if (rows.length === 0) {
+        return res.status(403).json({ error: "Vous n'avez pas ce role sur cet espace" });
+      }
+
+      // Fetch fresh user info for the JWT
+      const userRes = await query('SELECT id, email, full_name FROM users WHERE id = $1', [req.user.id]);
+      const user = userRes.rows[0];
+      if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+
+      // Sign new JWT scoped to the chosen space
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          role,
+          partnerId: partnerId || null,
+          fullName: user.full_name,
+          tenantId
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          role,
+          partner_id: partnerId || null,
+          tenant_id: tenantId
+        }
+      });
+    } catch (err) {
+      console.error('[POST /switch-space] error:', err);
+      res.status(500).json({ error: 'Erreur serveur' });
+    }
+  }
+);
 
 module.exports = router;
