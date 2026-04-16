@@ -1,9 +1,12 @@
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { loadThemeBySlug } from '../lib/theme';
 import { Send, CheckCircle, Building, User, Mail, Phone, Globe, Users, FileText } from 'lucide-react';
 
 export default function PublicApplyPage() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const [tenant, setTenant] = useState(null);
 
@@ -51,12 +54,12 @@ export default function PublicApplyPage() {
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
             <CheckCircle size={36} color="#fff" />
           </div>
-          <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Candidature envoyée !</h2>
+          <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginBottom: 12 }}>{t("publicApply.sent_title")} !</h2>
           <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.7, marginBottom: 32 }}>
             Merci pour votre intérêt. Notre équipe va examiner votre candidature et vous recevrez un email de confirmation dans les 48 heures.
           </p>
           <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
-            Déjà partenaire ? Se connecter
+            {t("publicApply.already")} ? {t("publicApply.login_link")}
           </a>
         </div>
       </Page>
@@ -76,8 +79,8 @@ export default function PublicApplyPage() {
               )}
               <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>{tenant?.name || 'Skipcall'}</span>
             </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>Devenir partenaire</h1>
-          <p style={{ color: '#94a3b8', fontSize: 15 }}>Rejoignez notre programme et générez des revenus récurrents</p>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{t("publicApply.title")}</h1>
+          <p style={{ color: '#94a3b8', fontSize: 15 }}>{t("publicApply.subtitle")}</p>
         </div>
 
         {/* Progress */}
@@ -94,24 +97,24 @@ export default function PublicApplyPage() {
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}>
           {step === 1 && (
             <div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>Vos informations</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>{t("publicApply.step1")}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <Field icon={Building} label="Nom de la société *" value={form.company_name} onChange={set('company_name')} placeholder="Ex: TechConseil SAS" />
-                <Field icon={User} label="Votre nom *" value={form.contact_name} onChange={set('contact_name')} placeholder="Prénom Nom" />
+                <Field icon={Building} label="{t("publicApply.field_company")} *" value={form.company_name} onChange={set('company_name')} placeholder="{t("publicApply.company_ph")}" />
+                <Field icon={User} label="{t("publicApply.field_contact")} *" value={form.contact_name} onChange={set('contact_name')} placeholder="{t("publicApply.name_ph")}" />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <Field icon={Mail} label="Email *" value={form.email} onChange={set('email')} placeholder="vous@entreprise.com" type="email" />
-                  <Field icon={Phone} label="Téléphone" value={form.phone} onChange={set('phone')} placeholder="+33 6 ..." />
+                  <Field icon={Mail} label="Email *" value={form.email} onChange={set('email')} placeholder="{t("publicApply.email_ph")}" type="email" />
+                  <Field icon={Phone} label="{t("publicApply.phone")}" value={form.phone} onChange={set('phone')} placeholder="+33 6 ..." />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <Field icon={Globe} label="Site web" value={form.company_website} onChange={set('company_website')} placeholder="https://..." />
+                  <Field icon={Globe} label="{t("publicApply.field_website")}" value={form.company_website} onChange={set('company_website')} placeholder="https://..." />
                   <div>
-                    <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Taille de l'entreprise</label>
+                    <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.size")}</label>
                     <select value={form.company_size} onChange={set('company_size')} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box', appearance: 'none' }}>
-                      <option value="" style={{ background: '#1e293b' }}>Sélectionner</option>
-                      <option value="1-10" style={{ background: '#1e293b' }}>1-10 employés</option>
+                      <option value="" style={{ background: '#1e293b' }}>{t("publicApply.size_ph")}</option>
+                      <option value="1-10" style={{ background: '#1e293b' }}>t("publicApply.size_1_10")</option>
                       <option value="11-50" style={{ background: '#1e293b' }}>11-50 employés</option>
                       <option value="51-200" style={{ background: '#1e293b' }}>51-200 employés</option>
-                      <option value="200+" style={{ background: '#1e293b' }}>200+ employés</option>
+                      <option value="200+" style={{ background: '#1e293b' }}>t("publicApply.size_200plus")</option>
                     </select>
                   </div>
                 </div>
@@ -121,7 +124,7 @@ export default function PublicApplyPage() {
                 background: canSubmit ? 'var(--rb-primary, #059669)' : 'rgba(255,255,255,0.06)',
                 color: canSubmit ? '#fff' : '#64748b', border: 'none', fontWeight: 600, fontSize: 15,
                 cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 15px rgba(5,150,105,0.3)' : 'none',
-              }}>Continuer</button>
+              }}>{t("publicApply.continue")}</button>
             </div>
           )}
 
@@ -129,7 +132,7 @@ export default function PublicApplyPage() {
             <div>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>Pourquoi devenir partenaire ?</h2>
               <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Parlez-nous de votre activité et de votre motivation</label>
+                <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.motivation")}</label>
                 <textarea value={form.motivation} onChange={set('motivation')} rows={5}
                   placeholder="Décrivez votre activité, votre réseau de clients, et ce qui vous motive à rejoindre notre programme partenaires..."
                   style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, resize: 'vertical', fontFamily: 'inherit', color: '#fff', boxSizing: 'border-box' }} />
@@ -142,12 +145,12 @@ export default function PublicApplyPage() {
                   <RecapRow label="Société" value={form.company_name} />
                   <RecapRow label="Contact" value={form.contact_name} />
                   <RecapRow label="Email" value={form.email} />
-                  <RecapRow label="Téléphone" value={form.phone || '—'} />
+                  <RecapRow label="{t("publicApply.phone")}" value={form.phone || '—'} />
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Retour</button>
+                <button onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>{t("publicApply.sent_back")}</button>
                 <button onClick={handleSubmit} disabled={saving} style={{
                   flex: 2, padding: '14px', borderRadius: 12,
                   background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff',
@@ -155,7 +158,7 @@ export default function PublicApplyPage() {
                   boxShadow: '0 4px 15px rgba(34,197,94,0.3)', opacity: saving ? 0.7 : 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}>
-                  <Send size={16} /> {saving ? 'Envoi...' : 'Envoyer ma candidature'}
+                  <Send size={16} /> {saving ? 'Envoi...' : '{t("publicApply.submit")}'}
                 </button>
               </div>
             </div>
@@ -164,7 +167,7 @@ export default function PublicApplyPage() {
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           <a href="/login" style={{ color: '#64748b', fontSize: 14, textDecoration: 'none' }}>
-            Déjà partenaire ? <span style={{ color: '#818cf8' }}>Se connecter</span>
+            {t("publicApply.already")} ? <span style={{ color: '#818cf8' }}>{t("publicApply.login_link")}</span>
           </a>
         </div>
       </div>
