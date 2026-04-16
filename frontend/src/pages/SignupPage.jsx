@@ -5,6 +5,7 @@ const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
 
 export default function SignupPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [showPwd, setShowPwd] = useState(false);
@@ -82,7 +83,7 @@ export default function SignupPage() {
         {/* Step 1: Company + Name */}
         {step === 1 && (
           <>
-            <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>Créez votre espace</h2>
+            <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.title")}</h2>
             <p style={{ color:C.m,fontSize:14,margin:'0 0 28px',fontFamily:"'DM Sans',sans-serif" }}>Votre programme d'apporteurs d'affaires en 2 minutes.</p>
 
             <div style={{ marginBottom:20 }}>
@@ -90,17 +91,17 @@ export default function SignupPage() {
               <input value={form.company} onChange={e=>set('company',e.target.value)} placeholder="Ex: Acme SAS" style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
             <div style={{ marginBottom:20 }}>
-              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>Votre nom complet *</label>
-              <input value={form.fullName} onChange={e=>set('fullName',e.target.value)} placeholder="Prénom Nom" style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.fullname")} *</label>
+              <input value={form.fullName} onChange={e=>set('fullName',e.target.value)} placeholder={t("signup.fullname_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
             <div style={{ marginBottom:28 }}>
-              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>Téléphone (optionnel)</label>
-              <input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder="+33 6 12 34 56 78" style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.phone")}</label>
+              <input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder={t("signup.phone_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
 
             <button onClick={()=>{ if(form.company && form.fullName) setStep(2); else setError('Veuillez remplir les champs obligatoires.'); }}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
-              Continuer →
+              {t("signup.next")}
             </button>
           </>
         )}
@@ -108,18 +109,18 @@ export default function SignupPage() {
         {/* Step 2: Email + Password */}
         {step === 2 && (
           <>
-            <button onClick={()=>setStep(1)} style={{ background:'none',border:'none',color:C.m,cursor:'pointer',fontSize:13,marginBottom:12,padding:0 }}>← Retour</button>
-            <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>Vos identifiants</h2>
+            <button onClick={()=>setStep(1)} style={{ background:'none',border:'none',color:C.m,cursor:'pointer',fontSize:13,marginBottom:12,padding:0 }}>{t("signup.back")}</button>
+            <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.credentials")}</h2>
             <p style={{ color:C.m,fontSize:14,margin:'0 0 28px',fontFamily:"'DM Sans',sans-serif" }}>Vous serez l'administrateur de l'espace <strong>{form.company}</strong>.</p>
 
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>Email professionnel *</label>
-              <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder="vous@entreprise.com" style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder={t("signup.email_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
             <div style={{ marginBottom:8 }}>
-              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>Mot de passe *</label>
+              <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.password")} *</label>
               <div style={{ position: 'relative' }}>
-              <input type={showPwd ? "text" : "password"} value={form.password} onChange={e=>set('password',e.target.value)} placeholder="Min. 10 caractères" style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <input type={showPwd ? "text" : "password"} value={form.password} onChange={e=>set('password',e.target.value)} placeholder={t("signup.password_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
               <button type="button" onClick={() => setShowPwd(v => !v)} tabIndex={-1} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex', alignItems: 'center' }}>
                 {showPwd
                   ? <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -130,11 +131,11 @@ export default function SignupPage() {
             </div>
             <div style={{ marginBottom:28,display:'flex',flexWrap:'wrap',gap:6 }}>
               {[
-                [form.password.length>=10, '10+ car.'],
-                [/[A-Z]/.test(form.password), 'Majuscule'],
-                [/[a-z]/.test(form.password), 'Minuscule'],
-                [/[0-9]/.test(form.password), 'Chiffre'],
-                [/[^A-Za-z0-9]/.test(form.password), 'Spécial'],
+                [form.password.length>=10, '{t("signup.pwd_chars")}'],
+                [/[A-Z]/.test(form.password), '{t("signup.pwd_upper")}'],
+                [/[a-z]/.test(form.password), '{t("signup.pwd_lower")}'],
+                [/[0-9]/.test(form.password), '{t("signup.pwd_digit")}'],
+                [/[^A-Za-z0-9]/.test(form.password), '{t("signup.pwd_special")}'],
               ].map(([ok,label],i)=>(
                 <span key={i} style={{ fontSize:11,padding:'3px 8px',borderRadius:6,background:ok?`${C.p}15`:'#f1f5f9',color:ok?C.p:'#94a3b8',fontWeight:600 }}>{ok?'✓':'○'} {label}</span>
               ))}
@@ -145,11 +146,11 @@ export default function SignupPage() {
             <button onClick={()=>{ if(!form.email||!passwordOk) setError('Email et mot de passe requis (10 car., maj, min, chiffre, spécial).'); else handleSubmit(); }}
               disabled={loading}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#94a3b8':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
-              {loading ? 'Création en cours...' : 'Créer mon espace'}
+              {loading ? 'Création en cours...' : '{t("signup.create")}'}
             </button>
 
             <p style={{ color:'#94a3b8',fontSize:11,textAlign:'center',marginTop:16,fontFamily:"'DM Sans',sans-serif" }}>
-              En créant un compte, vous acceptez nos <a href="#" style={{ color:C.p }}>CGV</a> et notre <a href="#" style={{ color:C.p }}>politique de confidentialité</a>.
+              {t("signup.terms")} <a href="#" style={{ color:C.p }}>CGV</a> {t("signup.terms_and")} <a href="#" style={{ color:C.p }}>{t("signup.terms_privacy")}</a>.
             </p>
           </>
         )}
@@ -158,13 +159,13 @@ export default function SignupPage() {
         {step === 3 && (
           <div style={{ textAlign:'center' }}>
             <div style={{ width:72,height:72,borderRadius:20,background:`${C.p}10`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}>🎉</div>
-            <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>Bienvenue sur RefBoost !</h2>
+            <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.success_title")}</h2>
             <p style={{ color:C.m,fontSize:14,margin:'0 0 32px',fontFamily:"'DM Sans',sans-serif" }}>
               Votre espace <strong>{form.company}</strong> est prêt.<br/>Vous êtes l'administrateur.
             </p>
             <button onClick={()=>{ window.location.href = '/dashboard'; }}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
-              Accéder à mon tableau de bord →
+              {t("signup.success_cta")}
             </button>
           </div>
         )}
@@ -173,7 +174,7 @@ export default function SignupPage() {
       {/* Login link */}
       {step < 3 && (
         <p style={{ marginTop:24,color:C.m,fontSize:14 }}>
-          Déjà un compte ? <a onClick={()=>navigate('/login')} style={{ color:C.p,fontWeight:600,cursor:'pointer',textDecoration:'none' }}>Se connecter</a>
+          {t("signup.have_account")} <a onClick={()=>navigate('/login')} style={{ color:C.p,fontWeight:600,cursor:'pointer',textDecoration:'none' }}>{t("signup.login_link")}</a>
         </p>
       )}
     </div>

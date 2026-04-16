@@ -156,9 +156,7 @@ export default function MarketplacePage() {
           <nav aria-label="Secteurs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 960, margin: '0 auto', alignItems: 'center' }}>
             <button
               onClick={() => setActiveSector('')}
-              style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (!activeSector ? C.p : '#e2e8f0'), background: !activeSector ? C.p : '#fff', color: !activeSector ? '#fff' : C.m, transition: 'all .2s' }}>
-              Tous
-            </button>
+              style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (!activeSector ? C.p : '#e2e8f0'), background: !activeSector ? C.p : '#fff', color: !activeSector ? '#fff' : C.m, transition: 'all .2s' }}>{t("marketplace.all")}</button>
             {allSectors.map(s => (
               <button key={s} onClick={() => setActiveSector(activeSector === s ? '' : s)}
                 style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (activeSector === s ? C.p : '#e2e8f0'), background: activeSector === s ? C.p : '#fff', color: activeSector === s ? '#fff' : C.m, transition: 'all .2s' }}>
@@ -167,7 +165,7 @@ export default function MarketplacePage() {
             ))}
             {(activeSector || search) && (
               <button onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, padding: '7px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid #fecaca', background: '#fef2f2', color: '#dc2626' }}>
-                <X size={12} /> Réinitialiser
+                <X size={12} /> {t("marketplace.reset")}
               </button>
             )}
           </nav>
@@ -225,7 +223,7 @@ export default function MarketplacePage() {
               {t("marketplace.add_program_sub")}
             </p>
             <a href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg,' + C.p + ',' + C.pl + ')', color: '#fff', padding: '14px 28px', borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: 'none', boxShadow: '0 8px 30px ' + C.p + '50' }}>
-              Creer mon espace gratuitement
+              {t("marketplace.add_program_cta")}
             </a>
           </div>
         </div>
