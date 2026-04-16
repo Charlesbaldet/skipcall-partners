@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Aantal deals (commissie per deal)",
     "logo_ph": "https://voorbeeld.nl/logo.png",
     "logo_hint": "Plak de URL van een gehost afbeelding. Aanbevolen formaat: transparante PNG, hoogte ~80px.",
-    "confirm_remove_member": "Dit lid verwijderen?"
+    "confirm_remove_member": "Dit lid verwijderen?",
+    "no_super_admin": "Geen super-administrator",
+    "member_created": "Lid aangemaakt!",
+    "full_name": "Naam",
+    "email": "E-mail",
+    "role_member": "Lid",
+    "api_key_name": "Naam",
+    "copy_this_key_now": "Kopieer deze sleutel nu"
   },
   "status": {
     "new": "Nieuw",
@@ -1312,7 +1319,30 @@
     "sector": "Sector *",
     "icp": "Hoofd-ICP",
     "short_description": "Korte beschrijving *",
-    "marketplace_visible": "Tonen in marketplace"
+    "marketplace_visible": "Tonen in marketplace",
+    "createPartner_desc_long": "Voeg een partner (zakelijke verwijzer) toe. Hij krijgt toegang tot zijn eigen ruimte om leads in te dienen.",
+    "customize_desc_long": "Pas de kleuren aan jouw merk aan (optioneel — je kunt dit later wijzigen in Instellingen).",
+    "customize_company_placeholder": "Jouw bedrijf",
+    "customize_revenue_label": "Omzetmodel",
+    "marketplace_desc_long": "Vul je gegevens in om op de marketplace te verschijnen. Op elk moment aan te passen in Instellingen.",
+    "marketplace_choose": "-- Kiezen --",
+    "marketplace_website_placeholder": "https://jouw-site.nl",
+    "marketplace_icp_placeholder": "Bijv. mkb, B2B-startups…",
+    "marketplace_description_placeholder": "Beschrijf je dienst in 2-3 zinnen…",
+    "marketplace_active": "Actief",
+    "marketplace_inactive": "Inactief",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Advies & Diensten",
+    "sector_finance_fintech": "Financiën & Fintech",
+    "sector_rh_recrutement": "HR & Werving",
+    "sector_marketing_communication": "Marketing & Communicatie",
+    "sector_immobilier": "Vastgoed",
+    "sector_commerce": "Handel",
+    "sector_formation": "Opleiding",
+    "sector_juridique": "Juridisch",
+    "sector_industrie": "Industrie",
+    "sector_autre": "Anders",
+    "revenue_other": "Anders"
   },
   "blog": {
     "subtitle": "Tips, strategieën & bronnen",
@@ -1327,6 +1357,12 @@
     "read_time": "min lezen",
     "page_subtitle": "Alles wat u moet weten over B2B-affiliateprogramma's, partnerprogramma's en groei.",
     "filter_all": "Alle",
-    "read_article": "Artikel lezen →"
+    "read_article": "Artikel lezen →",
+    "min_read": "min leestijd",
+    "all_categories": "Alle",
+    "no_articles": "Nog geen artikelen.",
+    "come_back_soon": "Kom snel terug!",
+    "categories": "Categorieën",
+    "back_to_blog": "Terug naar blog"
   }
 }

@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Nombre de deals (commission par deal)",
     "logo_ph": "https://exemple.com/logo.png",
     "logo_hint": "Colle l’URL d’une image hébergée. Format recommandé : PNG transparent, hauteur ~80px.",
-    "confirm_remove_member": "Supprimer ce membre ?"
+    "confirm_remove_member": "Supprimer ce membre ?",
+    "no_super_admin": "Aucun super administrateur",
+    "member_created": "Membre créé !",
+    "full_name": "Nom",
+    "email": "Email",
+    "role_member": "Membre",
+    "api_key_name": "Nom",
+    "copy_this_key_now": "Copiez cette clé maintenant"
   },
   "status": {
     "new": "Nouveau",
@@ -1312,7 +1319,30 @@
     "sector": "Secteur *",
     "icp": "ICP principal",
     "short_description": "Description courte *",
-    "marketplace_visible": "Apparaître sur la marketplace"
+    "marketplace_visible": "Apparaître sur la marketplace",
+    "createPartner_desc_long": "Ajoute un partenaire (apporteur d'affaires). Il aura accès à son propre espace pour soumettre des leads.",
+    "customize_desc_long": "Adapte les couleurs à ta marque (optionnel — tu pourras changer plus tard dans Paramètres).",
+    "customize_company_placeholder": "Ton entreprise",
+    "customize_revenue_label": "Modèle de revenus",
+    "marketplace_desc_long": "Renseignez vos informations pour apparaître sur la marketplace. Modifiable à tout moment dans les Paramètres.",
+    "marketplace_choose": "-- Choisir --",
+    "marketplace_website_placeholder": "https://votre-site.com",
+    "marketplace_icp_placeholder": "Ex : PME, startups B2B…",
+    "marketplace_description_placeholder": "Décrivez votre service en 2-3 phrases…",
+    "marketplace_active": "Actif",
+    "marketplace_inactive": "Inactif",
+    "sector_saas_logiciel": "SaaS / Logiciel",
+    "sector_conseil_services": "Conseil & Services",
+    "sector_finance_fintech": "Finance & Fintech",
+    "sector_rh_recrutement": "RH & Recrutement",
+    "sector_marketing_communication": "Marketing & Communication",
+    "sector_immobilier": "Immobilier",
+    "sector_commerce": "Commerce",
+    "sector_formation": "Formation",
+    "sector_juridique": "Juridique",
+    "sector_industrie": "Industrie",
+    "sector_autre": "Autre",
+    "revenue_other": "Autre"
   },
   "blog": {
     "subtitle": "Conseils & Ressources",
@@ -1327,6 +1357,12 @@
     "read_time": "min de lecture",
     "page_subtitle": "Tout ce qu'il faut savoir sur l'affiliation B2B, les programmes partenaires et la croissance.",
     "filter_all": "Tous",
-    "read_article": "Lire l'article →"
+    "read_article": "Lire l'article →",
+    "min_read": "min de lecture",
+    "all_categories": "Tous",
+    "no_articles": "Aucun article pour le moment.",
+    "come_back_soon": "Revenez bientôt !",
+    "categories": "Catégories",
+    "back_to_blog": "Retour au blog"
   }
 }

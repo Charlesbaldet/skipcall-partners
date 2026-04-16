@@ -4,41 +4,78 @@ import api from '../lib/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(api.getUser());
+  const [user, setUser] = useState(() => api.getUser());
   const [loading, setLoading] = useState(true);
+  const [spaces, setSpaces] = useState([]);
 
-  useEffect(() => {
-    const token = localStorage.getItem('skipcall_token');
-    if (token) {
-      api.getMe()
-        .then(data => { setUser(data.user); api.setUser(data.user); })
-        .catch(() => { setUser(null); api.logout(); })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+  const refreshSpaces = useCallback(async () => {
+    try {
+      const data = await api.getMySpaces();
+      setSpaces(data.spaces || []);
+    } catch {
+      setSpaces([]);
     }
   }, []);
 
-  const login = useCallback(async (email, password) => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api.getMe();
+        setUser(data.user);
+        await refreshSpaces();
+      } catch {
+        setUser(null);
+        setSpaces([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [refreshSpaces]);
+
+  const login = async (email, password) => {
     const data = await api.login(email, password);
     setUser(data.user);
-    return data.user;
-  }, []);
+    await refreshSpaces();
+    return data;
+  };
 
-  const logout = useCallback(() => {
-    api.logout();
+  const logout = async () => {
+    await api.logout();
     setUser(null);
-  }, []);
+    setSpaces([]);
+  };
+
+  const switchSpace = async (space) => {
+    const data = await api.switchSpace({
+      tenantId: space.tenant_id,
+      role: space.role,
+      partnerId: space.partner_id || null,
+    });
+    // Persist new JWT and user so subsequent requests use the new role
+    if (data.token) api.setToken(data.token);
+    if (data.user) api.setUser(data.user);
+    setUser(data.user);
+    return data;
+  };
+
+  const currentSpace = user
+    ? spaces.find(
+        (s) =>
+          s.tenant_id === user.tenant_id &&
+          s.role === user.role &&
+          (s.partner_id || null) === (user.partner_id || null)
+      ) || null
+    : null;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, loading, spaces, currentSpace, login, logout, switchSpace, refreshSpaces }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+  return useContext(AuthContext);
 }

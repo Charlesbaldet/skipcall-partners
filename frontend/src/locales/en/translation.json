@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Number of deals (commission per deal)",
     "logo_ph": "https://example.com/logo.png",
     "logo_hint": "Paste the URL of a hosted image. Recommended format: transparent PNG, height ~80px.",
-    "confirm_remove_member": "Remove this member?"
+    "confirm_remove_member": "Remove this member?",
+    "no_super_admin": "No super administrator",
+    "member_created": "Member created!",
+    "full_name": "Name",
+    "email": "Email",
+    "role_member": "Member",
+    "api_key_name": "Name",
+    "copy_this_key_now": "Copy this key now"
   },
   "status": {
     "new": "New",
@@ -1312,7 +1319,30 @@
     "sector": "Sector *",
     "icp": "Main ICP",
     "short_description": "Short description *",
-    "marketplace_visible": "Show on marketplace"
+    "marketplace_visible": "Show on marketplace",
+    "createPartner_desc_long": "Add a partner (business referrer). They'll get access to their own space to submit leads.",
+    "customize_desc_long": "Customize your brand colors (optional — you can change this later in Settings).",
+    "customize_company_placeholder": "Your company",
+    "customize_revenue_label": "Revenue model",
+    "marketplace_desc_long": "Fill in your information to appear on the marketplace. You can edit this anytime in Settings.",
+    "marketplace_choose": "-- Choose --",
+    "marketplace_website_placeholder": "https://your-site.com",
+    "marketplace_icp_placeholder": "E.g. SMBs, B2B startups…",
+    "marketplace_description_placeholder": "Describe your service in 2-3 sentences…",
+    "marketplace_active": "Active",
+    "marketplace_inactive": "Inactive",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Consulting & Services",
+    "sector_finance_fintech": "Finance & Fintech",
+    "sector_rh_recrutement": "HR & Recruitment",
+    "sector_marketing_communication": "Marketing & Communication",
+    "sector_immobilier": "Real Estate",
+    "sector_commerce": "Commerce",
+    "sector_formation": "Training",
+    "sector_juridique": "Legal",
+    "sector_industrie": "Industry",
+    "sector_autre": "Other",
+    "revenue_other": "Other"
   },
   "blog": {
     "subtitle": "Tips, strategies and insights",
@@ -1327,6 +1357,12 @@
     "read_time": "min read",
     "page_subtitle": "Everything you need to know about B2B affiliate programs, partner programs and growth.",
     "filter_all": "All",
-    "read_article": "Read article →"
+    "read_article": "Read article →",
+    "min_read": "min read",
+    "all_categories": "All",
+    "no_articles": "No articles yet.",
+    "come_back_soon": "Come back soon!",
+    "categories": "Categories",
+    "back_to_blog": "Back to blog"
   }
 }

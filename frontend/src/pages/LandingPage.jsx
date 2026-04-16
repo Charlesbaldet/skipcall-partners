@@ -1,4 +1,14 @@
 import { useState, useEffect } from 'react';
+
+function useMobile() {
+  const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const h = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', h, { passive: true });
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return mobile;
+}
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -76,6 +86,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const mobile = useMobile();
   const [email, setEmail] = useState('');
+  const mobile = useMobile();
   const [scrollY, setScrollY] = useState(0);
   const [featOpen, setFeatOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

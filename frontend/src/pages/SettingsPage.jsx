@@ -290,9 +290,9 @@ function SuperAdminsTab() {
       <div>
         <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>Liste ({superadmins.length})</h3>
         {loading ? (
-          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>
+          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>{t('common.loading')}</div>
         ) : superadmins.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0' }}>Aucun super administrateur</div>
+          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0' }}>{t('settings.no_super_admin')}</div>
         ) : (
           <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             {superadmins.map((sa, idx) => (
@@ -364,7 +364,7 @@ function MembersTab() {
           {inviteResult ? (
             <div style={{ textAlign: 'center' }}>
               <CheckCircle size={32} color="#16a34a" style={{ marginBottom: 10 }} />
-              <h4 style={{ fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>Membre créé !</h4>
+              <h4 style={{ fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>{t('settings.member_created')}</h4>
               <div style={{ background: '#fff', borderRadius: 10, padding: 16, display: 'inline-block', textAlign: 'left', border: '1px solid #e2e8f0' }}>
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>Email</span><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{inviteResult.email}</div></div>
                 <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>{t('settings.temp_password')}</span>
@@ -379,8 +379,8 @@ function MembersTab() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Nom *</label><input value={inviteForm.full_name} onChange={e => setInviteForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Prénom Nom" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
-                <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Email *</label><input value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder="email@skipcall.com" type="email" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
+                <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.full_name')} *</label><input value={inviteForm.full_name} onChange={e => setInviteForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Prénom Nom" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
+                <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.email')} *</label><input value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder="email@skipcall.com" type="email" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
               </div>
               <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.role')} *</label>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -423,7 +423,7 @@ function MembersTab() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <select value={u.role} onChange={e => api.updateAdminUser(u.id, { role: e.target.value }).then(load)} style={{ padding: '3px 6px', borderRadius: 6, border: `1px solid ${role.color}30`, background: role.bg, color: role.color, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
-                  <option value="admin">Admin</option><option value="commercial">Membre</option>
+                  <option value="admin">{t('settings.role_admin')}</option><option value="commercial">{t('settings.role_member')}</option>
                 </select>
                 {u.role !== 'admin' && (<button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
                   {u.is_active ? <ToggleRight size={24} color="#16a34a" /> : <ToggleLeft size={24} color="#dc2626" />}
@@ -495,7 +495,7 @@ function IntegrationsTab() {
 
       {newKey && (
         <div style={{ background: '#fffbeb', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #fde68a' }} className="fade-in">
-          <div style={{ fontWeight: 700, color: '#92400e', fontSize: 13, marginBottom: 8 }}>Copiez cette clé maintenant</div>
+          <div style={{ fontWeight: 700, color: '#92400e', fontSize: 13, marginBottom: 8 }}>{t('settings.copy_this_key_now')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <code style={{ background: '#fff', padding: '8px 12px', borderRadius: 8, color: '#0f172a', fontWeight: 600, fontSize: 14, fontFamily: 'monospace', flex: 1, wordBreak: 'break-all' }}>{newKey}</code>
             <button onClick={() => copyToClipboard(newKey)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 8, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>{copied ? <CheckCircle size={16} color="#16a34a" /> : <Copy size={16} color="#6366f1" />}</button>
@@ -506,7 +506,7 @@ function IntegrationsTab() {
       {showCreate ? (
         <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>Nom *</label><input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder={t('settings.integrations_zapier_ph')} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
+            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.api_key_name')} *</label><input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder={t('settings.integrations_zapier_ph')} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
             <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.role_partner')} ({t('common.optional')})</label><select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }}><option value="">Aucun</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -904,4 +904,4 @@ function ProgramTab() {
       </div>
     </div>
   );
-}
+        }

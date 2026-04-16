@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Anzahl der Deals (Provision pro Deal)",
     "logo_ph": "https://beispiel.de/logo.png",
     "logo_hint": "Füge die URL eines gehosteten Bildes ein. Empfohlenes Format: transparentes PNG, Höhe ~80px.",
-    "confirm_remove_member": "Dieses Mitglied entfernen?"
+    "confirm_remove_member": "Dieses Mitglied entfernen?",
+    "no_super_admin": "Kein Super-Administrator",
+    "member_created": "Mitglied erstellt!",
+    "full_name": "Name",
+    "email": "E-Mail",
+    "role_member": "Mitglied",
+    "api_key_name": "Name",
+    "copy_this_key_now": "Diesen Schlüssel jetzt kopieren"
   },
   "status": {
     "new": "Neu",
@@ -1312,7 +1319,30 @@
     "sector": "Branche *",
     "icp": "Haupt-ICP",
     "short_description": "Kurzbeschreibung *",
-    "marketplace_visible": "Im Marketplace anzeigen"
+    "marketplace_visible": "Im Marketplace anzeigen",
+    "createPartner_desc_long": "Füge einen Partner (Geschäftsvermittler) hinzu. Er erhält Zugang zu seinem eigenen Bereich, um Leads einzureichen.",
+    "customize_desc_long": "Passe die Farben an deine Marke an (optional — du kannst dies später in den Einstellungen ändern).",
+    "customize_company_placeholder": "Dein Unternehmen",
+    "customize_revenue_label": "Umsatzmodell",
+    "marketplace_desc_long": "Trage deine Informationen ein, um auf dem Marktplatz zu erscheinen. Jederzeit in den Einstellungen änderbar.",
+    "marketplace_choose": "-- Auswählen --",
+    "marketplace_website_placeholder": "https://deine-website.de",
+    "marketplace_icp_placeholder": "Z. B. KMU, B2B-Startups…",
+    "marketplace_description_placeholder": "Beschreibe deinen Service in 2-3 Sätzen…",
+    "marketplace_active": "Aktiv",
+    "marketplace_inactive": "Inaktiv",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Beratung & Dienstleistungen",
+    "sector_finance_fintech": "Finanzen & Fintech",
+    "sector_rh_recrutement": "HR & Rekrutierung",
+    "sector_marketing_communication": "Marketing & Kommunikation",
+    "sector_immobilier": "Immobilien",
+    "sector_commerce": "Handel",
+    "sector_formation": "Bildung",
+    "sector_juridique": "Recht",
+    "sector_industrie": "Industrie",
+    "sector_autre": "Sonstige",
+    "revenue_other": "Sonstige"
   },
   "blog": {
     "subtitle": "Tipps, Strategien & Ressourcen",
@@ -1327,6 +1357,12 @@
     "read_time": "Min. Lesezeit",
     "page_subtitle": "Alles, was Sie über B2B-Affiliate-Programme, Partnerprogramme und Wachstum wissen müssen.",
     "filter_all": "Alle",
-    "read_article": "Artikel lesen →"
+    "read_article": "Artikel lesen →",
+    "min_read": "Min. Lesezeit",
+    "all_categories": "Alle",
+    "no_articles": "Noch keine Artikel.",
+    "come_back_soon": "Schauen Sie bald wieder vorbei!",
+    "categories": "Kategorien",
+    "back_to_blog": "Zurück zum Blog"
   }
 }

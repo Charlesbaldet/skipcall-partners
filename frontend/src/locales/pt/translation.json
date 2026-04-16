@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Número de negócios (comissão por negócio)",
     "logo_ph": "https://exemplo.com/logo.png",
     "logo_hint": "Cole o URL de uma imagem alojada. Formato recomendado: PNG transparente, altura ~80px.",
-    "confirm_remove_member": "Remover este membro?"
+    "confirm_remove_member": "Remover este membro?",
+    "no_super_admin": "Nenhum super administrador",
+    "member_created": "Membro criado!",
+    "full_name": "Nome",
+    "email": "Email",
+    "role_member": "Membro",
+    "api_key_name": "Nome",
+    "copy_this_key_now": "Copie esta chave agora"
   },
   "status": {
     "new": "Novo",
@@ -1312,7 +1319,30 @@
     "sector": "Setor *",
     "icp": "ICP principal",
     "short_description": "Descrição breve *",
-    "marketplace_visible": "Exibir no marketplace"
+    "marketplace_visible": "Exibir no marketplace",
+    "createPartner_desc_long": "Adicione um parceiro (referenciador de negócios). Terá acesso ao seu próprio espaço para enviar leads.",
+    "customize_desc_long": "Adapte as cores à sua marca (opcional — pode alterar mais tarde nas Configurações).",
+    "customize_company_placeholder": "Sua empresa",
+    "customize_revenue_label": "Modelo de receita",
+    "marketplace_desc_long": "Preencha as suas informações para aparecer no marketplace. Editável a qualquer momento nas Configurações.",
+    "marketplace_choose": "-- Escolher --",
+    "marketplace_website_placeholder": "https://seu-site.com",
+    "marketplace_icp_placeholder": "Ex.: PMEs, startups B2B…",
+    "marketplace_description_placeholder": "Descreva o seu serviço em 2-3 frases…",
+    "marketplace_active": "Ativo",
+    "marketplace_inactive": "Inativo",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Consultoria & Serviços",
+    "sector_finance_fintech": "Finanças & Fintech",
+    "sector_rh_recrutement": "RH & Recrutamento",
+    "sector_marketing_communication": "Marketing & Comunicação",
+    "sector_immobilier": "Imobiliário",
+    "sector_commerce": "Comércio",
+    "sector_formation": "Formação",
+    "sector_juridique": "Jurídico",
+    "sector_industrie": "Indústria",
+    "sector_autre": "Outro",
+    "revenue_other": "Outro"
   },
   "blog": {
     "subtitle": "Dicas, estratégias e recursos",
@@ -1327,6 +1357,12 @@
     "read_time": "min de leitura",
     "page_subtitle": "Tudo o que você precisa saber sobre programas de afiliados B2B, programas de parceiros e crescimento.",
     "filter_all": "Todos",
-    "read_article": "Ler artigo →"
+    "read_article": "Ler artigo →",
+    "min_read": "min de leitura",
+    "all_categories": "Todos",
+    "no_articles": "Nenhum artigo ainda.",
+    "come_back_soon": "Volte em breve!",
+    "categories": "Categorias",
+    "back_to_blog": "Voltar ao blog"
   }
 }

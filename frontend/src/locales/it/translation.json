@@ -1246,7 +1246,14 @@
     "revenue_deals_opt": "Numero di deal (commissione per deal)",
     "logo_ph": "https://esempio.com/logo.png",
     "logo_hint": "Incolla l'URL di un'immagine ospitata. Formato consigliato: PNG trasparente, altezza ~80px.",
-    "confirm_remove_member": "Rimuovere questo membro?"
+    "confirm_remove_member": "Rimuovere questo membro?",
+    "no_super_admin": "Nessun super amministratore",
+    "member_created": "Membro creato!",
+    "full_name": "Nome",
+    "email": "Email",
+    "role_member": "Membro",
+    "api_key_name": "Nome",
+    "copy_this_key_now": "Copia questa chiave ora"
   },
   "status": {
     "new": "Nuovo",
@@ -1312,7 +1319,30 @@
     "sector": "Settore *",
     "icp": "ICP principale",
     "short_description": "Breve descrizione *",
-    "marketplace_visible": "Mostra nel marketplace"
+    "marketplace_visible": "Mostra nel marketplace",
+    "createPartner_desc_long": "Aggiungi un partner (procacciatore d'affari). Avrà accesso al proprio spazio per inviare lead.",
+    "customize_desc_long": "Adatta i colori al tuo marchio (opzionale — puoi modificarli in seguito nelle Impostazioni).",
+    "customize_company_placeholder": "La tua azienda",
+    "customize_revenue_label": "Modello di ricavi",
+    "marketplace_desc_long": "Inserisci le tue informazioni per apparire sul marketplace. Modificabili in qualsiasi momento dalle Impostazioni.",
+    "marketplace_choose": "-- Scegliere --",
+    "marketplace_website_placeholder": "https://il-tuo-sito.com",
+    "marketplace_icp_placeholder": "Es. PMI, startup B2B…",
+    "marketplace_description_placeholder": "Descrivi il tuo servizio in 2-3 frasi…",
+    "marketplace_active": "Attivo",
+    "marketplace_inactive": "Inattivo",
+    "sector_saas_logiciel": "SaaS / Software",
+    "sector_conseil_services": "Consulenza & Servizi",
+    "sector_finance_fintech": "Finanza & Fintech",
+    "sector_rh_recrutement": "HR & Selezione",
+    "sector_marketing_communication": "Marketing & Comunicazione",
+    "sector_immobilier": "Immobiliare",
+    "sector_commerce": "Commercio",
+    "sector_formation": "Formazione",
+    "sector_juridique": "Legale",
+    "sector_industrie": "Industria",
+    "sector_autre": "Altro",
+    "revenue_other": "Altro"
   },
   "blog": {
     "subtitle": "Consigli, strategie e risorse",
@@ -1327,6 +1357,12 @@
     "read_time": "min di lettura",
     "page_subtitle": "Tutto ciò che devi sapere sui programmi di affiliazione B2B, programmi partner e crescita.",
     "filter_all": "Tutti",
-    "read_article": "Leggi articolo →"
+    "read_article": "Leggi articolo →",
+    "min_read": "min di lettura",
+    "all_categories": "Tutti",
+    "no_articles": "Nessun articolo al momento.",
+    "come_back_soon": "Torna presto!",
+    "categories": "Categorie",
+    "back_to_blog": "Torna al blog"
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
@@ -24,9 +24,38 @@ function RefBoostLogo({ size = 36 }) {
   );
 }
 
+const ADMIN_NAV = [
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/referrals', icon: FileText, label: 'Pipeline' },
+  { to: '/commissions', icon: DollarSign, label: 'Commissions' },
+  { to: '/partners', icon: Users, label: 'Partenaires' },
+  { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
+  { divider: true },
+  { to: '/programme', icon: Trophy, label: 'Programme' },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
+];
+
+const PARTNER_NAV = [
+  { to: '/partner/referrals', icon: FileText, label: 'Mes Referrals' },
+  { to: '/partner/submit', icon: Send, label: 'Soumettre' },
+  { to: '/partner/payments', icon: DollarSign, label: 'Mes Paiements' },
+  { to: '/messaging', icon: MessageCircle, label: 'Messagerie', badge: 'messages' },
+  { divider: true },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
+];
+
+const SUPERADMIN_NAV = [
+  { to: '/super-admin?tab=clients', icon: Globe, label: 'Clients' },
+  { to: '/super-admin?tab=stats', icon: BarChart2, label: 'Statistiques' },
+  { to: '/super-admin?tab=logs', icon: Activity, label: 'Audit Logs' },
+  { to: '/super-admin?tab=blog', icon: FileText, label: 'Blog' },
+  { divider: true },
+  { to: '/settings', icon: Settings, label: 'Paramètres' },
+];
+
 export default function Layout({ children }) {
-  const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, spaces, currentSpace, switchSpace } = useAuth();
+  const handlePasswordChanged = () => { window.location.reload(); };
   const navigate = useNavigate();
   const location = useLocation();
   const [currentSearchParams] = useSearchParams();
@@ -66,6 +95,7 @@ export default function Layout({ children }) {
     return location.pathname === path && [...itemParams].every(([k, v]) => currentSearchParams.get(k) === v);
   };
   const [collapsed, setCollapsed] = useState(false);
+  const [spaceSwitcherOpen, setSpaceSwitcherOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
   const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
@@ -136,6 +166,95 @@ export default function Layout({ children }) {
           )}
         </div>
 
+        {/* Phase B: space switcher dropdown (below logo) */}
+        {spaces && spaces.length > 1 && (
+          <div style={{ padding: collapsed ? '0 4px 8px' : '0 12px 8px', position: 'relative' }}>
+            <button
+              onClick={() => setSpaceSwitcherOpen(v => !v)}
+              style={{
+                width: '100%',
+                padding: collapsed ? '8px' : '8px 10px',
+                display: 'flex', alignItems: 'center', gap: 10,
+                borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.03)', color: '#fff',
+                cursor: 'pointer', fontSize: 13,
+                justifyContent: collapsed ? 'center' : 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', flex: 1 }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                  background: currentSpace && currentSpace.role === 'partner'
+                    ? `linear-gradient(135deg, ${C.a}, ${C.al})`
+                    : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, fontWeight: 800, color: '#fff',
+                }}>
+                  {((currentSpace && (currentSpace.role === 'partner' ? currentSpace.partner_name : currentSpace.tenant_name)) || '??').slice(0, 2).toUpperCase()}
+                </div>
+                {!collapsed && (
+                  <div style={{ overflow: 'hidden', minWidth: 0, textAlign: 'left' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {currentSpace ? (currentSpace.role === 'partner' ? (currentSpace.partner_name || 'Partenaire') : (currentSpace.tenant_name || 'Espace')) : 'Changer d\'espace'}
+                    </div>
+                    <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>
+                      {currentSpace?.role || ''}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {!collapsed && (
+                <span style={{ color: '#94a3b8', fontSize: 10, marginLeft: 4 }}>{spaceSwitcherOpen ? '▲' : '▼'}</span>
+              )}
+            </button>
+            {spaceSwitcherOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: collapsed ? 4 : 12, right: collapsed ? 4 : 12,
+                marginTop: 4, zIndex: 60,
+                background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 10, padding: 6,
+                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
+                maxHeight: '60vh', overflowY: 'auto',
+              }}>
+                {spaces.map((space) => {
+                  const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && currentSpace.role === space.role && (currentSpace.partner_id || null) === (space.partner_id || null);
+                  const label = space.role === 'partner' ? (space.partner_name || 'Partenaire') : (space.tenant_name || 'Espace');
+                  const initials = (label || '??').slice(0, 2).toUpperCase();
+                  return (
+                    <button
+                      key={`sw-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
+                      onClick={() => {
+                        setSpaceSwitcherOpen(false);
+                        if (!isActive) switchSpace(space).then(() => window.location.reload());
+                      }}
+                      style={{
+                        width: '100%', padding: '8px 10px',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        borderRadius: 8, border: 'none',
+                        background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
+                        color: '#fff', cursor: isActive ? 'default' : 'pointer',
+                        textAlign: 'left', fontSize: 13, marginBottom: 2,
+                      }}
+                    >
+                      <div style={{
+                        width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                        background: space.role === 'partner' ? `linear-gradient(135deg, ${C.a}, ${C.al})` : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 10, fontWeight: 800, color: '#fff',
+                      }}>{initials}</div>
+                      <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                        <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>{space.role}</div>
+                      </div>
+                      {isActive && <span style={{ color: '#10b981', fontSize: 12 }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Nav */}
         <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
           {nav.map((item, i) => {
@@ -143,11 +262,68 @@ export default function Layout({ children }) {
             if (item.to === '/applications' && !isAdmin) return null;
             const badge = getBadge(item);
             return (
-              <NavLink key={item.to} to={item.to} end={item.to === '/super-admin'} style={({ isActive }) => ({ ...s.link, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}>
-                <item.icon size={18} style={{ flexShrink: 0 }}/>
+              <Fragment key={item.to}>
+              <NavLink
+                to={item.to}
+                end={item.to === '/super-admin'}
+                style={({ isActive }) => ({ ...s.link, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}
+              >
+                <item.icon size={18} style={{ flexShrink: 0 }} />
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
                 {!collapsed && badge > 0 && <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{badge}</span>}
               </NavLink>
+              {item.to === '/messaging' && user?.role === 'partner' && spaces && spaces.filter(s => s.role === 'partner').length > 0 && (
+                <>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />
+                  {spaces.filter(s => s.role === 'partner').map((space) => {
+                    const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && (currentSpace.partner_id || null) === (space.partner_id || null);
+                    const label = space.tenant_name || 'Programme';
+                    const initials = (label || '??').slice(0, 2).toUpperCase();
+                    return (
+                      <button
+                        key={`prog-${space.tenant_id}-${space.partner_id || 'none'}`}
+                        onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
+                        title={label}
+                        style={{
+                          width: '100%', padding: '6px 16px',
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          borderRadius: 0, border: 'none',
+                          background: isActive ? `linear-gradient(135deg, ${C.a}22, ${C.al}18)` : 'transparent',
+                          color: isActive ? '#fff' : '#94a3b8',
+                          cursor: isActive ? 'default' : 'pointer',
+                          fontSize: 13, fontWeight: 500,
+                        }}
+                      >
+                        <div style={{
+                          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                          background: `linear-gradient(135deg, ${C.a}, ${C.al})`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 9, fontWeight: 700, color: '#fff',
+                        }}>{initials}</div>
+                        {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, textAlign: 'left' }}>{label}</span>}
+                        {isActive && !collapsed && <span style={{ color: `${C.a}`, fontSize: 11 }}>✓</span>}
+                      </button>
+                    );
+                  })}
+                  {!collapsed && (
+                    <button
+                      onClick={() => navigate('/marketplace')}
+                      style={{
+                        width: '100%', padding: '6px 16px',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        borderRadius: 0, border: 'none',
+                        background: 'transparent', color: '#64748b',
+                        cursor: 'pointer', fontSize: 12,
+                      }}
+                    >
+                      <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>+</span>
+                      <span>Découvrir d'autres programmes</span>
+                    </button>
+                  )}
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />
+                </>
+              )}
+              </Fragment>
             );
           })}
         </nav>
@@ -179,6 +355,7 @@ export default function Layout({ children }) {
             </button>
           </div>
         </div>
+
       </aside>
 
       <main style={{ flex: 1, marginLeft: collapsed ? 68 : 200, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
