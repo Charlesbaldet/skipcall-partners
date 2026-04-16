@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -309,8 +309,8 @@ export default function Layout({ children }) {
             if (item.to === '/applications' && !isAdmin) return null;
             const badge = getBadge(item);
             return (
+              <Fragment key={item.to}>
               <NavLink
-                key={item.to}
                 to={item.to}
                 end={item.to === '/super-admin'}
                 style={({ isActive }) => ({ ...s.link, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}
@@ -324,6 +324,58 @@ export default function Layout({ children }) {
                   }}>{badge}</span>
                 )}
               </NavLink>
+              {item.to === '/messaging' && user?.role === 'partner' && spaces && spaces.filter(s => s.role === 'partner').length > 0 && (
+                <>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />
+                  {spaces.filter(s => s.role === 'partner').map((space) => {
+                    const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && (currentSpace.partner_id || null) === (space.partner_id || null);
+                    const label = space.tenant_name || 'Programme';
+                    const initials = (label || '??').slice(0, 2).toUpperCase();
+                    return (
+                      <button
+                        key={`prog-${space.tenant_id}-${space.partner_id || 'none'}`}
+                        onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
+                        title={label}
+                        style={{
+                          width: '100%', padding: '6px 16px',
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          borderRadius: 0, border: 'none',
+                          background: isActive ? `linear-gradient(135deg, ${C.a}22, ${C.al}18)` : 'transparent',
+                          color: isActive ? '#fff' : '#94a3b8',
+                          cursor: isActive ? 'default' : 'pointer',
+                          fontSize: 13, fontWeight: 500,
+                        }}
+                      >
+                        <div style={{
+                          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                          background: `linear-gradient(135deg, ${C.a}, ${C.al})`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 9, fontWeight: 700, color: '#fff',
+                        }}>{initials}</div>
+                        {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, textAlign: 'left' }}>{label}</span>}
+                        {isActive && !collapsed && <span style={{ color: `${C.a}`, fontSize: 11 }}>✓</span>}
+                      </button>
+                    );
+                  })}
+                  {!collapsed && (
+                    <button
+                      onClick={() => navigate('/marketplace')}
+                      style={{
+                        width: '100%', padding: '6px 16px',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        borderRadius: 0, border: 'none',
+                        background: 'transparent', color: '#64748b',
+                        cursor: 'pointer', fontSize: 12,
+                      }}
+                    >
+                      <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>+</span>
+                      <span>Découvrir d'autres programmes</span>
+                    </button>
+                  )}
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />
+                </>
+              )}
+              </Fragment>
             );
           })}
         </nav>
@@ -382,62 +434,7 @@ export default function Layout({ children }) {
             </button>
           </div>
         </div>
-        {/* Phase C: Mes programmes (partner view only) */}
-        {user?.role === 'partner' && spaces && spaces.filter(s => s.role === 'partner').length > 0 && (
-          <div style={{ padding: collapsed ? '12px 0' : '12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            {!collapsed && (
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, padding: '0 8px 8px' }}>Mes programmes</div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {spaces.filter(s => s.role === 'partner').map((space) => {
-                const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && (currentSpace.partner_id || null) === (space.partner_id || null);
-                const label = space.tenant_name || 'Programme';
-                const initials = (label || '??').slice(0, 2).toUpperCase();
-                return (
-                  <button
-                    key={`prog-${space.tenant_id}-${space.partner_id || 'none'}`}
-                    onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
-                    title={label}
-                    style={{
-                      width: '100%', padding: collapsed ? '6px' : '6px 8px',
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      borderRadius: 8, border: 'none',
-                      background: isActive ? `linear-gradient(135deg, ${C.a}33, ${C.al}26)` : 'transparent',
-                      color: isActive ? '#fff' : '#94a3b8',
-                      cursor: isActive ? 'default' : 'pointer',
-                      justifyContent: collapsed ? 'center' : 'flex-start', fontSize: 13,
-                    }}
-                  >
-                    <div style={{
-                      width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                      background: `linear-gradient(135deg, ${C.a}, ${C.al})`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 10, fontWeight: 700, color: '#fff',
-                    }}>{initials}</div>
-                    {!collapsed && (
-                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, textAlign: 'left' }}>{label}</span>
-                    )}
-                  </button>
-                );
-              })}
-              {!collapsed && (
-                <button
-                  onClick={() => navigate('/marketplace')}
-                  style={{
-                    marginTop: 6, padding: '6px 8px',
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    borderRadius: 8, border: '1px dashed rgba(255,255,255,0.15)',
-                    background: 'transparent', color: '#94a3b8',
-                    cursor: 'pointer', fontSize: 12,
-                  }}
-                >
-                  <span style={{ fontSize: 14 }}>+</span>
-                  <span>Découvrir d'autres programmes</span>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+
       </aside>
 
       <main style={{
