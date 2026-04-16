@@ -373,6 +373,12 @@ router.post('/switch-space',
         return res.status(403).json({ error: "Vous n'avez pas ce role sur cet espace" });
       }
 
+      // Persist the switch in the users table so /me and any DB-reading endpoint see the new active space
+      await query(
+        'UPDATE users SET role = $1, tenant_id = $2, partner_id = $3, updated_at = NOW() WHERE id = $4',
+        [role, tenantId, partnerId || null, req.user.id]
+      );
+
       const userRes = await query('SELECT id, email, full_name FROM users WHERE id = $1', [req.user.id]);
       const user = userRes.rows[0];
       if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
