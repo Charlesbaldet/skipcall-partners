@@ -325,4 +325,87 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+
+// Phase B: Multi-role space switcher
+router.get('/me/spaces', authenticate, async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT
+         ur.id, ur.tenant_id, ur.role, ur.partner_id, ur.is_active,
+         t.name AS tenant_name,
+         p.name AS partner_name
+       FROM user_roles ur
+       LEFT JOIN tenants t ON t.id = ur.tenant_id
+       LEFT JOIN partners p ON p.id = ur.partner_id
+       WHERE ur.user_id = $1 AND ur.is_active = TRUE
+       ORDER BY ur.created_at ASC`,
+      [req.user.id]
+    );
+    res.json({ spaces: rows });
+  } catch (err) {
+    console.error('[GET /me/spaces] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/switch-space',
+  authenticate,
+  [
+    body('tenantId').isUUID(),
+    body('role').isIn(['admin', 'commercial', 'partner']),
+    body('partnerId').optional({ nullable: true }).isUUID()
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+      const { tenantId, role, partnerId } = req.body;
+
+      const { rows } = await query(
+        `SELECT id FROM user_roles
+         WHERE user_id = $1 AND tenant_id = $2 AND role = $3
+         AND ($4::uuid IS NULL OR partner_id = $4) AND is_active = TRUE
+         LIMIT 1`,
+        [req.user.id, tenantId, role, partnerId || null]
+      );
+      if (rows.length === 0) {
+        return res.status(403).json({ error: "Vous n'avez pas ce role sur cet espace" });
+      }
+
+      const userRes = await query('SELECT id, email, full_name FROM users WHERE id = $1', [req.user.id]);
+      const user = userRes.rows[0];
+      if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          role,
+          partnerId: partnerId || null,
+          fullName: user.full_name,
+          tenantId
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          role,
+          partner_id: partnerId || null,
+          tenant_id: tenantId
+        }
+      });
+    } catch (err) {
+      console.error('[POST /switch-space] error:', err);
+      res.status(500).json({ error: 'Erreur serveur' });
+    }
+  }
+);
+
 module.exports = router;
