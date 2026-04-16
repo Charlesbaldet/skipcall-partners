@@ -87,7 +87,6 @@ export default function Layout({ children }) {
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
   ];
 
-  const handlePasswordChanged = () => window.location.reload();
   const isItemActive = (item) => {
     if (!item.to || !item.to.includes('?')) return false;
     const [path, query] = item.to.split('?');
