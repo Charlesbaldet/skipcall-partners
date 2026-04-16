@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -36,6 +37,7 @@ function Logo({ size = 40, white = false }) {
 }
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [showPwd, setShowPwd] = useState(false);
@@ -52,7 +54,7 @@ export default function LoginPage() {
       const user = await login(email, password);
       navigate(user.role === 'partner' ? '/partner/submit' : '/');
     } catch (err) {
-      setError(err.message || 'Identifiants incorrects');
+      setError(err.message || t("login.error_default"));
     } finally {
       setLoading(false);
     }
@@ -96,7 +98,7 @@ export default function LoginPage() {
         color: C.m, textDecoration: 'none', fontSize: 14, fontWeight: 500,
         display: 'flex', alignItems: 'center', gap: 6,
       }}>
-        ← Retour au site
+        {t("login.back_to_site")}
       </Link>
 
       {/* Card */}
@@ -125,7 +127,7 @@ export default function LoginPage() {
           color: C.m, fontSize: 15, textAlign: 'center',
           margin: '0 0 32px', fontFamily: 'inherit',
         }}>
-          Accédez à votre programme partenaires
+          {t("login.subtitle")}s
         </p>
 
         {/* Error */}
@@ -153,7 +155,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="vous@entreprise.com"
+              placeholder={t("login.email_placeholder")}
               required
               className="input-rb"
               style={{
@@ -202,7 +204,7 @@ export default function LoginPage() {
 
                   <div style={{ textAlign: 'right', marginBottom: 16 }}>
             <Link to="/forgot-password" style={{ color: C.p, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-              Mot de passe oublié ?
+              {t("login.forgot_password")}
             </Link>
           </div>
           <button
@@ -220,7 +222,7 @@ export default function LoginPage() {
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Connexion en cours...' : 'Se connecter →'}
+            {loading ? t("login.loading") : t("login.submit")}
           </button>
         </form>
 
@@ -229,7 +231,7 @@ export default function LoginPage() {
           textAlign: 'center', marginTop: 28, marginBottom: 0,
           fontSize: 14, color: C.m, fontFamily: 'inherit',
         }}>
-          <span style={{ display: 'block', marginBottom: 4 }}>Pas encore de compte ?</span>
+          <span style={{ display: 'block', marginBottom: 4 }}>{t("login.no_account")}</span>
           <Link to="/signup" style={{ color: C.p, fontWeight: 700, textDecoration: 'none', display: 'block' }}>
             Créer un espace gratuit →
           </Link>
