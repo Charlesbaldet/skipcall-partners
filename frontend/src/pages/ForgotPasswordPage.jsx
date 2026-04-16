@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
         <div style={{ fontSize: 52, marginBottom: 16 }}>📬</div>
         <h2 style={{ fontWeight: 800, fontSize: 24, color: C.s, margin: '0 0 12px' }}>{t("forgotPwd.sent_title")}</h2>
         <p style={{ color: C.m, marginBottom: 32, lineHeight: 1.6 }}>
-          Si un compte existe avec cet email, vous recevrez un lien de réinitialisation dans quelques minutes.
+          {t("forgotPwd.sent_text")}
         </p>
         <Link to="/login" style={{ color: C.p, fontWeight: 700, textDecoration: 'none', fontSize: 15 }}>
           {t("forgotPwd.back_to_login")}
