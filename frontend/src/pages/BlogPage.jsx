@@ -66,10 +66,10 @@ export default function BlogPage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>Blog RefBoost — Conseils affiliation, partenariats et croissance</title>
-        <meta name="description" content="Découvrez nos articles sur l'affiliation B2B, la gestion de partenaires, les programmes de referral et les stratégies de croissance." />
+        <title>{`Blog RefBoost — ${t("blog.subtitle")}`}</title>
+        <meta name="description" content={t("blog.page_subtitle")} />
         <meta property="og:title" content="Blog RefBoost" />
-        <meta property="og:description" content="Conseils affiliation, partenariats et croissance B2B" />
+        <meta property="og:description" content={t("blog.subtitle")} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={SITE + '/blog'} />
         <meta name="twitter:card" content="summary_large_image" />
@@ -80,7 +80,7 @@ export default function BlogPage() {
       {/* Hero */}
       <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '72px 48px 64px', textAlign: 'center' }}>
         <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 2 }}>Blog</p>
-        <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>Conseils & Ressources</h1>
+        <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>{t("blog.subtitle")}</h1>
         <p style={{ margin: '0 auto', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
           {t('blog.page_subtitle')}
         </p>
