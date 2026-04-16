@@ -68,7 +68,7 @@ const SUPERADMIN_NAV = [
 ];
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout, spaces, currentSpace, switchSpace } = useAuth();
   const handlePasswordChanged = () => { window.location.reload(); };
   const navigate = useNavigate();
   const location = useLocation();
@@ -181,6 +181,50 @@ export default function Layout({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
       <aside style={s.sidebar}>
+        {/* Phase B: multi-role space switcher */}
+        {spaces && spaces.length > 1 && (
+          <div style={{
+            padding: collapsed ? '12px 0 8px' : '12px 12px 8px',
+            display: 'flex', flexDirection: 'column', gap: 4,
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            {spaces.map((space) => {
+              const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && currentSpace.role === space.role && (currentSpace.partner_id || null) === (space.partner_id || null);
+              const label = space.role === 'partner' ? (space.partner_name || 'Partenaire') : (space.tenant_name || 'Espace');
+              const initials = (label || '??').slice(0, 2).toUpperCase();
+              return (
+                <button
+                  key={`${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
+                  onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
+                  title={`${label} · ${space.role}`}
+                  style={{
+                    width: '100%', padding: collapsed ? '6px' : '6px 10px',
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    borderRadius: 10, border: 'none',
+                    background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
+                    color: '#fff', cursor: isActive ? 'default' : 'pointer',
+                    textAlign: 'left', justifyContent: collapsed ? 'center' : 'flex-start',
+                  }}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    background: space.role === 'partner' ? `linear-gradient(135deg, ${C.a}, ${C.al})` : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 800, color: '#fff',
+                    boxShadow: isActive ? '0 0 12px rgba(16,185,129,0.35)' : 'none',
+                  }}>{initials}</div>
+                  {!collapsed && (
+                    <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                      <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>{space.role}</div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Logo */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
           {isSuperAdmin ? (
@@ -292,6 +336,62 @@ export default function Layout({ children }) {
             </button>
           </div>
         </div>
+        {/* Phase C: Mes programmes (partner view only) */}
+        {user?.role === 'partner' && spaces && spaces.filter(s => s.role === 'partner').length > 0 && (
+          <div style={{ padding: collapsed ? '12px 0' : '12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            {!collapsed && (
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, padding: '0 8px 8px' }}>Mes programmes</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {spaces.filter(s => s.role === 'partner').map((space) => {
+                const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && (currentSpace.partner_id || null) === (space.partner_id || null);
+                const label = space.tenant_name || 'Programme';
+                const initials = (label || '??').slice(0, 2).toUpperCase();
+                return (
+                  <button
+                    key={`prog-${space.tenant_id}-${space.partner_id || 'none'}`}
+                    onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
+                    title={label}
+                    style={{
+                      width: '100%', padding: collapsed ? '6px' : '6px 8px',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      borderRadius: 8, border: 'none',
+                      background: isActive ? `linear-gradient(135deg, ${C.a}33, ${C.al}26)` : 'transparent',
+                      color: isActive ? '#fff' : '#94a3b8',
+                      cursor: isActive ? 'default' : 'pointer',
+                      justifyContent: collapsed ? 'center' : 'flex-start', fontSize: 13,
+                    }}
+                  >
+                    <div style={{
+                      width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                      background: `linear-gradient(135deg, ${C.a}, ${C.al})`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: '#fff',
+                    }}>{initials}</div>
+                    {!collapsed && (
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, textAlign: 'left' }}>{label}</span>
+                    )}
+                  </button>
+                );
+              })}
+              {!collapsed && (
+                <button
+                  onClick={() => navigate('/marketplace')}
+                  style={{
+                    marginTop: 6, padding: '6px 8px',
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    borderRadius: 8, border: '1px dashed rgba(255,255,255,0.15)',
+                    background: 'transparent', color: '#94a3b8',
+                    cursor: 'pointer', fontSize: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>+</span>
+                  <span>Découvrir d'autres programmes</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </aside>
 
       <main style={{
