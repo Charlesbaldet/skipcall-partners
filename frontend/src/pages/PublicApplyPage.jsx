@@ -99,14 +99,14 @@ export default function PublicApplyPage() {
             <div>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>{t("publicApply.step1")}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <Field icon={Building} label="{t("publicApply.field_company")} *" value={form.company_name} onChange={set('company_name')} placeholder="{t("publicApply.company_ph")}" />
-                <Field icon={User} label="{t("publicApply.field_contact")} *" value={form.contact_name} onChange={set('contact_name')} placeholder="{t("publicApply.name_ph")}" />
+                <Field icon={Building} label={t("publicApply.field_company")} *" value={form.company_name} onChange={set('company_name')} placeholder={t("publicApply.company_ph")} />
+                <Field icon={User} label={t("publicApply.field_contact")} *" value={form.contact_name} onChange={set('contact_name')} placeholder={t("publicApply.name_ph")} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <Field icon={Mail} label="Email *" value={form.email} onChange={set('email')} placeholder="{t("publicApply.email_ph")}" type="email" />
-                  <Field icon={Phone} label="{t("publicApply.phone")}" value={form.phone} onChange={set('phone')} placeholder="+33 6 ..." />
+                  <Field icon={Mail} label="Email *" value={form.email} onChange={set('email')} placeholder={t("publicApply.email_ph")} type="email" />
+                  <Field icon={Phone} label={t("publicApply.phone")} value={form.phone} onChange={set('phone')} placeholder="+33 6 ..." />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <Field icon={Globe} label="{t("publicApply.field_website")}" value={form.company_website} onChange={set('company_website')} placeholder="https://..." />
+                  <Field icon={Globe} label={t("publicApply.field_website")} value={form.company_website} onChange={set('company_website')} placeholder="https://..." />
                   <div>
                     <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.size")}</label>
                     <select value={form.company_size} onChange={set('company_size')} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box', appearance: 'none' }}>
@@ -145,7 +145,7 @@ export default function PublicApplyPage() {
                   <RecapRow label="Société" value={form.company_name} />
                   <RecapRow label="Contact" value={form.contact_name} />
                   <RecapRow label="Email" value={form.email} />
-                  <RecapRow label="{t("publicApply.phone")}" value={form.phone || '—'} />
+                  <RecapRow label={t("publicApply.phone")} value={form.phone || '—'} />
                 </div>
               </div>
 
