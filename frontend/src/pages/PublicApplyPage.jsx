@@ -83,11 +83,7 @@ export default function PublicApplyPage() {
             </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{t("publicApply.title")}</h1>
           <p style={{ color: '#94a3b8', fontSize: 15 }}>{t("publicApply.subtitle")}</p>
-        <div style={{ display:"flex", justifyContent:"center", marginTop:16, marginBottom:8 }}>
-          <div style={{ background:"rgba(255,255,255,0.12)", borderRadius:24, padding:"6px 16px", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.25)", position:"relative", zIndex:1000 }}>
-            <LanguageSwitcher dark={true} />
-          </div>
-        </div>
+        <div style={{ display:"flex", justifyContent:"center", marginTop:16, marginBottom:8 }}><LanguageSwitcher dark={true} /></div>
         <p style={{ display:"none" }}></p>
         </div>
 
