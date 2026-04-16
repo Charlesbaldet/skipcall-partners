@@ -14,7 +14,16 @@ function formatDate(iso) {
 }
 
 function BlogCard({ post }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const CAT_TRANSLATIONS = {
+    en: { 'Stratégie': 'Strategy', 'Analytics': 'Analytics', 'Guide': 'Guide', 'Commissions': 'Commissions' },
+    es: { 'Stratégie': 'Estrategia', 'Analytics': 'Analítica', 'Guide': 'Guía', 'Commissions': 'Comisiones' },
+    de: { 'Stratégie': 'Strategie', 'Analytics': 'Analytik', 'Guide': 'Leitfaden', 'Commissions': 'Provisionen' },
+    it: { 'Stratégie': 'Strategia', 'Analytics': 'Analitica', 'Guide': 'Guida', 'Commissions': 'Commissioni' },
+    nl: { 'Stratégie': 'Strategie', 'Analytics': 'Analyse', 'Guide': 'Gids', 'Commissions': 'Commissies' },
+    pt: { 'Stratégie': 'Estratégia', 'Analytics': 'Analítica', 'Guide': 'Guia', 'Commissions': 'Comissões' },
+  };
+  const translateCat = (cat) => CAT_TRANSLATIONS[i18n.language]?.[cat] || cat;
   return (
     <article style={{ background: C.card, borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', transition: 'transform .2s, box-shadow .2s' }}
       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.12)';}}
@@ -96,7 +105,7 @@ export default function BlogPage() {
             {categories.map(c => (
               <button key={c.category} onClick={()=>setActiveCategory(c.category === activeCategory ? '' : c.category)}
                 style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: activeCategory === c.category ? '#059669' : '#e2e8f0', background: activeCategory === c.category ? '#059669' : 'transparent', color: activeCategory === c.category ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-                {c.category} ({c.count})
+                {translateCat(c.category)} ({c.count})
               </button>
             ))}
           </nav>
