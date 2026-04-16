@@ -100,7 +100,7 @@ export default function SignupPage() {
               <input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder={t("signup.phone_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
 
-            <button onClick={()=>{ if(form.company && form.fullName) setStep(2); else setError('Veuillez remplir les champs obligatoires.'); }}
+            <button onClick={()=>{ if(form.company && form.fullName) setStep(2); else setError('{t("signup.error_fields")}'); }}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
               {t("signup.next")}
             </button>
@@ -144,7 +144,7 @@ export default function SignupPage() {
 
             {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#fef2f2',color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
 
-            <button onClick={()=>{ if(!form.email||!passwordOk) setError('Email et mot de passe requis (10 car., maj, min, chiffre, spécial).'); else handleSubmit(); }}
+            <button onClick={()=>{ if(!form.email||!passwordOk) setError('{t("signup.error_creds")}'); else handleSubmit(); }}
               disabled={loading}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#94a3b8':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
               {loading ? 'Création en cours...' : '{t("signup.create")}'}
