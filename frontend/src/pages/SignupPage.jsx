@@ -162,7 +162,7 @@ export default function SignupPage() {
             <div style={{ width:72,height:72,borderRadius:20,background:`${C.p}10`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}>🎉</div>
             <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.success_title")}</h2>
             <p style={{ color:C.m,fontSize:14,margin:'0 0 32px',fontFamily:"'DM Sans',sans-serif" }}>
-              Votre espace <strong>{form.company}</strong> est prêt.<br/>Vous êtes l'administrateur.
+              {t("signup.success_sub", { company: form.company })}<br/>{t("signup.success_sub2")}
             </p>
             <button onClick={()=>{ window.location.href = '/dashboard'; }}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
