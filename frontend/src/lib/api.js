@@ -22,7 +22,7 @@ class ApiClient {
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
       const isPublicPath = path === '/' || path === '/login' || path === '/signup' || path.startsWith('/apply') || path.startsWith('/r/') || path.startsWith('/ref/') || path.startsWith('/setup-password/') || path.startsWith('/marketplace');
       if (!isPublicPath && typeof window !== 'undefined') window.location.href = '/login';
-      throw new Error('Session expirée');
+      throw new Error('Session expirÃ©e');
     }
     const data = await res.json();
     if (!res.ok) { throw new Error(data.error || 'Erreur serveur'); }
@@ -37,6 +37,9 @@ class ApiClient {
   logout() { this.setToken(null); this.setUser(null); }
   getMe() { return this.request('/auth/me'); }
   changePassword(currentPassword, newPassword) { return this.request('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) }); }
+  // Phase B: multi-role space switcher
+  getMySpaces() { return this.request('/auth/me/spaces'); }
+  switchSpace(body) { return this.request('/auth/switch-space', { method: 'POST', body: JSON.stringify(body) }); }
 
   // Partners
   getPartners() { return this.request('/partners'); }
