@@ -3,6 +3,7 @@ import { Search, ExternalLink, Globe, Users, Tag, X, Filter } from 'lucide-react
 import { Helmet } from 'react-helmet-async';
 import LandingLayout from '../components/LandingLayout';
 import api from '../lib/api';
+import { useTranslation } from 'react-i18next';
 
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
 
@@ -12,7 +13,19 @@ const SECTORS_STATIC = [
   'Juridique', 'Comptabilité', 'Industrie', 'Autre',
 ];
 
+
+const SECTOR_TRANSLATIONS = {
+  en: { 'SaaS / Logiciel': 'SaaS / Software', 'Conseil & Services': 'Consulting & Services', 'Finance & Fintech': 'Finance & Fintech', 'RH & Recrutement': 'HR & Recruitment', 'Marketing & Communication': 'Marketing & Communication', 'Immobilier': 'Real Estate', 'Commerce': 'Commerce', 'Formation': 'Training', 'Juridique': 'Legal', 'Comptabilité': 'Accounting', 'Industrie': 'Industry', 'Autre': 'Other' },
+  es: { 'SaaS / Logiciel': 'SaaS / Software', 'Conseil & Services': 'Consultoría y Servicios', 'Finance & Fintech': 'Finanzas y Fintech', 'RH & Recrutement': 'RRHH y Reclutamiento', 'Marketing & Communication': 'Marketing y Comunicación', 'Immobilier': 'Inmobiliaria', 'Commerce': 'Comercio', 'Formation': 'Formación', 'Juridique': 'Jurídico', 'Comptabilité': 'Contabilidad', 'Industrie': 'Industria', 'Autre': 'Otro' },
+  de: { 'SaaS / Logiciel': 'SaaS / Software', 'Conseil & Services': 'Beratung & Dienstleistungen', 'Finance & Fintech': 'Finanzen & Fintech', 'RH & Recrutement': 'HR & Recruiting', 'Marketing & Communication': 'Marketing & Kommunikation', 'Immobilier': 'Immobilien', 'Commerce': 'Handel', 'Formation': 'Ausbildung', 'Juridique': 'Recht', 'Comptabilité': 'Buchhaltung', 'Industrie': 'Industrie', 'Autre': 'Sonstiges' },
+  it: { 'SaaS / Logiciel': 'SaaS / Software', 'Conseil & Services': 'Consulenza e Servizi', 'Finance & Fintech': 'Finanza e Fintech', 'RH & Recrutement': 'Risorse Umane', 'Marketing & Communication': 'Marketing e Comunicazione', 'Immobilier': 'Immobiliare', 'Commerce': 'Commercio', 'Formation': 'Formazione', 'Juridique': 'Legale', 'Comptabilité': 'Contabilità', 'Industrie': 'Industria', 'Autre': 'Altro' },
+  nl: { 'SaaS / Logiciel': 'SaaS / Software', 'Conseil & Services': 'Advies & Diensten', 'Finance & Fintech': 'Financiën & Fintech', 'RH & Recrutement': 'HR & Werving', 'Marketing & Communication': 'Marketing & Communicatie', 'Immobilier': 'Vastgoed', 'Commerce': 'Handel', 'Formation': 'Opleiding', 'Juridique': 'Juridisch', 'Comptabilité': 'Boekhouding', 'Industrie': 'Industrie', 'Autre': 'Overig' },
+  pt: { 'SaaS / Logiciel': 'SaaS / Software', 'Conseil & Services': 'Consultoria e Serviços', 'Finance & Fintech': 'Finanças e Fintech', 'RH & Recrutement': 'RH e Recrutamento', 'Marketing & Communication': 'Marketing e Comunicação', 'Immobilier': 'Imobiliário', 'Commerce': 'Comércio', 'Formation': 'Formação', 'Juridique': 'Jurídico', 'Comptabilité': 'Contabilidade', 'Industrie': 'Indústria', 'Autre': 'Outro' },
+};
+
 function PartnerCard({ partner }) {
+  const { t, i18n } = useTranslation();
+  const trSector = (s) => SECTOR_TRANSLATIONS[i18n.language]?.[s] || s;
   const initials = partner.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   const color = partner.primary_color || C.p;
   return (
@@ -28,7 +41,7 @@ function PartnerCard({ partner }) {
             <div style={{ fontWeight: 700, fontSize: 16, color: C.s }}>{partner.name}</div>
             {partner.sector && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color, background: color + '15', borderRadius: 20, padding: '2px 10px', marginTop: 4 }}>
-                <Tag size={10} /> {partner.sector}
+                <Tag size={10} /> {trSector(partner.sector)}
               </span>
             )}
           </div>
@@ -39,7 +52,7 @@ function PartnerCard({ partner }) {
         {partner.icp && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.m, background: '#f8fafc', borderRadius: 8, padding: '6px 10px', marginTop: 12 }}>
             <Users size={12} color={C.p} />
-            <span><strong style={{ color: C.s }}>Cible :</strong> {partner.icp}</span>
+            <span><strong style={{ color: C.s }}>{t("marketplace.target")}</strong> {partner.icp}</span>
           </div>
         )}
       </div>
@@ -49,12 +62,12 @@ function PartnerCard({ partner }) {
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 14px', borderRadius: 10, border: '1.5px solid ' + color, color, fontWeight: 600, fontSize: 13, textDecoration: 'none', transition: 'all .2s' }}
             onMouseEnter={e => { e.currentTarget.style.background = color; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = color; }}>
-            <Globe size={14} /> Voir le site
+            <Globe size={14} /> {t("marketplace.website")}
           </a>
         )}
         <a href={'/r/' + partner.slug}
           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 14px', borderRadius: 10, background: 'linear-gradient(135deg,' + C.p + ',' + C.pl + ')', color: '#fff', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
-          <ExternalLink size={14} /> Rejoindre
+          <ExternalLink size={14} /> {t("marketplace.join")}
         </a>
       </div>
     </article>
@@ -62,6 +75,8 @@ function PartnerCard({ partner }) {
 }
 
 export default function MarketplacePage() {
+  const { t, i18n } = useTranslation();
+  const trSector = (s) => SECTOR_TRANSLATIONS[i18n.language]?.[s] || s;
   const [partners, setPartners] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -95,8 +110,8 @@ export default function MarketplacePage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>Marketplace — Programmes de parrainage | RefBoost</title>
-        <meta name="description" content="Découvrez des centaines de programmes de parrainage vérifiés. Rejoignez-les gratuitement en tant qu'apporteur d'affaires." />
+        <title>{t("marketplace.helmet_title")}</title>
+        <meta name="description" content={t("marketplace.subtitle")} />
       </Helmet>
 
       {/* Hero — identique au Blog */}
@@ -106,11 +121,11 @@ export default function MarketplacePage() {
             Marketplace
           </span>
           <h1 style={{ fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, color: '#fff', margin: '0 0 16px', lineHeight: 1.1 }}>
-            Programmes de parrainage
+            {t("marketplace.title")}
           </h1>
           <p style={{ color: '#94a3b8', fontSize: 17, margin: '0 0 36px', lineHeight: 1.6 }}>
-            Toutes ces entreprises ont un programme actif sur RefBoost.
-            Rejoignez-les gratuitement en tant qu'apporteur d'affaires.
+            {t("marketplace.subtitle")}
+            
           </p>
           {/* Search bar */}
           <div style={{ background: '#fff', borderRadius: 14, padding: '6px 6px 6px 20px', display: 'flex', alignItems: 'center', gap: 10, maxWidth: 560, margin: '0 auto', boxShadow: '0 8px 40px rgba(0,0,0,.25)' }}>
@@ -118,7 +133,7 @@ export default function MarketplacePage() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Chercher un programme, secteur, cible..."
+              placeholder={t("marketplace.search_ph")}
               style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: C.s, fontFamily: 'inherit', background: 'transparent' }}
             />
             {search && (
@@ -129,7 +144,7 @@ export default function MarketplacePage() {
             <button
               onClick={() => setShowFilters(v => !v)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, background: showFilters ? C.p : C.s, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-              <Filter size={14} /> Filtres{activeSector ? ' •' : ''}
+              <Filter size={14} /> {t("marketplace.all")}{activeSector ? ' •' : ''}
             </button>
           </div>
         </div>
@@ -187,11 +202,11 @@ export default function MarketplacePage() {
               <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
               <h3 style={{ fontSize: 20, fontWeight: 700, color: C.s, margin: '0 0 8px' }}>Aucun résultat</h3>
               <p style={{ color: C.m, margin: '0 0 20px' }}>
-                {(search || activeSector) ? "Essayez d'autres critères." : "Aucun programme visible pour le moment."}
+                {(search || activeSector) ? t("marketplace.reset") : t("marketplace.no_result")}
               </p>
               {(search || activeSector) && (
                 <button onClick={reset} style={{ padding: '10px 20px', borderRadius: 10, background: C.p, color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
-                  Voir tous les programmes
+                  {t("marketplace.see_all")}
                 </button>
               )}
             </div>
@@ -204,10 +219,10 @@ export default function MarketplacePage() {
           {/* CTA */}
           <div style={{ marginTop: 64, textAlign: 'center', background: 'linear-gradient(135deg,' + C.s + ',#1e293b)', borderRadius: 20, padding: '48px 24px' }}>
             <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>
-              Vous avez un programme de parrainage ?
+              {t("marketplace.add_program")}
             </h2>
             <p style={{ color: '#94a3b8', margin: '0 0 24px', fontSize: 15 }}>
-              Rejoignez RefBoost et gagnez en visibilite aupres de milliers d'apporteurs.
+              {t("marketplace.add_program_sub")}
             </p>
             <a href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg,' + C.p + ',' + C.pl + ')', color: '#fff', padding: '14px 28px', borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: 'none', boxShadow: '0 8px 30px ' + C.p + '50' }}>
               Creer mon espace gratuitement
