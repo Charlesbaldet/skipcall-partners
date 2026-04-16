@@ -56,12 +56,12 @@ export default function PublicApplyPage() {
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
             <CheckCircle size={36} color="#fff" />
           </div>
-          <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginBottom: 12 }}>{t("publicApply.sent_title")} !</h2>
+          <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginBottom: 12 }}>{t("publicApply.sent_title")}</h2>
           <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.7, marginBottom: 32 }}>
-            Merci pour votre intérêt. Notre équipe va examiner votre candidature et vous recevrez un email de confirmation dans les 48 heures.
+            {t("publicApply.sent_text")}
           </p>
           <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
-            {t("publicApply.already")} ? {t("publicApply.login_link")}
+            {t("publicApply.already")} {t("publicApply.login_link")}
           </a>
         </div>
       </Page>
