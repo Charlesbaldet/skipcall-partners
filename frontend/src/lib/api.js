@@ -120,6 +120,7 @@ class ApiClient {
   getApplications(s) { return this.request('/applications?status=' + (s || 'pending')); }
   approveApplication(id, r) { return this.request('/applications/' + id + '/approve', { method: 'PUT', body: JSON.stringify({ commission_rate: r }) }); }
   rejectApplication(id, r) { return this.request('/applications/' + id + '/reject', { method: 'PUT', body: JSON.stringify({ reason: r }) }); }
+  deleteApplication(id) { return this.request('/applications/' + id, { method: 'DELETE' }); }
 
   // Admin
   getAdminUsers() { return this.request('/admin/users'); }

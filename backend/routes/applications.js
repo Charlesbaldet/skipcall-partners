@@ -5,6 +5,7 @@ const { query, getClient } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
+const { sendEmail, partnerAccessRevoked } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -182,17 +183,58 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
     const { rows: [app] } = await query(appSql, appParams);
 
     if (!app) return res.status(404).json({ error: 'Candidature introuvable' });
-    if (app.status !== 'pending') return res.status(400).json({ error: 'Candidature déjà traitée' });
+
+    // Block when the application is already approved AND a matching
+    // active partner still exists — that's the real "already handled"
+    // case. If the partner was archived or deleted we allow re-approval
+    // to rebuild the chain (partner + user_roles + welcome email) so
+    // admins can recover without having to reject+re-apply.
+    let existingPartner = null;
+    if (app.status === 'approved') {
+      const { rows } = await query(
+        `SELECT id, is_active FROM partners
+          WHERE LOWER(email) = LOWER($1)
+            AND ($2::uuid IS NULL OR tenant_id = $2)
+          LIMIT 1`,
+        [app.email, req.tenantId || null]
+      );
+      existingPartner = rows[0] || null;
+      if (existingPartner && existingPartner.is_active) {
+        return res.status(400).json({ error: 'Candidature déjà traitée' });
+      }
+    } else if (app.status === 'rejected') {
+      return res.status(400).json({ error: 'Candidature déjà traitée' });
+    }
 
     await client.query('BEGIN');
 
-    // Create partner with tenant_id
-    const { rows: [partner] } = await client.query(
-      `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [app.company_name, app.contact_name, app.email, app.phone, app.company_website, commission_rate, req.tenantId || null]
-    );
+    // If an archived partner already exists for this email, reactivate
+    // it; otherwise insert a fresh partner.
+    let partner;
+    if (existingPartner) {
+      const { rows: [p] } = await client.query(
+        `UPDATE partners SET
+           name = $2,
+           contact_name = $3,
+           phone = COALESCE($4, phone),
+           company_website = COALESCE($5, company_website),
+           commission_rate = $6,
+           is_active = true,
+           tenant_id = COALESCE(tenant_id, $7)
+         WHERE id = $1
+         RETURNING *`,
+        [existingPartner.id, app.company_name, app.contact_name, app.phone, app.company_website, commission_rate, req.tenantId || null]
+      );
+      partner = p;
+    } else {
+      const { rows: [p] } = await client.query(
+        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [app.company_name, app.contact_name, app.email, app.phone, app.company_website, commission_rate, req.tenantId || null]
+      );
+      partner = p;
+    }
 
     // Multi-role: link existing user OR create new account
     const existingRows = await client.query(
@@ -358,6 +400,65 @@ Cordialement.`,
   } catch (err) {
     console.error('Reject application error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── ADMIN: Delete an application (+ revoke linked partner access) ───
+// Cleans up the full footprint of an approved application:
+//   * deletes the application row
+//   * deactivates the partner record that matches by email in the
+//     same tenant (we never hard-delete because referrals reference
+//     partners; archive preserves the FK chain)
+//   * disables user_roles rows pointing at that partner
+//   * emails the partner user(s) that access was revoked
+router.delete('/:id', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  const client = await getClient();
+  try {
+    let appSql = 'SELECT id, email, company_name, contact_name, status, tenant_id FROM partner_applications WHERE id = $1';
+    let appParams = [req.params.id];
+    if (req.tenantId && !req.skipTenantFilter) {
+      appSql += ' AND tenant_id = $2';
+      appParams.push(req.tenantId);
+    }
+    const { rows: [app] } = await query(appSql, appParams);
+    if (!app) return res.status(404).json({ error: 'Candidature introuvable' });
+
+    await client.query('BEGIN');
+
+    // Find the matching partner(s) linked to this email in the tenant
+    // so we can deactivate them and their user_roles.
+    const { rows: matchedPartners } = await client.query(
+      `SELECT id FROM partners
+        WHERE LOWER(email) = LOWER($1)
+          AND ($2::uuid IS NULL OR tenant_id = $2)`,
+      [app.email, app.tenant_id || null]
+    );
+    for (const p of matchedPartners) {
+      await client.query('UPDATE partners SET is_active = false WHERE id = $1', [p.id]);
+      await client.query('UPDATE user_roles SET is_active = false WHERE partner_id = $1', [p.id]);
+    }
+
+    await client.query('DELETE FROM partner_applications WHERE id = $1', [req.params.id]);
+    await client.query('COMMIT');
+
+    // Fire-and-forget revocation email (applies even when no partner
+    // record survived — the applicant should still know).
+    try {
+      const { rows: tRow } = await query('SELECT name FROM tenants WHERE id = $1', [app.tenant_id || null]);
+      const tenantName = tRow[0]?.name || null;
+      const tpl = partnerAccessRevoked(app.contact_name || app.company_name || '', tenantName);
+      sendEmail(app.email, tpl.subject, tpl.html).catch(e =>
+        console.error('[application-delete email]', app.email, e.message)
+      );
+    } catch (e) { console.error('[application-delete email outer]', e.message); }
+
+    res.json({ ok: true, deactivated_partners: matchedPartners.length });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Delete application error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    client.release();
   }
 });
 

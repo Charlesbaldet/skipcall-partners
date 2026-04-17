@@ -45,6 +45,11 @@ export default function PartnersPage() {
 
   const handleArchive = async (id) => { try { await api.archivePartner(id); await loadPartners(showArchived); } catch(e) { alert(e.message); } };
   const handleDeletePartner = async (id) => { try { await api.deletePartner(id); setPartners(prev => prev.filter(p => p.id !== id)); } catch(e) { alert(e.message); } };
+  const handleDeleteApplication = async (id) => {
+    if (!confirm(t('partners.delete_confirm_title') + '\n\n' + t('partners.delete_confirm_body'))) return;
+    try { await api.deleteApplication(id); loadApplications(); loadPartners(showArchived); }
+    catch (e) { alert(e.message); }
+  };
 
   const startEdit = (p) => { setEditingId(p.id); setEditForm({ name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '', company_website: p.company_website || '', commission_rate: p.commission_rate, iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '' }); };
   const saveEdit = async () => { try { await api.updatePartner(editingId, editForm); setEditingId(null); await loadPartners(showArchived); } catch(e) { alert(e.message); } };
@@ -293,9 +298,14 @@ export default function PartnersPage() {
                       </div>
                       <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{a.contact_name} · {a.email} · {fmtDate(a.created_at)}</div>
                     </div>
-                    <button onClick={() => { setSelectedApp(a); setCommissionRate(10); }} style={{ padding: '6px 14px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <CheckCircle size={12} /> {t('partners.app_review')}
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => { setSelectedApp(a); setCommissionRate(10); }} style={{ padding: '6px 14px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <CheckCircle size={12} /> {t('partners.app_review')}
+                      </button>
+                      <button onClick={() => handleDeleteApplication(a.id)} title={t('partners.delete')} style={{ padding: '6px 10px', borderRadius: 8, background: '#fef2f2', border: 'none', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
