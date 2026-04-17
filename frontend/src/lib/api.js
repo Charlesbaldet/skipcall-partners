@@ -32,6 +32,15 @@ class ApiClient {
     if (res.status === 401) {
       this.setToken(null);
       this.setUser(null);
+      // Peek at the body to detect the access-revoked signal from the
+      // backend — when a partner has been archived/deleted we redirect
+      // to /login?revoked=1 so the login page shows a clear message.
+      let revoked = false;
+      try {
+        const clone = res.clone();
+        const body = await clone.json();
+        if (body && (body.revoked || body.error === 'access_revoked')) revoked = true;
+      } catch { /* non-JSON body, ignore */ }
       // Don't redirect if we're already on a public marketing/auth page
       // (avoids kicking unauthenticated visitors off the landing site).
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -48,8 +57,10 @@ class ApiClient {
         path.startsWith('/marketplace') ||
         path.startsWith('/blog') ||
         path.startsWith('/fonctionnalites/');
-      if (!isPublicPath && typeof window !== 'undefined') window.location.href = '/login';
-      throw new Error('Session expirée');
+      if (!isPublicPath && typeof window !== 'undefined') {
+        window.location.href = '/login' + (revoked ? '?revoked=1' : '');
+      }
+      throw new Error(revoked ? 'access_revoked' : 'Session expirée');
     }
     const data = await res.json();
     if (!res.ok) { throw new Error(data.error || 'Erreur serveur'); }

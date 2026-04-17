@@ -142,6 +142,24 @@ router.get('/me', authenticate, async (req, res) => {
       }
     }
 
+    // Access revoked check — if this is a partner session but no active
+    // partner record exists (admin archived/deleted), sign them out. The
+    // frontend's 401 handler redirects to /login; the ?revoked=1 param
+    // tells the login page to show the "access revoked" banner.
+    if (u.role === 'partner') {
+      let stillActive = false;
+      if (partnerId) {
+        const { rows: pa } = await query(
+          'SELECT is_active FROM partners WHERE id = $1',
+          [partnerId]
+        );
+        stillActive = pa.length && pa[0].is_active === true;
+      }
+      if (!stillActive) {
+        return res.status(401).json({ error: 'access_revoked', revoked: true });
+      }
+    }
+
     res.json({
       user: {
         id: u.id,

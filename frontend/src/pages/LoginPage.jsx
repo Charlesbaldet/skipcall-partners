@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 // ─── Design tokens (sync avec LandingPage) ───
@@ -40,6 +40,8 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const revoked = searchParams.get('revoked') === '1';
   const [showPwd, setShowPwd] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -129,6 +131,19 @@ export default function LoginPage() {
         }}>
           {t("login.subtitle")}s
         </p>
+
+        {/* Access-revoked banner (set by api.js 401 handler when a
+            partner record has been archived or deleted). */}
+        {revoked && (
+          <div style={{
+            background: '#fef2f2', border: '1px solid #fecaca',
+            borderRadius: 12, padding: '12px 16px',
+            color: '#b91c1c', fontSize: 14, marginBottom: 20,
+            fontFamily: 'inherit', fontWeight: 500,
+          }}>
+            {t('login.access_revoked')}
+          </div>
+        )}
 
         {/* Error */}
         {error && (

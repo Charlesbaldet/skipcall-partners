@@ -272,7 +272,8 @@
     "no_account": "Pas encore de compte ?",
     "create_account": "Créer un espace gratuit →",
     "back_to_site": "← Retour au site",
-    "error_default": "Identifiants incorrects"
+    "error_default": "Identifiants incorrects",
+    "access_revoked": "Votre accès a été révoqué par l'administrateur. Si vous pensez qu'il s'agit d'une erreur, contactez votre programme."
   },
   "signup": {
     "title": "Créez votre espace",

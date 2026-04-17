@@ -272,7 +272,8 @@
     "no_account": "Nog geen account?",
     "create_account": "Gratis ruimte aanmaken →",
     "back_to_site": "← Terug naar site",
-    "error_default": "Onjuiste inloggegevens"
+    "error_default": "Onjuiste inloggegevens",
+    "access_revoked": "Je toegang is ingetrokken door de beheerder. Als je denkt dat dit een vergissing is, neem dan contact op met je programma."
   },
   "signup": {
     "title": "Maak uw ruimte aan",

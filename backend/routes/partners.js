@@ -3,7 +3,33 @@ const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
+const { sendEmail, partnerAccessRevoked } = require('../services/emailService');
 const router = express.Router();
+
+// ─── Helper: notify every user linked to this partner ───────────────
+// Best-effort: any email failure is logged but doesn't abort the flow.
+async function notifyPartnerRevoked(partnerId, tenantId, partnerName) {
+  try {
+    const { rows: tRow } = await query('SELECT name FROM tenants WHERE id = $1', [tenantId || null]);
+    const tenantName = tRow[0]?.name || null;
+    const { rows: users } = await query(
+      `SELECT DISTINCT u.email, u.full_name
+         FROM users u
+        WHERE u.partner_id = $1
+           OR u.id IN (SELECT user_id FROM user_roles WHERE partner_id = $1)`,
+      [partnerId]
+    );
+    for (const u of users) {
+      if (!u.email) continue;
+      const tpl = partnerAccessRevoked(u.full_name || partnerName || '', tenantName);
+      sendEmail(u.email, tpl.subject, tpl.html).catch(e =>
+        console.error('[partner-revoke email]', u.email, e.message)
+      );
+    }
+  } catch (err) {
+    console.error('[notifyPartnerRevoked]', err.message);
+  }
+}
 
 router.use(authenticate);
 router.use(tenantScope);
@@ -266,6 +292,7 @@ router.put('/:id/iban', async (req, res) => {
 
 // âââ Archive / Restore partner âââ
 router.put('/:id/archive', authorize('admin'), async (req, res) => {
+  const client = await getClient();
   try {
     let whereExtra = '';
     let params = [req.params.id];
@@ -274,15 +301,37 @@ router.put('/:id/archive', authorize('admin'), async (req, res) => {
       params.push(req.tenantId);
     }
 
-    const { rows: [partner] } = await query(
+    await client.query('BEGIN');
+    const { rows: [partner] } = await client.query(
       `UPDATE partners SET is_active = NOT is_active WHERE id = $1${whereExtra} RETURNING *`,
       params
     );
+    if (!partner) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Partenaire introuvable' });
+    }
 
-    if (!partner) return res.status(404).json({ error: 'Partenaire introuvable' });
+    // Keep user_roles in sync so /me/spaces stops listing this space
+    // for the partner user and /switch-space denies it. Existing active
+    // JWTs will still work until they hit /auth/me (which re-checks
+    // partners.is_active) or until the admin re-archives.
+    await client.query(
+      `UPDATE user_roles SET is_active = $1 WHERE partner_id = $2`,
+      [partner.is_active, partner.id]
+    );
+    await client.query('COMMIT');
+
+    // Fire-and-forget email on deactivation only (restore is silent).
+    if (!partner.is_active) {
+      notifyPartnerRevoked(partner.id, partner.tenant_id, partner.name);
+    }
     res.json({ partner });
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('[partners archive]', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    client.release();
   }
 });
 
@@ -290,10 +339,24 @@ router.put('/:id/archive', authorize('admin'), async (req, res) => {
 router.delete('/:id', authorize('admin'), async (req, res) => {
   const client = await getClient();
   try {
+    // Collect partner + linked users BEFORE we delete so we can email
+    // them after the transaction commits.
+    const { rows: pRow } = await client.query(
+      'SELECT id, name, tenant_id FROM partners WHERE id = $1 AND (tenant_id = $2 OR $2::uuid IS NULL)',
+      [req.params.id, req.tenantId || null]
+    );
+    const partner = pRow[0];
+
     await client.query('BEGIN');
+    // Remove any multi-role mappings that point at this partner — otherwise
+    // /me/spaces still lists the deleted space and /switch-space would
+    // allow a user to "switch to" a nonexistent partner.
+    await client.query('DELETE FROM user_roles WHERE partner_id = $1', [req.params.id]);
     await client.query('DELETE FROM users WHERE partner_id = $1', [req.params.id]);
     const { rowCount } = await client.query('DELETE FROM partners WHERE id = $1 AND (tenant_id = $2 OR $2::uuid IS NULL)', [req.params.id, req.tenantId || null]);
     await client.query('COMMIT');
+
+    if (partner) notifyPartnerRevoked(partner.id, partner.tenant_id, partner.name);
 
     if (rowCount === 0) return res.status(404).json({ error: 'Partenaire introuvable' });
     res.json({ message: 'Partenaire supprimÃ©' });
