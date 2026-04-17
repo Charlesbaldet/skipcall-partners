@@ -39,6 +39,8 @@ router.get('/posts', async (req, res) => {
   try {
     const { category, limit = 20, offset = 0 } = req.query;
     const lang = resolveLang(req);
+    // Key browser / CDN caches by language so changing locale invalidates.
+    res.vary('Accept-Language');
     let where = 'WHERE published = true';
     const params = [];
     let i = 1;
@@ -89,6 +91,7 @@ router.get('/categories', async (req, res) => {
 router.get('/posts/:slug', async (req, res) => {
   try {
     const lang = resolveLang(req);
+    res.vary('Accept-Language');
     const { rows } = await query(
       `SELECT id, slug,
               ${localizedCol('title', lang)} AS title,

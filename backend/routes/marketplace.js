@@ -8,6 +8,8 @@ router.get('/', async (req, res) => {
   try {
     const { sector, q } = req.query;
     const lang = resolveLang(req);
+    // Key browser / CDN caches by language so changing locale invalidates.
+    res.vary('Accept-Language');
     // Serve `short_description` in the caller's language with fallback to
     // the original (French) column. Only the whitelisted lang from
     // resolveLang() reaches this interpolation — safe for SQL.
