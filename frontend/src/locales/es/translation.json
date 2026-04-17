@@ -331,7 +331,8 @@
       "statistics": "Estadísticas",
       "audit_logs": "Logs de Auditoría",
       "blog": "Blog",
-      "news": "Noticias"
+      "news": "Noticias",
+      "notifications": "Notificaciones"
     },
     "collapse": "Reducir",
     "logout": "Cerrar sesión"
@@ -1756,6 +1757,15 @@
     "event_commission": "Nueva comisión disponible (socios)",
     "event_news": "Publicación de noticia (socios)",
     "event_deal_won": "Negocio ganado",
-    "event_access_revoked": "Acceso de socio revocado"
+    "event_access_revoked": "Acceso de socio revocado",
+    "filter_all": "Todo",
+    "filter_news": "Noticias",
+    "filter_referrals": "Referrals",
+    "filter_payments": "Pagos",
+    "filter_applications": "Solicitudes",
+    "group_today": "Hoy",
+    "group_yesterday": "Ayer",
+    "group_this_week": "Esta semana",
+    "group_earlier": "Antes"
   }
 }

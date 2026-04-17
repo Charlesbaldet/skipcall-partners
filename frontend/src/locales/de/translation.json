@@ -331,7 +331,8 @@
       "statistics": "Statistiken",
       "audit_logs": "Audit-Protokolle",
       "blog": "Blog",
-      "news": "News"
+      "news": "News",
+      "notifications": "Benachrichtigungen"
     },
     "collapse": "Einklappen",
     "logout": "Abmelden"
@@ -1756,6 +1757,15 @@
     "event_commission": "Neue Provision verfügbar (Partner)",
     "event_news": "News veröffentlicht (Partner)",
     "event_deal_won": "Deal gewonnen",
-    "event_access_revoked": "Partnerzugang widerrufen"
+    "event_access_revoked": "Partnerzugang widerrufen",
+    "filter_all": "Alle",
+    "filter_news": "News",
+    "filter_referrals": "Referrals",
+    "filter_payments": "Zahlungen",
+    "filter_applications": "Bewerbungen",
+    "group_today": "Heute",
+    "group_yesterday": "Gestern",
+    "group_this_week": "Diese Woche",
+    "group_earlier": "Früher"
   }
 }

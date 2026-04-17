@@ -331,7 +331,8 @@
       "statistics": "Statistics",
       "audit_logs": "Audit Logs",
       "blog": "Blog",
-      "news": "News"
+      "news": "News",
+      "notifications": "Notifications"
     },
     "collapse": "Collapse",
     "logout": "Logout"
@@ -1756,6 +1757,15 @@
     "event_commission": "New commission available (for partners)",
     "event_news": "News published (for partners)",
     "event_deal_won": "Deal won",
-    "event_access_revoked": "Partner access revoked"
+    "event_access_revoked": "Partner access revoked",
+    "filter_all": "All",
+    "filter_news": "News",
+    "filter_referrals": "Referrals",
+    "filter_payments": "Payments",
+    "filter_applications": "Applications",
+    "group_today": "Today",
+    "group_yesterday": "Yesterday",
+    "group_this_week": "This week",
+    "group_earlier": "Earlier"
   }
 }

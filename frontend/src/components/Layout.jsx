@@ -4,9 +4,8 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import LanguageSwitcher from './LanguageSwitcher';
-import NotificationBell from './NotificationBell';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -36,7 +35,13 @@ export default function Layout({ children }) {
   // `notifyKeys` — categories from /notifications/unread-by-category
   //  whose combined unread count triggers the red dot on this nav item.
   //  Visiting the page auto-marks those categories as read.
+  const ALL_NOTIFY_KEYS = [
+    'news', 'promo', 'kit', 'event',
+    'referral_update', 'new_referral', 'deal_won',
+    'commission', 'new_application', 'access_revoked',
+  ];
   const ADMIN_NAV = [
+    { to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
     { to: '/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
     { to: '/referrals', icon: FileText, label: t('layout.nav.pipeline'), notifyKeys: ['new_referral', 'deal_won'] },
     { to: '/commissions', icon: DollarSign, label: t('layout.nav.commissions') },
@@ -48,6 +53,7 @@ export default function Layout({ children }) {
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
   ];
   const PARTNER_NAV = [
+    { to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
     { to: '/partner/referrals', icon: FileText, label: t('layout.nav.my_referrals'), notifyKeys: ['referral_update'] },
     { to: '/partner/submit', icon: Send, label: t('layout.nav.submit') },
     { to: '/partner/payments', icon: DollarSign, label: t('layout.nav.my_payments'), notifyKeys: ['commission'] },
@@ -108,6 +114,7 @@ export default function Layout({ children }) {
   useEffect(() => {
     if (!user || isSuperAdmin) return;
     const routeCats = {
+      '/notifications':    ['news', 'promo', 'kit', 'event', 'referral_update', 'new_referral', 'deal_won', 'commission', 'new_application', 'access_revoked'],
       '/partner/news':     ['news', 'promo', 'kit', 'event'],
       '/partner/referrals':['referral_update'],
       '/partner/payments': ['commission'],
@@ -383,11 +390,6 @@ export default function Layout({ children }) {
       </aside>
 
       <main style={{ flex: 1, marginLeft: collapsed ? 68 : 200, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
-        {/* Floating notification bell in the top-right of the content area
-            so every authenticated page renders it without per-page plumbing. */}
-        <div style={{ position: 'fixed', top: 14, right: 20, zIndex: 90 }}>
-          <NotificationBell />
-        </div>
         {children}
       </main>
 

@@ -331,7 +331,8 @@
       "statistics": "Statistieken",
       "audit_logs": "Auditlogboeken",
       "blog": "Blog",
-      "news": "Nieuws"
+      "news": "Nieuws",
+      "notifications": "Meldingen"
     },
     "collapse": "Inklappen",
     "logout": "Uitloggen"
@@ -1756,6 +1757,15 @@
     "event_commission": "Nieuwe commissie beschikbaar (partners)",
     "event_news": "Nieuwsbericht gepubliceerd (partners)",
     "event_deal_won": "Deal gewonnen",
-    "event_access_revoked": "Partnertoegang ingetrokken"
+    "event_access_revoked": "Partnertoegang ingetrokken",
+    "filter_all": "Alles",
+    "filter_news": "Nieuws",
+    "filter_referrals": "Verwijzingen",
+    "filter_payments": "Betalingen",
+    "filter_applications": "Aanvragen",
+    "group_today": "Vandaag",
+    "group_yesterday": "Gisteren",
+    "group_this_week": "Deze week",
+    "group_earlier": "Eerder"
   }
 }
