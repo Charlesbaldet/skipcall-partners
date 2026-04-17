@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const LANGUAGES = [
@@ -11,6 +11,22 @@ const LANGUAGES = [
   { code: 'pt', label: 'Português', flag: '🇵🇹' },
 ];
 
+// Below this viewport width the switcher forces itself into compact mode
+// (flag only) regardless of the `compact` prop the caller passed.
+const COMPACT_BREAKPOINT = 380;
+
+function useForcedCompact() {
+  const [narrow, setNarrow] = useState(
+    typeof window !== 'undefined' && window.innerWidth < COMPACT_BREAKPOINT
+  );
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth < COMPACT_BREAKPOINT);
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return narrow;
+}
+
 /**
  * direction: 'down' (navbar / default) | 'up' (sidebar)
  * dark:      true = fond sombre (sidebar), false = fond blanc (navbar)
@@ -19,6 +35,8 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
   const { i18n } = useTranslation();
   const current = LANGUAGES.find(l => l.code === i18n.language) || LANGUAGES[0];
   const [open, setOpen] = useState(false);
+  const forceCompact = useForcedCompact();
+  const isCompact = compact || forceCompact;
 
   const select = (code) => { i18n.changeLanguage(code); setOpen(false); };
 
@@ -31,10 +49,12 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
   const itemColor  = dark ? '#94a3b8' : '#64748b';
   const itemHover  = dark ? 'rgba(255,255,255,0.05)' : '#f8fafc';
 
-  // Dropdown position : vers le bas (navbar) ou vers le haut (sidebar)
+  // Dropdown anchors to the right edge of the button so it never overflows
+  // off the right side of the viewport on mobile. `left: auto` is explicit
+  // to defeat any ambient styling that might otherwise pin it left.
   const dropPos = direction === 'up'
-    ? { bottom: 'calc(100% + 8px)', top: 'auto', left: 0 }
-    : { top:    'calc(100% + 8px)', bottom: 'auto', left: 0 };
+    ? { bottom: 'calc(100% + 8px)', top: 'auto', right: 0, left: 'auto' }
+    : { top:    'calc(100% + 8px)', bottom: 'auto', right: 0, left: 'auto' };
 
   return (
     <div style={{ position: 'relative', display: 'inline-block', ...style }}>
@@ -44,7 +64,7 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
           background: 'transparent',
           border: `1.5px solid ${btnBorder}`,
           borderRadius: 8,
-          padding: compact ? '5px 8px' : '6px 12px',
+          padding: isCompact ? '5px 8px' : '6px 12px',
           fontSize: 13,
           cursor: 'pointer',
           color: btnColor,
@@ -59,13 +79,15 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
         onMouseLeave={e => e.currentTarget.style.borderColor = btnBorder}
       >
         <span style={{ fontSize: 15, lineHeight: 1 }}>{current.flag}</span>
-        {!compact && <span>{current.label}</span>}
+        {!isCompact && <span>{current.label}</span>}
         <span style={{ fontSize: 9, opacity: 0.5 }}>▾</span>
       </button>
 
       {open && (
         <>
-          {/* Overlay pour fermer */}
+          {/* Full-screen overlay so a tap/click anywhere (including the
+              mobile viewport outside the narrow anchor container) closes
+              the dropdown. */}
           <div
             onClick={() => setOpen(false)}
             style={{ position: 'fixed', inset: 0, zIndex: 998 }}
@@ -79,6 +101,12 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
             borderRadius: 12,
             padding: '6px',
             minWidth: 160,
+            // Never exceed the viewport width (minus a 16px breathing
+            // margin on each side) and cap height so 7 languages stay
+            // scrollable on short screens.
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: 'min(70vh, 420px)',
+            overflowY: 'auto',
             boxShadow: dropShadow,
           }}>
             {LANGUAGES.map(l => (
