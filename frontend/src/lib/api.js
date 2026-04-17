@@ -172,6 +172,29 @@ class ApiClient {
   updateMarketplaceSettings(data) {
     return this.request('/marketplace/settings', { method: 'PATCH', body: JSON.stringify(data) });
   }
+
+  // News (admin)
+  getNews() { return this.request('/news'); }
+  createNews(data) { return this.request('/news', { method: 'POST', body: JSON.stringify(data) }); }
+  updateNews(id, data) { return this.request('/news/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
+  deleteNews(id) { return this.request('/news/' + id, { method: 'DELETE' }); }
+  addNewsAttachment(id, data) { return this.request('/news/' + id + '/attachments', { method: 'POST', body: JSON.stringify(data) }); }
+  deleteNewsAttachment(id) { return this.request('/news/attachments/' + id, { method: 'DELETE' }); }
+  getNewsStats(id) { return this.request('/news/' + id + '/stats'); }
+  getNewsEngagement() { return this.request('/news/engagement'); }
+  getSocials() { return this.request('/partners/social'); }
+  updateSocials(data) { return this.request('/partners/social', { method: 'PUT', body: JSON.stringify(data) }); }
+
+  // News (partner)
+  getPartnerNews() { return this.request('/partner/news'); }
+  getPartnerNewsPost(id) { return this.request('/partner/news/' + id); }
+  getProgramSocials(tenantId) { return this.request('/partner/program/' + tenantId + '/socials'); }
+
+  // Notifications
+  getNotifications() { return this.request('/notifications'); }
+  markNotificationRead(id) { return this.request('/notifications/' + id + '/read', { method: 'PUT' }); }
+  markAllNotificationsRead() { return this.request('/notifications/read-all', { method: 'PUT' }); }
+  getUnreadNotificationCount() { return this.request('/notifications/unread-count'); }
 }
 
 export const api = new ApiClient();

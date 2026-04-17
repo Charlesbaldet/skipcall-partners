@@ -31,6 +31,8 @@ import FeatureCommissionsPage from './pages/features/FeatureCommissionsPage';
 import FeatureAnalyticsPage from './pages/features/FeatureAnalyticsPage';
 import FeaturePersonnalisationPage from './pages/features/FeaturePersonnalisationPage';
 import FeatureTrackingPage from './pages/features/FeatureTrackingPage';
+import NewsPage from './pages/NewsPage.jsx';
+import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -71,11 +73,13 @@ function AppRoutes() {
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
       <Route path="/programme" element={<ProtectedRoute><Layout><ProgrammePage /></Layout></ProtectedRoute>} />
       <Route path="/messaging" element={<ProtectedRoute><Layout><MessagingPage /></Layout></ProtectedRoute>} />
+      <Route path="/news" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><NewsPage /></Layout></ProtectedRoute>} />
 
       {/* Partner */}
       <Route path="/partner/referrals" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerMyReferrals /></Layout></ProtectedRoute>} />
       <Route path="/partner/submit" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerSubmitPage /></Layout></ProtectedRoute>} />
       <Route path="/partner/payments" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerPaymentsPage /></Layout></ProtectedRoute>} />
+      <Route path="/partner/news" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerNewsPage /></Layout></ProtectedRoute>} />
               <Route path="/fonctionnalites/pipeline" element={<FeaturePipelinePage />} />
           <Route path="/fonctionnalites/commissions" element={<FeatureCommissionsPage />} />
           <Route path="/fonctionnalites/analytics" element={<FeatureAnalyticsPage />} />
