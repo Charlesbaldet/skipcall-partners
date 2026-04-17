@@ -19,6 +19,15 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     (async () => {
+      // Don't hit /auth/me at all when there's no token — it would 401,
+      // and the 401 handler in api.js would bounce guests off public
+      // marketing pages (/fonctionnalites/*, /blog, etc.) to /login.
+      if (!api.token) {
+        setUser(null);
+        setSpaces([]);
+        setLoading(false);
+        return;
+      }
       try {
         const data = await api.getMe();
         setUser(data.user);
