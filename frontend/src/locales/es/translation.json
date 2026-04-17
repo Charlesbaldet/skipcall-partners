@@ -272,7 +272,8 @@
     "no_account": "¿Aún no tienes cuenta?",
     "create_account": "Crear un espacio gratis →",
     "back_to_site": "← Volver al sitio",
-    "error_default": "Credenciales incorrectas"
+    "error_default": "Credenciales incorrectas",
+    "access_revoked": "Tu acceso ha sido revocado por el administrador. Si crees que es un error, contacta con tu programa."
   },
   "signup": {
     "title": "Crea tu espacio",

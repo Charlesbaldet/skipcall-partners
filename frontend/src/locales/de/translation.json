@@ -272,7 +272,8 @@
     "no_account": "Noch kein Konto?",
     "create_account": "Kostenlosen Bereich erstellen →",
     "back_to_site": "← Zurück zur Website",
-    "error_default": "Falsche Anmeldedaten"
+    "error_default": "Falsche Anmeldedaten",
+    "access_revoked": "Ihr Zugriff wurde vom Administrator widerrufen. Falls Sie glauben, dass es sich um einen Fehler handelt, kontaktieren Sie Ihr Programm."
   },
   "signup": {
     "title": "Erstellen Sie Ihren Bereich",

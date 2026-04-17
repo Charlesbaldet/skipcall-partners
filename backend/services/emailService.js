@@ -95,6 +95,28 @@ function commissionPending(partnerName, amount, prospectName) {
   };
 }
 
+function partnerAccessRevoked(partnerName, tenantName) {
+  const who = partnerName || '';
+  const from = tenantName ? ` au programme <strong>${tenantName}</strong>` : '';
+  return {
+    subject: `Skipcall — Votre accès a été révoqué`,
+    html: `
+      <div style="font-family: -apple-system, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="display: inline-block; width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; font-weight: 800; font-size: 18px; line-height: 40px;">S</div>
+        </div>
+        <h2 style="color: #0f172a; font-size: 20px; margin-bottom: 8px;">Accès révoqué</h2>
+        <p style="color: #475569; line-height: 1.6;">Bonjour ${who},</p>
+        <p style="color: #475569; line-height: 1.6;">Nous vous informons que votre accès${from} a été révoqué par l'administrateur. Vous ne pourrez plus vous connecter à votre espace partenaire avec cet email.</p>
+        <div style="background: #fef2f2; border-left: 3px solid #dc2626; border-radius: 8px; padding: 14px 16px; margin: 20px 0;">
+          <div style="color: #b91c1c; font-size: 13px;">Si vous pensez qu'il s'agit d'une erreur, contactez directement votre administrateur de programme.</div>
+        </div>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 32px;">Skipcall — Programme Partenaires</p>
+      </div>
+    `,
+  };
+}
+
 // Placeholder for old emailService compatibility
 function queueNotification() {}
 function startNotificationWorker() {}
@@ -104,6 +126,7 @@ module.exports = {
   referralStatusChanged,
   newReferralSubmitted,
   commissionPending,
+  partnerAccessRevoked,
   queueNotification,
   startNotificationWorker,
 };
