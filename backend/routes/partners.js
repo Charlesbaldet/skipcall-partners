@@ -124,27 +124,92 @@ router.post('/', authorize('admin'), [
 
     await client.query('BEGIN');
 
-    // INSERT partner with tenant_id
-    const { rows: [partner] } = await client.query(
-      `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [name, contact_name, email, phone, company_website, commission_rate, req.tenantId || null]
+    // If an archived partner with this email already exists, reactivate
+    // them instead of returning 409 — deactivating never removed the
+    // row (UNIQUE index on partners.email still holds it), so a fresh
+    // INSERT would collide.
+    const { rows: existing } = await client.query(
+      'SELECT id, is_active, tenant_id FROM partners WHERE LOWER(email) = LOWER($1) LIMIT 1',
+      [email]
     );
 
-    // Auto-create user account for the partner (with tenant_id)
-    const tempPassword = Math.random().toString(36).slice(2, 10) + '!A1';
+    let partner;
+    let tempPassword;
+    const reactivating = existing.length > 0 && existing[0].is_active === false;
+
+    if (existing.length && existing[0].is_active) {
+      // Genuine duplicate — real active partner with this email.
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Un partenaire avec cet email existe déjà' });
+    }
+    if (existing.length && existing[0].tenant_id && req.tenantId && existing[0].tenant_id !== req.tenantId) {
+      // Email is tied to another tenant — don't poach.
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Un partenaire avec cet email existe déjà' });
+    }
+
+    tempPassword = Math.random().toString(36).slice(2, 10) + '!A1';
     const hash = await bcrypt.hash(tempPassword, 12);
 
-    await client.query(
-      `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
-       VALUES ($1, $2, $3, 'partner', $4, $5, true)`,
-      [email, hash, contact_name, partner.id, req.tenantId || null]
-    );
+    if (reactivating) {
+      const prev = existing[0];
+      const { rows: [updated] } = await client.query(
+        `UPDATE partners SET
+           name = $2,
+           contact_name = $3,
+           phone = COALESCE($4, phone),
+           company_website = COALESCE($5, company_website),
+           commission_rate = $6,
+           is_active = true,
+           tenant_id = COALESCE(tenant_id, $7)
+         WHERE id = $1
+         RETURNING *`,
+        [prev.id, name, contact_name, phone || null, company_website || null, commission_rate, req.tenantId || null]
+      );
+      partner = updated;
+
+      // Restore the paired user (new password + must_change_password),
+      // or create one if it was previously deleted.
+      const { rowCount: userUpdated } = await client.query(
+        `UPDATE users SET
+           password_hash = $1,
+           full_name = $2,
+           role = 'partner',
+           partner_id = $3,
+           tenant_id = COALESCE(tenant_id, $4),
+           is_active = true,
+           must_change_password = true
+         WHERE LOWER(email) = LOWER($5)`,
+        [hash, contact_name, partner.id, req.tenantId || null, email]
+      );
+      if (!userUpdated) {
+        await client.query(
+          `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
+           VALUES ($1, $2, $3, 'partner', $4, $5, true)`,
+          [email, hash, contact_name, partner.id, req.tenantId || null]
+        );
+      }
+      await client.query(
+        'UPDATE user_roles SET is_active = true WHERE partner_id = $1',
+        [partner.id]
+      );
+    } else {
+      const { rows: [created] } = await client.query(
+        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [name, contact_name, email, phone, company_website, commission_rate, req.tenantId || null]
+      );
+      partner = created;
+      await client.query(
+        `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
+         VALUES ($1, $2, $3, 'partner', $4, $5, true)`,
+        [email, hash, contact_name, partner.id, req.tenantId || null]
+      );
+    }
 
     await client.query('COMMIT');
-
-    res.status(201).json({ partner, tempPassword });
+    res.status(201).json({ partner, tempPassword, reactivated: reactivating });
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.code === '23505') {
