@@ -78,10 +78,17 @@ router.post('/login', [
 
 // ─── Get current user profile ───
 // Response shape MUST match POST /auth/login so useAuth can overwrite
-// the stored user on page reload without dropping any fields. In
-// particular return camelCase `partnerId` (not `partner_id`) —
-// otherwise referrals submission loses user.partnerId after a refresh
-// and the backend returns "Partner ID requis".
+// the stored user on page reload without dropping any fields. Return
+// camelCase (partnerId, not partner_id).
+//
+// Multi-role (Phase B) handling: a user may have `role='partner'` on
+// the users row but `partner_id IS NULL` — either because a prior
+// /switch-space passed no partnerId, or the matching user_roles row
+// itself lacks it. In that case we resolve the correct partnerId by:
+//   1) looking at user_roles for this (user, tenant, role=partner)
+//   2) falling back to partners rows matched by email+tenant
+// Without this, referrals submission fails with "Partner ID requis"
+// after space switching even though the partner record exists.
 router.get('/me', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
@@ -92,20 +99,66 @@ router.get('/me', authenticate, async (req, res) => {
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
     const u = rows[0];
+
+    let partnerId = u.partner_id;
+    let partnerName = u.partner_name;
+    let commissionRate = u.commission_rate;
+
+    if (u.role === 'partner' && !partnerId) {
+      // 1. Resolve via user_roles (canonical source of truth for spaces).
+      const { rows: ur } = await query(
+        `SELECT ur.partner_id, p.name AS partner_name, p.commission_rate
+           FROM user_roles ur
+           LEFT JOIN partners p ON p.id = ur.partner_id
+          WHERE ur.user_id = $1 AND ur.role = 'partner'
+            AND ($2::uuid IS NULL OR ur.tenant_id = $2)
+            AND ur.is_active = TRUE AND ur.partner_id IS NOT NULL
+          ORDER BY ur.created_at DESC
+          LIMIT 1`,
+        [u.id, u.tenant_id || null]
+      );
+      if (ur.length) {
+        partnerId = ur[0].partner_id;
+        partnerName = ur[0].partner_name;
+        commissionRate = ur[0].commission_rate;
+      } else {
+        // 2. Fallback — find an active partner record by email in the tenant.
+        const { rows: pr } = await query(
+          `SELECT id AS partner_id, name AS partner_name, commission_rate
+             FROM partners
+            WHERE LOWER(email) = LOWER($1) AND is_active = TRUE
+              AND ($2::uuid IS NULL OR tenant_id = $2)
+            ORDER BY created_at DESC
+            LIMIT 1`,
+          [u.email, u.tenant_id || null]
+        );
+        if (pr.length) {
+          partnerId = pr[0].partner_id;
+          partnerName = pr[0].partner_name;
+          commissionRate = pr[0].commission_rate;
+          // Self-heal: persist so subsequent requests skip this fallback.
+          await query('UPDATE users SET partner_id = $1 WHERE id = $2', [partnerId, u.id]);
+        }
+      }
+    }
+
     res.json({
       user: {
         id: u.id,
         email: u.email,
         fullName: u.full_name,
         role: u.role,
-        partnerId: u.partner_id,
-        partnerName: u.partner_name,
+        partnerId,
+        partnerName,
         tenantId: u.tenant_id,
-        commissionRate: u.commission_rate,
+        commissionRate,
         mustChangePassword: u.must_change_password || false,
       },
     });
-  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch (err) {
+    console.error('[GET /me] error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // ─── Change password (ISO 27001 A.9.4 - password policy) ───
