@@ -149,8 +149,32 @@ router.post('/', [
       recommendation_level, notes,
     } = req.body;
 
-    // Determine partner_id from user or body
-    const partnerId = req.user.partnerId || req.body.partner_id;
+    // Determine partner_id from JWT, request body, or — for multi-role
+    // users whose JWT is stale after /switch-space — by resolving the
+    // partner record that matches this user+tenant+email.
+    let partnerId = req.user.partnerId || req.body.partner_id;
+    if (!partnerId && req.user.role === 'partner') {
+      const { rows: ur } = await query(
+        `SELECT partner_id FROM user_roles
+          WHERE user_id = $1 AND role = 'partner' AND is_active = TRUE
+            AND ($2::uuid IS NULL OR tenant_id = $2)
+            AND partner_id IS NOT NULL
+          ORDER BY created_at DESC LIMIT 1`,
+        [req.user.id, req.tenantId || req.user.tenantId || null]
+      );
+      if (ur.length) partnerId = ur[0].partner_id;
+      else {
+        const { rows: pr } = await query(
+          `SELECT p.id FROM partners p
+             JOIN users u ON LOWER(u.email) = LOWER(p.email)
+            WHERE u.id = $1 AND p.is_active = TRUE
+              AND ($2::uuid IS NULL OR p.tenant_id = $2)
+            ORDER BY p.created_at DESC LIMIT 1`,
+          [req.user.id, req.tenantId || req.user.tenantId || null]
+        );
+        if (pr.length) partnerId = pr[0].id;
+      }
+    }
     if (!partnerId) {
       return res.status(400).json({ error: 'Partner ID requis' });
     }
