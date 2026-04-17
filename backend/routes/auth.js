@@ -76,6 +76,97 @@ router.post('/login', [
   }
 });
 
+// ─── Google SSO ──────────────────────────────────────────────────────
+// POST /auth/google { credential } — verify the Google ID token, find
+// the matching user by email, issue our JWT. Does NOT create new
+// accounts; the frontend gets `{ error: 'no_account', email, name }`
+// when there's no user row with that email so it can nudge the user
+// to sign up or wait for a partner invite.
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+router.post('/google', async (req, res) => {
+  try {
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ error: 'Google SSO non configuré' });
+    }
+    const { credential } = req.body || {};
+    if (!credential) return res.status(400).json({ error: 'credential manquant' });
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      auditLog(req, 'google_login_invalid_token', 'user', null, { err: err.message });
+      return res.status(401).json({ error: 'Token Google invalide' });
+    }
+
+    const email = (payload.email || '').toLowerCase();
+    const emailVerified = payload.email_verified;
+    if (!email || !emailVerified) {
+      return res.status(401).json({ error: 'Email Google non vérifié' });
+    }
+
+    // Find the user by email (case-insensitive).
+    const { rows } = await query(
+      `SELECT u.id, u.email, u.password_hash, u.full_name, u.role, u.partner_id,
+              u.is_active, u.tenant_id, u.must_change_password, u.avatar_url,
+              p.name AS partner_name
+       FROM users u LEFT JOIN partners p ON u.partner_id = p.id
+       WHERE LOWER(u.email) = LOWER($1)
+       LIMIT 1`,
+      [email]
+    );
+    const user = rows[0];
+    if (!user) {
+      // Intentionally 200 with `needsSignup: true` — our api.request
+      // throws on non-2xx, which would strip the email/name the
+      // frontend needs to pre-fill the signup form.
+      return res.json({
+        needsSignup: true,
+        email,
+        name: payload.name || null,
+      });
+    }
+    if (!user.is_active) {
+      return res.status(403).json({ error: 'Compte désactivé' });
+    }
+
+    // Opportunistically save the Google avatar if we don't have one.
+    if (!user.avatar_url && payload.picture) {
+      try {
+        await query('UPDATE users SET avatar_url = $1 WHERE id = $2', [payload.picture, user.id]);
+        user.avatar_url = payload.picture;
+      } catch { /* avatar_url column may not exist yet — ignore */ }
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, partnerId: user.partner_id, fullName: user.full_name, tenantId: user.tenant_id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    auditLog(req, 'google_login_success', 'user', user.id, { email });
+
+    res.json({
+      token,
+      user: {
+        id: user.id, email: user.email, fullName: user.full_name,
+        role: user.role, partnerId: user.partner_id, partnerName: user.partner_name,
+        mustChangePassword: user.must_change_password || false,
+        avatarUrl: user.avatar_url || null,
+      },
+    });
+  } catch (err) {
+    console.error('[google sso]', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ─── Get current user profile ───
 // Response shape MUST match POST /auth/login so useAuth can overwrite
 // the stored user on page reload without dropping any fields. Return

@@ -275,7 +275,10 @@
     "create_account": "Kostenlosen Bereich erstellen →",
     "back_to_site": "← Zurück zur Website",
     "error_default": "Falsche Anmeldedaten",
-    "access_revoked": "Ihr Zugriff wurde vom Administrator widerrufen. Falls Sie glauben, dass es sich um einen Fehler handelt, kontaktieren Sie Ihr Programm."
+    "access_revoked": "Ihr Zugriff wurde vom Administrator widerrufen. Falls Sie glauben, dass es sich um einen Fehler handelt, kontaktieren Sie Ihr Programm.",
+    "google_continue": "Mit Google fortfahren",
+    "or": "oder",
+    "google_error": "Google-Anmeldung fehlgeschlagen"
   },
   "signup": {
     "title": "Erstellen Sie Ihren Bereich",
@@ -313,7 +316,8 @@
     "pwd_upper": "Großbuchst.",
     "pwd_lower": "Kleinbuchst.",
     "pwd_digit": "Ziffer",
-    "pwd_special": "Sonderz."
+    "pwd_special": "Sonderz.",
+    "google_continue": "Mit Google registrieren"
   },
   "layout": {
     "nav": {

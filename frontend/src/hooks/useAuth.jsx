@@ -48,6 +48,17 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  // Google SSO — same post-login steps as `login`, plus a caller
+  // signal (`needsSignup`) when the email isn't registered yet so
+  // pages can route the visitor to /signup with the email pre-filled.
+  const loginWithGoogle = async (credential) => {
+    const data = await api.loginWithGoogle(credential);
+    if (data.needsSignup) return data;
+    setUser(data.user);
+    await refreshSpaces();
+    return data;
+  };
+
   const logout = async () => {
     await api.logout();
     setUser(null);
@@ -78,7 +89,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, spaces, currentSpace, login, logout, switchSpace, refreshSpaces }}
+      value={{ user, loading, spaces, currentSpace, login, loginWithGoogle, logout, switchSpace, refreshSpaces }}
     >
       {children}
     </AuthContext.Provider>

@@ -275,7 +275,10 @@
     "create_account": "Crea uno spazio gratuito →",
     "back_to_site": "← Torna al sito",
     "error_default": "Credenziali errate",
-    "access_revoked": "Il tuo accesso è stato revocato dall'amministratore. Se pensi che si tratti di un errore, contatta il tuo programma."
+    "access_revoked": "Il tuo accesso è stato revocato dall'amministratore. Se pensi che si tratti di un errore, contatta il tuo programma.",
+    "google_continue": "Continua con Google",
+    "or": "o",
+    "google_error": "Accesso con Google non riuscito"
   },
   "signup": {
     "title": "Crea il tuo spazio",
@@ -313,7 +316,8 @@
     "pwd_upper": "Maiuscola",
     "pwd_lower": "Minuscola",
     "pwd_digit": "Cifra",
-    "pwd_special": "Speciale"
+    "pwd_special": "Speciale",
+    "google_continue": "Registrati con Google"
   },
   "layout": {
     "nav": {

@@ -275,7 +275,10 @@
     "create_account": "Gratis ruimte aanmaken →",
     "back_to_site": "← Terug naar site",
     "error_default": "Onjuiste inloggegevens",
-    "access_revoked": "Je toegang is ingetrokken door de beheerder. Als je denkt dat dit een vergissing is, neem dan contact op met je programma."
+    "access_revoked": "Je toegang is ingetrokken door de beheerder. Als je denkt dat dit een vergissing is, neem dan contact op met je programma.",
+    "google_continue": "Doorgaan met Google",
+    "or": "of",
+    "google_error": "Aanmelden met Google mislukt"
   },
   "signup": {
     "title": "Maak uw ruimte aan",
@@ -313,7 +316,8 @@
     "pwd_upper": "Hoofdletter",
     "pwd_lower": "Kleine letter",
     "pwd_digit": "Cijfer",
-    "pwd_special": "Speciaal"
+    "pwd_special": "Speciaal",
+    "google_continue": "Registreren met Google"
   },
   "layout": {
     "nav": {

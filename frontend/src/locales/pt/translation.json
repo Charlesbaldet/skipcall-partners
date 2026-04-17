@@ -275,7 +275,10 @@
     "create_account": "Criar espaço gratuito →",
     "back_to_site": "← Voltar ao site",
     "error_default": "Credenciais incorretas",
-    "access_revoked": "O seu acesso foi revogado pelo administrador. Se pensa que se trata de um erro, contacte o seu programa."
+    "access_revoked": "O seu acesso foi revogado pelo administrador. Se pensa que se trata de um erro, contacte o seu programa.",
+    "google_continue": "Continuar com Google",
+    "or": "ou",
+    "google_error": "Falha ao iniciar sessão com Google"
   },
   "signup": {
     "title": "Crie seu espaço",
@@ -313,7 +316,8 @@
     "pwd_upper": "Maiúscula",
     "pwd_lower": "Minúscula",
     "pwd_digit": "Dígito",
-    "pwd_special": "Especial"
+    "pwd_special": "Especial",
+    "google_continue": "Registar com Google"
   },
   "layout": {
     "nav": {

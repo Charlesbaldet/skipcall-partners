@@ -275,7 +275,10 @@
     "create_account": "Créer un espace gratuit →",
     "back_to_site": "← Retour au site",
     "error_default": "Identifiants incorrects",
-    "access_revoked": "Votre accès a été révoqué par l'administrateur. Si vous pensez qu'il s'agit d'une erreur, contactez votre programme."
+    "access_revoked": "Votre accès a été révoqué par l'administrateur. Si vous pensez qu'il s'agit d'une erreur, contactez votre programme.",
+    "google_continue": "Continuer avec Google",
+    "or": "ou",
+    "google_error": "La connexion Google a échoué"
   },
   "signup": {
     "title": "Créez votre espace",
@@ -313,7 +316,8 @@
     "pwd_upper": "Majuscule",
     "pwd_lower": "Minuscule",
     "pwd_digit": "Chiffre",
-    "pwd_special": "Spécial"
+    "pwd_special": "Spécial",
+    "google_continue": "S'inscrire avec Google"
   },
   "layout": {
     "nav": {

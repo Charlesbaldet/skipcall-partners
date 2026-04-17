@@ -1,11 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
 
 export default function SignupPage() {
+  const { loginWithGoogle } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -14,7 +17,10 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
-    company: '', fullName: '', email: params.get('email') || '', password: '', phone: '',
+    company: '',
+    fullName: params.get('name') || '',
+    email: params.get('email') || '',
+    password: '', phone: '',
   });
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -85,7 +91,41 @@ export default function SignupPage() {
         {step === 1 && (
           <>
             <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.title")}</h2>
-            <p style={{ color:C.m,fontSize:14,margin:'0 0 28px',fontFamily:"'DM Sans',sans-serif" }}>{t("signup.subtitle")}</p>
+            <p style={{ color:C.m,fontSize:14,margin:'0 0 20px',fontFamily:"'DM Sans',sans-serif" }}>{t("signup.subtitle")}</p>
+
+            {/* Google SSO — on a matching account we sign the user in
+                and skip the form entirely; on a new Google email we
+                pre-fill fullName + email and keep the signup flow so
+                the caller still enters company + password. */}
+            <GoogleSignInButton
+              text={t('signup.google_continue')}
+              onSuccess={async ({ credential }) => {
+                setError('');
+                try {
+                  const data = await loginWithGoogle(credential);
+                  if (data && data.needsSignup) {
+                    setForm(f => ({
+                      ...f,
+                      email: data.email || f.email,
+                      fullName: data.name || f.fullName,
+                    }));
+                  } else if (data && data.user) {
+                    navigate(data.user.role === 'partner' ? '/partner/submit' : '/');
+                  }
+                } catch (err) {
+                  setError(err.message || t('login.google_error'));
+                }
+              }}
+              onError={() => setError(t('login.google_error'))}
+            />
+
+            {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
+              <div style={{ display:'flex',alignItems:'center',gap:10,margin:'18px 0' }}>
+                <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
+                <span style={{ color:C.m,fontSize:12,fontWeight:500 }}>{t('login.or')}</span>
+                <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
+              </div>
+            )}
 
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.company")} *</label>

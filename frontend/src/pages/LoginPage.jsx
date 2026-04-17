@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import api from '../lib/api';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 // ─── Design tokens (sync avec LandingPage) ───
 const C = {
@@ -38,7 +40,7 @@ function Logo({ size = 40, white = false }) {
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const revoked = searchParams.get('revoked') === '1';
@@ -154,6 +156,42 @@ export default function LoginPage() {
             fontFamily: 'inherit',
           }}>
             {error}
+          </div>
+        )}
+
+        {/* Google SSO (renders only when VITE_GOOGLE_CLIENT_ID is set). */}
+        <GoogleSignInButton
+          text={t('login.google_continue')}
+          onSuccess={async ({ credential }) => {
+            setError('');
+            setLoading(true);
+            try {
+              const data = await loginWithGoogle(credential);
+              if (data.needsSignup) {
+                // No account for this Google email — send to signup
+                // with the identity we already trust pre-filled.
+                const params = new URLSearchParams({ email: data.email || '' });
+                if (data.name) params.set('name', data.name);
+                navigate('/signup?' + params.toString());
+                return;
+              }
+              navigate(data.user.role === 'partner' ? '/partner/submit' : '/');
+            } catch (err) {
+              setError(err.message || t('login.google_error'));
+            } finally {
+              setLoading(false);
+            }
+          }}
+          onError={() => setError(t('login.google_error'))}
+        />
+
+        {/* "or" divider between Google and email/password. Hidden when
+            the Google button is suppressed (missing client id). */}
+        {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+            <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>{t('login.or')}</span>
+            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
           </div>
         )}
 

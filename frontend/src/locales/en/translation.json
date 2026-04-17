@@ -275,7 +275,10 @@
     "create_account": "Create a free workspace →",
     "back_to_site": "← Back to site",
     "error_default": "Incorrect credentials",
-    "access_revoked": "Your access has been revoked by the administrator. If you think this is a mistake, contact your program."
+    "access_revoked": "Your access has been revoked by the administrator. If you think this is a mistake, contact your program.",
+    "google_continue": "Continue with Google",
+    "or": "or",
+    "google_error": "Google sign-in failed"
   },
   "signup": {
     "title": "Create your workspace",
@@ -313,7 +316,8 @@
     "pwd_upper": "Uppercase",
     "pwd_lower": "Lowercase",
     "pwd_digit": "Digit",
-    "pwd_special": "Special"
+    "pwd_special": "Special",
+    "google_continue": "Sign up with Google"
   },
   "layout": {
     "nav": {
