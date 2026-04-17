@@ -413,11 +413,47 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
     const partner = pRow[0];
 
     await client.query('BEGIN');
-    // Remove any multi-role mappings that point at this partner — otherwise
-    // /me/spaces still lists the deleted space and /switch-space would
-    // allow a user to "switch to" a nonexistent partner.
+    // Remove the user_roles mappings that point at this partner so
+    // /me/spaces stops listing the deleted space and /switch-space
+    // would refuse it. Any OTHER user_roles the user owns (admin of
+    // another tenant, partner of another program, …) stay intact.
     await client.query('DELETE FROM user_roles WHERE partner_id = $1', [req.params.id]);
-    await client.query('DELETE FROM users WHERE partner_id = $1', [req.params.id]);
+
+    // Find the users whose primary partner_id pointed at this partner.
+    // We need to preserve their account if they still have any other
+    // user_roles (multi-role case) — just null out their partner_id so
+    // they can keep accessing their remaining spaces. Users who had no
+    // other roles get their account deleted (single-program partner,
+    // now revoked).
+    const { rows: pUsers } = await client.query(
+      'SELECT id FROM users WHERE partner_id = $1',
+      [req.params.id]
+    );
+    for (const u of pUsers) {
+      const { rows: [{ c }] } = await client.query(
+        'SELECT COUNT(*)::int AS c FROM user_roles WHERE user_id = $1',
+        [u.id]
+      );
+      if (c > 0) {
+        // Keep the account — point them at their first remaining role
+        // so tenant/partner/role stay consistent with an existing space.
+        const { rows: [next] } = await client.query(
+          `SELECT role, tenant_id, partner_id
+             FROM user_roles
+            WHERE user_id = $1
+            ORDER BY is_active DESC, created_at ASC LIMIT 1`,
+          [u.id]
+        );
+        await client.query(
+          `UPDATE users SET role = $1, tenant_id = $2, partner_id = $3 WHERE id = $4`,
+          [next.role, next.tenant_id, next.partner_id, u.id]
+        );
+      } else {
+        // Pure partner of only this program — safe to remove the account.
+        await client.query('DELETE FROM users WHERE id = $1', [u.id]);
+      }
+    }
+
     const { rowCount } = await client.query('DELETE FROM partners WHERE id = $1 AND (tenant_id = $2 OR $2::uuid IS NULL)', [req.params.id, req.tenantId || null]);
     await client.query('COMMIT');
 

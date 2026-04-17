@@ -419,6 +419,12 @@ router.post('/reset-password', async (req, res) => {
 // Phase B: Multi-role space switcher
 router.get('/me/spaces', authenticate, async (req, res) => {
   try {
+    // Filter out:
+    //   * user_roles marked inactive (the normal archive path)
+    //   * partner spaces where the backing partners row is either
+    //     missing (hard-deleted) or is_active=false. This is a belt-
+    //     and-suspenders check for any code path that flips
+    //     partners.is_active without cascading to user_roles.
     const { rows } = await query(
       `SELECT
          ur.id, ur.tenant_id, ur.role, ur.partner_id, ur.is_active,
@@ -427,7 +433,12 @@ router.get('/me/spaces', authenticate, async (req, res) => {
        FROM user_roles ur
        LEFT JOIN tenants t ON t.id = ur.tenant_id
        LEFT JOIN partners p ON p.id = ur.partner_id
-       WHERE ur.user_id = $1 AND ur.is_active = TRUE
+       WHERE ur.user_id = $1
+         AND ur.is_active = TRUE
+         AND (
+           ur.role <> 'partner'
+           OR (p.id IS NOT NULL AND p.is_active = TRUE)
+         )
        ORDER BY ur.created_at ASC`,
       [req.user.id]
     );
@@ -452,11 +463,22 @@ router.post('/switch-space',
 
       const { tenantId, role, partnerId } = req.body;
 
+      // Mirror the /me/spaces filter: for partner spaces also require
+      // that the partners row is alive and active, so admins flipping
+      // partners.is_active even out-of-band can't be bypassed by the
+      // switcher.
       const { rows } = await query(
-        `SELECT id FROM user_roles
-         WHERE user_id = $1 AND tenant_id = $2 AND role = $3
-         AND ($4::uuid IS NULL OR partner_id = $4) AND is_active = TRUE
-         LIMIT 1`,
+        `SELECT ur.id
+           FROM user_roles ur
+           LEFT JOIN partners p ON p.id = ur.partner_id
+          WHERE ur.user_id = $1 AND ur.tenant_id = $2 AND ur.role = $3
+            AND ($4::uuid IS NULL OR ur.partner_id = $4)
+            AND ur.is_active = TRUE
+            AND (
+              ur.role <> 'partner'
+              OR (p.id IS NOT NULL AND p.is_active = TRUE)
+            )
+          LIMIT 1`,
         [req.user.id, tenantId, role, partnerId || null]
       );
       if (rows.length === 0) {
