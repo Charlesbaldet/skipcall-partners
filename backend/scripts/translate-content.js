@@ -35,6 +35,19 @@ if (!API_KEY) {
   process.exit(1);
 }
 
+// ─── Rate-limit helpers ────────────────────────────────────────────────
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Track the last request time to enforce a minimum spacing (5 req/min
+// means >=12s between calls; use 13s for safety).
+let lastCallAt = 0;
+const MIN_SPACING_MS = 13000;
+async function throttle() {
+  const since = Date.now() - lastCallAt;
+  if (since < MIN_SPACING_MS) await sleep(MIN_SPACING_MS - since);
+  lastCallAt = Date.now();
+}
+
 // ─── Anthropic Messages API call ───────────────────────────────────────
 async function translate(sourceText, targetLangName, kind) {
   // `kind` tells the model whether to preserve HTML, keep it short, etc.
@@ -55,24 +68,41 @@ async function translate(sourceText, targetLangName, kind) {
     messages: [{ role: 'user', content: sourceText }],
   };
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': API_KEY,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  // Up to 5 attempts with backoff on 429 / 5xx.
+  let lastErr;
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    await throttle();
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
 
-  if (!res.ok) {
+    if (res.ok) {
+      const data = await res.json();
+      const out = (data.content || []).map(b => b.text || '').join('').trim();
+      if (!out) throw new Error('empty response from Anthropic');
+      return out;
+    }
+
+    const retryable = res.status === 429 || (res.status >= 500 && res.status < 600);
     const text = await res.text();
-    throw new Error(`Anthropic ${res.status}: ${text.slice(0, 300)}`);
+    lastErr = `Anthropic ${res.status}: ${text.slice(0, 200)}`;
+    if (!retryable) throw new Error(lastErr);
+
+    // Prefer server-supplied Retry-After (seconds). Otherwise exponential backoff.
+    const ra = parseInt(res.headers.get('retry-after') || '', 10);
+    const waitMs = Number.isFinite(ra) && ra > 0
+      ? ra * 1000
+      : Math.min(60000, 15000 * attempt);
+    console.log(`    ⏳ ${res.status} — waiting ${Math.round(waitMs / 1000)}s (attempt ${attempt}/5)`);
+    await sleep(waitMs);
   }
-  const data = await res.json();
-  const out = (data.content || []).map(b => b.text || '').join('').trim();
-  if (!out) throw new Error('empty response from Anthropic');
-  return out;
+  throw new Error(lastErr || 'exhausted retries');
 }
 
 // ─── Tenants: short_description ────────────────────────────────────────
