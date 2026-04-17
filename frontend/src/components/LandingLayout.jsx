@@ -52,10 +52,16 @@ export function LandingNav() {
       <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:mobile?'14px 20px':'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
         <a href="/" style={{ textDecoration:'none' }}><Logo size={mobile?30:36}/></a>
         {mobile ? (
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5 }}>
-            <span style={{ display:'block',width:22,height:2,background:menuOpen?'transparent':C.s,transition:'all .2s',transform:menuOpen?'rotate(45deg) translate(5px,5px)':'none' }}/>
-            <span style={{ display:'block',width:22,height:2,background:C.s,transition:'all .2s',transform:menuOpen?'rotate(-45deg) translate(0,-1px)':'none' }}/>
-          </button>
+          <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+            {/* Language switcher sits in the header bar on mobile so the
+                dropdown can anchor to the right edge of the viewport and
+                not clip against the left side of the screen. */}
+            <LanguageSwitcher compact direction="down" dark={false}/>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5 }}>
+              <span style={{ display:'block',width:22,height:2,background:menuOpen?'transparent':C.s,transition:'all .2s',transform:menuOpen?'rotate(45deg) translate(5px,5px)':'none' }}/>
+              <span style={{ display:'block',width:22,height:2,background:C.s,transition:'all .2s',transform:menuOpen?'rotate(-45deg) translate(0,-1px)':'none' }}/>
+            </button>
+          </div>
         ) : (
           <div style={{ display:'flex',alignItems:'center',gap:24 }}>
             <div style={{ position:'relative' }} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
@@ -117,9 +123,6 @@ export function LandingNav() {
                 {t(key)}
               </a>
             ))}
-          </div>
-          <div style={{ padding:'16px 0',borderBottom:'1px solid #f1f5f9' }}>
-            <LanguageSwitcher direction="down" dark={false}/>
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:12,marginTop:24 }}>
             <button onClick={()=>{setMenuOpen(false);navigate('/login');}} style={{ padding:'14px',borderRadius:12,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:16,cursor:'pointer',width:'100%' }}>{t('nav.login')}</button>
