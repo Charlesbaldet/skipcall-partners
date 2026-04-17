@@ -8,6 +8,69 @@ const router = express.Router();
 router.use(authenticate);
 router.use(tenantScope);
 
+// ─── Update tenant social links (admin) ─────────────────────────────
+// These links are displayed to partners next to each news feed program.
+// Stored on the `partners` table per spec; we mirror the values across
+// every active partner record in the tenant so any one can feed the
+// GET /api/partner/program/:id/socials endpoint.
+router.put('/social', authorize('admin', 'superadmin'), async (req, res) => {
+  try {
+    const {
+      social_linkedin, social_twitter, social_facebook,
+      social_instagram, social_youtube, social_website,
+    } = req.body || {};
+    await query(
+      `UPDATE partners SET
+         social_linkedin  = $1,
+         social_twitter   = $2,
+         social_facebook  = $3,
+         social_instagram = $4,
+         social_youtube   = $5,
+         social_website   = $6
+       WHERE tenant_id = $7`,
+      [
+        social_linkedin  ?? null,
+        social_twitter   ?? null,
+        social_facebook  ?? null,
+        social_instagram ?? null,
+        social_youtube   ?? null,
+        social_website   ?? null,
+        req.tenantId || null,
+      ]
+    );
+    res.json({
+      socials: {
+        social_linkedin, social_twitter, social_facebook,
+        social_instagram, social_youtube, social_website,
+      },
+    });
+  } catch (err) {
+    console.error('[partners PUT /social]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Get current socials for admin's tenant ─────────────────────────
+router.get('/social', authorize('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT social_linkedin, social_twitter, social_facebook,
+              social_instagram, social_youtube, social_website
+         FROM partners
+        WHERE tenant_id = $1 AND is_active = true
+          AND (social_linkedin IS NOT NULL OR social_twitter IS NOT NULL
+            OR social_facebook IS NOT NULL OR social_instagram IS NOT NULL
+            OR social_youtube IS NOT NULL OR social_website IS NOT NULL)
+        LIMIT 1`,
+      [req.tenantId || null]
+    );
+    res.json({ socials: rows[0] || {} });
+  } catch (err) {
+    console.error('[partners GET /social]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // âââ List partners âââ
 router.get('/', async (req, res) => {
   try {

@@ -4,8 +4,9 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import LanguageSwitcher from './LanguageSwitcher';
+import NotificationBell from './NotificationBell';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, Settings, Globe, Activity, BarChart2, Trophy, Shield } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -38,6 +39,7 @@ export default function Layout({ children }) {
     { to: '/commissions', icon: DollarSign, label: t('layout.nav.commissions') },
     { to: '/partners', icon: Users, label: t('layout.nav.partners') },
     { to: '/messaging', icon: MessageCircle, label: t('layout.nav.messaging'), badge: 'messages' },
+    { to: '/news', icon: Newspaper, label: t('layout.nav.news') },
     { divider: true },
     { to: '/programme', icon: Trophy, label: t('layout.nav.programme') },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
@@ -47,6 +49,7 @@ export default function Layout({ children }) {
     { to: '/partner/submit', icon: Send, label: t('layout.nav.submit') },
     { to: '/partner/payments', icon: DollarSign, label: t('layout.nav.my_payments') },
     { to: '/messaging', icon: MessageCircle, label: t('layout.nav.messaging'), badge: 'messages' },
+    { to: '/partner/news', icon: Newspaper, label: t('layout.nav.news') },
     { divider: true },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
   ];
@@ -331,6 +334,11 @@ export default function Layout({ children }) {
       </aside>
 
       <main style={{ flex: 1, marginLeft: collapsed ? 68 : 200, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
+        {/* Floating notification bell in the top-right of the content area
+            so every authenticated page renders it without per-page plumbing. */}
+        <div style={{ position: 'fixed', top: 14, right: 20, zIndex: 90 }}>
+          <NotificationBell />
+        </div>
         {children}
       </main>
 
