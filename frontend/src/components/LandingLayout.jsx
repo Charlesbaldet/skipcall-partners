@@ -52,7 +52,7 @@ export function LandingNav() {
       <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:mobile?'14px 20px':'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
         <a href="/" style={{ textDecoration:'none' }}><Logo size={mobile?30:36}/></a>
         {mobile ? (
-          <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:8 }}>
             {/* Language switcher sits in the header bar on mobile so the
                 dropdown can anchor to the right edge of the viewport and
                 not clip against the left side of the screen. */}

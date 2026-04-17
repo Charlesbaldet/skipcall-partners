@@ -145,10 +145,16 @@ export default function LandingPage() {
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,padding:mobile?'14px 20px':'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',backdropFilter:'blur(20px)',borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',transition:'all .3s'}}>
         <Logo size={mobile?30:36}/>
         {mobile ? (
-          <button onClick={()=>setMenuOpen(!menuOpen)} style={{background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5}} aria-label={t('nav.menu')}>
-            <span style={{display:'block',width:22,height:2,background:menuOpen?'transparent':'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(45deg) translate(5px,5px)':'none'}}/>
-            <span style={{display:'block',width:22,height:2,background:'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(-45deg) translate(0,-1px)':'none'}}/>
-          </button>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            {/* Compact switcher (flag + caret) sits right next to the
+                burger so the dropdown anchors to the viewport's right
+                edge and never clips off the left of the screen. */}
+            <LanguageSwitcher compact />
+            <button onClick={()=>setMenuOpen(!menuOpen)} style={{background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5}} aria-label={t('nav.menu')}>
+              <span style={{display:'block',width:22,height:2,background:menuOpen?'transparent':'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(45deg) translate(5px,5px)':'none'}}/>
+              <span style={{display:'block',width:22,height:2,background:'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(-45deg) translate(0,-1px)':'none'}}/>
+            </button>
+          </div>
         ) : (
           <div style={{display:'flex',alignItems:'center',gap:28}}>
             {/* FonctionnalitÃÂ©s dropdown */}
@@ -194,7 +200,6 @@ export default function LandingPage() {
                 <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:'#0f172a',textDecoration:'none'}}>{t(key)}</a>
               ))}
             </div>
-            <div style={{padding:'16px 0',borderBottom:'1px solid #f1f5f9'}}><LanguageSwitcher/></div>
             <div style={{display:'flex',flexDirection:'column',gap:12,marginTop:24}}>
               <button onClick={()=>{setMenuOpen(false);navigate('/login');}} style={{padding:'14px',borderRadius:12,border:'2px solid #0f172a',background:'transparent',color:'#0f172a',fontWeight:600,fontSize:16,cursor:'pointer',width:'100%'}}>{t('nav.login')}</button>
               <button onClick={()=>{setMenuOpen(false);navigate('/signup');}} style={{padding:'14px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#059669,#10b981)',color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',width:'100%'}}>{t('nav.freeTrial')}</button>
