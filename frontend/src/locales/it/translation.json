@@ -14,7 +14,9 @@
     "no_data": "Nessun dato",
     "edit": "Modifica",
     "optional": "opzionale",
-    "server_error": "Errore del server"
+    "server_error": "Errore del server",
+    "saving": "Salvataggio…",
+    "saved": "Salvato ✓"
   },
   "nav": {
     "features": "Funzionalità",
@@ -1374,7 +1376,8 @@
     "saving_short": "Salvataggio...",
     "revoke_confirm": "Revocare questa chiave API?",
     "appearance_desc_full": "Personalizza i colori e il logo del tuo spazio partner. Queste impostazioni si applicano ovunque: sidebar admin, onboarding wizard e pagina pubblica di registrazione.",
-    "erreur_prefix": "Errore: "
+    "erreur_prefix": "Errore: ",
+    "tab_notifications": "Notifiche"
   },
   "status": {
     "new": "Nuovo",
@@ -1735,6 +1738,24 @@
     "just_now": "Adesso",
     "ago_m": "{{n}} min fa",
     "ago_h": "{{n}}h fa",
-    "ago_d": "{{n}}g fa"
+    "ago_d": "{{n}}g fa",
+    "preferences": "Preferenze di notifica",
+    "preferences_desc": "Attiva o disattiva le notifiche in-app ed email per ogni evento del tuo programma.",
+    "event": "Evento",
+    "in_app": "In-app",
+    "email": "Email",
+    "manage_preferences": "Gestisci le mie preferenze",
+    "tab_all": "Tutto",
+    "tab_news": "Notizie",
+    "tab_referrals": "Referral",
+    "tab_commissions": "Commissioni",
+    "tab_applications": "Candidature",
+    "event_new_referral": "Nuovo referral inviato",
+    "event_new_application": "Nuova candidatura partner",
+    "event_referral_update": "Cambio di stato di un referral (partner)",
+    "event_commission": "Nuova commissione disponibile (partner)",
+    "event_news": "Pubblicazione di una notizia (partner)",
+    "event_deal_won": "Deal vinto",
+    "event_access_revoked": "Accesso partner revocato"
   }
 }

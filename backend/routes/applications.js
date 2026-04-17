@@ -5,7 +5,8 @@ const { query, getClient } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
-const { sendEmail, partnerAccessRevoked } = require('../services/emailService');
+const { sendEmail, partnerAccessRevoked, newPartnerApplicationTpl } = require('../services/emailService');
+const notify = require('../services/notifyService');
 
 const router = express.Router();
 
@@ -121,6 +122,21 @@ Voir : ${_appDashUrl}`,
         template: 'new_application',
         payload: { recipient_name: admin.full_name, contact_name, company_name, email },
         query,
+      });
+    }
+
+    // In-app + email fan-out via the preferences-aware notify service.
+    if (resolvedTenantId) {
+      notify.fanoutAdminNotification(resolvedTenantId, 'new_application', {
+        title: `Nouvelle candidature — ${contact_name}`,
+        message: `${company_name} — ${email}`,
+        link: '/partners',
+      }, { includeCommercial: true }).catch(() => {});
+      notify.shouldNotify(resolvedTenantId, 'new_application').then(async p => {
+        if (!p.email) return;
+        const admins = await notify.adminEmails(resolvedTenantId);
+        const tpl = newPartnerApplicationTpl(contact_name, company_name);
+        for (const a of admins) sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
       });
     }
 

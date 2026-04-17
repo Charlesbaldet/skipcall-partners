@@ -25,6 +25,7 @@ const marketplaceRoutes = require('./routes/marketplace');
 const newsRoutes = require('./routes/news');
 const { partnerRouter: newsPartnerRoutes, programRouter: newsProgramRoutes } = newsRoutes;
 const notificationsRoutes = require('./routes/notifications');
+const notificationPrefsRoutes = require('./routes/notificationPrefs');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -120,6 +121,7 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/settings/notification-preferences', notificationPrefsRoutes);
 app.use('/api/partner/news', newsPartnerRoutes);
 app.use('/api/partner/program', newsProgramRoutes);
 app.use((err, req, res, next) => {

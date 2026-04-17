@@ -1,6 +1,8 @@
 const express = require('express');
 const { query, getClient } = require('../db');
 const { authenticate, authorize } = require('../middleware/auth');
+const notify = require('../services/notifyService');
+const { sendEmail, newsPublishedTpl } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -15,12 +17,16 @@ function firstChars(s, n = 200) {
 }
 
 // After a news post transitions to "published & not-draft", fan out
-// notifications to every active partner user in the same tenant. Safe
-// to run inside or outside a transaction via the optional `client`.
+// in-app notifications + (optionally) emails to every active partner
+// user in the same tenant. Behaviour is gated by the tenant's
+// notification_preferences for the 'news' event_type.
 async function createNotificationsForPost(post, client = null) {
   const exec = client ? client.query.bind(client) : query;
+  const prefs = await notify.shouldNotify(post.tenant_id, 'news');
+  if (!prefs.in_app && !prefs.email) return 0;
+
   const { rows: users } = await exec(
-    `SELECT u.id AS user_id
+    `SELECT u.id AS user_id, u.email, u.full_name
        FROM users u
        JOIN partners p ON p.id = u.partner_id
       WHERE u.role = 'partner'
@@ -29,18 +35,39 @@ async function createNotificationsForPost(post, client = null) {
     [post.tenant_id]
   );
   if (!users.length) return 0;
+
+  // Map news category to a specific notification type so the sidebar
+  // icon + unread-by-category grouping still distinguishes promo/kit/
+  // event from generic news.
   const type =
     post.category === 'promotion' ? 'promo' :
     post.is_kit || post.category === 'commercial_kit' ? 'kit' :
     post.category === 'event' ? 'event' : 'news';
   const message = firstChars(post.content, 200);
-  for (const u of users) {
-    await exec(
-      `INSERT INTO notifications (user_id, type, title, message, link, news_post_id)
-       VALUES ($1, $2, $3, $4, '/partner/news', $5)`,
-      [u.user_id, type, post.title, message, post.id]
-    );
+
+  if (prefs.in_app) {
+    for (const u of users) {
+      await exec(
+        `INSERT INTO notifications (user_id, type, title, message, link, news_post_id)
+         VALUES ($1, $2, $3, $4, '/partner/news', $5)`,
+        [u.user_id, type, post.title, message, post.id]
+      );
+    }
   }
+
+  // Email fan-out (fire-and-forget so we don't slow the admin response).
+  if (prefs.email) {
+    const { rows: [tRow] } = await query('SELECT name FROM tenants WHERE id = $1', [post.tenant_id]);
+    const tenantName = tRow?.name || 'RefBoost';
+    const tpl = newsPublishedTpl(post.title, tenantName, message);
+    for (const u of users) {
+      if (!u.email) continue;
+      sendEmail(u.email, tpl.subject, tpl.html).catch(e =>
+        console.error('[news email]', u.email, e.message)
+      );
+    }
+  }
+
   return users.length;
 }
 

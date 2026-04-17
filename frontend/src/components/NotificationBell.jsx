@@ -1,15 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Bell, Newspaper, Tag, Package, Calendar } from 'lucide-react';
+import { Bell, Newspaper, Tag, Package, Calendar, FileText, DollarSign, UserPlus, Trophy } from 'lucide-react';
 import api from '../lib/api';
 
 const POLL_MS = 30000;
+
+// Group notification types into the filter tabs shown at the top of
+// the dropdown.
+const TAB_BUCKETS = {
+  all: null,
+  news: new Set(['news', 'promo', 'kit', 'event']),
+  referrals: new Set(['referral_update', 'new_referral', 'deal_won']),
+  commissions: new Set(['commission']),
+  applications: new Set(['new_application']),
+};
+const TABS = ['all', 'news', 'referrals', 'commissions', 'applications'];
 
 function iconFor(type) {
   if (type === 'promo') return Tag;
   if (type === 'kit') return Package;
   if (type === 'event') return Calendar;
+  if (type === 'referral_update' || type === 'new_referral') return FileText;
+  if (type === 'commission') return DollarSign;
+  if (type === 'new_application') return UserPlus;
+  if (type === 'deal_won') return Trophy;
   return Newspaper;
 }
 
@@ -29,6 +44,7 @@ export default function NotificationBell() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -127,17 +143,56 @@ export default function NotificationBell() {
                 }}>{t('notifications.mark_all_read')}</button>
               )}
             </div>
+
+            {/* Filter tabs */}
+            <div style={{
+              display: 'flex', gap: 4, padding: '8px 10px',
+              borderBottom: '1px solid #f1f5f9', overflowX: 'auto',
+            }}>
+              {TABS.map(tab => {
+                const isActive = activeTab === tab;
+                const bucket = TAB_BUCKETS[tab];
+                const count = tab === 'all'
+                  ? items.filter(n => !n.is_read).length
+                  : items.filter(n => !n.is_read && bucket && bucket.has(n.type)).length;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      padding: '4px 10px', borderRadius: 8, border: 'none',
+                      background: isActive ? '#059669' : '#f1f5f9',
+                      color: isActive ? '#fff' : '#475569',
+                      fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                      whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    {t('notifications.tab_' + tab)}
+                    {count > 0 && (
+                      <span style={{
+                        fontSize: 10, padding: '1px 5px', borderRadius: 8,
+                        background: isActive ? 'rgba(255,255,255,0.3)' : '#ef4444',
+                        color: '#fff', fontWeight: 700,
+                      }}>{count}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
             <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-              {loading ? (
-                <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
-                  …
-                </div>
-              ) : items.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
-                  {t('notifications.no_notifications')}
-                </div>
-              ) : (
-                items.map(n => {
+              {(() => {
+                const bucket = TAB_BUCKETS[activeTab];
+                const visible = bucket ? items.filter(n => bucket.has(n.type)) : items;
+                if (loading) return (
+                  <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>…</div>
+                );
+                if (visible.length === 0) return (
+                  <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                    {t('notifications.no_notifications')}
+                  </div>
+                );
+                return visible.map(n => {
                   const Icon = iconFor(n.type);
                   return (
                     <button
@@ -182,8 +237,8 @@ export default function NotificationBell() {
                       </div>
                     </button>
                   );
-                })
-              )}
+                });
+              })()}
             </div>
           </div>
         </>

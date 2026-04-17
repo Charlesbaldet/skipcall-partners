@@ -5,6 +5,8 @@ const { authenticate, authorize, partnerScope, tenantScope } = require('../middl
 // emails via resend.sendAndLog — emailService.queueNotification removed
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
+const notify = require('../services/notifyService');
+const { sendEmail, referralStatusChangedTpl, newCommissionAvailableTpl, dealWonTpl } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -247,6 +249,14 @@ Voir : ${_dashUrl}`,
       });
     }
 
+    // In-app notification fan-out for the new_referral event (respects
+    // the tenant's notification_preferences).
+    notify.fanoutAdminNotification(req.tenantId, 'new_referral', {
+      title: `Nouveau referral — ${prospect_name}`,
+      message: `${partner.name} a soumis ${prospect_name}${prospect_company ? ' (' + prospect_company + ')' : ''}.`,
+      link: '/referrals',
+    }, { includeCommercial: true }).catch(() => {});
+
     res.status(201).json({ referral });
   } catch (err) {
     console.error('Create referral error:', err);
@@ -398,6 +408,88 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
     }
 
     await client.query('COMMIT');
+
+    // ─── In-app notification fan-out (+ emails) ──────────────────────
+    const statusChanged = status && status !== current.status;
+    if (statusChanged) {
+      const labels = { new: 'Nouveau', contacted: 'Contacté', qualified: 'Qualifié', proposal: 'Proposition', meeting: 'RDV planifié', won: 'Conclu', lost: 'Perdu', duplicate: 'Doublon' };
+      const newLabel = labels[status] || status;
+
+      // Notify the partner user of the status change.
+      (async () => {
+        try {
+          const { rows: partnerUsers } = await query(
+            `SELECT DISTINCT u.id, u.email, u.full_name
+               FROM users u
+               JOIN referrals r ON r.partner_id = u.partner_id
+              WHERE r.id = $1 AND u.is_active = TRUE`,
+            [req.params.id]
+          );
+          for (const pu of partnerUsers) {
+            notify.createNotification(pu.id, 'referral_update', {
+              title: `${current.prospect_name} → ${newLabel}`,
+              message: `Le statut de votre recommandation a changé.`,
+              link: '/partner/referrals',
+              tenantId: req.tenantId,
+            }).catch(() => {});
+            // Email (separate preference bucket).
+            notify.shouldNotify(req.tenantId, 'referral_update').then(p => {
+              if (!p.email) return;
+              const tpl = referralStatusChangedTpl(pu.full_name, current.prospect_name, newLabel);
+              sendEmail(pu.email, tpl.subject, tpl.html).catch(() => {});
+            });
+          }
+        } catch (e) { /* best-effort */ }
+      })();
+
+      // Admin-facing "deal won" fan-out.
+      if (status === 'won' && deal_value > 0) {
+        const { rows: [pRow] } = await query('SELECT name FROM partners WHERE id = $1', [current.partner_id]);
+        notify.fanoutAdminNotification(req.tenantId, 'deal_won', {
+          title: `🎉 Deal gagné — ${current.prospect_name}`,
+          message: `${pRow?.name || ''} · ${deal_value}€`,
+          link: '/referrals',
+        }, { includeCommercial: true }).catch(() => {});
+        notify.shouldNotify(req.tenantId, 'deal_won').then(async p => {
+          if (!p.email) return;
+          const admins = await notify.adminEmails(req.tenantId);
+          const tpl = dealWonTpl(pRow?.name || '', current.prospect_name, deal_value);
+          for (const a of admins) sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
+        });
+      }
+
+      // Commission fan-out when a deal is freshly won — the row was
+      // inserted in the won branch above; notify the partner it's
+      // available (+ email).
+      if (status === 'won' && deal_value > 0) {
+        (async () => {
+          try {
+            const { rows: partnerUsers } = await query(
+              `SELECT DISTINCT u.id, u.email, u.full_name
+                 FROM users u
+                 JOIN referrals r ON r.partner_id = u.partner_id
+                WHERE r.id = $1 AND u.is_active = TRUE`,
+              [req.params.id]
+            );
+            const { rows: [pRow] } = await query('SELECT commission_rate FROM partners WHERE id = $1', [current.partner_id]);
+            const amount = Math.round((deal_value * (pRow?.commission_rate || 0)) / 100);
+            for (const pu of partnerUsers) {
+              notify.createNotification(pu.id, 'commission', {
+                title: `Commission disponible : ${amount} €`,
+                message: `Pour votre recommandation ${current.prospect_name}.`,
+                link: '/partner/payments',
+                tenantId: req.tenantId,
+              }).catch(() => {});
+              notify.shouldNotify(req.tenantId, 'commission').then(p => {
+                if (!p.email) return;
+                const tpl = newCommissionAvailableTpl(pu.full_name, amount, current.prospect_name);
+                sendEmail(pu.email, tpl.subject, tpl.html).catch(() => {});
+              });
+            }
+          } catch { /* best-effort */ }
+        })();
+      }
+    }
 
     // Return updated referral
     const { rows: [updated] } = await client.query(

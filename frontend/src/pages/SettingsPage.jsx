@@ -9,6 +9,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
+  Bell,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -119,6 +120,7 @@ export default function SettingsPage() {
     ...(isAdmin ? [
     { id: 'marketplace', icon: Store, label: t('settings.tab_marketplace') },
       { id: 'members', icon: Users, label: t('settings.tab_members') },
+      { id: 'notifications', icon: Bell, label: t('settings.tab_notifications') },
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
       { id: 'public-link', icon: Link2, label: t('settings.tab_public_link') },
       { id: 'appearance', icon: Palette, label: t('settings.tab_appearance') },
@@ -151,6 +153,7 @@ export default function SettingsPage() {
             {tab === 'account' && <AccountTab user={user} />}
             {tab === 'superadmins' && <SuperAdminsTab />}
             {tab === 'members' && isAdmin && <MembersTab />}
+            {tab === 'notifications' && isAdmin && <NotificationsTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
               {tab === 'public-link' && isAdmin && <PublicLinkTab />}
               {tab === 'appearance' && isAdmin && <AppearanceTab />}
@@ -903,3 +906,78 @@ function ProgramTab() {
     </div>
   );
 }
+
+function NotificationsTab() {
+  const { t } = useTranslation();
+  const [prefs, setPrefs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState(0);
+
+  useEffect(() => {
+    api.getNotificationPreferences()
+      .then(d => setPrefs(d.preferences || []))
+      .catch(() => setPrefs([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggle = (event_type, field) => {
+    setPrefs(list => list.map(p => p.event_type === event_type ? { ...p, [field]: !p[field] } : p));
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.updateNotificationPreferences({ preferences: prefs });
+      setSavedAt(Date.now());
+    } catch (err) { alert(err.message); }
+    setSaving(false);
+  };
+
+  if (loading) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>{t('notifications.preferences')}</h2>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('notifications.preferences_desc')}</p>
+
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <div>{t('notifications.event')}</div>
+          <div style={{ textAlign: 'center' }}>{t('notifications.in_app')}</div>
+          <div style={{ textAlign: 'center' }}>{t('notifications.email')}</div>
+        </div>
+        {prefs.map(p => (
+          <div key={p.event_type} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
+            <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>{t('notifications.event_' + p.event_type)}</div>
+            <div style={{ textAlign: 'center' }}>
+              <button onClick={() => toggle(p.event_type, 'in_app')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.in_app ? '#059669' : '#cbd5e1' }}>
+                {p.in_app ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+              </button>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <button onClick={() => toggle(p.event_type, 'email')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.email ? '#059669' : '#cbd5e1' }}>
+                {p.email ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
+        <button onClick={save} disabled={saving} style={{
+          padding: '10px 20px', borderRadius: 10, border: 'none',
+          background: 'var(--rb-primary, #059669)', color: '#fff',
+          fontWeight: 600, fontSize: 14, cursor: 'pointer',
+          opacity: saving ? 0.7 : 1,
+        }}>{saving ? t('common.saving') : t('common.save')}</button>
+        {savedAt && Date.now() - savedAt < 3000 && (
+          <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <CheckCircle size={14} /> {t('common.saved')}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+

@@ -196,6 +196,12 @@ class ApiClient {
   markNotificationRead(id) { return this.request('/notifications/' + id + '/read', { method: 'PUT' }); }
   markAllNotificationsRead() { return this.request('/notifications/read-all', { method: 'PUT' }); }
   getUnreadNotificationCount() { return this.request('/notifications/unread-count'); }
+  getUnreadByCategory() { return this.request('/notifications/unread-by-category'); }
+  markCategoryRead(category) { return this.request('/notifications/mark-category-read/' + category, { method: 'PUT' }); }
+
+  // Notification preferences (admin)
+  getNotificationPreferences() { return this.request('/settings/notification-preferences'); }
+  updateNotificationPreferences(data) { return this.request('/settings/notification-preferences', { method: 'PUT', body: JSON.stringify(data) }); }
 }
 
 export const api = new ApiClient();

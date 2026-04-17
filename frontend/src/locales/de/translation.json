@@ -14,7 +14,9 @@
     "no_data": "Keine Daten",
     "edit": "Bearbeiten",
     "optional": "optional",
-    "server_error": "Serverfehler"
+    "server_error": "Serverfehler",
+    "saving": "Speichern…",
+    "saved": "Gespeichert ✓"
   },
   "nav": {
     "features": "Funktionen",
@@ -1374,7 +1376,8 @@
     "saving_short": "Speichern...",
     "revoke_confirm": "Diesen API-Schlüssel widerrufen?",
     "appearance_desc_full": "Passen Sie Farben und Logo Ihres Partnerbereichs an. Diese Einstellungen gelten überall: Admin-Seitenleiste, Onboarding-Assistent und öffentliche Anmeldeseite.",
-    "erreur_prefix": "Fehler: "
+    "erreur_prefix": "Fehler: ",
+    "tab_notifications": "Benachrichtigungen"
   },
   "status": {
     "new": "Neu",
@@ -1735,6 +1738,24 @@
     "just_now": "Gerade eben",
     "ago_m": "vor {{n}} Min.",
     "ago_h": "vor {{n}} Std.",
-    "ago_d": "vor {{n}} T."
+    "ago_d": "vor {{n}} T.",
+    "preferences": "Benachrichtigungseinstellungen",
+    "preferences_desc": "Aktivieren oder deaktivieren Sie In-App- und E-Mail-Benachrichtigungen für jedes Ereignis in Ihrem Programm.",
+    "event": "Ereignis",
+    "in_app": "In-App",
+    "email": "E-Mail",
+    "manage_preferences": "Meine Einstellungen verwalten",
+    "tab_all": "Alle",
+    "tab_news": "News",
+    "tab_referrals": "Referrals",
+    "tab_commissions": "Provisionen",
+    "tab_applications": "Bewerbungen",
+    "event_new_referral": "Neuer Referral eingereicht",
+    "event_new_application": "Neue Partnerbewerbung",
+    "event_referral_update": "Statuswechsel eines Referrals (Partner)",
+    "event_commission": "Neue Provision verfügbar (Partner)",
+    "event_news": "News veröffentlicht (Partner)",
+    "event_deal_won": "Deal gewonnen",
+    "event_access_revoked": "Partnerzugang widerrufen"
   }
 }

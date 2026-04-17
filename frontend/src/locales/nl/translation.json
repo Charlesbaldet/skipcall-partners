@@ -14,7 +14,9 @@
     "no_data": "Geen gegevens",
     "edit": "Bewerken",
     "optional": "optioneel",
-    "server_error": "Serverfout"
+    "server_error": "Serverfout",
+    "saving": "Opslaan…",
+    "saved": "Opgeslagen ✓"
   },
   "nav": {
     "features": "Functies",
@@ -1374,7 +1376,8 @@
     "saving_short": "Opslaan...",
     "revoke_confirm": "Deze API-sleutel intrekken?",
     "appearance_desc_full": "Pas de kleuren en het logo van je partnerruimte aan. Deze instellingen gelden overal: admin-sidebar, onboarding-wizard en openbare aanmeldpagina.",
-    "erreur_prefix": "Fout: "
+    "erreur_prefix": "Fout: ",
+    "tab_notifications": "Meldingen"
   },
   "status": {
     "new": "Nieuw",
@@ -1735,6 +1738,24 @@
     "just_now": "Zojuist",
     "ago_m": "{{n}} min geleden",
     "ago_h": "{{n}}u geleden",
-    "ago_d": "{{n}}d geleden"
+    "ago_d": "{{n}}d geleden",
+    "preferences": "Meldingsvoorkeuren",
+    "preferences_desc": "Schakel in-app- en e-mailmeldingen per gebeurtenis in of uit.",
+    "event": "Gebeurtenis",
+    "in_app": "In-app",
+    "email": "E-mail",
+    "manage_preferences": "Mijn voorkeuren beheren",
+    "tab_all": "Alles",
+    "tab_news": "Nieuws",
+    "tab_referrals": "Verwijzingen",
+    "tab_commissions": "Commissies",
+    "tab_applications": "Aanvragen",
+    "event_new_referral": "Nieuwe verwijzing ingediend",
+    "event_new_application": "Nieuwe partneraanvraag",
+    "event_referral_update": "Statuswijziging van een verwijzing (partners)",
+    "event_commission": "Nieuwe commissie beschikbaar (partners)",
+    "event_news": "Nieuwsbericht gepubliceerd (partners)",
+    "event_deal_won": "Deal gewonnen",
+    "event_access_revoked": "Partnertoegang ingetrokken"
   }
 }

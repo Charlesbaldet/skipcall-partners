@@ -14,7 +14,9 @@
     "no_data": "No data",
     "edit": "Edit",
     "optional": "optional",
-    "server_error": "Server error"
+    "server_error": "Server error",
+    "saving": "Saving…",
+    "saved": "Saved ✓"
   },
   "nav": {
     "features": "Features",
@@ -1374,7 +1376,8 @@
     "saving_short": "Saving...",
     "revoke_confirm": "Revoke this API key?",
     "appearance_desc_full": "Customize colors and logo for your partner space. These settings apply everywhere: admin sidebar, onboarding wizard, and public sign-up page.",
-    "erreur_prefix": "Error: "
+    "erreur_prefix": "Error: ",
+    "tab_notifications": "Notifications"
   },
   "status": {
     "new": "New",
@@ -1735,6 +1738,24 @@
     "just_now": "Just now",
     "ago_m": "{{n}} min ago",
     "ago_h": "{{n}}h ago",
-    "ago_d": "{{n}}d ago"
+    "ago_d": "{{n}}d ago",
+    "preferences": "Notification preferences",
+    "preferences_desc": "Toggle in-app and email notifications for each event in your program.",
+    "event": "Event",
+    "in_app": "In-app",
+    "email": "Email",
+    "manage_preferences": "Manage my preferences",
+    "tab_all": "All",
+    "tab_news": "News",
+    "tab_referrals": "Referrals",
+    "tab_commissions": "Commissions",
+    "tab_applications": "Applications",
+    "event_new_referral": "New referral submitted",
+    "event_new_application": "New partner application",
+    "event_referral_update": "Referral status change (for partners)",
+    "event_commission": "New commission available (for partners)",
+    "event_news": "News published (for partners)",
+    "event_deal_won": "Deal won",
+    "event_access_revoked": "Partner access revoked"
   }
 }

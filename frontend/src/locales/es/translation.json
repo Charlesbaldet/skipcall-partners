@@ -14,7 +14,9 @@
     "no_data": "Sin datos",
     "edit": "Editar",
     "optional": "opcional",
-    "server_error": "Error del servidor"
+    "server_error": "Error del servidor",
+    "saving": "Guardando…",
+    "saved": "Guardado ✓"
   },
   "nav": {
     "features": "Funcionalidades",
@@ -1374,7 +1376,8 @@
     "saving_short": "Guardando...",
     "revoke_confirm": "¿Revocar esta clave API?",
     "appearance_desc_full": "Personaliza los colores y el logo de tu espacio de socios. Estos ajustes se aplican en todas partes: sidebar de admin, asistente de onboarding y página pública de registro.",
-    "erreur_prefix": "Error: "
+    "erreur_prefix": "Error: ",
+    "tab_notifications": "Notificaciones"
   },
   "status": {
     "new": "Nuevo",
@@ -1735,6 +1738,24 @@
     "just_now": "Ahora mismo",
     "ago_m": "Hace {{n}} min",
     "ago_h": "Hace {{n}} h",
-    "ago_d": "Hace {{n}} d"
+    "ago_d": "Hace {{n}} d",
+    "preferences": "Preferencias de notificaciones",
+    "preferences_desc": "Activa o desactiva las notificaciones in-app y por email para cada evento de tu programa.",
+    "event": "Evento",
+    "in_app": "In-app",
+    "email": "Email",
+    "manage_preferences": "Gestionar mis preferencias",
+    "tab_all": "Todo",
+    "tab_news": "Noticias",
+    "tab_referrals": "Referrals",
+    "tab_commissions": "Comisiones",
+    "tab_applications": "Solicitudes",
+    "event_new_referral": "Nuevo referral enviado",
+    "event_new_application": "Nueva solicitud de socio",
+    "event_referral_update": "Cambio de estado de un referral (socios)",
+    "event_commission": "Nueva comisión disponible (socios)",
+    "event_news": "Publicación de noticia (socios)",
+    "event_deal_won": "Negocio ganado",
+    "event_access_revoked": "Acceso de socio revocado"
   }
 }

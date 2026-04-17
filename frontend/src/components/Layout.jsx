@@ -33,11 +33,14 @@ export default function Layout({ children }) {
   const location = useLocation();
   const [currentSearchParams] = useSearchParams();
 
+  // `notifyKeys` — categories from /notifications/unread-by-category
+  //  whose combined unread count triggers the red dot on this nav item.
+  //  Visiting the page auto-marks those categories as read.
   const ADMIN_NAV = [
     { to: '/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
-    { to: '/referrals', icon: FileText, label: t('layout.nav.pipeline') },
+    { to: '/referrals', icon: FileText, label: t('layout.nav.pipeline'), notifyKeys: ['new_referral', 'deal_won'] },
     { to: '/commissions', icon: DollarSign, label: t('layout.nav.commissions') },
-    { to: '/partners', icon: Users, label: t('layout.nav.partners') },
+    { to: '/partners', icon: Users, label: t('layout.nav.partners'), notifyKeys: ['new_application'] },
     { to: '/messaging', icon: MessageCircle, label: t('layout.nav.messaging'), badge: 'messages' },
     { to: '/news', icon: Newspaper, label: t('layout.nav.news') },
     { divider: true },
@@ -45,11 +48,11 @@ export default function Layout({ children }) {
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
   ];
   const PARTNER_NAV = [
-    { to: '/partner/referrals', icon: FileText, label: t('layout.nav.my_referrals') },
+    { to: '/partner/referrals', icon: FileText, label: t('layout.nav.my_referrals'), notifyKeys: ['referral_update'] },
     { to: '/partner/submit', icon: Send, label: t('layout.nav.submit') },
-    { to: '/partner/payments', icon: DollarSign, label: t('layout.nav.my_payments') },
+    { to: '/partner/payments', icon: DollarSign, label: t('layout.nav.my_payments'), notifyKeys: ['commission'] },
     { to: '/messaging', icon: MessageCircle, label: t('layout.nav.messaging'), badge: 'messages' },
-    { to: '/partner/news', icon: Newspaper, label: t('layout.nav.news') },
+    { to: '/partner/news', icon: Newspaper, label: t('layout.nav.news'), notifyKeys: ['news', 'promo', 'kit', 'event'] },
     { divider: true },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
   ];
@@ -73,6 +76,8 @@ export default function Layout({ children }) {
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
   const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
+  // Per-category unread counts driving the sidebar red dots.
+  const [unreadByCat, setUnreadByCat] = useState({});
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -90,11 +95,39 @@ export default function Layout({ children }) {
     const fetchCounts = async () => {
       try { const d = await api.getUnreadCount(); setUnread(d.count || 0); } catch (e) {}
       if (isAdmin) { try { const d = await api.getApplications('pending'); setPendingApps((d.applications || []).length); } catch (e) {} }
+      try { const d = await api.getUnreadByCategory(); setUnreadByCat(d.counts || {}); } catch (e) {}
     };
     fetchCounts();
     const interval = setInterval(fetchCounts, 30000);
     return () => clearInterval(interval);
   }, [isAdmin, isSuperAdmin]);
+
+  // Auto-mark categories as read when the user lands on a page whose
+  // nav item owns them. Fires once per path change so clicking around
+  // within a section doesn't spam the endpoint.
+  useEffect(() => {
+    if (!user || isSuperAdmin) return;
+    const routeCats = {
+      '/partner/news':     ['news', 'promo', 'kit', 'event'],
+      '/partner/referrals':['referral_update'],
+      '/partner/payments': ['commission'],
+      '/referrals':        ['new_referral', 'deal_won'],
+      '/partners':         ['new_application'],
+    };
+    const cats = routeCats[location.pathname];
+    if (!cats || !cats.length) return;
+    (async () => {
+      for (const c of cats) {
+        try { await api.markCategoryRead(c); } catch {}
+      }
+      // Optimistic local update so the dot disappears immediately.
+      setUnreadByCat(prev => {
+        const next = { ...prev };
+        for (const c of cats) delete next[c];
+        return next;
+      });
+    })();
+  }, [location.pathname, user, isSuperAdmin]);
 
   useEffect(() => {
     if (isSuperAdmin) { document.title = 'RefBoost - Super Admin'; return; }
@@ -236,6 +269,9 @@ export default function Layout({ children }) {
             if (item.divider) return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }}/>;
             if (item.to === '/applications' && !isAdmin) return null;
             const badge = getBadge(item);
+            const notifyCount = (item.notifyKeys || []).reduce(
+              (n, k) => n + (unreadByCat[k] || 0), 0
+            );
             return (
               <Fragment key={item.to}>
               <NavLink
@@ -243,7 +279,20 @@ export default function Layout({ children }) {
                 end={item.to === '/super-admin'}
                 style={({ isActive }) => ({ ...s.link, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}
               >
-                <item.icon size={18} style={{ flexShrink: 0 }} />
+                <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+                  <item.icon size={18} />
+                  {notifyCount > 0 && (
+                    <span
+                      title={String(notifyCount)}
+                      style={{
+                        position: 'absolute', top: -2, right: -2,
+                        width: 8, height: 8, borderRadius: '50%',
+                        background: '#ef4444',
+                        boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
+                      }}
+                    />
+                  )}
+                </span>
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
                 {!collapsed && badge > 0 && <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{badge}</span>}
               </NavLink>
