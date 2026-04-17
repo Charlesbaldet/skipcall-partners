@@ -77,15 +77,34 @@ router.post('/login', [
 });
 
 // ─── Get current user profile ───
+// Response shape MUST match POST /auth/login so useAuth can overwrite
+// the stored user on page reload without dropping any fields. In
+// particular return camelCase `partnerId` (not `partner_id`) —
+// otherwise referrals submission loses user.partnerId after a refresh
+// and the backend returns "Partner ID requis".
 router.get('/me', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT u.id, u.email, u.full_name, u.role, u.partner_id, p.name as partner_name, p.commission_rate
+      `SELECT u.id, u.email, u.full_name, u.role, u.partner_id, u.tenant_id, u.must_change_password,
+              p.name as partner_name, p.commission_rate
        FROM users u LEFT JOIN partners p ON u.partner_id = p.id WHERE u.id = $1`,
       [req.user.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
-    res.json({ user: rows[0] });
+    const u = rows[0];
+    res.json({
+      user: {
+        id: u.id,
+        email: u.email,
+        fullName: u.full_name,
+        role: u.role,
+        partnerId: u.partner_id,
+        partnerName: u.partner_name,
+        tenantId: u.tenant_id,
+        commissionRate: u.commission_rate,
+        mustChangePassword: u.must_change_password || false,
+      },
+    });
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
