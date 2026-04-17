@@ -49,7 +49,8 @@ router.get('/posts', async (req, res) => {
     const { rows } = await query(
       `SELECT id, slug,
               ${localizedCol('title', lang)} AS title,
-              excerpt, author, category, tags,
+              ${localizedCol('excerpt', lang)} AS excerpt,
+              author, category, tags,
               cover_image_url, published_at, reading_time_minutes,
               meta_title,
               ${localizedCol('meta_description', lang)} AS meta_description
@@ -91,7 +92,8 @@ router.get('/posts/:slug', async (req, res) => {
     const { rows } = await query(
       `SELECT id, slug,
               ${localizedCol('title', lang)} AS title,
-              excerpt, author, category, tags, cover_image_url,
+              ${localizedCol('excerpt', lang)} AS excerpt,
+              author, category, tags, cover_image_url,
               published, published_at, created_at, updated_at,
               meta_title,
               ${localizedCol('meta_description', lang)} AS meta_description,

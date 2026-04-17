@@ -171,8 +171,9 @@ async function translatePartners() {
 // ─── Blog posts: title / content / meta_description ────────────────────
 async function translateBlogPosts() {
   const { rows } = await query(`
-    SELECT id, slug, title, content, meta_description,
+    SELECT id, slug, title, excerpt, content, meta_description,
            title_en, title_es, title_de, title_it, title_nl, title_pt,
+           excerpt_en, excerpt_es, excerpt_de, excerpt_it, excerpt_nl, excerpt_pt,
            content_en, content_es, content_de, content_it, content_nl, content_pt,
            meta_description_en, meta_description_es, meta_description_de,
            meta_description_it, meta_description_nl, meta_description_pt
@@ -193,6 +194,20 @@ async function translateBlogPosts() {
           if (!DRY_RUN) await query(`UPDATE blog_posts SET ${titleCol} = $1 WHERE id = $2`, [t, row.id]);
         } catch (err) {
           console.error(`  ✗ ${row.slug} [${code}] title: ${err.message}`);
+        }
+      }
+
+      // EXCERPT (plain text card preview)
+      const excerptCol = `excerpt_${code}`;
+      if (row[excerptCol] && row[excerptCol].trim()) {
+        console.log(`  skip ${row.slug} [${code}] excerpt — already translated`);
+      } else if (row.excerpt && row.excerpt.trim()) {
+        try {
+          const e = await translate(row.excerpt, name, 'description');
+          console.log(`  ✓ ${row.slug} [${code}] excerpt: ${e.slice(0, 60)}${e.length > 60 ? '…' : ''}`);
+          if (!DRY_RUN) await query(`UPDATE blog_posts SET ${excerptCol} = $1 WHERE id = $2`, [e, row.id]);
+        } catch (err) {
+          console.error(`  ✗ ${row.slug} [${code}] excerpt: ${err.message}`);
         }
       }
 

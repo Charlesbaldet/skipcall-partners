@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
+import { translateCat } from '../lib/blog-categories';
 import LandingLayout from '../components/LandingLayout';
 
 const SITE = 'https://refboost.io';
@@ -118,7 +119,7 @@ export default function BlogPostPage() {
         <header style={{ marginBottom: 40 }}>
           {post.category && (
             <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 1 }}>
-              {post.category}
+              {translateCat(post.category)}
             </p>
           )}
           <h1 style={{ margin: '0 0 20px', fontSize: 38, fontWeight: 800, color: C.s, lineHeight: 1.25 }}>{post.title}</h1>

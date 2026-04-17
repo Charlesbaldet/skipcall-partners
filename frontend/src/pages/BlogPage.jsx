@@ -3,22 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
+import { translateCat } from '../lib/blog-categories';
 import LandingLayout from '../components/LandingLayout';
 
 const SITE = 'https://refboost.io';
 const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
-
-// Static French → other-language map for blog category names.
-// Shared between BlogPage (filter buttons) and BlogCard (tag on each card).
-const CAT_TRANSLATIONS = {
-  en: { 'Stratégie': 'Strategy', 'Analytics': 'Analytics', 'Guide': 'Guide', 'Commissions': 'Commissions' },
-  es: { 'Stratégie': 'Estrategia', 'Analytics': 'Analítica', 'Guide': 'Guía', 'Commissions': 'Comisiones' },
-  de: { 'Stratégie': 'Strategie', 'Analytics': 'Analytik', 'Guide': 'Leitfaden', 'Commissions': 'Provisionen' },
-  it: { 'Stratégie': 'Strategia', 'Analytics': 'Analitica', 'Guide': 'Guida', 'Commissions': 'Commissioni' },
-  nl: { 'Stratégie': 'Strategie', 'Analytics': 'Analyse', 'Guide': 'Gids', 'Commissions': 'Commissies' },
-  pt: { 'Stratégie': 'Estratégia', 'Analytics': 'Analítica', 'Guide': 'Guia', 'Commissions': 'Comissões' },
-};
-const translateCat = (cat, lang) => CAT_TRANSLATIONS[lang]?.[cat] || cat;
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -26,7 +15,9 @@ function formatDate(iso) {
 }
 
 function BlogCard({ post }) {
-  const { t, i18n } = useTranslation();
+  // useTranslation subscribes to language changes so the card re-renders
+  // (and translateCat picks up the new i18n.language) when the user switches.
+  const { t } = useTranslation();
   return (
     <article style={{ background: C.card, borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', transition: 'transform .2s, box-shadow .2s' }}
       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.12)';}}
@@ -37,7 +28,7 @@ function BlogCard({ post }) {
         </Link>
       )}
       <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {post.category && <span style={{ fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 1 }}>{translateCat(post.category, i18n.language)}</span>}
+        {post.category && <span style={{ fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 1 }}>{translateCat(post.category)}</span>}
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.s, lineHeight: 1.4 }}>
           <Link to={'/blog/' + post.slug} style={{ color: 'inherit', textDecoration: 'none' }}>{post.title}</Link>
         </h2>
@@ -55,7 +46,7 @@ function BlogCard({ post }) {
 }
 
 export default function BlogPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('');
@@ -108,7 +99,7 @@ export default function BlogPage() {
             {categories.map(c => (
               <button key={c.category} onClick={()=>setActiveCategory(c.category === activeCategory ? '' : c.category)}
                 style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: activeCategory === c.category ? '#059669' : '#e2e8f0', background: activeCategory === c.category ? '#059669' : 'transparent', color: activeCategory === c.category ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-                {translateCat(c.category, i18n.language)} ({c.count})
+                {translateCat(c.category)} ({c.count})
               </button>
             ))}
           </nav>

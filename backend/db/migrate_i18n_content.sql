@@ -53,4 +53,12 @@ ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS meta_description_it TEXT;
 ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS meta_description_nl TEXT;
 ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS meta_description_pt TEXT;
 
+-- excerpt is the card preview text; localize it too.
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS excerpt_en TEXT;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS excerpt_es TEXT;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS excerpt_de TEXT;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS excerpt_it TEXT;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS excerpt_nl TEXT;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS excerpt_pt TEXT;
+
 COMMIT;
