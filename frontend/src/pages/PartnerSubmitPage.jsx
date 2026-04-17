@@ -1,8 +1,17 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
-import { LEVEL_CONFIG } from '../lib/constants';
 import { Send, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
+
+// Lead temperature — matches the backend CHECK constraint on
+// referrals.recommendation_level (hot / warm / cold). These are the
+// original Chaud / Tiède / Froid options, not the program tier levels.
+const TEMPERATURES = [
+  { key: 'hot',  emoji: '🔥', label: 'Chaud',  desc: 'Prêt à signer',         color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+  { key: 'warm', emoji: '🌤️', label: 'Tiède',  desc: 'Intéressé, à relancer', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  { key: 'cold', emoji: '❄️', label: 'Froid',  desc: 'À qualifier',            color: '#0284c7', bg: '#eff6ff', border: '#bfdbfe' },
+];
+const tempByKey = Object.fromEntries(TEMPERATURES.map(t => [t.key, t]));
 
 export default function PartnerSubmitPage() {
   const { user } = useAuth();
@@ -98,20 +107,24 @@ export default function PartnerSubmitPage() {
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>Niveau & contexte</h2>
 
-          {/* Level selector */}
+          {/* Lead temperature selector (hot / warm / cold) */}
           <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 10 }}>Niveau de recommandation</label>
+            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 10 }}>Température du lead</label>
             <div style={{ display: 'flex', gap: 12 }}>
-              {Object.entries(LEVEL_CONFIG).map(([k, v]) => (
-                <div key={k} onClick={() => setForm(f => ({ ...f, recommendation_level: k }))} style={{
-                  flex: 1, padding: '20px 16px', borderRadius: 16, textAlign: 'center', cursor: 'pointer',
-                  border: form.recommendation_level === k ? `2px solid ${v.color}` : '2px solid #e2e8f0',
-                  background: form.recommendation_level === k ? v.bg : '#fff', transition: 'all .2s',
-                }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>{v.label.split(' ')[0]}</div>
-                  <div style={{ fontWeight: 600, color: v.color, fontSize: 14 }}>{v.label.split(' ')[1]}</div>
-                </div>
-              ))}
+              {TEMPERATURES.map(tp => {
+                const selected = form.recommendation_level === tp.key;
+                return (
+                  <div key={tp.key} onClick={() => setForm(f => ({ ...f, recommendation_level: tp.key }))} style={{
+                    flex: 1, padding: '20px 16px', borderRadius: 16, textAlign: 'center', cursor: 'pointer',
+                    border: selected ? `2px solid ${tp.color}` : '2px solid #e2e8f0',
+                    background: selected ? tp.bg : '#fff', transition: 'all .2s',
+                  }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>{tp.emoji}</div>
+                    <div style={{ fontWeight: 600, color: tp.color, fontSize: 14 }}>{tp.label}</div>
+                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{tp.desc}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -132,7 +145,7 @@ export default function PartnerSubmitPage() {
               <RecapRow label="Email" value={form.prospect_email} />
               <RecapRow label="Téléphone" value={form.prospect_phone || '—'} />
               <RecapRow label="Rôle" value={form.prospect_role || '—'} />
-              <RecapRow label="Niveau" value={LEVEL_CONFIG[form.recommendation_level]?.label} />
+              <RecapRow label="Température" value={`${tempByKey[form.recommendation_level]?.emoji || ''} ${tempByKey[form.recommendation_level]?.label || ''}`.trim()} />
             </div>
           </div>
 
