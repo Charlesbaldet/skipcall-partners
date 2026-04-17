@@ -312,6 +312,14 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
   const refs = parseInt(p.total_referrals || 0);
   const won = parseInt(p.won_deals || 0);
   const conv = refs > 0 ? Math.round((won / refs) * 100) : 0;
+  const confirmArchive = (e) => {
+    e.stopPropagation();
+    if (confirm(t('partners.confirm_archive'))) onArchive(p.id);
+  };
+  const confirmDelete = (e) => {
+    e.stopPropagation();
+    if (confirm(t('partners.delete_confirm_title') + '\n\n' + t('partners.delete_confirm_body'))) onDelete(p.id);
+  };
   return (
     <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
@@ -321,7 +329,9 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} title={t('partners.edit_title')} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
+          <button onClick={confirmArchive} title={t('partners.archive')} style={{ background: '#fffbeb', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#b45309', display: 'flex' }}><Archive size={13} /></button>
+          <button onClick={confirmDelete} title={t('partners.delete')} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={13} /></button>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
