@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CreditCard, Download, Check, Zap, Crown, AlertCircle, RefreshCw } from 'lucide-react';
 import api from '../lib/api';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 
 // Plans mirror backend/routes/billing.js — keep price ids in sync.
 const PRICE_PRO_MONTHLY = 'price_1TNSyKLO4aHvEb3qMzUBhtbe';
@@ -154,6 +155,12 @@ export default function BillingPage() {
   const [success, setSuccess] = useState('');
   const [showCompare, setShowCompare] = useState(false);
   const [interval, setInterval] = useState('monthly');
+  // Modals: cancel-subscription confirmation, plan-change preview.
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  // { planKey, preview, loading, error }
+  const [changePreview, setChangePreview] = useState(null);
+  const [applyingChange, setApplyingChange] = useState(false);
 
   const reload = () => {
     setLoading(true);
@@ -189,16 +196,53 @@ export default function BillingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Ask the user first: if they already have a live subscription, show
+  // the pro-rata preview and let them confirm; otherwise (first-time
+  // subscribe) go straight to Stripe Checkout.
   const handleCheckout = async (planKey) => {
     const priceId = PLAN_META[planKey]?.[interval]?.priceId;
     if (!priceId) return;
+
+    if (plan?.subscriptionId) {
+      // Plan change — preview before applying.
+      setChangePreview({ planKey, priceId, preview: null, loading: true, error: '' });
+      try {
+        const p = await api.previewPlanChange(priceId);
+        setChangePreview(s => s && s.planKey === planKey ? { ...s, preview: p, loading: false } : s);
+      } catch (e) {
+        setChangePreview(s => s && s.planKey === planKey ? { ...s, loading: false, error: e.message || 'Preview error' } : s);
+      }
+      return;
+    }
+
+    // First-time upgrade: hand off to Stripe Checkout.
     setBusy(true); setError('');
     try {
-      const { url } = await api.createCheckout(priceId);
-      if (url) window.location.href = url;
+      const resp = await api.createCheckout(priceId);
+      if (resp.url) { window.location.href = resp.url; return; }
+      // Already on this plan (noop) — just reload.
+      reload();
     } catch (e) {
       setError(e.message || 'Erreur');
     } finally { setBusy(false); }
+  };
+
+  // Called from the preview modal after the user confirms.
+  const applyPlanChange = async () => {
+    if (!changePreview?.priceId) return;
+    setApplyingChange(true);
+    try {
+      const resp = await api.createCheckout(changePreview.priceId);
+      if (resp.url) { window.location.href = resp.url; return; }
+      setChangePreview(null);
+      reload();
+      setSuccess('✓ ' + t('billing.current_plan'));
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (e) {
+      setChangePreview(s => s ? { ...s, error: e.message || 'Erreur' } : s);
+    } finally {
+      setApplyingChange(false);
+    }
   };
 
   const handlePortal = async () => {
@@ -208,12 +252,18 @@ export default function BillingPage() {
     finally { setBusy(false); }
   };
 
-  const handleCancel = async () => {
-    if (!window.confirm(t('billing.cancel_confirm'))) return;
-    setBusy(true); setError('');
-    try { await api.cancelSubscription(); reload(); }
-    catch (e) { setError(e.message || 'Erreur'); }
-    finally { setBusy(false); }
+  const handleCancel = () => setCancelOpen(true);
+  const confirmCancel = async () => {
+    setCancelBusy(true); setError('');
+    try {
+      await api.cancelSubscription();
+      setCancelOpen(false);
+      reload();
+    } catch (e) {
+      setError(e.message || 'Erreur');
+    } finally {
+      setCancelBusy(false);
+    }
   };
 
   const currentPlanKey = plan?.plan || 'starter';
@@ -230,8 +280,34 @@ export default function BillingPage() {
 
   if (loading) return <div style={{ padding: 32, color: '#64748b' }}>Loading…</div>;
 
+  const endLabel = plan?.planEndsAt ? fmtDate(plan.planEndsAt) : '—';
+
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', fontFamily: 'inherit' }}>
+      <ConfirmModal
+        isOpen={cancelOpen}
+        title={t('billing.cancel_title')}
+        confirmLabel={t('billing.cancel_yes')}
+        cancelLabel={t('billing.keep_my_plan')}
+        variant="danger"
+        loading={cancelBusy}
+        onConfirm={confirmCancel}
+        onCancel={() => !cancelBusy && setCancelOpen(false)}
+      >
+        <p style={{ margin: '0 0 10px' }}>{t('billing.cancel_line_until', { plan: t('billing.' + currentPlanKey), date: endLabel })}</p>
+        <p style={{ margin: '0 0 10px' }}>{t('billing.cancel_line_after')}</p>
+        <p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>{t('billing.cancel_line_partners')}</p>
+      </ConfirmModal>
+
+      <PreviewChangeModal
+        change={changePreview}
+        currentPlanKey={currentPlanKey}
+        t={t}
+        busy={applyingChange}
+        onConfirm={applyPlanChange}
+        onCancel={() => !applyingChange && setChangePreview(null)}
+      />
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
         <CreditCard size={24} color="#059669"/>
         <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: '#0f172a' }}>{t('billing.title')}</h1>
@@ -388,3 +464,91 @@ const btnSecondary = {
 };
 const th = { padding: '10px 12px', fontWeight: 600, borderBottom: '1px solid #f1f5f9' };
 const td = { padding: '12px', borderBottom: '1px solid #f1f5f9', color: '#0f172a' };
+
+// Pro-rata preview modal shown before upgrading/downgrading a live
+// subscription. Numbers come from GET /billing/preview-change which
+// wraps Stripe's upcoming-invoice preview.
+function PreviewChangeModal({ change, currentPlanKey, t, busy, onConfirm, onCancel }) {
+  if (!change) return null;
+  const money = (n, cur = 'eur') => {
+    try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: (cur || 'eur').toUpperCase() }).format(n); }
+    catch { return (n || 0).toFixed(2) + ' €'; }
+  };
+  const { planKey, preview, loading, error } = change;
+  const noop = preview && preview.newPlan?.key === currentPlanKey;
+
+  return (
+    <div
+      onClick={() => !busy && onCancel?.()}
+      style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', fontFamily: 'inherit' }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        style={{ background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 460, boxShadow: '0 25px 80px rgba(15,23,42,0.25)', color: '#0f172a' }}
+      >
+        <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800 }}>{t('billing.change_plan_title')}</h3>
+        <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: 13 }}>
+          {t('billing.change_from_to', {
+            from: t('billing.' + currentPlanKey),
+            to: t('billing.' + planKey),
+          })}
+        </p>
+
+        {loading && <div style={{ padding: '24px 0', textAlign: 'center', color: '#64748b', fontSize: 14 }}>{t('billing.preview_loading')}</div>}
+
+        {error && !loading && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>{error}</div>
+        )}
+
+        {preview && !loading && (
+          <>
+            {noop ? (
+              <div style={{ padding: '16px 0', color: '#64748b', fontSize: 14 }}>{t('billing.same_plan')}</div>
+            ) : (
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 18, fontSize: 14 }}>
+                {preview.credit < 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ color: '#64748b' }}>{t('billing.prorata_credit')}</span>
+                    <span style={{ color: '#059669', fontWeight: 600 }}>{money(preview.credit, preview.currency)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 8, borderTop: preview.credit < 0 ? '1px solid #e2e8f0' : 'none' }}>
+                  <span style={{ fontWeight: 700 }}>{t('billing.due_today')}</span>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{money(preview.amountDue, preview.currency)}</span>
+                </div>
+                {preview.nextBillingDate && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 13 }}>
+                    <span style={{ color: '#64748b' }}>{t('billing.next_billing')}</span>
+                    <span>{new Date(preview.nextBillingDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button onClick={onCancel} disabled={busy} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 14, fontWeight: 600, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+            {t('partners.cancel') || 'Annuler'}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={busy || loading || noop || !preview}
+            style={{
+              padding: '10px 18px', borderRadius: 10, border: 'none',
+              background: (busy || loading || noop || !preview) ? '#94a3b8' : 'linear-gradient(135deg,#059669,#10b981)',
+              color: '#fff', fontSize: 14, fontWeight: 700,
+              cursor: (busy || loading || noop || !preview) ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              boxShadow: (busy || loading || noop || !preview) ? 'none' : '0 6px 18px rgba(5,150,105,.25)',
+            }}
+          >
+            {busy ? '…' : t('billing.confirm_upgrade')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

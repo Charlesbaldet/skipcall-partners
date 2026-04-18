@@ -1837,6 +1837,20 @@
     "everything_in_starter": "Todo lo de Starter",
     "everything_in_pro": "Todo lo de Pro",
     "payment_failed_banner": "Tu último pago falló. Actualiza tu método de pago para no perder tu plan.",
-    "update_payment": "Actualizar pago"
+    "update_payment": "Actualizar pago",
+    "cancel_title": "¿Cancelar tu suscripción?",
+    "cancel_line_until": "Tu plan {{plan}} sigue activo hasta el {{date}}.",
+    "cancel_line_after": "Después, pasarás al plan gratuito Starter (3 partners máx).",
+    "cancel_line_partners": "Tus partners existentes no se eliminarán, pero no podrás añadir más allá del límite.",
+    "keep_my_plan": "Mantener mi plan",
+    "cancel_yes": "Cancelar suscripción",
+    "change_plan_title": "Cambiar de plan",
+    "change_from_to": "De {{from}} a {{to}}",
+    "prorata_credit": "Crédito pro-rata",
+    "due_today": "Importe a pagar hoy",
+    "next_billing": "Próxima facturación",
+    "confirm_upgrade": "Confirmar cambio",
+    "preview_loading": "Calculando…",
+    "same_plan": "Ya estás en este plan."
   }
 }

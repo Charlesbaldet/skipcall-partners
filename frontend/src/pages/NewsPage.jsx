@@ -5,6 +5,7 @@ import {
   ChevronDown, ChevronUp, Save, Link as LinkIcon,
 } from 'lucide-react';
 import api from '../lib/api';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const C = {
   p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff',
@@ -53,6 +54,7 @@ export default function NewsPage() {
   const [statsModal, setStatsModal] = useState(null);
   const [socialsOpen, setSocialsOpen] = useState(false);
   const [engagementOpen, setEngagementOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -105,9 +107,12 @@ export default function NewsPage() {
     setSaving(false);
   };
 
-  const remove = async (id) => {
-    if (!confirm(t('news.delete_confirm'))) return;
-    try { await api.deleteNews(id); await load(); } catch (err) { alert(err.message); }
+  const remove = (id) => setDeleteId(id);
+  const confirmRemove = async () => {
+    if (!deleteId) return;
+    try { await api.deleteNews(deleteId); await load(); }
+    catch (err) { alert(err.message); }
+    finally { setDeleteId(null); }
   };
 
   const addAttachment = async (data) => {
@@ -129,6 +134,16 @@ export default function NewsPage() {
 
   return (
     <div className="fade-in">
+      <ConfirmModal
+        isOpen={!!deleteId}
+        title={t('news.delete_confirm') || 'Supprimer'}
+        message={t('news.delete_confirm_body') || t('news.delete_confirm')}
+        confirmLabel={t('news.delete') || 'Supprimer'}
+        cancelLabel={t('partners.cancel') || 'Annuler'}
+        variant="danger"
+        onConfirm={confirmRemove}
+        onCancel={() => setDeleteId(null)}
+      />
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: C.s, letterSpacing: -0.5 }}>{t('news.title')}</h1>

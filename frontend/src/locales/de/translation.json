@@ -1837,6 +1837,20 @@
     "everything_in_starter": "Alles aus Starter",
     "everything_in_pro": "Alles aus Pro",
     "payment_failed_banner": "Deine letzte Zahlung ist fehlgeschlagen. Aktualisiere deine Zahlungsmethode, um deinen Plan nicht zu verlieren.",
-    "update_payment": "Zahlung aktualisieren"
+    "update_payment": "Zahlung aktualisieren",
+    "cancel_title": "Abonnement kündigen?",
+    "cancel_line_until": "Dein {{plan}}-Plan bleibt bis zum {{date}} aktiv.",
+    "cancel_line_after": "Danach wechselst du zum kostenlosen Starter-Plan (max. 3 Partner).",
+    "cancel_line_partners": "Deine bestehenden Partner bleiben erhalten, aber du kannst keine neuen über das Limit hinaus hinzufügen.",
+    "keep_my_plan": "Plan behalten",
+    "cancel_yes": "Abonnement kündigen",
+    "change_plan_title": "Plan ändern",
+    "change_from_to": "Von {{from}} zu {{to}}",
+    "prorata_credit": "Anteiliger Credit",
+    "due_today": "Heute fällig",
+    "next_billing": "Nächste Abrechnung",
+    "confirm_upgrade": "Änderung bestätigen",
+    "preview_loading": "Wird berechnet…",
+    "same_plan": "Du bist bereits auf diesem Plan."
   }
 }

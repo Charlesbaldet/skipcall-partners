@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
 import { FileText, TrendingUp, DollarSign, Trash2, LayoutGrid, List, ChevronRight, X } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
 
@@ -14,6 +15,7 @@ export default function PartnerMyReferrals() {
   const [selected, setSelected] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [viewMode, setViewMode] = useState('kanban');
+  const [deleteId, setDeleteId] = useState(null);
 
   const load = async () => {
     try {
@@ -25,8 +27,11 @@ export default function PartnerMyReferrals() {
 
   useEffect(() => { load().finally(() => setLoading(false)); }, []);
 
-  const handleDelete = async (id) => {
-    if (!confirm(t('partnerReferrals.confirm_delete'))) return;
+  const handleDelete = (id) => setDeleteId(id);
+  const confirmDelete = async () => {
+    const id = deleteId;
+    if (!id) return;
+    setDeleteId(null);
     setDeleting(id);
     try {
       await api.deleteReferral(id);
@@ -42,6 +47,16 @@ export default function PartnerMyReferrals() {
 
   return (
     <div className="fade-in">
+      <ConfirmModal
+        isOpen={!!deleteId}
+        title={t('referrals.delete_title') || t('partnerReferrals.confirm_delete')}
+        message={t('partnerReferrals.confirm_delete')}
+        confirmLabel={t('news.delete') || 'Supprimer'}
+        cancelLabel={t('partners.cancel') || 'Annuler'}
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerReferrals.title')}</h1>

@@ -6,6 +6,7 @@ import { fmt, fmtDate } from '../lib/constants';
 import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import UpgradeModal from '../components/UpgradeModal.jsx';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 
 export default function PartnersPage() {
   const { t } = useTranslation();
@@ -32,6 +33,8 @@ export default function PartnersPage() {
   const [commissionRate, setCommissionRate] = useState(10);
   const [rejectReason, setRejectReason] = useState('');
   const [upgradePrompt, setUpgradePrompt] = useState(null);
+  // Shape: { kind: 'archivePartner'|'deletePartner'|'deleteApplication', id, name? }
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const loadPartners = async (showAll) => {
     try { const qs = showAll ? '?show=all' : ''; const d = await api.request('/partners' + qs); setPartners(d.partners); } catch(e) { console.error(e); }
@@ -46,12 +49,30 @@ export default function PartnersPage() {
   useEffect(() => { loadPartners(false).finally(() => setLoading(false)); }, []);
   useEffect(() => { if (tab === 'candidatures' && isAdmin) loadApplications(); }, [tab, appFilter]);
 
-  const handleArchive = async (id) => { try { await api.archivePartner(id); await loadPartners(showArchived); } catch(e) { alert(e.message); } };
-  const handleDeletePartner = async (id) => { try { await api.deletePartner(id); setPartners(prev => prev.filter(p => p.id !== id)); } catch(e) { alert(e.message); } };
-  const handleDeleteApplication = async (id) => {
-    if (!confirm(t('partners.delete_confirm_title') + '\n\n' + t('partners.delete_confirm_body'))) return;
-    try { await api.deleteApplication(id); loadApplications(); loadPartners(showArchived); }
-    catch (e) { alert(e.message); }
+  const handleArchive = (id) => setConfirmAction({ kind: 'archivePartner', id });
+  const handleDeletePartner = (id) => setConfirmAction({ kind: 'deletePartner', id });
+  const handleDeleteApplication = (id) => setConfirmAction({ kind: 'deleteApplication', id });
+
+  const runConfirmAction = async () => {
+    if (!confirmAction) return;
+    const { kind, id } = confirmAction;
+    try {
+      if (kind === 'archivePartner') {
+        await api.archivePartner(id);
+        await loadPartners(showArchived);
+      } else if (kind === 'deletePartner') {
+        await api.deletePartner(id);
+        setPartners(prev => prev.filter(p => p.id !== id));
+      } else if (kind === 'deleteApplication') {
+        await api.deleteApplication(id);
+        loadApplications();
+        loadPartners(showArchived);
+      }
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setConfirmAction(null);
+    }
   };
 
   const startEdit = (p) => { setEditingId(p.id); setEditForm({ name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '', company_website: p.company_website || '', commission_rate: p.commission_rate, iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '' }); };
@@ -108,6 +129,21 @@ export default function PartnersPage() {
           onClose={() => setUpgradePrompt(null)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!confirmAction}
+        title={confirmAction?.kind === 'archivePartner'
+          ? t('partners.archive')
+          : t('partners.delete_confirm_title')}
+        message={confirmAction?.kind === 'archivePartner'
+          ? t('partners.confirm_archive')
+          : t('partners.delete_confirm_body')}
+        confirmLabel={confirmAction?.kind === 'archivePartner' ? t('partners.archive') : t('partners.delete')}
+        cancelLabel={t('partners.cancel') || 'Annuler'}
+        variant={confirmAction?.kind === 'archivePartner' ? 'warning' : 'danger'}
+        onConfirm={runConfirmAction}
+        onCancel={() => setConfirmAction(null)}
+      />
       {/* Edit modal */}
       {editingId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -348,14 +384,8 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
   const refs = parseInt(p.total_referrals || 0);
   const won = parseInt(p.won_deals || 0);
   const conv = refs > 0 ? Math.round((won / refs) * 100) : 0;
-  const confirmArchive = (e) => {
-    e.stopPropagation();
-    if (confirm(t('partners.confirm_archive'))) onArchive(p.id);
-  };
-  const confirmDelete = (e) => {
-    e.stopPropagation();
-    if (confirm(t('partners.delete_confirm_title') + '\n\n' + t('partners.delete_confirm_body'))) onDelete(p.id);
-  };
+  const confirmArchive = (e) => { e.stopPropagation(); onArchive(p.id); };
+  const confirmDelete = (e) => { e.stopPropagation(); onDelete(p.id); };
   return (
     <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>

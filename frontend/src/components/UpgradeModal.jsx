@@ -33,8 +33,12 @@ export default function UpgradeModal({ limit, plan, upgradeTo, onClose }) {
   const handleUpgrade = async (tierKey) => {
     setBusy(true); setError('');
     try {
-      const { url } = await api.createCheckout(TIERS[tierKey].priceId);
-      if (url) { window.location.href = url; return; }
+      const resp = await api.createCheckout(TIERS[tierKey].priceId);
+      if (resp?.url) { window.location.href = resp.url; return; }
+      // In-place update (already has a live sub) — close the modal and
+      // land the user on /billing so they see the new plan + usage.
+      onClose?.();
+      navigate('/billing?success=1');
     } catch (e) {
       setError(e.message || 'Erreur Stripe');
       setBusy(false);

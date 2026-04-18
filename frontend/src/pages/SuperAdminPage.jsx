@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 
 export default function SuperAdminPage() {
   const { t } = useTranslation();
@@ -20,6 +21,8 @@ export default function SuperAdminPage() {
   const [form, setForm] = useState({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #059669)', secondary_color: '#8b5cf6', accent_color: '#f59e0b', logo_url: '' });
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [deleteBlogId, setDeleteBlogId] = useState(null);
+  const [forceDeleteTenant, setForceDeleteTenant] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [blogPosts, setBlogPosts] = useState([]);
@@ -75,10 +78,15 @@ export default function SuperAdminPage() {
     setBlogSaving(false);
   };
 
-  const deleteBlogPost = async (id) => {
-    if (!confirm(t('admin.delete_article_confirm'))) return;
-    await api.request('/blog/admin/posts/' + id, { method: 'DELETE' });
-    loadBlog();
+  const deleteBlogPost = (id) => setDeleteBlogId(id);
+  const confirmDeleteBlogPost = async () => {
+    if (!deleteBlogId) return;
+    try {
+      await api.request('/blog/admin/posts/' + deleteBlogId, { method: 'DELETE' });
+      loadBlog();
+    } finally {
+      setDeleteBlogId(null);
+    }
   };
 
   const editBlogPost = (p) => {
@@ -129,7 +137,7 @@ export default function SuperAdminPage() {
       load();
     } catch (e) {
       if (e.message?.includes('utilisateur')) {
-        if (confirm(e.message + '\n\n' + t('admin.tenant_users_in_use'))) handleDelete(id, true);
+        setForceDeleteTenant({ id, reason: e.message });
       } else { alert(e.message); }
     }
   };
@@ -138,8 +146,30 @@ export default function SuperAdminPage() {
 
   return (
     <div className="fade-in">
-
-
+      <ConfirmModal
+        isOpen={!!deleteBlogId}
+        title={t('admin.delete_article_confirm')}
+        message={t('admin.delete_article_confirm')}
+        confirmLabel={t('news.delete') || 'Supprimer'}
+        cancelLabel={t('partners.cancel') || 'Annuler'}
+        variant="danger"
+        onConfirm={confirmDeleteBlogPost}
+        onCancel={() => setDeleteBlogId(null)}
+      />
+      <ConfirmModal
+        isOpen={!!forceDeleteTenant}
+        title={t('admin.tenant_users_in_use') || 'Force delete'}
+        message={forceDeleteTenant ? `${forceDeleteTenant.reason}\n\n${t('admin.tenant_users_in_use') || ''}` : ''}
+        confirmLabel={t('news.delete') || 'Supprimer'}
+        cancelLabel={t('partners.cancel') || 'Annuler'}
+        variant="danger"
+        onConfirm={() => {
+          const pending = forceDeleteTenant;
+          setForceDeleteTenant(null);
+          if (pending) handleDelete(pending.id, true);
+        }}
+        onCancel={() => setForceDeleteTenant(null)}
+      />
 
       {tab === 'stats' && (<>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 16 }}>

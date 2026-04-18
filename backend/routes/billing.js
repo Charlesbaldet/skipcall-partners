@@ -83,9 +83,16 @@ router.get('/plan', authenticate, tenantScope, authorize('admin'), async (req, r
 });
 
 // ─── POST /api/billing/checkout ──────────────────────────────────────
-// Creates a Stripe Checkout Session for upgrading. Returns { url }.
-// Creates a Stripe Customer on the tenant if one doesn't exist yet so
-// we can re-use it for the portal + future subscription changes.
+// Dual-purpose:
+//   * First-time subscribe (no existing Stripe subscription) →
+//     create a Checkout Session, return { url }
+//   * Plan change (existing active subscription) →
+//     update the sub items in place with prorations, return
+//     { updated: true, plan, subscriptionId } — NO new Checkout.
+//
+// This avoids stacking subscriptions when an admin clicks "Upgrade"
+// while already on Pro: Stripe's subscriptions.update handles
+// pro-rata charges and refunds for us in a single round-trip.
 router.post('/checkout', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     if (!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
@@ -95,11 +102,14 @@ router.post('/checkout', authenticate, tenantScope, authorize('admin'), async (r
 
     const planKey = planKeyFromPriceId(priceId);
     if (!planKey) return res.status(400).json({ error: 'Plan inconnu' });
+    const plan = PLANS[planKey];
 
     const tenant = await loadTenantPlan(req.tenantId);
     if (!tenant) return res.status(404).json({ error: 'Tenant introuvable' });
 
-    // Make sure we have a Stripe customer.
+    // Ensure the tenant has a Stripe customer — persist the id BEFORE
+    // we do anything else so the webhook/sync can reconcile even if
+    // this request fails mid-flight.
     let customerId = tenant.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -111,6 +121,54 @@ router.post('/checkout', authenticate, tenantScope, authorize('admin'), async (r
       await query('UPDATE tenants SET stripe_customer_id = $1 WHERE id = $2', [customerId, req.tenantId]);
     }
 
+    // Plan-change path: we already have a live subscription, so swap
+    // its item price rather than minting a new sub.
+    let existingSub = null;
+    if (tenant.stripe_subscription_id) {
+      try {
+        existingSub = await stripe.subscriptions.retrieve(tenant.stripe_subscription_id);
+      } catch (e) { /* sub may have been deleted on Stripe side — fall back to Checkout */ }
+    }
+    const isLive = existingSub && !['canceled', 'incomplete_expired'].includes(existingSub.status);
+
+    if (isLive) {
+      const currentPriceId = existingSub.items?.data?.[0]?.price?.id;
+      if (currentPriceId === priceId) {
+        return res.json({ updated: false, noop: true, plan: planKey });
+      }
+      const itemId = existingSub.items.data[0].id;
+      const updated = await stripe.subscriptions.update(existingSub.id, {
+        items: [{ id: itemId, price: priceId }],
+        proration_behavior: 'create_prorations',
+        metadata: { tenantId: req.tenantId, plan: planKey },
+      });
+      // Write the new plan back eagerly so the UI reflects it without
+      // waiting for a webhook round-trip.
+      await query(
+        `UPDATE tenants SET
+           plan = $1,
+           plan_partner_limit = $2,
+           stripe_subscription_id = $3,
+           plan_started_at = COALESCE(plan_started_at, $4),
+           plan_ends_at = $5
+         WHERE id = $6`,
+        [
+          planKey,
+          plan.partnerLimit,
+          updated.id,
+          updated.current_period_start ? new Date(updated.current_period_start * 1000) : null,
+          updated.current_period_end ? new Date(updated.current_period_end * 1000) : null,
+          req.tenantId,
+        ]
+      );
+      return res.json({
+        updated: true,
+        plan: planKey,
+        subscriptionId: updated.id,
+      });
+    }
+
+    // First-time subscribe → Stripe Checkout.
     const frontend = process.env.FRONTEND_URL || 'https://refboost.io';
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -128,6 +186,158 @@ router.post('/checkout', authenticate, tenantScope, authorize('admin'), async (r
     res.json({ url: session.url });
   } catch (err) {
     console.error('[billing.checkout] error:', err);
+    res.status(500).json({ error: 'Erreur Stripe' });
+  }
+});
+
+// ─── GET /api/billing/preview-change ─────────────────────────────────
+// Returns a pro-rata preview of swapping the active subscription to a
+// different price. The UI uses this to show "Amount due today: X€" +
+// next billing date BEFORE actually upgrading. If the tenant has no
+// live subscription, we return a minimal payload so the UI can still
+// show the new plan's monthly total.
+router.get('/preview-change', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  try {
+    if (!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+    if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+    const priceId = req.query.priceId;
+    if (!priceId) return res.status(400).json({ error: 'priceId requis' });
+    const planKey = planKeyFromPriceId(priceId);
+    if (!planKey) return res.status(400).json({ error: 'Plan inconnu' });
+
+    const tenant = await loadTenantPlan(req.tenantId);
+    if (!tenant) return res.status(404).json({ error: 'Tenant introuvable' });
+
+    const newPrice = await stripe.prices.retrieve(priceId);
+    const newPlanLabel = PLANS[planKey]?.name || planKey;
+    const currentPlanLabel = PLANS[tenant.plan]?.name || tenant.plan || 'starter';
+
+    if (!tenant.stripe_subscription_id) {
+      return res.json({
+        hasActiveSub: false,
+        currentPlan: { key: tenant.plan || 'starter', label: currentPlanLabel },
+        newPlan: { key: planKey, label: newPlanLabel, amount: (newPrice.unit_amount || 0) / 100, currency: newPrice.currency },
+        credit: 0,
+        amountDue: (newPrice.unit_amount || 0) / 100,
+        nextBillingDate: null,
+      });
+    }
+
+    const sub = await stripe.subscriptions.retrieve(tenant.stripe_subscription_id);
+    const itemId = sub.items.data[0].id;
+
+    let invoice;
+    try {
+      invoice = await stripe.invoices.retrieveUpcoming({
+        customer: tenant.stripe_customer_id,
+        subscription: tenant.stripe_subscription_id,
+        subscription_items: [{ id: itemId, price: priceId }],
+        subscription_proration_behavior: 'create_prorations',
+      });
+    } catch (e) {
+      // Newer Stripe API versions moved this to invoices.createPreview.
+      try {
+        invoice = await stripe.invoices.createPreview({
+          customer: tenant.stripe_customer_id,
+          subscription: tenant.stripe_subscription_id,
+          subscription_details: {
+            items: [{ id: itemId, price: priceId }],
+            proration_behavior: 'create_prorations',
+          },
+        });
+      } catch (e2) {
+        console.error('[billing.preview-change] invoice preview failed:', e2.message);
+        return res.status(500).json({ error: 'Preview indisponible' });
+      }
+    }
+
+    // Sum prorations (negative = credit from unused time on the old
+    // plan, positive = charge for remaining days on the new one) so
+    // the UI can show the separate credit line even when Stripe
+    // bundles them into one net total.
+    const prorationLines = (invoice.lines?.data || []).filter(l => l.proration);
+    let creditCents = 0;
+    for (const line of prorationLines) {
+      if (line.amount < 0) creditCents += line.amount; // keeps the negative sign
+    }
+    const amountDueCents = invoice.amount_due ?? invoice.total ?? 0;
+    const currency = invoice.currency || newPrice.currency;
+
+    res.json({
+      hasActiveSub: true,
+      currentPlan: { key: tenant.plan || 'starter', label: currentPlanLabel },
+      newPlan: { key: planKey, label: newPlanLabel, amount: (newPrice.unit_amount || 0) / 100, currency },
+      credit: creditCents / 100,
+      amountDue: amountDueCents / 100,
+      currency,
+      nextBillingDate: invoice.next_payment_attempt
+        ? new Date(invoice.next_payment_attempt * 1000).toISOString()
+        : (sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null),
+    });
+  } catch (err) {
+    console.error('[billing.preview-change] error:', err);
+    res.status(500).json({ error: 'Erreur Stripe' });
+  }
+});
+
+// ─── GET /api/billing/cleanup ────────────────────────────────────────
+// Admin-triggered: find any duplicate ACTIVE subscriptions for this
+// tenant's Stripe customer and cancel all but the most recent. Used
+// to clean up the mess from the old POST /checkout that created a
+// fresh sub on every upgrade click.
+router.get('/cleanup', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  try {
+    if (!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+    if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+    const tenant = await loadTenantPlan(req.tenantId);
+    if (!tenant || !tenant.stripe_customer_id) {
+      return res.json({ canceled: [], kept: null, reason: 'no_customer' });
+    }
+
+    const list = await stripe.subscriptions.list({
+      customer: tenant.stripe_customer_id,
+      status: 'all',
+      limit: 25,
+    });
+    const live = (list.data || []).filter(s => ['active', 'trialing', 'past_due', 'unpaid'].includes(s.status));
+    if (live.length <= 1) {
+      return res.json({ canceled: [], kept: live[0]?.id || null, reason: 'nothing_to_clean' });
+    }
+    // Keep the newest, cancel the rest immediately.
+    live.sort((a, b) => (b.created || 0) - (a.created || 0));
+    const keep = live[0];
+    const toCancel = live.slice(1);
+    const canceled = [];
+    for (const sub of toCancel) {
+      try {
+        await stripe.subscriptions.cancel(sub.id);
+        canceled.push(sub.id);
+      } catch (e) {
+        console.error('[billing.cleanup] cancel failed:', sub.id, e.message);
+      }
+    }
+    // Re-pin the tenant to the kept subscription.
+    const priceId = keep.items?.data?.[0]?.price?.id;
+    const planKey = keep.metadata?.plan || planKeyFromPriceId(priceId) || tenant.plan || 'starter';
+    const plan = PLANS[planKey] || PLANS.starter;
+    await query(
+      `UPDATE tenants SET
+         plan = $1,
+         plan_partner_limit = $2,
+         stripe_subscription_id = $3,
+         plan_ends_at = $4
+       WHERE id = $5`,
+      [
+        planKey,
+        plan.partnerLimit,
+        keep.id,
+        keep.current_period_end ? new Date(keep.current_period_end * 1000) : null,
+        req.tenantId,
+      ]
+    );
+    res.json({ canceled, kept: keep.id, plan: planKey });
+  } catch (err) {
+    console.error('[billing.cleanup] error:', err);
     res.status(500).json({ error: 'Erreur Stripe' });
   }
 });

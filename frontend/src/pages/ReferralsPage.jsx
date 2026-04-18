@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
 
@@ -17,6 +18,7 @@ export default function ReferralsPage() {
   const [activities, setActivities] = useState([]);
   const [viewMode, setViewMode] = useState('kanban');
   const [kanbanLimits, setKanbanLimits] = useState({});
+  const [deleteId, setDeleteId] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [draggedId, setDraggedId] = useState(null);
   const [myTenant, setMyTenant] = useState(null);
@@ -53,9 +55,14 @@ export default function ReferralsPage() {
     } catch (err) { console.error(err); }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm(t('referrals.confirm_delete'))) return;
-    try { await api.deleteReferral(id); setSelected(null); setActivities([]); load(); } catch (err) { alert(err.message); }
+  const handleDelete = (id) => setDeleteId(id);
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await api.deleteReferral(deleteId);
+      setSelected(null); setActivities([]); load();
+    } catch (err) { alert(err.message); }
+    finally { setDeleteId(null); }
   };
 
   // Kanban drag & drop
@@ -98,6 +105,16 @@ export default function ReferralsPage() {
 
   return (
     <div className="fade-in">
+      <ConfirmModal
+        isOpen={!!deleteId}
+        title={t('referrals.delete_title') || 'Supprimer'}
+        message={t('referrals.confirm_delete')}
+        confirmLabel={t('referrals.delete') || 'Supprimer'}
+        cancelLabel={t('partners.cancel') || 'Annuler'}
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
       {/* Confetti */}
       {showConfetti && <Confetti />}
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 import {
   Trophy, Plus, Edit2,
   Palette,
@@ -17,6 +18,8 @@ export default function ProgrammePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // level id or 'new'
   const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
+  // { kind: 'delete'|'reset', id? }
+  const [confirmAction, setConfirmAction] = useState(null);
   const [msg, setMsg] = useState(null);
 
   const load = async () => {
@@ -76,23 +79,18 @@ export default function ProgrammePage() {
     }
   };
 
-  const del = async (id) => {
-    if (!window.confirm(t('programme.delete_confirm'))) return;
+  const del = (id) => setConfirmAction({ kind: 'delete', id });
+  const reset = () => setConfirmAction({ kind: 'reset' });
+  const runConfirm = async () => {
+    if (!confirmAction) return;
     try {
-      await api.deleteTenantLevel(id);
+      if (confirmAction.kind === 'delete') await api.deleteTenantLevel(confirmAction.id);
+      else await api.resetTenantLevels();
       load();
     } catch (e) {
       setMsg({ type: 'error', text: e.message });
-    }
-  };
-
-  const reset = async () => {
-    if (!window.confirm(t('programme.reset_confirm'))) return;
-    try {
-      await api.resetTenantLevels();
-      load();
-    } catch (e) {
-      setMsg({ type: 'error', text: e.message });
+    } finally {
+      setConfirmAction(null);
     }
   };
 
@@ -140,6 +138,16 @@ export default function ProgrammePage() {
 
   return (
     <div>
+      <ConfirmModal
+        isOpen={!!confirmAction}
+        title={confirmAction?.kind === 'reset' ? t('programme.reset_confirm') : t('programme.delete_confirm')}
+        message={confirmAction?.kind === 'reset' ? t('programme.reset_confirm') : t('programme.delete_confirm')}
+        confirmLabel={confirmAction?.kind === 'reset' ? t('programme.reset') || 'Reset' : t('news.delete') || 'Supprimer'}
+        cancelLabel={t('partners.cancel') || 'Annuler'}
+        variant="danger"
+        onConfirm={runConfirm}
+        onCancel={() => setConfirmAction(null)}
+      />
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('programme.title_full')}</h3>
       <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('programme.subtitle_full')}</p>
 

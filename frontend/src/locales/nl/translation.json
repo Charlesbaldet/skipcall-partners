@@ -1837,6 +1837,20 @@
     "everything_in_starter": "Alles uit Starter",
     "everything_in_pro": "Alles uit Pro",
     "payment_failed_banner": "Je laatste betaling is mislukt. Werk je betaalmethode bij om je plan niet te verliezen.",
-    "update_payment": "Betaling bijwerken"
+    "update_payment": "Betaling bijwerken",
+    "cancel_title": "Abonnement opzeggen?",
+    "cancel_line_until": "Je {{plan}}-plan blijft actief tot {{date}}.",
+    "cancel_line_after": "Daarna ga je naar het gratis Starter-plan (max. 3 partners).",
+    "cancel_line_partners": "Je bestaande partners worden niet verwijderd, maar je kunt er geen nieuwe boven de limiet toevoegen.",
+    "keep_my_plan": "Plan behouden",
+    "cancel_yes": "Abonnement opzeggen",
+    "change_plan_title": "Plan wijzigen",
+    "change_from_to": "Van {{from}} naar {{to}}",
+    "prorata_credit": "Pro-rata credit",
+    "due_today": "Vandaag te betalen",
+    "next_billing": "Volgende facturatie",
+    "confirm_upgrade": "Bevestig wijziging",
+    "preview_loading": "Berekenen…",
+    "same_plan": "Je zit al op dit plan."
   }
 }
