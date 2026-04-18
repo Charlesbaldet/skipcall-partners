@@ -131,6 +131,7 @@ router.post('/google', async (req, res) => {
         needsSignup: true,
         email,
         name: payload.name || null,
+        picture: payload.picture || null,
       });
     }
     if (!user.is_active) {
@@ -389,6 +390,90 @@ router.post('/signup', [
     try { await query("INSERT INTO audit_logs (user_id, tenant_id, action, resource_type, resource_id, details) VALUES ($1, $2, 'signup', 'tenant', $3, $4)", [user.id, tenant.id, tenant.id, JSON.stringify({ company, email })]); } catch(e) {}
     res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, tenantId: tenant.id } });
   } catch (err) { console.error('Signup error:', err); res.status(500).json({ error: 'Erreur lors de la creation du compte.' }); }
+});
+
+// ─── SIGNUP via Google (no password — verify access_token, create tenant+user) ───
+// The frontend flow: Google OAuth2 redirect → /login picks up the access
+// token → backend /auth/google returns { needsSignup: true } → frontend
+// forwards to /signup with google_email/name/avatar + keeps access_token
+// in sessionStorage → user fills company + phone → POST here with the
+// access_token so we can re-verify the Google identity server-side and
+// ensure nobody can spoof an email that doesn't match their OAuth session.
+router.post('/signup-google', [
+  body('company').trim().notEmpty(),
+  body('fullName').trim().notEmpty(),
+  body('access_token').notEmpty(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: errors.array()[0].msg });
+    const { company, fullName, phone, access_token } = req.body;
+
+    // Re-verify the Google access token and extract the canonical email.
+    let payload;
+    try {
+      const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      if (!resp.ok) return res.status(401).json({ error: 'Token Google invalide' });
+      payload = await resp.json();
+    } catch {
+      return res.status(401).json({ error: 'Token Google invalide' });
+    }
+
+    const email = (payload.email || '').toLowerCase();
+    const emailVerified = payload.email_verified === true || payload.email_verified === 'true';
+    if (!email || !emailVerified) return res.status(401).json({ error: 'Email Google non vérifié' });
+
+    const { rows: existing } = await query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+    if (existing.length > 0) return res.status(409).json({ error: 'Un compte avec cet email existe deja.' });
+
+    const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+    const { rows: [tenant] } = await query(
+      "INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color) VALUES ($1, $2, '#6366f1', '#0f172a', '#f97316') RETURNING id",
+      [company, slug]
+    );
+
+    // Random placeholder password — the user will only ever log in via Google.
+    // Keeps the NOT NULL constraint satisfied without creating a usable credential.
+    const placeholder = require('crypto').randomBytes(32).toString('hex');
+    const hash = await bcrypt.hash(placeholder, 12);
+
+    let user;
+    try {
+      // Try inserting with avatar_url; fall back if the column doesn't exist yet.
+      const r = await query(
+        "INSERT INTO users (email, password_hash, full_name, role, tenant_id, avatar_url) VALUES ($1, $2, $3, 'admin', $4, $5) RETURNING id, email, full_name, role, tenant_id",
+        [email, hash, fullName, tenant.id, payload.picture || null]
+      );
+      user = r.rows[0];
+    } catch {
+      const r = await query(
+        "INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, 'admin', $4) RETURNING id, email, full_name, role, tenant_id",
+        [email, hash, fullName, tenant.id]
+      );
+      user = r.rows[0];
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, tenantId: tenant.id, fullName: user.full_name },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    try { await query("INSERT INTO audit_logs (user_id, tenant_id, action, resource_type, resource_id, details) VALUES ($1, $2, 'signup_google', 'tenant', $3, $4)", [user.id, tenant.id, tenant.id, JSON.stringify({ company, email })]); } catch {}
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user.id, email: user.email, fullName: user.full_name,
+        role: user.role, tenantId: tenant.id,
+        avatarUrl: payload.picture || null,
+      },
+    });
+  } catch (err) {
+    console.error('Signup-google error:', err);
+    res.status(500).json({ error: 'Erreur lors de la creation du compte.' });
+  }
 });
 
 // ─── Change password (1ère connexion — JWT requis) ───

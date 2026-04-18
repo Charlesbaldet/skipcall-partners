@@ -77,6 +77,14 @@ class ApiClient {
     if (data.token) { this.setToken(data.token); this.setUser(data.user); }
     return data;
   }
+  async signupWithGoogle({ company, fullName, phone, access_token }) {
+    const data = await this.request('/auth/signup-google', {
+      method: 'POST',
+      body: JSON.stringify({ company, fullName, phone, access_token }),
+    });
+    if (data.token) { this.setToken(data.token); this.setUser(data.user); }
+    return data;
+  }
   logout() { this.setToken(null); this.setUser(null); }
   getMe() { return this.request('/auth/me'); }
   changePassword(currentPassword, newPassword) { return this.request('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) }); }

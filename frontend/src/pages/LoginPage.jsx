@@ -79,8 +79,14 @@ export default function LoginPage() {
         const data = await loginWithGoogle(accessToken);
         if (cancelled) return;
         if (data.needsSignup) {
-          const qs = new URLSearchParams({ email: data.email || '' });
-          if (data.name) qs.set('name', data.name);
+          // Stash the access_token so the signup form can POST it with
+          // the company/fullName to /auth/signup-google; the backend
+          // re-verifies the token against Google to bind the new account
+          // to the proven Google identity.
+          try { sessionStorage.setItem('google_signup_access_token', accessToken); } catch {}
+          const qs = new URLSearchParams({ google_email: data.email || '' });
+          if (data.name) qs.set('google_name', data.name);
+          if (data.picture) qs.set('google_avatar', data.picture);
           navigate('/signup?' + qs.toString());
           return;
         }

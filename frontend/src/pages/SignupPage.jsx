@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import api from '../lib/api';
 
 const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
@@ -14,10 +15,21 @@ export default function SignupPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Google-prefilled signup: LoginPage redirects here with google_email /
+  // google_name / google_avatar when the user signs in with Google but
+  // has no matching account yet. The access_token lives in sessionStorage
+  // (set by LoginPage before the redirect) — it's not in the URL to avoid
+  // leaking it via referer headers or browser history.
+  const googleEmail = params.get('google_email') || '';
+  const googleName = params.get('google_name') || '';
+  const googleAvatar = params.get('google_avatar') || '';
+  const isGoogleSignup = !!googleEmail;
+
   const [form, setForm] = useState({
     company: '',
-    fullName: params.get('name') || '',
-    email: params.get('email') || '',
+    fullName: googleName || params.get('name') || '',
+    email: googleEmail || params.get('email') || '',
     password: '', phone: '',
   });
 
@@ -31,6 +43,21 @@ export default function SignupPage() {
     setLoading(true);
     setError('');
     try {
+      if (isGoogleSignup) {
+        const accessToken = sessionStorage.getItem('google_signup_access_token');
+        if (!accessToken) throw new Error(t('signup.google_token_missing') || 'Session Google expirée — réessayez');
+        const data = await api.signupWithGoogle({
+          company: form.company,
+          fullName: form.fullName,
+          phone: form.phone,
+          access_token: accessToken,
+        });
+        try { sessionStorage.removeItem('google_signup_access_token'); } catch {}
+        localStorage.setItem('refboost_onboarding_pending', '1');
+        try { window._rb_track?.('signup_google', { company: form.company }); } catch(e) {}
+        setStep(3);
+        return;
+      }
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +104,7 @@ export default function SignupPage() {
       <div style={{ width:'100%',maxWidth:460,background:'#fff',borderRadius:24,padding:40,boxShadow:'0 20px 60px rgba(0,0,0,.08)',border:'1px solid #f1f5f9' }}>
 
         {/* Progress */}
-        {step < 3 && (
+        {step < 3 && !isGoogleSignup && (
           <div style={{ display:'flex',gap:8,marginBottom:32 }}>
             {[1,2].map(s=>(
               <div key={s} style={{ flex:1,height:4,borderRadius:2,background:step>=s?g(C.p,C.pl):'#e2e8f0',transition:'all .3s' }}/>
@@ -104,9 +131,27 @@ export default function SignupPage() {
               <input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder={t("signup.phone_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
             </div>
 
-            <button onClick={()=>{ if(form.company && form.fullName) setStep(2); else setError(t("signup.error_fields")); }}
-              style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
-              {t("signup.next")}
+            {isGoogleSignup && (
+              <div style={{ display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,marginBottom:16 }}>
+                {googleAvatar && <img src={googleAvatar} alt="" style={{ width:32,height:32,borderRadius:'50%' }}/>}
+                <div style={{ fontSize:13,color:C.s,lineHeight:1.3 }}>
+                  <div style={{ fontWeight:600 }}>{googleName || googleEmail}</div>
+                  <div style={{ color:C.m,fontSize:12 }}>{googleEmail}</div>
+                </div>
+              </div>
+            )}
+
+            {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#fef2f2',color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
+
+            <button
+              onClick={()=>{
+                if (!form.company || !form.fullName) { setError(t("signup.error_fields")); return; }
+                if (isGoogleSignup) { handleSubmit(); return; }
+                setStep(2);
+              }}
+              disabled={loading}
+              style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#94a3b8':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
+              {loading ? t("signup.creating") : (isGoogleSignup ? t("signup.create") : t("signup.next"))}
             </button>
           </>
         )}
