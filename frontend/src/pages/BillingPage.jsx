@@ -50,7 +50,18 @@ const PLAN_META = {
   },
 };
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+// Format a date in the user's active UI language (e.g. "18 avril 2026"
+// in French, "April 18, 2026" in English). Falls back to fr-FR if the
+// browser can't resolve the locale. Uses month: 'long' for the
+// cancellation banners since they need to read naturally in prose.
+const fmtDate = (d, locale) => {
+  if (!d) return '—';
+  try {
+    return new Date(d).toLocaleDateString(locale || 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch {
+    return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+};
 
 function IntervalToggle({ interval, setInterval, t }) {
   // Hide the annual option entirely until the annual price IDs are
@@ -157,7 +168,8 @@ function PlanCard({ planKey, interval, t, current, onSelect, busy }) {
 }
 
 export default function BillingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const uiLocale = (i18n?.language || 'fr').slice(0, 2);
   const [params, setParams] = useSearchParams();
   const [plan, setPlan] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -331,7 +343,11 @@ export default function BillingPage() {
 
   if (loading) return <div style={{ padding: 32, color: '#64748b' }}>Loading…</div>;
 
-  const endLabel = plan?.planEndsAt ? fmtDate(plan.planEndsAt) : '—';
+  // Prefer the live Stripe cancel_at over the DB planEndsAt so the
+  // cancel-confirmation modal + banner always show a real date even
+  // when webhooks haven't caught up yet.
+  const endDateRaw = plan?.cancelAt || plan?.planEndsAt || null;
+  const endLabel = fmtDate(endDateRaw, uiLocale);
 
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto', fontFamily: 'inherit' }}>
@@ -384,7 +400,7 @@ export default function BillingPage() {
           <div style={{ flex: 1, fontWeight: 500 }}>
             {t('billing.cancel_scheduled_banner', {
               plan: t('billing.' + currentPlanKey),
-              date: plan?.cancelAt ? fmtDate(plan.cancelAt) : (plan?.planEndsAt ? fmtDate(plan.planEndsAt) : '—'),
+              date: fmtDate(plan?.cancelAt || plan?.planEndsAt, uiLocale),
             })}
           </div>
           <button
@@ -414,7 +430,7 @@ export default function BillingPage() {
             </div>
             {plan?.planEndsAt && (
               <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>
-                {t('billing.renewal', { date: fmtDate(plan.planEndsAt) })}
+                {t('billing.renewal', { date: fmtDate(plan.planEndsAt, uiLocale) })}
               </div>
             )}
           </div>
@@ -500,7 +516,7 @@ export default function BillingPage() {
               <tbody>
                 {invoices.map((inv, idx) => (
                   <tr key={inv.id} style={{ background: idx % 2 ? '#fafbfc' : '#fff' }}>
-                    <td style={td}>{fmtDate(inv.date)}</td>
+                    <td style={td}>{fmtDate(inv.date, uiLocale)}</td>
                     <td style={td}>{money(inv.amount, inv.currency)}</td>
                     <td style={td}>
                       <span style={{

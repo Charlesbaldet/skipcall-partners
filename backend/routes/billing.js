@@ -78,18 +78,35 @@ router.get('/plan', authenticate, tenantScope, authorize('admin'), async (req, r
     const partnerCount = await countActivePartners(req.tenantId);
 
     // Fetch the Stripe subscription live so we can surface
-    // cancel_at_period_end to the UI without a webhook round-trip.
-    // Failure is non-fatal — we just don't show the cancel banner.
+    // cancel_at_period_end + an authoritative period-end date to the UI
+    // without waiting on a webhook. Failure is non-fatal — we fall back
+    // to the DB column.
     let cancelAtPeriodEnd = false;
     let cancelAt = null;
+    let livePeriodEndIso = null;
     if (stripe && tenant.stripe_subscription_id) {
       try {
         const sub = await stripe.subscriptions.retrieve(tenant.stripe_subscription_id);
         cancelAtPeriodEnd = sub.cancel_at_period_end === true;
         cancelAt = sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString()
                   : (sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null);
-      } catch (e) { /* sub may be gone — leave cancelAtPeriodEnd=false */ }
+        if (sub.current_period_end) {
+          livePeriodEndIso = new Date(sub.current_period_end * 1000).toISOString();
+        }
+        // Opportunistically back-fill the DB column when Stripe is the
+        // only place that knows the real end date (webhooks may never
+        // have landed for this tenant).
+        if (livePeriodEndIso && !tenant.plan_ends_at) {
+          try {
+            await query('UPDATE tenants SET plan_ends_at = $1 WHERE id = $2', [livePeriodEndIso, req.tenantId]);
+          } catch { /* non-fatal */ }
+        }
+      } catch (e) { /* sub may be gone — leave everything null */ }
     }
+
+    // Prefer the live value so the UI always has a date to show (the DB
+    // column may be NULL for tenants whose webhook was never wired).
+    const planEndsAt = livePeriodEndIso || tenant.plan_ends_at || null;
 
     res.json({
       plan: tenant.plan || 'starter',
@@ -98,7 +115,7 @@ router.get('/plan', authenticate, tenantScope, authorize('admin'), async (req, r
       stripeCustomerId: tenant.stripe_customer_id || null,
       subscriptionId: tenant.stripe_subscription_id || null,
       planStartedAt: tenant.plan_started_at,
-      planEndsAt: tenant.plan_ends_at,
+      planEndsAt,
       paymentStatus: tenant.payment_status || 'active',
       cancelAtPeriodEnd,
       cancelAt,
@@ -436,6 +453,19 @@ router.post('/cancel', authenticate, tenantScope, authorize('admin'), async (req
     const sub = await stripe.subscriptions.update(tenant.stripe_subscription_id, {
       cancel_at_period_end: true,
     });
+
+    // Persist the period end on the tenant so the UI (and any
+    // webhook-less fetch paths) can show the cancellation date
+    // consistently even before the customer.subscription.updated
+    // webhook lands.
+    if (sub.current_period_end) {
+      try {
+        await query(
+          'UPDATE tenants SET plan_ends_at = $1 WHERE id = $2',
+          [new Date(sub.current_period_end * 1000), req.tenantId]
+        );
+      } catch { /* non-fatal */ }
+    }
 
     // Fire-and-forget "sorry to see you go" email. Failure must not
     // block the response — a swallowed email is strictly better than
