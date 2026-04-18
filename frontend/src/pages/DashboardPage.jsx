@@ -131,6 +131,7 @@ export default function DashboardPage() {
           timelineData={timelineData} revenueData={revenueData}
           revenueCumul={revenueCumul} setRevenueCumul={setRevenueCumul}
           topPartners={topPartners} myTenant={myTenant}
+          billingPlan={billingPlan} navigate={navigate}
         />
       )}
 
@@ -147,11 +148,15 @@ export default function DashboardPage() {
 // ═══════════════════════════════════════
 // VUE D'ENSEMBLE TAB
 // ═══════════════════════════════════════
-function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData, revenueCumul, setRevenueCumul, topPartners, myTenant }) {
+function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData, revenueCumul, setRevenueCumul, topPartners, myTenant, billingPlan, navigate }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
-  const over = billingPlan && billingPlan.partnerLimit !== -1 && billingPlan.partnerCount > billingPlan.partnerLimit;
+  const over = !!(billingPlan
+    && typeof billingPlan.partnerLimit === 'number'
+    && billingPlan.partnerLimit !== -1
+    && typeof billingPlan.partnerCount === 'number'
+    && billingPlan.partnerCount > billingPlan.partnerLimit);
 
   return (
     <>
