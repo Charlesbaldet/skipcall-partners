@@ -13,6 +13,13 @@ const PRICE_BUSINESS_MONTHLY = 'price_1TNSyfLO4aHvEb3qM7f7A14c';
 const PRICE_PRO_ANNUAL = 'STRIPE_PRICE_PRO_ANNUAL';
 const PRICE_BUSINESS_ANNUAL = 'STRIPE_PRICE_BUSINESS_ANNUAL';
 
+// Returns true only for real Stripe price IDs (they all start with
+// `price_`). When the annual IDs haven't been configured yet both
+// constants above fall back to their placeholder literal, and we need
+// to block the upgrade click — otherwise Stripe rejects the bogus
+// price and the button appears to do nothing.
+const isRealStripePrice = (id) => typeof id === 'string' && id.startsWith('price_');
+
 const PLAN_META = {
   starter: {
     key: 'starter',
@@ -46,9 +53,14 @@ const PLAN_META = {
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 function IntervalToggle({ interval, setInterval, t }) {
+  // Hide the annual option entirely until the annual price IDs are
+  // configured in Stripe — otherwise we'd offer the user a toggle that
+  // breaks every upgrade attempt.
+  const annualReady = isRealStripePrice(PRICE_PRO_ANNUAL) && isRealStripePrice(PRICE_BUSINESS_ANNUAL);
+  const options = annualReady ? ['monthly', 'annual'] : ['monthly'];
   return (
     <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: 999, padding: 4, gap: 2 }}>
-      {['monthly', 'annual'].map(opt => (
+      {options.map(opt => (
         <button key={opt} onClick={() => setInterval(opt)}
           style={{
             padding: '7px 16px', borderRadius: 999, border: 'none', cursor: 'pointer',
@@ -201,16 +213,36 @@ export default function BillingPage() {
   // subscribe) go straight to Stripe Checkout.
   const handleCheckout = async (planKey) => {
     const priceId = PLAN_META[planKey]?.[interval]?.priceId;
-    if (!priceId) return;
+    console.log('[billing] handleCheckout', { planKey, interval, priceId, hasSub: !!plan?.subscriptionId });
+    if (!priceId) { setError('Missing price id for ' + planKey); return; }
+    // Guard against unconfigured annual price IDs — they fall back to
+    // placeholder literals that Stripe rejects, which makes the button
+    // appear to do nothing. Surface a clear error instead.
+    if (!isRealStripePrice(priceId)) {
+      setError('Ce tarif n\'est pas encore configuré côté Stripe (' + priceId + ').');
+      return;
+    }
 
     if (plan?.subscriptionId) {
-      // Plan change — preview before applying.
+      // Plan change — preview before applying. Open the modal in a
+      // loading state immediately so the user sees something happen
+      // even if the preview network call is slow.
       setChangePreview({ planKey, priceId, preview: null, loading: true, error: '' });
       try {
         const p = await api.previewPlanChange(priceId);
+        console.log('[billing] previewPlanChange response', p);
         setChangePreview(s => s && s.planKey === planKey ? { ...s, preview: p, loading: false } : s);
       } catch (e) {
-        setChangePreview(s => s && s.planKey === planKey ? { ...s, loading: false, error: e.message || 'Preview error' } : s);
+        console.error('[billing] previewPlanChange failed', e);
+        // Don't close the modal on error — let the user confirm anyway;
+        // the actual subscriptions.update on confirm will apply proration
+        // itself, so we can still proceed with the upgrade.
+        setChangePreview(s => s && s.planKey === planKey ? {
+          ...s,
+          loading: false,
+          error: e.message || 'Preview error',
+          preview: { preview_unavailable: true, newPlan: { key: planKey } },
+        } : s);
       }
       return;
     }
@@ -219,10 +251,12 @@ export default function BillingPage() {
     setBusy(true); setError('');
     try {
       const resp = await api.createCheckout(priceId);
+      console.log('[billing] createCheckout response', resp);
       if (resp.url) { window.location.href = resp.url; return; }
       // Already on this plan (noop) — just reload.
       reload();
     } catch (e) {
+      console.error('[billing] createCheckout failed', e);
       setError(e.message || 'Erreur');
     } finally { setBusy(false); }
   };
@@ -230,15 +264,18 @@ export default function BillingPage() {
   // Called from the preview modal after the user confirms.
   const applyPlanChange = async () => {
     if (!changePreview?.priceId) return;
+    console.log('[billing] applyPlanChange', changePreview);
     setApplyingChange(true);
     try {
       const resp = await api.createCheckout(changePreview.priceId);
+      console.log('[billing] createCheckout (plan change) response', resp);
       if (resp.url) { window.location.href = resp.url; return; }
       setChangePreview(null);
       reload();
       setSuccess('✓ ' + t('billing.current_plan'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (e) {
+      console.error('[billing] applyPlanChange failed', e);
       setChangePreview(s => s ? { ...s, error: e.message || 'Erreur' } : s);
     } finally {
       setApplyingChange(false);
@@ -512,6 +549,12 @@ function PreviewChangeModal({ change, currentPlanKey, t, busy, onConfirm, onCanc
   };
   const { planKey, preview, loading, error } = change;
   const noop = preview && preview.newPlan?.key === currentPlanKey;
+  const previewUnavailable = !!(preview && preview.preview_unavailable);
+  // Allow Confirm as soon as we're not loading + not on the same plan.
+  // If the preview endpoint failed, Stripe's subscriptions.update will
+  // still compute the correct pro-ration on confirm, so we must not
+  // leave the user stuck.
+  const canConfirm = !loading && !busy && !noop && planKey && planKey !== currentPlanKey;
 
   return (
     <div
@@ -542,6 +585,10 @@ function PreviewChangeModal({ change, currentPlanKey, t, busy, onConfirm, onCanc
           <>
             {noop ? (
               <div style={{ padding: '16px 0', color: '#64748b', fontSize: 14 }}>{t('billing.same_plan')}</div>
+            ) : previewUnavailable ? (
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 18, fontSize: 13, color: '#475569' }}>
+                {t('billing.preview_unavailable_hint') || 'Le détail pro-rata n\'est pas disponible ici, mais Stripe calculera automatiquement le bon montant au changement.'}
+              </div>
             ) : (
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, marginBottom: 18, fontSize: 14 }}>
                 {preview.credit < 0 && (
@@ -571,14 +618,14 @@ function PreviewChangeModal({ change, currentPlanKey, t, busy, onConfirm, onCanc
           </button>
           <button
             onClick={onConfirm}
-            disabled={busy || loading || noop || !preview}
+            disabled={!canConfirm}
             style={{
               padding: '10px 18px', borderRadius: 10, border: 'none',
-              background: (busy || loading || noop || !preview) ? '#94a3b8' : 'linear-gradient(135deg,#059669,#10b981)',
+              background: !canConfirm ? '#94a3b8' : 'linear-gradient(135deg,#059669,#10b981)',
               color: '#fff', fontSize: 14, fontWeight: 700,
-              cursor: (busy || loading || noop || !preview) ? 'not-allowed' : 'pointer',
+              cursor: !canConfirm ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit',
-              boxShadow: (busy || loading || noop || !preview) ? 'none' : '0 6px 18px rgba(5,150,105,.25)',
+              boxShadow: !canConfirm ? 'none' : '0 6px 18px rgba(5,150,105,.25)',
             }}
           >
             {busy ? '…' : t('billing.confirm_upgrade')}

@@ -273,8 +273,22 @@ router.get('/preview-change', authenticate, tenantScope, authorize('admin'), asy
           },
         });
       } catch (e2) {
-        console.error('[billing.preview-change] invoice preview failed:', e2.message);
-        return res.status(500).json({ error: 'Preview indisponible' });
+        // Both preview methods unavailable (SDK version mismatch, API
+        // restriction, etc.) — return a DEGRADED preview instead of
+        // 500'ing. The UI still opens the confirm modal so the user can
+        // proceed; Stripe will compute the real proration on
+        // subscriptions.update anyway.
+        console.warn('[billing.preview-change] invoice preview unavailable, returning degraded payload:', e2.message);
+        return res.json({
+          hasActiveSub: true,
+          preview_unavailable: true,
+          currentPlan: { key: tenant.plan || 'starter', label: currentPlanLabel },
+          newPlan: { key: planKey, label: newPlanLabel, amount: (newPrice.unit_amount || 0) / 100, currency: newPrice.currency },
+          credit: 0,
+          amountDue: (newPrice.unit_amount || 0) / 100,
+          currency: newPrice.currency,
+          nextBillingDate: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+        });
       }
     }
 
@@ -292,6 +306,7 @@ router.get('/preview-change', authenticate, tenantScope, authorize('admin'), asy
 
     res.json({
       hasActiveSub: true,
+      preview_unavailable: false,
       currentPlan: { key: tenant.plan || 'starter', label: currentPlanLabel },
       newPlan: { key: planKey, label: newPlanLabel, amount: (newPrice.unit_amount || 0) / 100, currency },
       credit: creditCents / 100,
