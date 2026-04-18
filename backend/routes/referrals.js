@@ -285,6 +285,16 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       return res.status(404).json({ error: 'Referral introuvable' });
     }
 
+    // `deal_value` is only in req.body when the client edits that field
+    // in the same request. Dragging a card to "won" on the kanban just
+    // sends `{ status: 'won' }` — so we must fall back to the deal
+    // value already stored on the referral. Without this fallback the
+    // `status === 'won' && dealValue > 0` gates below never fire and
+    // no commission row is created.
+    const effectiveDealValue = deal_value !== undefined
+      ? (parseFloat(deal_value) || 0)
+      : (parseFloat(current.deal_value) || 0);
+
     await client.query('BEGIN');
 
     // Build update
@@ -337,8 +347,10 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       );
     }
 
-    // Handle commission on deal won
-    if (status === 'won' && deal_value > 0) {
+    // Handle commission on deal won. Use effectiveDealValue so a simple
+    // status flip (no deal_value in the request) still produces a
+    // commission row from the previously-saved deal value.
+    if (status === 'won' && effectiveDealValue > 0) {
       const { rows: [partner] } = await client.query(
         `SELECT p.id, p.commission_rate
          FROM partners p JOIN referrals r ON r.partner_id = p.id
@@ -353,8 +365,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
            ON CONFLICT (referral_id)
            DO UPDATE SET amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value`,
           [req.params.id, partner.id,
-           deal_value * partner.commission_rate / 100,
-           partner.commission_rate, deal_value,
+           effectiveDealValue * partner.commission_rate / 100,
+           partner.commission_rate, effectiveDealValue,
            req.tenantId || null]
         );
 
@@ -443,17 +455,17 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
       })();
 
       // Admin-facing "deal won" fan-out.
-      if (status === 'won' && deal_value > 0) {
+      if (status === 'won' && effectiveDealValue > 0) {
         const { rows: [pRow] } = await query('SELECT name FROM partners WHERE id = $1', [current.partner_id]);
         notify.fanoutAdminNotification(req.tenantId, 'deal_won', {
           title: `🎉 Deal gagné — ${current.prospect_name}`,
-          message: `${pRow?.name || ''} · ${deal_value}€`,
+          message: `${pRow?.name || ''} · ${effectiveDealValue}€`,
           link: '/referrals',
         }, { includeCommercial: true }).catch(() => {});
         notify.shouldNotify(req.tenantId, 'deal_won').then(async p => {
           if (!p.email) return;
           const admins = await notify.adminEmails(req.tenantId);
-          const tpl = dealWonTpl(pRow?.name || '', current.prospect_name, deal_value);
+          const tpl = dealWonTpl(pRow?.name || '', current.prospect_name, effectiveDealValue);
           for (const a of admins) sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
         });
       }
@@ -461,7 +473,7 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
       // Commission fan-out when a deal is freshly won — the row was
       // inserted in the won branch above; notify the partner it's
       // available (+ email).
-      if (status === 'won' && deal_value > 0) {
+      if (status === 'won' && effectiveDealValue > 0) {
         (async () => {
           try {
             const { rows: partnerUsers } = await query(
@@ -472,7 +484,7 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
               [req.params.id]
             );
             const { rows: [pRow] } = await query('SELECT commission_rate FROM partners WHERE id = $1', [current.partner_id]);
-            const amount = Math.round((deal_value * (pRow?.commission_rate || 0)) / 100);
+            const amount = Math.round((effectiveDealValue * (pRow?.commission_rate || 0)) / 100);
             for (const pu of partnerUsers) {
               notify.createNotification(pu.id, 'commission', {
                 title: `Commission disponible : ${amount} €`,
