@@ -1835,6 +1835,8 @@
     "plan_custom_branding": "Eigen branding",
     "plan_unlimited_partners": "Onbeperkt partners",
     "everything_in_starter": "Alles uit Starter",
-    "everything_in_pro": "Alles uit Pro"
+    "everything_in_pro": "Alles uit Pro",
+    "payment_failed_banner": "Je laatste betaling is mislukt. Werk je betaalmethode bij om je plan niet te verliezen.",
+    "update_payment": "Betaling bijwerken"
   }
 }

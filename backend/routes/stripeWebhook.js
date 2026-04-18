@@ -12,6 +12,16 @@
 const express = require('express');
 const { query } = require('../db');
 const { PLANS, planKeyFromPriceId } = require('./billing');
+const { sendEmail, billingPaymentFailedTpl, billingSubscriptionCanceledTpl } = require('../services/emailService');
+
+async function tenantAdminEmails(tenantId) {
+  if (!tenantId) return [];
+  const { rows } = await query(
+    "SELECT email, full_name FROM users WHERE tenant_id = $1 AND role = 'admin' AND is_active = TRUE",
+    [tenantId]
+  );
+  return rows;
+}
 
 const stripeKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
@@ -116,6 +126,18 @@ router.post('/', async (req, res) => {
             periodEnd: sub.current_period_end,
           });
         }
+        // Mirror Stripe's subscription status into our payment_status
+        // column so the dashboard banner flips in sync with the real
+        // state (past_due/unpaid/active). Other Stripe statuses
+        // (trialing, incomplete, etc.) leave the column untouched.
+        if (tenantId) {
+          const stat = sub.status;
+          if (stat === 'past_due' || stat === 'unpaid') {
+            await query('UPDATE tenants SET payment_status = $1 WHERE id = $2', [stat, tenantId]);
+          } else if (stat === 'active') {
+            await query("UPDATE tenants SET payment_status = 'active' WHERE id = $1", [tenantId]);
+          }
+        }
         break;
       }
 
@@ -129,8 +151,23 @@ router.post('/', async (req, res) => {
             subscriptionId: null,
             periodEnd: null,
           });
-          // Clear subscription id since the sub is gone.
-          await query('UPDATE tenants SET stripe_subscription_id = NULL WHERE id = $1', [tenantId]);
+          // Clear subscription id + reset payment_status since the sub
+          // is gone. Existing partners keep working (the plan-limit
+          // gate only blocks NEW adds), we just downgrade their cap.
+          await query(
+            "UPDATE tenants SET stripe_subscription_id = NULL, payment_status = 'active' WHERE id = $1",
+            [tenantId]
+          );
+          // Notify admins that the sub was canceled + they're back on
+          // Starter. Fire-and-forget — email failure must not 500 the
+          // webhook or Stripe will retry indefinitely.
+          try {
+            const admins = await tenantAdminEmails(tenantId);
+            for (const a of admins) {
+              const tpl = billingSubscriptionCanceledTpl(a.full_name);
+              sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
+            }
+          } catch (e) { console.error('[sub.deleted email]', e.message); }
         }
         break;
       }
@@ -139,12 +176,40 @@ router.post('/', async (req, res) => {
         const inv = event.data.object;
         const tenantId = await resolveTenantFromCustomer(inv.customer);
         if (tenantId) {
+          await query(
+            "UPDATE tenants SET payment_status = 'past_due' WHERE id = $1",
+            [tenantId]
+          );
           try {
             await query(
               "INSERT INTO audit_logs (tenant_id, action, resource_type, resource_id, details) VALUES ($1, 'invoice_payment_failed', 'tenant', $1, $2)",
               [tenantId, JSON.stringify({ invoiceId: inv.id, amount: inv.amount_due })]
             );
           } catch {}
+          // Email admins so they can update their card before retries
+          // run out and the subscription is canceled for good.
+          try {
+            const admins = await tenantAdminEmails(tenantId);
+            const { rows: tr } = await query('SELECT plan FROM tenants WHERE id = $1', [tenantId]);
+            const planLabel = (tr[0]?.plan || 'pro').charAt(0).toUpperCase() + (tr[0]?.plan || 'pro').slice(1);
+            for (const a of admins) {
+              const tpl = billingPaymentFailedTpl(a.full_name, planLabel);
+              sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
+            }
+          } catch (e) { console.error('[invoice.failed email]', e.message); }
+        }
+        break;
+      }
+
+      case 'invoice.payment_succeeded': {
+        // Retry after a past_due period succeeded — clear the banner.
+        const inv = event.data.object;
+        const tenantId = await resolveTenantFromCustomer(inv.customer);
+        if (tenantId) {
+          await query(
+            "UPDATE tenants SET payment_status = 'active' WHERE id = $1",
+            [tenantId]
+          );
         }
         break;
       }

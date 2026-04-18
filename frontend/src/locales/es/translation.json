@@ -1835,6 +1835,8 @@
     "plan_custom_branding": "Marca personalizada",
     "plan_unlimited_partners": "Partners ilimitados",
     "everything_in_starter": "Todo lo de Starter",
-    "everything_in_pro": "Todo lo de Pro"
+    "everything_in_pro": "Todo lo de Pro",
+    "payment_failed_banner": "Tu último pago falló. Actualiza tu método de pago para no perder tu plan.",
+    "update_payment": "Actualizar pago"
   }
 }

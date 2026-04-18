@@ -1835,6 +1835,8 @@
     "plan_custom_branding": "Eigenes Branding",
     "plan_unlimited_partners": "Unbegrenzte Partner",
     "everything_in_starter": "Alles aus Starter",
-    "everything_in_pro": "Alles aus Pro"
+    "everything_in_pro": "Alles aus Pro",
+    "payment_failed_banner": "Deine letzte Zahlung ist fehlgeschlagen. Aktualisiere deine Zahlungsmethode, um deinen Plan nicht zu verlieren.",
+    "update_payment": "Zahlung aktualisieren"
   }
 }

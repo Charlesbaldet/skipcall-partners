@@ -51,7 +51,8 @@ async function countActivePartners(tenantId) {
 async function loadTenantPlan(tenantId) {
   const { rows } = await query(
     `SELECT id, name, plan, plan_partner_limit, stripe_customer_id,
-            stripe_subscription_id, plan_started_at, plan_ends_at
+            stripe_subscription_id, plan_started_at, plan_ends_at,
+            payment_status
        FROM tenants WHERE id = $1`,
     [tenantId]
   );
@@ -67,12 +68,13 @@ router.get('/plan', authenticate, tenantScope, authorize('admin'), async (req, r
     const partnerCount = await countActivePartners(req.tenantId);
     res.json({
       plan: tenant.plan || 'starter',
-      partnerLimit: tenant.plan_partner_limit ?? 5,
+      partnerLimit: tenant.plan_partner_limit ?? 3,
       partnerCount,
       stripeCustomerId: tenant.stripe_customer_id || null,
       subscriptionId: tenant.stripe_subscription_id || null,
       planStartedAt: tenant.plan_started_at,
       planEndsAt: tenant.plan_ends_at,
+      paymentStatus: tenant.payment_status || 'active',
     });
   } catch (err) {
     console.error('[billing.plan] error:', err);
@@ -216,7 +218,8 @@ router.get('/sync', authenticate, tenantScope, authorize('admin'), async (req, r
            plan = 'starter',
            plan_partner_limit = $1,
            stripe_subscription_id = NULL,
-           plan_ends_at = NULL
+           plan_ends_at = NULL,
+           payment_status = 'active'
          WHERE id = $2`,
         [PLANS.starter.partnerLimit, req.tenantId]
       );
@@ -230,20 +233,26 @@ router.get('/sync', authenticate, tenantScope, authorize('admin'), async (req, r
     }
     const plan = PLANS[planKey] || PLANS.starter;
 
+    // Mirror Stripe's subscription status → our payment_status column.
+    const ps = (sub.status === 'past_due' || sub.status === 'unpaid')
+      ? sub.status
+      : 'active';
     await query(
       `UPDATE tenants SET
          plan = $1,
          plan_partner_limit = $2,
          stripe_subscription_id = $3,
          plan_started_at = COALESCE(plan_started_at, $4),
-         plan_ends_at = $5
-       WHERE id = $6`,
+         plan_ends_at = $5,
+         payment_status = $6
+       WHERE id = $7`,
       [
         planKey,
         plan.partnerLimit,
         sub.id,
         sub.current_period_start ? new Date(sub.current_period_start * 1000) : null,
         sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
+        ps,
         req.tenantId,
       ]
     );

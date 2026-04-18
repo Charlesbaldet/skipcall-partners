@@ -1835,6 +1835,8 @@
     "plan_custom_branding": "Branding personalizzato",
     "plan_unlimited_partners": "Partner illimitati",
     "everything_in_starter": "Tutto di Starter",
-    "everything_in_pro": "Tutto di Pro"
+    "everything_in_pro": "Tutto di Pro",
+    "payment_failed_banner": "Il tuo ultimo pagamento non è andato a buon fine. Aggiorna il metodo di pagamento per non perdere il tuo piano.",
+    "update_payment": "Aggiorna pagamento"
   }
 }

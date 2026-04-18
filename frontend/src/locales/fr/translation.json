@@ -1835,6 +1835,8 @@
     "plan_custom_branding": "Personnalisation de marque",
     "plan_unlimited_partners": "Partenaires illimités",
     "everything_in_starter": "Tout du plan Starter",
-    "everything_in_pro": "Tout du plan Pro"
+    "everything_in_pro": "Tout du plan Pro",
+    "payment_failed_banner": "Votre dernier paiement a échoué. Mettez à jour votre moyen de paiement pour ne pas perdre votre plan.",
+    "update_payment": "Mettre à jour le paiement"
   }
 }

@@ -157,9 +157,28 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
     && billingPlan.partnerLimit !== -1
     && typeof billingPlan.partnerCount === 'number'
     && billingPlan.partnerCount > billingPlan.partnerLimit);
+  const paymentFailed = billingPlan && (billingPlan.paymentStatus === 'past_due' || billingPlan.paymentStatus === 'unpaid');
+
+  const openStripePortal = async () => {
+    try {
+      const { url } = await api.createPortal();
+      if (url) window.location.href = url;
+    } catch (e) {
+      navigate('/billing');
+    }
+  };
 
   return (
     <>
+      {paymentFailed && (
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontFamily: 'inherit' }}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }}/>
+          <div style={{ flex: 1, fontWeight: 500 }}>{t('billing.payment_failed_banner')}</div>
+          <button onClick={openStripePortal} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+            {t('billing.update_payment')}
+          </button>
+        </div>
+      )}
       {over && (
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontFamily: 'inherit' }}>
           <AlertCircle size={18} style={{ flexShrink: 0 }}/>

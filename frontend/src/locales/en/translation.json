@@ -1835,6 +1835,8 @@
     "plan_custom_branding": "Custom branding",
     "plan_unlimited_partners": "Unlimited partners",
     "everything_in_starter": "Everything in Starter",
-    "everything_in_pro": "Everything in Pro"
+    "everything_in_pro": "Everything in Pro",
+    "payment_failed_banner": "Your last payment failed. Update your payment method to avoid losing your plan.",
+    "update_payment": "Update payment"
   }
 }

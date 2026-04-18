@@ -244,6 +244,37 @@ function partnerAccessRevoked(partnerName, tenantName) {
   };
 }
 
+// ─── Billing ───────────────────────────────────────────────────────
+function billingPaymentFailedTpl(recipientName, planLabel) {
+  return {
+    subject: `Votre paiement a échoué — mettez à jour votre moyen de paiement`,
+    html: frame({
+      accent: '#dc2626',
+      heading: `Bonjour ${recipientName || ''},`.trim(),
+      bodyHtml: `
+        <p>Votre dernier paiement pour le plan <strong>${planLabel || 'RefBoost'}</strong> a échoué.</p>
+        <p>Mettez à jour votre moyen de paiement pour conserver votre plan. Sans action de votre part, votre abonnement sera automatiquement annulé après plusieurs tentatives et votre espace sera rétrogradé au plan Starter.</p>`,
+      ctaLabel: 'Mettre à jour le paiement',
+      ctaUrl: `${FRONTEND}/billing`,
+    }),
+  };
+}
+
+function billingSubscriptionCanceledTpl(recipientName) {
+  return {
+    subject: `Votre abonnement a été annulé — retour au plan Starter`,
+    html: frame({
+      accent: '#64748b',
+      heading: `Bonjour ${recipientName || ''},`.trim(),
+      bodyHtml: `
+        <p>Votre abonnement RefBoost a été annulé et votre espace a été rétrogradé au plan <strong>Starter</strong> gratuit.</p>
+        <p>Vos partenaires existants restent actifs, mais vous ne pourrez plus en ajouter de nouveaux au-delà de la limite du plan gratuit. Vous pouvez reprendre un abonnement à tout moment depuis la page de facturation.</p>`,
+      ctaLabel: 'Reprendre un abonnement',
+      ctaUrl: `${FRONTEND}/billing`,
+    }),
+  };
+}
+
 // Placeholder for old emailService compatibility
 function queueNotification() {}
 function startNotificationWorker() {}
@@ -262,6 +293,8 @@ module.exports = {
   newPartnerApplicationTpl,
   dealWonTpl,
   newsPublishedTpl,
+  billingPaymentFailedTpl,
+  billingSubscriptionCanceledTpl,
   queueNotification,
   startNotificationWorker,
 };
