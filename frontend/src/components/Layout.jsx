@@ -163,7 +163,11 @@ export default function Layout({ children }) {
 
   const s = {
     sidebar: { width: collapsed ? 68 : 200, minWidth: collapsed ? 68 : 200, background: isSuperAdmin ? '#1a1a2e' : C.s, color: '#fff', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50 },
-    link: { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderRadius: 10, color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 500, transition: 'all 0.15s', margin: '2px 8px' },
+    // Nav-item baseline: consistent 8px vertical padding, 20px left
+    // gutter so every icon aligns on the same column whether it sits
+    // under a section, is the standalone Dashboard, or is the bottom
+    // Notifications row. gap:10 between icon and label.
+    link: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px 8px 20px', borderRadius: 10, color: '#94a3b8', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'all 0.15s', margin: '2px 8px' },
     activeLink: { background: isSuperAdmin ? 'linear-gradient(135deg, rgba(220,38,38,0.2), rgba(239,68,68,0.15))' : `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`, color: '#fff' },
     activeQueryLink: { background: `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`, color: '#fff' },
   };
@@ -291,13 +295,16 @@ export default function Layout({ children }) {
           {nav.filter(it => !it.bottom).map((item, i) => {
             if (item.section) {
               if (collapsed) return null;
+              // Section label sits at the same 20px left gutter as the
+              // nav items below it so icons and the label start on the
+              // same x position. Small margin-top for visual grouping.
               return (
                 <div
                   key={'sec-' + i}
                   style={{
                     fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
                     color: '#475569', fontWeight: 700,
-                    padding: '12px 16px 4px', marginTop: 8,
+                    padding: '4px 16px 4px 20px', marginTop: 12,
                   }}
                 >
                   {item.section}
@@ -310,20 +317,7 @@ export default function Layout({ children }) {
             const notifyCount = (item.notifyKeys || []).reduce(
               (n, k) => n + (unreadByCat[k] || 0), 0
             );
-            // Indent section items slightly vs the standalone Dashboard / bottom links.
-            const underSection = (() => {
-              for (let j = i - 1; j >= 0; j--) {
-                const prev = nav.filter(x => !x.bottom)[j];
-                if (!prev) break;
-                if (prev.section) return true;
-                if (prev.to) return false;
-              }
-              return false;
-            })();
-            const linkStyle = {
-              ...s.link,
-              paddingLeft: underSection && !collapsed ? 24 : 16,
-            };
+            const linkStyle = s.link;
             return (
               <Fragment key={item.to}>
               <NavLink
@@ -418,10 +412,14 @@ export default function Layout({ children }) {
               to={item.to}
               style={({ isActive }) => ({
                 ...s.link,
+                // Bottom row sits flush against the sidebar edge (no
+                // horizontal margin) but preserves the 20px left
+                // gutter so its icon aligns with the main nav icons
+                // above.
                 borderTop: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 0,
                 margin: 0,
-                padding: '12px 16px',
+                padding: '10px 16px 10px 20px',
                 color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#64748b'),
                 ...(isActive ? { background: 'rgba(255,255,255,0.04)' } : {}),
               })}
