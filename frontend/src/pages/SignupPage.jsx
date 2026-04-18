@@ -89,26 +89,7 @@ export default function SignupPage() {
         {step === 1 && (
           <>
             <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.title")}</h2>
-            <p style={{ color:C.m,fontSize:14,margin:'0 0 20px',fontFamily:"'DM Sans',sans-serif" }}>{t("signup.subtitle")}</p>
-
-            {/* Google SSO — on a matching account we sign the user in
-                and skip the form entirely; on a new Google email we
-                pre-fill fullName + email and keep the signup flow so
-                the caller still enters company + password. */}
-            {/* Google SSO → full-page redirect to Google; Google
-                returns to /login, where the mount-time handler either
-                signs the visitor in (matched existing account) or
-                forwards them back here with ?email=&name= pre-filled
-                so they only need to finish company + password. */}
-            <GoogleSignInButton text={t('signup.google_continue')} intent="signup" />
-
-            {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
-              <div style={{ display:'flex',alignItems:'center',gap:10,margin:'18px 0' }}>
-                <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
-                <span style={{ color:C.m,fontSize:12,fontWeight:500 }}>{t('login.or')}</span>
-                <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
-              </div>
-            )}
+            <p style={{ color:C.m,fontSize:14,margin:'0 0 28px',fontFamily:"'DM Sans',sans-serif" }}>{t("signup.subtitle")}</p>
 
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.company")} *</label>
@@ -166,6 +147,20 @@ export default function SignupPage() {
             </div>
 
             {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#fef2f2',color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
+
+            {/* "or" divider + Google SSO, placed just above submit */}
+            {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
+              <>
+                <div style={{ display:'flex',alignItems:'center',gap:10,margin:'18px 0' }}>
+                  <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
+                  <span style={{ color:C.m,fontSize:12,fontWeight:500 }}>{t('login.or')}</span>
+                  <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
+                </div>
+                <div style={{ marginBottom:16 }}>
+                  <GoogleSignInButton text={t('signup.google_continue')} intent="signup" />
+                </div>
+              </>
+            )}
 
             <button onClick={()=>{ if(!form.email||!passwordOk) setError(t("signup.error_creds")); else handleSubmit(); }}
               disabled={loading}

@@ -204,21 +204,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Google SSO (renders only when VITE_GOOGLE_CLIENT_ID is set).
-            Button triggers a full-page redirect to Google; the returning
-            access token is handled by the mount-time useEffect above. */}
-        <GoogleSignInButton text={t('login.google_continue')} intent="login" />
-
-        {/* "or" divider between Google and email/password. Hidden when
-            the Google button is suppressed (missing client id). */}
-        {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
-            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-            <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>{t('login.or')}</span>
-            <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-          </div>
-        )}
-
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 18 }}>
@@ -284,6 +269,21 @@ export default function LoginPage() {
               {t("login.forgot_password")}
             </Link>
           </div>
+
+          {/* "or" divider + Google SSO, placed just above submit */}
+          {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>{t('login.or')}</span>
+                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <GoogleSignInButton text={t('login.google_continue')} intent="login" />
+              </div>
+            </>
+          )}
+
           <button
             type="submit"
             disabled={loading}
