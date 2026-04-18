@@ -232,6 +232,7 @@ class ApiClient {
   createCheckout(priceId) { return this.request('/billing/checkout', { method: 'POST', body: JSON.stringify({ priceId }) }); }
   createPortal() { return this.request('/billing/portal', { method: 'POST' }); }
   cancelSubscription() { return this.request('/billing/cancel', { method: 'POST' }); }
+  reactivateSubscription() { return this.request('/billing/reactivate', { method: 'POST' }); }
   getInvoices() { return this.request('/billing/invoices'); }
 }
 

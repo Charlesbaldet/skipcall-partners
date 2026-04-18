@@ -4,8 +4,18 @@ const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 
 const stripeKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeKey ? require('stripe')(stripeKey) : null;
+const { sendEmail, billingSubscriptionCancelingTpl } = require('../services/emailService');
 
 const router = express.Router();
+
+async function tenantAdminEmails(tenantId) {
+  if (!tenantId) return [];
+  const { rows } = await query(
+    "SELECT email, full_name FROM users WHERE tenant_id = $1 AND role = 'admin' AND is_active = TRUE",
+    [tenantId]
+  );
+  return rows;
+}
 
 // ─── Plan catalog ───────────────────────────────────────────────────
 // Partner limits: -1 = unlimited. Keep in sync with landing + signup.
@@ -66,6 +76,21 @@ router.get('/plan', authenticate, tenantScope, authorize('admin'), async (req, r
     const tenant = await loadTenantPlan(req.tenantId);
     if (!tenant) return res.status(404).json({ error: 'Tenant introuvable' });
     const partnerCount = await countActivePartners(req.tenantId);
+
+    // Fetch the Stripe subscription live so we can surface
+    // cancel_at_period_end to the UI without a webhook round-trip.
+    // Failure is non-fatal — we just don't show the cancel banner.
+    let cancelAtPeriodEnd = false;
+    let cancelAt = null;
+    if (stripe && tenant.stripe_subscription_id) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(tenant.stripe_subscription_id);
+        cancelAtPeriodEnd = sub.cancel_at_period_end === true;
+        cancelAt = sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString()
+                  : (sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null);
+      } catch (e) { /* sub may be gone — leave cancelAtPeriodEnd=false */ }
+    }
+
     res.json({
       plan: tenant.plan || 'starter',
       partnerLimit: tenant.plan_partner_limit ?? 3,
@@ -75,6 +100,8 @@ router.get('/plan', authenticate, tenantScope, authorize('admin'), async (req, r
       planStartedAt: tenant.plan_started_at,
       planEndsAt: tenant.plan_ends_at,
       paymentStatus: tenant.payment_status || 'active',
+      cancelAtPeriodEnd,
+      cancelAt,
     });
   } catch (err) {
     console.error('[billing.plan] error:', err);
@@ -354,10 +381,25 @@ router.post('/portal', authenticate, tenantScope, authorize('admin'), async (req
       return res.status(400).json({ error: 'Aucun abonnement actif' });
     }
     const frontend = process.env.FRONTEND_URL || 'https://refboost.io';
-    const portal = await stripe.billingPortal.sessions.create({
-      customer: tenant.stripe_customer_id,
-      return_url: frontend + '/billing',
-    });
+    // flow_data: payment_method_update takes the user straight into the
+    // "Update payment method" flow in Stripe's portal — skipping the
+    // subscription management screen. If the portal configuration
+    // doesn't allow the flow (older account, disabled feature), we
+    // fall back to the default portal.
+    let portal;
+    try {
+      portal = await stripe.billingPortal.sessions.create({
+        customer: tenant.stripe_customer_id,
+        return_url: frontend + '/billing',
+        flow_data: { type: 'payment_method_update' },
+      });
+    } catch (e) {
+      console.warn('[billing.portal] payment_method_update flow unavailable, falling back:', e.message);
+      portal = await stripe.billingPortal.sessions.create({
+        customer: tenant.stripe_customer_id,
+        return_url: frontend + '/billing',
+      });
+    }
     res.json({ url: portal.url });
   } catch (err) {
     console.error('[billing.portal] error:', err);
@@ -379,9 +421,47 @@ router.post('/cancel', authenticate, tenantScope, authorize('admin'), async (req
     const sub = await stripe.subscriptions.update(tenant.stripe_subscription_id, {
       cancel_at_period_end: true,
     });
-    res.json({ ok: true, cancelAt: sub.cancel_at });
+
+    // Fire-and-forget "sorry to see you go" email. Failure must not
+    // block the response — a swallowed email is strictly better than
+    // a 500 on cancel, which would leave Stripe + DB out of sync with
+    // the user's perception.
+    try {
+      const endDateStr = sub.current_period_end
+        ? new Date(sub.current_period_end * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '';
+      const planLabel = (PLANS[tenant.plan]?.name) || (tenant.plan || 'Pro');
+      const admins = await tenantAdminEmails(req.tenantId);
+      for (const a of admins) {
+        const tpl = billingSubscriptionCancelingTpl(a.full_name, planLabel, endDateStr, tenant.name);
+        sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
+      }
+    } catch (e) { console.error('[billing.cancel email]', e.message); }
+
+    res.json({ ok: true, cancelAt: sub.cancel_at, cancelAtPeriodEnd: sub.cancel_at_period_end === true });
   } catch (err) {
     console.error('[billing.cancel] error:', err);
+    res.status(500).json({ error: 'Erreur Stripe' });
+  }
+});
+
+// ─── POST /api/billing/reactivate ────────────────────────────────────
+// Undo a scheduled cancellation. Safe to call when cancel_at_period_end
+// is already false — Stripe just acks with the same sub.
+router.post('/reactivate', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  try {
+    if (!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+    if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+    const tenant = await loadTenantPlan(req.tenantId);
+    if (!tenant || !tenant.stripe_subscription_id) {
+      return res.status(400).json({ error: 'Aucun abonnement actif' });
+    }
+    const sub = await stripe.subscriptions.update(tenant.stripe_subscription_id, {
+      cancel_at_period_end: false,
+    });
+    res.json({ ok: true, cancelAtPeriodEnd: sub.cancel_at_period_end === true });
+  } catch (err) {
+    console.error('[billing.reactivate] error:', err);
     res.status(500).json({ error: 'Erreur Stripe' });
   }
 });

@@ -1866,6 +1866,9 @@
     "next_billing": "Next billing date",
     "confirm_upgrade": "Confirm change",
     "preview_loading": "Calculating…",
-    "same_plan": "You're already on this plan."
+    "same_plan": "You're already on this plan.",
+    "cancel_scheduled_banner": "Your {{plan}} subscription has been canceled. It will remain active until {{date}}. After that, you'll be moved to the Starter plan.",
+    "reactivate": "Reactivate subscription",
+    "reactivated": "Your subscription has been reactivated!"
   }
 }

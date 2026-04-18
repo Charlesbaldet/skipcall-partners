@@ -1866,6 +1866,9 @@
     "next_billing": "Próxima faturação",
     "confirm_upgrade": "Confirmar alteração",
     "preview_loading": "A calcular…",
-    "same_plan": "Já estás neste plano."
+    "same_plan": "Já estás neste plano.",
+    "cancel_scheduled_banner": "A tua assinatura {{plan}} foi cancelada. Permanece ativa até {{date}}. Depois disso, passarás para o plano Starter.",
+    "reactivate": "Reativar assinatura",
+    "reactivated": "A tua assinatura foi reativada!"
   }
 }

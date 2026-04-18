@@ -1866,6 +1866,9 @@
     "next_billing": "Volgende facturatie",
     "confirm_upgrade": "Bevestig wijziging",
     "preview_loading": "Berekenen…",
-    "same_plan": "Je zit al op dit plan."
+    "same_plan": "Je zit al op dit plan.",
+    "cancel_scheduled_banner": "Je {{plan}}-abonnement is opgezegd. Het blijft actief tot {{date}}. Daarna ga je naar het Starter-plan.",
+    "reactivate": "Abonnement reactiveren",
+    "reactivated": "Je abonnement is gereactiveerd!"
   }
 }

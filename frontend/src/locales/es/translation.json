@@ -1866,6 +1866,9 @@
     "next_billing": "Próxima facturación",
     "confirm_upgrade": "Confirmar cambio",
     "preview_loading": "Calculando…",
-    "same_plan": "Ya estás en este plan."
+    "same_plan": "Ya estás en este plan.",
+    "cancel_scheduled_banner": "Tu suscripción {{plan}} ha sido cancelada. Seguirá activa hasta el {{date}}. Después, pasarás al plan Starter.",
+    "reactivate": "Reactivar suscripción",
+    "reactivated": "¡Tu suscripción ha sido reactivada!"
   }
 }

@@ -266,6 +266,20 @@ export default function BillingPage() {
     }
   };
 
+  const handleReactivate = async () => {
+    setBusy(true); setError('');
+    try {
+      await api.reactivateSubscription();
+      setSuccess('✓ ' + t('billing.reactivated'));
+      setTimeout(() => setSuccess(''), 3500);
+      reload();
+    } catch (e) {
+      setError(e.message || 'Erreur');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const currentPlanKey = plan?.plan || 'starter';
   const partnerLimit = plan?.partnerLimit ?? 3;
   const partnerCount = plan?.partnerCount ?? 0;
@@ -326,6 +340,26 @@ export default function BillingPage() {
         </div>
       )}
 
+      {/* Cancellation scheduled — sub still active until period end. */}
+      {plan?.cancelAtPeriodEnd && (
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginTop: 16, fontFamily: 'inherit' }}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }}/>
+          <div style={{ flex: 1, fontWeight: 500 }}>
+            {t('billing.cancel_scheduled_banner', {
+              plan: t('billing.' + currentPlanKey),
+              date: plan?.cancelAt ? fmtDate(plan.cancelAt) : (plan?.planEndsAt ? fmtDate(plan.planEndsAt) : '—'),
+            })}
+          </div>
+          <button
+            onClick={handleReactivate}
+            disabled={busy}
+            style={{ background: '#d97706', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: busy ? 0.7 : 1 }}
+          >
+            {t('billing.reactivate')}
+          </button>
+        </div>
+      )}
+
       {/* ─── Current plan card ─── */}
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 20, padding: 28, marginTop: 24, boxShadow: '0 2px 12px rgba(15,23,42,.04)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
@@ -352,7 +386,9 @@ export default function BillingPage() {
             {plan?.subscriptionId && (
               <>
                 <button onClick={handlePortal} disabled={busy} style={btnSecondary}>{t('billing.manage_payment')}</button>
-                <button onClick={handleCancel} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('billing.cancel')}</button>
+                {plan?.cancelAtPeriodEnd
+                  ? <button onClick={handleReactivate} disabled={busy} style={{ ...btnSecondary, color: '#047857', borderColor: '#bbf7d0' }}>{t('billing.reactivate')}</button>
+                  : <button onClick={handleCancel} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('billing.cancel')}</button>}
               </>
             )}
           </div>

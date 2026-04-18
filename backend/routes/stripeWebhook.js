@@ -12,7 +12,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { PLANS, planKeyFromPriceId } = require('./billing');
-const { sendEmail, billingPaymentFailedTpl, billingSubscriptionCanceledTpl } = require('../services/emailService');
+const { sendEmail, billingPaymentFailedTpl, billingSubscriptionCanceledTpl, billingInvoicePaidTpl } = require('../services/emailService');
 
 async function tenantAdminEmails(tenantId) {
   if (!tenantId) return [];
@@ -202,14 +202,39 @@ router.post('/', async (req, res) => {
       }
 
       case 'invoice.payment_succeeded': {
-        // Retry after a past_due period succeeded — clear the banner.
         const inv = event.data.object;
         const tenantId = await resolveTenantFromCustomer(inv.customer);
         if (tenantId) {
+          // Stripe just cleared the balance — reset the past_due flag
+          // so the dashboard banner disappears.
           await query(
             "UPDATE tenants SET payment_status = 'active' WHERE id = $1",
             [tenantId]
           );
+          // Send a "payment received" email with a direct link to the
+          // invoice PDF. Skip zero-amount invoices (e.g. $0 upgrade
+          // prorations) — they clutter the inbox without adding info.
+          try {
+            const amountCents = inv.amount_paid || inv.amount_due || inv.total || 0;
+            if (amountCents > 0) {
+              const currency = (inv.currency || 'eur').toUpperCase();
+              const amountLabel = (() => {
+                try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amountCents / 100); }
+                catch { return (amountCents / 100).toFixed(2) + ' ' + currency; }
+              })();
+              const dateLabel = new Date((inv.created || Math.floor(Date.now() / 1000)) * 1000)
+                .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+              const { rows: tRows } = await query('SELECT name FROM tenants WHERE id = $1', [tenantId]);
+              const tenantName = tRows[0]?.name || null;
+              const admins = await tenantAdminEmails(tenantId);
+              for (const a of admins) {
+                const tpl = billingInvoicePaidTpl(
+                  a.full_name, amountLabel, dateLabel, inv.invoice_pdf || inv.hosted_invoice_url || null, tenantName
+                );
+                sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
+              }
+            }
+          } catch (e) { console.error('[invoice.paid email]', e.message); }
         }
         break;
       }

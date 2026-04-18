@@ -260,6 +260,45 @@ function billingPaymentFailedTpl(recipientName, planLabel) {
   };
 }
 
+// Sent right after POST /billing/cancel succeeds (cancellation
+// scheduled for end of period). Warm, regretful tone + single CTA to
+// reactivate. Distinct from billingSubscriptionCanceledTpl which
+// fires once the subscription actually terminates.
+function billingSubscriptionCancelingTpl(recipientName, planLabel, endDate, tenantName) {
+  return {
+    subject: `Désolé de vous voir partir — votre plan ${planLabel || 'RefBoost'} se termine le ${endDate || ''}`.trim(),
+    html: frame({
+      accent: '#d97706',
+      heading: `Bonjour ${recipientName || ''},`.trim(),
+      bodyHtml: `
+        <p>Nous sommes désolés de vous voir partir${tenantName ? ` de <strong>${tenantName}</strong>` : ''}.</p>
+        <p>Votre plan <strong>${planLabel || 'RefBoost'}</strong> restera actif jusqu'au <strong>${endDate || ''}</strong>. Après cette date, votre espace sera basculé automatiquement sur le plan gratuit Starter (3 partenaires max). Vos partenaires existants ne seront pas supprimés.</p>
+        <p>Vous pouvez réactiver votre abonnement à tout moment depuis votre page de facturation — tant que la date ci-dessus n'est pas passée, rien ne change pour vous.</p>
+        <p style="color:#64748b;">S'il y a quelque chose que nous aurions pu faire mieux, répondez simplement à cet email — nous serions ravis de vous lire.</p>`,
+      ctaLabel: 'Réactiver mon abonnement',
+      ctaUrl: `${FRONTEND}/billing`,
+    }),
+  };
+}
+
+// Sent when Stripe reports a successful invoice payment (initial
+// charge, renewal, upgrade pro-rata). Includes a direct link to the
+// invoice PDF on Stripe.
+function billingInvoicePaidTpl(recipientName, amountLabel, dateLabel, invoicePdfUrl, tenantName) {
+  return {
+    subject: `Paiement reçu — ${amountLabel || ''}`.trim(),
+    html: frame({
+      accent: '#059669',
+      heading: `Bonjour ${recipientName || ''},`.trim(),
+      bodyHtml: `
+        <p>Votre paiement de <strong>${amountLabel || ''}</strong>${tenantName ? ` pour <strong>${tenantName}</strong>` : ''} a bien été traité le <strong>${dateLabel || ''}</strong>.</p>
+        <p>Votre facture est disponible en téléchargement ci-dessous.</p>`,
+      ctaLabel: invoicePdfUrl ? 'Télécharger la facture' : null,
+      ctaUrl: invoicePdfUrl || null,
+    }),
+  };
+}
+
 function billingSubscriptionCanceledTpl(recipientName) {
   return {
     subject: `Votre abonnement a été annulé — retour au plan Starter`,
@@ -295,6 +334,8 @@ module.exports = {
   newsPublishedTpl,
   billingPaymentFailedTpl,
   billingSubscriptionCanceledTpl,
+  billingSubscriptionCancelingTpl,
+  billingInvoicePaidTpl,
   queueNotification,
   startNotificationWorker,
 };
