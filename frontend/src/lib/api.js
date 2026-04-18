@@ -226,6 +226,7 @@ class ApiClient {
 
   // Billing (Stripe)
   getBillingPlan() { return this.request('/billing/plan'); }
+  syncBilling() { return this.request('/billing/sync'); }
   createCheckout(priceId) { return this.request('/billing/checkout', { method: 'POST', body: JSON.stringify({ priceId }) }); }
   createPortal() { return this.request('/billing/portal', { method: 'POST' }); }
   cancelSubscription() { return this.request('/billing/cancel', { method: 'POST' }); }

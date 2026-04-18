@@ -166,15 +166,26 @@ export default function BillingPage() {
     }).finally(() => setLoading(false));
   };
 
-  useEffect(() => { reload(); }, []);
+  useEffect(() => {
+    // When returning from a successful Stripe Checkout, the second
+    // effect below fires the sync+reload — skip the initial reload so
+    // the UI doesn't flash "Starter" before the sync completes.
+    if (params.get('success') !== '1') reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (params.get('success') === '1') {
       setSuccess('✓ ' + t('billing.current_plan'));
       setParams({}, { replace: true });
-      setTimeout(reload, 1500);
+      // Webhook-less sync: ask the backend to pull the user's latest
+      // subscription from Stripe and write the plan back to the tenant
+      // row BEFORE we refetch, otherwise the UI still shows "Starter"
+      // until a webhook lands (which may never happen in dev).
+      api.syncBilling().catch(() => {}).finally(() => reload());
+    } else if (params.get('canceled') === '1') {
+      setParams({}, { replace: true });
     }
-    if (params.get('canceled') === '1') setParams({}, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
