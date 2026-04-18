@@ -162,11 +162,11 @@ export default function LoginPage() {
         {/* Google SSO (renders only when VITE_GOOGLE_CLIENT_ID is set). */}
         <GoogleSignInButton
           text={t('login.google_continue')}
-          onSuccess={async ({ credential }) => {
+          onSuccess={async ({ access_token }) => {
             setError('');
             setLoading(true);
             try {
-              const data = await loginWithGoogle(credential);
+              const data = await loginWithGoogle(access_token);
               if (data.needsSignup) {
                 // No account for this Google email — send to signup
                 // with the identity we already trust pre-filled.

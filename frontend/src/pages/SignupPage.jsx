@@ -99,10 +99,10 @@ export default function SignupPage() {
                 the caller still enters company + password. */}
             <GoogleSignInButton
               text={t('signup.google_continue')}
-              onSuccess={async ({ credential }) => {
+              onSuccess={async ({ access_token }) => {
                 setError('');
                 try {
-                  const data = await loginWithGoogle(credential);
+                  const data = await loginWithGoogle(access_token);
                   if (data && data.needsSignup) {
                     setForm(f => ({
                       ...f,

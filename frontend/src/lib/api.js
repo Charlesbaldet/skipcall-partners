@@ -72,9 +72,10 @@ class ApiClient {
     const data = await this.request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
     this.setToken(data.token); this.setUser(data.user); return data;
   }
-  async loginWithGoogle(credential) {
-    const data = await this.request('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) });
-    this.setToken(data.token); this.setUser(data.user); return data;
+  async loginWithGoogle(accessToken) {
+    const data = await this.request('/auth/google', { method: 'POST', body: JSON.stringify({ access_token: accessToken }) });
+    if (data.token) { this.setToken(data.token); this.setUser(data.user); }
+    return data;
   }
   logout() { this.setToken(null); this.setUser(null); }
   getMe() { return this.request('/auth/me'); }

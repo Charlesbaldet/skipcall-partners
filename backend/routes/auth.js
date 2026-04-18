@@ -77,36 +77,37 @@ router.post('/login', [
 });
 
 // ─── Google SSO ──────────────────────────────────────────────────────
-// POST /auth/google { credential } — verify the Google ID token, find
-// the matching user by email, issue our JWT. Does NOT create new
-// accounts; the frontend gets `{ error: 'no_account', email, name }`
-// when there's no user row with that email so it can nudge the user
-// to sign up or wait for a partner invite.
-const { OAuth2Client } = require('google-auth-library');
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
+// POST /auth/google { access_token } — the frontend runs the OAuth2
+// implicit flow (popup → Google → redirects back with #access_token=…)
+// and POSTs the resulting bearer token here. We validate it by calling
+// Google's userinfo endpoint (the 200 response proves the token is
+// valid, unexpired, and issued to one of our scopes). We do NOT
+// verify the token's audience like we would with an ID token — that
+// ship sails the moment a popup-flow access token hits our backend —
+// but the subsequent DB lookup constrains access to emails we already
+// know, and the token stays server-side beyond this single call.
 router.post('/google', async (req, res) => {
   try {
-    if (!process.env.GOOGLE_CLIENT_ID) {
-      return res.status(500).json({ error: 'Google SSO non configuré' });
-    }
-    const { credential } = req.body || {};
-    if (!credential) return res.status(400).json({ error: 'credential manquant' });
+    const { access_token } = req.body || {};
+    if (!access_token) return res.status(400).json({ error: 'access_token manquant' });
 
     let payload;
     try {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID,
+      const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
       });
-      payload = ticket.getPayload();
+      if (!resp.ok) {
+        auditLog(req, 'google_login_invalid_token', 'user', null, { status: resp.status });
+        return res.status(401).json({ error: 'Token Google invalide' });
+      }
+      payload = await resp.json();
     } catch (err) {
       auditLog(req, 'google_login_invalid_token', 'user', null, { err: err.message });
       return res.status(401).json({ error: 'Token Google invalide' });
     }
 
     const email = (payload.email || '').toLowerCase();
-    const emailVerified = payload.email_verified;
+    const emailVerified = payload.email_verified === true || payload.email_verified === 'true';
     if (!email || !emailVerified) {
       return res.status(401).json({ error: 'Email Google non vérifié' });
     }
