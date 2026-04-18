@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 
 function useMobile() {
   const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-  const [pricingInterval, setPricingInterval] = useState('monthly');
   useEffect(() => {
     const h = () => setMobile(window.innerWidth < 768);
     window.addEventListener('resize', h, { passive: true });
@@ -77,6 +76,7 @@ export default function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const mobile = useMobile();
+  const [pricingInterval, setPricingInterval] = useState('monthly');
   const [email, setEmail] = useState('');
   const [scrollY, setScrollY] = useState(0);
   const [featOpen, setFeatOpen] = useState(false);
