@@ -337,10 +337,20 @@
       "blog": "Blog",
       "news": "Notícias",
       "notifications": "Notificações",
-      "billing": "Faturação"
+      "billing": "Faturação",
+      "referrals": "Referrals"
     },
     "collapse": "Recolher",
-    "logout": "Sair"
+    "logout": "Sair",
+    "section": {
+      "pipeline": "PIPELINE",
+      "communication": "COMUNICAÇÃO",
+      "gestion": "GESTÃO",
+      "my_activities": "AS MINHAS ATIVIDADES",
+      "account": "CONTA",
+      "programme": "PROGRAMA",
+      "preferences": "PREFERÊNCIAS"
+    }
   },
   "featureTemplate": {
     "try_free": "Experimentar grátis",
@@ -1383,7 +1393,12 @@
     "revoke_confirm": "Revogar esta chave API?",
     "appearance_desc_full": "Personalize as cores e o logo do seu espaço de parceiros. Estas definições aplicam-se em todo o lado: sidebar de admin, assistente de onboarding e página pública de registo.",
     "erreur_prefix": "Erro: ",
-    "tab_notifications": "Notificações"
+    "tab_notifications": "Notificações",
+    "tab_profile": "Perfil e segurança",
+    "tab_team": "Equipa e membros",
+    "tab_branding": "Aparência e branding",
+    "tab_public_marketplace": "Link público e marketplace",
+    "tab_notifications_emails": "Notificações e e-mails"
   },
   "status": {
     "new": "Novo",

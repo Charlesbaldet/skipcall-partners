@@ -337,10 +337,20 @@
       "blog": "Blog",
       "news": "Nieuws",
       "notifications": "Meldingen",
-      "billing": "Facturatie"
+      "billing": "Facturatie",
+      "referrals": "Referrals"
     },
     "collapse": "Inklappen",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "section": {
+      "pipeline": "PIPELINE",
+      "communication": "COMMUNICATIE",
+      "gestion": "BEHEER",
+      "my_activities": "MIJN ACTIVITEITEN",
+      "account": "ACCOUNT",
+      "programme": "PROGRAMMA",
+      "preferences": "VOORKEUREN"
+    }
   },
   "featureTemplate": {
     "try_free": "Gratis proberen",
@@ -1383,7 +1393,12 @@
     "revoke_confirm": "Deze API-sleutel intrekken?",
     "appearance_desc_full": "Pas de kleuren en het logo van je partnerruimte aan. Deze instellingen gelden overal: admin-sidebar, onboarding-wizard en openbare aanmeldpagina.",
     "erreur_prefix": "Fout: ",
-    "tab_notifications": "Meldingen"
+    "tab_notifications": "Meldingen",
+    "tab_profile": "Profiel & beveiliging",
+    "tab_team": "Team & leden",
+    "tab_branding": "Uiterlijk & branding",
+    "tab_public_marketplace": "Publieke link & marketplace",
+    "tab_notifications_emails": "Notificaties & e-mails"
   },
   "status": {
     "new": "Nieuw",

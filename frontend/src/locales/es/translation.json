@@ -337,10 +337,20 @@
       "blog": "Blog",
       "news": "Noticias",
       "notifications": "Notificaciones",
-      "billing": "Facturación"
+      "billing": "Facturación",
+      "referrals": "Referrals"
     },
     "collapse": "Reducir",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "section": {
+      "pipeline": "PIPELINE",
+      "communication": "COMUNICACIÓN",
+      "gestion": "GESTIÓN",
+      "my_activities": "MIS ACTIVIDADES",
+      "account": "CUENTA",
+      "programme": "PROGRAMA",
+      "preferences": "PREFERENCIAS"
+    }
   },
   "featureTemplate": {
     "try_free": "Probar gratis",
@@ -1383,7 +1393,12 @@
     "revoke_confirm": "¿Revocar esta clave API?",
     "appearance_desc_full": "Personaliza los colores y el logo de tu espacio de socios. Estos ajustes se aplican en todas partes: sidebar de admin, asistente de onboarding y página pública de registro.",
     "erreur_prefix": "Error: ",
-    "tab_notifications": "Notificaciones"
+    "tab_notifications": "Notificaciones",
+    "tab_profile": "Perfil y seguridad",
+    "tab_team": "Equipo y miembros",
+    "tab_branding": "Apariencia y branding",
+    "tab_public_marketplace": "Enlace público y marketplace",
+    "tab_notifications_emails": "Notificaciones y emails"
   },
   "status": {
     "new": "Nuevo",

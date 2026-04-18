@@ -337,10 +337,20 @@
       "blog": "Blog",
       "news": "Actualités",
       "notifications": "Notifications",
-      "billing": "Facturation"
+      "billing": "Facturation",
+      "referrals": "Referrals"
     },
     "collapse": "Réduire",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "section": {
+      "pipeline": "PIPELINE",
+      "communication": "COMMUNICATION",
+      "gestion": "GESTION",
+      "my_activities": "MES ACTIVITÉS",
+      "account": "COMPTE",
+      "programme": "PROGRAMME",
+      "preferences": "PRÉFÉRENCES"
+    }
   },
   "featureTemplate": {
     "try_free": "Essayer gratuitement",
@@ -1383,7 +1393,12 @@
     "revoke_confirm": "Révoquer cette clé API ?",
     "appearance_desc_full": "Personnalise les couleurs et le logo de ton espace partenaires. Ces réglages s'appliquent partout : sidebar admin, wizard d'onboarding, et page publique d'inscription.",
     "erreur_prefix": "Erreur : ",
-    "tab_notifications": "Notifications"
+    "tab_notifications": "Notifications",
+    "tab_profile": "Profil et sécurité",
+    "tab_team": "Équipe et membres",
+    "tab_branding": "Apparence et branding",
+    "tab_public_marketplace": "Lien public et marketplace",
+    "tab_notifications_emails": "Notifications et emails"
   },
   "status": {
     "new": "Nouveau",

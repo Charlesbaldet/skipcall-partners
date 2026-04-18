@@ -337,10 +337,20 @@
       "blog": "Blog",
       "news": "News",
       "notifications": "Benachrichtigungen",
-      "billing": "Abrechnung"
+      "billing": "Abrechnung",
+      "referrals": "Referrals"
     },
     "collapse": "Einklappen",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "section": {
+      "pipeline": "PIPELINE",
+      "communication": "KOMMUNIKATION",
+      "gestion": "VERWALTUNG",
+      "my_activities": "MEINE AKTIVITÄTEN",
+      "account": "KONTO",
+      "programme": "PROGRAMM",
+      "preferences": "EINSTELLUNGEN"
+    }
   },
   "featureTemplate": {
     "try_free": "Kostenlos testen",
@@ -1383,7 +1393,12 @@
     "revoke_confirm": "Diesen API-Schlüssel widerrufen?",
     "appearance_desc_full": "Passen Sie Farben und Logo Ihres Partnerbereichs an. Diese Einstellungen gelten überall: Admin-Seitenleiste, Onboarding-Assistent und öffentliche Anmeldeseite.",
     "erreur_prefix": "Fehler: ",
-    "tab_notifications": "Benachrichtigungen"
+    "tab_notifications": "Benachrichtigungen",
+    "tab_profile": "Profil & Sicherheit",
+    "tab_team": "Team & Mitglieder",
+    "tab_branding": "Design & Branding",
+    "tab_public_marketplace": "Öffentlicher Link & Marketplace",
+    "tab_notifications_emails": "Benachrichtigungen & E-Mails"
   },
   "status": {
     "new": "Neu",

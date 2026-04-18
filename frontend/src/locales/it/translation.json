@@ -337,10 +337,20 @@
       "blog": "Blog",
       "news": "Notizie",
       "notifications": "Notifiche",
-      "billing": "Fatturazione"
+      "billing": "Fatturazione",
+      "referrals": "Referrals"
     },
     "collapse": "Comprimi",
-    "logout": "Esci"
+    "logout": "Esci",
+    "section": {
+      "pipeline": "PIPELINE",
+      "communication": "COMUNICAZIONE",
+      "gestion": "GESTIONE",
+      "my_activities": "LE MIE ATTIVITÀ",
+      "account": "ACCOUNT",
+      "programme": "PROGRAMMA",
+      "preferences": "PREFERENZE"
+    }
   },
   "featureTemplate": {
     "try_free": "Prova gratuitamente",
@@ -1383,7 +1393,12 @@
     "revoke_confirm": "Revocare questa chiave API?",
     "appearance_desc_full": "Personalizza i colori e il logo del tuo spazio partner. Queste impostazioni si applicano ovunque: sidebar admin, onboarding wizard e pagina pubblica di registrazione.",
     "erreur_prefix": "Errore: ",
-    "tab_notifications": "Notifiche"
+    "tab_notifications": "Notifiche",
+    "tab_profile": "Profilo e sicurezza",
+    "tab_team": "Team e membri",
+    "tab_branding": "Aspetto e branding",
+    "tab_public_marketplace": "Link pubblico e marketplace",
+    "tab_notifications_emails": "Notifiche ed email"
   },
   "status": {
     "new": "Nuovo",

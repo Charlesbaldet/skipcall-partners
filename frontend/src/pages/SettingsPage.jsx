@@ -109,21 +109,37 @@ export default function SettingsPage() {
   const isAdmin = user?.role === 'admin';
   const isSuperadmin = user?.role === 'superadmin';
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get('tab') || 'account');
+  // Map legacy tab IDs (deep-links, bookmarks, old emails) to the new
+  // grouped tab IDs so existing URLs keep working.
+  const LEGACY_TAB_MAP = {
+    account: 'profile',
+    members: 'team',
+    superadmins: 'team',
+    appearance: 'branding',
+    'public-link': 'public-marketplace',
+    marketplace: 'public-marketplace',
+  };
+  const initialTab = LEGACY_TAB_MAP[searchParams.get('tab')] || searchParams.get('tab') || 'profile';
+  const [tab, setTab] = useState(initialTab);
   const handleClose = () => navigate(-1);
 
+  // Grouped nav: each entry is either { section: 'label' } or a tab.
+  // Admin sees all three sections; superadmin only sees COMPTE (since
+  // they don't have program/preferences tabs wired).
   const NAV = [
-    { id: 'account', icon: User, label: t('settings.tab_account') },
-    ...(isSuperadmin ? [
-      { id: 'superadmins', icon: Users, label: t('settings.tab_members') },
+    { section: t('layout.section.account') },
+    { id: 'profile', icon: User, label: t('settings.tab_profile') },
+    ...((isAdmin || isSuperadmin) ? [
+      { id: 'team', icon: Users, label: t('settings.tab_team') },
     ] : []),
     ...(isAdmin ? [
-    { id: 'marketplace', icon: Store, label: t('settings.tab_marketplace') },
-      { id: 'members', icon: Users, label: t('settings.tab_members') },
-      { id: 'notifications', icon: Bell, label: t('settings.tab_notifications') },
+      { section: t('layout.section.programme') },
+      { id: 'branding', icon: Palette, label: t('settings.tab_branding') },
+      { id: 'public-marketplace', icon: Store, label: t('settings.tab_public_marketplace') },
+
+      { section: t('layout.section.preferences') },
+      { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
-      { id: 'public-link', icon: Link2, label: t('settings.tab_public_link') },
-      { id: 'appearance', icon: Palette, label: t('settings.tab_appearance') },
     ] : []),
   ];
 
@@ -132,16 +148,33 @@ export default function SettingsPage() {
       <div onClick={handleClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
       <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 920, maxWidth: '100%', height: '85vh', maxHeight: 700, display: 'flex', overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
         {/* Left sidebar */}
-        <div style={{ width: 220, background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 12px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: 240, background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 12px', display: 'flex', flexDirection: 'column' }}>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', padding: '0 12px', marginBottom: 20 }}>{t('settings.title')}</h2>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {NAV.map(item => (
-              <button key={item.id} onClick={() => setTab(item.id)} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, textAlign: 'left',
-                background: tab === item.id ? '#fff' : 'transparent', color: tab === item.id ? '#0f172a' : '#64748b',
-                boxShadow: tab === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              }}><item.icon size={16} /> {item.label}</button>
-            ))}
+            {NAV.map((item, i) => {
+              if (item.section) {
+                return (
+                  <div
+                    key={'sec-' + i}
+                    style={{
+                      fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
+                      color: '#475569', fontWeight: 700,
+                      padding: '12px 12px 4px',
+                      marginTop: i === 0 ? 0 : 8,
+                    }}
+                  >
+                    {item.section}
+                  </div>
+                );
+              }
+              return (
+                <button key={item.id} onClick={() => setTab(item.id)} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px 10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, textAlign: 'left',
+                  background: tab === item.id ? '#fff' : 'transparent', color: tab === item.id ? '#0f172a' : '#64748b',
+                  boxShadow: tab === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                }}><item.icon size={16} /> {item.label}</button>
+              );
+            })}
           </nav>
         </div>
         {/* Right content */}
@@ -150,15 +183,20 @@ export default function SettingsPage() {
             <X size={18} color="#475569" />
           </button>
           <div style={{ padding: '72px 32px 32px 32px' }}>
-            {tab === 'account' && <AccountTab user={user} />}
-            {tab === 'superadmins' && <SuperAdminsTab />}
-            {tab === 'members' && isAdmin && <MembersTab />}
+            {tab === 'profile' && <AccountTab user={user} />}
+            {tab === 'team' && isSuperadmin && <SuperAdminsTab />}
+            {tab === 'team' && isAdmin && <MembersTab />}
             {tab === 'notifications' && isAdmin && <NotificationsTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
-              {tab === 'public-link' && isAdmin && <PublicLinkTab />}
-              {tab === 'appearance' && isAdmin && <AppearanceTab />}
-              {tab === 'program' && isAdmin && <ProgramTab />}
-              {tab === 'marketplace' && isAdmin && <MarketplaceTab />}
+            {tab === 'branding' && isAdmin && <AppearanceTab />}
+            {tab === 'public-marketplace' && isAdmin && (
+              <>
+                <MarketplaceTab />
+                <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+                <PublicLinkTab />
+              </>
+            )}
+            {tab === 'program' && isAdmin && <ProgramTab />}
           </div>
         </div>
       </div>

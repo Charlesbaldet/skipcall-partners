@@ -40,28 +40,43 @@ export default function Layout({ children }) {
     'referral_update', 'new_referral', 'deal_won',
     'commission', 'new_application', 'access_revoked',
   ];
+  // Grouped nav: items render under section labels (see rendering loop
+  // below). `section: 'label_key'` adds a label row; `dividerTop: true`
+  // pushes the item to the bottom (above the user profile) with a
+  // thin top divider — used for the global Notifications entry.
   const ADMIN_NAV = [
-    { to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
     { to: '/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
-    { to: '/referrals', icon: FileText, label: t('layout.nav.pipeline'), notifyKeys: ['new_referral', 'deal_won'] },
-    { to: '/commissions', icon: DollarSign, label: t('layout.nav.commissions') },
+
+    { section: t('layout.section.pipeline') },
+    { to: '/referrals', icon: FileText, label: t('layout.nav.referrals'), notifyKeys: ['new_referral', 'deal_won'] },
     { to: '/partners', icon: Users, label: t('layout.nav.partners'), notifyKeys: ['new_application'] },
+    { to: '/commissions', icon: DollarSign, label: t('layout.nav.commissions') },
+
+    { section: t('layout.section.communication') },
     { to: '/messaging', icon: MessageCircle, label: t('layout.nav.messaging'), badge: 'messages' },
     { to: '/news', icon: Newspaper, label: t('layout.nav.news') },
-    { divider: true },
+
+    { section: t('layout.section.gestion') },
     { to: '/programme', icon: Trophy, label: t('layout.nav.programme') },
     { to: '/billing', icon: CreditCard, label: t('layout.nav.billing') },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
+
+    { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
   ];
   const PARTNER_NAV = [
-    { to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
-    { to: '/partner/referrals', icon: FileText, label: t('layout.nav.my_referrals'), notifyKeys: ['referral_update'] },
+    { section: t('layout.section.my_activities') },
     { to: '/partner/submit', icon: Send, label: t('layout.nav.submit') },
+    { to: '/partner/referrals', icon: FileText, label: t('layout.nav.my_referrals'), notifyKeys: ['referral_update'] },
     { to: '/partner/payments', icon: DollarSign, label: t('layout.nav.my_payments'), notifyKeys: ['commission'] },
+
+    { section: t('layout.section.communication') },
     { to: '/messaging', icon: MessageCircle, label: t('layout.nav.messaging'), badge: 'messages' },
     { to: '/partner/news', icon: Newspaper, label: t('layout.nav.news'), notifyKeys: ['news', 'promo', 'kit', 'event'] },
-    { divider: true },
+
+    { section: t('layout.section.gestion') },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
+
+    { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
   ];
   const SUPERADMIN_NAV = [
     { to: '/super-admin?tab=clients', icon: Globe, label: t('layout.nav.clients') },
@@ -272,20 +287,49 @@ export default function Layout({ children }) {
         )}
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
-          {nav.map((item, i) => {
+        <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {nav.filter(it => !it.bottom).map((item, i) => {
+            if (item.section) {
+              if (collapsed) return null;
+              return (
+                <div
+                  key={'sec-' + i}
+                  style={{
+                    fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
+                    color: '#475569', fontWeight: 700,
+                    padding: '12px 16px 4px', marginTop: 8,
+                  }}
+                >
+                  {item.section}
+                </div>
+              );
+            }
             if (item.divider) return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }}/>;
             if (item.to === '/applications' && !isAdmin) return null;
             const badge = getBadge(item);
             const notifyCount = (item.notifyKeys || []).reduce(
               (n, k) => n + (unreadByCat[k] || 0), 0
             );
+            // Indent section items slightly vs the standalone Dashboard / bottom links.
+            const underSection = (() => {
+              for (let j = i - 1; j >= 0; j--) {
+                const prev = nav.filter(x => !x.bottom)[j];
+                if (!prev) break;
+                if (prev.section) return true;
+                if (prev.to) return false;
+              }
+              return false;
+            })();
+            const linkStyle = {
+              ...s.link,
+              paddingLeft: underSection && !collapsed ? 24 : 16,
+            };
             return (
               <Fragment key={item.to}>
               <NavLink
                 to={item.to}
                 end={item.to === '/super-admin'}
-                style={({ isActive }) => ({ ...s.link, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}
+                style={({ isActive }) => ({ ...linkStyle, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}
               >
                 <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
                   <item.icon size={18} />
@@ -359,6 +403,48 @@ export default function Layout({ children }) {
             );
           })}
         </nav>
+
+        {/* Bottom Notifications entry — pinned below the main nav, above
+            the language switcher. Renders separately from the nav loop
+            because it sits in a different layout row. */}
+        {nav.filter(it => it.bottom).map((item) => {
+          const notifyCount = (item.notifyKeys || []).reduce(
+            (n, k) => n + (unreadByCat[k] || 0), 0
+          );
+          const hasUnread = notifyCount > 0;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              style={({ isActive }) => ({
+                ...s.link,
+                borderTop: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 0,
+                margin: 0,
+                padding: '12px 16px',
+                color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#64748b'),
+                ...(isActive ? { background: 'rgba(255,255,255,0.04)' } : {}),
+              })}
+            >
+              <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+                <item.icon size={18} />
+                {hasUnread && (
+                  <span style={{
+                    position: 'absolute', top: -2, right: -2,
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: '#ef4444', boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
+                  }}/>
+                )}
+              </span>
+              {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
+              {!collapsed && hasUnread && (
+                <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>
+                  {notifyCount}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
 
         {/* Language Switcher â toujours visible */}
         <div style={{ padding: collapsed ? '6px 8px' : '6px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
