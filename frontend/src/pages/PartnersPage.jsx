@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
 import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.jsx';
+import UpgradeModal from '../components/UpgradeModal.jsx';
 
 export default function PartnersPage() {
   const { t } = useTranslation();
@@ -29,6 +31,7 @@ export default function PartnersPage() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [commissionRate, setCommissionRate] = useState(10);
   const [rejectReason, setRejectReason] = useState('');
+  const [upgradePrompt, setUpgradePrompt] = useState(null);
 
   const loadPartners = async (showAll) => {
     try { const qs = showAll ? '?show=all' : ''; const d = await api.request('/partners' + qs); setPartners(d.partners); } catch(e) { console.error(e); }
@@ -63,12 +66,27 @@ export default function PartnersPage() {
       setTempPwd(data.partner.temp_password || null);
             setForm({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
     setTempPwd(null);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      if (err?.data?.error === 'partner_limit_reached') {
+        setUpgradePrompt({ limit: err.data.limit, plan: err.data.plan, upgradeTo: err.data.upgradeTo });
+      } else {
+        console.error(err);
+        alert(err.message);
+      }
+    }
     setSaving(false);
   };
 
   const handleApprove = async () => {
-    try { await api.approveApplication(selectedApp.id, commissionRate); setSelectedApp(null); loadApplications(); } catch(e) { alert(e.message); }
+    try { await api.approveApplication(selectedApp.id, commissionRate); setSelectedApp(null); loadApplications(); }
+    catch(e) {
+      if (e?.data?.error === 'partner_limit_reached') {
+        setSelectedApp(null);
+        setUpgradePrompt({ limit: e.data.limit, plan: e.data.plan, upgradeTo: e.data.upgradeTo });
+      } else {
+        alert(e.message);
+      }
+    }
   };
   const handleReject = async () => {
     try { await api.rejectApplication(selectedApp.id, rejectReason); setSelectedApp(null); setRejectReason(''); loadApplications(); } catch(e) { alert(e.message); }
@@ -82,6 +100,14 @@ export default function PartnersPage() {
 
   return (
     <div className="fade-in">
+      {upgradePrompt && (
+        <UpgradeModal
+          limit={upgradePrompt.limit}
+          plan={upgradePrompt.plan}
+          upgradeTo={upgradePrompt.upgradeTo}
+          onClose={() => setUpgradePrompt(null)}
+        />
+      )}
       {/* Edit modal */}
       {editingId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

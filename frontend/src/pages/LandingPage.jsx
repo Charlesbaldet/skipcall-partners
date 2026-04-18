@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 function useMobile() {
   const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  const [pricingInterval, setPricingInterval] = useState('monthly');
   useEffect(() => {
     const h = () => setMobile(window.innerWidth < 768);
     window.addEventListener('resize', h, { passive: true });
@@ -354,32 +355,53 @@ export default function LandingPage() {
 
       {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ PRICING Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section id="tarifs" style={{...s.section,background:C.bg}}>
-        <div style={{maxWidth:1000,margin:'0 auto'}}>
+        <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={s.center}>
             <div style={s.label}>{t('landing.pricing.label')}</div>
-            <h2 style={s.h2}>{t('landing.pricing.title')}</h2>
-            <p style={{color:C.m,fontSize:16,marginTop:16,fontFamily:'inherit'}}>{t('landing.pricing.description')}</p>
+            <h2 style={s.h2}>{t('billing.pricing_title')}</h2>
+            <p style={{color:C.m,fontSize:16,marginTop:16,fontFamily:'inherit'}}>{t('billing.pricing_subtitle')}</p>
+            <div style={{marginTop:24,display:'inline-flex',background:'#fff',border:'1px solid #e2e8f0',borderRadius:999,padding:4,gap:2}}>
+              {['monthly','annual'].map(key=>(
+                <button key={key} onClick={()=>setPricingInterval(key)}
+                  style={{padding:'8px 18px',borderRadius:999,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:13,fontWeight:600,background:pricingInterval===key?C.s:'transparent',color:pricingInterval===key?'#fff':C.m}}>
+                  {t('billing.'+key)}{key==='annual'&&<span style={{marginLeft:6,fontSize:10,fontWeight:700,color:pricingInterval==='annual'?'#10b981':'#059669',background:pricingInterval==='annual'?'rgba(16,185,129,.15)':'#f0fdf4',padding:'2px 6px',borderRadius:999}}>-20%</span>}
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'repeat(3,1fr)',gap:24}}>
-            {Array.isArray(plans) && plans.map((p,i)=>{
-              const popular = i===1;
+          <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'repeat(3,1fr)',gap:24,marginTop:48}}>
+            {[
+              {key:'starter',price:{monthly:0,annual:0},limit:'3',popular:false,query:''},
+              {key:'pro',price:{monthly:29,annual:278},limit:'25',popular:true,query:'?plan=pro'},
+              {key:'business',price:{monthly:79,annual:758},limit:t('billing.unlimited'),popular:false,query:'?plan=business'},
+            ].map((p)=>{
+              const price=p.price[pricingInterval];
+              const features=p.key==='starter'
+                ? ['plan_pipeline','plan_commissions','plan_portal','plan_i18n']
+                : p.key==='pro'
+                  ? ['everything_in_starter','plan_analytics_advanced','plan_csv_export','plan_multi_admin','plan_priority_support']
+                  : ['everything_in_pro','plan_api_access','plan_custom_branding','plan_dedicated_support','plan_unlimited_partners'];
               return (
-                <div key={i} className="hl" style={{padding:36,borderRadius:24,background:'#fff',border:popular?`2px solid ${C.p}`:'1px solid #f1f5f9',boxShadow:popular?`0 20px 60px ${C.p}15`:'0 4px 20px rgba(0,0,0,.03)',position:'relative'}}>
-                  {popular && <div style={{position:'absolute',top:-12,left:'50%',transform:'translateX(-50%)',background:g(C.p,C.pl),color:'#fff',fontSize:11,fontWeight:700,padding:'4px 16px',borderRadius:50,textTransform:'uppercase',letterSpacing:1}}>{t('landing.pricing.popular')}</div>}
-                  <h3 style={{fontSize:22,fontWeight:700,marginBottom:4}}>{p.name}</h3>
-                  <p style={{color:C.m,fontSize:13,margin:'0 0 20px'}}>{p.desc}</p>
-                  <div style={{marginBottom:24}}>
-                    {i===2?<span style={{fontSize:20,fontWeight:700}}>{t('landing.pricing.custom')}</span>:<><span style={{fontSize:42,fontWeight:800,color:C.s}}>{i===0?'99':'249'}</span><span style={{color:C.m,fontSize:15}}>{t('landing.pricing.per_month')}</span></>}
+                <div key={p.key} className="hl" style={{padding:36,borderRadius:24,background:'#fff',border:p.popular?`2px solid ${C.p}`:'1px solid #f1f5f9',boxShadow:p.popular?`0 20px 60px ${C.p}15`:'0 4px 20px rgba(0,0,0,.03)',position:'relative',display:'flex',flexDirection:'column'}}>
+                  {p.popular && <div style={{position:'absolute',top:-12,left:'50%',transform:'translateX(-50%)',background:g(C.p,C.pl),color:'#fff',fontSize:11,fontWeight:700,padding:'4px 16px',borderRadius:50,textTransform:'uppercase',letterSpacing:1}}>{t('billing.most_popular')}</div>}
+                  <h3 style={{fontSize:22,fontWeight:800,marginBottom:4,color:C.s}}>{t('billing.'+p.key)}</h3>
+                  <div style={{display:'flex',alignItems:'baseline',gap:6,margin:'8px 0'}}>
+                    {price===0
+                      ? <span style={{fontSize:42,fontWeight:800,color:C.s}}>{t('billing.free')}</span>
+                      : <><span style={{fontSize:42,fontWeight:800,color:C.s}}>{price}€</span><span style={{color:C.m,fontSize:15}}>{pricingInterval==='annual'?t('billing.per_year'):t('billing.month')}</span></>
+                    }
                   </div>
-                  <ul style={{listStyle:'none',padding:0,margin:'0 0 28px'}}>
-                    {Array.isArray(p.features) && p.features.map((f,j)=>(
-                      <li key={j} style={{padding:'8px 0',fontSize:14,color:'#334155',display:'flex',alignItems:'center',gap:10,fontFamily:'inherit'}}>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{flexShrink:0,marginTop:2}}><circle cx="7" cy="7" r="6" fill={`${C.p}20`}/><path d="M4 7l2 2 4-4" stroke={C.p} strokeWidth="1.5" strokeLinecap="round"/></svg> {f}
+                  {pricingInterval==='annual'&&price>0&&<div style={{fontSize:12,color:C.p,fontWeight:600,marginBottom:8}}>{t('billing.billed_annually')} · {t('billing.save_20')}</div>}
+                  <div style={{fontSize:14,color:C.p,fontWeight:600,margin:'8px 0 16px'}}>{p.limit} {t('billing.partners_used').toLowerCase()}</div>
+                  <ul style={{listStyle:'none',padding:0,margin:'0 0 28px',flex:1}}>
+                    {features.map(f=>(
+                      <li key={f} style={{padding:'8px 0',fontSize:14,color:'#334155',display:'flex',alignItems:'center',gap:10,fontFamily:'inherit'}}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{flexShrink:0}}><circle cx="7" cy="7" r="6" fill={`${C.p}20`}/><path d="M4 7l2 2 4-4" stroke={C.p} strokeWidth="1.5" strokeLinecap="round"/></svg> {t('billing.'+f)}
                       </li>
                     ))}
                   </ul>
-                  <button onClick={()=>{trackClick('pricing_'+p.name);navigate(i===2?'/contact':'/signup');}} className={popular?'bp':'bs'} style={{width:'100%',padding:'14px 24px',borderRadius:12,cursor:'pointer',fontFamily:'inherit',fontSize:15,fontWeight:600,border:popular?'none':'2px solid #e2e8f0',background:popular?g(C.p,C.pl):'#fff',color:popular?'#fff':C.s,boxShadow:popular?`0 8px 30px ${C.p}25`:'none'}}>
-                    {i===2?t('landing.pricing.cta_contact'):t('landing.pricing.cta_start')}
+                  <button onClick={()=>{trackClick('pricing_'+p.key);navigate('/signup'+p.query);}} className={p.popular?'bp':'bs'} style={{width:'100%',padding:'14px 24px',borderRadius:12,cursor:'pointer',fontFamily:'inherit',fontSize:15,fontWeight:700,border:p.popular?'none':'2px solid #e2e8f0',background:p.popular?g(C.p,C.pl):'#fff',color:p.popular?'#fff':C.s,boxShadow:p.popular?`0 8px 30px ${C.p}25`:'none'}}>
+                    {p.key==='starter'?t('billing.get_started'):t('billing.start_trial')}
                   </button>
                 </div>
               );

@@ -34,6 +34,7 @@ import FeatureTrackingPage from './pages/features/FeatureTrackingPage';
 import NewsPage from './pages/NewsPage.jsx';
 import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
+import BillingPage from './pages/BillingPage.jsx';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -72,6 +73,7 @@ function AppRoutes() {
         <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><AdminSettingsPage /></Layout></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout><SuperAdminPage /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
+      <Route path="/billing" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><BillingPage /></Layout></ProtectedRoute>} />
       <Route path="/programme" element={<ProtectedRoute><Layout><ProgrammePage /></Layout></ProtectedRoute>} />
       <Route path="/messaging" element={<ProtectedRoute><Layout><MessagingPage /></Layout></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><Layout><NotificationsPage /></Layout></ProtectedRoute>} />

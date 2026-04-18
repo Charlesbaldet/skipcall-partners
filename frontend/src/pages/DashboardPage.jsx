@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
-import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, CheckCircle } from 'lucide-react';
+import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import OnboardingWizard from '../components/OnboardingWizard.jsx';
 import { fmt, STATUS_CONFIG, LEVEL_CONFIG } from '../lib/constants';
@@ -31,6 +32,8 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(null);
   const [myTenant, setMyTenant] = useState(null);
   const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
+  const [billingPlan, setBillingPlan] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
@@ -40,6 +43,10 @@ export default function DashboardPage() {
       setKpis(k); setMyTenant(mt && (mt.tenant || mt)); setTimeline(tl.timeline); setPipeline(p.pipeline);
       setTopPartners(tp.topPartners); setLevels(l.levels);
     }).catch(console.error).finally(() => setLoading(false));
+    // Billing plan is fetched separately so a billing outage doesn't
+    // block the rest of the dashboard. Used to render the over-limit
+    // banner when partnerCount > plan_partner_limit.
+    api.getBillingPlan().then(setBillingPlan).catch(() => {});
   }, []);
 
   const loadLeaderboard = () => {
@@ -144,8 +151,22 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
+  const over = billingPlan && billingPlan.partnerLimit !== -1 && billingPlan.partnerCount > billingPlan.partnerLimit;
+
   return (
     <>
+      {over && (
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontFamily: 'inherit' }}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }}/>
+          <div style={{ flex: 1 }}>
+            {t('billing.over_limit_banner', { count: billingPlan.partnerCount, limit: billingPlan.partnerLimit, plan: t('billing.' + (billingPlan.plan || 'starter')) })}
+          </div>
+          <button onClick={() => navigate('/billing')} style={{ background: 'linear-gradient(135deg,#059669,#10b981)', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+            {t('billing.upgrade')}
+          </button>
+        </div>
+      )}
+
       {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
         <KPICard icon={FileText} label={t('dashboard.kpi_total')} value={kpis?.total_referrals} color="#6366f1" />

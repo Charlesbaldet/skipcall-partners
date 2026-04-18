@@ -185,6 +185,33 @@ router.post('/', authorize('admin'), [
 
     const { name, contact_name, email, phone, company_website, commission_rate } = req.body;
 
+    // Plan partner-limit gate. Only blocks NEW additions — existing
+    // partners above the limit keep working. -1 means unlimited (manual
+    // DB override for early adopters / custom deals).
+    if (req.tenantId) {
+      const { rows: tr } = await query(
+        'SELECT plan, plan_partner_limit FROM tenants WHERE id = $1',
+        [req.tenantId]
+      );
+      const t = tr[0];
+      const limit = t?.plan_partner_limit;
+      if (t && limit != null && limit !== -1) {
+        const { rows: cr } = await query(
+          'SELECT COUNT(*)::int AS n FROM partners WHERE is_active = TRUE AND tenant_id = $1',
+          [req.tenantId]
+        );
+        if ((cr[0]?.n || 0) >= limit) {
+          const nextPlan = t.plan === 'starter' ? 'pro' : 'business';
+          return res.status(403).json({
+            error: 'partner_limit_reached',
+            limit,
+            plan: t.plan || 'starter',
+            upgradeTo: nextPlan,
+          });
+        }
+      }
+    }
+
     await client.query('BEGIN');
 
     // If an archived partner with this email already exists, reactivate

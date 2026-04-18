@@ -63,7 +63,15 @@ class ApiClient {
       throw new Error(revoked ? 'access_revoked' : 'Session expirée');
     }
     const data = await res.json();
-    if (!res.ok) { throw new Error(data.error || 'Erreur serveur'); }
+    if (!res.ok) {
+      // Preserve the full response payload on the Error so callers can
+      // act on structured fields (e.g. partner_limit_reached exposes
+      // `limit`, `plan`, `upgradeTo` for the upgrade modal).
+      const err = new Error(data.error || 'Erreur serveur');
+      err.data = data;
+      err.status = res.status;
+      throw err;
+    }
     return data;
   }
 
@@ -215,6 +223,13 @@ class ApiClient {
   // Notification preferences (admin)
   getNotificationPreferences() { return this.request('/settings/notification-preferences'); }
   updateNotificationPreferences(data) { return this.request('/settings/notification-preferences', { method: 'PUT', body: JSON.stringify(data) }); }
+
+  // Billing (Stripe)
+  getBillingPlan() { return this.request('/billing/plan'); }
+  createCheckout(priceId) { return this.request('/billing/checkout', { method: 'POST', body: JSON.stringify({ priceId }) }); }
+  createPortal() { return this.request('/billing/portal', { method: 'POST' }); }
+  cancelSubscription() { return this.request('/billing/cancel', { method: 'POST' }); }
+  getInvoices() { return this.request('/billing/invoices'); }
 }
 
 export const api = new ApiClient();

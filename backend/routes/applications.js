@@ -200,6 +200,44 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
 
     if (!app) return res.status(404).json({ error: 'Candidature introuvable' });
 
+    // Plan partner-limit gate for approvals. Skip when reactivating an
+    // existing partner (already counted) — that's checked further down;
+    // we only block when approval would add a NEW active partner.
+    if (req.tenantId) {
+      const { rows: tr } = await query(
+        'SELECT plan, plan_partner_limit FROM tenants WHERE id = $1',
+        [req.tenantId]
+      );
+      const t = tr[0];
+      const limit = t?.plan_partner_limit;
+      if (t && limit != null && limit !== -1) {
+        // Count existing ACTIVE partners in the tenant, excluding any
+        // matching-email row since that one would be reactivated (not
+        // a net-new partner).
+        const { rows: cr } = await query(
+          `SELECT COUNT(*)::int AS n FROM partners
+             WHERE is_active = TRUE AND tenant_id = $1
+               AND LOWER(email) <> LOWER($2)`,
+          [req.tenantId, app.email]
+        );
+        // If this approval creates a net-new partner (no existing row
+        // with this email at all), enforce the limit.
+        const { rows: ex } = await query(
+          'SELECT id FROM partners WHERE LOWER(email) = LOWER($1) AND tenant_id = $2 LIMIT 1',
+          [app.email, req.tenantId]
+        );
+        const willAddNew = ex.length === 0;
+        if (willAddNew && (cr[0]?.n || 0) >= limit) {
+          return res.status(403).json({
+            error: 'partner_limit_reached',
+            limit,
+            plan: t.plan || 'starter',
+            upgradeTo: t.plan === 'starter' ? 'pro' : 'business',
+          });
+        }
+      }
+    }
+
     // Block when the application is already approved AND a matching
     // active partner still exists — that's the real "already handled"
     // case. If the partner was archived or deleted we allow re-approval

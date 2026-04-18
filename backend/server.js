@@ -26,6 +26,8 @@ const newsRoutes = require('./routes/news');
 const { partnerRouter: newsPartnerRoutes, programRouter: newsProgramRoutes } = newsRoutes;
 const notificationsRoutes = require('./routes/notifications');
 const notificationPrefsRoutes = require('./routes/notificationPrefs');
+const { router: billingRoutes } = require('./routes/billing');
+const stripeWebhookRoutes = require('./routes/stripeWebhook');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -64,6 +66,11 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// Stripe webhook needs the raw body for signature verification, so it
+// MUST be mounted BEFORE express.json(). Everything else below gets the
+// usual parsed JSON body.
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookRoutes);
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -124,6 +131,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/settings/notification-preferences', notificationPrefsRoutes);
 app.use('/api/partner/news', newsPartnerRoutes);
 app.use('/api/partner/program', newsProgramRoutes);
+app.use('/api/billing', billingRoutes);
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({

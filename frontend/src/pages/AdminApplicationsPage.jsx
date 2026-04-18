@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { UserPlus, CheckCircle, XCircle, Clock, Building, Mail, Phone, Globe, Users, User, X } from 'lucide-react';
+import UpgradeModal from '../components/UpgradeModal.jsx';
 
 export default function AdminApplicationsPage() {
   const { t } = useTranslation();
@@ -20,6 +21,7 @@ export default function AdminApplicationsPage() {
   const [commissionRate, setCommissionRate] = useState(10);
   const [rejectReason, setRejectReason] = useState('');
   const [approvedEmail, setApprovedEmail] = useState(null);
+  const [upgradePrompt, setUpgradePrompt] = useState(null);
 
   const load = async () => {
     try {
@@ -37,7 +39,14 @@ export default function AdminApplicationsPage() {
       const data = await api.approveApplication(id, commissionRate);
       setApprovedEmail(true);
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) {
+      if (err?.data?.error === 'partner_limit_reached') {
+        setSelected(null);
+        setUpgradePrompt({ limit: err.data.limit, plan: err.data.plan, upgradeTo: err.data.upgradeTo });
+      } else {
+        alert(err.message);
+      }
+    }
     setProcessing(false);
   };
 
@@ -57,6 +66,14 @@ export default function AdminApplicationsPage() {
 
   return (
     <div className="fade-in">
+      {upgradePrompt && (
+        <UpgradeModal
+          limit={upgradePrompt.limit}
+          plan={upgradePrompt.plan}
+          upgradeTo={upgradePrompt.upgradeTo}
+          onClose={() => setUpgradePrompt(null)}
+        />
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('admin.applications_title')}</h1>

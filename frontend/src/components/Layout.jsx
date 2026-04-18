@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import LanguageSwitcher from './LanguageSwitcher';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -50,6 +50,7 @@ export default function Layout({ children }) {
     { to: '/news', icon: Newspaper, label: t('layout.nav.news') },
     { divider: true },
     { to: '/programme', icon: Trophy, label: t('layout.nav.programme') },
+    { to: '/billing', icon: CreditCard, label: t('layout.nav.billing') },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
   ];
   const PARTNER_NAV = [

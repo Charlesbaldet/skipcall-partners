@@ -25,6 +25,13 @@ export default function SignupPage() {
   const googleName = params.get('google_name') || '';
   const googleAvatar = params.get('google_avatar') || '';
   const isGoogleSignup = !!googleEmail;
+  // Plan coming from the landing page CTA ("Start free trial" →
+  // /signup?plan=pro|business). Starter skips checkout entirely.
+  const requestedPlan = (params.get('plan') || '').toLowerCase();
+  const PLAN_PRICE_IDS = {
+    pro: 'price_1TNSyKLO4aHvEb3qMzUBhtbe',
+    business: 'price_1TNSyfLO4aHvEb3qM7f7A14c',
+  };
 
   const [form, setForm] = useState({
     company: '',
@@ -38,6 +45,20 @@ export default function SignupPage() {
   const passwordOk = form.password.length >= 10 &&
     /[A-Z]/.test(form.password) && /[a-z]/.test(form.password) &&
     /[0-9]/.test(form.password) && /[^A-Za-z0-9]/.test(form.password);
+
+  // After a successful signup, if the user landed here from a paid
+  // pricing CTA, immediately push them to Stripe Checkout for that plan.
+  // Returns true when a redirect was triggered so the caller can skip
+  // the success step.
+  const redirectToCheckoutIfRequested = async () => {
+    const priceId = PLAN_PRICE_IDS[requestedPlan];
+    if (!priceId) return false;
+    try {
+      const { url } = await api.createCheckout(priceId);
+      if (url) { window.location.href = url; return true; }
+    } catch (_) { /* fall back to normal success step */ }
+    return false;
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -54,7 +75,8 @@ export default function SignupPage() {
         });
         try { sessionStorage.removeItem('google_signup_access_token'); } catch {}
         localStorage.setItem('refboost_onboarding_pending', '1');
-        try { window._rb_track?.('signup_google', { company: form.company }); } catch(e) {}
+        try { window._rb_track?.('signup_google', { company: form.company, plan: requestedPlan || 'starter' }); } catch(e) {}
+        if (await redirectToCheckoutIfRequested()) return;
         setStep(3);
         return;
       }
@@ -65,12 +87,13 @@ export default function SignupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t('signup.error_generic'));
-      // Auto-login
-      localStorage.setItem('skipcall_token', data.token);
-      localStorage.setItem('skipcall_user', JSON.stringify(data.user));
+      // Auto-login — push the token into the api client too so
+      // subsequent /billing/checkout calls authenticate correctly.
+      api.setToken(data.token);
+      api.setUser(data.user);
       localStorage.setItem('refboost_onboarding_pending', '1');
-      // Track signup
-      try { window._rb_track?.('signup', { company: form.company }); } catch(e) {}
+      try { window._rb_track?.('signup', { company: form.company, plan: requestedPlan || 'starter' }); } catch(e) {}
+      if (await redirectToCheckoutIfRequested()) return;
       setStep(3);
     } catch (e) {
       setError(e.message);
