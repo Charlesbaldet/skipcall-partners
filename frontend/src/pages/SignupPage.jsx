@@ -1,14 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
 
 export default function SignupPage() {
-  const { loginWithGoogle } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -97,27 +95,12 @@ export default function SignupPage() {
                 and skip the form entirely; on a new Google email we
                 pre-fill fullName + email and keep the signup flow so
                 the caller still enters company + password. */}
-            <GoogleSignInButton
-              text={t('signup.google_continue')}
-              onSuccess={async ({ access_token }) => {
-                setError('');
-                try {
-                  const data = await loginWithGoogle(access_token);
-                  if (data && data.needsSignup) {
-                    setForm(f => ({
-                      ...f,
-                      email: data.email || f.email,
-                      fullName: data.name || f.fullName,
-                    }));
-                  } else if (data && data.user) {
-                    navigate(data.user.role === 'partner' ? '/partner/submit' : '/');
-                  }
-                } catch (err) {
-                  setError(err.message || t('login.google_error'));
-                }
-              }}
-              onError={() => setError(t('login.google_error'))}
-            />
+            {/* Google SSO → full-page redirect to Google; Google
+                returns to /login, where the mount-time handler either
+                signs the visitor in (matched existing account) or
+                forwards them back here with ?email=&name= pre-filled
+                so they only need to finish company + password. */}
+            <GoogleSignInButton text={t('signup.google_continue')} intent="signup" />
 
             {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
               <div style={{ display:'flex',alignItems:'center',gap:10,margin:'18px 0' }}>

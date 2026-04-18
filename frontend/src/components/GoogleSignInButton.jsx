@@ -1,6 +1,13 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+// Full-page redirect OAuth2 flow — no GSI SDK, no popup, no FedCM.
+// Clicking the button sends the whole tab to Google's consent screen;
+// Google redirects back to `redirectUri` with `#access_token=…` in the
+// URL hash. The LoginPage mount effect picks it up and completes sign-in.
+//
+// Authorized redirect URIs required on the Google OAuth client:
+//   https://refboost.io/login
+//   http://localhost:5173/login  (dev)
+//   + any Vercel preview URL you want to test
 
-// Inline official Google "G" mark — renders instantly, no CDN dependency.
 function GoogleG({ size = 18 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
@@ -13,106 +20,36 @@ function GoogleG({ size = 18 }) {
   );
 }
 
-// OAuth2 implicit popup flow — bypasses FedCM / One Tap entirely so
-// Chrome cannot silently suppress it. The popup:
-//   1. navigates to Google's OAuth consent screen
-//   2. Google redirects back to our origin (/login) with the access
-//      token in the URL hash
-//   3. the parent polls popup.location; the first time the URL is
-//      same-origin we can read the hash, capture the token, close the
-//      popup and hand it off to onSuccess.
-// The redirect URI (window.location.origin + '/login') MUST be listed
-// under "Authorized redirect URIs" on the Google OAuth client.
+// Stash context (signup vs. login, any pre-fill) in sessionStorage so
+// the LoginPage mount handler knows where to route the user after the
+// redirect roundtrip returns to /login.
+export function redirectToGoogle({ intent = 'login' } = {}) {
+  const clientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
+  if (!clientId) return;
+  try { sessionStorage.setItem('google_sso_intent', intent); } catch { /* storage disabled */ }
+  const redirectUri = window.location.origin + '/login';
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'token',
+    scope: 'openid email profile',
+    prompt: 'select_account',
+    include_granted_scopes: 'true',
+  });
+  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+}
+
 export default function GoogleSignInButton({
-  onSuccess, onError, text = 'Continue with Google', disabled = false,
+  text = 'Continue with Google', disabled = false, intent = 'login',
 }) {
   const clientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
-  const [loading, setLoading] = useState(false);
-  const pollRef = useRef(null);
-
-  // Clean up any poll interval left behind if the component unmounts
-  // while a popup is open (user navigates away mid-auth).
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
-
-  const handleGoogleLogin = useCallback(() => {
-    if (!clientId || disabled || loading) return;
-
-    const redirectUri = window.location.origin + '/login';
-    const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'token',
-      scope: 'openid email profile',
-      prompt: 'select_account',
-      include_granted_scopes: 'true',
-    });
-    const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
-
-    // Center the popup on the user's screen — mirrors the stock Google
-    // popup sizing so it feels native.
-    const w = 500, h = 600;
-    const left = Math.max(0, Math.round((window.screen.width  - w) / 2));
-    const top  = Math.max(0, Math.round((window.screen.height - h) / 2));
-    const popup = window.open(url, 'refboost-google-login',
-      `width=${w},height=${h},left=${left},top=${top}`);
-
-    if (!popup) {
-      onError && onError(new Error('popup_blocked'));
-      return;
-    }
-
-    setLoading(true);
-    const origin = window.location.origin;
-
-    pollRef.current = setInterval(() => {
-      try {
-        // `popup.closed` is readable cross-origin; everything else
-        // throws until Google redirects back to our origin.
-        if (popup.closed) {
-          clearInterval(pollRef.current);
-          pollRef.current = null;
-          setLoading(false);
-          return;
-        }
-        // Reading .location or .href on a cross-origin window throws
-        // DOMException — caught below and retried.
-        const href = popup.location.href;
-        if (!href || !href.startsWith(origin)) return;
-
-        const hash = popup.location.hash || '';
-        const search = popup.location.search || '';
-        const params = new URLSearchParams(hash.replace(/^#/, ''));
-        const searchParams = new URLSearchParams(search);
-        const errorFromGoogle = params.get('error') || searchParams.get('error');
-        const accessToken = params.get('access_token');
-
-        popup.close();
-        clearInterval(pollRef.current);
-        pollRef.current = null;
-        setLoading(false);
-
-        if (errorFromGoogle) {
-          onError && onError(new Error(errorFromGoogle));
-          return;
-        }
-        if (accessToken) {
-          onSuccess && onSuccess({ access_token: accessToken });
-        } else {
-          onError && onError(new Error('no_access_token'));
-        }
-      } catch (_ignored) {
-        // Cross-origin while still on accounts.google.com — keep polling.
-      }
-    }, 500);
-  }, [clientId, disabled, loading, onSuccess, onError]);
-
   if (!clientId) return null;
 
   return (
     <button
       type="button"
-      onClick={handleGoogleLogin}
-      disabled={disabled || loading}
+      onClick={() => redirectToGoogle({ intent })}
+      disabled={disabled}
       style={{
         width: '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -122,11 +59,10 @@ export default function GoogleSignInButton({
         borderRadius: 8,
         fontFamily: 'inherit',
         fontSize: 14, fontWeight: 600, color: '#3c4043',
-        cursor: disabled || loading ? 'not-allowed' : 'pointer',
-        opacity: loading ? 0.7 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'background .15s',
       }}
-      onMouseEnter={e => { if (!disabled && !loading) e.currentTarget.style.background = '#f8f9fa'; }}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#f8f9fa'; }}
       onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
     >
       <GoogleG size={18} />

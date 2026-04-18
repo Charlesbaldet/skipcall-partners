@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../lib/api';
@@ -49,6 +49,51 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Complete the Google OAuth redirect flow: when Google sends the
+  // user back here with `#access_token=…` in the URL, trade the
+  // token with our backend, log the user in, and clear the hash so a
+  // refresh doesn't re-trigger the call. If the token maps to no
+  // existing account the backend returns { needsSignup: true } and
+  // we forward the visitor to /signup with email + name pre-filled.
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    if (!hash.includes('access_token=')) return;
+
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const accessToken = params.get('access_token');
+    const googleError = params.get('error');
+
+    // Strip the hash before any async work so a re-render can't loop.
+    try { window.history.replaceState(null, '', window.location.pathname + window.location.search); }
+    catch { window.location.hash = ''; }
+
+    if (googleError) { setError(t('login.google_error')); return; }
+    if (!accessToken) return;
+
+    let cancelled = false;
+    (async () => {
+      setError('');
+      setLoading(true);
+      try {
+        const data = await loginWithGoogle(accessToken);
+        if (cancelled) return;
+        if (data.needsSignup) {
+          const qs = new URLSearchParams({ email: data.email || '' });
+          if (data.name) qs.set('name', data.name);
+          navigate('/signup?' + qs.toString());
+          return;
+        }
+        navigate(data.user.role === 'partner' ? '/partner/submit' : '/');
+      } catch (err) {
+        if (!cancelled) setError(err.message || t('login.google_error'));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -159,31 +204,10 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Google SSO (renders only when VITE_GOOGLE_CLIENT_ID is set). */}
-        <GoogleSignInButton
-          text={t('login.google_continue')}
-          onSuccess={async ({ access_token }) => {
-            setError('');
-            setLoading(true);
-            try {
-              const data = await loginWithGoogle(access_token);
-              if (data.needsSignup) {
-                // No account for this Google email — send to signup
-                // with the identity we already trust pre-filled.
-                const params = new URLSearchParams({ email: data.email || '' });
-                if (data.name) params.set('name', data.name);
-                navigate('/signup?' + params.toString());
-                return;
-              }
-              navigate(data.user.role === 'partner' ? '/partner/submit' : '/');
-            } catch (err) {
-              setError(err.message || t('login.google_error'));
-            } finally {
-              setLoading(false);
-            }
-          }}
-          onError={() => setError(t('login.google_error'))}
-        />
+        {/* Google SSO (renders only when VITE_GOOGLE_CLIENT_ID is set).
+            Button triggers a full-page redirect to Google; the returning
+            access token is handled by the mount-time useEffect above. */}
+        <GoogleSignInButton text={t('login.google_continue')} intent="login" />
 
         {/* "or" divider between Google and email/password. Hidden when
             the Google button is suppressed (missing client id). */}
