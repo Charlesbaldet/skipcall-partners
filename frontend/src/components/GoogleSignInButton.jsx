@@ -1,26 +1,39 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-// Loads the Google Identity Services SDK once and caches the promise so
-// multiple buttons on the page don't re-inject the script tag.
+// ─── SDK loader ──────────────────────────────────────────────────────
+// Load https://accounts.google.com/gsi/client exactly once per tab.
+// Multiple button instances share the same promise so we don't re-inject
+// the tag or double-initialise.
 let gsiPromise = null;
 function loadGsi() {
   if (gsiPromise) return gsiPromise;
   gsiPromise = new Promise((resolve, reject) => {
     if (typeof window === 'undefined') return reject(new Error('no window'));
     if (window.google?.accounts?.id) return resolve(window.google);
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    const onLoad = () => {
+      if (window.google?.accounts?.id) resolve(window.google);
+      else reject(new Error('GSI loaded but id namespace missing'));
+    };
+    if (existing) {
+      if (window.google?.accounts?.id) return resolve(window.google);
+      existing.addEventListener('load', onLoad, { once: true });
+      existing.addEventListener('error', () => { gsiPromise = null; reject(new Error('GSI load failed')); }, { once: true });
+      return;
+    }
     const s = document.createElement('script');
     s.src = 'https://accounts.google.com/gsi/client';
     s.async = true;
     s.defer = true;
-    s.onload = () => resolve(window.google);
+    s.onload = onLoad;
     s.onerror = () => { gsiPromise = null; reject(new Error('GSI load failed')); };
     document.head.appendChild(s);
   });
   return gsiPromise;
 }
 
-// Inline SVG of the official multi-colour Google G mark — saves a
-// network hop and guarantees the button renders even if the CDN is slow.
+// Inline official Google "G" mark. Avoids a CDN dependency and renders
+// instantly even on a cold load.
 function GoogleG({ size = 18 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
@@ -35,94 +48,130 @@ function GoogleG({ size = 18 }) {
 
 export default function GoogleSignInButton({ onSuccess, onError, text = 'Continue with Google', disabled = false }) {
   const clientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
-  const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(false);
+  // The hidden container where Google renders its own real button. We
+  // size it to 0 and clip it visually; a click on our custom button
+  // dispatches a click on the Google button inside, which triggers
+  // Google's own account-picker popup — no FedCM prompt() required.
+  const hiddenRef = useRef(null);
   const initedFor = useRef(null);
 
-  useEffect(() => {
-    if (!clientId) return;
-    let cancelled = false;
-    loadGsi().then((google) => {
-      if (cancelled) return;
-      // Re-init if the client id changes at runtime (unlikely, but cheap).
-      if (initedFor.current !== clientId) {
-        google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleCredential,
-          ux_mode: 'popup',
-          auto_select: false,
-        });
-        initedFor.current = clientId;
-      }
-      setReady(true);
-    }).catch((err) => {
-      console.error('[gsi load]', err);
-      if (!cancelled && onError) onError(err);
-    });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId]);
-
-  function handleCredential(resp) {
+  const handleCredential = useCallback((resp) => {
     setLoading(false);
     if (!resp || !resp.credential) {
       onError && onError(new Error('no credential'));
       return;
     }
     onSuccess && onSuccess({ credential: resp.credential });
-  }
+  }, [onSuccess, onError]);
 
-  function onClick() {
+  useEffect(() => {
+    if (!clientId) return;
+    let cancelled = false;
+
+    loadGsi().then((google) => {
+      if (cancelled) return;
+
+      // Initialise once per client id. Subsequent button mounts reuse
+      // the existing callback; if initialize runs a second time Google
+      // simply overwrites the previous config.
+      if (initedFor.current !== clientId) {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleCredential,
+          // Opt into FedCM to avoid the deprecation warnings when the
+          // SDK falls back to legacy cookies.
+          use_fedcm_for_prompt: true,
+          auto_select: false,
+          ux_mode: 'popup',
+        });
+        initedFor.current = clientId;
+      }
+
+      // Render Google's real button inside our hidden slot. This is
+      // what actually wires up the popup account picker.
+      if (hiddenRef.current) {
+        hiddenRef.current.innerHTML = '';
+        google.accounts.id.renderButton(hiddenRef.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          width: 300,
+          logo_alignment: 'left',
+        });
+      }
+
+      setReady(true);
+    }).catch((err) => {
+      console.error('[gsi load]', err);
+      if (!cancelled && onError) onError(err);
+    });
+
+    return () => { cancelled = true; };
+  }, [clientId, handleCredential, onError]);
+
+  function onCustomClick() {
     if (!ready || disabled) return;
-    setLoading(true);
-    try {
-      // One Tap prompt — falls back to the standard popup when One Tap is
-      // suppressed (e.g. the user has previously dismissed it).
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
-          // Fallback to explicit popup via id.prompt retry with a one-off
-          // button-triggered FedCM flow. If even that is blocked we surface
-          // the error so the caller can show a message.
-          setLoading(false);
-          onError && onError(new Error(notification.getNotDisplayedReason?.() || notification.getSkippedReason?.() || 'google_prompt_blocked'));
-        }
-      });
-    } catch (err) {
-      setLoading(false);
-      onError && onError(err);
+    // Find the real Google button inside our hidden container and
+    // dispatch a click on it. This opens Google's own account-picker
+    // popup without us having to manage OAuth redirects.
+    const root = hiddenRef.current;
+    if (!root) return;
+    const realBtn = root.querySelector('div[role="button"]') || root.querySelector('button') || root.firstElementChild;
+    if (!realBtn) {
+      onError && onError(new Error('google_button_missing'));
+      return;
     }
+    setLoading(true);
+    realBtn.click();
+    // If Google's popup is blocked or dismissed we never get a callback;
+    // relax the loading flag after a short while so the UI recovers.
+    setTimeout(() => setLoading(false), 4000);
   }
 
-  if (!clientId) {
-    // Don't render the button at all when the client ID is missing —
-    // clicking would only produce console errors. Keeps the rest of the
-    // login form usable in local dev without the GOOGLE_CLIENT_ID set.
-    return null;
-  }
+  if (!clientId) return null;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled || !ready || loading}
-      style={{
-        width: '100%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        padding: '12px 16px',
-        background: '#fff',
-        border: '1px solid #dadce0',
-        borderRadius: 8,
-        fontFamily: 'inherit',
-        fontSize: 14, fontWeight: 600, color: '#3c4043',
-        cursor: disabled || !ready || loading ? 'not-allowed' : 'pointer',
-        opacity: loading ? 0.7 : 1,
-        transition: 'background .15s, box-shadow .15s',
-      }}
-      onMouseEnter={e => { if (!disabled && ready && !loading) e.currentTarget.style.background = '#f8f9fa'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-    >
-      <GoogleG size={18} />
-      <span>{text}</span>
-    </button>
+    <div style={{ position: 'relative', width: '100%' }}>
+      {/* Our styled wrapper — visible to the user. */}
+      <button
+        type="button"
+        onClick={onCustomClick}
+        disabled={disabled || !ready || loading}
+        style={{
+          width: '100%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          padding: '12px 16px',
+          background: '#fff',
+          border: '1px solid #dadce0',
+          borderRadius: 8,
+          fontFamily: 'inherit',
+          fontSize: 14, fontWeight: 600, color: '#3c4043',
+          cursor: disabled || !ready || loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.7 : 1,
+          transition: 'background .15s, box-shadow .15s',
+        }}
+        onMouseEnter={e => { if (!disabled && ready && !loading) e.currentTarget.style.background = '#f8f9fa'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+      >
+        <GoogleG size={18} />
+        <span>{text}</span>
+      </button>
+
+      {/* The real Google button lives here — visually hidden but in the
+          accessibility tree + interactive so .click() on it triggers
+          Google's flow. We can't use display:none (Google refuses to
+          render into a display:none node) so we clip it instead. */}
+      <div
+        ref={hiddenRef}
+        aria-hidden="true"
+        style={{
+          position: 'absolute', left: 0, top: 0,
+          width: 1, height: 1, overflow: 'hidden',
+          opacity: 0, pointerEvents: 'none',
+        }}
+      />
+    </div>
   );
 }
