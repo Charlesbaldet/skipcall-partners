@@ -25,7 +25,7 @@
     "testimonials": "Getuigenissen",
     "blog": "Blog",
     "login": "Inloggen",
-    "freeTrial": "Gratis proberen",
+    "freeTrial": "Aan de slag",
     "menu": "Menu"
   },
   "landing": {
@@ -42,7 +42,7 @@
       "stat2_label": "Gegenereerde omzet",
       "stat3_value": "98%",
       "stat3_label": "Klanttevredenheid",
-      "trial_badges": "✓ 14 dagen gratis · ✓ Geen creditcard · ✓ Instelling in 5 min"
+      "trial_badges": "✓ Voor altijd gratis · ✓ Geen creditcard · ✓ Instelling in 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Lead pipeline",

@@ -25,7 +25,7 @@
     "testimonials": "Kundenstimmen",
     "blog": "Blog",
     "login": "Anmelden",
-    "freeTrial": "Kostenlos testen",
+    "freeTrial": "Loslegen",
     "menu": "Menü"
   },
   "landing": {
@@ -42,7 +42,7 @@
       "stat2_label": "Generierter Umsatz",
       "stat3_value": "98%",
       "stat3_label": "Kundenzufriedenheit",
-      "trial_badges": "✓ 14 Tage kostenlos · ✓ Keine Kreditkarte · ✓ Einrichtung in 5 Min."
+      "trial_badges": "✓ Für immer kostenlos · ✓ Keine Kreditkarte · ✓ Einrichtung in 5 Min."
     },
     "featuresDropdown": {
       "pipeline_label": "Lead-Pipeline",

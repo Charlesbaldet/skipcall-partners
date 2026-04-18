@@ -25,7 +25,7 @@
     "testimonials": "Testimonios",
     "blog": "Blog",
     "login": "Iniciar sesión",
-    "freeTrial": "Prueba gratuita",
+    "freeTrial": "Empezar",
     "menu": "Menú"
   },
   "landing": {
@@ -42,7 +42,7 @@
       "stat2_label": "Ingresos generados",
       "stat3_value": "98%",
       "stat3_label": "Satisfacción del cliente",
-      "trial_badges": "✓ 14 días gratis · ✓ Sin tarjeta de crédito · ✓ Configuración en 5 min"
+      "trial_badges": "✓ Gratis para siempre · ✓ Sin tarjeta de crédito · ✓ Configuración en 5 min"
     },
     "featuresDropdown": {
       "pipeline_label": "Pipeline de leads",
