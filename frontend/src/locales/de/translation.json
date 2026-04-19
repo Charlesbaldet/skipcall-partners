@@ -338,7 +338,8 @@
       "news": "News",
       "notifications": "Benachrichtigungen",
       "billing": "Abrechnung",
-      "referrals": "Referrals"
+      "referrals": "Referrals",
+      "explore_programs": "Programme erkunden"
     },
     "collapse": "Einklappen",
     "logout": "Abmelden",
@@ -1689,7 +1690,8 @@
     "discover_other_programs": "Andere Programme entdecken",
     "super_admin": "Super Admin",
     "logo_alt": "Logo",
-    "close": "Schließen"
+    "close": "Schließen",
+    "space_admin": "Admin"
   },
   "news": {
     "title": "News & Updates",

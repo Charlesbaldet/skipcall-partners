@@ -338,7 +338,8 @@
       "news": "Nieuws",
       "notifications": "Meldingen",
       "billing": "Facturatie",
-      "referrals": "Referrals"
+      "referrals": "Referrals",
+      "explore_programs": "Programma's verkennen"
     },
     "collapse": "Inklappen",
     "logout": "Uitloggen",
@@ -1689,7 +1690,8 @@
     "discover_other_programs": "Ontdek andere programma's",
     "super_admin": "Super Admin",
     "logo_alt": "Logo",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "space_admin": "Admin"
   },
   "news": {
     "title": "Nieuws & updates",

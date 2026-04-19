@@ -1,11 +1,11 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import LanguageSwitcher from './LanguageSwitcher';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -40,10 +40,14 @@ export default function Layout({ children }) {
     'referral_update', 'new_referral', 'deal_won',
     'commission', 'new_application', 'access_revoked',
   ];
-  // Grouped nav: items render under section labels (see rendering loop
-  // below). `section: 'label_key'` adds a label row; `dividerTop: true`
-  // pushes the item to the bottom (above the user profile) with a
-  // thin top divider — used for the global Notifications entry.
+
+  // Grouped nav data. Special entry types:
+  //   { section: '...' }              section label row
+  //   { divider: true }               thin horizontal rule
+  //   { bottom: true, ... }           pinned at the bottom of the sidebar
+  //   { bottomBefore: true, ... }     pinned just above the bottom row
+  //                                   (subtle CTA button — green for partners)
+  //   { adminOnly: true, ... }        hidden for the commercial role
   const ADMIN_NAV = [
     { to: '/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
 
@@ -58,13 +62,21 @@ export default function Layout({ children }) {
 
     { section: t('layout.section.gestion') },
     { to: '/programme', icon: Trophy, label: t('layout.nav.programme') },
-    { to: '/billing', icon: CreditCard, label: t('layout.nav.billing') },
+    { to: '/billing', icon: CreditCard, label: t('layout.nav.billing'), adminOnly: true },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
 
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
   ];
+
+  // Partner has no dedicated /dashboard route — the kanban at
+  // /partner/referrals serves as their landing page. We point the
+  // standalone Dashboard item at the same route as "Mes referrals" so
+  // both highlight when active; add /partner/dashboard later if you
+  // want them split.
   const PARTNER_NAV = [
-    { section: t('layout.section.my_activities') },
+    { to: '/partner/referrals', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
+
+    { section: t('layout.section.pipeline') },
     { to: '/partner/submit', icon: Send, label: t('layout.nav.submit') },
     { to: '/partner/referrals', icon: FileText, label: t('layout.nav.my_referrals'), notifyKeys: ['referral_update'] },
     { to: '/partner/payments', icon: DollarSign, label: t('layout.nav.my_payments'), notifyKeys: ['commission'] },
@@ -76,8 +88,10 @@ export default function Layout({ children }) {
     { section: t('layout.section.gestion') },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
 
+    { bottomBefore: true, to: '/marketplace', icon: Search, label: t('layout.nav.explore_programs'), accent: 'green' },
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
   ];
+
   const SUPERADMIN_NAV = [
     { to: '/super-admin?tab=clients', icon: Globe, label: t('layout.nav.clients') },
     { to: '/super-admin?tab=stats', icon: BarChart2, label: t('layout.nav.statistics') },
@@ -110,7 +124,11 @@ export default function Layout({ children }) {
 
   const isSuperAdmin = user?.role === 'superadmin';
   const isAdmin = user?.role === 'admin';
-  const nav = isSuperAdmin ? SUPERADMIN_NAV : user?.role === 'partner' ? PARTNER_NAV : ADMIN_NAV;
+  const isCommercial = user?.role === 'commercial';
+  const isPartner = user?.role === 'partner';
+  // Commercial uses the admin nav minus admin-only entries (Billing).
+  let nav = isSuperAdmin ? SUPERADMIN_NAV : isPartner ? PARTNER_NAV : ADMIN_NAV;
+  if (isCommercial) nav = nav.filter(it => !it.adminOnly);
 
   useEffect(() => {
     if (isSuperAdmin) return;
@@ -159,17 +177,48 @@ export default function Layout({ children }) {
     document.title = total > 0 ? `(${total}) ${baseTitle}` : baseTitle;
   }, [unread, pendingApps, isSuperAdmin, tenant]);
 
+  // Close the space switcher dropdown on outside click + Escape.
+  const switcherRef = useRef(null);
+  useEffect(() => {
+    if (!spaceSwitcherOpen) return;
+    const onClick = (e) => {
+      if (switcherRef.current && !switcherRef.current.contains(e.target)) {
+        setSpaceSwitcherOpen(false);
+      }
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setSpaceSwitcherOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [spaceSwitcherOpen]);
+
   const handleLogout = () => { logout(); navigate('/login'); };
 
+  // ─── Style tokens ─────────────────────────────────────────────────
+  // Single source of truth for nav item geometry. All items (Dashboard,
+  // section items, bottom Notifications, partner Explorer button) align
+  // on the same 18px left gutter. The 2px transparent left border is
+  // promoted to #059669 on active so the indicator never shifts content.
+  const ACTIVE_ACCENT = isSuperAdmin ? '#dc2626' : '#059669';
   const s = {
-    sidebar: { width: collapsed ? 68 : 200, minWidth: collapsed ? 68 : 200, background: isSuperAdmin ? '#1a1a2e' : C.s, color: '#fff', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50 },
-    // Nav-item baseline: consistent 8px vertical padding, 20px left
-    // gutter so every icon aligns on the same column whether it sits
-    // under a section, is the standalone Dashboard, or is the bottom
-    // Notifications row. gap:10 between icon and label.
-    link: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px 8px 20px', borderRadius: 10, color: '#94a3b8', textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'all 0.15s', margin: '2px 8px' },
-    activeLink: { background: isSuperAdmin ? 'linear-gradient(135deg, rgba(220,38,38,0.2), rgba(239,68,68,0.15))' : `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`, color: '#fff' },
-    activeQueryLink: { background: `linear-gradient(135deg, ${C.p}33, ${C.pl}26)`, color: '#fff' },
+    sidebar: { width: collapsed ? 68 : 220, minWidth: collapsed ? 68 : 220, background: isSuperAdmin ? '#1a1a2e' : C.s, color: '#fff', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50 },
+    link: {
+      display: 'flex', alignItems: 'center', gap: 9,
+      padding: '7px 18px', borderLeft: '2px solid transparent',
+      color: '#94a3b8', textDecoration: 'none',
+      fontSize: 12, fontWeight: 500, transition: 'all 0.15s',
+      lineHeight: 1.3,
+    },
+    activeLink: { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeftColor: ACTIVE_ACCENT },
+    activeQueryLink: { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeftColor: ACTIVE_ACCENT },
+    sectionLabel: {
+      fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
+      color: '#475569', fontWeight: 500,
+      padding: '10px 18px 3px',
+    },
   };
 
   const getBadge = (item) => {
@@ -178,135 +227,170 @@ export default function Layout({ children }) {
     return 0;
   };
 
+  // Nav-item icon + optional notify dot. Reused by both the main nav
+  // loop and the bottom-pinned rows so every icon is exactly 16px.
+  const ItemIcon = ({ Icon, hasDot, color }) => (
+    <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0, width: 16, height: 16 }}>
+      <Icon size={16} color={color}/>
+      {hasDot && (
+        <span style={{
+          position: 'absolute', top: -2, right: -2,
+          width: 8, height: 8, borderRadius: '50%',
+          background: '#ef4444', boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
+        }}/>
+      )}
+    </span>
+  );
+
+  // ─── Space switcher trigger label ─────────────────────────────────
+  // The chevron next to the program name doubles as the switcher
+  // trigger when the user has more than one space. Single-space users
+  // get a plain label with no chevron / no click handler.
+  const hasMultipleSpaces = spaces && spaces.length > 1;
+  const programLabel = isSuperAdmin
+    ? t('layout_extra.super_admin')
+    : (currentSpace?.role === 'partner' && currentSpace?.partner_name)
+      ? currentSpace.partner_name
+      : (currentSpace?.tenant_name || tenant?.name || 'RefBoost');
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
       <aside style={s.sidebar}>
-        {/* Logo */}
-        <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          {isSuperAdmin ? (
-            <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #dc2626, #ef4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
-              <Shield size={18} color="#fff"/>
-            </div>
-          ) : (
-            <div style={{ flexShrink: 0, filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
-              {tenant?.logo_url
-                ? <img src={tenant.logo_url} alt={t('layout_extra.logo_alt')} style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }}/>
-                : <RefBoostLogo size={36}/>}
-            </div>
-          )}
-          {!collapsed && (
-            <span style={{ fontSize: isSuperAdmin ? 16 : 18, fontWeight: 800, letterSpacing: -0.5, fontFamily: 'inherit' }}>
-              {isSuperAdmin ? t('layout_extra.super_admin') : (tenant?.name || 'RefBoost')}
-            </span>
-          )}
-        </div>
-
-        {/* Phase B: space switcher dropdown (below logo) */}
-        {spaces && spaces.length > 1 && (
-          <div style={{ padding: collapsed ? '0 4px 8px' : '0 12px 8px', position: 'relative' }}>
-            <button
-              onClick={() => setSpaceSwitcherOpen(v => !v)}
-              style={{
-                width: '100%',
-                padding: collapsed ? '8px' : '8px 10px',
-                display: 'flex', alignItems: 'center', gap: 10,
-                borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(255,255,255,0.03)', color: '#fff',
-                cursor: 'pointer', fontSize: 13,
-                justifyContent: collapsed ? 'center' : 'space-between',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', flex: 1 }}>
-                <div style={{
-                  width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-                  background: currentSpace && currentSpace.role === 'partner'
-                    ? `linear-gradient(135deg, ${C.a}, ${C.al})`
-                    : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 800, color: '#fff',
-                }}>
-                  {((currentSpace && (currentSpace.role === 'partner' ? currentSpace.partner_name : currentSpace.tenant_name)) || '??').slice(0, 2).toUpperCase()}
-                </div>
-                {!collapsed && (
-                  <div style={{ overflow: 'hidden', minWidth: 0, textAlign: 'left' }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {currentSpace ? (currentSpace.role === 'partner' ? (currentSpace.partner_name || t('layout_extra.space_partner')) : (currentSpace.tenant_name || t('layout_extra.space_space'))) : t('layout_extra.switch_space')}
-                    </div>
-                    <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>
-                      {currentSpace?.role || ''}
-                    </div>
-                  </div>
-                )}
+        {/* ─── Top: logo + program name (also the space-switcher trigger) ─ */}
+        <div ref={switcherRef} style={{ position: 'relative', padding: '20px 16px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {isSuperAdmin ? (
+              <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #dc2626, #ef4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
+                <Shield size={18} color="#fff"/>
               </div>
-              {!collapsed && (
-                <span style={{ color: '#94a3b8', fontSize: 10, marginLeft: 4 }}>{spaceSwitcherOpen ? '▲' : '▼'}</span>
-              )}
-            </button>
-            {spaceSwitcherOpen && (
-              <div style={{
-                position: 'absolute', top: '100%', left: collapsed ? 4 : 12, right: collapsed ? 4 : 12,
+            ) : (
+              <div style={{ flexShrink: 0, filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
+                {tenant?.logo_url
+                  ? <img src={tenant.logo_url} alt={t('layout_extra.logo_alt')} style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }}/>
+                  : <RefBoostLogo size={36}/>}
+              </div>
+            )}
+            {!collapsed && (
+              <button
+                type="button"
+                disabled={!hasMultipleSpaces}
+                onClick={() => hasMultipleSpaces && setSpaceSwitcherOpen(v => !v)}
+                style={{
+                  background: 'none', border: 'none', padding: 0,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  color: '#fff', fontFamily: 'inherit',
+                  cursor: hasMultipleSpaces ? 'pointer' : 'default',
+                  overflow: 'hidden', flex: 1, textAlign: 'left',
+                }}
+                aria-haspopup={hasMultipleSpaces ? 'menu' : undefined}
+                aria-expanded={spaceSwitcherOpen}
+              >
+                <span style={{
+                  fontSize: isSuperAdmin ? 15 : 16, fontWeight: 800, letterSpacing: -0.4,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {programLabel}
+                </span>
+                {hasMultipleSpaces && (
+                  <ChevronDown
+                    size={14}
+                    color="#94a3b8"
+                    style={{
+                      flexShrink: 0,
+                      transition: 'transform .15s ease',
+                      transform: spaceSwitcherOpen ? 'rotate(180deg)' : 'rotate(0)',
+                    }}
+                  />
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* ─── Space switcher dropdown ─── */}
+          {spaceSwitcherOpen && hasMultipleSpaces && (
+            <div
+              role="menu"
+              style={{
+                position: 'absolute', top: '100%', left: 12, right: 12,
                 marginTop: 4, zIndex: 60,
                 background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: 10, padding: 6,
                 boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
                 maxHeight: '60vh', overflowY: 'auto',
-              }}>
-                {spaces.map((space) => {
-                  const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && currentSpace.role === space.role && (currentSpace.partner_id || null) === (space.partner_id || null);
-                  const label = space.role === 'partner' ? (space.partner_name || t('layout_extra.space_partner')) : (space.tenant_name || t('layout_extra.space_space'));
-                  const initials = (label || '??').slice(0, 2).toUpperCase();
-                  return (
-                    <button
-                      key={`sw-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
-                      onClick={() => {
-                        setSpaceSwitcherOpen(false);
-                        if (!isActive) switchSpace(space).then(() => window.location.reload());
-                      }}
-                      style={{
-                        width: '100%', padding: '8px 10px',
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        borderRadius: 8, border: 'none',
-                        background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
-                        color: '#fff', cursor: isActive ? 'default' : 'pointer',
-                        textAlign: 'left', fontSize: 13, marginBottom: 2,
-                      }}
-                    >
-                      <div style={{
-                        width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-                        background: space.role === 'partner' ? `linear-gradient(135deg, ${C.a}, ${C.al})` : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 10, fontWeight: 800, color: '#fff',
-                      }}>{initials}</div>
-                      <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-                        <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>{space.role}</div>
-                      </div>
-                      {isActive && <span style={{ color: '#10b981', fontSize: 12 }}>✓</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+              }}
+            >
+              {spaces.map((space) => {
+                const isActive = currentSpace
+                  && currentSpace.tenant_id === space.tenant_id
+                  && currentSpace.role === space.role
+                  && (currentSpace.partner_id || null) === (space.partner_id || null);
+                const label = space.role === 'partner'
+                  ? (space.partner_name || t('layout_extra.space_partner'))
+                  : (space.tenant_name || t('layout_extra.space_space'));
+                const initials = (label || '??').slice(0, 2).toUpperCase();
+                const roleLabel = space.role === 'partner' ? t('layout_extra.space_partner') : t('layout_extra.space_admin') || space.role;
+                return (
+                  <button
+                    key={`sw-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
+                    onClick={() => {
+                      setSpaceSwitcherOpen(false);
+                      if (!isActive) switchSpace(space).then(() => window.location.reload());
+                    }}
+                    style={{
+                      width: '100%', padding: '8px 10px',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      borderRadius: 8, border: 'none',
+                      background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
+                      color: '#fff', cursor: isActive ? 'default' : 'pointer',
+                      textAlign: 'left', marginBottom: 2,
+                    }}
+                  >
+                    <div style={{
+                      width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                      background: space.role === 'partner'
+                        ? `linear-gradient(135deg, ${C.a}, ${C.al})`
+                        : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 9, fontWeight: 800, color: '#fff',
+                    }}>{initials}</div>
+                    <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                    </div>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+                      textTransform: 'uppercase', letterSpacing: 0.4,
+                      background: space.role === 'partner' ? `${C.a}22` : `${C.p}22`,
+                      color: space.role === 'partner' ? C.al : C.pl,
+                    }}>{roleLabel}</span>
+                    {isActive && <span style={{ color: '#10b981', fontSize: 12 }}>✓</span>}
+                  </button>
+                );
+              })}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '6px 0' }} />
+              <button
+                onClick={() => { setSpaceSwitcherOpen(false); navigate('/marketplace'); }}
+                style={{
+                  width: '100%', padding: '8px 10px',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  borderRadius: 8, border: 'none', background: 'transparent',
+                  color: '#10b981', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, textAlign: 'left',
+                }}
+              >
+                <Search size={14}/>
+                {t('layout.nav.explore_programs')} →
+              </button>
+            </div>
+          )}
+        </div>
 
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-          {nav.filter(it => !it.bottom).map((item, i) => {
+        {/* ─── Main nav (sections + items) ─── */}
+        <nav style={{ flex: 1, padding: '8px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {nav.filter(it => !it.bottom && !it.bottomBefore).map((item, i) => {
             if (item.section) {
               if (collapsed) return null;
-              // Section label sits at the same 20px left gutter as the
-              // nav items below it so icons and the label start on the
-              // same x position. Small margin-top for visual grouping.
               return (
-                <div
-                  key={'sec-' + i}
-                  style={{
-                    fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
-                    color: '#475569', fontWeight: 700,
-                    padding: '4px 16px 4px 20px', marginTop: 12,
-                  }}
-                >
+                <div key={'sec-' + i} style={s.sectionLabel}>
                   {item.section}
                 </div>
               );
@@ -317,90 +401,55 @@ export default function Layout({ children }) {
             const notifyCount = (item.notifyKeys || []).reduce(
               (n, k) => n + (unreadByCat[k] || 0), 0
             );
-            const linkStyle = s.link;
             return (
-              <Fragment key={item.to}>
-              <NavLink
-                to={item.to}
-                end={item.to === '/super-admin'}
-                style={({ isActive }) => ({ ...linkStyle, ...(item.to && item.to.includes('?') ? (isItemActive(item) ? s.activeQueryLink : {}) : (isActive ? s.activeLink : {})) })}
-              >
-                <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
-                  <item.icon size={18} />
-                  {notifyCount > 0 && (
-                    <span
-                      title={String(notifyCount)}
-                      style={{
-                        position: 'absolute', top: -2, right: -2,
-                        width: 8, height: 8, borderRadius: '50%',
-                        background: '#ef4444',
-                        boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
-                      }}
-                    />
-                  )}
-                </span>
-                {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
-                {!collapsed && badge > 0 && <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{badge}</span>}
-              </NavLink>
-              {item.to === '/messaging' && user?.role === 'partner' && spaces && spaces.filter(s => s.role === 'partner').length > 0 && (
-                <>
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />
-                  {spaces.filter(s => s.role === 'partner').map((space) => {
-                    const isActive = currentSpace && currentSpace.tenant_id === space.tenant_id && (currentSpace.partner_id || null) === (space.partner_id || null);
-                    const label = space.tenant_name || t('layout_extra.program');
-                    const initials = (label || '??').slice(0, 2).toUpperCase();
-                    return (
-                      <button
-                        key={`prog-${space.tenant_id}-${space.partner_id || 'none'}`}
-                        onClick={() => { if (!isActive) switchSpace(space).then(() => window.location.reload()); }}
-                        title={label}
-                        style={{
-                          width: '100%', padding: '6px 16px',
-                          display: 'flex', alignItems: 'center', gap: 12,
-                          borderRadius: 0, border: 'none',
-                          background: isActive ? `linear-gradient(135deg, ${C.a}22, ${C.al}18)` : 'transparent',
-                          color: isActive ? '#fff' : '#94a3b8',
-                          cursor: isActive ? 'default' : 'pointer',
-                          fontSize: 13, fontWeight: 500,
-                        }}
-                      >
-                        <div style={{
-                          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                          background: `linear-gradient(135deg, ${C.a}, ${C.al})`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 9, fontWeight: 700, color: '#fff',
-                        }}>{initials}</div>
-                        {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, textAlign: 'left' }}>{label}</span>}
-                        {isActive && !collapsed && <span style={{ color: `${C.a}`, fontSize: 11 }}>✓</span>}
-                      </button>
-                    );
+              <Fragment key={'nav-' + i + '-' + item.to}>
+                <NavLink
+                  to={item.to}
+                  end={item.to === '/super-admin'}
+                  style={({ isActive }) => ({
+                    ...s.link,
+                    ...(item.to && item.to.includes('?')
+                      ? (isItemActive(item) ? s.activeQueryLink : {})
+                      : (isActive ? s.activeLink : {})),
                   })}
-                  {!collapsed && (
-                    <button
-                      onClick={() => navigate('/marketplace')}
-                      style={{
-                        width: '100%', padding: '6px 16px',
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        borderRadius: 0, border: 'none',
-                        background: 'transparent', color: '#64748b',
-                        cursor: 'pointer', fontSize: 12,
-                      }}
-                    >
-                      <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>+</span>
-                      <span>{t('layout_extra.discover_other_programs')}</span>
-                    </button>
+                >
+                  <ItemIcon Icon={item.icon} hasDot={notifyCount > 0}/>
+                  {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
+                  {!collapsed && badge > 0 && (
+                    <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
+                      {badge}
+                    </span>
                   )}
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '8px 12px' }} />
-                </>
-              )}
+                </NavLink>
               </Fragment>
             );
           })}
         </nav>
 
-        {/* Bottom Notifications entry — pinned below the main nav, above
-            the language switcher. Renders separately from the nav loop
-            because it sits in a different layout row. */}
+        {/* ─── Pre-bottom CTA (partner: Explorer les programmes) ─── */}
+        {nav.filter(it => it.bottomBefore).map((item) => (
+          <NavLink
+            key={'bb-' + item.to}
+            to={item.to}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 9,
+              margin: collapsed ? '8px 8px' : '8px 12px',
+              padding: '8px 12px',
+              borderRadius: 10, textDecoration: 'none',
+              fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+              background: 'rgba(5,150,105,0.08)',
+              border: '1px solid rgba(5,150,105,0.15)',
+              color: '#10b981',
+              transition: 'all 0.15s',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+            }}
+          >
+            <item.icon size={14}/>
+            {!collapsed && <span>{item.label}</span>}
+          </NavLink>
+        ))}
+
+        {/* ─── Bottom Notifications row ─── */}
         {nav.filter(it => it.bottom).map((item) => {
           const notifyCount = (item.notifyKeys || []).reduce(
             (n, k) => n + (unreadByCat[k] || 0), 0
@@ -408,35 +457,24 @@ export default function Layout({ children }) {
           const hasUnread = notifyCount > 0;
           return (
             <NavLink
-              key={item.to}
+              key={'bot-' + item.to}
               to={item.to}
               style={({ isActive }) => ({
-                ...s.link,
-                // Bottom row sits flush against the sidebar edge (no
-                // horizontal margin) but preserves the 20px left
-                // gutter so its icon aligns with the main nav icons
-                // above.
+                display: 'flex', alignItems: 'center', gap: 9,
+                padding: '7px 18px', borderLeft: '2px solid transparent',
                 borderTop: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 0,
-                margin: 0,
-                padding: '10px 16px 10px 20px',
-                color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#64748b'),
-                ...(isActive ? { background: 'rgba(255,255,255,0.04)' } : {}),
+                textDecoration: 'none',
+                fontSize: 12, fontWeight: 500,
+                color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#475569'),
+                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                borderLeftColor: isActive ? ACTIVE_ACCENT : 'transparent',
+                transition: 'all 0.15s',
               })}
             >
-              <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
-                <item.icon size={18} />
-                {hasUnread && (
-                  <span style={{
-                    position: 'absolute', top: -2, right: -2,
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: '#ef4444', boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
-                  }}/>
-                )}
-              </span>
+              <ItemIcon Icon={item.icon} hasDot={hasUnread}/>
               {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
               {!collapsed && hasUnread && (
-                <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>
+                <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
                   {notifyCount}
                 </span>
               )}
@@ -444,37 +482,37 @@ export default function Layout({ children }) {
           );
         })}
 
-        {/* Language Switcher â toujours visible */}
+        {/* ─── Language switcher ─── */}
         <div style={{ padding: collapsed ? '6px 8px' : '6px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <LanguageSwitcher compact={collapsed} direction="up" dark={true} style={{ width: '100%' }}/>
         </div>
 
-        {/* Collapse toggle */}
-        <button onClick={() => setCollapsed(!collapsed)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', margin: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 13 }}>
-          {collapsed ? <ChevronRight size={16}/> : <><ChevronLeft size={16}/> <span>{t('layout.collapse')}</span></>}
+        {/* ─── Collapse toggle ─── */}
+        <button onClick={() => setCollapsed(!collapsed)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '8px', margin: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 12 }}>
+          {collapsed ? <ChevronRight size={14}/> : <><ChevronLeft size={14}/> <span>{t('layout.collapse')}</span></>}
         </button>
 
-        {/* User */}
+        {/* ─── User profile ─── */}
         <div style={{ padding: '12px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? C.p : user?.role === 'commercial' ? '#0891b2' : C.pl, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? C.p : user?.role === 'commercial' ? '#0891b2' : C.pl, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13 }}>
               {user?.fullName?.charAt(0) || '?'}
             </div>
             {!collapsed && (
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.fullName}</div>
-                <div style={{ color: '#64748b', fontSize: 11, textTransform: 'capitalize' }}>{user?.role}</div>
+                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.fullName}</div>
+                <div style={{ color: '#64748b', fontSize: 10, textTransform: 'capitalize' }}>{user?.role}</div>
               </div>
             )}
             <button onClick={handleLogout} title={t('layout.logout')} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex' }}>
-              <LogOut size={16}/>
+              <LogOut size={14}/>
             </button>
           </div>
         </div>
 
       </aside>
 
-      <main style={{ flex: 1, marginLeft: collapsed ? 68 : 200, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
+      <main style={{ flex: 1, marginLeft: collapsed ? 68 : 220, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
         {children}
       </main>
 
