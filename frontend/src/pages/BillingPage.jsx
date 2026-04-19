@@ -6,8 +6,8 @@ import api from '../lib/api';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 // Plans mirror backend/routes/billing.js — keep price ids in sync.
-const PRICE_PRO_MONTHLY = 'price_1TNSyKLO4aHvEb3qMzUBhtbe';
-const PRICE_BUSINESS_MONTHLY = 'price_1TNSyfLO4aHvEb3qM7f7A14c';
+const PRICE_PRO_MONTHLY = 'price_1TNptZLG65VWFQyt9Dj7QNqt';
+const PRICE_BUSINESS_MONTHLY = 'price_1TNptZLG65VWFQytkMfbve38';
 // Annual prices are placeholders until real Stripe price IDs are wired
 // on the backend via STRIPE_PRICE_PRO_ANNUAL / STRIPE_PRICE_BUSINESS_ANNUAL.
 const PRICE_PRO_ANNUAL = 'STRIPE_PRICE_PRO_ANNUAL';

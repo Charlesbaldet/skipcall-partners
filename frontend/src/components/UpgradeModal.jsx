@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { X, Zap, Crown, AlertCircle, Check } from 'lucide-react';
 import api from '../lib/api';
 
-const PRICE_PRO_MONTHLY = 'price_1TNSyKLO4aHvEb3qMzUBhtbe';
-const PRICE_BUSINESS_MONTHLY = 'price_1TNSyfLO4aHvEb3qM7f7A14c';
+const PRICE_PRO_MONTHLY = 'price_1TNptZLG65VWFQyt9Dj7QNqt';
+const PRICE_BUSINESS_MONTHLY = 'price_1TNptZLG65VWFQytkMfbve38';
 
 const TIERS = {
   pro: {

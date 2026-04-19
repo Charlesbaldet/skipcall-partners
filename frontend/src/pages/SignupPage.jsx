@@ -29,8 +29,8 @@ export default function SignupPage() {
   // /signup?plan=pro|business). Starter skips checkout entirely.
   const requestedPlan = (params.get('plan') || '').toLowerCase();
   const PLAN_PRICE_IDS = {
-    pro: 'price_1TNSyKLO4aHvEb3qMzUBhtbe',
-    business: 'price_1TNSyfLO4aHvEb3qM7f7A14c',
+    pro: 'price_1TNptZLG65VWFQyt9Dj7QNqt',
+    business: 'price_1TNptZLG65VWFQytkMfbve38',
   };
 
   const [form, setForm] = useState({
