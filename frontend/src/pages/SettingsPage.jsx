@@ -615,7 +615,16 @@ function CrmIntegrations() {
   const isBusiness = data.plan === 'business';
   const byProvider = (p) => (data.integrations || []).find(i => i.provider === p);
 
-  const connectHubspot = async () => {
+  // All CRM click handlers accept the event and call stopPropagation +
+  // preventDefault. The handlers run from inside the SettingsPage
+  // modal (which has a backdrop onClick={handleClose}) — we don't
+  // want a bubbled click to both run the handler AND close the modal,
+  // and we don't want ANY handler to trigger the OAuth redirect
+  // except the explicit Connect buttons.
+  const stopEv = (e) => { if (e && typeof e.stopPropagation === 'function') { e.stopPropagation(); e.preventDefault(); } };
+
+  const connectHubspot = async (e) => {
+    stopEv(e);
     setBusy(true); setErr('');
     try {
       const { url } = await api.getHubspotAuthUrl();
@@ -625,9 +634,13 @@ function CrmIntegrations() {
       else setErr(e.message);
     } finally { setBusy(false); }
   };
-  const disconnectHubspot = async () => { setBusy(true); try { await api.disconnectHubspot(); load(); } catch (e) { setErr(e.message); } setBusy(false); };
+  const disconnectHubspot = async (e) => {
+    stopEv(e);
+    setBusy(true); try { await api.disconnectHubspot(); load(); } catch (e) { setErr(e.message); } setBusy(false);
+  };
 
-  const connectSalesforce = async () => {
+  const connectSalesforce = async (e) => {
+    stopEv(e);
     setBusy(true); setErr('');
     try {
       const { url } = await api.getSalesforceAuthUrl();
@@ -637,9 +650,13 @@ function CrmIntegrations() {
       else setErr(e.message);
     } finally { setBusy(false); }
   };
-  const disconnectSalesforce = async () => { setBusy(true); try { await api.disconnectSalesforce(); load(); } catch (e) { setErr(e.message); } setBusy(false); };
+  const disconnectSalesforce = async (e) => {
+    stopEv(e);
+    setBusy(true); try { await api.disconnectSalesforce(); load(); } catch (e) { setErr(e.message); } setBusy(false);
+  };
 
-  const saveWebhook = async () => {
+  const saveWebhook = async (e) => {
+    stopEv(e);
     setBusy(true); setErr('');
     try {
       await api.createCrmIntegration({ provider: 'webhook', webhook_url: webhookUrl });
@@ -649,7 +666,8 @@ function CrmIntegrations() {
       else setErr(e.message);
     } finally { setBusy(false); }
   };
-  const testWebhook = async () => {
+  const testWebhook = async (e) => {
+    stopEv(e);
     const wh = byProvider('webhook');
     if (!wh) return;
     setTestMsg('…');
@@ -661,7 +679,8 @@ function CrmIntegrations() {
     }
     setTimeout(() => setTestMsg(''), 4000);
   };
-  const removeIntegration = async (id) => {
+  const removeIntegration = async (ev, id) => {
+    stopEv(ev);
     setBusy(true);
     try { await api.deleteCrmIntegration(id); load(); }
     catch (e) { setErr(e.message); }
@@ -722,21 +741,21 @@ function CrmIntegrations() {
         <Card title={t('crm.hubspot')} desc={t('crm.hubspot_desc')} color="#ff7a59" status={hubspot?.is_active}>
           {hubspot?.is_active ? (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button onClick={() => setMappingFor(hubspot)} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
-              <button onClick={disconnectHubspot} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
+              <button type="button" onClick={(e) => { stopEv(e); setMappingFor(hubspot); }} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
+              <button type="button" onClick={disconnectHubspot} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
             </div>
           ) : (
-            <button onClick={connectHubspot} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
+            <button type="button" onClick={connectHubspot} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
           )}
         </Card>
         <Card title={t('crm.salesforce')} desc={t('crm.salesforce_desc')} color="#00a1e0" status={salesforce?.is_active}>
           {salesforce?.is_active ? (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button onClick={() => setMappingFor(salesforce)} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
-              <button onClick={disconnectSalesforce} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
+              <button type="button" onClick={(e) => { stopEv(e); setMappingFor(salesforce); }} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
+              <button type="button" onClick={disconnectSalesforce} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
             </div>
           ) : (
-            <button onClick={connectSalesforce} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
+            <button type="button" onClick={connectSalesforce} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
           )}
         </Card>
         <Card title={t('crm.webhook')} desc={t('crm.webhook_desc')} color="#6366f1" status={webhook?.is_active}>
@@ -748,9 +767,9 @@ function CrmIntegrations() {
               style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button onClick={saveWebhook} disabled={busy || !webhookUrl} style={btnPrimary}>{t('crm.save_webhook')}</button>
-              {webhook && <button onClick={testWebhook} disabled={busy} style={btnSecondary}>{t('crm.test_webhook')}</button>}
-              {webhook && <button onClick={() => removeIntegration(webhook.id)} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>}
+              <button type="button" onClick={saveWebhook} disabled={busy || !webhookUrl} style={btnPrimary}>{t('crm.save_webhook')}</button>
+              {webhook && <button type="button" onClick={testWebhook} disabled={busy} style={btnSecondary}>{t('crm.test_webhook')}</button>}
+              {webhook && <button type="button" onClick={(e) => removeIntegration(e, webhook.id)} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>}
             </div>
             {testMsg && <div style={{ fontSize: 11, color: testMsg.startsWith('✓') ? '#059669' : '#b91c1c', fontWeight: 600 }}>{testMsg}</div>}
           </div>
@@ -850,13 +869,13 @@ function CrmMappingModal({ integration, onClose }) {
   const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 640, maxHeight: '88vh', overflowY: 'auto', padding: 24, boxShadow: '0 25px 80px rgba(15,23,42,0.25)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
             {t('crm.configure')} — {t('crm.' + integration.provider)}
           </h3>
-          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <X size={16}/>
           </button>
         </div>
@@ -941,8 +960,8 @@ function CrmMappingModal({ integration, onClose }) {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center' }}>
               {savedMsg && <span style={{ color: '#059669', fontSize: 12, fontWeight: 600 }}>{savedMsg}</span>}
-              <button onClick={onClose} disabled={saving} style={btnSecondary}>{t('settings.cancel')}</button>
-              <button onClick={save} disabled={saving} style={btnPrimary}>{saving ? '…' : t('crm.save_mappings')}</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }} disabled={saving} style={btnSecondary}>{t('settings.cancel')}</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); save(); }} disabled={saving} style={btnPrimary}>{saving ? '…' : t('crm.save_mappings')}</button>
             </div>
           </>
         )}
