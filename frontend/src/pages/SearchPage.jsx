@@ -1,10 +1,45 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, Users, DollarSign, Newspaper, ChevronRight } from 'lucide-react';
+import { Search, FileText, Users, DollarSign, Newspaper, ChevronRight, Compass } from 'lucide-react';
 import api from '../lib/api';
+import { useAuth } from '../hooks/useAuth.jsx';
+
+// Static navigation index — pages, settings tabs, and other actions
+// the user can jump to. Filtered locally on every keystroke; no API
+// call. `roles` gates which entries each user sees: partners get the
+// /partner/* destinations, admins/commercials get the back-office.
+const NAVIGATION_ITEMS = [
+  // ─── Admin / commercial pages ───
+  { title: 'Dashboard',   subtitle: "Vue d'ensemble",                 url: '/dashboard',    keywords: ['dashboard', 'accueil', 'overview', 'home'],            roles: ['admin', 'commercial', 'superadmin'] },
+  { title: 'Referrals',   subtitle: 'Pipeline et Kanban',             url: '/referrals',    keywords: ['referrals', 'pipeline', 'kanban', 'leads', 'prospects'], roles: ['admin', 'commercial', 'superadmin'] },
+  { title: 'Partenaires', subtitle: 'Gérer vos partenaires',          url: '/partners',     keywords: ['partenaires', 'partners', 'apporteurs'],                roles: ['admin', 'commercial', 'superadmin'] },
+  { title: 'Commissions', subtitle: 'Suivi des commissions',          url: '/commissions',  keywords: ['commissions', 'paiements', 'payments'],                  roles: ['admin', 'commercial', 'superadmin'] },
+  { title: 'Messagerie',  subtitle: 'Conversations',                  url: '/messaging',    keywords: ['messagerie', 'messages', 'chat', 'conversations'],       roles: ['admin', 'commercial', 'superadmin', 'partner'] },
+  { title: 'Actualités',  subtitle: 'News et mises à jour',           url: '/news',         keywords: ['actualités', 'news', 'updates', 'publications'],         roles: ['admin', 'commercial', 'superadmin'] },
+  { title: 'Programme',   subtitle: 'Configuration du programme',     url: '/programme',    keywords: ['programme', 'program', 'configuration', 'niveaux', 'levels'], roles: ['admin', 'commercial', 'superadmin'] },
+  { title: 'Facturation', subtitle: 'Plans et abonnements',           url: '/billing',      keywords: ['facturation', 'billing', 'abonnement', 'plan', 'tarifs', 'prix', 'stripe'], roles: ['admin', 'superadmin'] },
+  { title: 'Notifications', subtitle: 'Centre de notifications',      url: '/notifications', keywords: ['notifications', 'alertes'],                              roles: ['admin', 'commercial', 'superadmin', 'partner'] },
+
+  // ─── Partner pages ───
+  { title: 'Dashboard',         subtitle: 'Mes referrals',             url: '/partner/referrals', keywords: ['dashboard', 'mes referrals', 'pipeline', 'mes leads'], roles: ['partner'] },
+  { title: 'Soumettre un lead', subtitle: 'Nouveau referral',          url: '/partner/submit',    keywords: ['soumettre', 'nouveau', 'lead', 'referral', 'ajouter'], roles: ['partner'] },
+  { title: 'Mes paiements',     subtitle: 'Mes commissions',           url: '/partner/payments',  keywords: ['paiements', 'commissions', 'payments', 'argent'],      roles: ['partner'] },
+  { title: 'Actualités',        subtitle: 'News du programme',         url: '/partner/news',      keywords: ['actualités', 'news', 'mises à jour'],                  roles: ['partner'] },
+  { title: 'Marketplace',       subtitle: "Découvrir d'autres programmes", url: '/marketplace',   keywords: ['marketplace', 'programmes', 'découvrir', 'explorer'],  roles: ['partner'] },
+
+  // ─── Settings tabs (admin/superadmin) ───
+  { title: 'Profil et sécurité',          subtitle: 'Paramètres → Compte',         url: '/settings?tab=profile',             keywords: ['profil', 'mot de passe', 'password', 'sécurité', 'email', 'compte', 'langue', 'language'], roles: ['admin', 'commercial', 'superadmin', 'partner'] },
+  { title: 'Équipe et membres',           subtitle: 'Paramètres → Compte',         url: '/settings?tab=team',                keywords: ['équipe', 'membres', 'team', 'admin', 'utilisateurs', 'inviter', 'users'], roles: ['admin', 'superadmin'] },
+  { title: 'Apparence et branding',       subtitle: 'Paramètres → Programme',      url: '/settings?tab=branding',            keywords: ['apparence', 'branding', 'logo', 'couleurs', 'thème', 'design'],          roles: ['admin', 'superadmin'] },
+  { title: 'Pipeline et statuts',         subtitle: 'Paramètres → Programme',      url: '/settings?tab=pipeline',            keywords: ['pipeline', 'statuts', 'colonnes', 'kanban', 'stages', 'étapes', 'status'], roles: ['admin', 'superadmin'] },
+  { title: 'Lien public et marketplace',  subtitle: 'Paramètres → Programme',      url: '/settings?tab=public-marketplace',  keywords: ['lien public', 'public link', 'marketplace', 'inscription', 'formulaire', 'candidature', 'apply'], roles: ['admin', 'superadmin'] },
+  { title: 'Notifications et emails',     subtitle: 'Paramètres → Préférences',    url: '/settings?tab=notifications',       keywords: ['notifications', 'emails', 'préférences', 'alertes', 'preferences'],     roles: ['admin', 'superadmin'] },
+  { title: 'Intégrations',                subtitle: 'Paramètres → Préférences',    url: '/settings?tab=integrations',        keywords: ['intégrations', 'crm', 'hubspot', 'salesforce', 'webhook', 'api'],       roles: ['admin', 'superadmin'] },
+];
 
 const CATEGORIES = [
+  { key: 'navigation',  icon: Compass,    color: '#0EA5E9' },
   { key: 'referrals',   icon: FileText,   color: '#3B82F6' },
   { key: 'partners',    icon: Users,      color: '#059669' },
   { key: 'commissions', icon: DollarSign, color: '#F59E0B' },
@@ -46,6 +81,8 @@ function useDebounced(value, ms = 300) {
 export default function SearchPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const role = user?.role || 'admin';
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);     // null = before first search, {} = after
   const [loading, setLoading] = useState(false);
@@ -72,15 +109,42 @@ export default function SearchPage() {
     return () => { cancelled = true; };
   }, [debounced]);
 
-  const groups = useMemo(() => {
-    if (!results) return [];
-    return CATEGORIES
-      .map(cat => ({ ...cat, items: results.results?.[cat.key] || [] }))
-      .filter(g => g.items.length > 0);
-  }, [results]);
+  // Local navigation match. Case-insensitive includes against title,
+  // subtitle, and the keyword aliases. Role-gated so partners see
+  // /partner/* destinations and admins see the back-office. Capped
+  // at 8 to avoid drowning the data results below.
+  const navHits = useMemo(() => {
+    const q = debounced.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return NAVIGATION_ITEMS
+      .filter(it => it.roles.includes(role))
+      .filter(it => {
+        if (it.title.toLowerCase().includes(q)) return true;
+        if (it.subtitle && it.subtitle.toLowerCase().includes(q)) return true;
+        return (it.keywords || []).some(k => k.toLowerCase().includes(q));
+      })
+      .slice(0, 8)
+      .map(it => ({
+        id: 'nav-' + it.url,
+        title: it.title,
+        subtitle: it.subtitle,
+        url: it.url,
+      }));
+  }, [debounced, role]);
 
-  const total = results?.total || 0;
-  const showEmpty = results && total === 0 && !loading && debounced.trim().length >= 2;
+  const groups = useMemo(() => {
+    return CATEGORIES
+      .map(cat => {
+        if (cat.key === 'navigation') return { ...cat, items: navHits };
+        return { ...cat, items: results?.results?.[cat.key] || [] };
+      })
+      .filter(g => g.items.length > 0);
+  }, [results, navHits]);
+
+  const total = (results?.total || 0) + navHits.length;
+  // Navigation matches alone are enough to consider the search non-
+  // empty — even if the backend returned zero data hits.
+  const showEmpty = !loading && debounced.trim().length >= 2 && total === 0 && (results !== null || navHits.length === 0);
 
   return (
     <div style={{ maxWidth: 820, margin: '0 auto' }}>

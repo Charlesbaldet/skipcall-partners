@@ -2047,6 +2047,7 @@
     "news": "Actualités",
     "results_count": "{{count}} résultats",
     "shortcut_hint": "Cmd+K",
-    "empty_hint": "Tapez au moins 2 caractères pour lancer la recherche."
+    "empty_hint": "Tapez au moins 2 caractères pour lancer la recherche.",
+    "navigation": "Navigation"
   }
 }

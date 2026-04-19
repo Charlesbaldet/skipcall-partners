@@ -2047,6 +2047,7 @@
     "news": "Nieuws",
     "results_count": "{{count}} resultaten",
     "shortcut_hint": "Cmd+K",
-    "empty_hint": "Typ minstens 2 tekens om te zoeken."
+    "empty_hint": "Typ minstens 2 tekens om te zoeken.",
+    "navigation": "Navigatie"
   }
 }

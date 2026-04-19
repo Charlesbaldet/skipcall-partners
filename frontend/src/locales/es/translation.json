@@ -2047,6 +2047,7 @@
     "news": "Noticias",
     "results_count": "{{count}} resultados",
     "shortcut_hint": "Cmd+K",
-    "empty_hint": "Escribe al menos 2 caracteres para buscar."
+    "empty_hint": "Escribe al menos 2 caracteres para buscar.",
+    "navigation": "Navegación"
   }
 }
