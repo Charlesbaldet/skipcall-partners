@@ -142,7 +142,7 @@ export default function ProgrammePage() {
         isOpen={!!confirmAction}
         title={confirmAction?.kind === 'reset' ? t('programme.reset_confirm') : t('programme.delete_confirm')}
         message={confirmAction?.kind === 'reset' ? t('programme.reset_confirm') : t('programme.delete_confirm')}
-        confirmLabel={confirmAction?.kind === 'reset' ? t('programme.reset') || 'Reset' : t('news.delete') || 'Supprimer'}
+        confirmLabel={confirmAction?.kind === 'reset' ? t('programme.reset') || 'Reset' : t('common.delete')}
         cancelLabel={t('partners.cancel') || 'Annuler'}
         variant="danger"
         onConfirm={runConfirm}

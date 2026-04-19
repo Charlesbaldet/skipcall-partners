@@ -138,7 +138,7 @@ export default function NewsPage() {
         isOpen={!!deleteId}
         title={t('news.delete_confirm') || 'Supprimer'}
         message={t('news.delete_confirm_body') || t('news.delete_confirm')}
-        confirmLabel={t('news.delete') || 'Supprimer'}
+        confirmLabel={t('common.delete')}
         cancelLabel={t('partners.cancel') || 'Annuler'}
         variant="danger"
         onConfirm={confirmRemove}

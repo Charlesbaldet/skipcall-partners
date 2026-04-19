@@ -150,7 +150,7 @@ export default function SuperAdminPage() {
         isOpen={!!deleteBlogId}
         title={t('admin.delete_article_confirm')}
         message={t('admin.delete_article_confirm')}
-        confirmLabel={t('news.delete') || 'Supprimer'}
+        confirmLabel={t('common.delete')}
         cancelLabel={t('partners.cancel') || 'Annuler'}
         variant="danger"
         onConfirm={confirmDeleteBlogPost}
@@ -160,7 +160,7 @@ export default function SuperAdminPage() {
         isOpen={!!forceDeleteTenant}
         title={t('admin.tenant_users_in_use') || 'Force delete'}
         message={forceDeleteTenant ? `${forceDeleteTenant.reason}\n\n${t('admin.tenant_users_in_use') || ''}` : ''}
-        confirmLabel={t('news.delete') || 'Supprimer'}
+        confirmLabel={t('common.delete')}
         cancelLabel={t('partners.cancel') || 'Annuler'}
         variant="danger"
         onConfirm={() => {

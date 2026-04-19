@@ -97,7 +97,7 @@ export default function PipelineStagesEditor() {
         isOpen={!!deleteId}
         title={t('pipeline.delete_stage')}
         message={t('pipeline.confirm_delete')}
-        confirmLabel={t('news.delete') || 'Supprimer'}
+        confirmLabel={t('common.delete')}
         cancelLabel={t('partners.cancel') || 'Annuler'}
         variant="danger"
         onConfirm={handleDelete}

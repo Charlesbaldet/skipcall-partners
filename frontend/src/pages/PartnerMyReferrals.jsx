@@ -53,7 +53,7 @@ export default function PartnerMyReferrals() {
         isOpen={!!deleteId}
         title={t('referrals.delete_title') || t('partnerReferrals.confirm_delete')}
         message={t('partnerReferrals.confirm_delete')}
-        confirmLabel={t('news.delete') || 'Supprimer'}
+        confirmLabel={t('common.delete')}
         cancelLabel={t('partners.cancel') || 'Annuler'}
         variant="danger"
         onConfirm={confirmDelete}
