@@ -404,43 +404,63 @@ export default function Layout({ children }) {
 
         {/* ─── Main nav (sections + items) ─── */}
         <nav style={{ flex: 1, padding: '8px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-          {nav.filter(it => !it.bottom).map((item, i) => {
-            if (item.section) {
-              return (
-                <div key={'sec-' + i} style={s.sectionLabel}>
-                  {item.section}
-                </div>
+          {(() => {
+            // Pre-compute the index of the FIRST nav item whose `to`
+            // matches the current path. We use that as a tie-breaker so
+            // that when two items share a `to` (e.g. partner Dashboard
+            // + Mes referrals both → /partner/referrals), only the
+            // first one lights up — otherwise both would render the
+            // active border at once and the indicator would appear
+            // "stuck" after navigating.
+            const renderable = nav.filter(it => !it.bottom);
+            const currentPath = location.pathname;
+            const firstActiveIdx = renderable.findIndex(it => {
+              if (!it.to) return false;
+              if (it.to.includes('?')) return isItemActive(it);
+              return currentPath === it.to;
+            });
+            return renderable.map((item, i) => {
+              if (item.section) {
+                return (
+                  <div key={'sec-' + i} style={s.sectionLabel}>
+                    {item.section}
+                  </div>
+                );
+              }
+              if (item.divider) return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }}/>;
+              if (item.to === '/applications' && !isAdmin) return null;
+              const badge = getBadge(item);
+              const notifyCount = (item.notifyKeys || []).reduce(
+                (n, k) => n + (unreadByCat[k] || 0), 0
               );
-            }
-            if (item.divider) return <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 16px' }}/>;
-            if (item.to === '/applications' && !isAdmin) return null;
-            const badge = getBadge(item);
-            const notifyCount = (item.notifyKeys || []).reduce(
-              (n, k) => n + (unreadByCat[k] || 0), 0
-            );
-            return (
-              <Fragment key={'nav-' + i + '-' + item.to}>
-                <NavLink
-                  to={item.to}
-                  end={item.to === '/super-admin'}
-                  style={({ isActive }) => ({
-                    ...s.link,
-                    ...(item.to && item.to.includes('?')
-                      ? (isItemActive(item) ? s.activeQueryLink : {})
-                      : (isActive ? s.activeLink : {})),
-                  })}
-                >
-                  <ItemIcon Icon={item.icon} hasDot={notifyCount > 0}/>
-                  <span style={{ flex: 1 }}>{item.label}</span>
-                  {badge > 0 && (
-                    <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
-                      {badge}
-                    </span>
-                  )}
-                </NavLink>
-              </Fragment>
-            );
-          })}
+              const isActive = i === firstActiveIdx;
+              return (
+                <Fragment key={'nav-' + i + '-' + item.to}>
+                  <NavLink
+                    to={item.to}
+                    // Force an exact-match active state by passing our
+                    // own computed flag via `style`; ignore NavLink's
+                    // built-in prefix matching (which was lighting up
+                    // /partner/referrals when on /partner/referrals/123).
+                    end
+                    style={() => ({
+                      ...s.link,
+                      outline: 'none',
+                      ...(isActive ? s.activeLink : {}),
+                    })}
+                  >
+                    <ItemIcon Icon={item.icon} hasDot={notifyCount > 0}/>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {badge > 0 && (
+                      <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
+                        {badge}
+                      </span>
+                    )}
+                  </NavLink>
+                </Fragment>
+              );
+            });
+          })()}
         </nav>
 
         {/* ─── Bottom Notifications row ─── */}
@@ -453,11 +473,12 @@ export default function Layout({ children }) {
             <NavLink
               key={'bot-' + item.to}
               to={item.to}
+              end
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '8px 18px', borderLeft: '2px solid transparent',
                 borderTop: '1px solid rgba(255,255,255,0.06)',
-                textDecoration: 'none',
+                textDecoration: 'none', outline: 'none',
                 fontSize: 13, fontWeight: 500,
                 color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#475569'),
                 background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
