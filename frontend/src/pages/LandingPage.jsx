@@ -11,6 +11,7 @@ function useMobile() {
 }
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Helmet } from 'react-helmet-async';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 
@@ -130,8 +131,19 @@ export default function LandingPage() {
     center:{textAlign:'center',marginBottom:64},
   };
 
+  const _meta_desc = "RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, commissions et performance.";
   return (
     <div style={{fontFamily:'inherit',color:C.s,overflow:'hidden'}}>
+      <Helmet>
+        <title>RefBoost — Transformez vos recommandations en revenus</title>
+        <meta name="description" content={_meta_desc}/>
+        <meta property="og:title" content="RefBoost — Transformez vos recommandations en revenus"/>
+        <meta property="og:description" content={_meta_desc}/>
+        <meta property="og:type" content="website"/>
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:title" content="RefBoost — Transformez vos recommandations en revenus"/>
+        <meta name="twitter:description" content={_meta_desc}/>
+      </Helmet>
       <style>{`
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}

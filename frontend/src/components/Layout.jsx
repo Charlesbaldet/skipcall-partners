@@ -165,11 +165,34 @@ export default function Layout({ children }) {
   }, [location.pathname, user, isSuperAdmin]);
 
   useEffect(() => {
-    if (isSuperAdmin) { document.title = 'RefBoost - Super Admin'; return; }
+    if (isSuperAdmin) { document.title = 'Super Admin — RefBoost'; return; }
+    // Per-route document.title lookup. Falls back to plain "RefBoost"
+    // for routes we haven't tagged. The unread+pending count prefix
+    // (e.g. "(3) Dashboard — RefBoost") still wins over the base
+    // label when there's something to act on.
+    const ROUTE_TITLE_KEYS = {
+      '/dashboard':        'layout.nav.dashboard',
+      '/referrals':        'layout.nav.referrals',
+      '/partners':         'layout.nav.partners',
+      '/applications':     'layout.nav.partners',
+      '/commissions':      'layout.nav.commissions',
+      '/messaging':        'layout.nav.messaging',
+      '/news':             'layout.nav.news',
+      '/programme':        'layout.nav.programme',
+      '/billing':          'layout.nav.billing',
+      '/settings':         'layout.nav.settings',
+      '/notifications':    'layout.nav.notifications',
+      '/partner/referrals':'layout.nav.my_referrals',
+      '/partner/submit':   'layout.nav.submit',
+      '/partner/payments': 'layout.nav.my_payments',
+      '/partner/news':     'layout.nav.news',
+    };
+    const pageKey = ROUTE_TITLE_KEYS[location.pathname];
+    const pageLabel = pageKey ? t(pageKey) : null;
+    const baseTitle = pageLabel ? `${pageLabel} — RefBoost` : 'RefBoost';
     const total = unread + pendingApps;
-    const baseTitle = 'RefBoost';
     document.title = total > 0 ? `(${total}) ${baseTitle}` : baseTitle;
-  }, [unread, pendingApps, isSuperAdmin, tenant]);
+  }, [unread, pendingApps, isSuperAdmin, tenant, location.pathname, t]);
 
   // Close the space switcher dropdown on outside click + Escape.
   const switcherRef = useRef(null);

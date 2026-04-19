@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import api from '../lib/api';
+import { Helmet } from 'react-helmet-async';
 
 const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
@@ -110,6 +111,7 @@ export default function SignupPage() {
 
   return (
     <div style={{ minHeight:'100vh', background:`radial-gradient(ellipse 80% 50% at 50% -10%,${C.p}10,transparent),#fafbfc`, fontFamily:"'Outfit','DM Sans',sans-serif", display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 20px' }}>
+      <Helmet><title>Créer un compte — RefBoost</title></Helmet>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
 
       {/* Logo */}

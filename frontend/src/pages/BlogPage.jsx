@@ -69,7 +69,7 @@ export default function BlogPage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>{`Blog RefBoost — ${t("blog.subtitle")}`}</title>
+        <title>Blog — RefBoost</title>
         <meta name="description" content={t("blog.page_subtitle")} />
         <meta property="og:title" content="Blog RefBoost" />
         <meta property="og:description" content={t("blog.subtitle")} />

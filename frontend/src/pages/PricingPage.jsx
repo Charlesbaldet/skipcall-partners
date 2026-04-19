@@ -131,9 +131,9 @@ export default function PricingPage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>{`${t('pricing.hero_title')} — RefBoost`}</title>
+        <title>{`${t('nav.pricing')} — RefBoost`}</title>
         <meta name="description" content={t('pricing.hero_subtitle')}/>
-        <meta property="og:title" content={`${t('pricing.hero_title')} — RefBoost`}/>
+        <meta property="og:title" content={`${t('nav.pricing')} — RefBoost`}/>
         <meta property="og:description" content={t('pricing.hero_subtitle')}/>
         <meta property="og:type" content="website"/>
         <meta property="og:url" content={SITE + '/pricing'}/>

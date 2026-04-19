@@ -4,6 +4,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import api from '../lib/api';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import { Helmet } from 'react-helmet-async';
 
 // ─── Design tokens (sync avec LandingPage) ───
 const C = {
@@ -125,6 +126,7 @@ export default function LoginPage() {
       background: `radial-gradient(ellipse 80% 60% at 50% -20%,${C.p}12,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,${C.a}08,transparent),${C.bg}`,
       position: 'relative', overflow: 'hidden',
     }}>
+      <Helmet><title>Connexion — RefBoost</title></Helmet>
       
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}

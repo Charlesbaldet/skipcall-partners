@@ -110,7 +110,7 @@ export default function MarketplacePage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>{t("marketplace.helmet_title")}</title>
+        <title>Marketplace — RefBoost</title>
         <meta name="description" content={t("marketplace.subtitle")} />
       </Helmet>
 
