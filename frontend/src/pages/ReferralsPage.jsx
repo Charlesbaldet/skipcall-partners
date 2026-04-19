@@ -276,14 +276,16 @@ export default function ReferralsPage() {
                       <div style={{ marginTop: 10, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
                         <select value={r.status} onChange={e => { e.stopPropagation(); handleStatusChangeFromCard(r.id, e.target.value); }}
                           onClick={e => e.stopPropagation()}
-                          style={{ width: '100%', padding: '4px 6px', borderRadius: 6, border: `1px solid ${sc.color}30`, background: sc.bg, color: sc.color, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
-                          {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                          style={{ width: '100%', padding: '4px 6px', borderRadius: 6, border: `1px solid ${stageColor}30`, background: stageColor + '15', color: stageColor, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
+                          {(stages.length ? stages.map(s => ({ k: s.slug, label: s.name })) : Object.entries(STATUS_CONFIG).map(([k, v]) => ({ k, label: v.label }))).map(({ k, label }) => (
+                            <option key={k} value={k}>{label}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
                   ))}
                   {hasMore && (
-                    <button onClick={() => setKanbanLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
+                    <button onClick={() => setKanbanLimits(prev => ({ ...prev, [stage.id || stage.slug]: limit + 25 }))} style={{
                       padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
                       color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
                     }}>{t('referrals.see_more', { count: allCards.length - limit })}</button>
