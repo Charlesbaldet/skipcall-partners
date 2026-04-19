@@ -233,6 +233,24 @@ class ApiClient {
   createPortal() { return this.request('/billing/portal', { method: 'POST' }); }
   cancelSubscription() { return this.request('/billing/cancel', { method: 'POST' }); }
   reactivateSubscription() { return this.request('/billing/reactivate', { method: 'POST' }); }
+
+  // CRM integrations
+  getCrmIntegrations() { return this.request('/crm/integrations'); }
+  createCrmIntegration(data) { return this.request('/crm/integrations', { method: 'POST', body: JSON.stringify(data) }); }
+  deleteCrmIntegration(id) { return this.request('/crm/integrations/' + id, { method: 'DELETE' }); }
+  testCrmWebhook(id) { return this.request('/crm/integrations/' + id + '/test', { method: 'POST' }); }
+  getCrmMappings(id) { return this.request('/crm/mappings/' + id); }
+  updateCrmMappings(id, data) { return this.request('/crm/mappings/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
+  syncReferralToCrm(referralId) { return this.request('/crm/sync/' + referralId, { method: 'POST' }); }
+  getCrmSyncLog() { return this.request('/crm/sync/log'); }
+  getHubspotAuthUrl() { return this.request('/crm/hubspot/auth'); }
+  disconnectHubspot() { return this.request('/crm/hubspot/disconnect', { method: 'POST' }); }
+  getSalesforceAuthUrl() { return this.request('/crm/salesforce/auth'); }
+  disconnectSalesforce() { return this.request('/crm/salesforce/disconnect', { method: 'POST' }); }
+  getHubspotFields() { return this.request('/crm/hubspot/fields'); }
+  getHubspotPipelines() { return this.request('/crm/hubspot/pipelines'); }
+  getSalesforceFields() { return this.request('/crm/salesforce/fields'); }
+  getSalesforceStages() { return this.request('/crm/salesforce/stages'); }
   getInvoices() { return this.request('/billing/invoices'); }
 }
 

@@ -169,7 +169,10 @@ export default function ReferralsPage() {
                 <tr key={r.id} onClick={() => openDetail(r)} style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background 0.1s' }}
                   onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'} onMouseLeave={e => e.currentTarget.style.background = ''}>
                   <td style={{ padding: '13px 16px' }}>
-                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{r.prospect_name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontWeight: 600, color: '#0f172a' }}>{r.prospect_name}</span>
+                      <CrmSyncBadge referral={r}/>
+                    </div>
                     <div style={{ color: '#94a3b8', fontSize: 12 }}>{r.prospect_company}</div>
                   </td>
                   <td style={{ padding: '13px 16px', color: '#475569' }}>{r.partner_name}</td>
@@ -226,7 +229,10 @@ export default function ReferralsPage() {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{r.prospect_name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.prospect_name}</div>
+                          <CrmSyncBadge referral={r}/>
+                        </div>
                         <GripVertical size={14} color="#cbd5e1" />
                       </div>
                       {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{r.prospect_company}</div>}
@@ -454,4 +460,27 @@ function InfoRow({ label, value }) {
 
 function Select({ value, onChange, children }) {
   return (<select value={value} onChange={e => onChange(e.target.value)} style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#334155', background: '#fff', cursor: 'pointer' }}>{children}</select>);
+}
+
+// Small badge next to a referral's prospect name when it's been
+// pushed to a CRM. crm_deal_id is set by the backend after a
+// successful sync; crm_synced_at carries the timestamp.
+function CrmSyncBadge({ referral }) {
+  if (!referral?.crm_deal_id) return null;
+  const date = referral.crm_synced_at ? new Date(referral.crm_synced_at).toLocaleString() : '';
+  return (
+    <span
+      title={`Synced with CRM${date ? ' — ' + date : ''}`}
+      aria-label="CRM synced"
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 16, height: 16, borderRadius: '50%',
+        background: '#f0fdf4', color: '#059669',
+        fontSize: 9, fontWeight: 800, flexShrink: 0,
+        border: '1px solid #bbf7d0',
+      }}
+    >
+      ✓
+    </span>
+  );
 }

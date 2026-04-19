@@ -7,6 +7,7 @@ const resend = require('../services/resend');
 const templates = require('../services/email-templates');
 const notify = require('../services/notifyService');
 const { sendEmail, referralStatusChangedTpl, newCommissionAvailableTpl, dealWonTpl } = require('../services/emailService');
+const crmService = require('../services/crmService');
 
 const router = express.Router();
 
@@ -258,6 +259,11 @@ Voir : ${_dashUrl}`,
     }, { includeCommercial: true }).catch(() => {});
 
     res.status(201).json({ referral });
+
+    // Fire-and-forget CRM push. The crmService swallows its own
+    // errors and writes them to crm_sync_log; we never want a CRM
+    // outage to surface as a 500 on referral creation.
+    crmService.pushReferralToCRM({ ...referral, partner_name: partner.name }, req.tenantId).catch(() => {});
   } catch (err) {
     console.error('Create referral error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -512,6 +518,11 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
     );
 
     res.json({ referral: updated });
+
+    // Fire-and-forget CRM sync — push status / value changes to the
+    // wired CRM (HubSpot / Salesforce / webhook). Errors land in
+    // crm_sync_log; never blocks the response.
+    crmService.pushReferralToCRM(updated, req.tenantId).catch(() => {});
 
     // Fire-and-forget: send 'lead won' email to partner user(s) if status just transitioned to 'won'
     if (updates.status === 'won' && current.status !== 'won') {

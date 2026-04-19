@@ -525,25 +525,15 @@ function IntegrationsTab() {
 
   const copyToClipboard = (tx) => { navigator.clipboard.writeText(tx); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
-  const CRM_CARDS = [
-    { name: 'HubSpot', desc: t('settings.hubspot_desc'), color: '#ff7a59', soon: true },
-    { name: 'Pipedrive', desc: t('settings.pipedrive_desc'), color: '#017737', soon: true },
-  ];
-
   return (
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>{t('settings.tab_integrations')}</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 28 }}>
-        {CRM_CARDS.map(crm => (
-          <div key={crm.name} style={{ padding: 20, borderRadius: 14, border: '1px solid #e2e8f0', background: '#fff', opacity: 0.7 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: crm.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, color: crm.color }}>{crm.name[0]}</div>
-              <div><div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{crm.name}</div>{crm.soon && <span style={{ fontSize: 10, fontWeight: 600, color: '#f59e0b', background: '#fffbeb', padding: '2px 6px', borderRadius: 4 }}>{t('settings.coming_soon')}</span>}</div>
-            </div>
-            <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.5 }}>{crm.desc}</p>
-          </div>
-        ))}
-      </div>
+
+      {/* CRM integrations (HubSpot / Salesforce / Webhook). Lives in
+          its own component so the existing Open API block below stays
+          unchanged. */}
+      <CrmIntegrations />
+      <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}><Key size={16} color="#6366f1" /><h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Open API</h4></div>
       <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>{t('settings.api_desc')} <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>POST /api/v1/referrals</code> · <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>GET /api/v1/referrals</code></p>
@@ -590,6 +580,386 @@ function IntegrationsTab() {
     </div>
   );
 }
+
+// ═══ CRM INTEGRATIONS (HubSpot / Salesforce / Webhook) ═══
+//
+// Business-plan only — the GET /crm/integrations endpoint also
+// returns the tenant plan so we can render the upgrade prompt without
+// a second round-trip.
+function CrmIntegrations() {
+  const { t } = useTranslation();
+  const [data, setData] = useState({ integrations: [], plan: 'starter' });
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [testMsg, setTestMsg] = useState('');
+  const [err, setErr] = useState('');
+  const [mappingFor, setMappingFor] = useState(null); // integration object
+  const [syncLog, setSyncLog] = useState([]);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const d = await api.getCrmIntegrations();
+      setData(d);
+      const wh = (d.integrations || []).find(i => i.provider === 'webhook');
+      if (wh && wh.webhook_url) setWebhookUrl(wh.webhook_url);
+      const log = await api.getCrmSyncLog().catch(() => ({ log: [] }));
+      setSyncLog(log.log || []);
+    } catch (e) {
+      setErr(e.message);
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const isBusiness = data.plan === 'business';
+  const byProvider = (p) => (data.integrations || []).find(i => i.provider === p);
+
+  const connectHubspot = async () => {
+    setBusy(true); setErr('');
+    try {
+      const { url } = await api.getHubspotAuthUrl();
+      if (url) window.location.href = url;
+    } catch (e) {
+      if (e?.data?.error === 'plan_upgrade_required') setErr(t('crm.upgrade_required_body'));
+      else setErr(e.message);
+    } finally { setBusy(false); }
+  };
+  const disconnectHubspot = async () => { setBusy(true); try { await api.disconnectHubspot(); load(); } catch (e) { setErr(e.message); } setBusy(false); };
+
+  const connectSalesforce = async () => {
+    setBusy(true); setErr('');
+    try {
+      const { url } = await api.getSalesforceAuthUrl();
+      if (url) window.location.href = url;
+    } catch (e) {
+      if (e?.data?.error === 'plan_upgrade_required') setErr(t('crm.upgrade_required_body'));
+      else setErr(e.message);
+    } finally { setBusy(false); }
+  };
+  const disconnectSalesforce = async () => { setBusy(true); try { await api.disconnectSalesforce(); load(); } catch (e) { setErr(e.message); } setBusy(false); };
+
+  const saveWebhook = async () => {
+    setBusy(true); setErr('');
+    try {
+      await api.createCrmIntegration({ provider: 'webhook', webhook_url: webhookUrl });
+      load();
+    } catch (e) {
+      if (e?.data?.error === 'plan_upgrade_required') setErr(t('crm.upgrade_required_body'));
+      else setErr(e.message);
+    } finally { setBusy(false); }
+  };
+  const testWebhook = async () => {
+    const wh = byProvider('webhook');
+    if (!wh) return;
+    setTestMsg('…');
+    try {
+      const r = await api.testCrmWebhook(wh.id);
+      setTestMsg(r.ok ? t('crm.test_ok') : t('crm.test_failed'));
+    } catch (e) {
+      setTestMsg(t('crm.test_failed'));
+    }
+    setTimeout(() => setTestMsg(''), 4000);
+  };
+  const removeIntegration = async (id) => {
+    setBusy(true);
+    try { await api.deleteCrmIntegration(id); load(); }
+    catch (e) { setErr(e.message); }
+    finally { setBusy(false); }
+  };
+
+  if (loading) return <div style={{ color: '#94a3b8', padding: 16 }}>{t('settings.loading')}</div>;
+
+  // Upgrade prompt when not on Business.
+  if (!isBusiness) {
+    return (
+      <div style={{ padding: 24, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 14, marginBottom: 24 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>
+          {t('crm.upgrade_required_title')}
+        </div>
+        <p style={{ color: '#92400e', fontSize: 14, lineHeight: 1.55, margin: '0 0 16px' }}>
+          {t('crm.upgrade_required_body')}
+        </p>
+        <a href="/billing" style={{ display: 'inline-block', padding: '10px 18px', borderRadius: 10, background: '#059669', color: '#fff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+          {t('crm.upgrade_cta')} →
+        </a>
+      </div>
+    );
+  }
+
+  const hubspot = byProvider('hubspot');
+  const salesforce = byProvider('salesforce');
+  const webhook = byProvider('webhook');
+
+  const Card = ({ title, desc, color, children, status }) => (
+    <div style={{ padding: 18, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: color + '15', color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800 }}>
+            {title[0]}
+          </div>
+          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{title}</div>
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: status ? '#f0fdf4' : '#f1f5f9', color: status ? '#059669' : '#64748b' }}>
+          {status ? t('crm.connected') : t('crm.not_connected')}
+        </span>
+      </div>
+      <p style={{ margin: 0, color: '#64748b', fontSize: 12, lineHeight: 1.55 }}>{desc}</p>
+      <div style={{ marginTop: 'auto' }}>{children}</div>
+    </div>
+  );
+
+  return (
+    <div>
+      <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Plug size={16} color="#6366f1"/> {t('crm.integrations')}
+      </h4>
+      {err && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{err}</div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 18 }}>
+        <Card title={t('crm.hubspot')} desc={t('crm.hubspot_desc')} color="#ff7a59" status={hubspot?.is_active}>
+          {hubspot?.is_active ? (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={() => setMappingFor(hubspot)} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
+              <button onClick={disconnectHubspot} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
+            </div>
+          ) : (
+            <button onClick={connectHubspot} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
+          )}
+        </Card>
+        <Card title={t('crm.salesforce')} desc={t('crm.salesforce_desc')} color="#00a1e0" status={salesforce?.is_active}>
+          {salesforce?.is_active ? (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={() => setMappingFor(salesforce)} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
+              <button onClick={disconnectSalesforce} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
+            </div>
+          ) : (
+            <button onClick={connectSalesforce} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
+          )}
+        </Card>
+        <Card title={t('crm.webhook')} desc={t('crm.webhook_desc')} color="#6366f1" status={webhook?.is_active}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <input
+              value={webhookUrl}
+              onChange={e => setWebhookUrl(e.target.value)}
+              placeholder={t('crm.webhook_url_ph')}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={saveWebhook} disabled={busy || !webhookUrl} style={btnPrimary}>{t('crm.save_webhook')}</button>
+              {webhook && <button onClick={testWebhook} disabled={busy} style={btnSecondary}>{t('crm.test_webhook')}</button>}
+              {webhook && <button onClick={() => removeIntegration(webhook.id)} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>}
+            </div>
+            {testMsg && <div style={{ fontSize: 11, color: testMsg.startsWith('✓') ? '#059669' : '#b91c1c', fontWeight: 600 }}>{testMsg}</div>}
+          </div>
+        </Card>
+      </div>
+
+      {mappingFor && (
+        <CrmMappingModal integration={mappingFor} onClose={() => { setMappingFor(null); load(); }}/>
+      )}
+
+      {/* Sync log */}
+      <h5 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '20px 0 10px' }}>{t('crm.sync_log')}</h5>
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 4 }}>
+        {syncLog.length === 0
+          ? <div style={{ color: '#94a3b8', fontSize: 12, padding: 14, textAlign: 'center' }}>{t('crm.no_sync_yet')}</div>
+          : (
+            <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+              {syncLog.map(row => (
+                <div key={row.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '8px 12px', fontSize: 12, borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', overflow: 'hidden', minWidth: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: row.status === 'success' ? '#f0fdf4' : '#fef2f2', color: row.status === 'success' ? '#059669' : '#b91c1c', textTransform: 'uppercase' }}>
+                      {row.action}
+                    </span>
+                    <span style={{ color: '#0f172a', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.prospect_name || '—'}</span>
+                    <span style={{ color: '#94a3b8' }}>· {row.provider}</span>
+                  </div>
+                  <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{fmtDate(row.created_at)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Field + stage mapping modal ────────────────────────────────────
+const REFBOOST_FIELDS = ['prospect_name', 'prospect_company', 'email', 'phone', 'deal_value', 'notes'];
+const REFBOOST_STATUSES = ['new', 'contacted', 'qualified', 'proposal', 'meeting', 'won', 'lost'];
+
+function CrmMappingModal({ integration, onClose }) {
+  const { t } = useTranslation();
+  const [fields, setFields] = useState([]);
+  const [stages, setStages] = useState([]);
+  const [crmFields, setCrmFields] = useState([]);
+  const [crmStages, setCrmStages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const m = await api.getCrmMappings(integration.id);
+        // Initialise mapping rows for every RefBoost field/status, even
+        // those without an existing CRM mapping yet.
+        const fmap = new Map((m.fields || []).map(f => [f.refboost_field, f.crm_field]));
+        const smap = new Map((m.stages || []).map(s => [s.refboost_status, s.crm_stage]));
+        setFields(REFBOOST_FIELDS.map(f => ({ refboost_field: f, crm_field: fmap.get(f) || '' })));
+        setStages(REFBOOST_STATUSES.map(s => ({ refboost_status: s, crm_stage: smap.get(s) || '' })));
+
+        if (integration.provider === 'hubspot') {
+          const [f, p] = await Promise.all([api.getHubspotFields(), api.getHubspotPipelines()]);
+          setCrmFields(f.fields || []);
+          // Flatten pipelines → stages list (use first pipeline by default).
+          const allStages = [];
+          for (const pl of p.pipelines || []) {
+            for (const st of pl.stages || []) allStages.push({ id: st.id, label: pl.label + ' · ' + st.label });
+          }
+          setCrmStages(allStages);
+        } else if (integration.provider === 'salesforce') {
+          const [f, s] = await Promise.all([api.getSalesforceFields(), api.getSalesforceStages()]);
+          setCrmFields(f.fields || []);
+          setCrmStages(s.stages || []);
+        }
+      } catch (e) {
+        // Best-effort — modal still works, dropdowns just become empty
+        console.error('[crm.mapping.load]', e);
+      } finally { setLoading(false); }
+    })();
+  }, [integration.id, integration.provider]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.updateCrmMappings(integration.id, {
+        fields: fields.filter(f => f.crm_field),
+        stages: stages.filter(s => s.crm_stage),
+      });
+      setSavedMsg(t('crm.saved'));
+      setTimeout(() => setSavedMsg(''), 2000);
+    } catch (e) {
+      alert(e.message);
+    } finally { setSaving(false); }
+  };
+
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 640, maxHeight: '88vh', overflowY: 'auto', padding: 24, boxShadow: '0 25px 80px rgba(15,23,42,0.25)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+            {t('crm.configure')} — {t('crm.' + integration.provider)}
+          </h3>
+          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <X size={16}/>
+          </button>
+        </div>
+
+        {loading ? <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>…</div> : (
+          <>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('crm.field_mappings')}
+            </h4>
+            <table style={{ width: '100%', marginBottom: 20 }}>
+              <thead>
+                <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_field')}</th>
+                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_field')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fields.map((row, i) => (
+                  <tr key={row.refboost_field}>
+                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t('crm.field_' + row.refboost_field)}</td>
+                    <td style={{ padding: '4px 8px' }}>
+                      {crmFields.length > 0 ? (
+                        <select
+                          value={row.crm_field}
+                          onChange={e => setFields(f => f.map((x, j) => j === i ? { ...x, crm_field: e.target.value } : x))}
+                          style={inp}
+                        >
+                          <option value="">{t('crm.select_field')}</option>
+                          {crmFields.map(c => <option key={c.name} value={c.name}>{c.label || c.name}</option>)}
+                        </select>
+                      ) : (
+                        <input
+                          value={row.crm_field}
+                          onChange={e => setFields(f => f.map((x, j) => j === i ? { ...x, crm_field: e.target.value } : x))}
+                          placeholder={t('crm.crm_field')}
+                          style={inp}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('crm.stage_mappings')}
+            </h4>
+            <table style={{ width: '100%', marginBottom: 20 }}>
+              <thead>
+                <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_status')}</th>
+                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_stage')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stages.map((row, i) => (
+                  <tr key={row.refboost_status}>
+                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t('crm.status_' + row.refboost_status)}</td>
+                    <td style={{ padding: '4px 8px' }}>
+                      {crmStages.length > 0 ? (
+                        <select
+                          value={row.crm_stage}
+                          onChange={e => setStages(s => s.map((x, j) => j === i ? { ...x, crm_stage: e.target.value } : x))}
+                          style={inp}
+                        >
+                          <option value="">{t('crm.select_field')}</option>
+                          {crmStages.map(c => <option key={c.id} value={c.id}>{c.label || c.id}</option>)}
+                        </select>
+                      ) : (
+                        <input
+                          value={row.crm_stage}
+                          onChange={e => setStages(s => s.map((x, j) => j === i ? { ...x, crm_stage: e.target.value } : x))}
+                          placeholder={t('crm.crm_stage')}
+                          style={inp}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center' }}>
+              {savedMsg && <span style={{ color: '#059669', fontSize: 12, fontWeight: 600 }}>{savedMsg}</span>}
+              <button onClick={onClose} disabled={saving} style={btnSecondary}>{t('settings.cancel')}</button>
+              <button onClick={save} disabled={saving} style={btnPrimary}>{saving ? '…' : t('crm.save_mappings')}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const btnPrimary = {
+  padding: '8px 14px', borderRadius: 8, border: 'none',
+  background: 'linear-gradient(135deg, #059669, #10b981)',
+  color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+};
+const btnSecondary = {
+  padding: '8px 14px', borderRadius: 8, border: '1.5px solid #e2e8f0',
+  background: '#fff', color: '#0f172a', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+};
 
 // ═══ LIEN PUBLIC ═══
 function PublicLinkTab() {
