@@ -174,7 +174,7 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
-            {[['nav.marketplace','/marketplace'],['nav.pricing','#tarifs'],['nav.testimonials','#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+            {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} style={{color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,cursor:'pointer',transition:'color .2s'}} onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>
                 {t(key)}
               </a>
@@ -197,7 +197,7 @@ export default function LandingPage() {
               ))}
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:2,marginTop:16}}>
-              {[['nav.marketplace','/marketplace'],['nav.pricing','/#tarifs'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+              {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
                 <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:'#0f172a',textDecoration:'none'}}>{t(key)}</a>
               ))}
             </div>
@@ -406,6 +406,16 @@ export default function LandingPage() {
                 </div>
               );
             })}
+          </div>
+          {/* Bridge to the dedicated /pricing page with the full table. */}
+          <div style={{textAlign:'center',marginTop:40}}>
+            <a
+              href="/pricing"
+              onClick={e=>{e.preventDefault();navigate('/pricing');}}
+              style={{color:C.p,fontWeight:700,fontSize:15,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,cursor:'pointer'}}
+            >
+              {t('pricing.compare_all')} →
+            </a>
           </div>
         </div>
       </section>

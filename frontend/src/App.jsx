@@ -35,6 +35,7 @@ import NewsPage from './pages/NewsPage.jsx';
 import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import BillingPage from './pages/BillingPage.jsx';
+import PricingPage from './pages/PricingPage.jsx';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -62,6 +63,7 @@ function AppRoutes() {
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
