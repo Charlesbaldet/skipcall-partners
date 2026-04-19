@@ -115,6 +115,68 @@ router.post('/', authenticate, tenantScope, authorize('admin'), async (req, res)
   }
 });
 
+// ─── PUT /api/pipeline-stages/reorder ────────────────────────────────
+// MUST be declared BEFORE the `/:id` route below — otherwise Express
+// matches `/reorder` as `:id='reorder'` and the generic update handler
+// runs (returning `{ stage: ... }` instead of `{ stages: [...] }`,
+// which would leave the client's `stages` state undefined and crash
+// the Kanban next render).
+//
+// Accepts `{ stages: [{id, position}, ...] }`. System stages snap to
+// the last two positions regardless of what the client submitted —
+// "Gagné" and "Perdu" must always close the pipeline.
+router.put('/reorder', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  const client = await getClient();
+  try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+    const { stages } = req.body || {};
+    if (!Array.isArray(stages)) return res.status(400).json({ error: 'stages array required' });
+    await client.query('BEGIN');
+    // Load authoritative rows.
+    const { rows: all } = await client.query(
+      'SELECT id, is_system, is_won, is_lost FROM pipeline_stages WHERE tenant_id = $1',
+      [req.tenantId]
+    );
+    const byId = new Map(all.map(s => [s.id, s]));
+    // Separate system + user stages.
+    const user = [];
+    const sysWon = [];
+    const sysLost = [];
+    for (const s of stages) {
+      const row = byId.get(s.id);
+      if (!row) continue;
+      if (row.is_won) sysWon.push(row);
+      else if (row.is_lost) sysLost.push(row);
+      else user.push(row);
+    }
+    // Position user stages in the order they arrived.
+    let pos = 0;
+    for (const s of user) {
+      await client.query('UPDATE pipeline_stages SET position = $1 WHERE id = $2', [pos++, s.id]);
+    }
+    // Won → position (N-2), Lost → (N-1). If either is missing, skip.
+    for (const s of sysWon) {
+      await client.query('UPDATE pipeline_stages SET position = $1 WHERE id = $2', [pos++, s.id]);
+    }
+    for (const s of sysLost) {
+      await client.query('UPDATE pipeline_stages SET position = $1 WHERE id = $2', [pos++, s.id]);
+    }
+    await client.query('COMMIT');
+    const { rows } = await query(
+      `SELECT id, name, slug, color, position, is_system, is_won, is_lost
+         FROM pipeline_stages WHERE tenant_id = $1 ORDER BY position ASC`,
+      [req.tenantId]
+    );
+    res.json({ stages: rows });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('[pipeline-stages.reorder] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    client.release();
+  }
+});
+
 // ─── PUT /api/pipeline-stages/:id ────────────────────────────────────
 // Renames + color + position updates. Intentionally ignores is_system,
 // is_won, is_lost on the body — those can only be set by the seed.
@@ -190,62 +252,6 @@ router.delete('/:id', authenticate, tenantScope, authorize('admin'), async (req,
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     console.error('[pipeline-stages.delete] error:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
-  } finally {
-    client.release();
-  }
-});
-
-// ─── PUT /api/pipeline-stages/reorder ────────────────────────────────
-// Accepts `{ stages: [{id, position}, ...] }`. System stages snap to
-// the last two positions regardless of what the client requested —
-// "Gagné" and "Perdu" must always close the pipeline.
-router.put('/reorder', authenticate, tenantScope, authorize('admin'), async (req, res) => {
-  const client = await getClient();
-  try {
-    if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
-    const { stages } = req.body || {};
-    if (!Array.isArray(stages)) return res.status(400).json({ error: 'stages array required' });
-    await client.query('BEGIN');
-    // Load authoritative rows.
-    const { rows: all } = await client.query(
-      'SELECT id, is_system, is_won, is_lost FROM pipeline_stages WHERE tenant_id = $1',
-      [req.tenantId]
-    );
-    const byId = new Map(all.map(s => [s.id, s]));
-    // Separate system + user stages.
-    const user = [];
-    const sysWon = [];
-    const sysLost = [];
-    for (const s of stages) {
-      const row = byId.get(s.id);
-      if (!row) continue;
-      if (row.is_won) sysWon.push(row);
-      else if (row.is_lost) sysLost.push(row);
-      else user.push(row);
-    }
-    // Position user stages in the order they arrived.
-    let pos = 0;
-    for (const s of user) {
-      await client.query('UPDATE pipeline_stages SET position = $1 WHERE id = $2', [pos++, s.id]);
-    }
-    // Won → position (N-2), Lost → (N-1). If either is missing, skip.
-    for (const s of sysWon) {
-      await client.query('UPDATE pipeline_stages SET position = $1 WHERE id = $2', [pos++, s.id]);
-    }
-    for (const s of sysLost) {
-      await client.query('UPDATE pipeline_stages SET position = $1 WHERE id = $2', [pos++, s.id]);
-    }
-    await client.query('COMMIT');
-    const { rows } = await query(
-      `SELECT id, name, slug, color, position, is_system, is_won, is_lost
-         FROM pipeline_stages WHERE tenant_id = $1 ORDER BY position ASC`,
-      [req.tenantId]
-    );
-    res.json({ stages: rows });
-  } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
-    console.error('[pipeline-stages.reorder] error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     client.release();

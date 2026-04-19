@@ -74,9 +74,19 @@ export default function PipelineStagesEditor() {
     setStages(reordered);
     setDraggedId(null);
     try {
-      const { stages: fresh } = await api.reorderPipelineStages(reordered.map((s, i) => ({ id: s.id, position: i })));
-      setStages(fresh);
-    } catch (e) { setMsg({ type: 'error', text: e.message }); load(); }
+      const resp = await api.reorderPipelineStages(reordered.map((s, i) => ({ id: s.id, position: i })));
+      // Only adopt the server response when it's actually a stages
+      // array — otherwise keep the optimistic state so we never blow
+      // stages away to `undefined` (which would crash the next render).
+      if (Array.isArray(resp?.stages)) {
+        setStages(resp.stages);
+      } else {
+        load();
+      }
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message });
+      load();
+    }
   };
 
   if (loading) return <div style={{ color: '#94a3b8', padding: 12 }}>{t('settings.loading')}</div>;
