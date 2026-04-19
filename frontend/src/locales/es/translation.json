@@ -2010,5 +2010,28 @@
     "status_meeting": "Reunión",
     "status_won": "Ganado",
     "status_lost": "Perdido"
+  },
+  "pipeline": {
+    "stages": "Etapas del pipeline",
+    "stages_desc": "Personaliza las columnas de tu Kanban. «Ganado» y «Perdido» son obligatorias y no pueden eliminarse.",
+    "add_stage": "Añadir etapa",
+    "edit_stage": "Editar etapa",
+    "delete_stage": "Eliminar etapa",
+    "stage_name": "Nombre de la etapa",
+    "stage_name_ph": "Ej. Reunión",
+    "color": "Color",
+    "reorder": "Reordenar",
+    "save_stages": "Guardar",
+    "system_stage_warning": "Esta etapa es necesaria para la automatización de comisiones y no puede eliminarse",
+    "won_stage_info": "Cuando un referral llega a esta etapa, se crea automáticamente una comisión",
+    "lost_stage_info": "Cuando un referral llega a esta etapa, se marca como perdido",
+    "cannot_delete_only": "No se puede eliminar la única etapa restante",
+    "confirm_delete": "¿Eliminar esta etapa? Los referrals se moverán a la etapa anterior.",
+    "default_new": "Nuevo",
+    "default_contacted": "Contactado",
+    "default_qualified": "Calificado",
+    "default_proposal": "Propuesta",
+    "default_won": "Ganado",
+    "default_lost": "Perdido"
   }
 }

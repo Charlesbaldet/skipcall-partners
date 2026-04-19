@@ -2010,5 +2010,28 @@
     "status_meeting": "Riunione",
     "status_won": "Vinto",
     "status_lost": "Perso"
+  },
+  "pipeline": {
+    "stages": "Fasi del pipeline",
+    "stages_desc": "Personalizza le colonne del tuo Kanban. «Vinto» e «Perso» sono obbligatorie e non possono essere eliminate.",
+    "add_stage": "Aggiungi fase",
+    "edit_stage": "Modifica fase",
+    "delete_stage": "Elimina fase",
+    "stage_name": "Nome della fase",
+    "stage_name_ph": "Es. Riunione",
+    "color": "Colore",
+    "reorder": "Riordina",
+    "save_stages": "Salva",
+    "system_stage_warning": "Questa fase è necessaria per l'automazione delle commissioni e non può essere eliminata",
+    "won_stage_info": "Quando un referral raggiunge questa fase, viene creata automaticamente una commissione",
+    "lost_stage_info": "Quando un referral raggiunge questa fase, viene segnato come perso",
+    "cannot_delete_only": "Impossibile eliminare l'unica fase rimasta",
+    "confirm_delete": "Eliminare questa fase? I referral verranno spostati alla fase precedente.",
+    "default_new": "Nuovo",
+    "default_contacted": "Contattato",
+    "default_qualified": "Qualificato",
+    "default_proposal": "Proposta",
+    "default_won": "Vinto",
+    "default_lost": "Perso"
   }
 }

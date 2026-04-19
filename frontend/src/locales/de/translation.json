@@ -2010,5 +2010,28 @@
     "status_meeting": "Termin",
     "status_won": "Gewonnen",
     "status_lost": "Verloren"
+  },
+  "pipeline": {
+    "stages": "Pipeline-Stages",
+    "stages_desc": "Passe deine Kanban-Spalten an. „Gewonnen“ und „Verloren“ sind Pflicht und können nicht gelöscht werden.",
+    "add_stage": "Stage hinzufügen",
+    "edit_stage": "Stage bearbeiten",
+    "delete_stage": "Stage löschen",
+    "stage_name": "Name der Stage",
+    "stage_name_ph": "z.B. Termin",
+    "color": "Farbe",
+    "reorder": "Neu anordnen",
+    "save_stages": "Speichern",
+    "system_stage_warning": "Diese Stage ist für die Provisionsautomatik erforderlich und kann nicht gelöscht werden",
+    "won_stage_info": "Wenn ein Referral diese Stage erreicht, wird automatisch eine Provision erstellt",
+    "lost_stage_info": "Wenn ein Referral diese Stage erreicht, wird es als verloren markiert",
+    "cannot_delete_only": "Die einzige verbleibende Stage kann nicht gelöscht werden",
+    "confirm_delete": "Diese Stage löschen? Referrals werden zur vorherigen Stage verschoben.",
+    "default_new": "Neu",
+    "default_contacted": "Kontaktiert",
+    "default_qualified": "Qualifiziert",
+    "default_proposal": "Angebot",
+    "default_won": "Gewonnen",
+    "default_lost": "Verloren"
   }
 }

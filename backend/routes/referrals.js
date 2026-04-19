@@ -182,17 +182,30 @@ router.post('/', [
       return res.status(400).json({ error: 'Partner ID requis' });
     }
 
+    // Default new referrals to the first pipeline stage (position 0)
+    // for this tenant so the Kanban has a home for them.
+    let defaultStageId = null;
+    if (req.tenantId) {
+      try {
+        const { rows: sr } = await query(
+          'SELECT id FROM pipeline_stages WHERE tenant_id = $1 ORDER BY position ASC LIMIT 1',
+          [req.tenantId]
+        );
+        defaultStageId = sr[0]?.id || null;
+      } catch (e) { /* stages may not exist yet — column allows NULL */ }
+    }
+
     // INSERT with tenant_id
     const { rows: [referral] } = await query(
       `INSERT INTO referrals
         (partner_id, submitted_by, prospect_name, prospect_email,
          prospect_phone, prospect_company, prospect_role,
-         recommendation_level, notes, tenant_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         recommendation_level, notes, tenant_id, stage_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [partnerId, req.user.id, prospect_name, prospect_email,
        prospect_phone, prospect_company, prospect_role,
-       recommendation_level, notes, req.tenantId || null]
+       recommendation_level, notes, req.tenantId || null, defaultStageId]
     );
 
     // Log activity
@@ -274,7 +287,7 @@ Voir : ${_dashUrl}`,
 router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, res) => {
   const client = await getClient();
   try {
-    const { status, deal_value, assigned_to, notes, lost_reason, engagement } = req.body;
+    let { status, stage_id, deal_value, assigned_to, notes, lost_reason, engagement } = req.body;
 
     // Get current state (with tenant check)
     let selectQuery = 'SELECT * FROM referrals WHERE id = $1';
@@ -289,6 +302,27 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
     if (!current) {
       client.release();
       return res.status(404).json({ error: 'Referral introuvable' });
+    }
+
+    // Resolve stage_id → derive canonical status so all the legacy
+    // commission/email/notification hooks below keep working. When
+    // the Kanban drops a card onto a new column it sends { stage_id },
+    // not { status }. Stages carry is_won / is_lost flags; everything
+    // else stays on 'contacted'/'qualified'/'new'/'proposal' etc.
+    if (stage_id) {
+      const { rows: [s] } = await client.query(
+        'SELECT slug, is_won, is_lost FROM pipeline_stages WHERE id = $1 AND tenant_id = $2',
+        [stage_id, req.tenantId || current.tenant_id]
+      );
+      if (!s) {
+        client.release();
+        return res.status(400).json({ error: 'stage_id introuvable' });
+      }
+      // Map flags → legacy status so commission creation (gated on
+      // status === 'won') still fires via the existing code path.
+      if (!status) {
+        status = s.is_won ? 'won' : s.is_lost ? 'lost' : s.slug;
+      }
     }
 
     // `deal_value` is only in req.body when the client edits that field
@@ -313,6 +347,9 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       if (['won', 'lost'].includes(status)) {
         updates.closed_at = new Date().toISOString();
       }
+    }
+    if (stage_id && stage_id !== current.stage_id) {
+      updates.stage_id = stage_id;
     }
 
     if (deal_value !== undefined && deal_value !== current.deal_value) {

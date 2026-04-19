@@ -2010,5 +2010,28 @@
     "status_meeting": "Meeting",
     "status_won": "Won",
     "status_lost": "Lost"
+  },
+  "pipeline": {
+    "stages": "Pipeline stages",
+    "stages_desc": "Customize your Kanban columns. \"Won\" and \"Lost\" are required and cannot be deleted.",
+    "add_stage": "Add a stage",
+    "edit_stage": "Edit stage",
+    "delete_stage": "Delete stage",
+    "stage_name": "Stage name",
+    "stage_name_ph": "e.g. Meeting",
+    "color": "Color",
+    "reorder": "Reorder",
+    "save_stages": "Save",
+    "system_stage_warning": "This stage is required for commission automation and cannot be deleted",
+    "won_stage_info": "When a referral reaches this stage, a commission is automatically created",
+    "lost_stage_info": "When a referral reaches this stage, it's marked as lost",
+    "cannot_delete_only": "Cannot delete the only remaining stage",
+    "confirm_delete": "Delete this stage? Referrals will be moved to the previous stage.",
+    "default_new": "New",
+    "default_contacted": "Contacted",
+    "default_qualified": "Qualified",
+    "default_proposal": "Proposal",
+    "default_won": "Won",
+    "default_lost": "Lost"
   }
 }

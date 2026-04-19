@@ -381,6 +381,13 @@ router.post('/signup', [
       "INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color) VALUES ($1, $2, '#6366f1', '#0f172a', '#f97316') RETURNING id",
       [company, slug]
     );
+    // Seed the 6 default pipeline stages so the tenant's Kanban has
+    // working columns out of the box. Lazy-imported to avoid a
+    // circular-ish require at module load.
+    try {
+      const { ensureDefaultStages } = require('./pipeline-stages');
+      await ensureDefaultStages(tenant.id);
+    } catch (e) { console.error('[signup.stages]', e.message); }
     const hash = await bcrypt.hash(password, 12);
     const { rows: [user] } = await query(
       "INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, 'admin', $4) RETURNING id, email, full_name, role, tenant_id",
@@ -433,6 +440,10 @@ router.post('/signup-google', [
       "INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color) VALUES ($1, $2, '#6366f1', '#0f172a', '#f97316') RETURNING id",
       [company, slug]
     );
+    try {
+      const { ensureDefaultStages } = require('./pipeline-stages');
+      await ensureDefaultStages(tenant.id);
+    } catch (e) { console.error('[signup-google.stages]', e.message); }
 
     // Random placeholder password — the user will only ever log in via Google.
     // Keeps the NOT NULL constraint satisfied without creating a usable credential.

@@ -22,6 +22,20 @@ export default function ReferralsPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [draggedId, setDraggedId] = useState(null);
   const [myTenant, setMyTenant] = useState(null);
+  const [stages, setStages] = useState([]);
+
+  // Load tenant pipeline stages once — used as Kanban columns, filter
+  // dropdown options, and the authoritative colour source for badges.
+  useEffect(() => {
+    api.getPipelineStages().then(d => setStages(d.stages || [])).catch(() => {});
+  }, []);
+
+  // Build a Badge-compatible config keyed by slug from tenant stages.
+  // Falls back to STATUS_CONFIG when the tenant has no custom stages
+  // (shouldn't happen after the migration, but a safe belt).
+  const stageStatusConfig = stages.length
+    ? Object.fromEntries(stages.map(s => [s.slug, { label: s.name, color: s.color, bg: s.color + '15' }]))
+    : STATUS_CONFIG;
 
   const load = useCallback(async () => {
     try {
@@ -71,20 +85,24 @@ export default function ReferralsPage() {
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDrop = async (e, newStatus) => {
+  // Drop onto a kanban column — `targetStage` is the stage object the
+  // card landed on. Send stage_id to the backend; it maps the stage's
+  // is_won/is_lost flags back to the legacy status string and fires
+  // the commission/email hooks that depend on it.
+  const handleDrop = async (e, targetStage) => {
     e.preventDefault();
     if (!draggedId) return;
     const ref = referrals.find(r => r.id === draggedId);
-    if (!ref || ref.status === newStatus) { setDraggedId(null); return; }
+    if (!ref || ref.stage_id === targetStage.id) { setDraggedId(null); return; }
 
-    // Easter egg: confetti on won!
-    if (newStatus === 'won') {
+    // Confetti when the card lands on the "won" stage (is_won flag).
+    if (targetStage.is_won) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
     }
 
     try {
-      const { referral } = await api.updateReferral(draggedId, { status: newStatus, deal_value: ref.deal_value || 0, engagement: ref.engagement || 'monthly' });
+      const { referral } = await api.updateReferral(draggedId, { stage_id: targetStage.id, deal_value: ref.deal_value || 0, engagement: ref.engagement || 'monthly' });
       setReferrals(prev => prev.map(r => r.id === draggedId ? { ...r, ...referral } : r));
     } catch (err) { console.error(err); }
     setDraggedId(null);
@@ -93,12 +111,18 @@ export default function ReferralsPage() {
   const handleStatusChangeFromCard = async (id, newStatus) => {
     const ref = referrals.find(r => r.id === id);
     if (!ref) return;
-    if (newStatus === 'won') {
+    // Resolve the stage that matches this legacy status slug so the
+    // card moves between the right Kanban columns.
+    const matchedStage = stages.find(s => s.slug === newStatus);
+    if (newStatus === 'won' || matchedStage?.is_won) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
     }
     try {
-      const { referral } = await api.updateReferral(id, { status: newStatus, deal_value: ref.deal_value || 0, engagement: ref.engagement || 'monthly' });
+      const patch = matchedStage
+        ? { stage_id: matchedStage.id, deal_value: ref.deal_value || 0, engagement: ref.engagement || 'monthly' }
+        : { status: newStatus, deal_value: ref.deal_value || 0, engagement: ref.engagement || 'monthly' };
+      const { referral } = await api.updateReferral(id, patch);
       setReferrals(prev => prev.map(r => r.id === id ? { ...r, ...referral } : r));
     } catch (err) { console.error(err); }
   };
@@ -140,7 +164,9 @@ export default function ReferralsPage() {
 
           <Select value={filters.status} onChange={v => setFilters(f => ({ ...f, status: v }))}>
             <option value="all">{t('referrals.all_statuses')}</option>
-            {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            {(stages.length ? stages.map(s => ({ k: s.slug, label: s.name })) : Object.entries(STATUS_CONFIG).map(([k, v]) => ({ k, label: v.label }))).map(({ k, label }) => (
+              <option key={k} value={k}>{label}</option>
+            ))}
           </Select>
           <Select value={filters.partner_id} onChange={v => setFilters(f => ({ ...f, partner_id: v }))}>
             <option value="all">{t('referrals.all_partners')}</option>
@@ -177,7 +203,7 @@ export default function ReferralsPage() {
                   </td>
                   <td style={{ padding: '13px 16px', color: '#475569' }}>{r.partner_name}</td>
                   <td style={{ padding: '13px 16px' }}><Badge config={LEVEL_CONFIG} value={r.recommendation_level} /></td>
-                  <td style={{ padding: '13px 16px' }}><Badge config={STATUS_CONFIG} value={r.status} /></td>
+                  <td style={{ padding: '13px 16px' }}><Badge config={stageStatusConfig} value={(stages.find(s => s.id === r.stage_id)?.slug) || r.status} /></td>
                   <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
                   <td style={{ padding: '13px 16px', color: '#94a3b8', fontSize: 13 }}>{fmtDate(r.created_at)}</td>
                   <td style={{ padding: '13px 16px' }}><ChevronRight size={16} color="#94a3b8" /></td>
@@ -190,30 +216,36 @@ export default function ReferralsPage() {
         /* KANBAN VIEW */
         <div style={{ overflow: 'hidden', borderRadius: 16 }}>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 180px)', minHeight: 400 }}>
-          {KANBAN_STATUSES.map(status => {
-            const sc = STATUS_CONFIG[status];
-            const allCards = referrals.filter(r => r.status === status);
-            const limit = kanbanLimits[status] || 25;
+          {(stages.length ? stages : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#64748b' }))).map(stage => {
+            // Match referrals to this column by stage_id primarily;
+            // fall back to legacy status slug so anything predating
+            // the migration still renders somewhere.
+            const allCards = referrals.filter(r =>
+              r.stage_id ? r.stage_id === stage.id : r.status === stage.slug
+            );
+            const limit = kanbanLimits[stage.id || stage.slug] || 25;
             const cards = allCards.slice(0, limit);
             const hasMore = allCards.length > limit;
+            const stageColor = stage.color || '#64748b';
             return (
-              <div key={status}
-                onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${sc.color}06`; }}
+              <div key={stage.id || stage.slug}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${stageColor}0a`; }}
                 onDragLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
-                onDrop={e => { e.currentTarget.style.background = '#f8fafc'; handleDrop(e, status); }}
+                onDrop={e => { e.currentTarget.style.background = '#f8fafc'; handleDrop(e, stage); }}
                 style={{
                   minWidth: 260, width: 260, flexShrink: 0, background: '#f8fafc', borderRadius: 16,
                   padding: 12, display: 'flex', flexDirection: 'column',
                   border: '1px solid #e2e8f0',
+                  borderTop: `3px solid ${stageColor}`,
                 }}
               >
                 {/* Column header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: sc.color }} />
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: stageColor }} />
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{stage.name}</span>
                   </div>
-                  <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
+                  <span style={{ background: stageColor + '15', color: stageColor, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
                 </div>
 
                 {/* Cards - scrollable */}
@@ -223,7 +255,7 @@ export default function ReferralsPage() {
                       onClick={() => openDetail(r)}
                       style={{
                         background: '#fff', borderRadius: 12, padding: 14, cursor: 'grab',
-                        border: draggedId === r.id ? `2px solid ${sc.color}` : '1px solid #e2e8f0',
+                        border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                         opacity: draggedId === r.id ? 0.5 : 1, transition: 'all 0.15s',
                       }}

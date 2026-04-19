@@ -251,6 +251,13 @@ class ApiClient {
   getHubspotPipelines() { return this.request('/crm/hubspot/pipelines'); }
   getSalesforceFields() { return this.request('/crm/salesforce/fields'); }
   getSalesforceStages() { return this.request('/crm/salesforce/stages'); }
+
+  // Pipeline stages (custom per-tenant Kanban columns)
+  getPipelineStages() { return this.request('/pipeline-stages'); }
+  createPipelineStage(data) { return this.request('/pipeline-stages', { method: 'POST', body: JSON.stringify(data) }); }
+  updatePipelineStage(id, data) { return this.request('/pipeline-stages/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
+  deletePipelineStage(id) { return this.request('/pipeline-stages/' + id, { method: 'DELETE' }); }
+  reorderPipelineStages(stages) { return this.request('/pipeline-stages/reorder', { method: 'PUT', body: JSON.stringify({ stages }) }); }
   getInvoices() { return this.request('/billing/invoices'); }
 }
 

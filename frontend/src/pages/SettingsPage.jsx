@@ -820,16 +820,27 @@ function CrmMappingModal({ integration, onClose }) {
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState('');
 
+  const [tenantStages, setTenantStages] = useState([]);
   useEffect(() => {
     (async () => {
       try {
+        // Load the tenant's custom pipeline stages so the stage-mapping
+        // table iterates over the actual columns they built (not the
+        // hardcoded default set).
+        const sr = await api.getPipelineStages().catch(() => ({ stages: [] }));
+        const pipelineStages = sr.stages || [];
+        setTenantStages(pipelineStages);
+
         const m = await api.getCrmMappings(integration.id);
         // Initialise mapping rows for every RefBoost field/status, even
         // those without an existing CRM mapping yet.
         const fmap = new Map((m.fields || []).map(f => [f.refboost_field, f.crm_field]));
         const smap = new Map((m.stages || []).map(s => [s.refboost_status, s.crm_stage]));
         setFields(REFBOOST_FIELDS.map(f => ({ refboost_field: f, crm_field: fmap.get(f) || '' })));
-        setStages(REFBOOST_STATUSES.map(s => ({ refboost_status: s, crm_stage: smap.get(s) || '' })));
+        const sourceStatuses = pipelineStages.length
+          ? pipelineStages.map(s => s.slug)
+          : REFBOOST_STATUSES;
+        setStages(sourceStatuses.map(s => ({ refboost_status: s, crm_stage: smap.get(s) || '' })));
 
         if (integration.provider === 'hubspot') {
           const [f, p] = await Promise.all([api.getHubspotFields(), api.getHubspotPipelines()]);
@@ -933,7 +944,12 @@ function CrmMappingModal({ integration, onClose }) {
               <tbody>
                 {stages.map((row, i) => (
                   <tr key={row.refboost_status}>
-                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t('crm.status_' + row.refboost_status)}</td>
+                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>
+                      {/* Prefer the tenant's custom stage name; fall
+                          back to the i18n default label if no custom
+                          stages exist yet. */}
+                      {(tenantStages.find(s => s.slug === row.refboost_status)?.name) || t('crm.status_' + row.refboost_status)}
+                    </td>
                     <td style={{ padding: '4px 8px' }}>
                       {crmStages.length > 0 ? (
                         <select

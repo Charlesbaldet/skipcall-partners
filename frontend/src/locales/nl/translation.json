@@ -2010,5 +2010,28 @@
     "status_meeting": "Afspraak",
     "status_won": "Gewonnen",
     "status_lost": "Verloren"
+  },
+  "pipeline": {
+    "stages": "Pipeline-stages",
+    "stages_desc": "Pas je Kanban-kolommen aan. \"Gewonnen\" en \"Verloren\" zijn verplicht en kunnen niet worden verwijderd.",
+    "add_stage": "Stage toevoegen",
+    "edit_stage": "Stage bewerken",
+    "delete_stage": "Stage verwijderen",
+    "stage_name": "Naam van de stage",
+    "stage_name_ph": "Bijv. Afspraak",
+    "color": "Kleur",
+    "reorder": "Opnieuw ordenen",
+    "save_stages": "Opslaan",
+    "system_stage_warning": "Deze stage is vereist voor de commissie-automatisering en kan niet worden verwijderd",
+    "won_stage_info": "Wanneer een referral deze stage bereikt, wordt automatisch een commissie aangemaakt",
+    "lost_stage_info": "Wanneer een referral deze stage bereikt, wordt deze als verloren gemarkeerd",
+    "cannot_delete_only": "De enige overgebleven stage kan niet worden verwijderd",
+    "confirm_delete": "Deze stage verwijderen? Referrals worden verplaatst naar de vorige stage.",
+    "default_new": "Nieuw",
+    "default_contacted": "Gecontacteerd",
+    "default_qualified": "Gekwalificeerd",
+    "default_proposal": "Voorstel",
+    "default_won": "Gewonnen",
+    "default_lost": "Verloren"
   }
 }

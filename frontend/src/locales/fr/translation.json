@@ -2010,5 +2010,28 @@
     "status_meeting": "RDV planifié",
     "status_won": "Gagné",
     "status_lost": "Perdu"
+  },
+  "pipeline": {
+    "stages": "Statuts du pipeline",
+    "stages_desc": "Personnalisez les colonnes de votre pipeline Kanban. « Gagné » et « Perdu » sont requis et ne peuvent pas être supprimés.",
+    "add_stage": "Ajouter un statut",
+    "edit_stage": "Modifier le statut",
+    "delete_stage": "Supprimer le statut",
+    "stage_name": "Nom du statut",
+    "stage_name_ph": "Ex. Rendez-vous",
+    "color": "Couleur",
+    "reorder": "Réorganiser",
+    "save_stages": "Enregistrer",
+    "system_stage_warning": "Ce statut est requis pour l'automatisation des commissions et ne peut pas être supprimé",
+    "won_stage_info": "Lorsqu'un referral atteint ce statut, une commission est automatiquement créée pour le partenaire",
+    "lost_stage_info": "Lorsqu'un referral atteint ce statut, il est marqué comme perdu",
+    "cannot_delete_only": "Impossible de supprimer l'unique statut restant",
+    "confirm_delete": "Supprimer ce statut ? Les referrals seront déplacés vers le statut précédent.",
+    "default_new": "Nouveau",
+    "default_contacted": "Contacté",
+    "default_qualified": "Qualifié",
+    "default_proposal": "Proposition",
+    "default_won": "Gagné",
+    "default_lost": "Perdu"
   }
 }
