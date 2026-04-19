@@ -17,6 +17,16 @@ const crmService = require('../services/crmService');
 const router = express.Router();
 
 const FRONTEND = () => process.env.FRONTEND_URL || 'https://refboost.io';
+// OAuth redirect_uri MUST point at the backend (where the /callback
+// handler lives) and MUST exactly match whatever is registered in the
+// HubSpot/Salesforce app configuration — not at the frontend origin.
+// Prefer RAILWAY_PUBLIC_DOMAIN (auto-populated on Railway) so staging
+// deployments pick up their own host without code changes.
+const BACKEND = () => {
+  if (process.env.BACKEND_URL) return process.env.BACKEND_URL;
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  return 'https://skipcall-partners-production.up.railway.app';
+};
 
 // ─── Plan gate middleware ────────────────────────────────────────────
 async function requireBusiness(req, res, next) {
@@ -146,7 +156,7 @@ router.get('/hubspot/auth', authenticate, tenantScope, authorize('admin'), requi
   // tokens to — the browser arriving at /callback won't have a JWT.
   // (For production, sign the state to prevent CSRF; placeholder here.)
   const state = Buffer.from(JSON.stringify({ tenantId: req.tenantId, ts: Date.now() })).toString('base64');
-  const redirectUri = FRONTEND() + '/api/crm/hubspot/callback';
+  const redirectUri = BACKEND() + '/api/crm/hubspot/callback';
   const url = crmService.hubspotAuthUrl(state, redirectUri);
   if (!url) return res.status(500).json({ error: 'HUBSPOT_CLIENT_ID non configuré' });
   res.json({ url });
@@ -162,7 +172,9 @@ router.get('/hubspot/callback', async (req, res) => {
     const tenantId = payload.tenantId;
     if (!tenantId) return res.status(400).send('Invalid state.tenantId');
 
-    const redirectUri = FRONTEND() + '/api/crm/hubspot/callback';
+    // MUST reuse the exact same redirect_uri that was passed to
+    // /authorize — HubSpot validates it on /token exchange.
+    const redirectUri = BACKEND() + '/api/crm/hubspot/callback';
     const tokens = await crmService.exchangeHubSpotCode(code, redirectUri);
     await query(
       `INSERT INTO crm_integrations (tenant_id, provider, is_active, access_token, refresh_token, connected_at)
@@ -172,7 +184,8 @@ router.get('/hubspot/callback', async (req, res) => {
                      is_active = TRUE, connected_at = NOW()`,
       [tenantId, tokens.access_token, tokens.refresh_token || null]
     );
-    res.redirect(FRONTEND() + '/settings?tab=integrations&crm=connected');
+    // Bounce the user back to the frontend Integrations tab.
+    res.redirect(FRONTEND() + '/settings?tab=integrations&connected=hubspot');
   } catch (err) {
     console.error('[crm.hubspot.callback] error:', err);
     res.redirect(FRONTEND() + '/settings?tab=integrations&crm=error');
@@ -191,7 +204,7 @@ router.post('/hubspot/disconnect', authenticate, tenantScope, authorize('admin')
 // ─── Salesforce OAuth ────────────────────────────────────────────────
 router.get('/salesforce/auth', authenticate, tenantScope, authorize('admin'), requireBusiness, async (req, res) => {
   const state = Buffer.from(JSON.stringify({ tenantId: req.tenantId, ts: Date.now() })).toString('base64');
-  const redirectUri = FRONTEND() + '/api/crm/salesforce/callback';
+  const redirectUri = BACKEND() + '/api/crm/salesforce/callback';
   const url = crmService.salesforceAuthUrl(state, redirectUri);
   if (!url) return res.status(500).json({ error: 'SALESFORCE_CLIENT_ID non configuré' });
   res.json({ url });
@@ -204,7 +217,8 @@ router.get('/salesforce/callback', async (req, res) => {
     const payload = JSON.parse(Buffer.from(state, 'base64').toString());
     const tenantId = payload.tenantId;
     if (!tenantId) return res.status(400).send('Invalid state');
-    const redirectUri = FRONTEND() + '/api/crm/salesforce/callback';
+    // Same exact-match requirement as HubSpot.
+    const redirectUri = BACKEND() + '/api/crm/salesforce/callback';
     const tokens = await crmService.exchangeSalesforceCode(code, redirectUri);
     await query(
       `INSERT INTO crm_integrations (tenant_id, provider, is_active, access_token, refresh_token, instance_url, connected_at)
@@ -214,7 +228,7 @@ router.get('/salesforce/callback', async (req, res) => {
                      instance_url = EXCLUDED.instance_url, is_active = TRUE, connected_at = NOW()`,
       [tenantId, tokens.access_token, tokens.refresh_token || null, tokens.instance_url || null]
     );
-    res.redirect(FRONTEND() + '/settings?tab=integrations&crm=connected');
+    res.redirect(FRONTEND() + '/settings?tab=integrations&connected=salesforce');
   } catch (err) {
     console.error('[crm.salesforce.callback] error:', err);
     res.redirect(FRONTEND() + '/settings?tab=integrations&crm=error');
