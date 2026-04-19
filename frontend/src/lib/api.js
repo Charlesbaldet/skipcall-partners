@@ -62,7 +62,35 @@ class ApiClient {
       }
       throw new Error(revoked ? 'access_revoked' : 'Session expirée');
     }
-    const data = await res.json();
+    // Content-Type-aware parsing. If something upstream (Vercel
+    // fallback during a backend deploy, a 404 from a missing route, a
+    // reverse proxy returning an error page) serves HTML instead of
+    // JSON, `res.json()` blows up with "Unexpected token '<'" and the
+    // caller sees a cryptic parse error. Detect that up front and
+    // throw a clean message instead.
+    const contentType = res.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+      try { data = await res.json(); }
+      catch {
+        const err = new Error('Réponse serveur invalide');
+        err.status = res.status;
+        throw err;
+      }
+    } else {
+      const text = await res.text().catch(() => '');
+      if (!res.ok) {
+        const err = new Error(
+          text.startsWith('<') || text.includes('<!DOCTYPE')
+            ? 'Service indisponible — réessayez dans quelques secondes'
+            : (text || 'Erreur serveur')
+        );
+        err.status = res.status;
+        throw err;
+      }
+      // 2xx non-JSON — rare, surface the raw body so callers can act.
+      return text;
+    }
     if (!res.ok) {
       // Preserve the full response payload on the Error so callers can
       // act on structured fields (e.g. partner_limit_reached exposes
