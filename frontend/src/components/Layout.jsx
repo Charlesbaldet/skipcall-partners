@@ -248,8 +248,15 @@ export default function Layout({ children }) {
       fontSize: 13, fontWeight: 500, transition: 'all 0.15s',
       lineHeight: 1.3,
     },
-    activeLink: { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeftColor: ACTIVE_ACCENT },
-    activeQueryLink: { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeftColor: ACTIVE_ACCENT },
+    // IMPORTANT: always use the full `borderLeft` shorthand, never
+    // the `borderLeftColor` sub-property. When the previous render
+    // wrote `borderLeft: 2px solid transparent` and the next render
+    // only sets `borderLeftColor`, React's style diffing can leave
+    // the DOM with a partial value (border-left-width + style but no
+    // explicit color) — and the browser falls back to the element's
+    // text color, painting a stale gray bar on inactive items.
+    activeLink:      { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeft: '2px solid ' + ACTIVE_ACCENT },
+    activeQueryLink: { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeft: '2px solid ' + ACTIVE_ACCENT },
     sectionLabel: {
       fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
       color: '#475569', fontWeight: 500,
@@ -476,13 +483,16 @@ export default function Layout({ children }) {
               end
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: 10,
-                padding: '8px 18px', borderLeft: '2px solid transparent',
+                padding: '8px 18px',
+                // Always use the full borderLeft shorthand on every
+                // render so React's style diffing can't strip the
+                // color and leave a stale gray bar on inactive rows.
+                borderLeft: '2px solid ' + (isActive ? ACTIVE_ACCENT : 'transparent'),
                 borderTop: '1px solid rgba(255,255,255,0.06)',
                 textDecoration: 'none', outline: 'none',
                 fontSize: 13, fontWeight: 500,
                 color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#475569'),
                 background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                borderLeftColor: isActive ? ACTIVE_ACCENT : 'transparent',
                 transition: 'all 0.15s',
               })}
             >
