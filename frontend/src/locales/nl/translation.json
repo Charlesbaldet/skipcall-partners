@@ -1939,6 +1939,25 @@
     "final_subtitle": "Begin gratis — geen creditcard nodig.",
     "final_cta_start": "Gratis beginnen",
     "final_cta_sales": "Praat met sales",
-    "annual_per_month": "/maand, jaarlijks gefactureerd"
+    "annual_per_month": "/maand, jaarlijks gefactureerd",
+    "popular": "Populair",
+    "feat_pipeline_kanban": "Pipeline & Kanban",
+    "feat_commissions": "Commissiebeheer",
+    "feat_partner_portal": "Partnerportaal",
+    "feat_7_languages": "7 talen",
+    "feat_google_sso": "Google SSO",
+    "feat_email_notifs": "E-mailnotificaties",
+    "feat_everything_starter": "Alles uit Starter",
+    "feat_advanced_analytics": "Geavanceerde analytics & KPI's",
+    "feat_csv_export": "CSV-export",
+    "feat_multi_admin": "Multi-admin / team",
+    "feat_priority_support": "Prioriteitssupport",
+    "feat_partner_news": "Partner nieuws & updates",
+    "feat_everything_pro": "Alles uit Pro",
+    "feat_api": "API-toegang",
+    "feat_branding": "Eigen branding",
+    "feat_dedicated_support": "Dedicated support",
+    "feat_crm_soon": "CRM-integraties (binnenkort)",
+    "feat_unlimited_programs": "Onbeperkt programma's"
   }
 }

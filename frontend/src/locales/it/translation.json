@@ -1939,6 +1939,25 @@
     "final_subtitle": "Inizia gratis — nessuna carta richiesta.",
     "final_cta_start": "Inizia gratis",
     "final_cta_sales": "Parla con il commerciale",
-    "annual_per_month": "/mese, fatturato annualmente"
+    "annual_per_month": "/mese, fatturato annualmente",
+    "popular": "Popolare",
+    "feat_pipeline_kanban": "Pipeline e Kanban",
+    "feat_commissions": "Gestione commissioni",
+    "feat_partner_portal": "Portale partner",
+    "feat_7_languages": "7 lingue",
+    "feat_google_sso": "Google SSO",
+    "feat_email_notifs": "Notifiche email",
+    "feat_everything_starter": "Tutto di Starter",
+    "feat_advanced_analytics": "Analytics avanzata e KPI",
+    "feat_csv_export": "Esportazione CSV",
+    "feat_multi_admin": "Multi-admin / team",
+    "feat_priority_support": "Supporto prioritario",
+    "feat_partner_news": "News per partner",
+    "feat_everything_pro": "Tutto di Pro",
+    "feat_api": "Accesso API",
+    "feat_branding": "Branding personalizzato",
+    "feat_dedicated_support": "Supporto dedicato",
+    "feat_crm_soon": "Integrazioni CRM (prossimamente)",
+    "feat_unlimited_programs": "Programmi illimitati"
   }
 }

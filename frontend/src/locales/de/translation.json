@@ -1939,6 +1939,25 @@
     "final_subtitle": "Kostenlos starten — keine Kreditkarte nötig.",
     "final_cta_start": "Kostenlos starten",
     "final_cta_sales": "Mit Vertrieb sprechen",
-    "annual_per_month": "/Monat, jährliche Abrechnung"
+    "annual_per_month": "/Monat, jährliche Abrechnung",
+    "popular": "Beliebt",
+    "feat_pipeline_kanban": "Pipeline & Kanban",
+    "feat_commissions": "Provisionsverwaltung",
+    "feat_partner_portal": "Partnerportal",
+    "feat_7_languages": "7 Sprachen",
+    "feat_google_sso": "Google SSO",
+    "feat_email_notifs": "E-Mail-Benachrichtigungen",
+    "feat_everything_starter": "Alles aus Starter",
+    "feat_advanced_analytics": "Erweiterte Analytics & KPIs",
+    "feat_csv_export": "CSV-Export",
+    "feat_multi_admin": "Multi-Admin / Team",
+    "feat_priority_support": "Priority-Support",
+    "feat_partner_news": "News & Updates für Partner",
+    "feat_everything_pro": "Alles aus Pro",
+    "feat_api": "API-Zugriff",
+    "feat_branding": "Eigenes Branding",
+    "feat_dedicated_support": "Dedizierter Support",
+    "feat_crm_soon": "CRM-Integrationen (bald)",
+    "feat_unlimited_programs": "Unbegrenzte Programme"
   }
 }
