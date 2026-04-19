@@ -1406,7 +1406,8 @@
     "tab_public_marketplace": "Publieke link & marketplace",
     "tab_notifications_emails": "Notificaties & e-mails",
     "language": "Taal",
-    "language_help": "Kies de taal van de interface."
+    "language_help": "Kies de taal van de interface.",
+    "tab_pipeline": "Pipeline & stages"
   },
   "status": {
     "new": "Nieuw",

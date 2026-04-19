@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import PipelineStagesEditor from '../components/PipelineStagesEditor.jsx';
 import {
   Trophy, Plus, Edit2,
   Palette,
@@ -136,6 +137,7 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { section: t('layout.section.programme') },
       { id: 'branding', icon: Palette, label: t('settings.tab_branding') },
+      { id: 'pipeline', icon: Trophy, label: t('settings.tab_pipeline') },
       { id: 'public-marketplace', icon: Store, label: t('settings.tab_public_marketplace') },
 
       { section: t('layout.section.preferences') },
@@ -190,6 +192,7 @@ export default function SettingsPage() {
             {tab === 'notifications' && isAdmin && <NotificationsTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
+            {tab === 'pipeline' && isAdmin && <PipelineStagesEditor />}
             {tab === 'public-marketplace' && isAdmin && (
               <>
                 <MarketplaceTab />

@@ -1406,7 +1406,8 @@
     "tab_public_marketplace": "Lien public et marketplace",
     "tab_notifications_emails": "Notifications et emails",
     "language": "Langue",
-    "language_help": "Choisissez la langue d'affichage de l'interface."
+    "language_help": "Choisissez la langue d'affichage de l'interface.",
+    "tab_pipeline": "Pipeline et statuts"
   },
   "status": {
     "new": "Nouveau",
