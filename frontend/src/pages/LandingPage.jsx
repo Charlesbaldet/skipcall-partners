@@ -292,7 +292,7 @@ export default function LandingPage() {
                   <div style={{width:44,height:44,borderRadius:12,background:g(C.p,C.pl),display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:18}}>{t2.a}</div>
                   <div>
                     <div style={{fontWeight:700,fontSize:14,color:C.s}}>{t2.n}</div>
-                    <div style={{fontSize:12,color:C.m}}>{t2.r} ÃÂ· {t2.c}</div>
+                    <div style={{fontSize:12,color:C.m}}>{t2.r} · {t2.c}</div>
                   </div>
                 </div>
               </div>
