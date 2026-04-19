@@ -341,7 +341,8 @@
       "notifications": "Notifications",
       "billing": "Billing",
       "referrals": "Referrals",
-      "explore_programs": "Explore programs"
+      "explore_programs": "Explore programs",
+      "search": "Search"
     },
     "collapse": "Collapse",
     "logout": "Logout",
@@ -2034,5 +2035,18 @@
     "default_proposal": "Proposal",
     "default_won": "Won",
     "default_lost": "Lost"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search referrals, partners, commissions…",
+    "no_results": "No results for",
+    "searching": "Searching…",
+    "referrals": "Referrals",
+    "partners": "Partners",
+    "commissions": "Commissions",
+    "news": "News",
+    "results_count": "{{count}} results",
+    "shortcut_hint": "Cmd+K",
+    "empty_hint": "Type at least 2 characters to search."
   }
 }

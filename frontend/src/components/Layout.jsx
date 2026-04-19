@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -46,6 +46,7 @@ export default function Layout({ children }) {
   //   { bottom: true, ... }     pinned at the bottom above the user bar
   //   { adminOnly: true, ... }  hidden for the commercial role
   const ADMIN_NAV = [
+    { to: '/search', icon: Search, label: t('layout.nav.search') },
     { to: '/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
 
     { section: t('layout.section.pipeline') },
@@ -70,6 +71,7 @@ export default function Layout({ children }) {
   // the standalone Dashboard item and "Mes referrals" at the same
   // route; both will highlight when active.
   const PARTNER_NAV = [
+    { to: '/search', icon: Search, label: t('layout.nav.search') },
     { to: '/partner/referrals', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
 
     { section: t('layout.section.pipeline') },
@@ -211,6 +213,23 @@ export default function Layout({ children }) {
       window.removeEventListener('keydown', onKey);
     };
   }, [spaceSwitcherOpen]);
+
+  // Global Cmd+K / Ctrl+K shortcut → /search. Registered once per Layout
+  // mount so every logged-in screen picks it up. Doesn't fire while
+  // editing a text field — pressing Cmd+K inside an <input> should
+  // stay available for text-editing shortcuts or browser defaults.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        const tag = (e.target?.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) return;
+        e.preventDefault();
+        navigate('/search');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 

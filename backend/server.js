@@ -30,6 +30,7 @@ const { router: billingRoutes } = require('./routes/billing');
 const stripeWebhookRoutes = require('./routes/stripeWebhook');
 const crmRoutes = require('./routes/crm');
 const pipelineStagesRoutes = require('./routes/pipeline-stages');
+const searchRoutes = require('./routes/search');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -136,6 +137,7 @@ app.use('/api/partner/program', newsProgramRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/pipeline-stages', pipelineStagesRoutes);
+app.use('/api/search', searchRoutes);
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({

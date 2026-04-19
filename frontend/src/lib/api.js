@@ -258,6 +258,9 @@ class ApiClient {
   updatePipelineStage(id, data) { return this.request('/pipeline-stages/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
   deletePipelineStage(id) { return this.request('/pipeline-stages/' + id, { method: 'DELETE' }); }
   reorderPipelineStages(stages) { return this.request('/pipeline-stages/reorder', { method: 'PUT', body: JSON.stringify({ stages }) }); }
+
+  // Global search
+  globalSearch(query) { return this.request('/search?q=' + encodeURIComponent(query)); }
   getInvoices() { return this.request('/billing/invoices'); }
 }
 

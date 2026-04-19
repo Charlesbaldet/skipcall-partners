@@ -341,7 +341,8 @@
       "notifications": "Meldingen",
       "billing": "Facturatie",
       "referrals": "Referrals",
-      "explore_programs": "Programma's verkennen"
+      "explore_programs": "Programma's verkennen",
+      "search": "Zoeken"
     },
     "collapse": "Inklappen",
     "logout": "Uitloggen",
@@ -2034,5 +2035,18 @@
     "default_proposal": "Voorstel",
     "default_won": "Gewonnen",
     "default_lost": "Verloren"
+  },
+  "search": {
+    "title": "Zoeken",
+    "placeholder": "Zoek referrals, partners, commissies…",
+    "no_results": "Geen resultaten voor",
+    "searching": "Zoeken…",
+    "referrals": "Referrals",
+    "partners": "Partners",
+    "commissions": "Commissies",
+    "news": "Nieuws",
+    "results_count": "{{count}} resultaten",
+    "shortcut_hint": "Cmd+K",
+    "empty_hint": "Typ minstens 2 tekens om te zoeken."
   }
 }
