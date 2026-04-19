@@ -152,37 +152,38 @@ export default function PricingPage() {
         <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>
           {t('pricing.hero_title')}
         </h1>
-        <p style={{ margin: '0 auto 32px', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
+        <p style={{ margin: '0 auto', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
           {t('pricing.hero_subtitle')}
         </p>
-
-        {/* Monthly / Annual toggle (centered like the Marketplace search bar). */}
-        <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: 4, gap: 2 }}>
-          {['monthly', 'annual'].map(opt => (
-            <button
-              key={opt}
-              onClick={() => setInterval(opt)}
-              style={{
-                padding: '10px 22px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
-                background: interval === opt ? '#fff' : 'transparent',
-                color: interval === opt ? C.s : '#cbd5e1',
-                transition: 'all .15s',
-              }}
-            >
-              {t('billing.' + opt)}
-              {opt === 'annual' && (
-                <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: C.p, background: '#f0fdf4', padding: '2px 7px', borderRadius: 999 }}>
-                  -20%
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
       </section>
 
-      {/* ─── PLAN CARDS ─── */}
-      <main style={{ background: C.bg, padding: '48px 24px 24px' }}>
+      {/* ─── PLAN CARDS (preceded by Monthly/Annual toggle, placed
+          between hero and cards like the Blog page's filter pills) ─── */}
+      <main style={{ background: C.bg, padding: '40px 24px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto 32px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ display: 'inline-flex', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 999, padding: 4, gap: 2, boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+            {['monthly', 'annual'].map(opt => (
+              <button
+                key={opt}
+                onClick={() => setInterval(opt)}
+                style={{
+                  padding: '10px 22px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                  background: interval === opt ? C.s : 'transparent',
+                  color: interval === opt ? '#fff' : C.m,
+                  transition: 'all .15s',
+                }}
+              >
+                {t('billing.' + opt)}
+                {opt === 'annual' && (
+                  <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: interval === 'annual' ? '#10b981' : C.p, background: interval === 'annual' ? 'rgba(16,185,129,.15)' : '#f0fdf4', padding: '2px 7px', borderRadius: 999 }}>
+                    -20%
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
           {PLANS.map(p => {
             const price = p.price[interval];
