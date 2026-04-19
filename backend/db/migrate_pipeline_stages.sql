@@ -22,6 +22,13 @@ CREATE INDEX IF NOT EXISTS idx_pipeline_stages_tenant ON pipeline_stages(tenant_
 ALTER TABLE referrals ADD COLUMN IF NOT EXISTS stage_id UUID REFERENCES pipeline_stages(id);
 CREATE INDEX IF NOT EXISTS idx_referrals_stage ON referrals(stage_id);
 
+-- Drop the legacy CHECK(status IN (...)) constraint now that stage_id
+-- is the source of truth. Custom per-tenant stages produce arbitrary
+-- slugs (e.g. 'qualified' — default, but not in the original allow-
+-- list — or anything the user invents like 'follow-up'), and any
+-- mismatch used to blow up with a 500 on PUT /referrals/:id.
+ALTER TABLE referrals DROP CONSTRAINT IF EXISTS referrals_status_check;
+
 -- ─── Seed default stages for every tenant that has none yet. ─────────
 INSERT INTO pipeline_stages (tenant_id, name, slug, color, position, is_system, is_won, is_lost)
 SELECT t.id, v.name, v.slug, v.color, v.position, v.is_system, v.is_won, v.is_lost

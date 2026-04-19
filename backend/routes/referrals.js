@@ -309,6 +309,13 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
     // the Kanban drops a card onto a new column it sends { stage_id },
     // not { status }. Stages carry is_won / is_lost flags; everything
     // else stays on 'contacted'/'qualified'/'new'/'proposal' etc.
+    //
+    // The referrals_status_check CHECK constraint used to block any
+    // slug outside {new,contacted,meeting,proposal,won,lost,duplicate}.
+    // The migration drops it, but we also pin status to the safe set
+    // here as a belt-and-suspenders — if for whatever reason the
+    // constraint is ever re-added, only known-safe values flow through.
+    const LEGACY_STATUS_ALLOWED = new Set(['new', 'contacted', 'qualified', 'meeting', 'proposal', 'won', 'lost', 'duplicate']);
     if (stage_id) {
       const { rows: [s] } = await client.query(
         'SELECT slug, is_won, is_lost FROM pipeline_stages WHERE id = $1 AND tenant_id = $2',
@@ -318,10 +325,16 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
         client.release();
         return res.status(400).json({ error: 'stage_id introuvable' });
       }
-      // Map flags → legacy status so commission creation (gated on
-      // status === 'won') still fires via the existing code path.
+      // Map flags → legacy status. is_won / is_lost always win so the
+      // commission + deal-won + email hooks (all gated on status) keep
+      // firing. For other stages, use the slug when it's in the legacy
+      // allowlist; otherwise hold status at its current value (stage_id
+      // is the source of truth now — status is just a mirror).
       if (!status) {
-        status = s.is_won ? 'won' : s.is_lost ? 'lost' : s.slug;
+        if (s.is_won) status = 'won';
+        else if (s.is_lost) status = 'lost';
+        else if (LEGACY_STATUS_ALLOWED.has(s.slug)) status = s.slug;
+        else status = current.status;
       }
     }
 
