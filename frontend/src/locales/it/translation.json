@@ -953,7 +953,10 @@
     "deal_value": "Valore del deal",
     "deal_won_msg": "Deal vinto — Commissione in attesa",
     "deleting": "Eliminazione...",
-    "delete": "Elimina"
+    "delete": "Elimina",
+    "discover_title": "Scopri altri programmi partner",
+    "discover_subtitle": "Trova nuovi programmi da consigliare.",
+    "explore_marketplace": "Esplora il marketplace"
   },
   "partnerSubmit": {
     "title": "Nuovo referral",
@@ -1399,7 +1402,9 @@
     "tab_team": "Team e membri",
     "tab_branding": "Aspetto e branding",
     "tab_public_marketplace": "Link pubblico e marketplace",
-    "tab_notifications_emails": "Notifiche ed email"
+    "tab_notifications_emails": "Notifiche ed email",
+    "language": "Lingua",
+    "language_help": "Scegli la lingua dell'interfaccia."
   },
   "status": {
     "new": "Nuovo",

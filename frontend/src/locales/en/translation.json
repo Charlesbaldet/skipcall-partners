@@ -953,7 +953,10 @@
     "deal_value": "Deal value",
     "deal_won_msg": "Deal won — Commission pending",
     "deleting": "Deleting...",
-    "delete": "Delete"
+    "delete": "Delete",
+    "discover_title": "Discover other partner programs",
+    "discover_subtitle": "Find new programs to recommend.",
+    "explore_marketplace": "Explore the marketplace"
   },
   "partnerSubmit": {
     "title": "New referral",
@@ -1399,7 +1402,9 @@
     "tab_team": "Team & members",
     "tab_branding": "Appearance & branding",
     "tab_public_marketplace": "Public link & marketplace",
-    "tab_notifications_emails": "Notifications & emails"
+    "tab_notifications_emails": "Notifications & emails",
+    "language": "Language",
+    "language_help": "Choose the interface display language."
   },
   "status": {
     "new": "New",

@@ -953,7 +953,10 @@
     "deal_value": "Dealwaarde",
     "deal_won_msg": "Deal gewonnen — Commissie in afwachting",
     "deleting": "Verwijderen...",
-    "delete": "Verwijderen"
+    "delete": "Verwijderen",
+    "discover_title": "Ontdek andere partnerprogramma's",
+    "discover_subtitle": "Vind nieuwe programma's om aan te bevelen.",
+    "explore_marketplace": "Verken de marketplace"
   },
   "partnerSubmit": {
     "title": "Nieuwe referral",
@@ -1399,7 +1402,9 @@
     "tab_team": "Team & leden",
     "tab_branding": "Uiterlijk & branding",
     "tab_public_marketplace": "Publieke link & marketplace",
-    "tab_notifications_emails": "Notificaties & e-mails"
+    "tab_notifications_emails": "Notificaties & e-mails",
+    "language": "Taal",
+    "language_help": "Kies de taal van de interface."
   },
   "status": {
     "new": "Nieuw",

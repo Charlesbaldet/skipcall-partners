@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import {
   Trophy, Plus, Edit2,
   Palette,
@@ -251,6 +252,21 @@ function AccountTab({ user }) {
         <div><label style={labelStyle}>{t('settings.pwd_new')}</label><input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder={t('settings.password_min8')} style={inputStyle} /></div>
         <div><label style={labelStyle}>{t('settings.pwd_confirm')}</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} style={inputStyle} /></div>
         <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? t('settings.updating') : t('settings.update')}</button>
+      </div>
+
+      {/* Language — moved out of the sidebar so the only language entry
+          point lives in the user's account settings. */}
+      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <Globe size={16} color="#6366f1" />
+          <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('settings.language') || 'Langue'}</h4>
+        </div>
+        <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>
+          {t('settings.language_help') || 'Choisissez la langue d\'affichage de l\'interface.'}
+        </p>
+        <div style={{ maxWidth: 260 }}>
+          <LanguageSwitcher direction="down" dark={false} style={{ width: '100%' }}/>
+        </div>
       </div>
     </div>
   );

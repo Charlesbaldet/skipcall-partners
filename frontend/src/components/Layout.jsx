@@ -3,9 +3,8 @@ import { NavLink, useNavigate, useLocation, useSearchParams } from 'react-router
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
-import LanguageSwitcher from './LanguageSwitcher';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronLeft, ChevronRight, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -42,12 +41,10 @@ export default function Layout({ children }) {
   ];
 
   // Grouped nav data. Special entry types:
-  //   { section: '...' }              section label row
-  //   { divider: true }               thin horizontal rule
-  //   { bottom: true, ... }           pinned at the bottom of the sidebar
-  //   { bottomBefore: true, ... }     pinned just above the bottom row
-  //                                   (subtle CTA button — green for partners)
-  //   { adminOnly: true, ... }        hidden for the commercial role
+  //   { section: '...' }        section label row
+  //   { divider: true }         thin horizontal rule
+  //   { bottom: true, ... }     pinned at the bottom above the user bar
+  //   { adminOnly: true, ... }  hidden for the commercial role
   const ADMIN_NAV = [
     { to: '/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
 
@@ -69,10 +66,9 @@ export default function Layout({ children }) {
   ];
 
   // Partner has no dedicated /dashboard route — the kanban at
-  // /partner/referrals serves as their landing page. We point the
-  // standalone Dashboard item at the same route as "Mes referrals" so
-  // both highlight when active; add /partner/dashboard later if you
-  // want them split.
+  // /partner/referrals doubles as their landing page. We point both
+  // the standalone Dashboard item and "Mes referrals" at the same
+  // route; both will highlight when active.
   const PARTNER_NAV = [
     { to: '/partner/referrals', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
 
@@ -88,7 +84,6 @@ export default function Layout({ children }) {
     { section: t('layout.section.gestion') },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
 
-    { bottomBefore: true, to: '/marketplace', icon: Search, label: t('layout.nav.explore_programs'), accent: 'green' },
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
   ];
 
@@ -107,7 +102,7 @@ export default function Layout({ children }) {
     const itemParams = new URLSearchParams(query);
     return location.pathname === path && [...itemParams].every(([k, v]) => currentSearchParams.get(k) === v);
   };
-  const [collapsed, setCollapsed] = useState(false);
+
   const [spaceSwitcherOpen, setSpaceSwitcherOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
@@ -161,7 +156,6 @@ export default function Layout({ children }) {
       for (const c of cats) {
         try { await api.markCategoryRead(c); } catch {}
       }
-      // Optimistic local update so the dot disappears immediately.
       setUnreadByCat(prev => {
         const next = { ...prev };
         for (const c of cats) delete next[c];
@@ -198,18 +192,18 @@ export default function Layout({ children }) {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   // ─── Style tokens ─────────────────────────────────────────────────
-  // Single source of truth for nav item geometry. All items (Dashboard,
-  // section items, bottom Notifications, partner Explorer button) align
-  // on the same 18px left gutter. The 2px transparent left border is
-  // promoted to #059669 on active so the indicator never shifts content.
+  // Every nav row (Dashboard, section items, bottom Notifications)
+  // shares one geometry: 8px 18px padding + 18px icons + 10px gap.
+  // The 2px transparent left border is promoted to #059669 on active so
+  // the indicator never shifts content.
   const ACTIVE_ACCENT = isSuperAdmin ? '#dc2626' : '#059669';
   const s = {
-    sidebar: { width: collapsed ? 68 : 220, minWidth: collapsed ? 68 : 220, background: isSuperAdmin ? '#1a1a2e' : C.s, color: '#fff', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50 },
+    sidebar: { width: 220, minWidth: 220, background: isSuperAdmin ? '#1a1a2e' : C.s, color: '#fff', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50 },
     link: {
-      display: 'flex', alignItems: 'center', gap: 9,
-      padding: '7px 18px', borderLeft: '2px solid transparent',
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '8px 18px', borderLeft: '2px solid transparent',
       color: '#94a3b8', textDecoration: 'none',
-      fontSize: 12, fontWeight: 500, transition: 'all 0.15s',
+      fontSize: 13, fontWeight: 500, transition: 'all 0.15s',
       lineHeight: 1.3,
     },
     activeLink: { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeftColor: ACTIVE_ACCENT },
@@ -227,11 +221,11 @@ export default function Layout({ children }) {
     return 0;
   };
 
-  // Nav-item icon + optional notify dot. Reused by both the main nav
-  // loop and the bottom-pinned rows so every icon is exactly 16px.
+  // Nav-item icon + optional notify dot. Reused by main nav + bottom
+  // so every icon is exactly 18px.
   const ItemIcon = ({ Icon, hasDot, color }) => (
-    <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0, width: 16, height: 16 }}>
-      <Icon size={16} color={color}/>
+    <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0, width: 18, height: 18 }}>
+      <Icon size={18} color={color}/>
       {hasDot && (
         <span style={{
           position: 'absolute', top: -2, right: -2,
@@ -242,10 +236,6 @@ export default function Layout({ children }) {
     </span>
   );
 
-  // ─── Space switcher trigger label ─────────────────────────────────
-  // The chevron next to the program name doubles as the switcher
-  // trigger when the user has more than one space. Single-space users
-  // get a plain label with no chevron / no click handler.
   const hasMultipleSpaces = spaces && spaces.length > 1;
   const programLabel = isSuperAdmin
     ? t('layout_extra.super_admin')
@@ -270,43 +260,41 @@ export default function Layout({ children }) {
                   : <RefBoostLogo size={36}/>}
               </div>
             )}
-            {!collapsed && (
-              <button
-                type="button"
-                disabled={!hasMultipleSpaces}
-                onClick={() => hasMultipleSpaces && setSpaceSwitcherOpen(v => !v)}
-                style={{
-                  background: 'none', border: 'none', padding: 0,
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  color: '#fff', fontFamily: 'inherit',
-                  cursor: hasMultipleSpaces ? 'pointer' : 'default',
-                  overflow: 'hidden', flex: 1, textAlign: 'left',
-                }}
-                aria-haspopup={hasMultipleSpaces ? 'menu' : undefined}
-                aria-expanded={spaceSwitcherOpen}
-              >
-                <span style={{
-                  fontSize: isSuperAdmin ? 15 : 16, fontWeight: 800, letterSpacing: -0.4,
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                }}>
-                  {programLabel}
-                </span>
-                {hasMultipleSpaces && (
-                  <ChevronDown
-                    size={14}
-                    color="#94a3b8"
-                    style={{
-                      flexShrink: 0,
-                      transition: 'transform .15s ease',
-                      transform: spaceSwitcherOpen ? 'rotate(180deg)' : 'rotate(0)',
-                    }}
-                  />
-                )}
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={!hasMultipleSpaces}
+              onClick={() => hasMultipleSpaces && setSpaceSwitcherOpen(v => !v)}
+              style={{
+                background: 'none', border: 'none', padding: 0,
+                display: 'flex', alignItems: 'center', gap: 6,
+                color: '#fff', fontFamily: 'inherit',
+                cursor: hasMultipleSpaces ? 'pointer' : 'default',
+                overflow: 'hidden', flex: 1, textAlign: 'left',
+              }}
+              aria-haspopup={hasMultipleSpaces ? 'menu' : undefined}
+              aria-expanded={spaceSwitcherOpen}
+            >
+              <span style={{
+                fontSize: isSuperAdmin ? 15 : 16, fontWeight: 800, letterSpacing: -0.4,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {programLabel}
+              </span>
+              {hasMultipleSpaces && (
+                <ChevronDown
+                  size={14}
+                  color="#94a3b8"
+                  style={{
+                    flexShrink: 0,
+                    transition: 'transform .15s ease',
+                    transform: spaceSwitcherOpen ? 'rotate(180deg)' : 'rotate(0)',
+                  }}
+                />
+              )}
+            </button>
           </div>
 
-          {/* ─── Space switcher dropdown ─── */}
+          {/* ─── Space switcher dropdown (spaces only — no external links) ─── */}
           {spaceSwitcherOpen && hasMultipleSpaces && (
             <div
               role="menu"
@@ -328,7 +316,9 @@ export default function Layout({ children }) {
                   ? (space.partner_name || t('layout_extra.space_partner'))
                   : (space.tenant_name || t('layout_extra.space_space'));
                 const initials = (label || '??').slice(0, 2).toUpperCase();
-                const roleLabel = space.role === 'partner' ? t('layout_extra.space_partner') : t('layout_extra.space_admin') || space.role;
+                const roleLabel = space.role === 'partner'
+                  ? t('layout_extra.space_partner')
+                  : (t('layout_extra.space_admin') || space.role);
                 return (
                   <button
                     key={`sw-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
@@ -366,29 +356,14 @@ export default function Layout({ children }) {
                   </button>
                 );
               })}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '6px 0' }} />
-              <button
-                onClick={() => { setSpaceSwitcherOpen(false); navigate('/marketplace'); }}
-                style={{
-                  width: '100%', padding: '8px 10px',
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  borderRadius: 8, border: 'none', background: 'transparent',
-                  color: '#10b981', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 600, textAlign: 'left',
-                }}
-              >
-                <Search size={14}/>
-                {t('layout.nav.explore_programs')} →
-              </button>
             </div>
           )}
         </div>
 
         {/* ─── Main nav (sections + items) ─── */}
         <nav style={{ flex: 1, padding: '8px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-          {nav.filter(it => !it.bottom && !it.bottomBefore).map((item, i) => {
+          {nav.filter(it => !it.bottom).map((item, i) => {
             if (item.section) {
-              if (collapsed) return null;
               return (
                 <div key={'sec-' + i} style={s.sectionLabel}>
                   {item.section}
@@ -414,8 +389,8 @@ export default function Layout({ children }) {
                   })}
                 >
                   <ItemIcon Icon={item.icon} hasDot={notifyCount > 0}/>
-                  {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
-                  {!collapsed && badge > 0 && (
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {badge > 0 && (
                     <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
                       {badge}
                     </span>
@@ -425,29 +400,6 @@ export default function Layout({ children }) {
             );
           })}
         </nav>
-
-        {/* ─── Pre-bottom CTA (partner: Explorer les programmes) ─── */}
-        {nav.filter(it => it.bottomBefore).map((item) => (
-          <NavLink
-            key={'bb-' + item.to}
-            to={item.to}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 9,
-              margin: collapsed ? '8px 8px' : '8px 12px',
-              padding: '8px 12px',
-              borderRadius: 10, textDecoration: 'none',
-              fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-              background: 'rgba(5,150,105,0.08)',
-              border: '1px solid rgba(5,150,105,0.15)',
-              color: '#10b981',
-              transition: 'all 0.15s',
-              justifyContent: collapsed ? 'center' : 'flex-start',
-            }}
-          >
-            <item.icon size={14}/>
-            {!collapsed && <span>{item.label}</span>}
-          </NavLink>
-        ))}
 
         {/* ─── Bottom Notifications row ─── */}
         {nav.filter(it => it.bottom).map((item) => {
@@ -460,11 +412,11 @@ export default function Layout({ children }) {
               key={'bot-' + item.to}
               to={item.to}
               style={({ isActive }) => ({
-                display: 'flex', alignItems: 'center', gap: 9,
-                padding: '7px 18px', borderLeft: '2px solid transparent',
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 18px', borderLeft: '2px solid transparent',
                 borderTop: '1px solid rgba(255,255,255,0.06)',
                 textDecoration: 'none',
-                fontSize: 12, fontWeight: 500,
+                fontSize: 13, fontWeight: 500,
                 color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#475569'),
                 background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
                 borderLeftColor: isActive ? ACTIVE_ACCENT : 'transparent',
@@ -472,8 +424,8 @@ export default function Layout({ children }) {
               })}
             >
               <ItemIcon Icon={item.icon} hasDot={hasUnread}/>
-              {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
-              {!collapsed && hasUnread && (
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {hasUnread && (
                 <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
                   {notifyCount}
                 </span>
@@ -482,29 +434,30 @@ export default function Layout({ children }) {
           );
         })}
 
-        {/* ─── Language switcher ─── */}
-        <div style={{ padding: collapsed ? '6px 8px' : '6px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <LanguageSwitcher compact={collapsed} direction="up" dark={true} style={{ width: '100%' }}/>
-        </div>
-
-        {/* ─── Collapse toggle ─── */}
-        <button onClick={() => setCollapsed(!collapsed)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '8px', margin: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 12 }}>
-          {collapsed ? <ChevronRight size={14}/> : <><ChevronLeft size={14}/> <span>{t('layout.collapse')}</span></>}
-        </button>
-
-        {/* ─── User profile ─── */}
-        <div style={{ padding: '12px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        {/* ─── User profile bar ─── */}
+        <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? C.p : user?.role === 'commercial' ? '#0891b2' : C.pl, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13 }}>
-              {user?.fullName?.charAt(0) || '?'}
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+              background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? C.p : user?.role === 'commercial' ? '#0891b2' : C.pl,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 700, fontSize: 12,
+            }}>
+              {user?.fullName?.charAt(0)?.toUpperCase() || '?'}
             </div>
-            {!collapsed && (
-              <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.fullName}</div>
-                <div style={{ color: '#64748b', fontSize: 10, textTransform: 'capitalize' }}>{user?.role}</div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ fontWeight: 500, color: '#fff', fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.fullName}
               </div>
-            )}
-            <button onClick={handleLogout} title={t('layout.logout')} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 6, borderRadius: 6, display: 'flex' }}>
+              <div style={{ color: '#475569', fontSize: 10, textTransform: 'capitalize' }}>
+                {isPartner ? (t('layout_extra.space_partner') || 'Partenaire') : user?.role}
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              title={t('layout.logout')}
+              style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex' }}
+            >
               <LogOut size={14}/>
             </button>
           </div>
@@ -512,7 +465,7 @@ export default function Layout({ children }) {
 
       </aside>
 
-      <main style={{ flex: 1, marginLeft: collapsed ? 68 : 220, padding: '32px 40px', transition: 'margin-left 0.2s ease', minHeight: '100vh', overflow: 'hidden' }}>
+      <main style={{ flex: 1, marginLeft: 220, padding: '32px 40px', minHeight: '100vh', overflow: 'hidden' }}>
         {children}
       </main>
 

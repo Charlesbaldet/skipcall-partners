@@ -953,7 +953,10 @@
     "deal_value": "Valor del trato",
     "deal_won_msg": "Trato ganado — Comisión pendiente",
     "deleting": "Eliminando...",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "discover_title": "Descubre otros programas de partners",
+    "discover_subtitle": "Encuentra nuevos programas que recomendar.",
+    "explore_marketplace": "Explorar el marketplace"
   },
   "partnerSubmit": {
     "title": "Nuevo referido",
@@ -1399,7 +1402,9 @@
     "tab_team": "Equipo y miembros",
     "tab_branding": "Apariencia y branding",
     "tab_public_marketplace": "Enlace público y marketplace",
-    "tab_notifications_emails": "Notificaciones y emails"
+    "tab_notifications_emails": "Notificaciones y emails",
+    "language": "Idioma",
+    "language_help": "Elige el idioma de la interfaz."
   },
   "status": {
     "new": "Nuevo",

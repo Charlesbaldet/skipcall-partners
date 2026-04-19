@@ -2,13 +2,15 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
-import { FileText, TrendingUp, DollarSign, Trash2, LayoutGrid, List, ChevronRight, X } from 'lucide-react';
+import { FileText, TrendingUp, DollarSign, Trash2, LayoutGrid, List, ChevronRight, X, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
 
 export default function PartnerMyReferrals() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [referrals, setReferrals] = useState([]);
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -93,6 +95,41 @@ export default function PartnerMyReferrals() {
           deleting={deleting === selected.id}
         />
       )}
+
+      {/* Explore other partner programs — moved here from the sidebar
+          so partners discover the marketplace without it living in the
+          nav. */}
+      <div
+        onClick={() => navigate('/marketplace')}
+        style={{
+          marginTop: 32,
+          padding: '16px 20px',
+          background: 'rgba(5,150,105,0.05)',
+          border: '1px solid rgba(5,150,105,0.18)',
+          borderRadius: 14,
+          display: 'flex', alignItems: 'center', gap: 14,
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          transition: 'background .15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(5,150,105,0.08)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(5,150,105,0.05)'; }}
+      >
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(5,150,105,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Search size={18} color="#059669"/>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+            {t('partnerReferrals.discover_title') || 'Découvrez d\'autres programmes partenaires'}
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+            {t('partnerReferrals.discover_subtitle') || 'Trouvez de nouveaux programmes à recommander.'}
+          </div>
+        </div>
+        <span style={{ color: '#059669', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+          {t('partnerReferrals.explore_marketplace') || 'Explorer la marketplace'} →
+        </span>
+      </div>
     </div>
   );
 }

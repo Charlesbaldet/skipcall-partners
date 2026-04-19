@@ -953,7 +953,10 @@
     "deal_value": "Valor do negócio",
     "deal_won_msg": "Negócio ganho — Comissão pendente",
     "deleting": "A eliminar...",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "discover_title": "Descobre outros programas de parceiros",
+    "discover_subtitle": "Encontra novos programas para recomendar.",
+    "explore_marketplace": "Explorar o marketplace"
   },
   "partnerSubmit": {
     "title": "Nova indicação",
@@ -1399,7 +1402,9 @@
     "tab_team": "Equipa e membros",
     "tab_branding": "Aparência e branding",
     "tab_public_marketplace": "Link público e marketplace",
-    "tab_notifications_emails": "Notificações e e-mails"
+    "tab_notifications_emails": "Notificações e e-mails",
+    "language": "Idioma",
+    "language_help": "Escolhe o idioma da interface."
   },
   "status": {
     "new": "Novo",

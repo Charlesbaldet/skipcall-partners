@@ -953,7 +953,10 @@
     "deal_value": "Valeur deal",
     "deal_won_msg": "Deal gagné — Commission en attente de traitement",
     "deleting": "Suppression...",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "discover_title": "Découvrez d'autres programmes partenaires",
+    "discover_subtitle": "Trouvez de nouveaux programmes à recommander.",
+    "explore_marketplace": "Explorer la marketplace"
   },
   "partnerSubmit": {
     "title": "Nouvelle recommandation",
@@ -1399,7 +1402,9 @@
     "tab_team": "Équipe et membres",
     "tab_branding": "Apparence et branding",
     "tab_public_marketplace": "Lien public et marketplace",
-    "tab_notifications_emails": "Notifications et emails"
+    "tab_notifications_emails": "Notifications et emails",
+    "language": "Langue",
+    "language_help": "Choisissez la langue d'affichage de l'interface."
   },
   "status": {
     "new": "Nouveau",
