@@ -22,7 +22,6 @@ const PLANS = [
     href: '/signup',
     variant: 'outline',
     features: ['feat_pipeline_kanban', 'feat_commissions', 'feat_partner_portal', 'feat_7_languages', 'feat_google_sso', 'feat_email_notifs'],
-    footnote: 'no_cc',
   },
   {
     key: 'pro',
@@ -33,7 +32,6 @@ const PLANS = [
     href: '/signup?plan=pro',
     variant: 'solid',
     features: ['feat_everything_starter', 'feat_advanced_analytics', 'feat_csv_export', 'feat_multi_admin', 'feat_priority_support', 'feat_partner_news'],
-    footnote: 'money_back',
   },
   {
     key: 'business',
@@ -44,7 +42,6 @@ const PLANS = [
     href: '/signup?plan=business',
     variant: 'outline',
     features: ['feat_everything_pro', 'feat_api', 'feat_branding', 'feat_dedicated_support', 'feat_crm_soon', 'feat_unlimited_programs'],
-    footnote: 'money_back',
   },
 ];
 
@@ -277,10 +274,6 @@ export default function PricingPage() {
                 >
                   {t('pricing.' + p.cta)} →
                 </button>
-
-                <div style={{ marginTop: 12, textAlign: 'center', fontSize: 12, color: C.m }}>
-                  {t('pricing.' + p.footnote)}
-                </div>
               </article>
             );
           })}

@@ -150,7 +150,7 @@
     "pricing": {
       "label": "Preise",
       "title": "Einfache Preise, keine Überraschungen",
-      "description": "Alle Pläne beinhalten eine 14-tägige kostenlose Testphase. Ohne Verpflichtung.",
+      "description": "Alle Pläne starten kostenlos. Keine Bindung.",
       "popular": "Beliebt",
       "custom": "Individuell",
       "per_month": "€/Monat",
@@ -361,9 +361,9 @@
     "detailed_features": "Detaillierte Funktionen",
     "what_you_get": "Was Sie konkret erhalten",
     "ready_to_test": "Bereit zum Testen?",
-    "trial_text": "14 Tage kostenlos, ohne Kreditkarte. Richten Sie Ihr Programm in 5 Minuten ein.",
+    "trial_text": "Für immer kostenlos, keine Kreditkarte. Richte dein Programm in 5 Minuten ein.",
     "create_space": "Meinen Bereich kostenlos erstellen",
-    "no_commitment": "Ohne Verpflichtung · 14 Tage kostenlos · Support inklusive"
+    "no_commitment": "Keine Bindung · Für immer kostenlos · Support inklusive"
   },
   "features": {
     "label": "Funktion",
@@ -1884,7 +1884,6 @@
     "hero_title": "Einfache Preise, keine Überraschungen",
     "hero_subtitle": "Starte kostenlos. Skaliere, wenn du willst.",
     "no_cc": "Keine Kreditkarte nötig",
-    "money_back": "14 Tage Geld-zurück-Garantie",
     "cta_starter": "Kostenlos starten",
     "cta_pro": "Mit Pro starten",
     "cta_business": "Mit Business starten",
@@ -1932,7 +1931,7 @@
     "faq_q2": "Was passiert, wenn ich mein Partnerlimit erreiche?",
     "faq_a2": "Deine bestehenden Partner bleiben aktiv. Du kannst nur keine neuen mehr hinzufügen, bis du upgradest.",
     "faq_q3": "Gibt es eine kostenlose Testphase?",
-    "faq_a3": "Der Starter-Plan ist für immer kostenlos. Für Pro und Business bieten wir eine 14-tägige Geld-zurück-Garantie.",
+    "faq_a3": "Der Starter-Plan ist für immer kostenlos. Bei Pro und Business kannst du jederzeit über deine Abrechnungsseite kündigen.",
     "faq_q4": "Kann ich jederzeit kündigen?",
     "faq_a4": "Ja — jederzeit kündbar. Dein Plan bleibt bis zum Ende des Abrechnungszeitraums aktiv.",
     "final_title": "Bereit, dein Partnernetzwerk auszubauen?",

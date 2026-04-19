@@ -361,9 +361,9 @@
     "detailed_features": "Fonctionnalités détaillées",
     "what_you_get": "Ce que vous obtenez concrètement",
     "ready_to_test": "Prêt à tester ?",
-    "trial_text": "14 jours gratuits, sans carte bancaire. Configurez votre programme en 5 minutes.",
+    "trial_text": "Gratuit à vie, sans carte bancaire. Configurez votre programme en 5 minutes.",
     "create_space": "Créer mon espace gratuitement",
-    "no_commitment": "Sans engagement · 14 jours gratuits · Support inclus"
+    "no_commitment": "Sans engagement · Gratuit à vie · Support inclus"
   },
   "features": {
     "label": "Fonctionnalité",
@@ -1884,7 +1884,6 @@
     "hero_title": "Une tarification simple, sans surprise",
     "hero_subtitle": "Commencez gratuitement. Passez à un plan supérieur quand vous en avez besoin.",
     "no_cc": "Pas de carte bancaire requise",
-    "money_back": "Garantie satisfait ou remboursé 14 jours",
     "cta_starter": "Commencer gratuitement",
     "cta_pro": "Commencer avec Pro",
     "cta_business": "Commencer avec Business",
@@ -1932,7 +1931,7 @@
     "faq_q2": "Que se passe-t-il si j'atteins ma limite de partenaires ?",
     "faq_a2": "Vos partenaires existants continuent de fonctionner normalement. Vous ne pouvez simplement plus en ajouter de nouveaux tant que vous ne passez pas à un plan supérieur.",
     "faq_q3": "Y a-t-il un essai gratuit ?",
-    "faq_a3": "Le plan Starter est gratuit pour toujours. Pour Pro et Business, nous offrons une garantie satisfait ou remboursé de 14 jours.",
+    "faq_a3": "Le plan Starter est gratuit à vie. Pour Pro et Business, vous pouvez annuler à tout moment depuis votre page de facturation.",
     "faq_q4": "Puis-je annuler à tout moment ?",
     "faq_a4": "Oui, vous pouvez annuler à tout moment. Votre plan reste actif jusqu'à la fin de la période de facturation.",
     "final_title": "Prêt à développer votre réseau de partenaires ?",

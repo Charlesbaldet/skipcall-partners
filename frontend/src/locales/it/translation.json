@@ -150,7 +150,7 @@
     "pricing": {
       "label": "Prezzi",
       "title": "Prezzi semplici, senza sorprese",
-      "description": "Tutti i piani includono 14 giorni di prova gratuita. Senza impegno.",
+      "description": "Tutti i piani iniziano gratis. Nessun impegno.",
       "popular": "Popolare",
       "custom": "Su misura",
       "per_month": "€/mese",
@@ -361,9 +361,9 @@
     "detailed_features": "Funzionalità dettagliate",
     "what_you_get": "Quello che ottieni concretamente",
     "ready_to_test": "Pronto a provare?",
-    "trial_text": "14 giorni gratis, senza carta di credito. Configura il tuo programma in 5 minuti.",
+    "trial_text": "Gratis per sempre, senza carta di credito. Configura il tuo programma in 5 minuti.",
     "create_space": "Crea il mio spazio gratuitamente",
-    "no_commitment": "Senza impegno · 14 giorni gratis · Supporto incluso"
+    "no_commitment": "Nessun impegno · Gratis per sempre · Supporto incluso"
   },
   "features": {
     "label": "Funzionalità",
@@ -1884,7 +1884,6 @@
     "hero_title": "Prezzi semplici, zero sorprese",
     "hero_subtitle": "Inizia gratis. Passa a un piano superiore quando serve.",
     "no_cc": "Nessuna carta richiesta",
-    "money_back": "Soddisfatti o rimborsati 14 giorni",
     "cta_starter": "Inizia gratis",
     "cta_pro": "Inizia con Pro",
     "cta_business": "Inizia con Business",
@@ -1932,7 +1931,7 @@
     "faq_q2": "Cosa succede quando raggiungo il limite di partner?",
     "faq_a2": "I tuoi partner esistenti continuano a funzionare. Non puoi solo aggiungerne di nuovi finché non fai upgrade.",
     "faq_q3": "C'è una prova gratuita?",
-    "faq_a3": "Il piano Starter è gratis per sempre. Per Pro e Business offriamo una garanzia soddisfatti o rimborsati di 14 giorni.",
+    "faq_a3": "Il piano Starter è gratis per sempre. Per Pro e Business, puoi annullare in qualsiasi momento dalla pagina di fatturazione.",
     "faq_q4": "Posso annullare in qualsiasi momento?",
     "faq_a4": "Sì — annulla quando vuoi. Il piano resta attivo fino alla fine del periodo di fatturazione.",
     "final_title": "Pronto a far crescere la tua rete di partner?",

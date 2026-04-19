@@ -150,7 +150,7 @@
     "pricing": {
       "label": "Preços",
       "title": "Preços simples, sem surpresas",
-      "description": "Todos os planos incluem 14 dias de teste gratuito. Sem compromisso.",
+      "description": "Todos os planos começam grátis. Sem compromisso.",
       "popular": "Popular",
       "custom": "Personalizado",
       "per_month": "€/mês",
@@ -361,9 +361,9 @@
     "detailed_features": "Funcionalidades detalhadas",
     "what_you_get": "O que você obtém concretamente",
     "ready_to_test": "Pronto para testar?",
-    "trial_text": "14 dias grátis, sem cartão de crédito. Configure seu programa em 5 minutos.",
+    "trial_text": "Grátis para sempre, sem cartão de crédito. Configura o teu programa em 5 minutos.",
     "create_space": "Criar meu espaço gratuitamente",
-    "no_commitment": "Sem compromisso · 14 dias grátis · Suporte incluído"
+    "no_commitment": "Sem compromisso · Grátis para sempre · Suporte incluído"
   },
   "features": {
     "label": "Funcionalidade",
@@ -1884,7 +1884,6 @@
     "hero_title": "Preços simples, sem surpresas",
     "hero_subtitle": "Começa grátis. Escala quando precisares.",
     "no_cc": "Sem cartão de crédito",
-    "money_back": "Garantia de devolução 14 dias",
     "cta_starter": "Começar grátis",
     "cta_pro": "Começar com Pro",
     "cta_business": "Começar com Business",
@@ -1932,7 +1931,7 @@
     "faq_q2": "O que acontece se atingir o limite de parceiros?",
     "faq_a2": "Os teus parceiros existentes continuam a funcionar. Só não podes adicionar novos até fazeres upgrade.",
     "faq_q3": "Existe um teste gratuito?",
-    "faq_a3": "O plano Starter é grátis para sempre. Para Pro e Business oferecemos garantia de devolução de 14 dias.",
+    "faq_a3": "O plano Starter é grátis para sempre. Para Pro e Business, podes cancelar quando quiseres na tua página de faturação.",
     "faq_q4": "Posso cancelar a qualquer momento?",
     "faq_a4": "Sim — cancela quando quiseres. O teu plano fica ativo até ao fim do período de faturação.",
     "final_title": "Pronto para fazer crescer a tua rede de parceiros?",

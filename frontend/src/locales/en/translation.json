@@ -150,7 +150,7 @@
     "pricing": {
       "label": "Pricing",
       "title": "Simple pricing, no surprises",
-      "description": "All plans include a 14-day free trial. No commitment.",
+      "description": "All plans are free to start. No commitment.",
       "popular": "Popular",
       "custom": "Custom",
       "per_month": "€/month",
@@ -361,9 +361,9 @@
     "detailed_features": "Detailed features",
     "what_you_get": "What you get concretely",
     "ready_to_test": "Ready to test it?",
-    "trial_text": "14 days free, no credit card. Set up your program in 5 minutes.",
+    "trial_text": "Free forever, no credit card. Set up your program in 5 minutes.",
     "create_space": "Create my workspace for free",
-    "no_commitment": "No commitment · 14 days free · Support included"
+    "no_commitment": "No commitment · Free forever · Support included"
   },
   "features": {
     "label": "Feature",
@@ -1884,7 +1884,6 @@
     "hero_title": "Simple pricing, no surprises",
     "hero_subtitle": "Start free. Scale when you need to.",
     "no_cc": "No credit card required",
-    "money_back": "14-day money-back guarantee",
     "cta_starter": "Get started for free",
     "cta_pro": "Start with Pro",
     "cta_business": "Start with Business",
@@ -1932,7 +1931,7 @@
     "faq_q2": "What happens when I reach my partner limit?",
     "faq_a2": "Your existing partners continue working. You just can't add new ones until you upgrade.",
     "faq_q3": "Is there a free trial?",
-    "faq_a3": "The Starter plan is free forever. For Pro and Business, we offer a 14-day money-back guarantee.",
+    "faq_a3": "The Starter plan is free forever. For Pro and Business, you can cancel anytime from your billing page.",
     "faq_q4": "Can I cancel anytime?",
     "faq_a4": "Yes — cancel anytime. Your plan stays active until the end of the billing period.",
     "final_title": "Ready to grow your partner network?",

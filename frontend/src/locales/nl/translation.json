@@ -150,7 +150,7 @@
     "pricing": {
       "label": "Prijzen",
       "title": "Eenvoudige prijzen, geen verrassingen",
-      "description": "Alle plannen bevatten een gratis proefperiode van 14 dagen. Geen verplichting.",
+      "description": "Alle plannen beginnen gratis. Geen verplichting.",
       "popular": "Populair",
       "custom": "Op maat",
       "per_month": "€/maand",
@@ -361,9 +361,9 @@
     "detailed_features": "Gedetailleerde functies",
     "what_you_get": "Wat u concreet krijgt",
     "ready_to_test": "Klaar om het te testen?",
-    "trial_text": "14 dagen gratis, geen creditcard. Stel uw programma in 5 minuten in.",
+    "trial_text": "Voor altijd gratis, geen creditcard. Zet je programma op in 5 minuten.",
     "create_space": "Mijn ruimte gratis aanmaken",
-    "no_commitment": "Geen verplichting · 14 dagen gratis · Support inbegrepen"
+    "no_commitment": "Geen verplichting · Voor altijd gratis · Support inbegrepen"
   },
   "features": {
     "label": "Functie",
@@ -1884,7 +1884,6 @@
     "hero_title": "Eenvoudige tarieven, geen verrassingen",
     "hero_subtitle": "Begin gratis. Schaal wanneer je wilt.",
     "no_cc": "Geen creditcard nodig",
-    "money_back": "14 dagen niet-goed-geld-terug",
     "cta_starter": "Gratis beginnen",
     "cta_pro": "Start met Pro",
     "cta_business": "Start met Business",
@@ -1932,7 +1931,7 @@
     "faq_q2": "Wat gebeurt er als ik mijn partnerlimiet bereik?",
     "faq_a2": "Je bestaande partners blijven werken. Je kunt alleen geen nieuwe meer toevoegen tot je upgradet.",
     "faq_q3": "Is er een gratis proefperiode?",
-    "faq_a3": "Het Starter-plan is voor altijd gratis. Voor Pro en Business bieden we 14 dagen niet-goed-geld-terug.",
+    "faq_a3": "Het Starter-plan is voor altijd gratis. Voor Pro en Business kun je op elk moment opzeggen via je facturatiepagina.",
     "faq_q4": "Kan ik op elk moment opzeggen?",
     "faq_a4": "Ja — zeg op wanneer je wilt. Je plan blijft actief tot het einde van de factureringsperiode.",
     "final_title": "Klaar om je partnernetwerk te laten groeien?",
