@@ -32,6 +32,10 @@ const crmRoutes = require('./routes/crm');
 const pipelineStagesRoutes = require('./routes/pipeline-stages');
 const searchRoutes = require('./routes/search');
 const sitemapRoutes = require('./routes/sitemap');
+const tenantFeaturesRoutes = require('./routes/tenantFeatures');
+const referralLinksRoutes = require('./routes/referralLinks');
+const promoCodesRoutes = require('./routes/promoCodes');
+const trackingScriptRoutes = require('./routes/trackingScript');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -140,6 +144,10 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/pipeline-stages', pipelineStagesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api', sitemapRoutes);
+app.use('/api/tenants', tenantFeaturesRoutes);
+app.use('/api/referral-links', referralLinksRoutes);
+app.use('/api/promo-codes', promoCodesRoutes);
+app.use('/api/tracking', trackingScriptRoutes);
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({

@@ -175,6 +175,8 @@ export default function ReferralsPage() {
         </div>
       </div>
 
+      <AdminTrackingAnalytics/>
+
       {loading ? (
         <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('referrals.loading')}</div>
       ) : viewMode === 'table' ? (
@@ -537,6 +539,76 @@ function LeadHandlingBadge({ handling }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#f0fdf4', color: '#059669', fontSize: 10, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
       🤝 {t('referral.partner_managed_badge')}
+    </div>
+  );
+}
+
+// ═══ Admin tracking analytics ═══
+// Renders a compact source-breakdown + per-partner click stats.
+// Self-fetches feature flags and hides itself when no tracking feature
+// is enabled (so admins who don't use tracking see nothing).
+function AdminTrackingAnalytics() {
+  const { t } = useTranslation();
+  const [features, setFeatures] = useState(null);
+  const [breakdown, setBreakdown] = useState([]);
+  const [partnerStats, setPartnerStats] = useState([]);
+
+  useEffect(() => {
+    api.getTenantFeatures()
+      .then(({ features }) => {
+        setFeatures(features);
+        api.getReferralSourceBreakdown().then(d => setBreakdown(d.breakdown || [])).catch(() => {});
+        if (features?.feature_referral_links) {
+          api.getReferralClickStats().then(d => setPartnerStats(d.stats || [])).catch(() => {});
+        }
+      })
+      .catch(() => setFeatures({}));
+  }, []);
+
+  if (!features) return null;
+  const anyOn = features.feature_referral_links || features.feature_promo_codes;
+  if (!anyOn) return null;
+
+  const total = breakdown.reduce((s, b) => s + b.n, 0) || 0;
+  const color = { manual: '#94a3b8', referral_link: '#059669', promo_code: '#f97316' };
+  const label = (k) => k === 'referral_link' ? t('tracking.referral_link') : k === 'promo_code' ? t('tracking.promo_code') : t('tracking.manual');
+
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20, marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>{t('tracking.breakdown_title')}</div>
+      <div style={{ display: 'flex', gap: 6, height: 10, borderRadius: 999, overflow: 'hidden', background: '#f1f5f9', marginBottom: 10 }}>
+        {breakdown.map(b => (
+          <div key={b.source} style={{ width: total ? (b.n / total * 100) + '%' : '0%', background: color[b.source] || '#94a3b8' }} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12, color: '#475569' }}>
+        {breakdown.map(b => (
+          <div key={b.source} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: color[b.source] || '#94a3b8' }} />
+            {label(b.source)} — <strong>{b.n}</strong>{total ? ` (${Math.round(b.n / total * 100)}%)` : ''}
+          </div>
+        ))}
+      </div>
+
+      {features.feature_referral_links && partnerStats.length > 0 && (
+        <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Clics par partenaire</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8, fontSize: 12, color: '#64748b', padding: '6px 10px', background: '#f8fafc', borderRadius: 8 }}>
+            <div>Partenaire</div>
+            <div style={{ textAlign: 'right' }}>Total</div>
+            <div style={{ textAlign: 'right' }}>30j</div>
+            <div style={{ textAlign: 'right' }}>Conv.</div>
+          </div>
+          {partnerStats.slice(0, 10).map(s => (
+            <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8, fontSize: 13, color: '#0f172a', padding: '8px 10px', borderBottom: '1px solid #f8fafc' }}>
+              <div style={{ fontWeight: 500 }}>{s.name}</div>
+              <div style={{ textAlign: 'right' }}>{s.total_clicks}</div>
+              <div style={{ textAlign: 'right' }}>{s.month_clicks}</div>
+              <div style={{ textAlign: 'right', color: '#059669', fontWeight: 600 }}>{s.conversions}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -607,7 +607,16 @@
         "text": "Before RefBoost, we spent 2 hours a month manually reconciling leads with partners. Now it's automatic and dispute-free.",
         "author": "Alexandre R., VP Sales — ScaleB2B"
       }
-    }
+    },
+    "tracking_title": "Tracking features",
+    "referral_links": "Referral links",
+    "referral_links_desc": "Each partner gets a unique link to track the prospects they send you",
+    "promo_codes": "Promo codes",
+    "promo_codes_desc": "Allow partners to create promo codes to share with their prospects",
+    "tracking_script": "Tracking script",
+    "tracking_script_desc": "Install a script on your website to automatically track conversions",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "forgotPwd": {
     "title": "Forgot password",
@@ -2074,5 +2083,49 @@
     "approved_message": "Commission approved",
     "rejected_message": "Commission rejected",
     "rejection_reason_label": "Reason"
+  },
+  "referral_link": {
+    "title": "My referral link",
+    "subtitle": "Share this link so leads are automatically attributed to you.",
+    "copy": "Copy link",
+    "copied": "Link copied!",
+    "clicks": "Total clicks",
+    "clicks_month": "This month",
+    "conversions": "Conversions",
+    "regenerate": "Regenerate code",
+    "regenerate_confirm": "Regenerating will break your old link. Continue?"
+  },
+  "promo_code": {
+    "title": "Promo codes",
+    "create": "Create a promo code",
+    "code": "Code",
+    "discount_type": "Discount type",
+    "percentage": "Percentage",
+    "fixed": "Fixed amount",
+    "discount_value": "Value",
+    "description": "Description",
+    "max_uses": "Max uses",
+    "unlimited": "Unlimited",
+    "expires_at": "Expires",
+    "uses": "Uses",
+    "active": "Active",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "empty": "No promo codes yet",
+    "delete_confirm": "Deactivate this promo code?"
+  },
+  "tracking": {
+    "title": "Tracking configuration",
+    "redirect_url": "Redirect URL",
+    "redirect_url_hint": "Where referral links send visitors (e.g. https://mysite.com/signup)",
+    "cookie_duration": "Cookie duration (days)",
+    "script": "Tracking script",
+    "script_instructions": "Add this script to your site to automatically track referrals",
+    "copy_script": "Copy script",
+    "source": "Source",
+    "manual": "Manual",
+    "referral_link": "Referral link",
+    "promo_code": "Promo code",
+    "breakdown_title": "Referral sources"
   }
 }

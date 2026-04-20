@@ -125,7 +125,9 @@ router.get('/me', authenticate, async (req, res) => {
 router.get('/public/:slug', async (req, res) => {
   try {
     const { rows } = await query(
-      'SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url FROM tenants WHERE slug = $1',
+      `SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url,
+              tracking_redirect_url
+         FROM tenants WHERE slug = $1`,
       [req.params.slug]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Tenant not found' });

@@ -16,6 +16,7 @@ import PartnerPaymentsPage from './pages/PartnerPaymentsPage.jsx';
 import MessagingPage from './pages/MessagingPage.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import PublicApplyPage from './pages/PublicApplyPage.jsx';
+import PublicReferralRedirectPage from './pages/PublicReferralRedirectPage.jsx';
 import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
 import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
 import AdminSettingsPage from './pages/AdminSettingsPage.jsx';
@@ -56,7 +57,7 @@ function AppRoutes() {
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
       <Route path="/ref/:code" element={<PublicTrackingPage />} />
       <Route path="/apply" element={<PublicApplyPage />} />
-          <Route path="/r/:slug" element={<PublicApplyPage />} />
+          <Route path="/r/:slug" element={<PublicReferralRedirectPage />} />
       <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
       <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

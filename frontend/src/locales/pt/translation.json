@@ -607,7 +607,16 @@
         "text": "Antes do RefBoost, passávamos 2 horas por mês reconciliando manualmente os leads com os parceiros. Agora é automático e sem discussões.",
         "author": "Alexandre R., VP Sales — ScaleB2B"
       }
-    }
+    },
+    "tracking_title": "Funcionalidades de rastreio",
+    "referral_links": "Links de referência",
+    "referral_links_desc": "Cada parceiro recebe um link único para rastrear os prospetos enviados",
+    "promo_codes": "Códigos promocionais",
+    "promo_codes_desc": "Permite aos parceiros criarem códigos promocionais para partilharem com os seus prospetos",
+    "tracking_script": "Script de rastreio",
+    "tracking_script_desc": "Instala um script no teu site para registar automaticamente as conversões",
+    "enabled": "Ativado",
+    "disabled": "Desativado"
   },
   "forgotPwd": {
     "title": "Esqueceu a senha?",
@@ -2074,5 +2083,49 @@
     "approved_message": "Comissão aprovada",
     "rejected_message": "Comissão rejeitada",
     "rejection_reason_label": "Motivo"
+  },
+  "referral_link": {
+    "title": "O meu link de referência",
+    "subtitle": "Partilha este link para que os leads sejam automaticamente atribuídos a ti.",
+    "copy": "Copiar link",
+    "copied": "Link copiado!",
+    "clicks": "Cliques totais",
+    "clicks_month": "Este mês",
+    "conversions": "Conversões",
+    "regenerate": "Gerar novo código",
+    "regenerate_confirm": "O teu link atual deixará de funcionar. Continuar?"
+  },
+  "promo_code": {
+    "title": "Códigos promocionais",
+    "create": "Criar um código promocional",
+    "code": "Código",
+    "discount_type": "Tipo de desconto",
+    "percentage": "Percentagem",
+    "fixed": "Valor fixo",
+    "discount_value": "Valor",
+    "description": "Descrição",
+    "max_uses": "Utilizações máximas",
+    "unlimited": "Ilimitadas",
+    "expires_at": "Expira",
+    "uses": "Utilizações",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "expired": "Expirado",
+    "empty": "Ainda sem códigos",
+    "delete_confirm": "Desativar este código?"
+  },
+  "tracking": {
+    "title": "Configuração de rastreio",
+    "redirect_url": "URL de redirecionamento",
+    "redirect_url_hint": "Para onde os links enviam visitantes (ex.: https://omeusite.pt/signup)",
+    "cookie_duration": "Duração do cookie (dias)",
+    "script": "Script de rastreio",
+    "script_instructions": "Adiciona este script ao teu site para rastrear automaticamente as referências",
+    "copy_script": "Copiar script",
+    "source": "Origem",
+    "manual": "Manual",
+    "referral_link": "Link de referência",
+    "promo_code": "Código promocional",
+    "breakdown_title": "Origens dos referrals"
   }
 }

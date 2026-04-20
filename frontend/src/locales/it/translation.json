@@ -607,7 +607,16 @@
         "text": "Prima di RefBoost, passavamo 2 ore al mese a riconciliare manualmente i lead con i partner. Ora è automatico e senza discussioni.",
         "author": "Alexandre R., VP Sales — ScaleB2B"
       }
-    }
+    },
+    "tracking_title": "Funzionalità di tracciamento",
+    "referral_links": "Link di affiliazione",
+    "referral_links_desc": "Ogni partner riceve un link univoco per tracciare i prospect inviati",
+    "promo_codes": "Codici promo",
+    "promo_codes_desc": "Consenti ai partner di creare codici promo da condividere con i loro prospect",
+    "tracking_script": "Script di tracciamento",
+    "tracking_script_desc": "Installa uno script sul tuo sito per tracciare automaticamente le conversioni",
+    "enabled": "Attivato",
+    "disabled": "Disattivato"
   },
   "forgotPwd": {
     "title": "Password dimenticata",
@@ -2074,5 +2083,49 @@
     "approved_message": "Commissione approvata",
     "rejected_message": "Commissione rifiutata",
     "rejection_reason_label": "Motivo"
+  },
+  "referral_link": {
+    "title": "Il mio link di affiliazione",
+    "subtitle": "Condividi questo link: i lead ti verranno attribuiti automaticamente.",
+    "copy": "Copia link",
+    "copied": "Link copiato!",
+    "clicks": "Clic totali",
+    "clicks_month": "Questo mese",
+    "conversions": "Conversioni",
+    "regenerate": "Rigenera codice",
+    "regenerate_confirm": "Rigenerando invaliderai il vecchio link. Continuare?"
+  },
+  "promo_code": {
+    "title": "Codici promo",
+    "create": "Crea un codice promo",
+    "code": "Codice",
+    "discount_type": "Tipo di sconto",
+    "percentage": "Percentuale",
+    "fixed": "Importo fisso",
+    "discount_value": "Valore",
+    "description": "Descrizione",
+    "max_uses": "Usi massimi",
+    "unlimited": "Illimitati",
+    "expires_at": "Scade il",
+    "uses": "Usi",
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "expired": "Scaduto",
+    "empty": "Nessun codice",
+    "delete_confirm": "Disattivare questo codice?"
+  },
+  "tracking": {
+    "title": "Configurazione del tracciamento",
+    "redirect_url": "URL di redirect",
+    "redirect_url_hint": "Dove i link inviano i visitatori (es. https://miosito.it/signup)",
+    "cookie_duration": "Durata cookie (giorni)",
+    "script": "Script di tracciamento",
+    "script_instructions": "Aggiungi questo script al tuo sito per tracciare automaticamente i referral",
+    "copy_script": "Copia script",
+    "source": "Origine",
+    "manual": "Manuale",
+    "referral_link": "Link di affiliazione",
+    "promo_code": "Codice promo",
+    "breakdown_title": "Origini dei referral"
   }
 }

@@ -255,6 +255,24 @@ class ApiClient {
   updateNotificationPreferences(data) { return this.request('/settings/notification-preferences', { method: 'PUT', body: JSON.stringify(data) }); }
   previewEmailTemplate(key) { return this.request('/settings/notification-preferences/preview/' + encodeURIComponent(key)); }
 
+  // Tenant feature flags (tracking opt-ins)
+  getTenantFeatures() { return this.request('/tenants/features'); }
+  updateTenantFeatures(data) { return this.request('/tenants/features', { method: 'PUT', body: JSON.stringify(data) }); }
+
+  // Referral links
+  getPartnerReferralLink(partnerId) { return this.request('/referral-links/partners/' + partnerId); }
+  regenerateReferralCode(partnerId) { return this.request('/referral-links/partners/' + partnerId + '/regenerate', { method: 'POST' }); }
+  getReferralClickStats() { return this.request('/referral-links/click-stats'); }
+  getReferralSourceBreakdown() { return this.request('/referral-links/source-breakdown'); }
+
+  // Promo codes
+  getPromoCodes() { return this.request('/promo-codes'); }
+  getPartnerPromoCodes() { return this.request('/promo-codes/partner'); }
+  createPromoCode(data) { return this.request('/promo-codes', { method: 'POST', body: JSON.stringify(data) }); }
+  updatePromoCode(id, data) { return this.request('/promo-codes/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
+  deletePromoCode(id) { return this.request('/promo-codes/' + id, { method: 'DELETE' }); }
+  validatePromoCode(code, tenantSlug) { return this.request('/promo-codes/validate', { method: 'POST', body: JSON.stringify({ code, tenantSlug }) }); }
+
   // Billing (Stripe)
   getBillingPlan() { return this.request('/billing/plan'); }
   syncBilling() { return this.request('/billing/sync'); }

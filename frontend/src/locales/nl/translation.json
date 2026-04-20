@@ -607,7 +607,16 @@
         "text": "Voor RefBoost besteedden we 2 uur per maand aan het handmatig afstemmen van leads met partners. Nu is het automatisch en conflictvrij.",
         "author": "Alexandre R., VP Sales — ScaleB2B"
       }
-    }
+    },
+    "tracking_title": "Trackingfuncties",
+    "referral_links": "Referral-links",
+    "referral_links_desc": "Elke partner krijgt een unieke link om de doorverwezen prospects te volgen",
+    "promo_codes": "Promocodes",
+    "promo_codes_desc": "Laat partners promocodes aanmaken om met hun prospects te delen",
+    "tracking_script": "Trackingscript",
+    "tracking_script_desc": "Installeer een script op je site om conversies automatisch te tracken",
+    "enabled": "Ingeschakeld",
+    "disabled": "Uitgeschakeld"
   },
   "forgotPwd": {
     "title": "Wachtwoord vergeten",
@@ -2074,5 +2083,49 @@
     "approved_message": "Commissie goedgekeurd",
     "rejected_message": "Commissie afgewezen",
     "rejection_reason_label": "Reden"
+  },
+  "referral_link": {
+    "title": "Mijn referral-link",
+    "subtitle": "Deel deze link zodat leads automatisch aan jou worden toegewezen.",
+    "copy": "Link kopiëren",
+    "copied": "Link gekopieerd!",
+    "clicks": "Totale kliks",
+    "clicks_month": "Deze maand",
+    "conversions": "Conversies",
+    "regenerate": "Code vernieuwen",
+    "regenerate_confirm": "Je oude link vervalt hierdoor. Doorgaan?"
+  },
+  "promo_code": {
+    "title": "Promocodes",
+    "create": "Promocode aanmaken",
+    "code": "Code",
+    "discount_type": "Soort korting",
+    "percentage": "Percentage",
+    "fixed": "Vast bedrag",
+    "discount_value": "Waarde",
+    "description": "Beschrijving",
+    "max_uses": "Max. gebruik",
+    "unlimited": "Onbeperkt",
+    "expires_at": "Verloopt",
+    "uses": "Gebruikt",
+    "active": "Actief",
+    "inactive": "Inactief",
+    "expired": "Verlopen",
+    "empty": "Nog geen codes",
+    "delete_confirm": "Deze code deactiveren?"
+  },
+  "tracking": {
+    "title": "Trackingconfiguratie",
+    "redirect_url": "Redirect-URL",
+    "redirect_url_hint": "Waar referral-links bezoekers naartoe sturen (bijv. https://mijnsite.nl/signup)",
+    "cookie_duration": "Cookieduur (dagen)",
+    "script": "Trackingscript",
+    "script_instructions": "Voeg dit script toe aan je site om referrals automatisch te tracken",
+    "copy_script": "Script kopiëren",
+    "source": "Bron",
+    "manual": "Handmatig",
+    "referral_link": "Referral-link",
+    "promo_code": "Promocode",
+    "breakdown_title": "Referral-bronnen"
   }
 }

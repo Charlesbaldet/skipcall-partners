@@ -192,7 +192,13 @@ export default function SettingsPage() {
             {tab === 'notifications' && isAdmin && <NotificationsTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
-            {tab === 'pipeline' && isAdmin && <PipelineStagesEditor />}
+            {tab === 'pipeline' && isAdmin && (
+              <>
+                <PipelineStagesEditor />
+                <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+                <TrackingFeaturesTab />
+              </>
+            )}
             {tab === 'public-marketplace' && isAdmin && (
               <>
                 <MarketplaceTab />
@@ -1521,6 +1527,140 @@ function EmailPreviewModal({ preview, onClose }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ═══ TRACKING FEATURES ═══
+// Feature toggles + tracking configuration. Admin-scoped, sits inside
+// the pipeline/Programme tab. Each toggle independently enables a
+// downstream surface (partner referral link card, promo codes table,
+// embeddable script). Config fields (redirect URL, cookie days, copy
+// script snippet) only show when at least one feature is on.
+function TrackingFeaturesTab() {
+  const { t } = useTranslation();
+  const [flags, setFlags] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [tenantSlug, setTenantSlug] = useState(null);
+  const [scriptCopied, setScriptCopied] = useState(false);
+
+  useEffect(() => {
+    Promise.all([api.getTenantFeatures(), api.getMyTenant().catch(() => null)])
+      .then(([f, mt]) => {
+        setFlags(f.features);
+        const t = mt && (mt.tenant || mt);
+        if (t && t.slug) setTenantSlug(t.slug);
+      })
+      .catch(() => setFlags({ feature_referral_links: false, feature_promo_codes: false, feature_tracking_script: false, tracking_redirect_url: '', tracking_cookie_days: 30 }))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const patch = async (diff) => {
+    setSaving(true);
+    try {
+      const { features } = await api.updateTenantFeatures(diff);
+      setFlags(features);
+    } catch (e) { alert(e.message); }
+    setSaving(false);
+  };
+
+  if (loading || !flags) return <div style={{ color: '#94a3b8' }}>…</div>;
+
+  const anyTrackingOn = flags.feature_referral_links || flags.feature_promo_codes || flags.feature_tracking_script;
+  const scriptTag = `<script src="https://refboost.io/api/tracking/refboost.js?tenant=${tenantSlug || ''}" data-tenant="${tenantSlug || ''}"></script>`;
+
+  const FeatureRow = ({ on, onChange, title, desc }) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid #f1f5f9', gap: 20 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{title}</div>
+        <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{desc}</div>
+      </div>
+      <button onClick={() => onChange(!on)} disabled={saving} style={{ background: 'none', border: 'none', cursor: 'pointer', color: on ? '#059669' : '#cbd5e1' }}>
+        {on ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+      </button>
+    </div>
+  );
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>{t('features.tracking_title')}</h3>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>
+        {t('features.referral_links_desc')}
+      </p>
+
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0 20px' }}>
+        <FeatureRow
+          on={flags.feature_referral_links}
+          onChange={v => patch({ feature_referral_links: v })}
+          title={t('features.referral_links')}
+          desc={t('features.referral_links_desc')}
+        />
+        <FeatureRow
+          on={flags.feature_promo_codes}
+          onChange={v => patch({ feature_promo_codes: v })}
+          title={t('features.promo_codes')}
+          desc={t('features.promo_codes_desc')}
+        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', gap: 20 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{t('features.tracking_script')}</div>
+            <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t('features.tracking_script_desc')}</div>
+          </div>
+          <button onClick={() => patch({ feature_tracking_script: !flags.feature_tracking_script })} disabled={saving} style={{ background: 'none', border: 'none', cursor: 'pointer', color: flags.feature_tracking_script ? '#059669' : '#cbd5e1' }}>
+            {flags.feature_tracking_script ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+          </button>
+        </div>
+      </div>
+
+      {anyTrackingOn && (
+        <>
+          <h4 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginTop: 32, marginBottom: 12 }}>
+            {t('tracking.title')}
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('tracking.redirect_url')}</label>
+              <input
+                type="url"
+                value={flags.tracking_redirect_url || ''}
+                onChange={e => setFlags({ ...flags, tracking_redirect_url: e.target.value })}
+                onBlur={e => patch({ tracking_redirect_url: e.target.value })}
+                placeholder="https://monsite.com/signup"
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{t('tracking.redirect_url_hint')}</div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('tracking.cookie_duration')}</label>
+              <input
+                type="number"
+                min="1"
+                value={flags.tracking_cookie_days ?? 30}
+                onChange={e => setFlags({ ...flags, tracking_cookie_days: e.target.value })}
+                onBlur={e => patch({ tracking_cookie_days: parseInt(e.target.value, 10) || 30 })}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          {flags.feature_tracking_script && tenantSlug && (
+            <div style={{ background: '#0f172a', borderRadius: 12, padding: 16, color: '#e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('tracking.script')}</span>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(scriptTag); setScriptCopied(true); setTimeout(() => setScriptCopied(false), 2000); }}
+                  style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                >
+                  {scriptCopied ? t('referral_link.copied') : t('tracking.copy_script')}
+                </button>
+              </div>
+              <pre style={{ margin: 0, fontSize: 12, fontFamily: 'ui-monospace, monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{scriptTag}</pre>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 10 }}>{t('tracking.script_instructions')}</div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

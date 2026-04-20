@@ -150,13 +150,51 @@ router.post('/', [
       prospect_name, prospect_email, prospect_phone,
       prospect_company, prospect_role,
       recommendation_level, notes, lead_handling,
+      referral_code_used, promo_code,
     } = req.body;
     const safeLeadHandling = lead_handling === 'client_prospect' ? 'client_prospect' : 'partner_managed';
 
-    // Determine partner_id from JWT, request body, or — for multi-role
-    // users whose JWT is stale after /switch-space — by resolving the
-    // partner record that matches this user+tenant+email.
-    let partnerId = req.user.partnerId || req.body.partner_id;
+    // Track the submission source for admin analytics. Tracking codes
+    // override any explicit partner_id in the body.
+    let source = 'manual';
+    let promoCodeId = null;
+    let refCodeNorm = null;
+    let resolvedPartnerIdFromCode = null;
+
+    if (referral_code_used) {
+      refCodeNorm = String(referral_code_used).toUpperCase();
+      const { rows: [pr] } = await query(
+        'SELECT id, tenant_id FROM partners WHERE referral_code = $1 LIMIT 1',
+        [refCodeNorm]
+      );
+      if (pr && (!req.tenantId || pr.tenant_id === req.tenantId)) {
+        resolvedPartnerIdFromCode = pr.id;
+        source = 'referral_link';
+      } else {
+        refCodeNorm = null; // invalid — fall through to manual flow
+      }
+    }
+    if (promo_code && !resolvedPartnerIdFromCode) {
+      const promoNorm = String(promo_code).toUpperCase();
+      const { rows: [pc] } = await query(
+        `SELECT pc.id, pc.partner_id, pc.tenant_id
+           FROM promo_codes pc
+          WHERE pc.code = $1 AND pc.is_active = TRUE
+            AND ($2::uuid IS NULL OR pc.tenant_id = $2)
+          ORDER BY pc.created_at DESC LIMIT 1`,
+        [promoNorm, req.tenantId || null]
+      );
+      if (pc) {
+        resolvedPartnerIdFromCode = pc.partner_id;
+        promoCodeId = pc.id;
+        source = 'promo_code';
+      }
+    }
+
+    // Determine partner_id from JWT, request body, tracking code, or —
+    // for multi-role users whose JWT is stale after /switch-space — by
+    // resolving the partner record that matches this user+tenant+email.
+    let partnerId = resolvedPartnerIdFromCode || req.user.partnerId || req.body.partner_id;
     if (!partnerId && req.user.role === 'partner') {
       const { rows: ur } = await query(
         `SELECT partner_id FROM user_roles
@@ -196,18 +234,19 @@ router.post('/', [
       } catch (e) { /* stages may not exist yet — column allows NULL */ }
     }
 
-    // INSERT with tenant_id
+    // INSERT with tenant_id + tracking source
     const { rows: [referral] } = await query(
       `INSERT INTO referrals
         (partner_id, submitted_by, prospect_name, prospect_email,
          prospect_phone, prospect_company, prospect_role,
-         recommendation_level, notes, tenant_id, stage_id, lead_handling)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         recommendation_level, notes, tenant_id, stage_id, lead_handling,
+         source, promo_code_id, referral_code_used)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
       [partnerId, req.user.id, prospect_name, prospect_email,
        prospect_phone, prospect_company, prospect_role,
        recommendation_level, notes, req.tenantId || null, defaultStageId,
-       safeLeadHandling]
+       safeLeadHandling, source, promoCodeId, refCodeNorm]
     );
 
     // Log activity

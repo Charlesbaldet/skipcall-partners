@@ -607,7 +607,16 @@
         "text": "Vor RefBoost verbrachten wir 2 Stunden im Monat damit, Leads manuell mit Partnern abzugleichen. Jetzt ist es automatisch und streitfrei.",
         "author": "Alexandre R., VP Sales — ScaleB2B"
       }
-    }
+    },
+    "tracking_title": "Tracking-Funktionen",
+    "referral_links": "Empfehlungslinks",
+    "referral_links_desc": "Jeder Partner erhält einen eindeutigen Link, um die übermittelten Interessenten zu verfolgen",
+    "promo_codes": "Gutscheincodes",
+    "promo_codes_desc": "Erlaube Partnern, Gutscheincodes für ihre Interessenten zu erstellen",
+    "tracking_script": "Tracking-Skript",
+    "tracking_script_desc": "Installiere ein Skript auf deiner Website, um Conversions automatisch zu erfassen",
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert"
   },
   "forgotPwd": {
     "title": "Passwort vergessen",
@@ -2074,5 +2083,49 @@
     "approved_message": "Provision genehmigt",
     "rejected_message": "Provision abgelehnt",
     "rejection_reason_label": "Grund"
+  },
+  "referral_link": {
+    "title": "Mein Empfehlungslink",
+    "subtitle": "Teile diesen Link, damit Leads dir automatisch zugeordnet werden.",
+    "copy": "Link kopieren",
+    "copied": "Link kopiert!",
+    "clicks": "Klicks gesamt",
+    "clicks_month": "Diesen Monat",
+    "conversions": "Conversions",
+    "regenerate": "Code neu generieren",
+    "regenerate_confirm": "Dein alter Link wird dadurch ungültig. Fortfahren?"
+  },
+  "promo_code": {
+    "title": "Gutscheincodes",
+    "create": "Gutscheincode erstellen",
+    "code": "Code",
+    "discount_type": "Rabattart",
+    "percentage": "Prozent",
+    "fixed": "Fester Betrag",
+    "discount_value": "Wert",
+    "description": "Beschreibung",
+    "max_uses": "Max. Nutzungen",
+    "unlimited": "Unbegrenzt",
+    "expires_at": "Läuft ab",
+    "uses": "Nutzungen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "expired": "Abgelaufen",
+    "empty": "Noch keine Codes",
+    "delete_confirm": "Diesen Code deaktivieren?"
+  },
+  "tracking": {
+    "title": "Tracking-Konfiguration",
+    "redirect_url": "Weiterleitungs-URL",
+    "redirect_url_hint": "Wohin Empfehlungslinks Besucher schicken (z. B. https://meineseite.de/signup)",
+    "cookie_duration": "Cookie-Dauer (Tage)",
+    "script": "Tracking-Skript",
+    "script_instructions": "Füge dieses Skript auf deiner Website ein, um Empfehlungen automatisch zu erfassen",
+    "copy_script": "Skript kopieren",
+    "source": "Quelle",
+    "manual": "Manuell",
+    "referral_link": "Empfehlungslink",
+    "promo_code": "Gutscheincode",
+    "breakdown_title": "Referral-Quellen"
   }
 }

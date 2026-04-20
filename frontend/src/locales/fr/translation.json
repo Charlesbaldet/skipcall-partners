@@ -607,7 +607,16 @@
         "text": "Avant RefBoost, on passait 2h par mois à réconcilier manuellement les leads avec les apporteurs. Maintenant c'est automatique et sans discussion.",
         "author": "Alexandre R., VP Sales — ScaleB2B"
       }
-    }
+    },
+    "tracking_title": "Fonctionnalités de tracking",
+    "referral_links": "Liens de parrainage",
+    "referral_links_desc": "Chaque partenaire reçoit un lien unique pour tracker les prospects qu'il vous envoie",
+    "promo_codes": "Codes promo",
+    "promo_codes_desc": "Permettre aux partenaires de créer des codes promo à partager avec leurs prospects",
+    "tracking_script": "Script de tracking",
+    "tracking_script_desc": "Installer un script sur votre site pour tracker automatiquement les conversions",
+    "enabled": "Activé",
+    "disabled": "Désactivé"
   },
   "forgotPwd": {
     "title": "Mot de passe oublié",
@@ -2074,5 +2083,49 @@
     "approved_message": "Commission approuvée",
     "rejected_message": "Commission rejetée",
     "rejection_reason_label": "Motif"
+  },
+  "referral_link": {
+    "title": "Mon lien de parrainage",
+    "subtitle": "Partagez ce lien avec vos prospects pour que leurs inscriptions vous soient automatiquement attribuées.",
+    "copy": "Copier le lien",
+    "copied": "Lien copié !",
+    "clicks": "Clics totaux",
+    "clicks_month": "Ce mois-ci",
+    "conversions": "Conversions",
+    "regenerate": "Régénérer le code",
+    "regenerate_confirm": "Régénérer le code cassera votre ancien lien. Continuer ?"
+  },
+  "promo_code": {
+    "title": "Codes promo",
+    "create": "Créer un code promo",
+    "code": "Code",
+    "discount_type": "Type de remise",
+    "percentage": "Pourcentage",
+    "fixed": "Montant fixe",
+    "discount_value": "Valeur",
+    "description": "Description",
+    "max_uses": "Utilisations max",
+    "unlimited": "Illimitées",
+    "expires_at": "Expire le",
+    "uses": "Utilisations",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "expired": "Expiré",
+    "empty": "Aucun code promo",
+    "delete_confirm": "Désactiver ce code promo ?"
+  },
+  "tracking": {
+    "title": "Configuration du tracking",
+    "redirect_url": "URL de redirection",
+    "redirect_url_hint": "Où vos liens de parrainage envoient les visiteurs (ex : https://monsite.com/signup)",
+    "cookie_duration": "Durée du cookie (jours)",
+    "script": "Script de tracking",
+    "script_instructions": "Ajoutez ce script à votre site pour tracker automatiquement les referrals",
+    "copy_script": "Copier le script",
+    "source": "Source",
+    "manual": "Manuel",
+    "referral_link": "Lien de parrainage",
+    "promo_code": "Code promo",
+    "breakdown_title": "Sources des referrals"
   }
 }

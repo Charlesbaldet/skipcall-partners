@@ -607,7 +607,16 @@
         "text": "Antes de RefBoost, pasábamos 2 horas al mes reconciliando manualmente los leads con los socios. Ahora es automático y sin discusiones.",
         "author": "Alexandre R., VP Sales — ScaleB2B"
       }
-    }
+    },
+    "tracking_title": "Funciones de seguimiento",
+    "referral_links": "Enlaces de referido",
+    "referral_links_desc": "Cada partner recibe un enlace único para rastrear los prospectos que te envía",
+    "promo_codes": "Códigos promocionales",
+    "promo_codes_desc": "Permite a los partners crear códigos promocionales para compartir con sus prospectos",
+    "tracking_script": "Script de seguimiento",
+    "tracking_script_desc": "Instala un script en tu sitio para rastrear automáticamente las conversiones",
+    "enabled": "Activado",
+    "disabled": "Desactivado"
   },
   "forgotPwd": {
     "title": "¿Olvidaste tu contraseña?",
@@ -2074,5 +2083,49 @@
     "approved_message": "Comisión aprobada",
     "rejected_message": "Comisión rechazada",
     "rejection_reason_label": "Motivo"
+  },
+  "referral_link": {
+    "title": "Mi enlace de referido",
+    "subtitle": "Comparte este enlace para que los leads se te atribuyan automáticamente.",
+    "copy": "Copiar enlace",
+    "copied": "¡Enlace copiado!",
+    "clicks": "Clics totales",
+    "clicks_month": "Este mes",
+    "conversions": "Conversiones",
+    "regenerate": "Regenerar código",
+    "regenerate_confirm": "Regenerar romperá tu enlace actual. ¿Continuar?"
+  },
+  "promo_code": {
+    "title": "Códigos promocionales",
+    "create": "Crear un código promocional",
+    "code": "Código",
+    "discount_type": "Tipo de descuento",
+    "percentage": "Porcentaje",
+    "fixed": "Importe fijo",
+    "discount_value": "Valor",
+    "description": "Descripción",
+    "max_uses": "Usos máximos",
+    "unlimited": "Ilimitados",
+    "expires_at": "Expira",
+    "uses": "Usos",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "expired": "Expirado",
+    "empty": "No hay códigos aún",
+    "delete_confirm": "¿Desactivar este código?"
+  },
+  "tracking": {
+    "title": "Configuración del seguimiento",
+    "redirect_url": "URL de redirección",
+    "redirect_url_hint": "Dónde envían los enlaces a los visitantes (ej.: https://misitio.com/signup)",
+    "cookie_duration": "Duración de la cookie (días)",
+    "script": "Script de seguimiento",
+    "script_instructions": "Añade este script a tu sitio para rastrear automáticamente los referidos",
+    "copy_script": "Copiar script",
+    "source": "Origen",
+    "manual": "Manual",
+    "referral_link": "Enlace de referido",
+    "promo_code": "Código promocional",
+    "breakdown_title": "Fuentes de referidos"
   }
 }
