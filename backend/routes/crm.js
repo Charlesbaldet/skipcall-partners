@@ -28,6 +28,16 @@ const BACKEND = () => {
   return 'https://skipcall-partners-production.up.railway.app';
 };
 
+// Diagnostic: which env var resolved the BACKEND() base. If the value
+// HubSpot rejects with "incohérence entre les domaines" doesn't match
+// what's registered in the HubSpot app config, change the app config
+// or pin BACKEND_URL to the registered origin.
+function backendSource() {
+  if (process.env.BACKEND_URL) return `BACKEND_URL=${process.env.BACKEND_URL}`;
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `RAILWAY_PUBLIC_DOMAIN=${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  return 'hardcoded fallback';
+}
+
 // ─── Plan gate middleware ────────────────────────────────────────────
 async function requireBusiness(req, res, next) {
   if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
@@ -159,6 +169,8 @@ router.get('/hubspot/auth', authenticate, tenantScope, authorize('admin'), requi
   const redirectUri = BACKEND() + '/api/crm/hubspot/callback';
   const url = crmService.hubspotAuthUrl(state, redirectUri);
   if (!url) return res.status(500).json({ error: 'HUBSPOT_CLIENT_ID non configuré' });
+  console.log('[hubspot.auth] redirect_uri resolved to:', redirectUri, '(source:', backendSource(), ')');
+  console.log('[hubspot.auth] authorize URL:', url);
   res.json({ url });
 });
 
@@ -175,6 +187,7 @@ router.get('/hubspot/callback', async (req, res) => {
     // MUST reuse the exact same redirect_uri that was passed to
     // /authorize — HubSpot validates it on /token exchange.
     const redirectUri = BACKEND() + '/api/crm/hubspot/callback';
+    console.log('[hubspot.callback] exchanging code with redirect_uri:', redirectUri);
     const tokens = await crmService.exchangeHubSpotCode(code, redirectUri);
     await query(
       `INSERT INTO crm_integrations (tenant_id, provider, is_active, access_token, refresh_token, connected_at)
