@@ -305,6 +305,7 @@ export default function ReferralsPage() {
         <DetailModal referral={selected} activities={activities}
           onClose={() => { setSelected(null); setActivities([]); }}
           onUpdate={handleUpdate} onDelete={handleDelete} myTenant={myTenant}
+          stages={stages}
         />
       )}
     </div>
@@ -341,24 +342,46 @@ function Confetti() {
   );
 }
 
-// ═══ DETAIL MODAL (unchanged from original) ═══
-function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTenant }) {
+// ═══ DETAIL MODAL ═══
+// `stages` comes from the parent page (api.getPipelineStages) so the
+// Pipeline tab renders the tenant's custom columns — not a hardcoded
+// list. Falls back to STATUS_CONFIG so the modal still works during
+// the brief window before stages load.
+function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTenant, stages = [] }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
   const rUnit = rModel === 'ARR' ? t('referrals.unit_year') : rModel === 'MRR' ? t('referrals.unit_month') : '€';
-  const [editStatus, setEditStatus] = useState(referral.status);
+
+  // Prefer stage_id for the source of truth; fall back to matching a
+  // stage by legacy status slug so existing referrals still highlight
+  // the right button.
+  const initialStage = stages.find(s => s.id === referral.stage_id)
+    || stages.find(s => s.slug === referral.status)
+    || null;
+  const [editStageId, setEditStageId] = useState(initialStage?.id || referral.stage_id || null);
+  const [editStatus, setEditStatus] = useState(initialStage?.slug || referral.status);
   const [editValue, setEditValue] = useState(referral.deal_value || '');
   const [saving, setSaving] = useState(false);
   const [editEngagement, setEditEngagement] = useState(referral.engagement || 'monthly');
   const [tab, setTab] = useState('info');
   const [saveToast, setSaveToast] = useState(null);
 
+  const pickStage = (stage) => {
+    setEditStageId(stage.id);
+    setEditStatus(stage.slug || stage.id);
+  };
+
+  const selectedStage = stages.find(s => s.id === editStageId) || null;
+
   const handleSave = async () => {
     setSaving(true);
     setSaveToast(null);
     try {
-      await onUpdate(referral.id, { status: editStatus, deal_value: Number(editValue) || 0, engagement: editEngagement });
+      const patch = { deal_value: Number(editValue) || 0, engagement: editEngagement };
+      if (editStageId) patch.stage_id = editStageId;
+      else if (editStatus) patch.status = editStatus;
+      await onUpdate(referral.id, patch);
       setSaveToast({ type: 'success', text: t('referrals.saved_ok') });
       setTimeout(() => setSaveToast(null), 2500);
     } catch (e) {
@@ -368,7 +391,8 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   };
 
   const rate = referral.commission_rate || 10;
-  const commission = editStatus === 'won' ? (Number(editValue) || 0) * rate / 100 : 0;
+  const isWonSelected = selectedStage ? !!selectedStage.is_won : editStatus === 'won';
+  const commission = isWonSelected ? (Number(editValue) || 0) * rate / 100 : 0;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -413,9 +437,28 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 10 }}>{t('referrals.field_status')}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {Object.entries(STATUS_CONFIG).map(([k, v]) => (
-                    <button key={k} onClick={() => setEditStatus(k)} style={{ padding: '8px 14px', borderRadius: 10, border: editStatus === k ? `2px solid ${v.color}` : '2px solid #e2e8f0', background: editStatus === k ? v.bg : '#fff', color: v.color, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{v.label}</button>
-                  ))}
+                  {(stages.length
+                    ? stages.map(s => ({ id: s.id, slug: s.slug, label: s.name, color: s.color || '#64748b', isStage: true, stage: s }))
+                    : Object.entries(STATUS_CONFIG).map(([k, v]) => ({ id: k, slug: k, label: v.label, color: v.color, bg: v.bg, isStage: false }))
+                  ).map(opt => {
+                    const active = opt.isStage ? editStageId === opt.id : editStatus === opt.slug;
+                    const bg = opt.isStage ? (opt.color + '15') : opt.bg;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => opt.isStage ? pickStage(opt.stage) : (setEditStageId(null), setEditStatus(opt.slug))}
+                        style={{
+                          padding: '8px 14px', borderRadius: 10,
+                          border: active ? `2px solid ${opt.color}` : '2px solid #e2e8f0',
+                          background: active ? bg : '#fff',
+                          color: opt.color,
+                          fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div style={{ marginBottom: 24 }}>
@@ -430,7 +473,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   ))}
                 </div>
               </div>
-              {editStatus === 'won' && Number(editValue) > 0 && (
+              {isWonSelected && Number(editValue) > 0 && (
                 <div style={{ background: 'linear-gradient(135deg,#fef3c7,#fffbeb)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #fcd34d' }}>
                   <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('referrals.commission_est')}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
