@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
@@ -32,6 +32,8 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(null);
   const [myTenant, setMyTenant] = useState(null);
   const [features, setFeatures] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [revenueCumulState, setRevenueCumulState] = useState(false);
   const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
   const [billingPlan, setBillingPlan] = useState(null);
   const navigate = useNavigate();
@@ -44,13 +46,10 @@ export default function DashboardPage() {
       setKpis(k); setMyTenant(mt && (mt.tenant || mt)); setTimeline(tl.timeline); setPipeline(p.pipeline);
       setTopPartners(tp.topPartners); setLevels(l.levels);
     }).catch(console.error).finally(() => setLoading(false));
-    // Feature flags drive whether the Classement tab's "Lien" column
-    // is shown — when feature_referral_links is off we hide it entirely
-    // so the old /ref/:code scheme doesn't compete with the new one.
+    // Dashboard-wide bundle for the redesigned charts. Fails silently
+    // so the page still renders KPIs even if this endpoint errors.
+    api.getDashboardStats().then(setStats).catch(() => setStats({}));
     api.getTenantFeatures().then(d => setFeatures(d.features || {})).catch(() => setFeatures({}));
-    // Billing plan is fetched separately so a billing outage doesn't
-    // block the rest of the dashboard. Used to render the over-limit
-    // banner when partnerCount > plan_partner_limit.
     api.getBillingPlan().then(setBillingPlan).catch(() => {});
   }, []);
 
@@ -138,10 +137,10 @@ export default function DashboardPage() {
 
       {tab === 'overview' && (
         <OverviewTab
-          kpis={kpis} pipelineData={pipelineData} levelData={levelData}
-          timelineData={timelineData} revenueData={revenueData}
-          revenueCumul={revenueCumul} setRevenueCumul={setRevenueCumul}
-          topPartners={topPartners} myTenant={myTenant}
+          kpis={kpis}
+          stats={stats}
+          revenueCumul={revenueCumulState} setRevenueCumul={setRevenueCumulState}
+          myTenant={myTenant}
           billingPlan={billingPlan} navigate={navigate}
         />
       )}
@@ -160,7 +159,7 @@ export default function DashboardPage() {
 // ═══════════════════════════════════════
 // VUE D'ENSEMBLE TAB
 // ═══════════════════════════════════════
-function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData, revenueCumul, setRevenueCumul, topPartners, myTenant, billingPlan, navigate }) {
+function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, billingPlan, navigate }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
@@ -178,6 +177,29 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
     } catch (e) {
       navigate('/billing');
     }
+  };
+
+  // Short month label for x-axes (nov., déc., jan., …).
+  const monthShort = (ym) => {
+    if (!ym) return '';
+    const [y, m] = ym.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('fr-FR', { month: 'short' }).toLowerCase();
+  };
+  const monthlyData = (stats?.referralsByMonth || []).map(r => ({ ...r, label: monthShort(r.month) }));
+  const mrrSeries = (stats?.mrrByMonth || []).map(r => ({ ...r, label: monthShort(r.month), value: revenueCumul ? r.cumulative : r.mrr }));
+  const commissionMonthly = (stats?.commissionsByMonth || []).map(r => ({ ...r, label: monthShort(r.month) }));
+  const stageData = (stats?.referralsByStage || []).filter(s => s.count > 0);
+  const stageTotal = stageData.reduce((s, r) => s + r.count, 0);
+  const commissionStatusData = (stats?.commissionsByStatus || []).filter(c => c.amount > 0);
+  const commissionTotal = commissionStatusData.reduce((s, c) => s + c.amount, 0);
+  const temperatureData = stats?.performanceByTemperature || [];
+  const cycle = stats?.averageCycleDuration || {};
+  const mrrTotal = (stats?.mrrByMonth || []).reduce((s, r) => s + (r.mrr || 0), 0);
+  const fmtDays = (n) => n == null ? '—' : `${Math.round(n)}j`;
+  const fmtK = (n) => {
+    if (n == null) return '—';
+    if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}K€`;
+    return `${Math.round(n)}€`;
   };
 
   return (
@@ -214,122 +236,238 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
       </div>
 
       <PartnersByCategoryCard />
-      <AdminTrackingAnalytics />
 
-      {/* Charts Row 1 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
+      {/* Row 3: Monthly area + pipeline donut */}
+      <div style={{ display: 'grid', gridTemplateColumns: '65fr 35fr', gap: 20, marginBottom: 20 }}>
         <ChartCard title={t('dashboard.chart_monthly')}>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={timelineData} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="total" name={t('dashboard.chart_total')} fill="#6366f1" radius={[4,4,0,0]}>
-                <LabelList dataKey="total" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#6366f1' }} />
-              </Bar>
-              <Bar dataKey="won" name={t('dashboard.chart_won')} fill="#16a34a" radius={[4,4,0,0]}>
-                <LabelList dataKey="won" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#16a34a' }} />
-              </Bar>
-              <Bar dataKey="lost" name={t('dashboard.chart_lost')} fill="#dc2626" radius={[4,4,0,0]}>
-                <LabelList dataKey="lost" position="top" style={{ fontSize: 11, fontWeight: 700, fill: '#dc2626' }} />
-              </Bar>
-            </BarChart>
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={monthlyData} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
+              <defs>
+                <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#059669" stopOpacity={0.18}/>
+                  <stop offset="100%" stopColor="#059669" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#f3f4f6" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={36} />
+              <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }} />
+              <Area type="monotone" dataKey="total" stroke="#059669" strokeWidth={2} fill="url(#totalGrad)" name="Total" isAnimationActive={false} />
+              <Area type="monotone" dataKey="won"   stroke="#059669" strokeWidth={2} strokeDasharray="4 4" strokeOpacity={0.55} fill="transparent" name="Gagnés" isAnimationActive={false} />
+            </AreaChart>
           </ResponsiveContainer>
-        </ChartCard>
-
-        <ChartCard title={t('dashboard.chart_pipeline')}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 4 }}>
-            {pipelineData.filter(p => p.count > 0).map((p, i) => {
-              const total = pipelineData.reduce((s, d) => s + d.count, 0);
-              const pct = total > 0 ? Math.round(p.count / total * 100) : 0;
-              return (
-                <div key={i}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: p.fill }} />
-                      <span style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{p.name}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontWeight: 800, color: '#0f172a', fontSize: 18 }}>{p.count}</span>
-                      <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>{pct}%</span>
-                    </div>
-                  </div>
-                  <div style={{ height: 8, borderRadius: 4, background: '#f1f5f9', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 4, background: p.fill, width: `${pct}%`, transition: 'width 0.5s ease' }} />
-                  </div>
-                </div>
-              );
-            })}
-            {pipelineData.every(p => p.count === 0) && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32 }}>{t('dashboard.no_data')}</div>}
+          <div style={{ display: 'flex', gap: 18, justifyContent: 'center', fontSize: 11, color: '#6b7280', marginTop: 6 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 18, height: 2, background: '#059669' }}/> Total</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 18, height: 0, borderTop: '2px dashed #059669', opacity: 0.55 }}/> Gagnés</span>
           </div>
         </ChartCard>
+
+        <PipelineDonutCard stages={stageData} total={stageTotal} />
       </div>
 
-      {/* Charts Row 2 */}
+      {/* Row 4: MRR area + Temperature bars */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
-        <ChartCard title={`${rLabel} ${t('dashboard.chart_revenue_label')}`} action={
-          <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 8, padding: 2 }}>
-            {[{ key: false, label: t('dashboard.chart_monthly_tab') }, { key: true, label: t('dashboard.chart_cumul_tab') }].map(opt => (
-              <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
-                padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
-                background: revenueCumul === opt.key ? '#fff' : 'transparent',
-                color: revenueCumul === opt.key ? '#6366f1' : '#94a3b8',
-                boxShadow: revenueCumul === opt.key ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-              }}>{opt.label}</button>
-            ))}
+        <ChartCard
+          title={`${rLabel} Généré (€)`}
+          action={
+            <div style={{ display: 'flex', gap: 2, background: '#f3f4f6', borderRadius: 8, padding: 2 }}>
+              {[{ key: false, label: 'Mensuel' }, { key: true, label: 'Cumulé' }].map(opt => (
+                <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
+                  padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                  background: revenueCumul === opt.key ? '#fff' : 'transparent',
+                  color: revenueCumul === opt.key ? '#059669' : '#9ca3af',
+                  boxShadow: revenueCumul === opt.key ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                }}>{opt.label}</button>
+              ))}
+            </div>
+          }
+        >
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#059669', letterSpacing: -1, marginBottom: 4 }}>
+            {fmtK(revenueCumul ? mrrTotal : (mrrSeries[mrrSeries.length - 1]?.mrr || 0))}
           </div>
-        }>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
-              <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13 }} formatter={v => fmt(v)} />
-              <Line type="monotone" dataKey="revenue" name={revenueCumul ? `${rLabel} ${t('dashboard.chart_cumul_tab')}` : `${rLabel} ${t('dashboard.chart_monthly_tab')}`} stroke="#6366f1" strokeWidth={3} dot={{ r: 5, fill: '#6366f1' }} />
-            </LineChart>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={mrrSeries} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
+              <defs>
+                <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#059669" stopOpacity={0.18}/>
+                  <stop offset="100%" stopColor="#059669" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#f3f4f6" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+              <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={v => fmt(v)} />
+              <Area type="monotone" dataKey="value" stroke="#059669" strokeWidth={2} fill="url(#mrrGrad)" name={revenueCumul ? 'Cumulé' : 'Mensuel'} isAnimationActive={false} />
+            </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={t('dashboard.chart_levels')}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 4 }}>
-            {levelData.map((l, idx) => (
-              <div key={idx}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{l.name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
-                    <span style={{ color: '#64748b' }}>{l.total} {t('dashboard.kpi_total').toLowerCase()}</span>
-                    <span style={{ color: '#16a34a', fontWeight: 700 }}>{l.won} {t('dashboard.chart_won').toLowerCase()}</span>
-                    <span style={{ padding: '2px 10px', borderRadius: 20, fontWeight: 700, fontSize: 12,
-                      background: l.convRate >= 50 ? '#f0fdf4' : l.convRate >= 25 ? '#fffbeb' : '#fef2f2',
-                      color: l.convRate >= 50 ? '#16a34a' : l.convRate >= 25 ? '#f59e0b' : '#dc2626',
-                    }}>{l.convRate}%</span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', height: 28, borderRadius: 8, overflow: 'hidden', background: '#f1f5f9' }}>
-                  {l.won > 0 && (
-                    <div style={{ width: `${(l.won / l.total) * 100}%`, background: 'linear-gradient(90deg, #22c55e, #16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', minWidth: 28 }}>{l.won}</div>
-                  )}
-                  {l.lost > 0 && (
-                    <div style={{ width: `${(l.lost / l.total) * 100}%`, background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#64748b', minWidth: 28 }}>{l.lost}</div>
-                  )}
-                </div>
-              </div>
-            ))}
-            {levelData.length === 0 && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 14 }}>{t('dashboard.no_data')}</div>}
-            {levelData.length > 0 && (
-              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', fontSize: 12 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a' }} /><span style={{ color: '#64748b' }}>{t('dashboard.chart_won')}</span></span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#e2e8f0' }} /><span style={{ color: '#64748b' }}>{t('dashboard.chart_others')}</span></span>
-              </div>
-            )}
-          </div>
+        <ChartCard title="Performance par niveau de reco">
+          <TemperatureBars data={temperatureData} />
         </ChartCard>
       </div>
 
+      {/* Row 5: Commissions donut + Cycle duration */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+        <CommissionStatusCard data={commissionStatusData} total={commissionTotal} />
+        <CycleDurationCard cycle={cycle} />
+      </div>
 
+      {/* Row 6: Commission evolution, full width */}
+      <ChartCard title="Évolution des commissions">
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={commissionMonthly} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
+            <defs>
+              <linearGradient id="commGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.22}/>
+                <stop offset="100%" stopColor="#F59E0B" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#f3f4f6" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+            <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={v => fmt(v)} />
+            <Area type="monotone" dataKey="amount" stroke="#F59E0B" strokeWidth={2} fill="url(#commGrad)" name="Commissions" isAnimationActive={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
     </>
+  );
+}
+
+// ═══ Donut: Pipeline par statut ═══
+function PipelineDonutCard({ stages, total }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>Pipeline par statut</div>
+      {stages.length === 0 ? (
+        <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>Aucune donnée</div>
+      ) : (
+        <>
+          <div style={{ position: 'relative', height: 180 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={stages} dataKey="count" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={2} isAnimationActive={false}>
+                  {stages.map((s, i) => <Cell key={i} fill={s.color || '#94a3b8'} stroke="#fff" strokeWidth={2} />)}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#1a2236', letterSpacing: -1 }}>{total}</div>
+              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 12, fontSize: 12 }}>
+            {stages.map(s => (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4b5563' }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color || '#94a3b8', flexShrink: 0 }}/>
+                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
+                <span style={{ fontWeight: 700, color: '#1a2236' }}>{s.count}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══ Horizontal progress bars per lead temperature ═══
+function TemperatureBars({ data }) {
+  const PALETTE = {
+    hot:  { label: 'Hot',  fg: '#DC2626', bg: '#FEE2E2' },
+    warm: { label: 'Warm', fg: '#F59E0B', bg: '#FEF3C7' },
+    cold: { label: 'Cold', fg: '#3B82F6', bg: '#DBEAFE' },
+  };
+  const any = data.some(d => d.total > 0);
+  if (!any) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>Aucune donnée</div>;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18, paddingTop: 6 }}>
+      {data.map(row => {
+        const p = PALETTE[row.temperature] || PALETTE.cold;
+        const pct = Math.max(0, Math.min(100, row.conversion));
+        return (
+          <div key={row.temperature}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1a2236' }}>{p.label}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: p.fg }}>{row.conversion}%</span>
+            </div>
+            <div style={{ height: 10, borderRadius: 999, background: p.bg, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: p.fg, borderRadius: 999, transition: 'width .4s' }}/>
+            </div>
+            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>{row.won} / {row.total} deals</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══ Donut: Commissions par statut ═══
+function CommissionStatusCard({ data, total }) {
+  const fmtEur = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>Commissions par statut</div>
+      {data.length === 0 ? (
+        <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>Aucune donnée</div>
+      ) : (
+        <>
+          <div style={{ position: 'relative', height: 180 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={data} dataKey="amount" nameKey="label" innerRadius={55} outerRadius={80} paddingAngle={2} isAnimationActive={false}>
+                  {data.map((s, i) => <Cell key={i} fill={s.color} stroke="#fff" strokeWidth={2} />)}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={v => fmtEur(v)} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#1a2236', letterSpacing: -0.5 }}>{fmtEur(total)}</div>
+              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 12, fontSize: 12 }}>
+            {data.map(s => (
+              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4b5563' }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color, flexShrink: 0 }}/>
+                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
+                <span style={{ fontWeight: 700, color: '#1a2236' }}>{fmtEur(s.amount)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══ Cycle duration card ═══
+function CycleDurationCard({ cycle }) {
+  const fmt = (n) => n == null ? '—' : `${Math.round(n)}j`;
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>Durée moyenne du cycle</div>
+      <div style={{ textAlign: 'center', padding: '24px 0' }}>
+        <div style={{ fontSize: 56, fontWeight: 800, color: '#8B5CF6', letterSpacing: -2, lineHeight: 1 }}>{fmt(cycle.overall)}</div>
+        <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>Nouveau à Gagné</div>
+      </div>
+      <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, textAlign: 'center' }}>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#1a2236' }}>{fmt(cycle.qualification)}</div>
+          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Qualification</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#1a2236' }}>{fmt(cycle.proposition)}</div>
+          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Proposition</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#1a2236' }}>{fmt(cycle.closing)}</div>
+          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Closing</div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -544,72 +682,6 @@ function PartnersByCategoryCard() {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-// Source breakdown + per-partner click stats. Self-fetches feature
-// flags and hides itself when feature_referral_links is off. Moved
-// from the Referrals page so the Kanban stays clean; lives on the
-// Dashboard alongside the other admin analytics.
-function AdminTrackingAnalytics() {
-  const { t } = useTranslation();
-  const [features, setFeatures] = useState(null);
-  const [breakdown, setBreakdown] = useState([]);
-  const [partnerStats, setPartnerStats] = useState([]);
-
-  useEffect(() => {
-    api.getTenantFeatures()
-      .then(({ features }) => {
-        setFeatures(features);
-        if (features?.feature_referral_links) {
-          api.getReferralSourceBreakdown().then(d => setBreakdown(d.breakdown || [])).catch(() => {});
-          api.getReferralClickStats().then(d => setPartnerStats(d.stats || [])).catch(() => {});
-        }
-      })
-      .catch(() => setFeatures({}));
-  }, []);
-
-  if (!features || !features.feature_referral_links) return null;
-
-  const total = breakdown.reduce((s, b) => s + b.n, 0) || 0;
-  const color = { manual: '#94a3b8', referral_link: '#059669' };
-  const label = (k) => k === 'referral_link' ? t('tracking.referral_link') : t('tracking.manual');
-
-  return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>{t('tracking.breakdown_title')}</div>
-      <div style={{ display: 'flex', gap: 6, height: 10, borderRadius: 999, overflow: 'hidden', background: '#f1f5f9', marginBottom: 10 }}>
-        {breakdown.map(b => (
-          <div key={b.source} style={{ width: total ? (b.n / total * 100) + '%' : '0%', background: color[b.source] || '#94a3b8' }} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12, color: '#475569' }}>
-        {breakdown.map(b => (
-          <div key={b.source} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: color[b.source] || '#94a3b8' }} />
-            {label(b.source)} — <strong>{b.n}</strong>{total ? ` (${Math.round(b.n / total * 100)}%)` : ''}
-          </div>
-        ))}
-      </div>
-
-      {partnerStats.length > 0 && (
-        <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Clics par partenaire</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, fontSize: 12, color: '#64748b', padding: '6px 10px', background: '#f8fafc', borderRadius: 8 }}>
-            <div>Partenaire</div>
-            <div style={{ textAlign: 'right' }}>Total</div>
-            <div style={{ textAlign: 'right' }}>30j</div>
-          </div>
-          {partnerStats.slice(0, 10).map(s => (
-            <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, fontSize: 13, color: '#0f172a', padding: '8px 10px', borderBottom: '1px solid #f8fafc' }}>
-              <div style={{ fontWeight: 500 }}>{s.name}</div>
-              <div style={{ textAlign: 'right' }}>{s.total_clicks}</div>
-              <div style={{ textAlign: 'right' }}>{s.month_clicks}</div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

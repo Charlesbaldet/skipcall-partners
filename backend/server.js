@@ -38,6 +38,7 @@ const promoCodesRoutes = require('./routes/promoCodes');
 const trackingScriptRoutes = require('./routes/trackingScript');
 const partnerCategoriesRoutes = require('./routes/partnerCategories');
 const referralRedirectRoutes = require('./routes/referralRedirect');
+const dashboardStatsRoutes = require('./routes/dashboardStats');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -118,6 +119,7 @@ app.use('/api/partners', partnerRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/commissions', commissionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/dashboard', dashboardStatsRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);

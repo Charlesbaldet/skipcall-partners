@@ -155,6 +155,7 @@ class ApiClient {
   // Dashboard
   getKPIs() { return this.request('/dashboard/kpis'); }
   getTimeline(months = 6) { return this.request(`/dashboard/timeline?months=${months}`); }
+  getDashboardStats() { return this.request('/dashboard/stats'); }
   getPipeline() { return this.request('/dashboard/pipeline'); }
   getTopPartners() { return this.request('/dashboard/top-partners'); }
   getLevels() { return this.request('/dashboard/levels'); }
