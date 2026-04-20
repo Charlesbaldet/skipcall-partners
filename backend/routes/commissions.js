@@ -3,6 +3,8 @@ const { query } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
+const { sendEmail } = require('../services/emailService');
+const notify = require('../services/notifyService');
 
 const router = express.Router();
 
@@ -22,7 +24,7 @@ function nextQuarterEnd(date) {
 // âââ List commissions âââ
 router.get('/', async (req, res) => {
   try {
-    const { status, partner_id } = req.query;
+    const { status, partner_id, approval_status } = req.query;
     let where = [];
     let params = [];
     let i = 1;
@@ -44,6 +46,10 @@ router.get('/', async (req, res) => {
     if (status && status !== 'all') {
       where.push(`c.status = $${i++}`);
       params.push(status);
+    }
+    if (approval_status && approval_status !== 'all') {
+      where.push(`c.approval_status = $${i++}`);
+      params.push(approval_status);
     }
 
     const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
@@ -199,6 +205,116 @@ router.put('/:id', authorize('admin'), async (req, res) => {
     res.json({ commission });
   } catch (err) {
     console.error('Update commission error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Approve / Reject commission (admin approval flow) ─────────────
+// A commission is created with approval_status='pending_approval'
+// whenever a referral transitions to a won stage. An admin must
+// then explicitly approve (→ 'approved', payment eligible) or reject
+// (→ 'rejected', with an optional reason). Both paths notify the
+// partner; approve is email-framed as good news, reject as
+// "requires review".
+async function loadCommissionWithContext(commissionId, tenantId) {
+  const { rows } = await query(
+    `SELECT c.*, p.name AS partner_name, r.prospect_name
+       FROM commissions c
+       JOIN partners p ON p.id = c.partner_id
+       JOIN referrals r ON r.id = c.referral_id
+      WHERE c.id = $1 AND ($2::uuid IS NULL OR c.tenant_id = $2)
+      LIMIT 1`,
+    [commissionId, tenantId || null]
+  );
+  return rows[0] || null;
+}
+async function partnerUsers(partnerId) {
+  if (!partnerId) return [];
+  const { rows } = await query(
+    "SELECT id, email, full_name FROM users WHERE partner_id = $1 AND is_active = TRUE",
+    [partnerId]
+  );
+  return rows;
+}
+const fmtMoney = (n) => {
+  const num = parseFloat(n) || 0;
+  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(num); }
+  catch { return num.toFixed(2) + ' €'; }
+};
+
+router.post('/:id/approve', authorize('admin'), async (req, res) => {
+  try {
+    const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
+    if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
+    if (existing.approval_status === 'approved') return res.json({ commission: existing, noop: true });
+
+    const { rows: [updated] } = await query(
+      `UPDATE commissions
+          SET approval_status = 'approved',
+              rejection_reason = NULL,
+              approved_at = COALESCE(approved_at, NOW())
+        WHERE id = $1 RETURNING *`,
+      [req.params.id]
+    );
+
+    // In-app + email notify the partner
+    (async () => {
+      try {
+        const users = await partnerUsers(existing.partner_id);
+        const amountLabel = fmtMoney(existing.amount);
+        for (const u of users) {
+          notify.createNotification(u.id, 'commission', {
+            title: `Commission approuvée — ${amountLabel}`,
+            message: `Pour ${existing.prospect_name || 'votre lead'}`,
+            link: '/partner/payments',
+            tenantId: existing.tenant_id,
+          }).catch(() => {});
+          const html = `<p>Bonne nouvelle !</p><p>Votre commission de <strong>${amountLabel}</strong> pour <strong>${existing.prospect_name || ''}</strong> a été approuvée.</p>`;
+          sendEmail(u.email, `Commission approuvée — ${existing.prospect_name || ''}`, html).catch(() => {});
+        }
+      } catch {}
+    })();
+
+    res.json({ commission: updated });
+  } catch (err) {
+    console.error('Approve commission error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/:id/reject', authorize('admin'), async (req, res) => {
+  try {
+    const { reason } = req.body || {};
+    const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
+    if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
+
+    const { rows: [updated] } = await query(
+      `UPDATE commissions
+          SET approval_status = 'rejected',
+              rejection_reason = $2
+        WHERE id = $1 RETURNING *`,
+      [req.params.id, reason || null]
+    );
+
+    (async () => {
+      try {
+        const users = await partnerUsers(existing.partner_id);
+        for (const u of users) {
+          notify.createNotification(u.id, 'commission', {
+            title: `Commission à revoir — ${existing.prospect_name || ''}`,
+            message: reason || 'Votre gestionnaire a demandé une révision.',
+            link: '/partner/payments',
+            tenantId: existing.tenant_id,
+          }).catch(() => {});
+          const html = `<p>Votre commission pour <strong>${existing.prospect_name || ''}</strong> nécessite une révision.</p>${reason ? `<blockquote>${reason}</blockquote>` : ''}<p>Contactez votre gestionnaire de programme pour en discuter.</p>`;
+          sendEmail(u.email, `Commission à revoir — ${existing.prospect_name || ''}`, html).catch(() => {});
+        }
+      } catch {}
+    })();
+
+    res.json({ commission: updated });
+  } catch (err) {
+    console.error('Reject commission error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

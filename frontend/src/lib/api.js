@@ -149,6 +149,8 @@ class ApiClient {
   getCommissions(params = {}) { const qs = new URLSearchParams(params).toString(); return this.request(`/commissions?${qs}`); }
   getCommissionsSummary() { return this.request('/commissions/summary'); }
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
+  approveCommission(id) { return this.request('/commissions/' + id + '/approve', { method: 'POST' }); }
+  rejectCommission(id, reason) { return this.request('/commissions/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason }) }); }
 
   // Dashboard
   getKPIs() { return this.request('/dashboard/kpis'); }

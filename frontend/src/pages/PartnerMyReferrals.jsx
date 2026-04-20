@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
-import { FileText, TrendingUp, DollarSign, Trash2, LayoutGrid, List, ChevronRight, X, Search } from 'lucide-react';
+import { FileText, TrendingUp, DollarSign, Trash2, LayoutGrid, List, ChevronRight, X, Search, Lock, GripVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
@@ -18,16 +18,54 @@ export default function PartnerMyReferrals() {
   const [deleting, setDeleting] = useState(null);
   const [viewMode, setViewMode] = useState('kanban');
   const [deleteId, setDeleteId] = useState(null);
+  const [stages, setStages] = useState([]);
+  const [draggedId, setDraggedId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const load = async () => {
     try {
-      const [r, k] = await Promise.all([api.getReferrals(), api.getKPIs()]);
+      const [r, k, s] = await Promise.all([api.getReferrals(), api.getKPIs(), api.getPipelineStages().catch(() => ({ stages: [] }))]);
       setReferrals(r.referrals);
       setKpis(k);
+      setStages(s.stages || []);
     } catch (err) { console.error(err); }
   };
 
   useEffect(() => { load().finally(() => setLoading(false)); }, []);
+
+  const showToast = (text, type = 'warning') => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleDragStart = (e, r) => {
+    if (r.lead_handling === 'client_prospect') {
+      e.preventDefault();
+      showToast(t('referral.cannot_move_client_lead'));
+      return;
+    }
+    setDraggedId(r.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDrop = async (e, targetStage) => {
+    e.preventDefault();
+    if (!draggedId) return;
+    const ref = referrals.find(r => r.id === draggedId);
+    if (!ref || ref.stage_id === targetStage.id) { setDraggedId(null); return; }
+    if (ref.lead_handling === 'client_prospect') {
+      setDraggedId(null);
+      showToast(t('referral.cannot_move_client_lead'));
+      return;
+    }
+    try {
+      const { referral } = await api.updateReferral(draggedId, { stage_id: targetStage.id });
+      setReferrals(prev => prev.map(r => r.id === draggedId ? { ...r, ...referral } : r));
+    } catch (err) {
+      showToast(err.message || 'Error', 'error');
+    }
+    setDraggedId(null);
+  };
 
   const handleDelete = (id) => setDeleteId(id);
   const confirmDelete = async () => {
@@ -82,9 +120,31 @@ export default function PartnerMyReferrals() {
           <a href="/partner/submit" style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{t('partnerReferrals.empty_cta')}</a>
         </div>
       ) : viewMode === 'kanban' ? (
-        <KanbanView referrals={referrals} onSelect={setSelected} />
+        <KanbanView
+          referrals={referrals}
+          stages={stages}
+          draggedId={draggedId}
+          onDragStart={handleDragStart}
+          onDrop={handleDrop}
+          onSelect={setSelected}
+        />
       ) : (
         <TableView referrals={referrals} onSelect={setSelected} />
+      )}
+
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 2000,
+          padding: '14px 18px', borderRadius: 12,
+          background: toast.type === 'error' ? '#fef2f2' : '#fffbeb',
+          color: toast.type === 'error' ? '#dc2626' : '#92400e',
+          border: `1px solid ${toast.type === 'error' ? '#fecaca' : '#fcd34d'}`,
+          fontSize: 13, fontWeight: 600,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          maxWidth: 360,
+        }}>
+          {toast.text}
+        </div>
       )}
 
       {selected && (
@@ -134,37 +194,91 @@ export default function PartnerMyReferrals() {
   );
 }
 
-function KanbanView({ referrals, onSelect }) {
+function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelect }) {
   const { t } = useTranslation();
+  const cols = stages.length
+    ? stages
+    : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#64748b' }));
   return (
     <div style={{ overflow: 'hidden', borderRadius: 16 }}>
       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 320px)', minHeight: 400 }}>
-        {KANBAN_STATUSES.map(status => {
-          const sc = STATUS_CONFIG[status];
-          const cards = referrals.filter(r => r.status === status);
+        {cols.map(stage => {
+          const stageColor = stage.color || '#64748b';
+          const cards = referrals.filter(r =>
+            r.stage_id ? r.stage_id === stage.id : r.status === stage.slug
+          );
           return (
-            <div key={status} style={{ minWidth: 260, width: 260, flexShrink: 0, background: '#f8fafc', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
+            <div
+              key={stage.id || stage.slug}
+              onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${stageColor}0a`; }}
+              onDragLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
+              onDrop={e => { e.currentTarget.style.background = '#f8fafc'; onDrop(e, stage); }}
+              style={{
+                minWidth: 260, width: 260, flexShrink: 0, background: '#f8fafc', borderRadius: 16,
+                padding: 12, display: 'flex', flexDirection: 'column',
+                border: '1px solid #e2e8f0',
+                borderTop: `3px solid ${stageColor}`,
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: sc.color }} />
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: stageColor }} />
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{stage.name}</span>
                 </div>
-                <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{cards.length}</span>
+                <span style={{ background: stageColor + '15', color: stageColor, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{cards.length}</span>
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
-                {cards.map(r => (
-                  <div key={r.id} onClick={() => onSelect(r)} style={{ background: '#fff', borderRadius: 12, padding: 14, cursor: 'pointer', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>{r.prospect_name}</div>
-                    {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{r.prospect_company}</div>}
-                    {r.deal_value > 0 && <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</div>}
-                  </div>
-                ))}
+                {cards.map(r => {
+                  const locked = r.lead_handling === 'client_prospect';
+                  return (
+                    <div
+                      key={r.id}
+                      draggable={!locked}
+                      onDragStart={e => onDragStart(e, r)}
+                      onClick={() => onSelect(r)}
+                      style={{
+                        background: '#fff', borderRadius: 12, padding: 14,
+                        cursor: locked ? 'pointer' : 'grab',
+                        border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        opacity: draggedId === r.id ? 0.5 : 1,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.prospect_name}</div>
+                        {locked
+                          ? <Lock size={13} color="#94a3b8" />
+                          : <GripVertical size={14} color="#cbd5e1" />}
+                      </div>
+                      <LeadHandlingBadge handling={r.lead_handling} />
+                      {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4, marginBottom: 6 }}>{r.prospect_company}</div>}
+                      {r.deal_value > 0 && <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</div>}
+                    </div>
+                  );
+                })}
                 {cards.length === 0 && <div style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', padding: 16 }}>{t('partnerReferrals.empty_col')}</div>}
               </div>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function LeadHandlingBadge({ handling }) {
+  const { t } = useTranslation();
+  if (handling === 'client_prospect') {
+    return (
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#dbeafe', color: '#2563eb', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+        📞 {t('referral.client_prospect_badge')}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#f0fdf4', color: '#059669', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+      🤝 {t('referral.partner_managed_badge')}
     </div>
   );
 }

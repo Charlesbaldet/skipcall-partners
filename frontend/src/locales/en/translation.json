@@ -2049,5 +2049,30 @@
     "shortcut_hint": "Cmd+K",
     "empty_hint": "Type at least 2 characters to search.",
     "navigation": "Navigation"
+  },
+  "referral": {
+    "lead_handling_label": "Who handles this lead?",
+    "partner_managed": "I handle this lead directly",
+    "partner_managed_helper": "I manage the sales relationship",
+    "client_prospect": "The sales team needs to contact them",
+    "client_prospect_helper": "The client or a salesperson will take over",
+    "partner_managed_badge": "Managed by partner",
+    "client_prospect_badge": "To be prospected",
+    "cannot_move_client_lead": "This lead is managed by the sales team. You cannot change its status.",
+    "lead_handling_changed": "Lead handling updated"
+  },
+  "commission": {
+    "pending_approval": "Pending approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "paid_label": "Paid",
+    "approval_section": "To approve",
+    "approve": "Approve",
+    "reject": "Reject",
+    "reject_reason": "Reason (optional)",
+    "reject_reason_placeholder": "Explain why this commission is being rejected…",
+    "approved_message": "Commission approved",
+    "rejected_message": "Commission rejected",
+    "rejection_reason_label": "Reason"
   }
 }

@@ -149,8 +149,9 @@ router.post('/', [
     const {
       prospect_name, prospect_email, prospect_phone,
       prospect_company, prospect_role,
-      recommendation_level, notes,
+      recommendation_level, notes, lead_handling,
     } = req.body;
+    const safeLeadHandling = lead_handling === 'client_prospect' ? 'client_prospect' : 'partner_managed';
 
     // Determine partner_id from JWT, request body, or — for multi-role
     // users whose JWT is stale after /switch-space — by resolving the
@@ -200,12 +201,13 @@ router.post('/', [
       `INSERT INTO referrals
         (partner_id, submitted_by, prospect_name, prospect_email,
          prospect_phone, prospect_company, prospect_role,
-         recommendation_level, notes, tenant_id, stage_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         recommendation_level, notes, tenant_id, stage_id, lead_handling)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [partnerId, req.user.id, prospect_name, prospect_email,
        prospect_phone, prospect_company, prospect_role,
-       recommendation_level, notes, req.tenantId || null, defaultStageId]
+       recommendation_level, notes, req.tenantId || null, defaultStageId,
+       safeLeadHandling]
     );
 
     // Log activity
@@ -284,10 +286,10 @@ Voir : ${_dashUrl}`,
 });
 
 // âââ Update referral (internal team) âââ
-router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, res) => {
+router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), async (req, res) => {
   const client = await getClient();
   try {
-    let { status, stage_id, deal_value, assigned_to, notes, lost_reason, engagement } = req.body;
+    let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement } = req.body;
 
     // Get current state (with tenant check)
     let selectQuery = 'SELECT * FROM referrals WHERE id = $1';
@@ -302,6 +304,32 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
     if (!current) {
       client.release();
       return res.status(404).json({ error: 'Referral introuvable' });
+    }
+
+    // ─── Partner permission gate ────────────────────────────────────
+    // Partners can only edit their OWN referrals, and only when the
+    // lead is flagged partner_managed. client_prospect leads are
+    // handled by the sales team and are read-only for the partner.
+    // Fields a partner is allowed to write: stage_id + lead_handling
+    // only — deal_value / commission / notes / assigned_to stay admin-
+    // editable.
+    if (req.user?.role === 'partner') {
+      if (!req.user.partnerId || current.partner_id !== req.user.partnerId) {
+        client.release();
+        return res.status(403).json({ error: 'partner_not_owner' });
+      }
+      if (current.lead_handling === 'client_prospect') {
+        client.release();
+        return res.status(403).json({ error: 'client_prospect_locked' });
+      }
+      // Strip admin-only fields out of the partner's payload so we
+      // don't accidentally write them on a legitimate stage drop.
+      status = undefined;
+      deal_value = undefined;
+      assigned_to = undefined;
+      notes = undefined;
+      lost_reason = undefined;
+      engagement = undefined;
     }
 
     // Resolve stage_id → derive canonical status so all the legacy
@@ -364,6 +392,10 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
     if (stage_id && stage_id !== current.stage_id) {
       updates.stage_id = stage_id;
     }
+    if (lead_handling && lead_handling !== current.lead_handling && ['partner_managed', 'client_prospect'].includes(lead_handling)) {
+      updates.lead_handling = lead_handling;
+      activities.push({ action: 'lead_handling_changed', old_value: current.lead_handling, new_value: lead_handling });
+    }
 
     if (deal_value !== undefined && deal_value !== current.deal_value) {
       updates.deal_value = deal_value;
@@ -415,9 +447,15 @@ router.put('/:id', authenticate, authorize('admin', 'commercial'), async (req, r
       );
 
       if (partner) {
+        // New commissions start in the approval flow: approval_status
+        // 'pending_approval'. Admin clicks Approve/Reject in
+        // CommissionsPage → flips it to 'approved' (ready for payment)
+        // or 'rejected'. Legacy rows created before this flow stayed
+        // on approval_status='pending' (the column default) and are
+        // treated as already approved.
         await client.query(
-          `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id)
-           VALUES ($1, $2, $3, $4, $5, $6)
+          `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status)
+           VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval')
            ON CONFLICT (referral_id)
            DO UPDATE SET amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value`,
           [req.params.id, partner.id,
@@ -510,19 +548,25 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
         } catch (e) { /* best-effort */ }
       })();
 
-      // Admin-facing "deal won" fan-out.
+      // Admin-facing "deal won" fan-out + "commission to approve"
+      // prompt. The commission row itself was inserted with
+      // approval_status='pending_approval' further up; here we tell
+      // the admins there's something waiting for them.
       if (status === 'won' && effectiveDealValue > 0) {
-        const { rows: [pRow] } = await query('SELECT name FROM partners WHERE id = $1', [current.partner_id]);
+        const { rows: [pRow] } = await query('SELECT name, commission_rate FROM partners WHERE id = $1', [current.partner_id]);
+        const commissionAmount = Math.round(effectiveDealValue * (parseFloat(pRow?.commission_rate) || 0)) / 100;
         notify.fanoutAdminNotification(req.tenantId, 'deal_won', {
           title: `🎉 Deal gagné — ${current.prospect_name}`,
-          message: `${pRow?.name || ''} · ${effectiveDealValue}€`,
-          link: '/referrals',
+          message: `${pRow?.name || ''} · ${effectiveDealValue}€ · commission ${commissionAmount}€ à approuver`,
+          link: '/commissions',
         }, { includeCommercial: true }).catch(() => {});
         notify.shouldNotify(req.tenantId, 'deal_won').then(async p => {
           if (!p.email) return;
           const admins = await notify.adminEmails(req.tenantId);
-          const tpl = dealWonTpl(pRow?.name || '', current.prospect_name, effectiveDealValue);
-          for (const a of admins) sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
+          for (const a of admins) {
+            const html = `<p>Bonjour ${a.full_name || ''},</p><p><strong>${pRow?.name || ''}</strong> a marqué <strong>${current.prospect_name}</strong> comme gagné.</p><p>Une commission de <strong>${commissionAmount}€</strong> est en attente de votre approbation.</p><p><a href="${(process.env.FRONTEND_URL || 'https://refboost.io')}/commissions" style="display:inline-block;padding:10px 18px;background:#059669;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Examiner la commission →</a></p>`;
+            sendEmail(a.email, `Commission à approuver — ${current.prospect_name}`, html).catch(() => {});
+          }
         });
       }
 

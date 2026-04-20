@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, ShieldCheck } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const COM_STATUS_META = {
   pending: { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
@@ -28,6 +29,10 @@ export default function CommissionsPage() {
   const [paying, setPaying] = useState(false);
   const [comLimits, setComLimits] = useState({});
   const [myTenant, setMyTenant] = useState(null);
+  const [approvingId, setApprovingId] = useState(null);
+  const [rejectModal, setRejectModal] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejecting, setRejecting] = useState(false);
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
 
@@ -54,6 +59,36 @@ export default function CommissionsPage() {
     }
   };
 
+  const handleApprove = async (id) => {
+    setApprovingId(id);
+    try {
+      await api.approveCommission(id);
+      await reload();
+    } catch (err) {
+      alert(err.message || 'Error');
+    }
+    setApprovingId(null);
+  };
+
+  const openReject = (commission) => {
+    setRejectReason('');
+    setRejectModal(commission);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectModal) return;
+    setRejecting(true);
+    try {
+      await api.rejectCommission(rejectModal.id, rejectReason.trim() || undefined);
+      setRejectModal(null);
+      setRejectReason('');
+      await reload();
+    } catch (err) {
+      alert(err.message || 'Error');
+    }
+    setRejecting(false);
+  };
+
   const handleConfirmPay = async () => {
     setPaying(true);
     try { await api.updateCommission(payModal.commission.id, 'paid'); setPayModal(null); await reload(); }
@@ -71,7 +106,11 @@ export default function CommissionsPage() {
   };
 
   const totalAll = summary.reduce((s, p) => s + parseFloat(p.total_amount || 0), 0);
-  const filtered = filterStatus === 'all' ? commissions : commissions.filter(c => c.status === filterStatus);
+  const pendingApprovals = commissions.filter(c => c.approval_status === 'pending_approval');
+  const approvedCommissions = commissions.filter(c => c.approval_status !== 'pending_approval' && c.approval_status !== 'rejected');
+  const filtered = filterStatus === 'all'
+    ? approvedCommissions
+    : approvedCommissions.filter(c => c.status === filterStatus);
 
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('commissions.loading')}</div>;
 
@@ -97,12 +136,22 @@ export default function CommissionsPage() {
       {/* Tabs + view toggle */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-          {[{ id: 'summary', label: t('commissions.tab_by_partner') }, { id: 'detail', label: t('commissions.tab_detail') }].map(tab_ => (
+          {[
+            { id: 'approval', label: t('commission.approval_section'), badge: pendingApprovals.length },
+            { id: 'summary', label: t('commissions.tab_by_partner') },
+            { id: 'detail', label: t('commissions.tab_detail') },
+          ].map(tab_ => (
             <button key={tab_.id} onClick={() => setTab(tab_.id)} style={{
               padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: 8,
               background: tab === tab_.id ? '#fff' : 'transparent', color: tab === tab_.id ? '#0f172a' : '#64748b',
               boxShadow: tab === tab_.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}>{tab_.label}</button>
+            }}>
+              {tab_.label}
+              {tab_.badge > 0 && (
+                <span style={{ background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 800, padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{tab_.badge}</span>
+              )}
+            </button>
           ))}
         </div>
 
@@ -121,6 +170,59 @@ export default function CommissionsPage() {
           </div>
         )}
       </div>
+
+      {tab === 'approval' && (
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ padding: '16px 20px', background: '#fffbeb', borderBottom: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ShieldCheck size={18} color="#f59e0b" />
+            <div>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{t('commission.approval_section')}</div>
+              <div style={{ fontSize: 12, color: '#92400e', marginTop: 2 }}>{pendingApprovals.length} × {t('commission.pending_approval').toLowerCase()}</div>
+            </div>
+          </div>
+          {pendingApprovals.length === 0 ? (
+            <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('commissions.no_commission')}</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, padding: 20 }}>
+              {pendingApprovals.map(c => (
+                <div key={c.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderLeft: '3px solid #f59e0b', borderRadius: 12, padding: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{c.prospect_name}</div>
+                      {c.prospect_company && <div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div>}
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: '#fef3c7', color: '#92400e', whiteSpace: 'nowrap' }}>{t('commission.pending_approval')}</div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                    <div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_partner')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{c.partner_name}</div></div>
+                    <div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.tbl_deal')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{fmt(c.deal_value)}</div></div>
+                  </div>
+                  <div style={{ background: 'linear-gradient(135deg,#fef3c7,#fffbeb)', borderRadius: 10, padding: 12, textAlign: 'center', marginBottom: 12, border: '1px solid #fde68a' }}>
+                    <div style={{ color: '#92400e', fontSize: 11, fontWeight: 600 }}>{t('commissions.tbl_commission')}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>{fmt(c.amount)}</div>
+                    <div style={{ fontSize: 11, color: '#92400e' }}>({c.rate}%)</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => handleApprove(c.id)}
+                      disabled={approvingId === c.id}
+                      style={{ flex: 2, padding: '10px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 8px rgba(5,150,105,0.25)', opacity: approvingId === c.id ? 0.7 : 1 }}
+                    >
+                      <CheckCircle size={14} /> {t('commission.approve')}
+                    </button>
+                    <button
+                      onClick={() => openReject(c)}
+                      style={{ flex: 1, padding: '10px', borderRadius: 10, background: '#fff', border: '1px solid #fecaca', color: '#dc2626', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    >
+                      <X size={14} /> {t('commission.reject')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === 'summary' && (
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
@@ -153,7 +255,7 @@ export default function CommissionsPage() {
       {tab === 'detail' && viewMode === 'kanban' && (
         <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 400 }}>
           {Object.entries(COM_STATUS).map(([status, sc]) => {
-            const allCards = commissions.filter(c => c.status === status);
+            const allCards = approvedCommissions.filter(c => c.status === status);
             const limit = comLimits[status] || 25;
             const cards = allCards.slice(0, limit);
             const hasMore = allCards.length > limit;
@@ -251,6 +353,35 @@ export default function CommissionsPage() {
           </div>
         </>
       )}
+
+      {/* Reject commission modal (uses ConfirmModal with a reason textarea) */}
+      <ConfirmModal
+        isOpen={!!rejectModal}
+        title={t('commission.reject')}
+        message={
+          <div>
+            <div style={{ marginBottom: 12, color: '#475569' }}>
+              {rejectModal && (<>
+                <strong style={{ color: '#0f172a' }}>{rejectModal.prospect_name}</strong> — {fmt(rejectModal.amount)}
+              </>)}
+            </div>
+            <div style={{ color: '#334155', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{t('commission.reject_reason')}</div>
+            <textarea
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder={t('commission.reject_reason_placeholder')}
+              rows={3}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', color: '#0f172a', resize: 'vertical', boxSizing: 'border-box' }}
+            />
+          </div>
+        }
+        confirmLabel={t('commission.reject')}
+        cancelLabel={t('commissions.modal_cancel')}
+        variant="danger"
+        loading={rejecting}
+        onConfirm={handleConfirmReject}
+        onCancel={() => { setRejectModal(null); setRejectReason(''); }}
+      />
 
       {/* Payment modal */}
       {payModal && (

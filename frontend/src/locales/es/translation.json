@@ -2049,5 +2049,30 @@
     "shortcut_hint": "Cmd+K",
     "empty_hint": "Escribe al menos 2 caracteres para buscar.",
     "navigation": "Navegación"
+  },
+  "referral": {
+    "lead_handling_label": "¿Quién gestiona este lead?",
+    "partner_managed": "Yo gestiono este lead directamente",
+    "partner_managed_helper": "Me encargo de la relación comercial",
+    "client_prospect": "El equipo comercial debe contactarlo",
+    "client_prospect_helper": "El cliente o un comercial se encargará",
+    "partner_managed_badge": "Gestionado por partner",
+    "client_prospect_badge": "Por prospectar",
+    "cannot_move_client_lead": "Este lead lo gestiona el equipo comercial. No puedes cambiar su estado.",
+    "lead_handling_changed": "Gestión del lead actualizada"
+  },
+  "commission": {
+    "pending_approval": "Pendiente de aprobación",
+    "approved": "Aprobada",
+    "rejected": "Rechazada",
+    "paid_label": "Pagada",
+    "approval_section": "Por aprobar",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "reject_reason": "Motivo (opcional)",
+    "reject_reason_placeholder": "Explica por qué se rechaza esta comisión…",
+    "approved_message": "Comisión aprobada",
+    "rejected_message": "Comisión rechazada",
+    "rejection_reason_label": "Motivo"
   }
 }

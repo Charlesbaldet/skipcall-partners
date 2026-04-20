@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import { Send, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -14,6 +15,7 @@ const TEMPERATURES = [
 const tempByKey = Object.fromEntries(TEMPERATURES.map(t => [t.key, t]));
 
 export default function PartnerSubmitPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -22,6 +24,7 @@ export default function PartnerSubmitPage() {
   const [form, setForm] = useState({
     prospect_name: '', prospect_email: '', prospect_phone: '',
     prospect_company: '', prospect_role: '', recommendation_level: 'warm', notes: '',
+    lead_handling: 'partner_managed',
   });
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
@@ -134,6 +137,43 @@ export default function PartnerSubmitPage() {
             <textarea value={form.notes} onChange={set('notes')} rows={4}
               placeholder="Contexte de la recommandation, besoins identifiés, timing, budget..."
               style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 15, resize: 'vertical', fontFamily: 'inherit', color: '#0f172a', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* Lead handling — who drives this lead */}
+          <div style={{ marginBottom: 32 }}>
+            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 12 }}>
+              {t('referral.lead_handling_label')}
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
+              {[
+                { value: 'partner_managed', icon: '🤝', title: t('referral.partner_managed'), helper: t('referral.partner_managed_helper') },
+                { value: 'client_prospect', icon: '📞', title: t('referral.client_prospect'), helper: t('referral.client_prospect_helper') },
+              ].map(opt => {
+                const active = form.lead_handling === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, lead_handling: opt.value }))}
+                    style={{
+                      textAlign: 'left',
+                      padding: '14px 16px',
+                      borderRadius: 12,
+                      border: active ? '2px solid #059669' : '2px solid #e2e8f0',
+                      background: active ? 'rgba(5,150,105,0.06)' : '#fff',
+                      color: '#0f172a',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>{opt.icon}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{opt.title}</div>
+                    <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>{opt.helper}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Recap */}

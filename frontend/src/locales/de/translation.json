@@ -2049,5 +2049,30 @@
     "shortcut_hint": "Cmd+K",
     "empty_hint": "Gib mindestens 2 Zeichen ein, um zu suchen.",
     "navigation": "Navigation"
+  },
+  "referral": {
+    "lead_handling_label": "Wer betreut diesen Lead?",
+    "partner_managed": "Ich betreue diesen Lead direkt",
+    "partner_managed_helper": "Ich verwalte die Verkaufsbeziehung",
+    "client_prospect": "Das Vertriebsteam soll ihn kontaktieren",
+    "client_prospect_helper": "Der Kunde oder ein Vertriebsmitarbeiter übernimmt",
+    "partner_managed_badge": "Vom Partner betreut",
+    "client_prospect_badge": "Zu akquirieren",
+    "cannot_move_client_lead": "Dieser Lead wird vom Vertriebsteam betreut. Du kannst seinen Status nicht ändern.",
+    "lead_handling_changed": "Lead-Betreuung aktualisiert"
+  },
+  "commission": {
+    "pending_approval": "Wartet auf Freigabe",
+    "approved": "Freigegeben",
+    "rejected": "Abgelehnt",
+    "paid_label": "Bezahlt",
+    "approval_section": "Zu genehmigen",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen",
+    "reject_reason": "Grund (optional)",
+    "reject_reason_placeholder": "Begründe die Ablehnung dieser Provision…",
+    "approved_message": "Provision genehmigt",
+    "rejected_message": "Provision abgelehnt",
+    "rejection_reason_label": "Grund"
   }
 }

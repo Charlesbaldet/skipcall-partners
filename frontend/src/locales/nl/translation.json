@@ -2049,5 +2049,30 @@
     "shortcut_hint": "Cmd+K",
     "empty_hint": "Typ minstens 2 tekens om te zoeken.",
     "navigation": "Navigatie"
+  },
+  "referral": {
+    "lead_handling_label": "Wie beheert deze lead?",
+    "partner_managed": "Ik beheer deze lead rechtstreeks",
+    "partner_managed_helper": "Ik beheer de commerciële relatie",
+    "client_prospect": "Het salesteam moet hem contacteren",
+    "client_prospect_helper": "De klant of een verkoper neemt het over",
+    "partner_managed_badge": "Beheerd door partner",
+    "client_prospect_badge": "Te prospecteren",
+    "cannot_move_client_lead": "Deze lead wordt beheerd door het salesteam. Je kunt de status niet wijzigen.",
+    "lead_handling_changed": "Leadbeheer bijgewerkt"
+  },
+  "commission": {
+    "pending_approval": "In afwachting van goedkeuring",
+    "approved": "Goedgekeurd",
+    "rejected": "Afgewezen",
+    "paid_label": "Betaald",
+    "approval_section": "Goed te keuren",
+    "approve": "Goedkeuren",
+    "reject": "Afwijzen",
+    "reject_reason": "Reden (optioneel)",
+    "reject_reason_placeholder": "Leg uit waarom deze commissie wordt afgewezen…",
+    "approved_message": "Commissie goedgekeurd",
+    "rejected_message": "Commissie afgewezen",
+    "rejection_reason_label": "Reden"
   }
 }

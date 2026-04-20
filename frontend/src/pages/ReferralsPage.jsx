@@ -267,6 +267,7 @@ export default function ReferralsPage() {
                         </div>
                         <GripVertical size={14} color="#cbd5e1" />
                       </div>
+                      <LeadHandlingBadge handling={r.lead_handling}/>
                       {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{r.prospect_company}</div>}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600 }}>{r.partner_name}</span>
@@ -516,5 +517,26 @@ function CrmSyncBadge({ referral }) {
     >
       ✓
     </span>
+  );
+}
+
+// Small pill showing who drives the lead. Green when the partner
+// handles it directly, blue when it's been handed off to the sales
+// team. Shown on Kanban cards so everyone knows who's expected to
+// move the deal forward. Not interactive here — the detail drawer is
+// the place to change it.
+function LeadHandlingBadge({ handling }) {
+  const { t } = useTranslation();
+  if (handling === 'client_prospect') {
+    return (
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#dbeafe', color: '#2563eb', fontSize: 10, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+        📞 {t('referral.client_prospect_badge')}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#f0fdf4', color: '#059669', fontSize: 10, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+      🤝 {t('referral.partner_managed_badge')}
+    </div>
   );
 }

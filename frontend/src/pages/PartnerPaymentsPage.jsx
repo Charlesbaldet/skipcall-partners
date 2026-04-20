@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building } from 'lucide-react';
+import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building, XCircle } from 'lucide-react';
 
 const PAY_STATUS_META = {
   pending: { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
@@ -168,23 +168,39 @@ export default function PartnerPaymentsPage() {
             {commissions.length === 0 ? (
               <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerPayments.no_payments')}</td></tr>
             ) : commissions.map(c => {
-              const st = PAY_STATUS[c.status];
-              const StIcon = st.icon;
+              // Approval state (pending_approval / rejected) takes priority
+              // over the payment-status badge — partners need to see
+              // "waiting on approval" or "rejected" before the payment
+              // lifecycle starts.
+              let badgeBg, badgeColor, badgeLabel, BadgeIcon, amountColor;
+              if (c.approval_status === 'pending_approval') {
+                badgeBg = '#fffbeb'; badgeColor = '#d97706'; badgeLabel = t('commission.pending_approval'); BadgeIcon = Clock; amountColor = '#d97706';
+              } else if (c.approval_status === 'rejected') {
+                badgeBg = '#fef2f2'; badgeColor = '#dc2626'; badgeLabel = t('commission.rejected'); BadgeIcon = XCircle; amountColor = '#dc2626';
+              } else {
+                const st = PAY_STATUS[c.status] || PAY_STATUS.pending;
+                badgeBg = st.bg; badgeColor = st.color; badgeLabel = st.label; BadgeIcon = st.icon; amountColor = st.color;
+              }
               return (
                 <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '13px 16px' }}>
                     <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div>
                     <div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div>
+                    {c.approval_status === 'rejected' && c.rejection_reason && (
+                      <div style={{ marginTop: 6, padding: '6px 10px', borderRadius: 6, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', fontSize: 11, lineHeight: 1.4 }}>
+                        <strong>{t('commission.rejection_reason_label')}:</strong> {c.rejection_reason}
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(c.deal_value)}</td>
                   <td style={{ padding: '13px 16px' }}>
                     <span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span>
                   </td>
-                  <td style={{ padding: '13px 16px', fontWeight: 800, color: st.color, fontSize: 16 }}>{fmt(c.amount)}</td>
+                  <td style={{ padding: '13px 16px', fontWeight: 800, color: amountColor, fontSize: 16 }}>{fmt(c.amount)}</td>
                   <td style={{ padding: '13px 16px' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: st.bg, color: st.color }}>
-                      <StIcon size={13} />
-                      {st.label}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: badgeBg, color: badgeColor }}>
+                      <BadgeIcon size={13} />
+                      {badgeLabel}
                     </span>
                   </td>
                   <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{fmtDate(c.created_at)}</td>
