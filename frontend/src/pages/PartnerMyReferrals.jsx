@@ -158,7 +158,7 @@ function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelec
     : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#64748b' }));
   return (
     <div style={{ overflow: 'hidden', borderRadius: 16 }}>
-      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 320px)', minHeight: 400 }}>
+      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 140px)', minHeight: 400 }}>
         {cols.map(stage => {
           const stageColor = stage.color || '#64748b';
           const cards = referrals.filter(r =>

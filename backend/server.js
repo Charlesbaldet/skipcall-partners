@@ -37,6 +37,7 @@ const referralLinksRoutes = require('./routes/referralLinks');
 const promoCodesRoutes = require('./routes/promoCodes');
 const trackingScriptRoutes = require('./routes/trackingScript');
 const partnerCategoriesRoutes = require('./routes/partnerCategories');
+const referralRedirectRoutes = require('./routes/referralRedirect');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -153,6 +154,9 @@ app.use('/api/referral-links', referralLinksRoutes);
 app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/tracking', trackingScriptRoutes);
 app.use('/api/partner-categories', partnerCategoriesRoutes);
+// Public referral-link short URL (mounted at app root, not /api).
+// Vercel rewrites /r/:path* to this service.
+app.use('/r', referralRedirectRoutes);
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({

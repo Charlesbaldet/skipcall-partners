@@ -5,6 +5,10 @@
       "destination": "https://skipcall-partners-production.up.railway.app/api/:path*"
     },
     {
+      "source": "/r/:path*",
+      "destination": "https://skipcall-partners-production.up.railway.app/r/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

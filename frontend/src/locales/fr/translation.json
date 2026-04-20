@@ -610,7 +610,7 @@
     },
     "tracking_title": "Fonctionnalités de tracking",
     "referral_links": "Liens de parrainage",
-    "referral_links_desc": "Chaque partenaire reçoit un lien unique pour tracker les prospects qu'il vous envoie",
+    "referral_links_desc": "Chaque partenaire reçoit un lien unique. Les clics sont comptabilisés et les visiteurs sont redirigés vers votre site web.",
     "promo_codes": "Codes promo",
     "promo_codes_desc": "Permettre aux partenaires de créer des codes promo à partager avec leurs prospects",
     "tracking_script": "Script de tracking",

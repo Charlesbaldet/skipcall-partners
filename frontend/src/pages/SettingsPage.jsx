@@ -11,7 +11,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell, Zap,
+  Bell,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -138,7 +138,6 @@ export default function SettingsPage() {
       { section: t('layout.section.programme') },
       { id: 'branding', icon: Palette, label: t('settings.tab_branding') },
       { id: 'pipeline', icon: Trophy, label: t('settings.tab_pipeline') },
-      { id: 'features', icon: Zap, label: t('settings.tab_features') },
       { id: 'public-marketplace', icon: Store, label: t('settings.tab_public_marketplace') },
 
       { section: t('layout.section.preferences') },
@@ -203,12 +202,13 @@ export default function SettingsPage() {
                 <PartnerCategoriesTab />
               </>
             )}
-            {tab === 'features' && isAdmin && <TrackingFeaturesTab />}
             {tab === 'public-marketplace' && isAdmin && (
               <>
                 <MarketplaceTab />
                 <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
                 <PublicLinkTab />
+                <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+                <TrackingFeaturesTab />
               </>
             )}
             {tab === 'program' && isAdmin && <ProgramTab />}

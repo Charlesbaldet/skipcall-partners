@@ -215,7 +215,7 @@ export default function ReferralsPage() {
       ) : (
         /* KANBAN VIEW */
         <div style={{ overflow: 'hidden', borderRadius: 16 }}>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 180px)', minHeight: 400 }}>
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 140px)', minHeight: 400 }}>
           {(stages.length ? stages : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#64748b' }))).map(stage => {
             // Match referrals to this column by stage_id primarily;
             // fall back to legacy status slug so anything predating

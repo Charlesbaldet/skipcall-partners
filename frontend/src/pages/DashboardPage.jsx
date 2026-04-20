@@ -336,11 +336,10 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
 // ═══════════════════════════════════════
 // CLASSEMENT TAB
 // ═══════════════════════════════════════
-function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenant, features }) {
+function ClassementTab({ leaderboard, levels, loading, myTenant }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
-  const showLinkColumn = !!features?.feature_referral_links;
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('dashboard.loading')}</div>;
 
   const topThree = leaderboard.slice(0, 3);
@@ -385,7 +384,6 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
                 `${rLabel} ${t('dashboard.tbl_generated')}`,
                 t('dashboard.tbl_commissions'),
                 t('dashboard.tbl_conversion'),
-                ...(showLinkColumn ? [t('dashboard.tbl_link')] : []),
                 t('dashboard.tbl_progression'),
               ].map((h, i) => (
                 <th key={i} style={{ padding: '13px 14px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
@@ -418,16 +416,6 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
                       color: p.conversion_rate >= 50 ? '#16a34a' : p.conversion_rate >= 25 ? '#f59e0b' : '#dc2626',
                     }}>{p.conversion_rate}%</span>
                   </td>
-                  {showLinkColumn && (
-                    <td style={{ padding: '13px 14px' }}>
-                      {p.referral_code && (
-                        <button onClick={() => copyLink(p.referral_code)} style={{ padding: '4px 8px', borderRadius: 6, background: copied === p.referral_code ? '#f0fdf4' : '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#475569', fontWeight: 500 }}>
-                          {copied === p.referral_code ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} />}
-                          {p.referral_code}
-                        </button>
-                      )}
-                    </td>
-                  )}
                   <td style={{ padding: '13px 14px', fontSize: 12, minWidth: 120 }}>
                     {p.next_level ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

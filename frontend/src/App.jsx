@@ -58,6 +58,10 @@ function AppRoutes() {
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
       <Route path="/ref/:code" element={<PublicTrackingPage />} />
       <Route path="/apply" element={<PublicApplyPage />} />
+          {/* /r/:slug is handled server-side — Vercel rewrites it to the
+              Railway backend which logs the click then 302s to the tenant's
+              website. Kept as a no-op route so dev environments without
+              the rewrite fall back to the legacy React component. */}
           <Route path="/r/:slug" element={<PublicReferralRedirectPage />} />
       <Route path="/setup-password/:token" element={<SetupPasswordPage />} />
       <Route path="/signup" element={<SignupPage />} />
