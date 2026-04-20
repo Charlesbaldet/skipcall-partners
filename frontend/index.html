@@ -57,6 +57,23 @@
       }
     }
     </script>
+
+    <!-- Google Analytics 4 — only fires page_view on public pages; app
+         pages (dashboard, referrals, etc.) stay untracked for privacy. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MJY1N13L2S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-MJY1N13L2S', { 'send_page_view': false });
+
+      var publicPaths = ['/', '/blog', '/pricing', '/marketplace', '/login', '/signup'];
+      var path = window.location.pathname;
+      var isPublic = publicPaths.indexOf(path) !== -1 || path.indexOf('/blog/') === 0;
+      if (isPublic) {
+        gtag('event', 'page_view');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
