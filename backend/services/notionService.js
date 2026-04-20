@@ -4,29 +4,49 @@ const { encrypt, decrypt } = require('../middleware/security');
 const NOTION_API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
 
-// ─── Config lookup ──────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// Multi-database Notion sync
+//
+// The tenant can configure up to three Notion databases:
+//   - notion_db_transactions  (required — drives every push)
+//   - notion_db_contacts      (optional)
+//   - notion_db_companies     (optional)
+//
+// Each database gets its own JSONB field mapping (refboost field →
+// Notion property name). At push time we upsert in order
+// Company → Contact → Transaction and, when relation-typed properties
+// exist between the databases, wire them up. Everything not marked
+// required is skipped gracefully when it's not configured.
+// ═══════════════════════════════════════════════════════════════════
+
 async function getTenantNotion(tenantId) {
   const { rows } = await query(
-    `SELECT notion_token, notion_database_id, notion_database_name,
-            notion_connected, notion_field_mapping
+    `SELECT notion_token, notion_connected,
+            notion_db_transactions, notion_db_contacts, notion_db_companies,
+            notion_mapping_transactions, notion_mapping_contacts, notion_mapping_companies,
+            notion_last_sync
        FROM tenants WHERE id = $1 LIMIT 1`,
     [tenantId]
   );
   const t = rows[0];
-  if (!t || !t.notion_connected || !t.notion_token || !t.notion_database_id) return null;
+  if (!t || !t.notion_connected || !t.notion_token || !t.notion_db_transactions) return null;
   return {
     token: decrypt(t.notion_token),
-    databaseId: t.notion_database_id,
-    databaseName: t.notion_database_name,
-    mapping: t.notion_field_mapping || {},
+    dbs: {
+      transactions: t.notion_db_transactions,
+      contacts:     t.notion_db_contacts || null,
+      companies:    t.notion_db_companies || null,
+    },
+    mappings: {
+      transactions: t.notion_mapping_transactions || {},
+      contacts:     t.notion_mapping_contacts     || {},
+      companies:    t.notion_mapping_companies    || {},
+    },
+    lastSync: t.notion_last_sync,
   };
 }
 
-// ─── HTTP helper (rate-limit tolerant) ──────────────────────────────
-// Notion's API is rate-limited at ~3 RPS; keep one small delay between
-// sequential writes so a bulk pull doesn't get 429'd. For the
-// one-off sync endpoints we call from the UI this is overkill but
-// harmless.
+// ─── HTTP helper ────────────────────────────────────────────────────
 async function notionFetch(token, path, init = {}) {
   const res = await fetch(NOTION_API + path, {
     ...init,
@@ -39,29 +59,59 @@ async function notionFetch(token, path, init = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = new Error(data?.message || 'Notion error');
-    err.status = res.status;
-    err.body = data;
+    const err = new Error(data?.message || `Notion ${res.status}`);
+    err.status = res.status; err.body = data;
     throw err;
   }
   return data;
 }
 
-async function validateToken(token, databaseId) {
-  const db = await notionFetch(token, `/databases/${encodeURIComponent(databaseId)}`);
-  const name = (db.title || [])
-    .map(t => (t.plain_text || t.text?.content || '')).join('')
-    .trim() || 'Notion database';
-  const properties = Object.entries(db.properties || {}).map(([key, p]) => ({
-    id: p.id, name: key, type: p.type,
+// Extract a human-readable database title from a GET /databases/:id
+// response. Falls back to a generic label when the title is empty.
+function readDbTitle(db) {
+  const t = (db.title || []).map(t => t.plain_text || t.text?.content || '').join('').trim();
+  return t || 'Notion database';
+}
+
+// Summarise a database's schema so the frontend can render dropdowns:
+// [{ id, name, type }]. Relation types also carry the target database_id.
+function readDbProperties(db) {
+  return Object.entries(db.properties || {}).map(([name, p]) => ({
+    id: p.id, name, type: p.type,
+    ...(p.type === 'relation' && p.relation?.database_id ? { relation_database_id: p.relation.database_id } : {}),
   }));
-  return { databaseName: name, properties };
+}
+
+async function fetchDatabase(token, databaseId) {
+  if (!databaseId) return null;
+  const db = await notionFetch(token, `/databases/${encodeURIComponent(databaseId)}`);
+  return {
+    id: databaseId,
+    name: readDbTitle(db),
+    properties: readDbProperties(db),
+    rawSchema: db.properties || {},
+  };
+}
+
+// Validate up to 3 databases in one shot. Returns what each resolved
+// to so the frontend can surface "⚠️ Contacts DB invalid — skipped"
+// when needed.
+async function validateConnection(token, { transactions, contacts, companies }) {
+  const out = { transactions: null, contacts: null, companies: null };
+  const errors = {};
+  for (const [key, id] of Object.entries({ transactions, contacts, companies })) {
+    if (!id) continue;
+    try {
+      const db = await fetchDatabase(token, id);
+      out[key] = { id: db.id, name: db.name, properties: db.properties };
+    } catch (err) {
+      errors[key] = err.message;
+    }
+  }
+  return { databases: out, errors };
 }
 
 // ─── Property builder ──────────────────────────────────────────────
-// Given a Notion property spec + a primitive value, build the exact
-// request body Notion expects for that property type. Returns null
-// when we can't represent the value (so the caller can skip).
 function buildNotionProperty(spec, value) {
   if (value === undefined || value === null || value === '') return null;
   const str = String(value);
@@ -81,45 +131,57 @@ function buildNotionProperty(spec, value) {
   }
 }
 
-// Map RefBoost referral → Notion properties using the tenant's
-// configured mapping + the database schema (type info).
-async function buildPropertiesFromReferral(referral, token, databaseId, mapping) {
-  const db = await notionFetch(token, `/databases/${encodeURIComponent(databaseId)}`);
-  const schema = db.properties || {};
-
-  const fieldValue = {
-    prospect_name: referral.prospect_name,
-    email:         referral.prospect_email,
-    phone:         referral.prospect_phone,
-    company:       referral.prospect_company,
-    notes:         referral.notes,
-    status:        referral.status,
-    mrr:           referral.deal_value,
-    partner_name:  referral.partner_name,
-  };
-
+// Given a database schema + a mapping (refboost_field → notion_prop_name)
+// + the flattened field/value map for the referral, build the Notion
+// properties payload. Drops anything unmapped or unrepresentable.
+// Always fills the db's title property even when the user didn't map
+// it (Notion requires title-type pages to have a title).
+function buildPropertiesFor(schema, mapping, values) {
   const properties = {};
-  for (const [refboostField, notionPropName] of Object.entries(mapping || {})) {
-    if (!notionPropName) continue;
-    const spec = schema[notionPropName];
+  for (const [refField, propName] of Object.entries(mapping || {})) {
+    if (!propName) continue;
+    const spec = schema[propName];
     if (!spec) continue;
-    const built = buildNotionProperty({ ...spec, id: spec.id }, fieldValue[refboostField]);
-    if (built) properties[notionPropName] = built;
+    const built = buildNotionProperty(spec, values[refField]);
+    if (built) properties[propName] = built;
   }
-
-  // Safety: Notion requires a 'title' property. If the mapping didn't
-  // set one (e.g. user never configured mappings), pick the first
-  // title property and fill it with prospect_name so the page actually
-  // lands in the database.
+  // Safety net for the title property — use the first available text-ish
+  // field so the page actually lands.
   const hasTitle = Object.entries(properties).some(([k]) => schema[k]?.type === 'title');
   if (!hasTitle) {
     const [titleKey] = Object.entries(schema).find(([, p]) => p.type === 'title') || [];
-    if (titleKey && referral.prospect_name) {
-      properties[titleKey] = { title: [{ text: { content: String(referral.prospect_name).slice(0, 2000) } }] };
+    const fallback = values.prospect_name || values.company || values.email || '(sans titre)';
+    if (titleKey) {
+      properties[titleKey] = { title: [{ text: { content: String(fallback).slice(0, 2000) } }] };
     }
   }
+  return properties;
+}
 
-  return { properties, schema };
+// Find the relation property on `sourceSchema` whose target database_id
+// matches `targetDbId`. Returns the property name or null.
+function findRelationProperty(sourceSchema, targetDbId) {
+  if (!targetDbId) return null;
+  for (const [name, spec] of Object.entries(sourceSchema || {})) {
+    if (spec.type === 'relation' && spec.relation?.database_id === targetDbId) {
+      return name;
+    }
+  }
+  return null;
+}
+
+// Look up a page in `databaseId` matching `{ property, equals }`.
+async function searchPage(token, databaseId, property, filter) {
+  try {
+    const data = await notionFetch(token, `/databases/${encodeURIComponent(databaseId)}/query`, {
+      method: 'POST',
+      body: JSON.stringify({
+        filter: { property, ...filter },
+        page_size: 1,
+      }),
+    });
+    return data?.results?.[0]?.id || null;
+  } catch { return null; }
 }
 
 // ─── Sync ops ───────────────────────────────────────────────────────
@@ -128,80 +190,178 @@ async function pushReferralToNotion(referral, tenantId) {
   if (!cfg) return { ok: false, reason: 'not_connected' };
 
   try {
-    const { properties } = await buildPropertiesFromReferral(referral, cfg.token, cfg.databaseId, cfg.mapping);
+    // Fetch schemas for every database we plan to write to.
+    const [txnsDb, contactsDb, companiesDb] = await Promise.all([
+      fetchDatabase(cfg.token, cfg.dbs.transactions),
+      cfg.dbs.contacts  ? fetchDatabase(cfg.token, cfg.dbs.contacts).catch(() => null)  : null,
+      cfg.dbs.companies ? fetchDatabase(cfg.token, cfg.dbs.companies).catch(() => null) : null,
+    ]);
 
-    if (referral.notion_page_id) {
-      // Update
-      await notionFetch(cfg.token, `/pages/${referral.notion_page_id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ properties }),
+    const values = {
+      prospect_name: referral.prospect_name,
+      email:         referral.prospect_email,
+      phone:         referral.prospect_phone,
+      company:       referral.prospect_company,
+      notes:         referral.notes,
+      status:        referral.status,
+      mrr:           referral.deal_value,
+      partner_name:  referral.partner_name,
+      role:          referral.prospect_role,
+    };
+
+    // ── 1. Company ──
+    let companyId = referral.notion_company_id || null;
+    if (companiesDb && values.company) {
+      const mapping = cfg.mappings.companies || {};
+      const nameProp = mapping.company || findTitleProp(companiesDb.rawSchema);
+      // Search by title for existing row.
+      if (!companyId && nameProp) {
+        companyId = await searchPage(cfg.token, cfg.dbs.companies, nameProp, { title: { equals: values.company } });
+      }
+      const properties = buildPropertiesFor(companiesDb.rawSchema, mapping, values);
+      if (companyId) {
+        await notionFetch(cfg.token, `/pages/${companyId}`, { method: 'PATCH', body: JSON.stringify({ properties }) });
+      } else {
+        const created = await notionFetch(cfg.token, '/pages', {
+          method: 'POST',
+          body: JSON.stringify({ parent: { database_id: cfg.dbs.companies }, properties }),
+        });
+        companyId = created?.id || null;
+      }
+    }
+
+    // ── 2. Contact ──
+    let contactId = referral.notion_contact_id || null;
+    if (contactsDb && values.email) {
+      const mapping = cfg.mappings.contacts || {};
+      const emailProp = mapping.email;
+      if (!contactId && emailProp) {
+        const schemaType = contactsDb.rawSchema[emailProp]?.type;
+        const filter = schemaType === 'email'
+          ? { email: { equals: values.email } }
+          : { rich_text: { equals: values.email } };
+        contactId = await searchPage(cfg.token, cfg.dbs.contacts, emailProp, filter);
+      }
+      const properties = buildPropertiesFor(contactsDb.rawSchema, mapping, values);
+      // Auto-relation: if the Contacts DB has a relation property that
+      // points at the Companies DB, populate it with the company we
+      // just upserted.
+      const contactToCompany = findRelationProperty(contactsDb.rawSchema, cfg.dbs.companies);
+      if (contactToCompany && companyId) {
+        properties[contactToCompany] = { relation: [{ id: companyId }] };
+      }
+      if (contactId) {
+        await notionFetch(cfg.token, `/pages/${contactId}`, { method: 'PATCH', body: JSON.stringify({ properties }) });
+      } else {
+        const created = await notionFetch(cfg.token, '/pages', {
+          method: 'POST',
+          body: JSON.stringify({ parent: { database_id: cfg.dbs.contacts }, properties }),
+        });
+        contactId = created?.id || null;
+      }
+    }
+
+    // ── 3. Transaction (always) ──
+    const txMapping = cfg.mappings.transactions || {};
+    const txProperties = buildPropertiesFor(txnsDb.rawSchema, txMapping, values);
+    // Auto-relations: link the new transaction to contact/company when
+    // the Transactions DB schema exposes relations pointing at them.
+    const txToContact = findRelationProperty(txnsDb.rawSchema, cfg.dbs.contacts);
+    const txToCompany = findRelationProperty(txnsDb.rawSchema, cfg.dbs.companies);
+    if (txToContact && contactId) txProperties[txToContact] = { relation: [{ id: contactId }] };
+    if (txToCompany && companyId) txProperties[txToCompany] = { relation: [{ id: companyId }] };
+
+    let transactionId = referral.notion_transaction_id || referral.notion_page_id || null;
+    if (transactionId) {
+      await notionFetch(cfg.token, `/pages/${transactionId}`, { method: 'PATCH', body: JSON.stringify({ properties: txProperties }) });
+    } else {
+      const created = await notionFetch(cfg.token, '/pages', {
+        method: 'POST',
+        body: JSON.stringify({ parent: { database_id: cfg.dbs.transactions }, properties: txProperties }),
       });
-      return { ok: true, action: 'updated', pageId: referral.notion_page_id };
+      transactionId = created?.id || null;
     }
-    // Create
-    const created = await notionFetch(cfg.token, '/pages', {
-      method: 'POST',
-      body: JSON.stringify({
-        parent: { database_id: cfg.databaseId },
-        properties,
-      }),
-    });
-    if (created.id) {
-      await query('UPDATE referrals SET notion_page_id = $1 WHERE id = $2', [created.id, referral.id]);
-    }
-    return { ok: true, action: 'created', pageId: created.id };
+
+    // Persist every id we resolved.
+    await query(
+      `UPDATE referrals
+          SET notion_transaction_id = COALESCE($1, notion_transaction_id),
+              notion_contact_id     = COALESCE($2, notion_contact_id),
+              notion_company_id     = COALESCE($3, notion_company_id),
+              notion_page_id        = COALESCE($1, notion_page_id)
+        WHERE id = $4`,
+      [transactionId, contactId, companyId, referral.id]
+    );
+
+    return { ok: true, transactionId, contactId, companyId };
   } catch (err) {
     console.error('[notion.push]', err.message, err.body || '');
     return { ok: false, error: err.message };
   }
 }
 
-// Pull: fetch recently edited pages, match on notion_page_id, and
-// update the local referral row with any mapped text/email/phone/
-// company/notes fields whose Notion value is newer.
+function findTitleProp(schema) {
+  const entry = Object.entries(schema || {}).find(([, p]) => p.type === 'title');
+  return entry ? entry[0] : null;
+}
+
+// ─── Pull ───────────────────────────────────────────────────────────
 async function pullFromNotion(tenantId) {
   const cfg = await getTenantNotion(tenantId);
   if (!cfg) return { ok: false, reason: 'not_connected' };
 
   try {
-    const since = (await query('SELECT notion_last_sync FROM tenants WHERE id = $1', [tenantId])).rows[0]?.notion_last_sync;
-    const body = {
-      page_size: 100,
-      sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }],
-    };
-    const pages = await notionFetch(cfg.token, `/databases/${encodeURIComponent(cfg.databaseId)}/query`, {
+    const pages = await notionFetch(cfg.token, `/databases/${encodeURIComponent(cfg.dbs.transactions)}/query`, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify({ page_size: 100, sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }] }),
     });
 
-    const reverseMap = {}; // notion_property_name → refboost_field
-    for (const [refField, notionName] of Object.entries(cfg.mapping || {})) {
-      if (notionName) reverseMap[notionName] = refField;
-    }
-    const textyRefFields = new Set(['prospect_name', 'email', 'phone', 'company', 'notes', 'partner_name']);
+    // Reverse the Transaction mapping so we know which Notion prop
+    // name maps back to which RefBoost field.
+    const txReverse = reverseMap(cfg.mappings.transactions);
+    const ctReverse = reverseMap(cfg.mappings.contacts);
+    const coReverse = reverseMap(cfg.mappings.companies);
 
     let updated = 0;
     for (const page of (pages.results || [])) {
-      // Only touch pages whose last edit is newer than our last sync.
-      if (since && new Date(page.last_edited_time) <= new Date(since)) continue;
+      if (cfg.lastSync && new Date(page.last_edited_time) <= new Date(cfg.lastSync)) continue;
       const { rows: [referral] } = await query(
-        'SELECT id FROM referrals WHERE notion_page_id = $1 AND tenant_id = $2',
+        'SELECT id FROM referrals WHERE notion_transaction_id = $1 AND tenant_id = $2',
         [page.id, tenantId]
       );
       if (!referral) continue;
 
+      const patch = {};
+      mergeReadable(patch, page.properties, txReverse);
+
+      // Follow relations into Contacts / Companies for fuller enrichment.
+      if (cfg.dbs.contacts) {
+        const relProp = firstRelationPropValue(page.properties);
+        for (const contactPageId of (relProp.get('contacts') || [])) {
+          const contactPage = await notionFetch(cfg.token, `/pages/${contactPageId}`).catch(() => null);
+          if (contactPage?.properties) mergeReadable(patch, contactPage.properties, ctReverse);
+        }
+      }
+      if (cfg.dbs.companies) {
+        const relProp = firstRelationPropValue(page.properties);
+        for (const companyPageId of (relProp.get('companies') || [])) {
+          const companyPage = await notionFetch(cfg.token, `/pages/${companyPageId}`).catch(() => null);
+          if (companyPage?.properties) mergeReadable(patch, companyPage.properties, coReverse);
+        }
+      }
+
+      // Write the patch back (translate RefBoost keys → column names).
+      const colMap = {
+        prospect_name: 'prospect_name', email: 'prospect_email', phone: 'prospect_phone',
+        company: 'prospect_company', notes: 'notes', role: 'prospect_role',
+      };
       const sets = [];
       const params = [];
       let i = 1;
-      for (const [propName, prop] of Object.entries(page.properties || {})) {
-        const refField = reverseMap[propName];
-        if (!refField || !textyRefFields.has(refField)) continue;
-        const val = readNotionText(prop);
-        if (val == null) continue;
-        const col = ({ prospect_name: 'prospect_name', email: 'prospect_email', phone: 'prospect_phone', company: 'prospect_company', notes: 'notes' })[refField];
-        if (!col) continue;
-        sets.push(`${col} = $${i++}`);
-        params.push(val);
+      for (const [k, v] of Object.entries(patch)) {
+        const col = colMap[k];
+        if (!col || v == null || v === '') continue;
+        sets.push(`${col} = $${i++}`); params.push(v);
       }
       if (sets.length) {
         params.push(referral.id);
@@ -218,23 +378,58 @@ async function pullFromNotion(tenantId) {
   }
 }
 
+function reverseMap(mapping) {
+  const out = {};
+  for (const [refField, propName] of Object.entries(mapping || {})) {
+    if (propName) out[propName] = refField;
+  }
+  return out;
+}
+
+function mergeReadable(patch, props, reverse) {
+  for (const [propName, prop] of Object.entries(props || {})) {
+    const refField = reverse[propName];
+    if (!refField) continue;
+    const val = readNotionText(prop);
+    if (val != null && val !== '') patch[refField] = val;
+  }
+}
+
+// Group all relation-property values on a page into a Map keyed by
+// the target database shorthand (best-effort: keys are "contacts" /
+// "companies" lookups done server-side). Here we return a generic
+// "all relations" bucket so the caller can inspect them.
+function firstRelationPropValue(props) {
+  const out = new Map();
+  const bucket = [];
+  for (const prop of Object.values(props || {})) {
+    if (prop.type === 'relation') {
+      for (const r of (prop.relation || [])) bucket.push(r.id);
+    }
+  }
+  out.set('contacts', bucket);
+  out.set('companies', bucket);
+  return out;
+}
+
 function readNotionText(prop) {
   if (!prop) return null;
   switch (prop.type) {
-    case 'title':       return (prop.title || []).map(t => t.plain_text).join('').trim();
-    case 'rich_text':   return (prop.rich_text || []).map(t => t.plain_text).join('').trim();
-    case 'email':       return prop.email || null;
+    case 'title':        return (prop.title || []).map(t => t.plain_text).join('').trim();
+    case 'rich_text':    return (prop.rich_text || []).map(t => t.plain_text).join('').trim();
+    case 'email':        return prop.email || null;
     case 'phone_number': return prop.phone_number || null;
-    case 'url':         return prop.url || null;
-    case 'number':      return prop.number != null ? String(prop.number) : null;
-    case 'select':      return prop.select?.name || null;
-    case 'status':      return prop.status?.name || null;
-    default:            return null;
+    case 'url':          return prop.url || null;
+    case 'number':       return prop.number != null ? String(prop.number) : null;
+    case 'select':       return prop.select?.name || null;
+    case 'status':       return prop.status?.name || null;
+    default:             return null;
   }
 }
 
 module.exports = {
-  validateToken,
+  validateConnection,
+  fetchDatabase,
   getTenantNotion,
   pushReferralToNotion,
   pullFromNotion,

@@ -1798,32 +1798,42 @@ function PartnerCategoriesTab() {
   );
 }
 
-// ═══ Notion connect modal ═══
-// Token + database-ID capture. Hitting "Connecter" validates the
-// token server-side by calling Notion's databases endpoint.
+
+// ═══ Notion connect modal — 3 databases ═══
+// Token + up to three database IDs (Transactions required, Contacts
+// and Companies optional). Hitting "Connecter" validates everything
+// server-side; errors for individual DBs are surfaced per-field.
 function NotionConnectModal({ onClose, onConnected }) {
   const { t } = useTranslation();
-  const [token, setToken] = useState('');
-  const [databaseId, setDatabaseId] = useState('');
+  const [form, setForm] = useState({ token: '', dbTransactions: '', dbContacts: '', dbCompanies: '' });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
   const submit = async () => {
-    if (!token.trim() || !databaseId.trim()) return;
+    if (!form.token.trim() || !form.dbTransactions.trim()) return;
     setBusy(true); setErr('');
     try {
-      await api.connectNotion({ token: token.trim(), databaseId: databaseId.trim() });
+      await api.connectNotion({
+        token: form.token.trim(),
+        dbTransactions: form.dbTransactions.trim(),
+        dbContacts:     form.dbContacts.trim()  || undefined,
+        dbCompanies:    form.dbCompanies.trim() || undefined,
+      });
       onConnected();
     } catch (e) {
       setErr(e.message || t('notion.invalid_token'));
     } finally { setBusy(false); }
   };
 
-  const inp = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const inp = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'ui-monospace, monospace', boxSizing: 'border-box' };
+  const lbl = { display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 4, marginTop: 12 };
+  const hint = { fontSize: 11, color: '#94a3b8', marginTop: 4 };
+
+  const canSubmit = form.token.trim() && form.dbTransactions.trim();
 
   return (
     <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 520, padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>{t('notion.title')} — {t('notion.connect')}</h3>
           <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -1831,7 +1841,7 @@ function NotionConnectModal({ onClose, onConnected }) {
           </button>
         </div>
 
-        <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, marginBottom: 16, border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, marginBottom: 12, border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
             {t('notion.setup_instructions')}
           </div>
@@ -1843,19 +1853,32 @@ function NotionConnectModal({ onClose, onConnected }) {
           </ol>
         </div>
 
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('notion.token')}</label>
-        <input type="password" value={token} onChange={e => setToken(e.target.value)} placeholder="secret_..." style={{ ...inp, marginBottom: 12, fontFamily: 'ui-monospace, monospace' }}/>
+        <label style={lbl}>{t('notion.token')}</label>
+        <input type="password" value={form.token} onChange={e => setForm(f => ({ ...f, token: e.target.value }))} placeholder="secret_..." style={inp}/>
 
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('notion.database_id')}</label>
-        <input value={databaseId} onChange={e => setDatabaseId(e.target.value)} placeholder="32-char hex" style={{ ...inp, marginBottom: 16, fontFamily: 'ui-monospace, monospace' }}/>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginTop: 18, marginBottom: 4 }}>
+          Configurez vos bases de données
+        </div>
+        <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>
+          L'ID se trouve dans l'URL de votre base Notion (les 32 caractères après le dernier /).
+        </div>
 
-        {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+        <label style={lbl}>Base Transactions (Deals) *</label>
+        <input value={form.dbTransactions} onChange={e => setForm(f => ({ ...f, dbTransactions: e.target.value }))} placeholder="32-char hex" style={inp}/>
 
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <label style={lbl}>Base Contacts <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optionnel)</span></label>
+        <input value={form.dbContacts} onChange={e => setForm(f => ({ ...f, dbContacts: e.target.value }))} placeholder="32-char hex" style={inp}/>
+
+        <label style={lbl}>Base Entreprises <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optionnel)</span></label>
+        <input value={form.dbCompanies} onChange={e => setForm(f => ({ ...f, dbCompanies: e.target.value }))} placeholder="32-char hex" style={inp}/>
+
+        {err && <div style={{ marginTop: 14, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12 }}>{err}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
           <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {t('common.cancel') || 'Annuler'}
           </button>
-          <button type="button" onClick={submit} disabled={busy || !token.trim() || !databaseId.trim()} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>
+          <button type="button" onClick={submit} disabled={busy || !canSubmit} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: busy || !canSubmit ? 0.6 : 1 }}>
             {busy ? '…' : t('notion.connect')}
           </button>
         </div>
@@ -1864,23 +1887,36 @@ function NotionConnectModal({ onClose, onConnected }) {
   );
 }
 
-// ═══ Notion field-mapping modal ═══
-// Loads Notion database properties + saved mapping, lets the admin
-// pair RefBoost fields to Notion properties, saves back as JSONB.
+// ═══ Notion mapping modal — 3 tabs ═══
+// One tab per Notion database (Transactions, Contacts, Entreprises).
+// Each tab's dropdown list is populated from GET /properties/:type.
+// Missing optional databases are marked "non configurée" and their
+// tab is disabled.
 function NotionMappingModal({ onClose }) {
   const { t } = useTranslation();
-  const REFBOOST_FIELDS = [
-    { key: 'prospect_name', labelKey: 'crm.field_prospect_name' },
-    { key: 'email',         labelKey: 'crm.field_email' },
-    { key: 'phone',         labelKey: 'crm.field_phone' },
-    { key: 'company',       labelKey: 'crm.field_company' },
-    { key: 'status',        labelKey: 'crm.field_status' },
-    { key: 'mrr',           labelKey: 'crm.field_mrr' },
-    { key: 'notes',         labelKey: 'crm.field_notes' },
-    { key: 'partner_name',  labelKey: 'crm.field_partner_name' },
+  const TABS = [
+    { id: 'transactions', label: 'Transactions', fields: [
+      { key: 'prospect_name', label: t('crm.field_prospect_name') || 'Nom du prospect', hints: ['name', 'nom', 'title', 'titre'] },
+      { key: 'status',        label: t('crm.field_status')        || 'Statut',          hints: ['status', 'statut'] },
+      { key: 'mrr',           label: t('crm.field_mrr')           || 'MRR',             hints: ['mrr', 'amount', 'montant', 'prix', 'deal'] },
+      { key: 'notes',         label: t('crm.field_notes')         || 'Notes',           hints: ['notes', 'note'] },
+      { key: 'partner_name',  label: t('crm.field_partner_name')  || 'Partenaire',      hints: ['partner', 'partenaire'] },
+    ] },
+    { id: 'contacts', label: 'Contacts', fields: [
+      { key: 'prospect_name', label: t('crm.field_prospect_name') || 'Nom',             hints: ['name', 'nom', 'title', 'titre'] },
+      { key: 'email',         label: t('crm.field_email')         || 'Email',           hints: ['email', 'e-mail', 'mail'] },
+      { key: 'phone',         label: t('crm.field_phone')         || 'Téléphone',       hints: ['phone', 'téléphone', 'telephone', 'tel'] },
+      { key: 'role',          label: t('crm.field_role')          || 'Rôle',            hints: ['role', 'poste', 'title', 'titre'] },
+    ] },
+    { id: 'companies', label: 'Entreprises', fields: [
+      { key: 'company',       label: t('crm.field_company')       || 'Entreprise',      hints: ['name', 'nom', 'company', 'société', 'entreprise'] },
+    ] },
   ];
-  const [properties, setProperties] = useState([]);
-  const [mapping, setMapping] = useState({});
+
+  const [active, setActive] = useState('transactions');
+  const [status, setStatus] = useState({ databases: { transactions: null, contacts: null, companies: null } });
+  const [propsByType, setPropsByType] = useState({ transactions: [], contacts: [], companies: [] });
+  const [mappings, setMappings] = useState({ transactions: {}, contacts: {}, companies: {} });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
@@ -1888,26 +1924,39 @@ function NotionMappingModal({ onClose }) {
   useEffect(() => {
     (async () => {
       try {
-        const [propsRes, mapRes] = await Promise.all([
-          api.getNotionProperties().catch(() => ({ properties: [] })),
+        const [st, m] = await Promise.all([
+          api.getNotionStatus(),
           api.getNotionMappings().catch(() => ({ mappings: {} })),
         ]);
-        const props = propsRes.properties || [];
-        const m = mapRes.mappings || {};
-        // Auto-suggest: any RefBoost field without a saved mapping,
-        // match a Notion property whose name equals the RefBoost label
-        // (case-insensitive) or contains a familiar keyword.
-        const byLower = Object.fromEntries(props.map(p => [p.name.toLowerCase(), p.name]));
-        const heuristic = { prospect_name: ['name', 'nom', 'title', 'titre'], email: ['email', 'e-mail'], phone: ['phone', 'téléphone', 'telephone'], company: ['company', 'société', 'entreprise'], status: ['status', 'statut'], mrr: ['mrr', 'amount', 'montant', 'deal'], notes: ['notes', 'note'], partner_name: ['partner', 'partenaire'] };
-        const merged = {};
-        for (const { key } of REFBOOST_FIELDS) {
-          if (m[key]) { merged[key] = m[key]; continue; }
-          const hits = heuristic[key] || [];
-          const found = hits.map(h => byLower[h]).find(Boolean);
-          merged[key] = found || '';
+        setStatus(st);
+
+        // Fetch properties for each configured DB in parallel; skip
+        // the unconfigured ones.
+        const tasks = ['transactions', 'contacts', 'companies']
+          .filter(t => st.databases?.[t])
+          .map(async type => {
+            try { const p = await api.getNotionProperties(type); return [type, p.properties || []]; }
+            catch { return [type, []]; }
+          });
+        const results = await Promise.all(tasks);
+        const byType = { transactions: [], contacts: [], companies: [] };
+        for (const [type, props] of results) byType[type] = props;
+        setPropsByType(byType);
+
+        // Auto-suggest: anything not already mapped gets a best-guess
+        // match against property names via per-field `hints`.
+        const merged = { transactions: {}, contacts: {}, companies: {} };
+        for (const tab of TABS) {
+          const props = byType[tab.id] || [];
+          const byLower = Object.fromEntries(props.map(p => [p.name.toLowerCase(), p.name]));
+          const saved = m.mappings?.[tab.id] || {};
+          for (const f of tab.fields) {
+            if (saved[f.key]) { merged[tab.id][f.key] = saved[f.key]; continue; }
+            const found = f.hints.map(h => byLower[h]).find(Boolean);
+            merged[tab.id][f.key] = found || '';
+          }
         }
-        setProperties(props);
-        setMapping(merged);
+        setMappings(merged);
       } catch (e) { setErr(e.message); }
       finally { setLoading(false); }
     })();
@@ -1916,17 +1965,20 @@ function NotionMappingModal({ onClose }) {
   const save = async () => {
     setSaving(true); setErr('');
     try {
-      await api.updateNotionMappings(mapping);
+      await api.updateNotionMappings(mappings);
       onClose();
     } catch (e) { setErr(e.message); }
     finally { setSaving(false); }
   };
 
   const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const currentTab = TABS.find(t => t.id === active);
+  const currentProps = propsByType[active] || [];
+  const currentDbConfigured = !!status.databases?.[active];
 
   return (
     <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 580, maxHeight: '86vh', overflowY: 'auto', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>{t('notion.title')} — {t('notion.field_mapping')}</h3>
           <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -1934,8 +1986,37 @@ function NotionMappingModal({ onClose }) {
           </button>
         </div>
 
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 14 }}>
+          {TABS.map(tab => {
+            const configured = !!status.databases?.[tab.id];
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActive(tab.id)}
+                disabled={!configured}
+                style={{
+                  flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none',
+                  cursor: configured ? 'pointer' : 'not-allowed',
+                  fontSize: 12, fontWeight: 600,
+                  background: active === tab.id ? '#fff' : 'transparent',
+                  color: !configured ? '#cbd5e1' : active === tab.id ? '#0f172a' : '#64748b',
+                  boxShadow: active === tab.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                }}
+              >
+                {tab.label}{!configured && ' —'}
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>…</div>
+        ) : !currentDbConfigured ? (
+          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+            Base non configurée. Ajoutez l'ID dans la connexion Notion pour activer ce mapping.
+          </div>
         ) : (
           <>
             <table style={{ width: '100%', marginBottom: 16 }}>
@@ -1946,13 +2027,17 @@ function NotionMappingModal({ onClose }) {
                 </tr>
               </thead>
               <tbody>
-                {REFBOOST_FIELDS.map(f => (
+                {currentTab.fields.map(f => (
                   <tr key={f.key}>
-                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t(f.labelKey) || f.key}</td>
+                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{f.label}</td>
                     <td style={{ padding: '4px 8px' }}>
-                      <select value={mapping[f.key] || ''} onChange={e => setMapping(m => ({ ...m, [f.key]: e.target.value }))} style={inp}>
+                      <select
+                        value={mappings[active]?.[f.key] || ''}
+                        onChange={e => setMappings(m => ({ ...m, [active]: { ...m[active], [f.key]: e.target.value } }))}
+                        style={inp}
+                      >
                         <option value="">—</option>
-                        {properties.map(p => (
+                        {currentProps.map(p => (
                           <option key={p.id || p.name} value={p.name}>{p.name} ({p.type})</option>
                         ))}
                       </select>
@@ -1961,19 +2046,19 @@ function NotionMappingModal({ onClose }) {
                 ))}
               </tbody>
             </table>
-
-            {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
-
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                {t('common.cancel') || 'Annuler'}
-              </button>
-              <button type="button" onClick={save} disabled={saving} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
-                {saving ? '…' : (t('common.save') || 'Enregistrer')}
-              </button>
-            </div>
           </>
         )}
+
+        {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            {t('common.cancel') || 'Annuler'}
+          </button>
+          <button type="button" onClick={save} disabled={saving} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+            {saving ? '…' : (t('common.save') || 'Enregistrer')}
+          </button>
+        </div>
       </div>
     </div>
   );
