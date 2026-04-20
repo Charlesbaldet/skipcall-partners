@@ -429,6 +429,10 @@ async function pullStatusFromCRM(payload, integration) {
 }
 
 // ─── HubSpot OAuth helpers (env-gated) ───────────────────────────────
+// Scopes cover all three object types (deals / contacts / companies)
+// plus their schemas so the mapping modal can list properties for
+// each. Existing tenants who connected with the deals-only scope set
+// will need to re-authorize once to unlock contact/company syncs.
 function hubspotAuthUrl(state, redirectUri) {
   const clientId = process.env.HUBSPOT_CLIENT_ID;
   if (!clientId) return null;
@@ -436,7 +440,13 @@ function hubspotAuthUrl(state, redirectUri) {
     'oauth',
     'crm.objects.deals.read',
     'crm.objects.deals.write',
+    'crm.objects.contacts.read',
+    'crm.objects.contacts.write',
+    'crm.objects.companies.read',
+    'crm.objects.companies.write',
     'crm.schemas.deals.read',
+    'crm.schemas.contacts.read',
+    'crm.schemas.companies.read',
   ].join('%20');
   return `https://app.hubspot.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&state=${encodeURIComponent(state)}`;
 }
