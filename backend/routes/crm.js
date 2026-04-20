@@ -297,6 +297,14 @@ router.put('/mappings/:integrationId', authenticate, tenantScope, authorize('adm
 });
 
 // ─── HubSpot/Salesforce metadata fetch (for the mapping picker) ──────
+// Translate upstream 401/403 into 502 so the frontend's global 401
+// handler doesn't log the RefBoost user out when HubSpot's OAuth token
+// has expired. Everything else collapses to 502 as well (this endpoint
+// is a proxy, not an auth gate).
+function mapUpstreamStatus(s) {
+  return s === 401 || s === 403 ? 502 : (s >= 500 ? 502 : 400);
+}
+
 router.get('/hubspot/fields', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     const { rows } = await query("SELECT access_token FROM crm_integrations WHERE tenant_id = $1 AND provider = 'hubspot' AND is_active = TRUE LIMIT 1", [req.tenantId]);
@@ -305,11 +313,11 @@ router.get('/hubspot/fields', authenticate, tenantScope, authorize('admin'), asy
     const r = await fetch('https://api.hubapi.com/crm/v3/properties/deals', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!r.ok) return res.status(r.status).json({ error: 'HubSpot fetch failed' });
+    if (!r.ok) return res.status(mapUpstreamStatus(r.status)).json({ error: 'HubSpot unreachable', upstream_status: r.status });
     const data = await r.json();
     res.json({ fields: (data.results || []).map(p => ({ name: p.name, label: p.label, type: p.type })) });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur HubSpot' });
+    res.status(502).json({ error: 'Erreur HubSpot' });
   }
 });
 
@@ -321,7 +329,7 @@ router.get('/hubspot/pipelines', authenticate, tenantScope, authorize('admin'), 
     const r = await fetch('https://api.hubapi.com/crm/v3/pipelines/deals', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!r.ok) return res.status(r.status).json({ error: 'HubSpot fetch failed' });
+    if (!r.ok) return res.status(mapUpstreamStatus(r.status)).json({ error: 'HubSpot unreachable', upstream_status: r.status });
     const data = await r.json();
     res.json({
       pipelines: (data.results || []).map(p => ({
@@ -330,7 +338,7 @@ router.get('/hubspot/pipelines', authenticate, tenantScope, authorize('admin'), 
       })),
     });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur HubSpot' });
+    res.status(502).json({ error: 'Erreur HubSpot' });
   }
 });
 
@@ -342,7 +350,7 @@ router.get('/salesforce/fields', authenticate, tenantScope, authorize('admin'), 
     const r = await fetch(`${it.instance_url}/services/data/v59.0/sobjects/Opportunity/describe`, {
       headers: { Authorization: `Bearer ${it.access_token}` },
     });
-    if (!r.ok) return res.status(r.status).json({ error: 'Salesforce fetch failed' });
+    if (!r.ok) return res.status(mapUpstreamStatus(r.status)).json({ error: 'Salesforce unreachable', upstream_status: r.status });
     const data = await r.json();
     res.json({ fields: (data.fields || []).map(f => ({ name: f.name, label: f.label, type: f.type })) });
   } catch (err) {
@@ -358,7 +366,7 @@ router.get('/salesforce/stages', authenticate, tenantScope, authorize('admin'), 
     const r = await fetch(`${it.instance_url}/services/data/v59.0/query?q=SELECT+MasterLabel+FROM+OpportunityStage+WHERE+IsActive=true`, {
       headers: { Authorization: `Bearer ${it.access_token}` },
     });
-    if (!r.ok) return res.status(r.status).json({ error: 'Salesforce fetch failed' });
+    if (!r.ok) return res.status(mapUpstreamStatus(r.status)).json({ error: 'Salesforce unreachable', upstream_status: r.status });
     const data = await r.json();
     res.json({ stages: (data.records || []).map(s => ({ id: s.MasterLabel, label: s.MasterLabel })) });
   } catch (err) {

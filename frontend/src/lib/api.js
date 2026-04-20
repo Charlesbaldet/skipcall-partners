@@ -30,6 +30,21 @@ class ApiClient {
     }
     const res = await fetch(`${API_BASE}${finalPath}`, { ...options, headers });
     if (res.status === 401) {
+      // Proxy endpoints (e.g. /crm/hubspot/fields) can return 401 when
+      // the *upstream* OAuth token is expired — that's not a RefBoost
+      // session problem, so don't log the user out. Surface a regular
+      // error and let the caller decide how to handle it.
+      const isProxy401 = finalPath.startsWith('/crm/');
+      if (isProxy401) {
+        let msg = 'Erreur intégration';
+        try {
+          const body = await res.clone().json();
+          if (body && body.error) msg = body.error;
+        } catch {}
+        const err = new Error(msg);
+        err.status = 401;
+        throw err;
+      }
       this.setToken(null);
       this.setUser(null);
       // Peek at the body to detect the access-revoked signal from the
