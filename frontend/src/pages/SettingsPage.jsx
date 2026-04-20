@@ -875,6 +875,16 @@ function CrmMappingModal({ integration, onClose }) {
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState('');
 
+  // HubSpot-only multi-object mapping. Each tab owns its own property
+  // list (fetched from /crm/hubspot/properties/:object) + its own
+  // map. Salesforce/webhook fall through to the single-tab mode.
+  const isHubspot = integration.provider === 'hubspot';
+  const [activeTab, setActiveTab] = useState('transaction');
+  const [contactProps, setContactProps] = useState([]);
+  const [companyProps, setCompanyProps] = useState([]);
+  const [contactMap, setContactMap] = useState({});
+  const [companyMap, setCompanyMap] = useState({});
+
   const [tenantStages, setTenantStages] = useState([]);
   useEffect(() => {
     (async () => {
@@ -898,8 +908,35 @@ function CrmMappingModal({ integration, onClose }) {
         setStages(sourceStatuses.map(s => ({ refboost_status: s, crm_stage: smap.get(s) || '' })));
 
         if (integration.provider === 'hubspot') {
-          const [f, p] = await Promise.all([api.getHubspotFields(), api.getHubspotPipelines()]);
+          const [f, p, cP, coP, om] = await Promise.all([
+            api.getHubspotFields(),
+            api.getHubspotPipelines(),
+            api.getHubspotProperties('contacts').catch(() => ({ properties: [] })),
+            api.getHubspotProperties('companies').catch(() => ({ properties: [] })),
+            api.getHubspotObjectMappings().catch(() => ({ contacts: {}, companies: {} })),
+          ]);
           setCrmFields(f.fields || []);
+          setContactProps(cP.properties || []);
+          setCompanyProps(coP.properties || []);
+
+          // Auto-suggest any unmapped Contact/Company field by name
+          // match against HubSpot property names. Saved mappings
+          // always win.
+          const byLower = (list) => Object.fromEntries((list || []).map(p => [p.name.toLowerCase(), p.name]));
+          const cLook = byLower(cP.properties);
+          const coLook = byLower(coP.properties);
+          setContactMap({
+            firstname: om.contacts?.firstname || cLook.firstname || '',
+            lastname:  om.contacts?.lastname  || cLook.lastname  || '',
+            email:     om.contacts?.email     || cLook.email     || '',
+            phone:     om.contacts?.phone     || cLook.phone     || '',
+            jobtitle:  om.contacts?.jobtitle  || cLook.jobtitle  || '',
+          });
+          setCompanyMap({
+            company: om.companies?.company || coLook.name   || '',
+            domain:  om.companies?.domain  || coLook.domain || '',
+          });
+
           // Flatten pipelines → stages list (use first pipeline by default).
           const allStages = [];
           for (const pl of p.pipelines || []) {
@@ -921,10 +958,16 @@ function CrmMappingModal({ integration, onClose }) {
   const save = async () => {
     setSaving(true);
     try {
-      await api.updateCrmMappings(integration.id, {
-        fields: fields.filter(f => f.crm_field),
-        stages: stages.filter(s => s.crm_stage),
-      });
+      if (activeTab === 'transaction') {
+        await api.updateCrmMappings(integration.id, {
+          fields: fields.filter(f => f.crm_field),
+          stages: stages.filter(s => s.crm_stage),
+        });
+      } else if (activeTab === 'contact') {
+        await api.updateHubspotObjectMappings({ contacts: contactMap });
+      } else if (activeTab === 'company') {
+        await api.updateHubspotObjectMappings({ companies: companyMap });
+      }
       setSavedMsg(t('crm.saved'));
       setTimeout(() => setSavedMsg(''), 2000);
     } catch (e) {
@@ -948,96 +991,175 @@ function CrmMappingModal({ integration, onClose }) {
 
         {loading ? <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>…</div> : (
           <>
-            <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {t('crm.field_mappings')}
-            </h4>
-            <table style={{ width: '100%', marginBottom: 20 }}>
-              <thead>
-                <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
-                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_field')}</th>
-                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_field')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {fields.map((row, i) => (
-                  <tr key={row.refboost_field}>
-                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t('crm.field_' + row.refboost_field)}</td>
-                    <td style={{ padding: '4px 8px' }}>
-                      {crmFields.length > 0 ? (
-                        <select
-                          value={row.crm_field}
-                          onChange={e => setFields(f => f.map((x, j) => j === i ? { ...x, crm_field: e.target.value } : x))}
-                          style={inp}
-                        >
-                          <option value="">{t('crm.select_field')}</option>
-                          {crmFields.map(c => <option key={c.name} value={c.name}>{c.label || c.name}</option>)}
-                        </select>
-                      ) : (
-                        <input
-                          value={row.crm_field}
-                          onChange={e => setFields(f => f.map((x, j) => j === i ? { ...x, crm_field: e.target.value } : x))}
-                          placeholder={t('crm.crm_field')}
-                          style={inp}
-                        />
-                      )}
-                    </td>
-                  </tr>
+            {isHubspot && (
+              <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 16 }}>
+                {[
+                  { id: 'transaction', label: 'Transaction' },
+                  { id: 'contact',     label: 'Contact' },
+                  { id: 'company',     label: 'Entreprise' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setActiveTab(tab.id); }}
+                    style={{
+                      flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none',
+                      cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                      background: activeTab === tab.id ? '#fff' : 'transparent',
+                      color: activeTab === tab.id ? '#059669' : '#64748b',
+                      boxShadow: activeTab === tab.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    }}
+                  >{tab.label}</button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
 
-            <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {t('crm.stage_mappings')}
-            </h4>
-            <table style={{ width: '100%', marginBottom: 20 }}>
-              <thead>
-                <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
-                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_status')}</th>
-                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_stage')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stages.map((row, i) => (
-                  <tr key={row.refboost_status}>
-                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>
-                      {/* Prefer the tenant's custom stage name; fall
-                          back to the i18n default label if no custom
-                          stages exist yet. */}
-                      {(tenantStages.find(s => s.slug === row.refboost_status)?.name) || t('crm.status_' + row.refboost_status)}
-                    </td>
-                    <td style={{ padding: '4px 8px' }}>
-                      {crmStages.length > 0 ? (
-                        <select
-                          value={row.crm_stage}
-                          onChange={e => setStages(s => s.map((x, j) => j === i ? { ...x, crm_stage: e.target.value } : x))}
-                          style={inp}
-                        >
-                          <option value="">{t('crm.select_field')}</option>
-                          {crmStages.map(c => <option key={c.id} value={c.id}>{c.label || c.id}</option>)}
-                        </select>
-                      ) : (
-                        <input
-                          value={row.crm_stage}
-                          onChange={e => setStages(s => s.map((x, j) => j === i ? { ...x, crm_stage: e.target.value } : x))}
-                          placeholder={t('crm.crm_stage')}
-                          style={inp}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center' }}>
-              {savedMsg && <span style={{ color: '#059669', fontSize: 12, fontWeight: 600 }}>{savedMsg}</span>}
-              <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }} disabled={saving} style={btnSecondary}>{t('settings.cancel')}</button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); save(); }} disabled={saving} style={btnPrimary}>{saving ? '…' : t('crm.save_mappings')}</button>
-            </div>
+            {isHubspot && activeTab !== 'transaction' ? (
+              <ObjectMappingTable
+                type={activeTab}
+                properties={activeTab === 'contact' ? contactProps : companyProps}
+                mapping={activeTab === 'contact' ? contactMap : companyMap}
+                onChange={activeTab === 'contact' ? setContactMap : setCompanyMap}
+              />
+            ) : (
+              <TransactionMappingContent
+                fields={fields} setFields={setFields}
+                stages={stages} setStages={setStages}
+                crmFields={crmFields} crmStages={crmStages}
+                tenantStages={tenantStages} t={t}
+              />
+            )}
           </>
+        )}
+        {!loading && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center', marginTop: 4 }}>
+            {savedMsg && <span style={{ color: '#059669', fontSize: 12, fontWeight: 600 }}>{savedMsg}</span>}
+            <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }} disabled={saving} style={btnSecondary}>{t('settings.cancel')}</button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); save(); }} disabled={saving} style={btnPrimary}>{saving ? '…' : t('crm.save_mappings')}</button>
+          </div>
         )}
       </div>
     </div>
+  );
+}
+
+// ═══ Transaction (Deal) mapping content ═══
+// The original modal body, now extracted into a subcomponent so
+// CrmMappingModal can render it inside a tab layout.
+function TransactionMappingContent({ fields, setFields, stages, setStages, crmFields, crmStages, tenantStages, t }) {
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  return (
+    <>
+      <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        {t('crm.field_mappings')}
+      </h4>
+      <table style={{ width: '100%', marginBottom: 20 }}>
+        <thead>
+          <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+            <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_field')}</th>
+            <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_field')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {fields.map((row, i) => (
+            <tr key={row.refboost_field}>
+              <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t('crm.field_' + row.refboost_field)}</td>
+              <td style={{ padding: '4px 8px' }}>
+                {crmFields.length > 0 ? (
+                  <select value={row.crm_field} onChange={e => setFields(f => f.map((x, j) => j === i ? { ...x, crm_field: e.target.value } : x))} style={inp}>
+                    <option value="">{t('crm.select_field')}</option>
+                    {crmFields.map(c => <option key={c.name} value={c.name}>{c.label || c.name}</option>)}
+                  </select>
+                ) : (
+                  <input value={row.crm_field} onChange={e => setFields(f => f.map((x, j) => j === i ? { ...x, crm_field: e.target.value } : x))} placeholder={t('crm.crm_field')} style={inp} />
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        {t('crm.stage_mappings')}
+      </h4>
+      <table style={{ width: '100%', marginBottom: 20 }}>
+        <thead>
+          <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+            <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_status')}</th>
+            <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_stage')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stages.map((row, i) => (
+            <tr key={row.refboost_status}>
+              <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>
+                {(tenantStages.find(s => s.slug === row.refboost_status)?.name) || t('crm.status_' + row.refboost_status)}
+              </td>
+              <td style={{ padding: '4px 8px' }}>
+                {crmStages.length > 0 ? (
+                  <select value={row.crm_stage} onChange={e => setStages(s => s.map((x, j) => j === i ? { ...x, crm_stage: e.target.value } : x))} style={inp}>
+                    <option value="">{t('crm.select_field')}</option>
+                    {crmStages.map(c => <option key={c.id} value={c.id}>{c.label || c.id}</option>)}
+                  </select>
+                ) : (
+                  <input value={row.crm_stage} onChange={e => setStages(s => s.map((x, j) => j === i ? { ...x, crm_stage: e.target.value } : x))} placeholder={t('crm.crm_stage')} style={inp} />
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+// ═══ Contact / Company mapping tab ═══
+// Simple two-column table. One row per RefBoost field; right side is
+// a dropdown populated from HubSpot's contacts/companies property
+// list. Auto-suggested pairings happen upstream in the parent.
+function ObjectMappingTable({ type, properties, mapping, onChange }) {
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const rows = type === 'contact'
+    ? [
+        { key: 'firstname', label: 'Prénom' },
+        { key: 'lastname',  label: 'Nom' },
+        { key: 'email',     label: 'Email' },
+        { key: 'phone',     label: 'Téléphone' },
+        { key: 'jobtitle',  label: 'Poste / Rôle' },
+      ]
+    : [
+        { key: 'company', label: "Nom de l'entreprise" },
+        { key: 'domain',  label: 'Domaine' },
+      ];
+
+  return (
+    <table style={{ width: '100%', marginBottom: 20 }}>
+      <thead>
+        <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+          <th style={{ padding: '6px 8px', fontWeight: 600 }}>Champ RefBoost</th>
+          <th style={{ padding: '6px 8px', fontWeight: 600 }}>Propriété HubSpot</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(r => (
+          <tr key={r.key}>
+            <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{r.label}</td>
+            <td style={{ padding: '4px 8px' }}>
+              <select
+                value={mapping[r.key] || ''}
+                onChange={e => onChange({ ...mapping, [r.key]: e.target.value })}
+                style={inp}
+              >
+                <option value="">—</option>
+                {properties.map(p => (
+                  <option key={p.name} value={p.name}>{p.label || p.name}</option>
+                ))}
+              </select>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

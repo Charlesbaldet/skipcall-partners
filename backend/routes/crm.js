@@ -334,6 +334,75 @@ router.get('/hubspot/fields', authenticate, tenantScope, authorize('admin'), asy
   }
 });
 
+// GET /api/crm/hubspot/properties/:object — generic proxy for deals /
+// contacts / companies property schemas. The mapping modal's
+// Contact + Entreprise tabs call this to populate their dropdowns.
+router.get('/hubspot/properties/:object', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  const object = req.params.object;
+  if (!['deals', 'contacts', 'companies'].includes(object)) {
+    return res.status(400).json({ error: 'object invalide' });
+  }
+  try {
+    const { rows } = await query("SELECT access_token FROM crm_integrations WHERE tenant_id = $1 AND provider = 'hubspot' AND is_active = TRUE LIMIT 1", [req.tenantId]);
+    const token = rows[0]?.access_token;
+    if (!token) return res.status(400).json({ error: 'HubSpot non connecté' });
+    const r = await fetch(`https://api.hubapi.com/crm/v3/properties/${object}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!r.ok) return res.status(mapUpstreamStatus(r.status)).json({ error: 'HubSpot unreachable', upstream_status: r.status });
+    const data = await r.json();
+    res.json({ properties: (data.results || []).map(p => ({ name: p.name, label: p.label, type: p.type })) });
+  } catch (err) {
+    res.status(502).json({ error: 'Erreur HubSpot' });
+  }
+});
+
+// GET /api/crm/hubspot/object-mappings — returns { contacts, companies }
+// for the current tenant. (Deal field/stage mappings keep living in
+// crm_field_mappings / crm_stage_mappings as before.)
+router.get('/hubspot/object-mappings', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  try {
+    const { rows } = await query(
+      'SELECT hubspot_mapping_contacts, hubspot_mapping_companies FROM tenants WHERE id = $1',
+      [req.tenantId]
+    );
+    const t = rows[0] || {};
+    res.json({
+      contacts:  t.hubspot_mapping_contacts  || {},
+      companies: t.hubspot_mapping_companies || {},
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// PUT /api/crm/hubspot/object-mappings
+// Body: { contacts?: {...}, companies?: {...} }. Each map is
+// RefBoost-key → HubSpot-property-name.
+router.put('/hubspot/object-mappings', authenticate, tenantScope, authorize('admin'), async (req, res) => {
+  try {
+    const { contacts, companies } = req.body || {};
+    const sets = [];
+    const params = [];
+    let i = 1;
+    if (contacts !== undefined && typeof contacts === 'object') {
+      sets.push(`hubspot_mapping_contacts = $${i++}`);
+      params.push(JSON.stringify(contacts || {}));
+    }
+    if (companies !== undefined && typeof companies === 'object') {
+      sets.push(`hubspot_mapping_companies = $${i++}`);
+      params.push(JSON.stringify(companies || {}));
+    }
+    if (!sets.length) return res.json({ ok: true, noop: true });
+    params.push(req.tenantId);
+    await query(`UPDATE tenants SET ${sets.join(', ')} WHERE id = $${i}`, params);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[hubspot.object-mappings PUT]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 router.get('/hubspot/pipelines', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     const { rows } = await query("SELECT access_token FROM crm_integrations WHERE tenant_id = $1 AND provider = 'hubspot' AND is_active = TRUE LIMIT 1", [req.tenantId]);

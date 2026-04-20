@@ -323,6 +323,9 @@ class ApiClient {
   disconnectSalesforce() { return this.request('/crm/salesforce/disconnect', { method: 'POST' }); }
   getHubspotFields() { return this.request('/crm/hubspot/fields'); }
   getHubspotPipelines() { return this.request('/crm/hubspot/pipelines'); }
+  getHubspotProperties(object) { return this.request('/crm/hubspot/properties/' + encodeURIComponent(object)); }
+  getHubspotObjectMappings() { return this.request('/crm/hubspot/object-mappings'); }
+  updateHubspotObjectMappings(data) { return this.request('/crm/hubspot/object-mappings', { method: 'PUT', body: JSON.stringify(data) }); }
 
   // Notion (multi-database: transactions / contacts / companies)
   getNotionStatus() { return this.request('/crm/notion/status'); }

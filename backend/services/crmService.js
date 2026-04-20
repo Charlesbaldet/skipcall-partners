@@ -135,16 +135,36 @@ async function associate(integration, fromObject, fromId, toObject, toId) {
   }
 }
 
+// Build HubSpot property bag from a RefBoost-key → HubSpot-prop-name
+// mapping + the referral values. Skips any pair whose RefBoost value
+// is empty.
+function applyObjectMapping(mapping, values) {
+  const out = {};
+  for (const [refKey, propName] of Object.entries(mapping || {})) {
+    if (!propName) continue;
+    const v = values[refKey];
+    if (v === undefined || v === null || v === '') continue;
+    out[propName] = v;
+  }
+  return out;
+}
+
 // Upsert a Company on { name } (exact match). Returns the id.
-async function upsertHubSpotCompany(integration, referral) {
+// `mapping` is tenants.hubspot_mapping_companies — falls back to
+// { company: 'name', domain: 'domain' } when empty.
+async function upsertHubSpotCompany(integration, referral, mapping = {}) {
   const name = referral.prospect_company;
   if (!name) return null;
-  // Prefer the saved id, fall back to search-by-name.
-  let id = referral.hubspot_company_id || await findObjectIdByProperty(integration, 'companies', 'name', name);
-  const properties = {
-    name,
-    ...(domainFromEmail(referral.prospect_email) ? { domain: domainFromEmail(referral.prospect_email) } : {}),
+  const effective = Object.keys(mapping).length ? mapping : { company: 'name', domain: 'domain' };
+  const values = {
+    company: name,
+    domain: domainFromEmail(referral.prospect_email) || '',
   };
+  // Search property = whatever maps to 'company' or default 'name'.
+  const searchProp = effective.company || 'name';
+  let id = referral.hubspot_company_id || await findObjectIdByProperty(integration, 'companies', searchProp, name);
+  const properties = applyObjectMapping(effective, values);
+  if (Object.keys(properties).length === 0) properties.name = name;
   if (id) {
     try { await hs(integration, `/crm/v3/objects/companies/${id}`, { method: 'PATCH', body: JSON.stringify({ properties }) }); }
     catch { /* benign — a stale id is better than a duplicate row */ }
@@ -158,18 +178,25 @@ async function upsertHubSpotCompany(integration, referral) {
 }
 
 // Upsert a Contact on { email } (HubSpot's natural unique key).
-async function upsertHubSpotContact(integration, referral) {
+// `mapping` is tenants.hubspot_mapping_contacts — falls back to the
+// previous hardcoded pairing when empty.
+async function upsertHubSpotContact(integration, referral, mapping = {}) {
   const email = referral.prospect_email;
   if (!email) return null;
   const { firstname, lastname } = splitName(referral.prospect_name);
-  const properties = {
-    ...(firstname ? { firstname } : {}),
-    ...(lastname ? { lastname } : {}),
+  const values = {
+    firstname,
+    lastname,
     email,
-    ...(referral.prospect_phone ? { phone: referral.prospect_phone } : {}),
-    ...(referral.prospect_role ? { jobtitle: referral.prospect_role } : {}),
+    phone: referral.prospect_phone,
+    jobtitle: referral.prospect_role,
   };
-  let id = referral.hubspot_contact_id || await findObjectIdByProperty(integration, 'contacts', 'email', email);
+  const effective = Object.keys(mapping).length
+    ? mapping
+    : { firstname: 'firstname', lastname: 'lastname', email: 'email', phone: 'phone', jobtitle: 'jobtitle' };
+  const searchProp = effective.email || 'email';
+  let id = referral.hubspot_contact_id || await findObjectIdByProperty(integration, 'contacts', searchProp, email);
+  const properties = applyObjectMapping(effective, values);
   if (id) {
     try { await hs(integration, `/crm/v3/objects/contacts/${id}`, { method: 'PATCH', body: JSON.stringify({ properties }) }); }
     catch { /* leave id, skip update */ }
@@ -203,11 +230,21 @@ async function upsertHubSpotDeal(integration, referral, mappings) {
 }
 
 async function pushToHubSpot(referral, integration, mappings) {
+  // Tenant-level Contact/Company mappings live on tenants.*; load
+  // them once so Contact + Company upserts honour whatever pairs the
+  // admin configured in the mapping modal.
+  const { rows: [tenantMaps] } = await query(
+    'SELECT hubspot_mapping_contacts, hubspot_mapping_companies FROM tenants WHERE id = $1',
+    [integration.tenant_id]
+  );
+  const contactMap = tenantMaps?.hubspot_mapping_contacts || {};
+  const companyMap = tenantMaps?.hubspot_mapping_companies || {};
+
   // Strict order: Company → Contact → Deal → associations. If any step
   // fails we still return whatever we've built so the caller can
   // persist the ids we have and log the partial state.
-  const companyId = await upsertHubSpotCompany(integration, referral).catch(e => { console.warn('[hubspot.company]', e.message); return referral.hubspot_company_id || null; });
-  const contactId = await upsertHubSpotContact(integration, referral).catch(e => { console.warn('[hubspot.contact]', e.message); return referral.hubspot_contact_id || null; });
+  const companyId = await upsertHubSpotCompany(integration, referral, companyMap).catch(e => { console.warn('[hubspot.company]', e.message); return referral.hubspot_company_id || null; });
+  const contactId = await upsertHubSpotContact(integration, referral, contactMap).catch(e => { console.warn('[hubspot.contact]', e.message); return referral.hubspot_contact_id || null; });
   const dealId    = await upsertHubSpotDeal(integration, referral, mappings);
 
   // Associate contact ↔ deal, contact ↔ company, deal ↔ company.
