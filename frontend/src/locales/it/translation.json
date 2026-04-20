@@ -2151,5 +2151,29 @@
     "required": "Seleziona un tipo di partnership",
     "filter": "Tutte le categorie",
     "stats": "Partner per categoria"
+  },
+  "notion": {
+    "title": "Notion",
+    "description": "Synchronize your referrals with a Notion database",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connected": "Connected",
+    "not_connected": "Not connected",
+    "token": "Integration token",
+    "database_id": "Database ID",
+    "configure_mappings": "Configure mappings",
+    "sync_now": "Sync now",
+    "syncing": "Syncing…",
+    "last_sync": "Last sync",
+    "setup_instructions": "Setup instructions",
+    "step1": "Create an integration on notion.so/my-integrations",
+    "step2": "Copy the token (Internal Integration Secret)",
+    "step3": "Share your database with the integration",
+    "step4": "Copy the database ID from the URL",
+    "invalid_token": "Invalid token or database",
+    "sync_success": "Sync completed successfully",
+    "field_mapping": "Field mapping",
+    "refboost_field": "RefBoost field",
+    "notion_property": "Notion property"
   }
 }

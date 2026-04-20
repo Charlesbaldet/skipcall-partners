@@ -2151,5 +2151,29 @@
     "required": "Merci de sélectionner un type de partenariat",
     "filter": "Toutes les catégories",
     "stats": "Partenaires par catégorie"
+  },
+  "notion": {
+    "title": "Notion",
+    "description": "Synchronisez vos referrals avec une base de données Notion",
+    "connect": "Connecter",
+    "disconnect": "Déconnecter",
+    "connected": "Connecté",
+    "not_connected": "Non connecté",
+    "token": "Token d'intégration",
+    "database_id": "ID de la base",
+    "configure_mappings": "Configurer les mappings",
+    "sync_now": "Synchroniser maintenant",
+    "syncing": "Synchronisation…",
+    "last_sync": "Dernière sync",
+    "setup_instructions": "Instructions d'installation",
+    "step1": "Créez une intégration sur notion.so/my-integrations",
+    "step2": "Copiez le token (Internal Integration Secret)",
+    "step3": "Partagez votre base de données avec l'intégration",
+    "step4": "Copiez l'ID de la base depuis l'URL",
+    "invalid_token": "Token ou base de données invalide",
+    "sync_success": "Synchronisation terminée",
+    "field_mapping": "Mapping des champs",
+    "refboost_field": "Champ RefBoost",
+    "notion_property": "Propriété Notion"
   }
 }

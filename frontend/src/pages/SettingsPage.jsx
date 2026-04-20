@@ -610,6 +610,9 @@ function CrmIntegrations() {
   const [err, setErr] = useState('');
   const [mappingFor, setMappingFor] = useState(null); // integration object
   const [syncLog, setSyncLog] = useState([]);
+  const [notion, setNotion] = useState(null);
+  const [showNotionConnect, setShowNotionConnect] = useState(false);
+  const [showNotionMappings, setShowNotionMappings] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -620,6 +623,8 @@ function CrmIntegrations() {
       if (wh && wh.webhook_url) setWebhookUrl(wh.webhook_url);
       const log = await api.getCrmSyncLog().catch(() => ({ log: [] }));
       setSyncLog(log.log || []);
+      const n = await api.getNotionStatus().catch(() => null);
+      setNotion(n);
     } catch (e) {
       setErr(e.message);
     } finally { setLoading(false); }
@@ -762,6 +767,29 @@ function CrmIntegrations() {
             <button type="button" onClick={connectHubspot} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
           )}
         </Card>
+        <Card title={t('notion.title')} desc={t('notion.description')} color="#111827" status={!!notion?.connected}>
+          {notion?.connected ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {notion.databaseName && (
+                <div style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{notion.databaseName}</div>
+              )}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <button type="button" onClick={(e) => { stopEv(e); setShowNotionMappings(true); }} disabled={busy} style={btnSecondary}>{t('notion.configure_mappings')}</button>
+                <button type="button" onClick={async (e) => {
+                  stopEv(e); setBusy(true);
+                  try { const r = await api.pullFromNotion(); if (!r.ok) throw new Error(r.error || 'sync failed'); load(); }
+                  catch (err) { setErr(err.message); } finally { setBusy(false); }
+                }} disabled={busy} style={btnSecondary}>{t('notion.sync_now')}</button>
+                <button type="button" onClick={async (e) => {
+                  stopEv(e); setBusy(true);
+                  try { await api.disconnectNotion(); load(); } catch (err) { setErr(err.message); } finally { setBusy(false); }
+                }} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('notion.disconnect')}</button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={(e) => { stopEv(e); setShowNotionConnect(true); }} disabled={busy} style={btnPrimary}>{t('notion.connect')}</button>
+          )}
+        </Card>
         <Card title={t('crm.salesforce')} desc={t('crm.salesforce_desc')} color="#00a1e0" status={salesforce?.is_active}>
           {salesforce?.is_active ? (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -792,6 +820,19 @@ function CrmIntegrations() {
 
       {mappingFor && (
         <CrmMappingModal integration={mappingFor} onClose={() => { setMappingFor(null); load(); }}/>
+      )}
+
+      {showNotionConnect && (
+        <NotionConnectModal
+          onClose={() => setShowNotionConnect(false)}
+          onConnected={() => { setShowNotionConnect(false); load(); }}
+        />
+      )}
+
+      {showNotionMappings && (
+        <NotionMappingModal
+          onClose={() => { setShowNotionMappings(false); load(); }}
+        />
       )}
 
       {/* Sync log */}
@@ -1752,6 +1793,187 @@ function PartnerCategoriesTab() {
             </button>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══ Notion connect modal ═══
+// Token + database-ID capture. Hitting "Connecter" validates the
+// token server-side by calling Notion's databases endpoint.
+function NotionConnectModal({ onClose, onConnected }) {
+  const { t } = useTranslation();
+  const [token, setToken] = useState('');
+  const [databaseId, setDatabaseId] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const submit = async () => {
+    if (!token.trim() || !databaseId.trim()) return;
+    setBusy(true); setErr('');
+    try {
+      await api.connectNotion({ token: token.trim(), databaseId: databaseId.trim() });
+      onConnected();
+    } catch (e) {
+      setErr(e.message || t('notion.invalid_token'));
+    } finally { setBusy(false); }
+  };
+
+  const inp = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+
+  return (
+    <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 520, padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>{t('notion.title')} — {t('notion.connect')}</h3>
+          <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <X size={16}/>
+          </button>
+        </div>
+
+        <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, marginBottom: 16, border: '1px solid #e2e8f0' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+            {t('notion.setup_instructions')}
+          </div>
+          <ol style={{ margin: 0, paddingLeft: 20, color: '#475569', fontSize: 12, lineHeight: 1.7 }}>
+            <li>{t('notion.step1')} — <a href="https://www.notion.so/my-integrations" target="_blank" rel="noreferrer" style={{ color: '#059669', fontWeight: 600 }}>notion.so/my-integrations</a></li>
+            <li>{t('notion.step2')}</li>
+            <li>{t('notion.step3')}</li>
+            <li>{t('notion.step4')}</li>
+          </ol>
+        </div>
+
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('notion.token')}</label>
+        <input type="password" value={token} onChange={e => setToken(e.target.value)} placeholder="secret_..." style={{ ...inp, marginBottom: 12, fontFamily: 'ui-monospace, monospace' }}/>
+
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('notion.database_id')}</label>
+        <input value={databaseId} onChange={e => setDatabaseId(e.target.value)} placeholder="32-char hex" style={{ ...inp, marginBottom: 16, fontFamily: 'ui-monospace, monospace' }}/>
+
+        {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            {t('common.cancel') || 'Annuler'}
+          </button>
+          <button type="button" onClick={submit} disabled={busy || !token.trim() || !databaseId.trim()} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>
+            {busy ? '…' : t('notion.connect')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ Notion field-mapping modal ═══
+// Loads Notion database properties + saved mapping, lets the admin
+// pair RefBoost fields to Notion properties, saves back as JSONB.
+function NotionMappingModal({ onClose }) {
+  const { t } = useTranslation();
+  const REFBOOST_FIELDS = [
+    { key: 'prospect_name', labelKey: 'crm.field_prospect_name' },
+    { key: 'email',         labelKey: 'crm.field_email' },
+    { key: 'phone',         labelKey: 'crm.field_phone' },
+    { key: 'company',       labelKey: 'crm.field_company' },
+    { key: 'status',        labelKey: 'crm.field_status' },
+    { key: 'mrr',           labelKey: 'crm.field_mrr' },
+    { key: 'notes',         labelKey: 'crm.field_notes' },
+    { key: 'partner_name',  labelKey: 'crm.field_partner_name' },
+  ];
+  const [properties, setProperties] = useState([]);
+  const [mapping, setMapping] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [propsRes, mapRes] = await Promise.all([
+          api.getNotionProperties().catch(() => ({ properties: [] })),
+          api.getNotionMappings().catch(() => ({ mappings: {} })),
+        ]);
+        const props = propsRes.properties || [];
+        const m = mapRes.mappings || {};
+        // Auto-suggest: any RefBoost field without a saved mapping,
+        // match a Notion property whose name equals the RefBoost label
+        // (case-insensitive) or contains a familiar keyword.
+        const byLower = Object.fromEntries(props.map(p => [p.name.toLowerCase(), p.name]));
+        const heuristic = { prospect_name: ['name', 'nom', 'title', 'titre'], email: ['email', 'e-mail'], phone: ['phone', 'téléphone', 'telephone'], company: ['company', 'société', 'entreprise'], status: ['status', 'statut'], mrr: ['mrr', 'amount', 'montant', 'deal'], notes: ['notes', 'note'], partner_name: ['partner', 'partenaire'] };
+        const merged = {};
+        for (const { key } of REFBOOST_FIELDS) {
+          if (m[key]) { merged[key] = m[key]; continue; }
+          const hits = heuristic[key] || [];
+          const found = hits.map(h => byLower[h]).find(Boolean);
+          merged[key] = found || '';
+        }
+        setProperties(props);
+        setMapping(merged);
+      } catch (e) { setErr(e.message); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const save = async () => {
+    setSaving(true); setErr('');
+    try {
+      await api.updateNotionMappings(mapping);
+      onClose();
+    } catch (e) { setErr(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+
+  return (
+    <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 580, maxHeight: '86vh', overflowY: 'auto', padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>{t('notion.title')} — {t('notion.field_mapping')}</h3>
+          <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <X size={16}/>
+          </button>
+        </div>
+
+        {loading ? (
+          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>…</div>
+        ) : (
+          <>
+            <table style={{ width: '100%', marginBottom: 16 }}>
+              <thead>
+                <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.refboost_field')}</th>
+                  <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.notion_property')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {REFBOOST_FIELDS.map(f => (
+                  <tr key={f.key}>
+                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t(f.labelKey) || f.key}</td>
+                    <td style={{ padding: '4px 8px' }}>
+                      <select value={mapping[f.key] || ''} onChange={e => setMapping(m => ({ ...m, [f.key]: e.target.value }))} style={inp}>
+                        <option value="">—</option>
+                        {properties.map(p => (
+                          <option key={p.id || p.name} value={p.name}>{p.name} ({p.type})</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                {t('common.cancel') || 'Annuler'}
+              </button>
+              <button type="button" onClick={save} disabled={saving} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+                {saving ? '…' : (t('common.save') || 'Enregistrer')}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

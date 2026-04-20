@@ -38,6 +38,7 @@ const promoCodesRoutes = require('./routes/promoCodes');
 const trackingScriptRoutes = require('./routes/trackingScript');
 const partnerCategoriesRoutes = require('./routes/partnerCategories');
 const referralRedirectRoutes = require('./routes/referralRedirect');
+const notionRoutes = require('./routes/notion');
 const dashboardStatsRoutes = require('./routes/dashboardStats');
 
 // Services & middleware
@@ -149,6 +150,7 @@ app.use('/api/partner/news', newsPartnerRoutes);
 app.use('/api/partner/program', newsProgramRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/crm', crmRoutes);
+app.use('/api/crm/notion', notionRoutes);
 app.use('/api/pipeline-stages', pipelineStagesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api', sitemapRoutes);

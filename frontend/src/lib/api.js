@@ -323,6 +323,16 @@ class ApiClient {
   disconnectSalesforce() { return this.request('/crm/salesforce/disconnect', { method: 'POST' }); }
   getHubspotFields() { return this.request('/crm/hubspot/fields'); }
   getHubspotPipelines() { return this.request('/crm/hubspot/pipelines'); }
+
+  // Notion
+  getNotionStatus() { return this.request('/crm/notion/status'); }
+  connectNotion(data) { return this.request('/crm/notion/connect', { method: 'POST', body: JSON.stringify(data) }); }
+  disconnectNotion() { return this.request('/crm/notion/disconnect', { method: 'POST' }); }
+  getNotionProperties() { return this.request('/crm/notion/properties'); }
+  getNotionMappings() { return this.request('/crm/notion/mappings'); }
+  updateNotionMappings(mappings) { return this.request('/crm/notion/mappings', { method: 'PUT', body: JSON.stringify({ mappings }) }); }
+  syncReferralToNotion(referralId) { return this.request('/crm/notion/sync/' + referralId, { method: 'POST' }); }
+  pullFromNotion() { return this.request('/crm/notion/pull', { method: 'POST' }); }
   getSalesforceFields() { return this.request('/crm/salesforce/fields'); }
   getSalesforceStages() { return this.request('/crm/salesforce/stages'); }
 

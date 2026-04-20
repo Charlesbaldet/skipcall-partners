@@ -544,23 +544,48 @@ function Select({ value, onChange, children }) {
 // pushed to a CRM. crm_deal_id is set by the backend after a
 // successful sync; crm_synced_at carries the timestamp.
 function CrmSyncBadge({ referral }) {
-  if (!referral?.crm_deal_id) return null;
-  const date = referral.crm_synced_at ? new Date(referral.crm_synced_at).toLocaleString() : '';
-  return (
-    <span
-      title={`Synced with CRM${date ? ' — ' + date : ''}`}
-      aria-label="CRM synced"
-      style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 16, height: 16, borderRadius: '50%',
-        background: '#f0fdf4', color: '#059669',
-        fontSize: 9, fontWeight: 800, flexShrink: 0,
-        border: '1px solid #bbf7d0',
-      }}
-    >
-      ✓
-    </span>
-  );
+  const badges = [];
+  if (referral?.crm_deal_id) {
+    const date = referral.crm_synced_at ? new Date(referral.crm_synced_at).toLocaleString() : '';
+    badges.push(
+      <span
+        key="crm"
+        title={`Synced with CRM${date ? ' — ' + date : ''}`}
+        aria-label="CRM synced"
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 16, height: 16, borderRadius: '50%',
+          background: '#f0fdf4', color: '#059669',
+          fontSize: 9, fontWeight: 800, flexShrink: 0,
+          border: '1px solid #bbf7d0',
+        }}
+      >✓</span>
+    );
+  }
+  if (referral?.notion_page_id) {
+    // Notion's page IDs are hyphenless in the URL; normalise.
+    const id = String(referral.notion_page_id).replace(/-/g, '');
+    badges.push(
+      <a
+        key="notion"
+        href={`https://notion.so/${id}`}
+        target="_blank"
+        rel="noreferrer"
+        onClick={e => e.stopPropagation()}
+        title="Open in Notion"
+        aria-label="Open in Notion"
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 16, height: 16, borderRadius: '50%',
+          background: '#111827', color: '#fff',
+          fontSize: 9, fontWeight: 800, flexShrink: 0,
+          textDecoration: 'none',
+        }}
+      >N</a>
+    );
+  }
+  if (!badges.length) return null;
+  return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{badges}</span>;
 }
 
 // Small pill showing who drives the lead. Green when the partner

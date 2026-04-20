@@ -8,6 +8,7 @@ const templates = require('../services/email-templates');
 const notify = require('../services/notifyService');
 const { sendEmail, referralStatusChangedTpl, newCommissionAvailableTpl, dealWonTpl } = require('../services/emailService');
 const crmService = require('../services/crmService');
+const notionService = require('../services/notionService');
 
 const router = express.Router();
 
@@ -318,6 +319,9 @@ Voir : ${_dashUrl}`,
     // errors and writes them to crm_sync_log; we never want a CRM
     // outage to surface as a 500 on referral creation.
     crmService.pushReferralToCRM({ ...referral, partner_name: partner.name }, req.tenantId).catch(() => {});
+    // Same fire-and-forget story for Notion — if the tenant has
+    // notion_connected=false the service short-circuits.
+    notionService.pushReferralToNotion({ ...referral, partner_name: partner.name }, req.tenantId).catch(() => {});
   } catch (err) {
     console.error('Create referral error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -662,6 +666,7 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
     // wired CRM (HubSpot / Salesforce / webhook). Errors land in
     // crm_sync_log; never blocks the response.
     crmService.pushReferralToCRM(updated, req.tenantId).catch(() => {});
+    notionService.pushReferralToNotion(updated, req.tenantId).catch(() => {});
 
     // Fire-and-forget: send 'lead won' email to partner user(s) if status just transitioned to 'won'
     if (updates.status === 'won' && current.status !== 'won') {
