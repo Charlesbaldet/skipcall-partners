@@ -66,13 +66,12 @@ export default function Layout({ children }) {
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
   ];
 
-  // Partner has no dedicated /dashboard route — the kanban at
-  // /partner/referrals doubles as their landing page. We point both
-  // the standalone Dashboard item and "Mes referrals" at the same
-  // route; both will highlight when active.
+  // Partner navigation. Dashboard shows KPI cards + feature-gated
+  // tracking cards (referral link, promo codes); "Mes referrals"
+  // takes you to the Kanban/table view of the partner's pipeline.
   const PARTNER_NAV = [
     { to: '/search', icon: Search, label: t('layout.nav.search') },
-    { to: '/partner/referrals', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
+    { to: '/partner/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
 
     { section: t('layout.section.pipeline') },
     { to: '/partner/submit', icon: Send, label: t('layout.nav.submit') },
@@ -184,6 +183,7 @@ export default function Layout({ children }) {
       '/billing':          'layout.nav.billing',
       '/settings':         'layout.nav.settings',
       '/notifications':    'layout.nav.notifications',
+      '/partner/dashboard':'layout.nav.dashboard',
       '/partner/referrals':'layout.nav.my_referrals',
       '/partner/submit':   'layout.nav.submit',
       '/partner/payments': 'layout.nav.my_payments',

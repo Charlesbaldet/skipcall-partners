@@ -11,6 +11,7 @@ import ReferralsPage from './pages/ReferralsPage.jsx';
 import CommissionsPage from './pages/CommissionsPage.jsx';
 import PartnersPage from './pages/PartnersPage.jsx';
 import PartnerMyReferrals from './pages/PartnerMyReferrals.jsx';
+import PartnerDashboardPage from './pages/PartnerDashboardPage.jsx';
 import PartnerSubmitPage from './pages/PartnerSubmitPage.jsx';
 import PartnerPaymentsPage from './pages/PartnerPaymentsPage.jsx';
 import MessagingPage from './pages/MessagingPage.jsx';
@@ -54,7 +55,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public pages */}
-      <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
+      <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
       <Route path="/ref/:code" element={<PublicTrackingPage />} />
       <Route path="/apply" element={<PublicApplyPage />} />
           <Route path="/r/:slug" element={<PublicReferralRedirectPage />} />
@@ -66,7 +67,7 @@ function AppRoutes() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/referrals' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
+        <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />
@@ -85,6 +86,7 @@ function AppRoutes() {
       <Route path="/news" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><NewsPage /></Layout></ProtectedRoute>} />
 
       {/* Partner */}
+      <Route path="/partner/dashboard" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerDashboardPage /></Layout></ProtectedRoute>} />
       <Route path="/partner/referrals" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerMyReferrals /></Layout></ProtectedRoute>} />
       <Route path="/partner/submit" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerSubmitPage /></Layout></ProtectedRoute>} />
       <Route path="/partner/payments" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerPaymentsPage /></Layout></ProtectedRoute>} />
