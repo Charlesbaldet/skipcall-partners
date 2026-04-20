@@ -2,8 +2,11 @@ User-agent: *
 Allow: /
 Allow: /blog
 Allow: /blog/
+Allow: /pricing
+Allow: /marketplace
+Allow: /login
+Allow: /signup
 
-# Protect app routes
 Disallow: /dashboard
 Disallow: /referrals
 Disallow: /commissions
@@ -14,6 +17,10 @@ Disallow: /partner/
 Disallow: /super-admin
 Disallow: /applications
 Disallow: /reset-password
+Disallow: /search
+Disallow: /notifications
+Disallow: /programme
+Disallow: /billing
+Disallow: /news
 
-# Sitemap
-Sitemap: https://refboost.io/api/blog/sitemap
+Sitemap: https://refboost.io/api/sitemap.xml

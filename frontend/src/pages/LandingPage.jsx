@@ -131,18 +131,23 @@ export default function LandingPage() {
     center:{textAlign:'center',marginBottom:64},
   };
 
-  const _meta_desc = "RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, commissions et performance.";
+  const _meta_title = "RefBoost — Plateforme de gestion de programme partenaires et apporteurs d'affaires";
+  const _meta_desc = "Automatisez le suivi des referrals, commissions et la performance de votre réseau d'apporteurs d'affaires. Gratuit à vie. Configuré en 5 minutes.";
   return (
     <div style={{fontFamily:'inherit',color:C.s,overflow:'hidden'}}>
       <Helmet>
-        <title>RefBoost — Transformez vos recommandations en revenus</title>
+        <title>{_meta_title}</title>
         <meta name="description" content={_meta_desc}/>
-        <meta property="og:title" content="RefBoost — Transformez vos recommandations en revenus"/>
+        <link rel="canonical" href="https://refboost.io"/>
+        <meta property="og:title" content={_meta_title}/>
         <meta property="og:description" content={_meta_desc}/>
         <meta property="og:type" content="website"/>
+        <meta property="og:url" content="https://refboost.io"/>
+        <meta property="og:image" content="https://refboost.io/og-image.png"/>
         <meta name="twitter:card" content="summary_large_image"/>
-        <meta name="twitter:title" content="RefBoost — Transformez vos recommandations en revenus"/>
+        <meta name="twitter:title" content={_meta_title}/>
         <meta name="twitter:description" content={_meta_desc}/>
+        <meta name="twitter:image" content="https://refboost.io/og-image.png"/>
       </Helmet>
       <style>{`
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}

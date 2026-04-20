@@ -92,7 +92,7 @@ export default function BlogPostPage() {
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDesc} />
         <meta property="og:url" content={canonicalUrl} />
-        {post.cover_image_url && <meta property="og:image" content={post.cover_image_url} />}
+        <meta property="og:image" content={post.cover_image_url || (SITE + '/og-image.png')} />
         <meta property="article:published_time" content={post.published_at} />
         <meta property="article:modified_time" content={post.updated_at || post.published_at} />
         {post.category && <meta property="article:section" content={post.category} />}
@@ -100,7 +100,7 @@ export default function BlogPostPage() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDesc} />
-        {post.cover_image_url && <meta name="twitter:image" content={post.cover_image_url} />}
+        <meta name="twitter:image" content={post.cover_image_url || (SITE + '/og-image.png')} />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
       </Helmet>

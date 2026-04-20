@@ -111,7 +111,15 @@ export default function SignupPage() {
 
   return (
     <div style={{ minHeight:'100vh', background:`radial-gradient(ellipse 80% 50% at 50% -10%,${C.p}10,transparent),#fafbfc`, fontFamily:"'Outfit','DM Sans',sans-serif", display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 20px' }}>
-      <Helmet><title>Créer un compte — RefBoost</title></Helmet>
+      <Helmet>
+        <title>Créer un compte — RefBoost</title>
+        <meta name="description" content="Créez votre programme partenaires en 5 minutes. Gratuit, sans carte bancaire." />
+        <link rel="canonical" href="https://refboost.io/signup" />
+        <meta property="og:title" content="Créer un compte — RefBoost" />
+        <meta property="og:description" content="Créez votre programme partenaires en 5 minutes. Gratuit, sans carte bancaire." />
+        <meta property="og:url" content="https://refboost.io/signup" />
+        <meta property="og:image" content="https://refboost.io/og-image.png" />
+      </Helmet>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
 
       {/* Logo */}

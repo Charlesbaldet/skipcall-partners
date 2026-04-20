@@ -110,8 +110,17 @@ export default function MarketplacePage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>Marketplace — RefBoost</title>
-        <meta name="description" content={t("marketplace.subtitle")} />
+        <title>Marketplace RefBoost — Programmes d'apporteurs d'affaires disponibles</title>
+        <meta name="description" content="Découvrez les programmes partenaires disponibles et rejoignez-les en un clic. Commencez à générer des commissions." />
+        <link rel="canonical" href="https://refboost.io/marketplace" />
+        <meta property="og:title" content="Marketplace RefBoost — Programmes d'apporteurs d'affaires" />
+        <meta property="og:description" content="Découvrez les programmes partenaires disponibles et rejoignez-les en un clic." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://refboost.io/marketplace" />
+        <meta property="og:image" content="https://refboost.io/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Marketplace RefBoost" />
+        <meta name="twitter:image" content="https://refboost.io/og-image.png" />
       </Helmet>
 
       {/* Hero — identique au Blog */}

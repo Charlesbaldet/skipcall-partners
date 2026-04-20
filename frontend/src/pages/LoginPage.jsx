@@ -126,7 +126,15 @@ export default function LoginPage() {
       background: `radial-gradient(ellipse 80% 60% at 50% -20%,${C.p}12,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,${C.a}08,transparent),${C.bg}`,
       position: 'relative', overflow: 'hidden',
     }}>
-      <Helmet><title>Connexion — RefBoost</title></Helmet>
+      <Helmet>
+        <title>Connexion — RefBoost</title>
+        <meta name="description" content="Connectez-vous à votre espace RefBoost." />
+        <link rel="canonical" href="https://refboost.io/login" />
+        <meta property="og:title" content="Connexion — RefBoost" />
+        <meta property="og:description" content="Connectez-vous à votre espace RefBoost." />
+        <meta property="og:url" content="https://refboost.io/login" />
+        <meta property="og:image" content="https://refboost.io/og-image.png" />
+      </Helmet>
       
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}

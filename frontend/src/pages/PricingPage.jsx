@@ -131,14 +131,43 @@ export default function PricingPage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>{`${t('nav.pricing')} — RefBoost`}</title>
-        <meta name="description" content={t('pricing.hero_subtitle')}/>
-        <meta property="og:title" content={`${t('nav.pricing')} — RefBoost`}/>
-        <meta property="og:description" content={t('pricing.hero_subtitle')}/>
+        <title>Tarifs — RefBoost | Starter gratuit, Pro 29€/mois, Business 79€/mois</title>
+        <meta name="description" content="Découvrez les plans RefBoost. Commencez gratuitement avec 3 partenaires, passez à Pro pour 25 partenaires ou Business pour un accès illimité."/>
+        <link rel="canonical" href={SITE + '/pricing'}/>
+        <meta property="og:title" content="Tarifs — RefBoost"/>
+        <meta property="og:description" content="Commencez gratuitement avec 3 partenaires, passez à Pro (29€/mois) pour 25 partenaires ou Business (79€/mois) pour un accès illimité."/>
         <meta property="og:type" content="website"/>
         <meta property="og:url" content={SITE + '/pricing'}/>
+        <meta property="og:image" content={SITE + '/og-image.png'}/>
         <meta name="twitter:card" content="summary_large_image"/>
-        <link rel="canonical" href={SITE + '/pricing'}/>
+        <meta name="twitter:title" content="Tarifs — RefBoost"/>
+        <meta name="twitter:image" content={SITE + '/og-image.png'}/>
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            {
+              '@type': 'Question',
+              name: 'Puis-je changer de plan à tout moment ?',
+              acceptedAnswer: { '@type': 'Answer', text: "Oui, montez ou descendez en gamme à tout moment. Lors d'un upgrade, vous ne payez que la différence au prorata." },
+            },
+            {
+              '@type': 'Question',
+              name: "Que se passe-t-il quand j'atteins ma limite de partenaires ?",
+              acceptedAnswer: { '@type': 'Answer', text: "Vos partenaires existants continuent de fonctionner. Vous ne pouvez simplement plus en ajouter tant que vous n'avez pas upgradé." },
+            },
+            {
+              '@type': 'Question',
+              name: 'Y a-t-il un essai gratuit ?',
+              acceptedAnswer: { '@type': 'Answer', text: "Le plan Starter est gratuit à vie. Pour Pro et Business, vous pouvez annuler à tout moment." },
+            },
+            {
+              '@type': 'Question',
+              name: 'Puis-je annuler à tout moment ?',
+              acceptedAnswer: { '@type': 'Answer', text: "Oui, annulez quand vous voulez. Votre plan reste actif jusqu'à la fin de la période de facturation." },
+            },
+          ],
+        })}</script>
       </Helmet>
 
       {/* ─── HERO (mirrors Blog & Marketplace dark navy hero) ─── */}

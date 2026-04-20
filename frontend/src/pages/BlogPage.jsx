@@ -69,15 +69,18 @@ export default function BlogPage() {
   return (
     <LandingLayout>
       <Helmet>
-        <title>Blog — RefBoost</title>
-        <meta name="description" content={t("blog.page_subtitle")} />
-        <meta property="og:title" content="Blog RefBoost" />
-        <meta property="og:description" content={t("blog.subtitle")} />
+        <title>Blog RefBoost — Conseils et ressources pour programmes partenaires B2B</title>
+        <meta name="description" content="Stratégies, guides et bonnes pratiques pour créer et gérer un programme d'apporteurs d'affaires performant." />
+        <link rel="canonical" href={SITE + '/blog'} />
+        <meta property="og:title" content="Blog RefBoost — Conseils pour programmes partenaires B2B" />
+        <meta property="og:description" content="Stratégies, guides et bonnes pratiques pour créer et gérer un programme d'apporteurs d'affaires performant." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={SITE + '/blog'} />
+        <meta property="og:image" content={SITE + '/og-image.png'} />
         <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href={SITE + '/blog'} />
-        <script type="application/ld+json">{JSON.stringify({ '@context': 'https://schema.org', '@type': 'Blog', name: 'Blog RefBoost', description: t('blog.page_subtitle'), url: SITE + '/blog', publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE } })}</script>
+        <meta name="twitter:title" content="Blog RefBoost" />
+        <meta name="twitter:image" content={SITE + '/og-image.png'} />
+        <script type="application/ld+json">{JSON.stringify({ '@context': 'https://schema.org', '@type': 'Blog', name: 'Blog RefBoost', description: "Stratégies, guides et bonnes pratiques pour créer et gérer un programme d'apporteurs d'affaires performant.", url: SITE + '/blog', publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE } })}</script>
       </Helmet>
 
       {/* Hero */}
