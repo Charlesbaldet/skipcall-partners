@@ -1417,7 +1417,8 @@
     "tab_notifications_emails": "Benachrichtigungen & E-Mails",
     "language": "Sprache",
     "language_help": "Wähle die Sprache der Oberfläche.",
-    "tab_pipeline": "Pipeline & Stages"
+    "tab_pipeline": "Pipeline & Stages",
+    "tab_features": "Funktionen"
   },
   "status": {
     "new": "Neu",
