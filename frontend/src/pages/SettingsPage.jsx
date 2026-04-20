@@ -11,7 +11,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell, Zap,
+  Bell, Zap, Tag, Code,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -1575,55 +1575,90 @@ function TrackingFeaturesTab() {
   const anyTrackingOn = flags.feature_referral_links || flags.feature_promo_codes || flags.feature_tracking_script;
   const scriptTag = `<script src="https://refboost.io/api/tracking/refboost.js?tenant=${tenantSlug || ''}" data-tenant="${tenantSlug || ''}"></script>`;
 
-  const FeatureRow = ({ on, onChange, title, desc }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid #f1f5f9', gap: 20 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{title}</div>
-        <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{desc}</div>
+  // Each feature renders as its own white card so the tab matches the
+  // other settings tabs (Profile, Integrations, etc.) instead of a
+  // bordered list. Icon lives in a 36×36 soft-green tile on the left;
+  // the brand-green toggle sits on the right.
+  const FeatureCard = ({ icon: Icon, title, desc, on, onChange, children }) => (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: on ? '#f0fdf4' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon size={18} color={on ? '#059669' : '#64748b'} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{title}</div>
+          <div style={{ fontSize: 13, color: '#64748b', marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
+        </div>
+        <button
+          onClick={() => onChange(!on)}
+          disabled={saving}
+          aria-pressed={on}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: on ? '#059669' : '#cbd5e1', padding: 0, lineHeight: 0 }}
+        >
+          {on ? <ToggleRight size={34} /> : <ToggleLeft size={34} />}
+        </button>
       </div>
-      <button onClick={() => onChange(!on)} disabled={saving} style={{ background: 'none', border: 'none', cursor: 'pointer', color: on ? '#059669' : '#cbd5e1' }}>
-        {on ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-      </button>
+      {on && children && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+          {children}
+        </div>
+      )}
     </div>
   );
 
   return (
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>{t('features.tracking_title')}</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>
-        {t('features.referral_links_desc')}
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+        {t('features.tracking_subtitle')}
       </p>
 
-      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0 20px' }}>
-        <FeatureRow
-          on={flags.feature_referral_links}
-          onChange={v => patch({ feature_referral_links: v })}
-          title={t('features.referral_links')}
-          desc={t('features.referral_links_desc')}
-        />
-        <FeatureRow
-          on={flags.feature_promo_codes}
-          onChange={v => patch({ feature_promo_codes: v })}
-          title={t('features.promo_codes')}
-          desc={t('features.promo_codes_desc')}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', gap: 20 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{t('features.tracking_script')}</div>
-            <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t('features.tracking_script_desc')}</div>
+      <FeatureCard
+        icon={Link2}
+        title={t('features.referral_links')}
+        desc={t('features.referral_links_desc')}
+        on={flags.feature_referral_links}
+        onChange={v => patch({ feature_referral_links: v })}
+      />
+
+      <FeatureCard
+        icon={Tag}
+        title={t('features.promo_codes')}
+        desc={t('features.promo_codes_desc')}
+        on={flags.feature_promo_codes}
+        onChange={v => patch({ feature_promo_codes: v })}
+      />
+
+      <FeatureCard
+        icon={Code}
+        title={t('features.tracking_script')}
+        desc={t('features.tracking_script_desc')}
+        on={flags.feature_tracking_script}
+        onChange={v => patch({ feature_tracking_script: v })}
+      >
+        {tenantSlug && (
+          <div style={{ background: '#0f172a', borderRadius: 10, padding: 14, color: '#e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('tracking.script')}</span>
+              <button
+                onClick={() => { navigator.clipboard.writeText(scriptTag); setScriptCopied(true); setTimeout(() => setScriptCopied(false), 2000); }}
+                style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', padding: '5px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
+              >
+                {scriptCopied ? t('referral_link.copied') : t('tracking.copy_script')}
+              </button>
+            </div>
+            <pre style={{ margin: 0, fontSize: 12, fontFamily: 'ui-monospace, monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{scriptTag}</pre>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 10 }}>{t('tracking.script_instructions')}</div>
           </div>
-          <button onClick={() => patch({ feature_tracking_script: !flags.feature_tracking_script })} disabled={saving} style={{ background: 'none', border: 'none', cursor: 'pointer', color: flags.feature_tracking_script ? '#059669' : '#cbd5e1' }}>
-            {flags.feature_tracking_script ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-          </button>
-        </div>
-      </div>
+        )}
+      </FeatureCard>
 
       {anyTrackingOn && (
-        <>
-          <h4 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginTop: 32, marginBottom: 12 }}>
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>
             {t('tracking.title')}
-          </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('tracking.redirect_url')}</label>
               <input
@@ -1648,23 +1683,7 @@ function TrackingFeaturesTab() {
               />
             </div>
           </div>
-
-          {flags.feature_tracking_script && tenantSlug && (
-            <div style={{ background: '#0f172a', borderRadius: 12, padding: 16, color: '#e2e8f0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('tracking.script')}</span>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(scriptTag); setScriptCopied(true); setTimeout(() => setScriptCopied(false), 2000); }}
-                  style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-                >
-                  {scriptCopied ? t('referral_link.copied') : t('tracking.copy_script')}
-                </button>
-              </div>
-              <pre style={{ margin: 0, fontSize: 12, fontFamily: 'ui-monospace, monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{scriptTag}</pre>
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 10 }}>{t('tracking.script_instructions')}</div>
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
   );

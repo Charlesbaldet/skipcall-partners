@@ -616,7 +616,8 @@
     "tracking_script": "Trackingscript",
     "tracking_script_desc": "Installeer een script op je site om conversies automatisch te tracken",
     "enabled": "Ingeschakeld",
-    "disabled": "Uitgeschakeld"
+    "disabled": "Uitgeschakeld",
+    "tracking_subtitle": "Schakel trackingfuncties voor je partnerprogramma in of uit"
   },
   "forgotPwd": {
     "title": "Wachtwoord vergeten",

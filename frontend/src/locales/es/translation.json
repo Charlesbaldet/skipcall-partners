@@ -616,7 +616,8 @@
     "tracking_script": "Script de seguimiento",
     "tracking_script_desc": "Instala un script en tu sitio para rastrear automáticamente las conversiones",
     "enabled": "Activado",
-    "disabled": "Desactivado"
+    "disabled": "Desactivado",
+    "tracking_subtitle": "Activa o desactiva las funciones de seguimiento para tu programa de partners"
   },
   "forgotPwd": {
     "title": "¿Olvidaste tu contraseña?",

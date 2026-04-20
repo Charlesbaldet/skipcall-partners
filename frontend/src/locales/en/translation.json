@@ -616,7 +616,8 @@
     "tracking_script": "Tracking script",
     "tracking_script_desc": "Install a script on your website to automatically track conversions",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "tracking_subtitle": "Enable or disable tracking features for your partner program"
   },
   "forgotPwd": {
     "title": "Forgot password",

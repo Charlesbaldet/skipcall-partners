@@ -616,7 +616,8 @@
     "tracking_script": "Script de rastreio",
     "tracking_script_desc": "Instala um script no teu site para registar automaticamente as conversões",
     "enabled": "Ativado",
-    "disabled": "Desativado"
+    "disabled": "Desativado",
+    "tracking_subtitle": "Ativa ou desativa as funcionalidades de rastreio do teu programa de parceiros"
   },
   "forgotPwd": {
     "title": "Esqueceu a senha?",

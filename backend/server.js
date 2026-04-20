@@ -124,6 +124,10 @@ app.use('/api/v1', openapiRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/levels', levelsRoutes);
 app.use('/api/track', trackingRoutes);
+// Features endpoint MUST mount before the generic tenants router — the
+// latter defines PUT /:id which would otherwise swallow /features as
+// if "features" were a tenant UUID (and reject with 403).
+app.use('/api/tenants', tenantFeaturesRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/super-admin', superadminRoutes);
 
@@ -145,7 +149,6 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/pipeline-stages', pipelineStagesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api', sitemapRoutes);
-app.use('/api/tenants', tenantFeaturesRoutes);
 app.use('/api/referral-links', referralLinksRoutes);
 app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/tracking', trackingScriptRoutes);
