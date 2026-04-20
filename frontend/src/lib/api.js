@@ -253,6 +253,7 @@ class ApiClient {
   // Notification preferences (admin)
   getNotificationPreferences() { return this.request('/settings/notification-preferences'); }
   updateNotificationPreferences(data) { return this.request('/settings/notification-preferences', { method: 'PUT', body: JSON.stringify(data) }); }
+  previewEmailTemplate(key) { return this.request('/settings/notification-preferences/preview/' + encodeURIComponent(key)); }
 
   // Billing (Stripe)
   getBillingPlan() { return this.request('/billing/plan'); }

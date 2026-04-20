@@ -7,41 +7,20 @@
  */
 
 const BRAND_PRIMARY = '#059669';
-const BRAND_PRIMARY_DARK = '#047857';
 const BG_SOFT = '#f0fdf4';
 const TEXT_DARK = '#1f2937';
 const TEXT_MUTED = '#6b7280';
-const BORDER = '#e5e7eb';
 
-function baseLayout({ title, preheader, tenantName, bodyHtml, ctaLabel, ctaUrl, footerNote }) {
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title>
-</head>
-<body style="margin:0;padding:0;background:${BG_SOFT};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:${TEXT_DARK};">
-<div style="display:none;max-height:0;overflow:hidden;color:transparent;">${preheader || ''}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_SOFT};padding:40px 20px;">
-<tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-<tr><td style="background:${BRAND_PRIMARY};padding:24px 32px;">
-<div style="color:#ffffff;font-weight:700;font-size:18px;letter-spacing:-0.01em;">${tenantName || 'RefBoost'}</div>
-</td></tr>
-<tr><td style="padding:40px 32px 32px;">
-<h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:${TEXT_DARK};line-height:1.3;">${title}</h1>
-<div style="font-size:15px;line-height:1.6;color:${TEXT_DARK};">${bodyHtml}</div>
-${ctaUrl ? `<div style="margin:32px 0 8px;"><a href="${ctaUrl}" style="display:inline-block;background:${BRAND_PRIMARY};color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;">${ctaLabel || 'Accéder à mon espace'}</a></div>` : ''}
-</td></tr>
-<tr><td style="padding:24px 32px;border-top:1px solid ${BORDER};background:#fafafa;">
-<p style="margin:0;font-size:12px;color:${TEXT_MUTED};line-height:1.5;">${footerNote || 'Vous recevez cet email parce que vous participez au programme partenaire de ' + (tenantName || 'RefBoost') + '.'}</p>
-</td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+// Delegate to the canonical shared builder so every template in this
+// file (partnerInvite / memberInvite / leadWon / commissionValidated /
+// commissionPaid) picks up the navy-header card design. Extra props
+// like `preheader`, `tenantName`, `footerNote` are intentionally
+// ignored — the new shell has a uniform footer and no preheader slot.
+const { baseTemplate } = require('../utils/emailTemplates');
+
+function baseLayout({ title, tenantName, bodyHtml, ctaLabel, ctaUrl }) {
+  const content = `<h2>${title}</h2>${bodyHtml || ''}`;
+  return baseTemplate(content, ctaUrl || null, ctaLabel || 'Accéder à mon espace');
 }
 
 function stripHtml(html) {

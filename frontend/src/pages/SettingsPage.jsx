@@ -1375,6 +1375,7 @@ function NotificationsTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(0);
+  const [preview, setPreview] = useState(null); // { loading, subject, html, event_type, error }
 
   useEffect(() => {
     api.getNotificationPreferences()
@@ -1382,6 +1383,16 @@ function NotificationsTab() {
       .catch(() => setPrefs([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const openPreview = async (event_type) => {
+    setPreview({ loading: true, event_type });
+    try {
+      const { subject, html } = await api.previewEmailTemplate(event_type);
+      setPreview({ loading: false, event_type, subject, html });
+    } catch (err) {
+      setPreview({ loading: false, event_type, error: err.message || 'Aperçu indisponible' });
+    }
+  };
 
   const toggle = (event_type, field) => {
     setPrefs(list => list.map(p => p.event_type === event_type ? { ...p, [field]: !p[field] } : p));
@@ -1404,13 +1415,14 @@ function NotificationsTab() {
       <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('notifications.preferences_desc')}</p>
 
       <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
           <div>{t('notifications.event')}</div>
           <div style={{ textAlign: 'center' }}>{t('notifications.in_app')}</div>
           <div style={{ textAlign: 'center' }}>{t('notifications.email')}</div>
+          <div style={{ textAlign: 'center' }}>Aperçu</div>
         </div>
         {prefs.map(p => (
-          <div key={p.event_type} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
+          <div key={p.event_type} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
             <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>{t('notifications.event_' + p.event_type)}</div>
             <div style={{ textAlign: 'center' }}>
               <button onClick={() => toggle(p.event_type, 'in_app')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.in_app ? '#059669' : '#cbd5e1' }}>
@@ -1422,9 +1434,25 @@ function NotificationsTab() {
                 {p.email ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
               </button>
             </div>
+            <div style={{ textAlign: 'center' }}>
+              <button
+                onClick={() => openPreview(p.event_type)}
+                style={{
+                  padding: '6px 12px', borderRadius: 8,
+                  border: '1px solid #e2e8f0', background: '#fff',
+                  color: '#475569', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                }}
+              >
+                Aperçu
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {preview && (
+        <EmailPreviewModal preview={preview} onClose={() => setPreview(null)} />
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
         <button onClick={save} disabled={saving} style={{
@@ -1443,3 +1471,56 @@ function NotificationsTab() {
   );
 }
 
+
+// Renders the server-generated email HTML inside a sandboxed iframe so
+// the template's CSS doesn't leak into the Settings page. Admin-only
+// affordance from the Notifications et emails tab.
+function EmailPreviewModal({ preview, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 3000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 24, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#fff', borderRadius: 16,
+          width: '100%', maxWidth: 720, maxHeight: '90vh',
+          display: 'flex', flexDirection: 'column',
+          boxShadow: '0 25px 80px rgba(0,0,0,0.25)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #e2e8f0' }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>Aperçu email</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+              {preview.loading ? '…' : (preview.subject || preview.error || 'Aperçu')}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: 18 }}
+          >×</button>
+        </div>
+        <div style={{ flex: 1, overflow: 'hidden', padding: 12, background: '#f1f5f9' }}>
+          {preview.loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement…</div>
+          ) : preview.error ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#dc2626' }}>{preview.error}</div>
+          ) : (
+            <iframe
+              title="Aperçu email"
+              srcDoc={preview.html}
+              sandbox=""
+              style={{ width: '100%', height: '70vh', border: 'none', borderRadius: 8, background: '#fff' }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

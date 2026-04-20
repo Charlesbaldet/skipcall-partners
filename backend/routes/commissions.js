@@ -269,8 +269,12 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
             link: '/partner/payments',
             tenantId: existing.tenant_id,
           }).catch(() => {});
-          const html = `<p>Bonne nouvelle !</p><p>Votre commission de <strong>${amountLabel}</strong> pour <strong>${existing.prospect_name || ''}</strong> a été approuvée.</p>`;
-          sendEmail(u.email, `Commission approuvée — ${existing.prospect_name || ''}`, html).catch(() => {});
+          const tpl = require('../utils/emailTemplates').commissionApproved({
+            partnerName: u.full_name,
+            prospectName: existing.prospect_name,
+            amount: existing.amount,
+          });
+          sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
         }
       } catch {}
     })();
@@ -306,8 +310,12 @@ router.post('/:id/reject', authorize('admin'), async (req, res) => {
             link: '/partner/payments',
             tenantId: existing.tenant_id,
           }).catch(() => {});
-          const html = `<p>Votre commission pour <strong>${existing.prospect_name || ''}</strong> nécessite une révision.</p>${reason ? `<blockquote>${reason}</blockquote>` : ''}<p>Contactez votre gestionnaire de programme pour en discuter.</p>`;
-          sendEmail(u.email, `Commission à revoir — ${existing.prospect_name || ''}`, html).catch(() => {});
+          const tpl = require('../utils/emailTemplates').commissionRejected({
+            partnerName: u.full_name,
+            prospectName: existing.prospect_name,
+            reason,
+          });
+          sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
         }
       } catch {}
     })();

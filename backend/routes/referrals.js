@@ -563,9 +563,15 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
         notify.shouldNotify(req.tenantId, 'deal_won').then(async p => {
           if (!p.email) return;
           const admins = await notify.adminEmails(req.tenantId);
+          const { commissionToApprove } = require('../utils/emailTemplates');
           for (const a of admins) {
-            const html = `<p>Bonjour ${a.full_name || ''},</p><p><strong>${pRow?.name || ''}</strong> a marqué <strong>${current.prospect_name}</strong> comme gagné.</p><p>Une commission de <strong>${commissionAmount}€</strong> est en attente de votre approbation.</p><p><a href="${(process.env.FRONTEND_URL || 'https://refboost.io')}/commissions" style="display:inline-block;padding:10px 18px;background:#059669;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Examiner la commission →</a></p>`;
-            sendEmail(a.email, `Commission à approuver — ${current.prospect_name}`, html).catch(() => {});
+            const tpl = commissionToApprove({
+              adminName: a.full_name,
+              partnerName: pRow?.name || '',
+              prospectName: current.prospect_name,
+              amount: commissionAmount,
+            });
+            sendEmail(a.email, tpl.subject, tpl.html).catch(() => {});
           }
         });
       }

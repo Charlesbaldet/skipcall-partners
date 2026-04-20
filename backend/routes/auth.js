@@ -535,34 +535,14 @@ router.post('/forgot-password', [
 
     const resetUrl = `${process.env.FRONTEND_URL || 'https://refboost.io'}/reset-password?token=${token}`;
     const resend = require('../services/resend');
-
-    const html = `
-      <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
-        <div style="text-align:center;margin-bottom:32px;">
-          <div style="display:inline-flex;align-items:center;gap:8px;background:#f0fdf4;padding:12px 20px;border-radius:12px;">
-            <span style="font-size:22px;font-weight:800;color:#0f172a;">Ref<span style="color:#059669;">Boost</span></span>
-          </div>
-        </div>
-        <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin:0 0 8px;">Réinitialisation de mot de passe</h2>
-        <p style="color:#64748b;margin:0 0 24px;">Bonjour ${user.full_name},</p>
-        <p style="color:#334155;margin:0 0 24px;">Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.</p>
-        <div style="text-align:center;margin:32px 0;">
-          <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:#059669;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;">
-            Réinitialiser mon mot de passe
-          </a>
-        </div>
-        <p style="color:#94a3b8;font-size:13px;margin:0 0 8px;">Ce lien expire dans <strong>1 heure</strong>.</p>
-        <p style="color:#94a3b8;font-size:13px;margin:0;">Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email — votre mot de passe restera inchangé.</p>
-        <hr style="border:none;border-top:1px solid #f1f5f9;margin:24px 0;"/>
-        <p style="color:#cbd5e1;font-size:12px;text-align:center;">RefBoost · notifications@refboost.io</p>
-      </div>
-    `;
+    const { passwordReset } = require('../utils/emailTemplates');
+    const tpl = passwordReset({ recipientName: user.full_name, resetUrl });
 
     await resend.sendEmail({
       to: email,
-      subject: 'Réinitialisation de votre mot de passe RefBoost',
-      html,
-      text: `Bonjour ${user.full_name}, cliquez sur ce lien pour réinitialiser votre mot de passe (valide 1h) : ${resetUrl}`,
+      subject: tpl.subject,
+      html: tpl.html,
+      text: tpl.text,
     });
   } catch (err) {
     console.error('[forgot-password] error:', err.message);
