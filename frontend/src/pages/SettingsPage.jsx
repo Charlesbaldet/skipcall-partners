@@ -11,7 +11,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell, Zap, Tag, Code,
+  Bell, Zap,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -1547,17 +1547,11 @@ function TrackingFeaturesTab() {
   const [flags, setFlags] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [tenantSlug, setTenantSlug] = useState(null);
-  const [scriptCopied, setScriptCopied] = useState(false);
 
   useEffect(() => {
-    Promise.all([api.getTenantFeatures(), api.getMyTenant().catch(() => null)])
-      .then(([f, mt]) => {
-        setFlags(f.features);
-        const t = mt && (mt.tenant || mt);
-        if (t && t.slug) setTenantSlug(t.slug);
-      })
-      .catch(() => setFlags({ feature_referral_links: false, feature_promo_codes: false, feature_tracking_script: false, tracking_redirect_url: '', tracking_cookie_days: 30 }))
+    api.getTenantFeatures()
+      .then(f => setFlags(f.features))
+      .catch(() => setFlags({ feature_referral_links: false }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -1572,14 +1566,10 @@ function TrackingFeaturesTab() {
 
   if (loading || !flags) return <div style={{ color: '#94a3b8' }}>…</div>;
 
-  const anyTrackingOn = flags.feature_referral_links || flags.feature_promo_codes || flags.feature_tracking_script;
-  const scriptTag = `<script src="https://refboost.io/api/tracking/refboost.js?tenant=${tenantSlug || ''}" data-tenant="${tenantSlug || ''}"></script>`;
-
-  // Each feature renders as its own white card so the tab matches the
-  // other settings tabs (Profile, Integrations, etc.) instead of a
-  // bordered list. Icon lives in a 36×36 soft-green tile on the left;
-  // the brand-green toggle sits on the right.
-  const FeatureCard = ({ icon: Icon, title, desc, on, onChange, children }) => (
+  // One feature card, soft-green icon tile on the left, brand-green
+  // toggle on the right. Same white-card styling as other settings
+  // tabs (Profile, Integrations, etc.).
+  const FeatureCard = ({ icon: Icon, title, desc, on, onChange }) => (
     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20, marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ width: 36, height: 36, borderRadius: 10, background: on ? '#f0fdf4' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -1598,11 +1588,6 @@ function TrackingFeaturesTab() {
           {on ? <ToggleRight size={34} /> : <ToggleLeft size={34} />}
         </button>
       </div>
-      {on && children && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
-          {children}
-        </div>
-      )}
     </div>
   );
 
@@ -1620,71 +1605,6 @@ function TrackingFeaturesTab() {
         on={flags.feature_referral_links}
         onChange={v => patch({ feature_referral_links: v })}
       />
-
-      <FeatureCard
-        icon={Tag}
-        title={t('features.promo_codes')}
-        desc={t('features.promo_codes_desc')}
-        on={flags.feature_promo_codes}
-        onChange={v => patch({ feature_promo_codes: v })}
-      />
-
-      <FeatureCard
-        icon={Code}
-        title={t('features.tracking_script')}
-        desc={t('features.tracking_script_desc')}
-        on={flags.feature_tracking_script}
-        onChange={v => patch({ feature_tracking_script: v })}
-      >
-        {tenantSlug && (
-          <div style={{ background: '#0f172a', borderRadius: 10, padding: 14, color: '#e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('tracking.script')}</span>
-              <button
-                onClick={() => { navigator.clipboard.writeText(scriptTag); setScriptCopied(true); setTimeout(() => setScriptCopied(false), 2000); }}
-                style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', padding: '5px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
-              >
-                {scriptCopied ? t('referral_link.copied') : t('tracking.copy_script')}
-              </button>
-            </div>
-            <pre style={{ margin: 0, fontSize: 12, fontFamily: 'ui-monospace, monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{scriptTag}</pre>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 10 }}>{t('tracking.script_instructions')}</div>
-          </div>
-        )}
-      </FeatureCard>
-
-      {anyTrackingOn && (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 14 }}>
-            {t('tracking.title')}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('tracking.redirect_url')}</label>
-              <input
-                type="url"
-                value={flags.tracking_redirect_url || ''}
-                onChange={e => setFlags({ ...flags, tracking_redirect_url: e.target.value })}
-                onBlur={e => patch({ tracking_redirect_url: e.target.value })}
-                placeholder="https://monsite.com/signup"
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }}
-              />
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{t('tracking.redirect_url_hint')}</div>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('tracking.cookie_duration')}</label>
-              <input
-                type="number"
-                min="1"
-                value={flags.tracking_cookie_days ?? 30}
-                onChange={e => setFlags({ ...flags, tracking_cookie_days: e.target.value })}
-                onBlur={e => patch({ tracking_cookie_days: parseInt(e.target.value, 10) || 30 })}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -61,12 +61,6 @@ router.get('/partners/:id', requireFeature('feature_referral_links'), async (req
        WHERE partner_id = $1`,
       [id]
     );
-    const { rows: [conv] } = await query(
-      `SELECT COUNT(*)::int AS n
-         FROM referrals
-        WHERE partner_id = $1 AND (source IN ('referral_link', 'promo_code') OR referral_code_used IS NOT NULL)`,
-      [id]
-    );
 
     const referralLink = `${FRONTEND}/r/${p.tenant_slug || ''}?ref=${encodeURIComponent(code)}`;
     res.json({
@@ -75,7 +69,6 @@ router.get('/partners/:id', requireFeature('feature_referral_links'), async (req
       stats: {
         total_clicks: stats?.total_clicks || 0,
         month_clicks: stats?.month_clicks || 0,
-        conversions: conv?.n || 0,
       },
     });
   } catch (err) {

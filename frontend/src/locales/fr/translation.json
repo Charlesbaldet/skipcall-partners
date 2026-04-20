@@ -2087,8 +2087,8 @@
     "rejection_reason_label": "Motif"
   },
   "referral_link": {
-    "title": "Mon lien de parrainage",
-    "subtitle": "Partagez ce lien avec vos prospects pour que leurs inscriptions vous soient automatiquement attribuées.",
+    "title": "Mon lien de recommandation",
+    "subtitle": "Partagez ce lien: les clics sont trackés et les prospects atterrissent sur notre site.",
     "copy": "Copier le lien",
     "copied": "Lien copié !",
     "clicks": "Clics totaux",

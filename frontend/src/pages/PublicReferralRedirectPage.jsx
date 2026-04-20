@@ -32,7 +32,11 @@ export default function PublicReferralRedirectPage() {
     fetch(`/api/tenants/public/${encodeURIComponent(slug || '')}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        const redirect = d?.tenant?.tracking_redirect_url;
+        // Prefer the tenant's main website URL (Settings → Site web);
+        // fall back to the legacy tracking_redirect_url field for
+        // tenants that configured it explicitly before the simpler
+        // model shipped.
+        const redirect = d?.tenant?.website || d?.tenant?.tracking_redirect_url;
         const name = d?.tenant?.name || slug || '';
         setTenantName(name);
         if (redirect) {
