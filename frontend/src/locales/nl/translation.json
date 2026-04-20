@@ -2127,5 +2127,27 @@
     "referral_link": "Referral-link",
     "promo_code": "Promocode",
     "breakdown_title": "Referral-bronnen"
+  },
+  "partner_category": {
+    "title": "Partnercategorieën",
+    "add": "Categorie toevoegen",
+    "name": "Naam van de categorie",
+    "description": "Beschrijving",
+    "color": "Kleur",
+    "default": "Standaard",
+    "set_default": "Als standaard instellen",
+    "delete": "Categorie verwijderen",
+    "cannot_delete_has_partners": "Deze categorie heeft {{count}} gekoppelde partners. Wijs ze eerst opnieuw toe.",
+    "cannot_delete_default": "De standaardcategorie kan niet worden verwijderd",
+    "apporteur": "Zakelijke aanbrenger",
+    "apporteur_desc": "Ik beveel prospects aan bij het bedrijf",
+    "conseil": "Adviespartner",
+    "conseil_desc": "Ik adviseer en begeleid klanten bij hun keuzes",
+    "integrateur": "Integratiepartner",
+    "integrateur_desc": "Ik integreer en implementeer de oplossing bij mijn klanten",
+    "select": "Selecteer je soort partnerschap",
+    "required": "Kies een soort partnerschap",
+    "filter": "Alle categorieën",
+    "stats": "Partners per categorie"
   }
 }

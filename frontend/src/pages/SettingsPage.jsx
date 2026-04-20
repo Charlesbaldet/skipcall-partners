@@ -199,6 +199,8 @@ export default function SettingsPage() {
               <>
                 <PipelineStagesEditor />
                 <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+                <PartnerCategoriesTab />
+                <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
                 <TrackingFeaturesTab />
               </>
             )}
@@ -1664,6 +1666,154 @@ function TrackingFeaturesTab() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+// ═══ PARTNER CATEGORIES ═══
+// Admin editor for the list of partner categories. Drag-and-drop
+// reorder; inline edit on name/description; colour picker; star-toggle
+// for the default; delete with guard (disabled when partners are
+// assigned or when the category is the default one).
+function PartnerCategoriesTab() {
+  const { t } = useTranslation();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
+
+  const reload = () => {
+    setLoading(true);
+    api.getPartnerCategories()
+      .then(d => setCategories(d.categories || []))
+      .catch(() => setCategories([]))
+      .finally(() => setLoading(false));
+  };
+  useEffect(reload, []);
+
+  const updateInline = async (id, patch) => {
+    setCategories(list => list.map(c => c.id === id ? { ...c, ...patch } : c));
+    try { await api.updatePartnerCategory(id, patch); }
+    catch (e) { setErr(e.message); reload(); }
+  };
+
+  const setDefault = async (id) => {
+    try {
+      await api.setDefaultPartnerCategory(id);
+      reload();
+    } catch (e) { setErr(e.message); }
+  };
+
+  const del = async (c) => {
+    if (c.partners_count > 0 || c.is_default) return;
+    if (!window.confirm(t('partner_category.delete') + ' ?')) return;
+    try { await api.deletePartnerCategory(c.id); reload(); }
+    catch (e) { setErr(e.message || t('partner_category.cannot_delete_has_partners', { count: c.partners_count || 0 })); }
+  };
+
+  const add = async () => {
+    const name = window.prompt(t('partner_category.name'));
+    if (!name || !name.trim()) return;
+    try {
+      await api.createPartnerCategory({ name: name.trim(), color: '#6B7280' });
+      reload();
+    } catch (e) { setErr(e.message); }
+  };
+
+  const onDrop = async (e, targetId) => {
+    e.preventDefault();
+    if (!draggingId || draggingId === targetId) return;
+    const srcIdx = categories.findIndex(c => c.id === draggingId);
+    const dstIdx = categories.findIndex(c => c.id === targetId);
+    if (srcIdx < 0 || dstIdx < 0) return;
+    const next = categories.slice();
+    const [moved] = next.splice(srcIdx, 1);
+    next.splice(dstIdx, 0, moved);
+    const withPos = next.map((c, i) => ({ ...c, position: i }));
+    setCategories(withPos);
+    setDraggingId(null);
+    try {
+      await api.reorderPartnerCategories(withPos.map(c => ({ id: c.id, position: c.position })));
+    } catch (err) { setErr(err.message); reload(); }
+  };
+
+  if (loading) return <div style={{ color: '#94a3b8' }}>…</div>;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('partner_category.title')}</h3>
+        <button onClick={add} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+          + {t('partner_category.add')}
+        </button>
+      </div>
+      {err && <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>{err}</div>}
+
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+        {categories.map(c => (
+          <div
+            key={c.id}
+            draggable
+            onDragStart={() => setDraggingId(c.id)}
+            onDragOver={e => e.preventDefault()}
+            onDrop={e => onDrop(e, c.id)}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '32px 1fr 2fr 80px 80px',
+              gap: 10, alignItems: 'center',
+              padding: '12px 14px',
+              borderTop: '1px solid #f1f5f9',
+              background: draggingId === c.id ? '#f8fafc' : '#fff',
+              cursor: 'move',
+            }}
+          >
+            <input
+              type="color"
+              value={c.color || '#6B7280'}
+              onChange={e => updateInline(c.id, { color: e.target.value })}
+              style={{ width: 28, height: 28, padding: 0, border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', background: 'transparent' }}
+              title={t('partner_category.color')}
+            />
+            <input
+              defaultValue={c.name}
+              onBlur={e => e.target.value.trim() && e.target.value !== c.name && updateInline(c.id, { name: e.target.value.trim() })}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#0f172a' }}
+            />
+            <input
+              defaultValue={c.description || ''}
+              placeholder={t('partner_category.description')}
+              onBlur={e => e.target.value !== (c.description || '') && updateInline(c.id, { description: e.target.value })}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, color: '#475569' }}
+            />
+            <button
+              onClick={() => !c.is_default && setDefault(c.id)}
+              title={c.is_default ? t('partner_category.default') : t('partner_category.set_default')}
+              style={{ background: 'none', border: 'none', cursor: c.is_default ? 'default' : 'pointer', color: c.is_default ? '#f59e0b' : '#cbd5e1', fontSize: 22, lineHeight: 1, padding: 0 }}
+            >
+              {c.is_default ? '★' : '☆'}
+            </button>
+            <button
+              onClick={() => del(c)}
+              disabled={c.is_default || c.partners_count > 0}
+              title={
+                c.is_default
+                  ? t('partner_category.cannot_delete_default')
+                  : c.partners_count > 0
+                    ? t('partner_category.cannot_delete_has_partners', { count: c.partners_count })
+                    : t('partner_category.delete')
+              }
+              style={{
+                background: 'none', border: 'none',
+                cursor: (c.is_default || c.partners_count > 0) ? 'not-allowed' : 'pointer',
+                color: (c.is_default || c.partners_count > 0) ? '#cbd5e1' : '#dc2626',
+                fontSize: 14, fontWeight: 600,
+              }}
+            >
+              {c.partners_count > 0 ? `${c.partners_count} 👥` : '🗑'}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

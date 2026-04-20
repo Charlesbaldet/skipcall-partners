@@ -16,7 +16,9 @@ export default function PartnersPage() {
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
+  const [form, setForm] = useState({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10, category_id: '' });
+  const [categories, setCategories] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [tempPwd, setTempPwd] = useState(null);
   const [saving, setSaving] = useState(false);
   const [createdEmail, setCreatedEmail] = useState(null);
@@ -47,6 +49,16 @@ export default function PartnersPage() {
   };
 
   useEffect(() => { loadPartners(false).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    api.getPartnerCategories()
+      .then(d => {
+        const list = d.categories || [];
+        setCategories(list);
+        const def = list.find(c => c.is_default) || list[0];
+        if (def) setForm(f => ({ ...f, category_id: f.category_id || def.id }));
+      })
+      .catch(() => setCategories([]));
+  }, []);
   useEffect(() => { if (tab === 'candidatures' && isAdmin) loadApplications(); }, [tab, appFilter]);
 
   const handleArchive = (id) => setConfirmAction({ kind: 'archivePartner', id });
@@ -75,7 +87,7 @@ export default function PartnersPage() {
     }
   };
 
-  const startEdit = (p) => { setEditingId(p.id); setEditForm({ name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '', company_website: p.company_website || '', commission_rate: p.commission_rate, iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '' }); };
+  const startEdit = (p) => { setEditingId(p.id); setEditForm({ name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '', company_website: p.company_website || '', commission_rate: p.commission_rate, iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '', category_id: p.category_id || '' }); };
   const saveEdit = async () => { try { await api.updatePartner(editingId, editForm); setEditingId(null); await loadPartners(showArchived); } catch(e) { alert(e.message); } };
 
   const handleSubmit = async (e) => {
@@ -113,8 +125,9 @@ export default function PartnersPage() {
     try { await api.rejectApplication(selectedApp.id, rejectReason); setSelectedApp(null); setRejectReason(''); loadApplications(); } catch(e) { alert(e.message); }
   };
 
-  const activePartners = partners.filter(p => p.is_active !== false);
-  const archivedPartners = partners.filter(p => p.is_active === false);
+  const categoryMatches = (p) => categoryFilter === 'all' || p.category_id === categoryFilter;
+  const activePartners = partners.filter(p => p.is_active !== false && categoryMatches(p));
+  const archivedPartners = partners.filter(p => p.is_active === false && categoryMatches(p));
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partners.loading')}</div>;
@@ -157,6 +170,20 @@ export default function PartnersPage() {
                   <input value={editForm[key] || ''} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} type={key === 'commission_rate' ? 'number' : 'text'} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, fontFamily: ['iban', 'bic'].includes(key) ? 'monospace' : 'inherit' }} />
                 </div>
               ))}
+              {categories.length > 0 && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partner_category.title').replace(/s$/, '')}</label>
+                  <select
+                    value={editForm.category_id || ''}
+                    onChange={e => setEditForm(f => ({ ...f, category_id: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, background: '#fff' }}
+                  >
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.cancel')}</button>
@@ -238,7 +265,19 @@ export default function PartnersPage() {
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('partners.title')}</h1>
           <p style={{ color: '#64748b', marginTop: 4 }}>{t('partners.active_count', { count: activePartners.length })}</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {tab === 'partners' && categories.length > 0 && (
+            <select
+              value={categoryFilter}
+              onChange={e => setCategoryFilter(e.target.value)}
+              style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontSize: 13, fontWeight: 600, color: '#334155', cursor: 'pointer' }}
+            >
+              <option value="all">{t('partner_category.filter')}</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          )}
           {tab === 'partners' && (
             <>
               <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners(next); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -292,6 +331,20 @@ export default function PartnersPage() {
                     <FormField label={t('partners.field_phone')} value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} />
                     <FormField label={t('partners.field_website')} value={form.company_website} onChange={v => setForm(f => ({ ...f, company_website: v }))} />
                     <FormField label={t('partners.field_rate')} value={form.commission_rate} onChange={v => setForm(f => ({ ...f, commission_rate: v }))} type="number" />
+                    {categories.length > 0 && (
+                      <div>
+                        <label style={{ display: 'block', color: '#475569', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partner_category.select')}</label>
+                        <select
+                          value={form.category_id}
+                          onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
+                        >
+                          {categories.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                   <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? t('partners.creating') : t('partners.create')}</button>
                 </form>
@@ -389,9 +442,15 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
   return (
     <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18 }}>{p.name}</div>
           <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
+          {p.category_name && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, padding: '3px 8px', borderRadius: 999, background: (p.category_color || '#6B7280') + '15', color: p.category_color || '#6B7280', fontSize: 11, fontWeight: 700 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.category_color || '#6B7280' }} />
+              {p.category_name}
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>

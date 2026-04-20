@@ -2127,5 +2127,27 @@
     "referral_link": "Link di affiliazione",
     "promo_code": "Codice promo",
     "breakdown_title": "Origini dei referral"
+  },
+  "partner_category": {
+    "title": "Categorie di partner",
+    "add": "Aggiungi una categoria",
+    "name": "Nome della categoria",
+    "description": "Descrizione",
+    "color": "Colore",
+    "default": "Predefinita",
+    "set_default": "Imposta come predefinita",
+    "delete": "Elimina categoria",
+    "cannot_delete_has_partners": "Questa categoria ha {{count}} partner assegnati. Riassegnali prima.",
+    "cannot_delete_default": "Impossibile eliminare la categoria predefinita",
+    "apporteur": "Segnalatore",
+    "apporteur_desc": "Raccomando prospect all'azienda",
+    "conseil": "Partner consulente",
+    "conseil_desc": "Consiglio e supporto i clienti nelle loro scelte",
+    "integrateur": "Partner integratore",
+    "integrateur_desc": "Integro e distribuisco la soluzione ai miei clienti",
+    "select": "Seleziona il tipo di partnership",
+    "required": "Seleziona un tipo di partnership",
+    "filter": "Tutte le categorie",
+    "stats": "Partner per categoria"
   }
 }

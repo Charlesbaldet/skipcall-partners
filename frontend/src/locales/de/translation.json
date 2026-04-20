@@ -2127,5 +2127,27 @@
     "referral_link": "Empfehlungslink",
     "promo_code": "Gutscheincode",
     "breakdown_title": "Referral-Quellen"
+  },
+  "partner_category": {
+    "title": "Partnerkategorien",
+    "add": "Kategorie hinzufügen",
+    "name": "Kategoriename",
+    "description": "Beschreibung",
+    "color": "Farbe",
+    "default": "Standard",
+    "set_default": "Als Standard festlegen",
+    "delete": "Kategorie löschen",
+    "cannot_delete_has_partners": "Dieser Kategorie sind {{count}} Partner zugeordnet. Weise sie zuerst neu zu.",
+    "cannot_delete_default": "Die Standardkategorie kann nicht gelöscht werden",
+    "apporteur": "Geschäftsvermittler",
+    "apporteur_desc": "Ich empfehle dem Unternehmen Interessenten",
+    "conseil": "Beratungspartner",
+    "conseil_desc": "Ich berate und begleite Kunden bei ihrer Entscheidung",
+    "integrateur": "Integrationspartner",
+    "integrateur_desc": "Ich integriere und implementiere die Lösung bei meinen Kunden",
+    "select": "Wähle deine Partnerschaftsart",
+    "required": "Bitte wähle eine Partnerschaftsart",
+    "filter": "Alle Kategorien",
+    "stats": "Partner nach Kategorie"
   }
 }

@@ -2127,5 +2127,27 @@
     "referral_link": "Link de referência",
     "promo_code": "Código promocional",
     "breakdown_title": "Origens dos referrals"
+  },
+  "partner_category": {
+    "title": "Categorias de parceiros",
+    "add": "Adicionar uma categoria",
+    "name": "Nome da categoria",
+    "description": "Descrição",
+    "color": "Cor",
+    "default": "Padrão",
+    "set_default": "Definir como padrão",
+    "delete": "Eliminar categoria",
+    "cannot_delete_has_partners": "Esta categoria tem {{count}} parceiros atribuídos. Reatribua-os primeiro.",
+    "cannot_delete_default": "Não é possível eliminar a categoria padrão",
+    "apporteur": "Indicador de negócios",
+    "apporteur_desc": "Recomendo prospetos à empresa",
+    "conseil": "Parceiro consultor",
+    "conseil_desc": "Aconselho e acompanho os clientes nas suas decisões",
+    "integrateur": "Parceiro integrador",
+    "integrateur_desc": "Integro e implemento a solução nos meus clientes",
+    "select": "Seleciona o teu tipo de parceria",
+    "required": "Seleciona um tipo de parceria",
+    "filter": "Todas as categorias",
+    "stats": "Parceiros por categoria"
   }
 }

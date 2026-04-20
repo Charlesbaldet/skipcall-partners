@@ -2127,5 +2127,27 @@
     "referral_link": "Lien de parrainage",
     "promo_code": "Code promo",
     "breakdown_title": "Sources des referrals"
+  },
+  "partner_category": {
+    "title": "Catégories de partenaires",
+    "add": "Ajouter une catégorie",
+    "name": "Nom de la catégorie",
+    "description": "Description",
+    "color": "Couleur",
+    "default": "Par défaut",
+    "set_default": "Définir comme défaut",
+    "delete": "Supprimer la catégorie",
+    "cannot_delete_has_partners": "Cette catégorie a {{count}} partenaires assignés. Réassignez-les d'abord.",
+    "cannot_delete_default": "Impossible de supprimer la catégorie par défaut",
+    "apporteur": "Apporteur d'affaires",
+    "apporteur_desc": "Je recommande des prospects à l'entreprise",
+    "conseil": "Partenaire conseil",
+    "conseil_desc": "Je conseille et accompagne les clients dans leur choix",
+    "integrateur": "Partenaire intégrateur",
+    "integrateur_desc": "J'intègre et déploie la solution chez mes clients",
+    "select": "Sélectionnez votre type de partenariat",
+    "required": "Merci de sélectionner un type de partenariat",
+    "filter": "Toutes les catégories",
+    "stats": "Partenaires par catégorie"
   }
 }

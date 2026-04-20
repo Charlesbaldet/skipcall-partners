@@ -54,7 +54,7 @@ router.post('/apply', [
       return res.status(400).json({ error: errors.array()[0].msg });
     }
 
-    const { company_name, contact_name, email, phone, company_website, company_size, motivation } = req.body;
+    const { company_name, contact_name, email, phone, company_website, company_size, motivation, category_id } = req.body;
 
     // Resolve tenant from URL slug (set via /r/:slug routing) — fallback to domain
     let resolvedTenantId = req.tenantId;
@@ -80,12 +80,31 @@ router.post('/apply', [
       return res.status(409).json({ error: 'Une candidature ou un compte existe déjà avec cet email' });
     }
 
+    // Validate / fall back the applicant's chosen category.
+    let resolvedCategoryId = null;
+    if (resolvedTenantId) {
+      if (category_id) {
+        const { rows: cc } = await query(
+          'SELECT id FROM partner_categories WHERE id = $1 AND tenant_id = $2',
+          [category_id, resolvedTenantId]
+        );
+        if (cc.length) resolvedCategoryId = cc[0].id;
+      }
+      if (!resolvedCategoryId) {
+        const { rows: dd } = await query(
+          'SELECT id FROM partner_categories WHERE tenant_id = $1 AND is_default = TRUE LIMIT 1',
+          [resolvedTenantId]
+        );
+        resolvedCategoryId = dd[0]?.id || null;
+      }
+    }
+
     const { rows: [application] } = await query(
       `INSERT INTO partner_applications
-       (company_name, contact_name, email, phone, company_website, company_size, motivation, tenant_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       (company_name, contact_name, email, phone, company_website, company_size, motivation, tenant_id, category_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [company_name, contact_name, email, phone, company_website, company_size, motivation, resolvedTenantId || null]
+      [company_name, contact_name, email, phone, company_website, company_size, motivation, resolvedTenantId || null, resolvedCategoryId]
     );
 
     // Notify admins of THIS tenant only
@@ -281,11 +300,21 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
       );
       partner = p;
     } else {
+      // Fall back the category to the tenant's default if the
+      // applicant didn't (or couldn't) pick one.
+      let approvedCategoryId = app.category_id || null;
+      if (!approvedCategoryId && req.tenantId) {
+        const { rows: dd } = await client.query(
+          'SELECT id FROM partner_categories WHERE tenant_id = $1 AND is_default = TRUE LIMIT 1',
+          [req.tenantId]
+        );
+        approvedCategoryId = dd[0]?.id || null;
+      }
       const { rows: [p] } = await client.query(
-        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id, category_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
-        [app.company_name, app.contact_name, app.email, app.phone, app.company_website, commission_rate, req.tenantId || null]
+        [app.company_name, app.contact_name, app.email, app.phone, app.company_website, commission_rate, req.tenantId || null, approvedCategoryId]
       );
       partner = p;
     }

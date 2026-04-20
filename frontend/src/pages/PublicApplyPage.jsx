@@ -22,15 +22,36 @@ export default function PublicApplyPage() {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     company_name: '', contact_name: '', email: '', phone: '',
-    company_website: '', company_size: '', motivation: '',
+    company_website: '', company_size: '', motivation: '', category_id: '',
   });
 
+  // Fetch partner categories for this tenant so applicants pick a
+  // partnership type. The default category is pre-selected so the
+  // "required" gate doesn't flag a fresh form.
+  useEffect(() => {
+    if (!slug) return;
+    fetch('/api/partner-categories/public?tenant=' + encodeURIComponent(slug))
+      .then(r => r.ok ? r.json() : { categories: [] })
+      .then(d => {
+        const list = d.categories || [];
+        setCategories(list);
+        const def = list.find(c => c.is_default) || list[0];
+        if (def) setForm(f => ({ ...f, category_id: f.category_id || def.id }));
+      })
+      .catch(() => {});
+  }, [slug]);
+
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
-  const canSubmit = form.company_name && form.contact_name && form.email;
+  const canSubmit = form.company_name && form.contact_name && form.email && form.category_id;
 
   const handleSubmit = async () => {
+    if (!form.category_id) {
+      setError(t('partner_category.required'));
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -123,6 +144,43 @@ export default function PublicApplyPage() {
                   </div>
                 </div>
               </div>
+              {categories.length > 0 && (
+                <div style={{ marginTop: 24 }}>
+                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>
+                    {t('partner_category.select')} *
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+                    {categories.map(c => {
+                      const active = form.category_id === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, category_id: c.id }))}
+                          style={{
+                            textAlign: 'left',
+                            padding: '14px 14px',
+                            borderRadius: 12,
+                            border: active ? `2px solid ${c.color || '#fff'}` : '1px solid rgba(255,255,255,0.12)',
+                            background: active ? `${c.color || '#ffffff'}22` : 'rgba(255,255,255,0.04)',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.color || '#94a3b8' }} />
+                            <span style={{ fontSize: 14, fontWeight: 700 }}>{c.name}</span>
+                          </div>
+                          {c.description && (
+                            <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.4 }}>{c.description}</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <button disabled={!canSubmit} onClick={() => setStep(2)} style={{
                 marginTop: 28, width: '100%', padding: '14px', borderRadius: 12,
                 background: canSubmit ? 'var(--rb-primary, #059669)' : 'rgba(255,255,255,0.06)',

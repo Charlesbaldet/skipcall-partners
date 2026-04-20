@@ -36,6 +36,7 @@ const tenantFeaturesRoutes = require('./routes/tenantFeatures');
 const referralLinksRoutes = require('./routes/referralLinks');
 const promoCodesRoutes = require('./routes/promoCodes');
 const trackingScriptRoutes = require('./routes/trackingScript');
+const partnerCategoriesRoutes = require('./routes/partnerCategories');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -148,6 +149,7 @@ app.use('/api/tenants', tenantFeaturesRoutes);
 app.use('/api/referral-links', referralLinksRoutes);
 app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/tracking', trackingScriptRoutes);
+app.use('/api/partner-categories', partnerCategoriesRoutes);
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({

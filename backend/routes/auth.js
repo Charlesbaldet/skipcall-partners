@@ -388,6 +388,10 @@ router.post('/signup', [
       const { ensureDefaultStages } = require('./pipeline-stages');
       await ensureDefaultStages(tenant.id);
     } catch (e) { console.error('[signup.stages]', e.message); }
+    try {
+      const { seedDefaultCategories } = require('../services/partnerCategoriesSeed');
+      await seedDefaultCategories(tenant.id);
+    } catch (e) { console.error('[signup.categories]', e.message); }
     const hash = await bcrypt.hash(password, 12);
     const { rows: [user] } = await query(
       "INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, 'admin', $4) RETURNING id, email, full_name, role, tenant_id",
@@ -444,6 +448,10 @@ router.post('/signup-google', [
       const { ensureDefaultStages } = require('./pipeline-stages');
       await ensureDefaultStages(tenant.id);
     } catch (e) { console.error('[signup-google.stages]', e.message); }
+    try {
+      const { seedDefaultCategories } = require('../services/partnerCategoriesSeed');
+      await seedDefaultCategories(tenant.id);
+    } catch (e) { console.error('[signup-google.categories]', e.message); }
 
     // Random placeholder password — the user will only ever log in via Google.
     // Keeps the NOT NULL constraint satisfied without creating a usable credential.

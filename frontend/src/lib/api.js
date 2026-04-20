@@ -273,6 +273,15 @@ class ApiClient {
   deletePromoCode(id) { return this.request('/promo-codes/' + id, { method: 'DELETE' }); }
   validatePromoCode(code, tenantSlug) { return this.request('/promo-codes/validate', { method: 'POST', body: JSON.stringify({ code, tenantSlug }) }); }
 
+  // Partner categories
+  getPartnerCategories() { return this.request('/partner-categories'); }
+  getPublicPartnerCategories(tenantSlug) { return this.request('/partner-categories/public?tenant=' + encodeURIComponent(tenantSlug)); }
+  createPartnerCategory(data) { return this.request('/partner-categories', { method: 'POST', body: JSON.stringify(data) }); }
+  updatePartnerCategory(id, data) { return this.request('/partner-categories/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
+  deletePartnerCategory(id) { return this.request('/partner-categories/' + id, { method: 'DELETE' }); }
+  reorderPartnerCategories(categories) { return this.request('/partner-categories/reorder', { method: 'PUT', body: JSON.stringify({ categories }) }); }
+  setDefaultPartnerCategory(id) { return this.request('/partner-categories/' + id + '/set-default', { method: 'PUT' }); }
+
   // Billing (Stripe)
   getBillingPlan() { return this.request('/billing/plan'); }
   syncBilling() { return this.request('/billing/sync'); }

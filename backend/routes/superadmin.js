@@ -97,6 +97,10 @@ router.post('/tenants', authenticate, requireSuperAdmin, async (req, res) => {
       [name, slug.toLowerCase().replace(/[^a-z0-9-]/g, ''), domain || null, primary_color || '#6366f1', secondary_color || '#8b5cf6', accent_color || '#f59e0b', logo_url || null, req.body.revenue_model || 'CA']
     );
     auditLog(req, 'tenant_created', 'tenant', rows[0].id, { name, slug });
+    try {
+      const { seedDefaultCategories } = require('../services/partnerCategoriesSeed');
+      await seedDefaultCategories(rows[0].id);
+    } catch (e) { console.error('[tenants.create.categories]', e.message); }
     res.json({ tenant: rows[0] });
   } catch (err) {
     if (err.message.includes('duplicate')) return res.status(400).json({ error: 'Ce slug existe déjà' });

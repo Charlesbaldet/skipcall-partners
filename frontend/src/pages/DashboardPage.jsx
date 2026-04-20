@@ -201,6 +201,8 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
         <KPICard icon={Users} label={t('dashboard.kpi_rate')} value={`${kpis?.win_rate || 0}%`} color="#c026d3" />
       </div>
 
+      <PartnersByCategoryCard />
+
       {/* Charts Row 1 */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
         <ChartCard title={t('dashboard.chart_monthly')}>
@@ -486,6 +488,48 @@ function PageLoader() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
       <p style={{ color: '#94a3b8' }}>{t('dashboard.loading')}</p>
+    </div>
+  );
+}
+
+// Small admin-only breakdown of active partners per category.
+// Self-fetches categories + partners so it's drop-in from any
+// dashboard tab. Hides itself when no categories exist.
+function PartnersByCategoryCard() {
+  const { t } = useTranslation();
+  const [categories, setCategories] = useState([]);
+  const [partners, setPartners] = useState([]);
+
+  useEffect(() => {
+    Promise.all([api.getPartnerCategories().catch(() => ({ categories: [] })), api.request('/partners').catch(() => ({ partners: [] }))])
+      .then(([c, p]) => { setCategories(c.categories || []); setPartners(p.partners || []); });
+  }, []);
+
+  if (!categories.length) return null;
+  const counts = categories.map(c => ({
+    ...c,
+    count: partners.filter(p => p.category_id === c.id && p.is_active !== false).length,
+  }));
+  const total = counts.reduce((s, c) => s + c.count, 0) || 0;
+
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20, marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
+        {t('partner_category.stats')}
+      </div>
+      <div style={{ display: 'flex', gap: 4, height: 10, borderRadius: 999, overflow: 'hidden', background: '#f1f5f9', marginBottom: 10 }}>
+        {counts.map(c => (
+          <div key={c.id} style={{ width: total ? (c.count / total * 100) + '%' : '0%', background: c.color || '#6B7280' }} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 13, color: '#475569' }}>
+        {counts.map(c => (
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.color || '#6B7280' }} />
+            {c.name} — <strong>{c.count}</strong>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

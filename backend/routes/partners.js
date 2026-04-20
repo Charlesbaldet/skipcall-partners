@@ -120,13 +120,17 @@ router.get('/', async (req, res) => {
 
     const { rows } = await query(
       `SELECT p.*,
+              pc.name  AS category_name,
+              pc.slug  AS category_slug,
+              pc.color AS category_color,
               COUNT(r.id) as total_referrals,
               COUNT(CASE WHEN r.status = 'won' THEN 1 END) as won_deals,
               COALESCE(SUM(CASE WHEN r.status = 'won' THEN r.deal_value END), 0) as total_revenue
        FROM partners p
+       LEFT JOIN partner_categories pc ON pc.id = p.category_id
        LEFT JOIN referrals r ON p.id = r.partner_id
        ${whereClause}
-       GROUP BY p.id
+       GROUP BY p.id, pc.name, pc.slug, pc.color
        ORDER BY p.is_active DESC, p.name`,
       params
     );
@@ -183,7 +187,28 @@ router.post('/', authorize('admin'), [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, contact_name, email, phone, company_website, commission_rate } = req.body;
+    const { name, contact_name, email, phone, company_website, commission_rate, category_id } = req.body;
+
+    // Validate category_id belongs to this tenant; fall back to the
+    // tenant's default category when missing/invalid so every partner
+    // row is categorized (required for the UI filters + stats).
+    let resolvedCategoryId = null;
+    if (req.tenantId) {
+      if (category_id) {
+        const { rows: cc } = await query(
+          'SELECT id FROM partner_categories WHERE id = $1 AND tenant_id = $2',
+          [category_id, req.tenantId]
+        );
+        if (cc.length) resolvedCategoryId = cc[0].id;
+      }
+      if (!resolvedCategoryId) {
+        const { rows: dd } = await query(
+          'SELECT id FROM partner_categories WHERE tenant_id = $1 AND is_default = TRUE LIMIT 1',
+          [req.tenantId]
+        );
+        resolvedCategoryId = dd[0]?.id || null;
+      }
+    }
 
     // Plan partner-limit gate. Only blocks NEW additions — existing
     // partners above the limit keep working. -1 means unlimited (manual
@@ -251,10 +276,11 @@ router.post('/', authorize('admin'), [
            company_website = COALESCE($5, company_website),
            commission_rate = $6,
            is_active = true,
-           tenant_id = COALESCE(tenant_id, $7)
+           tenant_id = COALESCE(tenant_id, $7),
+           category_id = COALESCE(category_id, $8)
          WHERE id = $1
          RETURNING *`,
-        [prev.id, name, contact_name, phone || null, company_website || null, commission_rate, req.tenantId || null]
+        [prev.id, name, contact_name, phone || null, company_website || null, commission_rate, req.tenantId || null, resolvedCategoryId]
       );
       partner = updated;
 
@@ -285,10 +311,10 @@ router.post('/', authorize('admin'), [
       );
     } else {
       const { rows: [created] } = await client.query(
-        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id, category_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
-        [name, contact_name, email, phone, company_website, commission_rate, req.tenantId || null]
+        [name, contact_name, email, phone, company_website, commission_rate, req.tenantId || null, resolvedCategoryId]
       );
       partner = created;
       await client.query(
@@ -315,14 +341,29 @@ router.post('/', authorize('admin'), [
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
     const { name, contact_name, email, phone, company_website,
-            commission_rate, is_active, iban, bic, account_holder } = req.body;
+            commission_rate, is_active, iban, bic, account_holder, category_id } = req.body;
+
+    // Validate the new category_id (if any) belongs to this tenant
+    // before we COALESCE it in.
+    let safeCategoryId = undefined;
+    if (category_id !== undefined && req.tenantId) {
+      if (category_id === null) {
+        safeCategoryId = null;
+      } else {
+        const { rows: cc } = await query(
+          'SELECT id FROM partner_categories WHERE id = $1 AND tenant_id = $2',
+          [category_id, req.tenantId]
+        );
+        if (cc.length) safeCategoryId = cc[0].id;
+      }
+    }
 
     // Tenant check
     let whereExtra = '';
     let params = [req.params.id, name, contact_name, email, phone,
-                  company_website, commission_rate, is_active, iban, bic, account_holder];
+                  company_website, commission_rate, is_active, iban, bic, account_holder, safeCategoryId];
     if (req.tenantId && !req.skipTenantFilter) {
-      whereExtra = ` AND tenant_id = $12`;
+      whereExtra = ` AND tenant_id = $13`;
       params.push(req.tenantId);
     }
 
@@ -337,7 +378,8 @@ router.put('/:id', authorize('admin'), async (req, res) => {
         is_active = COALESCE($8, is_active),
         iban = COALESCE($9, iban),
         bic = COALESCE($10, bic),
-        account_holder = COALESCE($11, account_holder)
+        account_holder = COALESCE($11, account_holder),
+        category_id = COALESCE($12, category_id)
        WHERE id = $1${whereExtra}
        RETURNING *`,
       params
