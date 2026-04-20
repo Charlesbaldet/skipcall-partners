@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const [lbLoading, setLbLoading] = useState(false);
   const [copied, setCopied] = useState(null);
   const [myTenant, setMyTenant] = useState(null);
+  const [features, setFeatures] = useState(null);
   const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
   const [billingPlan, setBillingPlan] = useState(null);
   const navigate = useNavigate();
@@ -43,6 +44,10 @@ export default function DashboardPage() {
       setKpis(k); setMyTenant(mt && (mt.tenant || mt)); setTimeline(tl.timeline); setPipeline(p.pipeline);
       setTopPartners(tp.topPartners); setLevels(l.levels);
     }).catch(console.error).finally(() => setLoading(false));
+    // Feature flags drive whether the Classement tab's "Lien" column
+    // is shown — when feature_referral_links is off we hide it entirely
+    // so the old /ref/:code scheme doesn't compete with the new one.
+    api.getTenantFeatures().then(d => setFeatures(d.features || {})).catch(() => setFeatures({}));
     // Billing plan is fetched separately so a billing outage doesn't
     // block the rest of the dashboard. Used to render the over-limit
     // banner when partnerCount > plan_partner_limit.
@@ -63,8 +68,14 @@ export default function DashboardPage() {
     if (id === 'classement') loadLeaderboard();
   };
 
+  // Unified referral-link URL: /r/{tenantSlug}?ref={code}. This is the
+  // same shape the partner-side ReferralLinkCard and the tracking
+  // script use, so admins copying from Classement share the same
+  // trackable link the partner would.
   const copyLink = (code) => {
-    navigator.clipboard.writeText(`${window.location.origin}/ref/${code}`);
+    const slug = myTenant?.slug || '';
+    const url = `${window.location.origin}/r/${encodeURIComponent(slug)}?ref=${encodeURIComponent(code)}`;
+    navigator.clipboard.writeText(url);
     setCopied(code);
     setTimeout(() => setCopied(null), 2000);
   };
@@ -139,6 +150,7 @@ export default function DashboardPage() {
         <ClassementTab
           leaderboard={leaderboard} levels={lbLevels} loading={lbLoading}
           copied={copied} copyLink={copyLink} myTenant={myTenant}
+          features={features}
         />
       )}
     </div>
@@ -323,10 +335,11 @@ function OverviewTab({ kpis, pipelineData, levelData, timelineData, revenueData,
 // ═══════════════════════════════════════
 // CLASSEMENT TAB
 // ═══════════════════════════════════════
-function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenant }) {
+function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenant, features }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
+  const showLinkColumn = !!features?.feature_referral_links;
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('dashboard.loading')}</div>;
 
   const topThree = leaderboard.slice(0, 3);
@@ -363,7 +376,17 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
             <tr style={{ background: '#f8fafc' }}>
-              {[t('dashboard.tbl_rank'), t('dashboard.tbl_partner'), t('dashboard.tbl_level'), t('dashboard.tbl_won'), `${rLabel} ${t('dashboard.tbl_generated')}`, t('dashboard.tbl_commissions'), t('dashboard.tbl_conversion'), t('dashboard.tbl_link'), t('dashboard.tbl_progression')].map((h, i) => (
+              {[
+                t('dashboard.tbl_rank'),
+                t('dashboard.tbl_partner'),
+                t('dashboard.tbl_level'),
+                t('dashboard.tbl_won'),
+                `${rLabel} ${t('dashboard.tbl_generated')}`,
+                t('dashboard.tbl_commissions'),
+                t('dashboard.tbl_conversion'),
+                ...(showLinkColumn ? [t('dashboard.tbl_link')] : []),
+                t('dashboard.tbl_progression'),
+              ].map((h, i) => (
                 <th key={i} style={{ padding: '13px 14px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr>
@@ -394,14 +417,16 @@ function ClassementTab({ leaderboard, levels, loading, copied, copyLink, myTenan
                       color: p.conversion_rate >= 50 ? '#16a34a' : p.conversion_rate >= 25 ? '#f59e0b' : '#dc2626',
                     }}>{p.conversion_rate}%</span>
                   </td>
-                  <td style={{ padding: '13px 14px' }}>
-                    {p.referral_code && (
-                      <button onClick={() => copyLink(p.referral_code)} style={{ padding: '4px 8px', borderRadius: 6, background: copied === p.referral_code ? '#f0fdf4' : '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#475569', fontWeight: 500 }}>
-                        {copied === p.referral_code ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} />}
-                        {p.referral_code}
-                      </button>
-                    )}
-                  </td>
+                  {showLinkColumn && (
+                    <td style={{ padding: '13px 14px' }}>
+                      {p.referral_code && (
+                        <button onClick={() => copyLink(p.referral_code)} style={{ padding: '4px 8px', borderRadius: 6, background: copied === p.referral_code ? '#f0fdf4' : '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#475569', fontWeight: 500 }}>
+                          {copied === p.referral_code ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} />}
+                          {p.referral_code}
+                        </button>
+                      )}
+                    </td>
+                  )}
                   <td style={{ padding: '13px 14px', fontSize: 12, minWidth: 120 }}>
                     {p.next_level ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

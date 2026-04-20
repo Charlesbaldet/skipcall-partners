@@ -19,7 +19,24 @@ export default function PublicTrackingPage() {
   useEffect(() => {
     fetch(`/api/track/${code}`)
       .then(r => r.json())
-      .then(d => { if (d.partner) setPartner(d.partner); else setError(t('publicTracking.invalid_link')); })
+      .then(d => {
+        if (d.partner) {
+          setPartner(d.partner);
+          // Unification: if the tenant has the new referral-links
+          // feature enabled, redirect to the canonical /r/:slug flow
+          // so /ref/:code old links don't diverge from the rest of
+          // the app. Falls through to the legacy in-app submission
+          // form when the feature is off.
+          const slug = d.partner.tenant_slug || d.tenant_slug;
+          const featureOn = d.feature_referral_links || d.partner.feature_referral_links;
+          if (featureOn && slug) {
+            window.location.replace(`/r/${encodeURIComponent(slug)}?ref=${encodeURIComponent(code)}`);
+            return;
+          }
+        } else {
+          setError(t('publicTracking.invalid_link'));
+        }
+      })
       .catch(() => setError(t('publicTracking.connection_error')))
       .finally(() => setLoading(false));
   }, [code]);

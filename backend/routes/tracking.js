@@ -4,14 +4,32 @@ const { query } = require('../db');
 const router = express.Router();
 
 // ─── GET /api/track/:code - Get partner info by referral code ───
+// Enriched with the tenant slug + feature_referral_links flag so the
+// old /ref/:code page can redirect to the unified /r/:slug?ref=CODE
+// flow when the feature is enabled.
 router.get('/:code', async (req, res) => {
   try {
     const { rows } = await query(
-      'SELECT id, name, contact_name, referral_code FROM partners WHERE referral_code = $1 AND is_active = true',
+      `SELECT p.id, p.name, p.contact_name, p.referral_code,
+              t.slug AS tenant_slug, t.feature_referral_links
+         FROM partners p
+         LEFT JOIN tenants t ON t.id = p.tenant_id
+        WHERE p.referral_code = $1 AND p.is_active = true`,
       [req.params.code.toUpperCase()]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Code partenaire invalide' });
-    res.json({ partner: rows[0] });
+    const r = rows[0];
+    res.json({
+      partner: {
+        id: r.id,
+        name: r.name,
+        contact_name: r.contact_name,
+        referral_code: r.referral_code,
+        tenant_slug: r.tenant_slug,
+      },
+      tenant_slug: r.tenant_slug,
+      feature_referral_links: !!r.feature_referral_links,
+    });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
