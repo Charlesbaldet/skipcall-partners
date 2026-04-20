@@ -185,7 +185,10 @@ export default function SettingsPage() {
           <button onClick={handleClose} style={{ position: 'absolute', top: 24, right: 24, width: 36, height: 36, borderRadius: 10, zIndex: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={18} color="#475569" />
           </button>
-          <div style={{ padding: '72px 32px 32px 32px' }}>
+          {/* Extra bottom padding so dropdowns near the bottom (e.g. the
+              language switcher in Profil) aren't clipped by the
+              scroll container's overflow: auto. */}
+          <div style={{ padding: '72px 32px 120px 32px' }}>
             {tab === 'profile' && <AccountTab user={user} />}
             {tab === 'team' && isSuperadmin && <SuperAdminsTab />}
             {tab === 'team' && isAdmin && <MembersTab />}
@@ -274,7 +277,7 @@ function AccountTab({ user }) {
           {t('settings.language_help') || 'Choisissez la langue d\'affichage de l\'interface.'}
         </p>
         <div style={{ maxWidth: 260 }}>
-          <LanguageSwitcher direction="down" dark={false} style={{ width: '100%' }}/>
+          <LanguageSwitcher direction="up" dark={false} style={{ width: '100%' }}/>
         </div>
       </div>
     </div>
