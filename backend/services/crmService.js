@@ -67,7 +67,125 @@ function findStageMapping(stages, status) {
 }
 
 // ─── HubSpot ─────────────────────────────────────────────────────────
-async function pushToHubSpot(referral, integration, mappings) {
+// Thin wrapper around the HubSpot API with a clean error path — every
+// non-2xx response throws with the status + truncated body so the
+// caller's catch block can log meaningful details.
+async function hs(integration, path, init = {}) {
+  const res = await fetch(`https://api.hubapi.com${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${integration.access_token}`,
+      'Content-Type': 'application/json',
+      ...(init.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    const err = new Error(`HubSpot ${res.status}: ${body.slice(0, 300)}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// Split a single "prospect_name" into first/last. Falls back to
+// (name, '') when there's only one token.
+function splitName(full) {
+  if (!full) return { firstname: '', lastname: '' };
+  const parts = String(full).trim().split(/\s+/);
+  if (parts.length === 1) return { firstname: parts[0], lastname: '' };
+  return { firstname: parts[0], lastname: parts.slice(1).join(' ') };
+}
+
+function domainFromEmail(email) {
+  const m = String(email || '').match(/@([a-z0-9.-]+\.[a-z]{2,})$/i);
+  return m ? m[1].toLowerCase() : null;
+}
+
+// Search-by-property helper. Returns the first match's id (if any).
+async function findObjectIdByProperty(integration, object, propertyName, value) {
+  if (!value) return null;
+  try {
+    const data = await hs(integration, `/crm/v3/objects/${object}/search`, {
+      method: 'POST',
+      body: JSON.stringify({
+        filterGroups: [{ filters: [{ propertyName, operator: 'EQ', value: String(value) }] }],
+        limit: 1,
+      }),
+    });
+    return data?.results?.[0]?.id || null;
+  } catch (err) {
+    // Search API 404s on misconfigured portals; treat as "not found".
+    if (err.status === 404) return null;
+    throw err;
+  }
+}
+
+// Associate two HubSpot objects via the default type. Uses v4
+// (`/crm/v4/objects/.../default/`) so HubSpot picks the primary
+// association type automatically — no need to maintain type IDs.
+async function associate(integration, fromObject, fromId, toObject, toId) {
+  if (!fromId || !toId) return;
+  try {
+    await hs(integration, `/crm/v4/objects/${fromObject}/${fromId}/associations/default/${toObject}/${toId}`, { method: 'PUT' });
+  } catch (err) {
+    // Already-associated responses and transient 409s shouldn't fail
+    // the whole sync — log and move on.
+    console.warn('[hubspot.associate]', fromObject, fromId, '→', toObject, toId, err.message);
+  }
+}
+
+// Upsert a Company on { name } (exact match). Returns the id.
+async function upsertHubSpotCompany(integration, referral) {
+  const name = referral.prospect_company;
+  if (!name) return null;
+  // Prefer the saved id, fall back to search-by-name.
+  let id = referral.hubspot_company_id || await findObjectIdByProperty(integration, 'companies', 'name', name);
+  const properties = {
+    name,
+    ...(domainFromEmail(referral.prospect_email) ? { domain: domainFromEmail(referral.prospect_email) } : {}),
+  };
+  if (id) {
+    try { await hs(integration, `/crm/v3/objects/companies/${id}`, { method: 'PATCH', body: JSON.stringify({ properties }) }); }
+    catch { /* benign — a stale id is better than a duplicate row */ }
+    return id;
+  }
+  const created = await hs(integration, '/crm/v3/objects/companies', {
+    method: 'POST',
+    body: JSON.stringify({ properties }),
+  });
+  return created?.id || null;
+}
+
+// Upsert a Contact on { email } (HubSpot's natural unique key).
+async function upsertHubSpotContact(integration, referral) {
+  const email = referral.prospect_email;
+  if (!email) return null;
+  const { firstname, lastname } = splitName(referral.prospect_name);
+  const properties = {
+    ...(firstname ? { firstname } : {}),
+    ...(lastname ? { lastname } : {}),
+    email,
+    ...(referral.prospect_phone ? { phone: referral.prospect_phone } : {}),
+    ...(referral.prospect_role ? { jobtitle: referral.prospect_role } : {}),
+  };
+  let id = referral.hubspot_contact_id || await findObjectIdByProperty(integration, 'contacts', 'email', email);
+  if (id) {
+    try { await hs(integration, `/crm/v3/objects/contacts/${id}`, { method: 'PATCH', body: JSON.stringify({ properties }) }); }
+    catch { /* leave id, skip update */ }
+    return id;
+  }
+  const created = await hs(integration, '/crm/v3/objects/contacts', {
+    method: 'POST',
+    body: JSON.stringify({ properties }),
+  });
+  return created?.id || null;
+}
+
+// Create or update the Deal and return its id. Kept separate so the
+// top-level pushToHubSpot reads as an ordered script: company →
+// contact → deal → associate.
+async function upsertHubSpotDeal(integration, referral, mappings) {
   const properties = buildPayload(referral, mappings.fields);
   const stage = findStageMapping(mappings.stages, referral.status);
   if (stage) {
@@ -75,30 +193,40 @@ async function pushToHubSpot(referral, integration, mappings) {
     if (stage.crm_pipeline_id) properties.pipeline = stage.crm_pipeline_id;
   }
   if (!properties.dealname) {
-    // dealname is required by HubSpot — synthesize one if no mapping
-    // wrote it.
     properties.dealname = referral.prospect_company || referral.prospect_name || 'RefBoost referral';
   }
 
-  const url = referral.crm_deal_id
-    ? `https://api.hubapi.com/crm/v3/objects/deals/${referral.crm_deal_id}`
-    : 'https://api.hubapi.com/crm/v3/objects/deals';
+  const url = referral.crm_deal_id ? `/crm/v3/objects/deals/${referral.crm_deal_id}` : '/crm/v3/objects/deals';
   const method = referral.crm_deal_id ? 'PATCH' : 'POST';
+  const data = await hs(integration, url, { method, body: JSON.stringify({ properties }) });
+  return data?.id || referral.crm_deal_id || null;
+}
 
-  const resp = await fetch(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${integration.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ properties }),
-  });
-  if (!resp.ok) {
-    const body = await resp.text();
-    throw new Error(`HubSpot ${resp.status}: ${body.slice(0, 300)}`);
-  }
-  const data = await resp.json();
-  return data.id; // dealId
+async function pushToHubSpot(referral, integration, mappings) {
+  // Strict order: Company → Contact → Deal → associations. If any step
+  // fails we still return whatever we've built so the caller can
+  // persist the ids we have and log the partial state.
+  const companyId = await upsertHubSpotCompany(integration, referral).catch(e => { console.warn('[hubspot.company]', e.message); return referral.hubspot_company_id || null; });
+  const contactId = await upsertHubSpotContact(integration, referral).catch(e => { console.warn('[hubspot.contact]', e.message); return referral.hubspot_contact_id || null; });
+  const dealId    = await upsertHubSpotDeal(integration, referral, mappings);
+
+  // Associate contact ↔ deal, contact ↔ company, deal ↔ company.
+  // All fire-and-forget at the individual call level (they self-log on
+  // failure) — we never want a single association hiccup to poison the
+  // whole sync.
+  await Promise.all([
+    associate(integration, 'contacts', contactId, 'deals', dealId),
+    associate(integration, 'contacts', contactId, 'companies', companyId),
+    associate(integration, 'deals', dealId, 'companies', companyId),
+  ]);
+
+  // Persist the sibling ids so the next push doesn't re-search.
+  await query(
+    'UPDATE referrals SET hubspot_contact_id = COALESCE($1, hubspot_contact_id), hubspot_company_id = COALESCE($2, hubspot_company_id) WHERE id = $3',
+    [contactId, companyId, referral.id]
+  );
+
+  return dealId;
 }
 
 // ─── Salesforce ──────────────────────────────────────────────────────
@@ -198,8 +326,15 @@ async function pushReferralToCRM(referral, tenantId) {
     } else {
       await query('UPDATE referrals SET crm_synced_at = NOW() WHERE id = $1', [referral.id]);
     }
-    await logSync(integration.id, referral.id, 'push', 'success', { provider: integration.provider, dealId });
-    return { ok: true, dealId };
+    // Re-read the sibling ids so the sync log reflects the full set
+    // of HubSpot objects touched by this push (contact, company, deal).
+    let hsIds = {};
+    if (integration.provider === 'hubspot') {
+      const { rows } = await query('SELECT hubspot_contact_id, hubspot_company_id FROM referrals WHERE id = $1', [referral.id]);
+      hsIds = rows[0] || {};
+    }
+    await logSync(integration.id, referral.id, 'push', 'success', { provider: integration.provider, dealId, ...hsIds });
+    return { ok: true, dealId, ...hsIds };
   } catch (err) {
     console.error('[crm.push] error:', err.message);
     // Best-effort log even on failure — needs the integration id.
@@ -238,12 +373,54 @@ async function pullStatusFromCRM(payload, integration) {
       [String(dealId), integration.tenant_id]
     );
     if (!refs[0]) return { skipped: true, reason: 'referral_not_found' };
+    const referralId = refs[0].id;
+
+    // Bidirectional enrichment — when HubSpot owns a Contact or a
+    // Company linked to this Deal, pull their current
+    // email/phone/company values and mirror them on the referral row.
+    // Falls through silently when the provider isn't HubSpot or when
+    // the sibling ids haven't been persisted yet.
+    const enrich = {};
+    if (integration.provider === 'hubspot') {
+      try {
+        const { rows: [r] } = await query(
+          'SELECT hubspot_contact_id, hubspot_company_id FROM referrals WHERE id = $1',
+          [referralId]
+        );
+        if (r?.hubspot_contact_id) {
+          const c = await hs(integration, `/crm/v3/objects/contacts/${r.hubspot_contact_id}?properties=email,phone,firstname,lastname,jobtitle`).catch(() => null);
+          if (c?.properties) {
+            if (c.properties.email) enrich.prospect_email = c.properties.email;
+            if (c.properties.phone) enrich.prospect_phone = c.properties.phone;
+            const fn = (c.properties.firstname || '').trim();
+            const ln = (c.properties.lastname  || '').trim();
+            if (fn || ln) enrich.prospect_name = [fn, ln].filter(Boolean).join(' ');
+            if (c.properties.jobtitle) enrich.prospect_role = c.properties.jobtitle;
+          }
+        }
+        if (r?.hubspot_company_id) {
+          const co = await hs(integration, `/crm/v3/objects/companies/${r.hubspot_company_id}?properties=name`).catch(() => null);
+          if (co?.properties?.name) enrich.prospect_company = co.properties.name;
+        }
+      } catch (e) {
+        console.warn('[crm.pull.enrich]', e.message);
+      }
+    }
+
+    const enrichKeys = Object.keys(enrich);
+    const sets = ['status = $1', 'crm_synced_at = NOW()', 'updated_at = NOW()'];
+    const params = [refboostStatus];
+    enrichKeys.forEach((k, i) => {
+      sets.push(`${k} = $${i + 2}`);
+      params.push(enrich[k]);
+    });
+    params.push(referralId);
     await query(
-      'UPDATE referrals SET status = $1, crm_synced_at = NOW(), updated_at = NOW() WHERE id = $2',
-      [refboostStatus, refs[0].id]
+      `UPDATE referrals SET ${sets.join(', ')} WHERE id = $${params.length}`,
+      params
     );
-    await logSync(integration.id, refs[0].id, 'pull', 'success', { incomingStage, refboostStatus });
-    return { ok: true, referralId: refs[0].id, status: refboostStatus };
+    await logSync(integration.id, referralId, 'pull', 'success', { incomingStage, refboostStatus, enriched: enrichKeys });
+    return { ok: true, referralId, status: refboostStatus };
   } catch (err) {
     console.error('[crm.pull] error:', err.message);
     await logSync(integration.id, null, 'pull', 'error', { message: err.message });
