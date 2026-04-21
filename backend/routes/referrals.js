@@ -588,9 +588,13 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
               link: '/partner/referrals',
               tenantId: req.tenantId,
             }).catch(() => {});
-            // Email (separate preference bucket).
-            notify.shouldNotify(req.tenantId, 'referral_update').then(p => {
-              if (!p.email) return;
+            // Email — tenant-level pref AND partner-level
+            // `email_referral_status` must both be true.
+            Promise.all([
+              notify.shouldNotify(req.tenantId, 'referral_update'),
+              notify.shouldNotifyPartner(current.partner_id, 'email_referral_status'),
+            ]).then(([tenantPref, partnerPref]) => {
+              if (!tenantPref.email || !partnerPref.email) return;
               const tpl = referralStatusChangedTpl(pu.full_name, current.prospect_name, newLabel);
               sendEmail(pu.email, tpl.subject, tpl.html).catch(() => {});
             });
@@ -648,8 +652,11 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
                 link: '/partner/payments',
                 tenantId: req.tenantId,
               }).catch(() => {});
-              notify.shouldNotify(req.tenantId, 'commission').then(p => {
-                if (!p.email) return;
+              Promise.all([
+                notify.shouldNotify(req.tenantId, 'commission'),
+                notify.shouldNotifyPartner(current.partner_id, 'email_referral_won'),
+              ]).then(([tenantPref, partnerPref]) => {
+                if (!tenantPref.email || !partnerPref.email) return;
                 const tpl = newCommissionAvailableTpl(pu.full_name, amount, current.prospect_name);
                 sendEmail(pu.email, tpl.subject, tpl.html).catch(() => {});
               });

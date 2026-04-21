@@ -269,12 +269,15 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
             link: '/partner/payments',
             tenantId: existing.tenant_id,
           }).catch(() => {});
-          const tpl = require('../utils/emailTemplates').commissionApproved({
-            partnerName: u.full_name,
-            prospectName: existing.prospect_name,
-            amount: existing.amount,
-          });
-          sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
+          const p = await notify.shouldNotifyPartner(existing.partner_id, 'email_commission_update');
+          if (p.email) {
+            const tpl = require('../utils/emailTemplates').commissionApproved({
+              partnerName: u.full_name,
+              prospectName: existing.prospect_name,
+              amount: existing.amount,
+            });
+            sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
+          }
         }
       } catch {}
     })();
@@ -310,12 +313,15 @@ router.post('/:id/reject', authorize('admin'), async (req, res) => {
             link: '/partner/payments',
             tenantId: existing.tenant_id,
           }).catch(() => {});
-          const tpl = require('../utils/emailTemplates').commissionRejected({
-            partnerName: u.full_name,
-            prospectName: existing.prospect_name,
-            reason,
-          });
-          sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
+          const p = await notify.shouldNotifyPartner(existing.partner_id, 'email_commission_update');
+          if (p.email) {
+            const tpl = require('../utils/emailTemplates').commissionRejected({
+              partnerName: u.full_name,
+              prospectName: existing.prospect_name,
+              reason,
+            });
+            sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
+          }
         }
       } catch {}
     })();

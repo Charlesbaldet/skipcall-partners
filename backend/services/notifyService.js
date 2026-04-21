@@ -65,6 +65,33 @@ async function shouldNotify(tenantId, eventType) {
   return { in_app: !!p.in_app, email: !!p.email };
 }
 
+// Partner-scoped preference check. Partners own one JSONB row
+// (partners.notification_preferences) with six email toggles:
+//   email_referral_status, email_referral_won, email_commission_update,
+//   email_new_message, email_news, email_tier_change
+// In-app delivery is always allowed (the spec locks toggles to email
+// only). Returns { in_app: true, email: bool }.
+async function shouldNotifyPartner(partnerId, prefKey) {
+  if (!partnerId) return { in_app: true, email: true };
+  try {
+    const { rows } = await query(
+      'SELECT notification_preferences FROM partners WHERE id = $1 LIMIT 1',
+      [partnerId]
+    );
+    const prefs = rows[0]?.notification_preferences || {};
+    // Default-ON for every key except email_news which defaults OFF
+    // (matches the column's JSONB default so pre-migration rows also
+    // behave predictably).
+    const defaultOn = prefKey !== 'email_news';
+    const value = prefs[prefKey];
+    const email = typeof value === 'boolean' ? value : defaultOn;
+    return { in_app: true, email };
+  } catch (err) {
+    console.error('[notify.shouldNotifyPartner]', err.message);
+    return { in_app: true, email: true };
+  }
+}
+
 // Insert one row if the event is allowed in-app for the tenant.
 async function createNotification(userId, eventType, meta = {}, opts = {}) {
   if (!userId) return;
@@ -169,6 +196,7 @@ async function partnerEmails(tenantId) {
 module.exports = {
   KNOWN_EVENTS,
   shouldNotify,
+  shouldNotifyPartner,
   invalidatePrefsCache,
   createNotification,
   fanoutPartnerNotification,

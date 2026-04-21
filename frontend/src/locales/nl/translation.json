@@ -2178,5 +2178,16 @@
     "field_mapping": "Field mapping",
     "refboost_field": "RefBoost field",
     "notion_property": "Notion property"
+  },
+  "partner_notifications": {
+    "tab": "Meldingen",
+    "title": "Meldingen",
+    "subtitle": "Kies welke e-mails je wilt ontvangen. In-app-meldingen blijven altijd actief.",
+    "referral_status": "Nieuwe status van mijn referral",
+    "referral_won": "Referral gewonnen / commissie aangemaakt",
+    "commission_update": "Commissie goedgekeurd / betaald",
+    "new_message": "Nieuw bericht",
+    "news": "Nieuws gepubliceerd",
+    "tier_change": "Niveauwijziging"
   }
 }

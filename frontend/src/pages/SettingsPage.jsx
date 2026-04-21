@@ -109,6 +109,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
+  const isPartner = user?.role === 'partner';
   const isSuperadmin = user?.role === 'superadmin';
   const [searchParams] = useSearchParams();
   // Map legacy tab IDs (deep-links, bookmarks, old emails) to the new
@@ -143,6 +144,10 @@ export default function SettingsPage() {
       { section: t('layout.section.preferences') },
       { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
+    ] : []),
+    ...(isPartner ? [
+      { section: t('layout.section.preferences') },
+      { id: 'partner-notifications', icon: Bell, label: t('partner_notifications.tab', 'Notifications') },
     ] : []),
   ];
 
@@ -193,6 +198,7 @@ export default function SettingsPage() {
             {tab === 'team' && isSuperadmin && <SuperAdminsTab />}
             {tab === 'team' && isAdmin && <MembersTab />}
             {tab === 'notifications' && isAdmin && <NotificationsTab />}
+            {tab === 'partner-notifications' && isPartner && <PartnerNotificationsTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
             {tab === 'pipeline' && isAdmin && (
@@ -2181,6 +2187,85 @@ function NotionMappingModal({ onClose }) {
             {saving ? '…' : (t('common.save') || 'Enregistrer')}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ Partner notification preferences ═══
+// Six email toggles; in-app delivery is always on per product spec
+// so the UI only exposes the email column. Writes straight to
+// partners.notification_preferences.
+function PartnerNotificationsTab() {
+  const { t } = useTranslation();
+  const KEYS = [
+    { key: 'email_referral_status',   label: t('partner_notifications.referral_status',   'Nouveau statut de mon referral') },
+    { key: 'email_referral_won',      label: t('partner_notifications.referral_won',      'Referral gagné / commission déclenchée') },
+    { key: 'email_commission_update', label: t('partner_notifications.commission_update', 'Commission approuvée / payée') },
+    { key: 'email_new_message',       label: t('partner_notifications.new_message',       'Nouveau message') },
+    { key: 'email_news',              label: t('partner_notifications.news',              'Actualité publiée') },
+    { key: 'email_tier_change',       label: t('partner_notifications.tier_change',       'Changement de niveau') },
+  ];
+  const [prefs, setPrefs] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState(0);
+
+  useEffect(() => {
+    api.getPartnerNotificationPreferences()
+      .then(d => setPrefs(d.preferences || {}))
+      .catch(() => setPrefs({}));
+  }, []);
+
+  const toggle = (k) => setPrefs(p => ({ ...p, [k]: !p[k] }));
+  const save = async () => {
+    setSaving(true);
+    try { await api.updatePartnerNotificationPreferences(prefs); setSavedAt(Date.now()); }
+    catch (err) { alert(err.message); }
+    setSaving(false);
+  };
+
+  if (!prefs) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+        {t('partner_notifications.title', 'Notifications')}
+      </h2>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+        {t('partner_notifications.subtitle', 'Choisissez les emails que vous souhaitez recevoir. Les notifications dans l\'application restent toujours actives.')}
+      </p>
+
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <div>{t('notifications.event', 'Événement')}</div>
+          <div style={{ textAlign: 'center' }}>Email</div>
+        </div>
+        {KEYS.map(row => (
+          <div key={row.key} style={{ display: 'grid', gridTemplateColumns: '1fr 90px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
+            <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>{row.label}</div>
+            <div style={{ textAlign: 'center' }}>
+              <button
+                onClick={() => toggle(row.key)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: prefs[row.key] ? '#059669' : '#cbd5e1' }}
+              >
+                {prefs[row.key] ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
+        <button onClick={save} disabled={saving} style={{
+          padding: '10px 20px', borderRadius: 10, border: 'none',
+          background: 'var(--rb-primary, #059669)', color: '#fff',
+          fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1,
+        }}>{saving ? t('common.saving', 'Enregistrement…') : t('common.save', 'Enregistrer')}</button>
+        {savedAt && Date.now() - savedAt < 3000 && (
+          <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
+          </span>
+        )}
       </div>
     </div>
   );

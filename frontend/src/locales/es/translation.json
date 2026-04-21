@@ -2178,5 +2178,16 @@
     "field_mapping": "Field mapping",
     "refboost_field": "RefBoost field",
     "notion_property": "Notion property"
+  },
+  "partner_notifications": {
+    "tab": "Notificaciones",
+    "title": "Notificaciones",
+    "subtitle": "Elige qué emails quieres recibir. Las notificaciones en la app siempre están activas.",
+    "referral_status": "Nuevo estado de mi referido",
+    "referral_won": "Referido ganado / comisión creada",
+    "commission_update": "Comisión aprobada / pagada",
+    "new_message": "Nuevo mensaje",
+    "news": "Noticia publicada",
+    "tier_change": "Cambio de nivel"
   }
 }

@@ -2,6 +2,75 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
+const notify = require('../services/notifyService');
+const { sendEmail } = require('../services/emailService');
+const { renderEmail } = require('../utils/emailTemplates');
+
+const FRONTEND = () => (process.env.FRONTEND_URL || 'https://refboost.io').replace(/\/$/, '');
+
+// Fire-and-forget: for every OTHER participant of the conversation,
+// write an in-app notification and (if their prefs allow) send the
+// "new message" email. Never blocks the POST response.
+async function notifyNewMessage(conversationId, senderId, tenantId, content) {
+  try {
+    const { rows: [sender] } = await query(
+      'SELECT id, full_name, role FROM users WHERE id = $1',
+      [senderId]
+    );
+    const senderName = sender?.full_name || 'Un utilisateur';
+    const { rows: recipients } = await query(
+      `SELECT u.id, u.email, u.full_name, u.role, u.partner_id
+         FROM conversation_participants cp
+         JOIN users u ON u.id = cp.user_id
+        WHERE cp.conversation_id = $1
+          AND cp.user_id <> $2
+          AND u.is_active = TRUE`,
+      [conversationId, senderId]
+    );
+    const preview = String(content || '').slice(0, 180);
+    const link = '/messaging?c=' + conversationId;
+
+    for (const r of recipients) {
+      // In-app — always (partners + admins). Uses the generic event key.
+      notify.createNotification(r.id, 'new_message', {
+        title: `Nouveau message de ${senderName}`,
+        message: preview,
+        link,
+        tenantId,
+      }, { skipPreferenceCheck: true }).catch(() => {});
+
+      // Email — gated by partner.notification_preferences.email_new_message
+      // for partners, tenant prefs for admins. If neither check says
+      // yes, skip.
+      (async () => {
+        try {
+          let emailOn = true;
+          if (r.role === 'partner' && r.partner_id) {
+            const p = await notify.shouldNotifyPartner(r.partner_id, 'email_new_message');
+            emailOn = p.email;
+          }
+          if (!emailOn || !r.email) return;
+          const tpl = renderEmail({
+            subject: `Nouveau message de ${senderName}`,
+            heading: `Nouveau message de ${senderName}`,
+            bodyHtml: `
+              <p>Bonjour ${r.full_name || ''},</p>
+              <p>${senderName} vous a envoyé un nouveau message&nbsp;:</p>
+              <div class="highlight"><em>${preview.replace(/[<>]/g, '')}</em></div>
+              <p>Répondez directement depuis RefBoost.</p>`,
+            ctaUrl: FRONTEND() + link,
+            ctaLabel: 'Voir la conversation',
+          });
+          sendEmail(r.email, tpl.subject, tpl.html).catch(() => {});
+        } catch (err) {
+          console.error('[messages.notifyEmail]', err.message);
+        }
+      })();
+    }
+  } catch (err) {
+    console.error('[messages.notifyNewMessage]', err.message);
+  }
+}
 
 const router = express.Router();
 router.use(authenticate);
@@ -98,6 +167,8 @@ router.post('/conversations', [
 
     await client.query('COMMIT');
     res.status(201).json({ conversation: conv });
+    // Fire-and-forget first-message notification.
+    notifyNewMessage(conv.id, req.user.id, req.tenantId, message);
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Create conversation error:', err);
@@ -199,9 +270,11 @@ router.post('/conversations/:id/messages', [
       `SELECT full_name, role FROM users WHERE id = $1`, [req.user.id]
     );
 
-    res.status(201).json({ 
-      message: { ...msg, sender_name: sender.full_name, sender_role: sender.role } 
+    res.status(201).json({
+      message: { ...msg, sender_name: sender.full_name, sender_role: sender.role }
     });
+    // Fire-and-forget — notify every other participant.
+    notifyNewMessage(req.params.id, req.user.id, req.tenantId, req.body.content);
   } catch (err) {
     console.error('Send message error:', err);
     res.status(500).json({ error: 'Erreur serveur' });

@@ -268,6 +268,8 @@ class ApiClient {
 
   // Notification preferences (admin)
   getNotificationPreferences() { return this.request('/settings/notification-preferences'); }
+  getPartnerNotificationPreferences() { return this.request('/partner/notification-preferences'); }
+  updatePartnerNotificationPreferences(preferences) { return this.request('/partner/notification-preferences', { method: 'PUT', body: JSON.stringify({ preferences }) }); }
   updateNotificationPreferences(data) { return this.request('/settings/notification-preferences', { method: 'PUT', body: JSON.stringify(data) }); }
   previewEmailTemplate(key) { return this.request('/settings/notification-preferences/preview/' + encodeURIComponent(key)); }
 

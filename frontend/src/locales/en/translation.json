@@ -2178,5 +2178,16 @@
     "field_mapping": "Field mapping",
     "refboost_field": "RefBoost field",
     "notion_property": "Notion property"
+  },
+  "partner_notifications": {
+    "tab": "Notifications",
+    "title": "Notifications",
+    "subtitle": "Pick which emails you want to receive. In-app notifications always stay active.",
+    "referral_status": "My referral status changed",
+    "referral_won": "Referral won / commission created",
+    "commission_update": "Commission approved / paid",
+    "new_message": "New message",
+    "news": "News published",
+    "tier_change": "Tier change"
   }
 }
