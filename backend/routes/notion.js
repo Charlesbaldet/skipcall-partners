@@ -25,7 +25,20 @@ router.post('/connect', async (req, res) => {
       companies:    dbCompanies ? dbCompanies.trim() : null,
     });
     if (!databases.transactions) {
-      return res.status(400).json({ error: 'Base Transactions invalide', detail: errors.transactions });
+      const e = errors.transactions || {};
+      // A 401 / "unauthorized" from Notion means the integration
+      // token is wrong — labelling that "Base invalide" was sending
+      // users on a wild goose chase. 404 / object_not_found remains
+      // a database-ID problem (or the DB not being shared with the
+      // integration).
+      const isTokenError = e.status === 401 || e.code === 'unauthorized'
+        || /token/i.test(e.message || '') || /unauthoriz/i.test(e.message || '');
+      return res.status(400).json({
+        error: isTokenError ? 'Token Notion invalide' : 'Base Transactions invalide',
+        detail: e.message || null,
+        status: e.status || null,
+        code: e.code || null,
+      });
     }
 
     await query(

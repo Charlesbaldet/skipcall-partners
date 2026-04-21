@@ -105,7 +105,14 @@ async function validateConnection(token, { transactions, contacts, companies }) 
       const db = await fetchDatabase(token, id);
       out[key] = { id: db.id, name: db.name, properties: db.properties };
     } catch (err) {
-      errors[key] = err.message;
+      // Preserve the HTTP status + Notion error code so the caller
+      // can tell "invalid token" (401 / unauthorized) apart from
+      // "invalid database id" (404 / object_not_found).
+      errors[key] = {
+        message: err.message,
+        status: err.status || null,
+        code: err.body?.code || null,
+      };
     }
   }
   return { databases: out, errors };
