@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
@@ -21,11 +21,20 @@ export default function PartnerSubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [tenantName, setTenantName] = useState('');
   const [form, setForm] = useState({
     prospect_name: '', prospect_email: '', prospect_phone: '',
     prospect_company: '', prospect_role: '', recommendation_level: 'warm', notes: '',
     lead_handling: 'partner_managed',
   });
+
+  // Resolve the program name from the partner's JWT-scoped tenant so
+  // we can stop hardcoding "Skipcall" in the subtitle + confirmation.
+  useEffect(() => {
+    api.getMyTenant()
+      .then(d => { const tt = d && (d.tenant || d); if (tt?.name) setTenantName(tt.name); })
+      .catch(() => {});
+  }, []);
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
@@ -55,7 +64,7 @@ export default function PartnerSubmitPage() {
           </div>
           <h2 style={{ fontSize: 28, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>Recommandation envoyée !</h2>
           <p style={{ color: '#64748b', fontSize: 16, lineHeight: 1.6, marginBottom: 32 }}>
-            Merci pour votre recommandation. L'équipe Skipcall va prendre contact avec le prospect rapidement. Vous serez notifié des mises à jour par email.
+            Merci pour votre recommandation. {tenantName ? `L'équipe ${tenantName}` : "L'équipe"} va prendre contact avec le prospect rapidement. Vous serez notifié des mises à jour par email.
           </p>
           <button onClick={() => { setForm({ prospect_name: '', prospect_email: '', prospect_phone: '', prospect_company: '', prospect_role: '', recommendation_level: 'warm', notes: '' }); setStep(1); setSubmitted(false); }}
             style={{ padding: '12px 28px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
@@ -70,7 +79,9 @@ export default function PartnerSubmitPage() {
   return (
     <div className="fade-in" style={{ maxWidth: 640, margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Nouvelle recommandation</h1>
-      <p style={{ color: '#64748b', marginBottom: 32 }}>Recommandez un prospect à l'équipe Skipcall</p>
+      <p style={{ color: '#64748b', marginBottom: 32 }}>
+        {tenantName ? `Recommandez un prospect à l'équipe ${tenantName}` : 'Recommandez un prospect'}
+      </p>
 
       {/* Progress */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 36 }}>

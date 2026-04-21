@@ -144,7 +144,11 @@ router.post('/', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      // Surface the failing fields so the partner sees WHY the form
+      // was rejected instead of a generic 400.
+      const details = errors.array().map(e => `${e.path}: ${e.msg}`);
+      console.warn('[referrals.create] validation 400:', details, '| body keys:', Object.keys(req.body || {}));
+      return res.status(400).json({ error: 'Champs invalides: ' + details.join(', '), errors: errors.array() });
     }
 
     const {
@@ -219,7 +223,10 @@ router.post('/', [
       }
     }
     if (!partnerId) {
-      return res.status(400).json({ error: 'Partner ID requis' });
+      console.warn('[referrals.create] partner_id could not be resolved | user:', {
+        id: req.user?.id, role: req.user?.role, partnerId: req.user?.partnerId, tenantId: req.user?.tenantId,
+      }, '| body.partner_id:', req.body?.partner_id, '| req.tenantId:', req.tenantId);
+      return res.status(400).json({ error: 'Partner ID requis — votre compte n\'est lié à aucun partenaire actif dans cet espace.' });
     }
 
     // Default new referrals to the first pipeline stage (position 0)
