@@ -16,6 +16,18 @@ router.get('/:slug', async (req, res) => {
     const slug = String(req.params.slug || '').toLowerCase();
     const ref = req.query.ref ? String(req.query.ref).toUpperCase() : null;
 
+    // CRITICAL: /r/:slug without ?ref= is the PARTNER REGISTRATION
+    // FORM (served by the React SPA). Only the tracking-link flow
+    // (with ?ref=) belongs on the backend. Vercel's rewrite already
+    // gates this on the ref query param, but belt-and-braces: if we
+    // somehow got here without a ref, bounce to the frontend so the
+    // apply form renders instead of our 302 redirect to the tenant
+    // website.
+    if (!ref) {
+      const frontend = (process.env.FRONTEND_URL || 'https://refboost.io').replace(/\/$/, '');
+      return res.redirect(302, `${frontend}/r/${encodeURIComponent(slug)}`);
+    }
+
     const { rows: [tenant] } = await query(
       `SELECT id, name, website FROM tenants WHERE slug = $1 LIMIT 1`,
       [slug]
