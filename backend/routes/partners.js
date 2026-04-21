@@ -241,11 +241,18 @@ router.post('/', authorize('admin'), [
 
     // If an archived partner with this email already exists, reactivate
     // them instead of returning 409 — deactivating never removed the
-    // row (UNIQUE index on partners.email still holds it), so a fresh
-    // INSERT would collide.
+    // row within the same tenant (composite UNIQUE (email, tenant_id)
+    // still holds it), so a fresh INSERT would collide. Scope the
+    // lookup to the CURRENT tenant — the same address can live on a
+    // partner row of a DIFFERENT tenant (B2B: one advisor can be a
+    // partner of Skipcall AND Xpanzee AND GETALEAD).
+    const dupParams = req.tenantId ? [email, req.tenantId] : [email];
+    const dupWhere = req.tenantId
+      ? 'LOWER(email) = LOWER($1) AND tenant_id = $2'
+      : 'LOWER(email) = LOWER($1)';
     const { rows: existing } = await client.query(
-      'SELECT id, is_active, tenant_id FROM partners WHERE LOWER(email) = LOWER($1) LIMIT 1',
-      [email]
+      `SELECT id, is_active, tenant_id FROM partners WHERE ${dupWhere} LIMIT 1`,
+      dupParams
     );
 
     let partner;
@@ -253,12 +260,8 @@ router.post('/', authorize('admin'), [
     const reactivating = existing.length > 0 && existing[0].is_active === false;
 
     if (existing.length && existing[0].is_active) {
-      // Genuine duplicate — real active partner with this email.
-      await client.query('ROLLBACK');
-      return res.status(409).json({ error: 'Un partenaire avec cet email existe déjà' });
-    }
-    if (existing.length && existing[0].tenant_id && req.tenantId && existing[0].tenant_id !== req.tenantId) {
-      // Email is tied to another tenant — don't poach.
+      // Genuine duplicate — real active partner with this email in
+      // the CURRENT tenant.
       await client.query('ROLLBACK');
       return res.status(409).json({ error: 'Un partenaire avec cet email existe déjà' });
     }
