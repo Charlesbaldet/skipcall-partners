@@ -35,12 +35,7 @@ export default function PublicApplyPage() {
     if (!slug) return;
     fetch('/api/partner-categories/public?tenant=' + encodeURIComponent(slug))
       .then(r => r.ok ? r.json() : { categories: [] })
-      .then(d => {
-        const list = d.categories || [];
-        setCategories(list);
-        const def = list.find(c => c.is_default) || list[0];
-        if (def) setForm(f => ({ ...f, category_id: f.category_id || def.id }));
-      })
+      .then(d => setCategories(d.categories || []))
       .catch(() => {});
   }, [slug]);
 
@@ -149,30 +144,41 @@ export default function PublicApplyPage() {
                   <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                     {t('partner_category.select_type')} *
                   </label>
-                  <select
-                    required
-                    value={form.category_id}
-                    onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
-                    style={{
-                      width: '100%', padding: '12px 16px', borderRadius: 12,
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      background: 'rgba(255,255,255,0.06)',
-                      fontSize: 15, color: '#fff', boxSizing: 'border-box',
-                      appearance: 'none', fontFamily: 'inherit', cursor: 'pointer',
-                    }}
-                  >
-                    <option value="" disabled style={{ background: '#1e293b' }}>
-                      {t('partner_category.select_placeholder')}
-                    </option>
-                    {categories.map(c => {
-                      const label = (c.slug === 'apporteur' || c.slug === 'conseil' || c.slug === 'integrateur')
-                        ? t('partner_category.' + c.slug, c.name)
-                        : c.name;
-                      return (
-                        <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{label}</option>
-                      );
-                    })}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      required
+                      value={form.category_id}
+                      onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
+                      style={{
+                        width: '100%', padding: '12px 44px 12px 16px', borderRadius: 12,
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        background: 'rgba(255,255,255,0.06)',
+                        fontSize: 15, color: '#fff', boxSizing: 'border-box',
+                        appearance: 'none', fontFamily: 'inherit', cursor: 'pointer',
+                      }}
+                    >
+                      <option value="" disabled style={{ background: '#1e293b' }}>
+                        {t('partner_category.select_placeholder')}
+                      </option>
+                      {categories.map(c => {
+                        // Translate any slug that has a matching key;
+                        // fall back to the raw DB name otherwise. Works
+                        // for the 3 defaults AND any custom slug the
+                        // admin ships a translation for (e.g. `client`).
+                        const label = c.slug ? t('partner_category.' + c.slug, { defaultValue: c.name || '' }) : (c.name || '');
+                        return (
+                          <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{label}</option>
+                        );
+                      })}
+                    </select>
+                    {/* Visible down-arrow — appearance:none strips the
+                        native one, so add it manually. Pointer-events
+                        none so it doesn't steal clicks from the select. */}
+                    <span aria-hidden="true" style={{
+                      position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+                      color: '#94a3b8', fontSize: 12, pointerEvents: 'none',
+                    }}>▼</span>
+                  </div>
                 </div>
               )}
               <button disabled={!canSubmit} onClick={() => setStep(2)} style={{

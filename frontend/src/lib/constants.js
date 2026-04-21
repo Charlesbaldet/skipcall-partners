@@ -23,15 +23,16 @@ export const fmt = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', cu
 export const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 export const fmtDateTime = (d) => d ? new Date(d).toLocaleString('fr-FR') : '—';
 
-// Return the display name for a partner category. Default slugs
-// (apporteur / conseil / integrateur) resolve through i18n so the
-// label follows the user's language; custom categories created by
-// admins fall through to the raw name saved in the database.
+// Return the display name for a partner category. Any slug that has
+// a matching `partner_category.<slug>` i18n key is translated — this
+// covers the three defaults (apporteur / conseil / integrateur) plus
+// any custom slug an admin has shipped a translation for (e.g.
+// `client` via `partner_category.client`). Unknown slugs fall through
+// to the raw name saved in the database.
 export const categoryName = (cat) => {
   if (!cat) return '';
   const slug = cat.slug || cat.category_slug;
-  if (slug === 'apporteur' || slug === 'conseil' || slug === 'integrateur') {
-    return i18n.t('partner_category.' + slug, cat.name || cat.category_name || '');
-  }
-  return cat.name || cat.category_name || '';
+  const rawName = cat.name || cat.category_name || '';
+  if (!slug) return rawName;
+  return i18n.t('partner_category.' + slug, { defaultValue: rawName });
 };

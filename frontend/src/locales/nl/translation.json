@@ -2152,7 +2152,8 @@
     "filter": "Alle categorieën",
     "stats": "Partners per categorie",
     "select_type": "Type partnerschap",
-    "select_placeholder": "Selecteer je type..."
+    "select_placeholder": "Selecteer je type...",
+    "client": "Klant"
   },
   "notion": {
     "title": "Notion",

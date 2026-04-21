@@ -2152,7 +2152,8 @@
     "filter": "Todas las categorías",
     "stats": "Partners por categoría",
     "select_type": "Tipo de asociación",
-    "select_placeholder": "Selecciona tu tipo..."
+    "select_placeholder": "Selecciona tu tipo...",
+    "client": "Cliente"
   },
   "notion": {
     "title": "Notion",
