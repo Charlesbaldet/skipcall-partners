@@ -2150,7 +2150,9 @@
     "select": "Wähle deine Partnerschaftsart",
     "required": "Bitte wähle eine Partnerschaftsart",
     "filter": "Alle Kategorien",
-    "stats": "Partner nach Kategorie"
+    "stats": "Partner nach Kategorie",
+    "select_type": "Partnerschaftstyp",
+    "select_placeholder": "Wähle deinen Typ..."
   },
   "notion": {
     "title": "Notion",

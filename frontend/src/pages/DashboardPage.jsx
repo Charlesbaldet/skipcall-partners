@@ -5,7 +5,7 @@ import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, Che
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import OnboardingWizard from '../components/OnboardingWizard.jsx';
-import { fmt, STATUS_CONFIG, LEVEL_CONFIG } from '../lib/constants';
+import { fmt, STATUS_CONFIG, LEVEL_CONFIG, categoryName } from '../lib/constants';
 
 const COLORS = ['#6366f1', '#0ea5e9', '#f59e0b', '#c026d3', '#16a34a', '#dc2626'];
 
@@ -678,7 +678,7 @@ function PartnersByCategoryCard() {
         {counts.map(c => (
           <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.color || '#6B7280' }} />
-            {c.name} — <strong>{c.count}</strong>
+            {categoryName(c)} — <strong>{c.count}</strong>
           </div>
         ))}
       </div>

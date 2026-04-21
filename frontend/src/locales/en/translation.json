@@ -2141,16 +2141,18 @@
     "delete": "Delete category",
     "cannot_delete_has_partners": "This category has {{count}} partners assigned. Reassign them first.",
     "cannot_delete_default": "Cannot delete the default category",
-    "apporteur": "Business referrer",
+    "apporteur": "Business Referrer",
     "apporteur_desc": "I recommend prospects to the company",
-    "conseil": "Consulting partner",
+    "conseil": "Consulting Partner",
     "conseil_desc": "I advise and support clients in their decisions",
-    "integrateur": "Integration partner",
+    "integrateur": "Integration Partner",
     "integrateur_desc": "I integrate and deploy the solution for my clients",
     "select": "Select your partnership type",
     "required": "Please select a partnership type",
     "filter": "All categories",
-    "stats": "Partners by category"
+    "stats": "Partners by category",
+    "select_type": "Partnership type",
+    "select_placeholder": "Select your type..."
   },
   "notion": {
     "title": "Notion",

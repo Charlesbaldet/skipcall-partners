@@ -2150,7 +2150,9 @@
     "select": "Sélectionnez votre type de partenariat",
     "required": "Merci de sélectionner un type de partenariat",
     "filter": "Toutes les catégories",
-    "stats": "Partenaires par catégorie"
+    "stats": "Partenaires par catégorie",
+    "select_type": "Type de partenariat",
+    "select_placeholder": "Sélectionnez votre type..."
   },
   "notion": {
     "title": "Notion",

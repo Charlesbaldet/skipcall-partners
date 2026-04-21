@@ -2141,7 +2141,7 @@
     "delete": "Categorie verwijderen",
     "cannot_delete_has_partners": "Deze categorie heeft {{count}} gekoppelde partners. Wijs ze eerst opnieuw toe.",
     "cannot_delete_default": "De standaardcategorie kan niet worden verwijderd",
-    "apporteur": "Zakelijke aanbrenger",
+    "apporteur": "Zakenverwijzer",
     "apporteur_desc": "Ik beveel prospects aan bij het bedrijf",
     "conseil": "Adviespartner",
     "conseil_desc": "Ik adviseer en begeleid klanten bij hun keuzes",
@@ -2150,7 +2150,9 @@
     "select": "Selecteer je soort partnerschap",
     "required": "Kies een soort partnerschap",
     "filter": "Alle categorieën",
-    "stats": "Partners per categorie"
+    "stats": "Partners per categorie",
+    "select_type": "Type partnerschap",
+    "select_placeholder": "Selecteer je type..."
   },
   "notion": {
     "title": "Notion",

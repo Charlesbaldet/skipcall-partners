@@ -22,3 +22,16 @@ export const LEVEL_CONFIG = {
 export const fmt = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
 export const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 export const fmtDateTime = (d) => d ? new Date(d).toLocaleString('fr-FR') : '—';
+
+// Return the display name for a partner category. Default slugs
+// (apporteur / conseil / integrateur) resolve through i18n so the
+// label follows the user's language; custom categories created by
+// admins fall through to the raw name saved in the database.
+export const categoryName = (cat) => {
+  if (!cat) return '';
+  const slug = cat.slug || cat.category_slug;
+  if (slug === 'apporteur' || slug === 'conseil' || slug === 'integrateur') {
+    return i18n.t('partner_category.' + slug, cat.name || cat.category_name || '');
+  }
+  return cat.name || cat.category_name || '';
+};

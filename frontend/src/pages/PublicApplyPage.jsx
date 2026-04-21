@@ -146,39 +146,33 @@ export default function PublicApplyPage() {
               </div>
               {categories.length > 0 && (
                 <div style={{ marginTop: 24 }}>
-                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>
-                    {t('partner_category.select')} *
+                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+                    {t('partner_category.select_type')} *
                   </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+                  <select
+                    required
+                    value={form.category_id}
+                    onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
+                    style={{
+                      width: '100%', padding: '12px 16px', borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'rgba(255,255,255,0.06)',
+                      fontSize: 15, color: '#fff', boxSizing: 'border-box',
+                      appearance: 'none', fontFamily: 'inherit', cursor: 'pointer',
+                    }}
+                  >
+                    <option value="" disabled style={{ background: '#1e293b' }}>
+                      {t('partner_category.select_placeholder')}
+                    </option>
                     {categories.map(c => {
-                      const active = form.category_id === c.id;
+                      const label = (c.slug === 'apporteur' || c.slug === 'conseil' || c.slug === 'integrateur')
+                        ? t('partner_category.' + c.slug, c.name)
+                        : c.name;
                       return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => setForm(f => ({ ...f, category_id: c.id }))}
-                          style={{
-                            textAlign: 'left',
-                            padding: '14px 14px',
-                            borderRadius: 12,
-                            border: active ? `2px solid ${c.color || '#fff'}` : '1px solid rgba(255,255,255,0.12)',
-                            background: active ? `${c.color || '#ffffff'}22` : 'rgba(255,255,255,0.04)',
-                            color: '#fff',
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: c.color || '#94a3b8' }} />
-                            <span style={{ fontSize: 14, fontWeight: 700 }}>{c.name}</span>
-                          </div>
-                          {c.description && (
-                            <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.4 }}>{c.description}</div>
-                          )}
-                        </button>
+                        <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{label}</option>
                       );
                     })}
-                  </div>
+                  </select>
                 </div>
               )}
               <button disabled={!canSubmit} onClick={() => setStep(2)} style={{

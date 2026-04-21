@@ -2141,16 +2141,18 @@
     "delete": "Eliminar categoría",
     "cannot_delete_has_partners": "Esta categoría tiene {{count}} partners asignados. Reasígnalos primero.",
     "cannot_delete_default": "No se puede eliminar la categoría por defecto",
-    "apporteur": "Recomendador",
+    "apporteur": "Referente de negocios",
     "apporteur_desc": "Recomiendo prospectos a la empresa",
-    "conseil": "Partner consultor",
+    "conseil": "Socio consultor",
     "conseil_desc": "Asesoro y acompaño a los clientes en sus decisiones",
-    "integrateur": "Partner integrador",
+    "integrateur": "Socio integrador",
     "integrateur_desc": "Integro y despliego la solución para mis clientes",
     "select": "Selecciona tu tipo de partnership",
     "required": "Selecciona un tipo de partnership",
     "filter": "Todas las categorías",
-    "stats": "Partners por categoría"
+    "stats": "Partners por categoría",
+    "select_type": "Tipo de asociación",
+    "select_placeholder": "Selecciona tu tipo..."
   },
   "notion": {
     "title": "Notion",

@@ -2141,7 +2141,7 @@
     "delete": "Elimina categoria",
     "cannot_delete_has_partners": "Questa categoria ha {{count}} partner assegnati. Riassegnali prima.",
     "cannot_delete_default": "Impossibile eliminare la categoria predefinita",
-    "apporteur": "Segnalatore",
+    "apporteur": "Referente commerciale",
     "apporteur_desc": "Raccomando prospect all'azienda",
     "conseil": "Partner consulente",
     "conseil_desc": "Consiglio e supporto i clienti nelle loro scelte",
@@ -2150,7 +2150,9 @@
     "select": "Seleziona il tipo di partnership",
     "required": "Seleziona un tipo di partnership",
     "filter": "Tutte le categorie",
-    "stats": "Partner per categoria"
+    "stats": "Partner per categoria",
+    "select_type": "Tipo di partnership",
+    "select_placeholder": "Seleziona il tuo tipo..."
   },
   "notion": {
     "title": "Notion",

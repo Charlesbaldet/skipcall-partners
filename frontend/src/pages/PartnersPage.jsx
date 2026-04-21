@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { fmt, fmtDate } from '../lib/constants';
+import { fmt, fmtDate, categoryName } from '../lib/constants';
 import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import UpgradeModal from '../components/UpgradeModal.jsx';
@@ -179,7 +179,7 @@ export default function PartnersPage() {
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, background: '#fff' }}
                   >
                     {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                      <option key={c.id} value={c.id}>{categoryName(c)}</option>
                     ))}
                   </select>
                 </div>
@@ -274,7 +274,7 @@ export default function PartnersPage() {
             >
               <option value="all">{t('partner_category.filter')}</option>
               {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>{categoryName(c)}</option>
               ))}
             </select>
           )}
@@ -340,7 +340,7 @@ export default function PartnersPage() {
                           style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
                         >
                           {categories.map(c => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
+                            <option key={c.id} value={c.id}>{categoryName(c)}</option>
                           ))}
                         </select>
                       </div>
@@ -448,7 +448,7 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
           {p.category_name && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, padding: '3px 8px', borderRadius: 999, background: (p.category_color || '#6B7280') + '15', color: p.category_color || '#6B7280', fontSize: 11, fontWeight: 700 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.category_color || '#6B7280' }} />
-              {p.category_name}
+              {categoryName({ slug: p.category_slug, name: p.category_name })}
             </span>
           )}
         </div>
