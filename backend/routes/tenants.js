@@ -122,7 +122,7 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 // Public: Get tenant by slug (for public pages like /r/:slug — theme + logo)
-router.get('/public/:slug', async (req, res) => {
+async function publicTenantBySlug(req, res) {
   try {
     const { rows } = await query(
       `SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url,
@@ -133,8 +133,13 @@ router.get('/public/:slug', async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Tenant not found' });
     res.json({ tenant: rows[0] });
   } catch (err) {
+    console.error('[tenants.public]', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
-});
+}
+// Two equivalent public read paths so existing callers (/public/:slug)
+// and new ones (/by-slug/:slug) both hit the same handler.
+router.get('/public/:slug',  publicTenantBySlug);
+router.get('/by-slug/:slug', publicTenantBySlug);
 
 module.exports = router;

@@ -56,14 +56,24 @@ router.post('/apply', [
 
     const { company_name, contact_name, email, phone, company_website, company_size, motivation, category_id } = req.body;
 
+    console.log('[applications.apply] tenant_slug:', req.body.tenant_slug, '| req.tenantId:', req.tenantId, '| category_id:', category_id, '| email:', email);
+
     // Resolve tenant from URL slug (set via /r/:slug routing) — fallback to domain
     let resolvedTenantId = req.tenantId;
     if (req.body.tenant_slug) {
       try {
-        const { rows: ts } = await query("SELECT id FROM tenants WHERE slug = $1", [req.body.tenant_slug]);
-        if (ts[0]) resolvedTenantId = ts[0].id;
-      } catch (e) {}
+        const { rows: ts } = await query("SELECT id, name FROM tenants WHERE slug = $1", [req.body.tenant_slug]);
+        if (ts[0]) {
+          resolvedTenantId = ts[0].id;
+          console.log('[applications.apply] resolved slug', req.body.tenant_slug, '→', ts[0].name, ts[0].id);
+        } else {
+          console.warn('[applications.apply] slug did not resolve:', req.body.tenant_slug);
+        }
+      } catch (e) {
+        console.error('[applications.apply] slug lookup failed:', e.message);
+      }
     }
+    console.log('[applications.apply] final resolvedTenantId:', resolvedTenantId);
 
     // Check if email already exists in applications or partners — within the same tenant
     let dupCheckSql = `
@@ -161,8 +171,14 @@ Voir : ${_appDashUrl}`,
 
     res.status(201).json({ message: 'Candidature envoyée avec succès', application: { id: application.id } });
   } catch (err) {
-    console.error('Application submit error:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
+    // Verbose tracing so we can diagnose 500s from Railway logs. Also
+    // surfaces the real error message on the wire — keep for now
+    // while we're stabilising the apply flow; can be trimmed later.
+    console.error('[applications.apply] 500 error:', err.message);
+    console.error('[applications.apply] stack:', err.stack);
+    console.error('[applications.apply] body:', JSON.stringify(req.body));
+    console.error('[applications.apply] db code:', err.code, 'constraint:', err.constraint, 'detail:', err.detail);
+    res.status(500).json({ error: err.message || 'Erreur serveur', code: err.code || null, constraint: err.constraint || null });
   }
 });
 
