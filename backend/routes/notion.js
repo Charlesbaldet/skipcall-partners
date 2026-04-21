@@ -18,12 +18,24 @@ router.post('/connect', async (req, res) => {
   const { token, dbTransactions, dbContacts, dbCompanies } = req.body || {};
   if (!token || !dbTransactions) return res.status(400).json({ error: 'token et base Transactions requis' });
 
+  // Inbound request tracing. Logs token PREFIX only — never the full
+  // secret. Helps spot paste artefacts ("ntn_" prefix mis-copied,
+  // trailing whitespace, 32-char hex vs UUID) on the Railway side.
+  console.log('[notion.connect] token prefix:', String(token).slice(0, 10) + '…', 'length:', String(token).length);
+  console.log('[notion.connect] dbTransactions:', dbTransactions);
+  if (dbContacts)  console.log('[notion.connect] dbContacts:',  dbContacts);
+  if (dbCompanies) console.log('[notion.connect] dbCompanies:', dbCompanies);
+  console.log('[notion.connect] normalized dbTransactions:', notion.normalizeDatabaseId(dbTransactions));
+
   try {
     const { databases, errors } = await notion.validateConnection(token.trim(), {
       transactions: dbTransactions.trim(),
       contacts:     dbContacts ? dbContacts.trim()  : null,
       companies:    dbCompanies ? dbCompanies.trim() : null,
     });
+    if (errors && Object.keys(errors).length) {
+      console.log('[notion.connect] validation errors:', JSON.stringify(errors));
+    }
     if (!databases.transactions) {
       const e = errors.transactions || {};
       // A 401 / "unauthorized" from Notion means the integration

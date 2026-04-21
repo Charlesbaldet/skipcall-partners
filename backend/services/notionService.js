@@ -48,22 +48,42 @@ async function getTenantNotion(tenantId) {
 
 // ─── HTTP helper ────────────────────────────────────────────────────
 async function notionFetch(token, path, init = {}) {
-  const res = await fetch(NOTION_API + path, {
+  const url = NOTION_API + path;
+  // Strip anything that might have slipped past the input field — stray
+  // newlines, quotes, or zero-width chars from a copy-paste — before we
+  // stuff the token into the Authorization header. Notion rejects
+  // tokens that aren't a clean ASCII string.
+  const cleanToken = String(token || '').replace(/[\r\n\t"'\u200B-\u200D\uFEFF]/g, '').trim();
+  console.log('[notion] →', init.method || 'GET', url);
+  console.log('[notion]    token prefix:', cleanToken.slice(0, 10) + '…', 'length:', cleanToken.length);
+  const res = await fetch(url, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${cleanToken}`,
       'Notion-Version': NOTION_VERSION,
       'Content-Type': 'application/json',
       ...(init.headers || {}),
     },
   });
   const data = await res.json().catch(() => ({}));
+  console.log('[notion] ←', res.status, data?.code || data?.message || 'ok');
   if (!res.ok) {
     const err = new Error(data?.message || `Notion ${res.status}`);
     err.status = res.status; err.body = data;
     throw err;
   }
   return data;
+}
+
+// Notion accepts both hyphen-less ("32char") and UUID-dashed
+// ("8-4-4-4-12") database ids, but some legacy paths/reverse proxies
+// treat them differently. Normalise every id we pass on the wire to
+// the dashed UUID form to rule that failure mode out.
+function normalizeDatabaseId(raw) {
+  if (!raw) return raw;
+  const s = String(raw).trim().toLowerCase().replace(/-/g, '');
+  if (!/^[0-9a-f]{32}$/.test(s)) return raw.trim(); // leave non-hex as-is
+  return `${s.slice(0,8)}-${s.slice(8,12)}-${s.slice(12,16)}-${s.slice(16,20)}-${s.slice(20)}`;
 }
 
 // Extract a human-readable database title from a GET /databases/:id
@@ -84,9 +104,10 @@ function readDbProperties(db) {
 
 async function fetchDatabase(token, databaseId) {
   if (!databaseId) return null;
-  const db = await notionFetch(token, `/databases/${encodeURIComponent(databaseId)}`);
+  const normalized = normalizeDatabaseId(databaseId);
+  const db = await notionFetch(token, `/databases/${encodeURIComponent(normalized)}`);
   return {
-    id: databaseId,
+    id: normalized,
     name: readDbTitle(db),
     properties: readDbProperties(db),
     rawSchema: db.properties || {},
@@ -437,6 +458,7 @@ function readNotionText(prop) {
 module.exports = {
   validateConnection,
   fetchDatabase,
+  normalizeDatabaseId,
   getTenantNotion,
   pushReferralToNotion,
   pullFromNotion,
