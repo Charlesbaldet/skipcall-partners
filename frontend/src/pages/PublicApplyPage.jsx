@@ -11,12 +11,14 @@ export default function PublicApplyPage() {
   const { slug } = useParams();
   const [tenant, setTenant] = useState(null);
 
+  const [tenantLoading, setTenantLoading] = useState(true);
+  const [tenantNotFound, setTenantNotFound] = useState(false);
   useEffect(() => {
-    if (slug) {
-      loadThemeBySlug(slug).then(t => {
-        if (t) setTenant(t);
-      });
-    }
+    if (!slug) { setTenantLoading(false); return; }
+    loadThemeBySlug(slug).then(t => {
+      if (t) setTenant(t);
+      else setTenantNotFound(true);
+    }).finally(() => setTenantLoading(false));
   }, [slug]);
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -84,18 +86,43 @@ export default function PublicApplyPage() {
     );
   }
 
+  // Never render a form branded as someone else's tenant. If the
+  // slug lookup is still in flight, show a neutral spinner; if it
+  // failed (404 / unknown slug), show an explicit error instead of
+  // falling back to a hardcoded brand.
+  if (tenantLoading) {
+    return (
+      <Page>
+        <div style={{ color: '#94a3b8', padding: 48 }}>…</div>
+      </Page>
+    );
+  }
+  if (tenantNotFound || !tenant) {
+    return (
+      <Page>
+        <div style={{ textAlign: 'center', maxWidth: 420, margin: '0 auto', padding: '60px 24px' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#fca5a5', fontSize: 28 }}>⚠</div>
+          <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Lien invalide</h2>
+          <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>
+            Aucun programme partenaire n'a été trouvé pour ce lien. Vérifiez l'URL auprès de la personne qui vous l'a partagé.
+          </p>
+        </div>
+      </Page>
+    );
+  }
+
   return (
     <Page>
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '40px 24px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              {tenant?.logo_url ? (
-                <img src={tenant.logo_url} alt="Logo" style={{ height: 44, maxWidth: 160, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+              {tenant.logo_url ? (
+                <img src={tenant.logo_url} alt={tenant.name} style={{ height: 44, maxWidth: 160, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
               ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>{(tenant?.name || 'S').charAt(0).toUpperCase()}</div>
+                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>{(tenant.name || '?').charAt(0).toUpperCase()}</div>
               )}
-              <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>{tenant?.name || 'Skipcall'}</span>
+              <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>{tenant.name}</span>
             </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{t("publicApply.title")}</h1>
           <p style={{ color: '#94a3b8', fontSize: 15 }}>{t("publicApply.subtitle")}</p>

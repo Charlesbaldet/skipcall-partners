@@ -4,13 +4,17 @@ const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const { getFeatures, invalidate } = require('../middleware/featureFlag');
 
 const router = express.Router();
-router.use(authenticate);
-router.use(tenantScope);
+// NB: authenticate/tenantScope are attached PER ROUTE rather than via
+// router.use(...) so requests for paths not declared here (notably
+// /api/tenants/public/:slug, which lives in tenantRoutes) fall
+// through without being 401'd first. Applying them globally would
+// hijack every /api/tenants/* request and block the public slug
+// lookup used by the partner registration page.
 
 // GET /api/tenants/features — return the flags + tracking config for
 // the caller's tenant. Any authenticated user can read (the frontend
 // needs them to gate UI), only admins can write.
-router.get('/features', async (req, res) => {
+router.get('/features', authenticate, tenantScope, async (req, res) => {
   try {
     if (!req.tenantId) return res.status(400).json({ error: 'no tenant' });
     const flags = await getFeatures(req.tenantId);
@@ -24,7 +28,7 @@ router.get('/features', async (req, res) => {
 // PUT /api/tenants/features — admin updates flags + tracking config.
 // Body: any subset of { feature_referral_links, feature_promo_codes,
 // feature_tracking_script, tracking_redirect_url, tracking_cookie_days }
-router.put('/features', authorize('admin', 'superadmin'), async (req, res) => {
+router.put('/features', authenticate, tenantScope, authorize('admin', 'superadmin'), async (req, res) => {
   try {
     if (!req.tenantId) return res.status(400).json({ error: 'no tenant' });
     const {
