@@ -51,7 +51,6 @@ export default function BlogPage() {
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('');
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     api.request('/blog/categories').then(d => setCategories(d.categories || [])).catch(()=>{});
@@ -61,10 +60,16 @@ export default function BlogPage() {
     setLoading(true);
     const params = activeCategory ? '?category=' + encodeURIComponent(activeCategory) : '';
     api.request('/blog/posts' + params)
-      .then(d => { setPosts(d.posts || []); setTotal(d.total || 0); })
+      .then(d => { setPosts(d.posts || []); })
       .catch(()=>{})
       .finally(()=>setLoading(false));
   }, [activeCategory]);
+
+  // "Tous" must always show the grand total, never the filtered
+  // count. Sum once from the categories payload (which is fetched
+  // unfiltered on mount) and memo-ise so it doesn't shift when the
+  // user clicks a category pill.
+  const totalAll = categories.reduce((s, c) => s + (parseInt(c.count, 10) || 0), 0);
 
   return (
     <LandingLayout>
@@ -97,7 +102,7 @@ export default function BlogPage() {
         {categories.length > 0 && (
           <nav aria-label={t('blog.categories')} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
             <button onClick={()=>setActiveCategory('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? '#059669' : '#e2e8f0', background: !activeCategory ? '#059669' : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-              {t('blog.all_categories')} ({total})
+              {t('blog.all_categories')} ({totalAll})
             </button>
             {categories.map(c => (
               <button key={c.category} onClick={()=>setActiveCategory(c.category === activeCategory ? '' : c.category)}
