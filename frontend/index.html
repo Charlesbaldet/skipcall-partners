@@ -7,10 +7,12 @@
     <title>RefBoost — Gestion de programme partenaires</title>
     <meta name="description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, commissions et performance." />
 
-    <!-- Canonical — baseline for crawlers that don't execute JS.
-         Per-route React pages override this via Helmet with the
-         exact path-qualified canonical. -->
-    <link rel="canonical" href="https://refboost.io/" />
+    <!-- No static canonical here on purpose. react-helmet-async sets
+         a per-route <link rel="canonical"> from App.jsx's
+         <RouteCanonical/>, with each public page overriding it via
+         its own Helmet. A static root-level canonical would make
+         crawlers see TWO canonicals (static homepage + Helmet's) and
+         pick the wrong one, collapsing every URL to /. -->
 
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />

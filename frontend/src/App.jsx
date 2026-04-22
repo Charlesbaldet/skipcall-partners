@@ -1,7 +1,8 @@
 import SignupPage from './pages/SignupPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import Layout from './components/Layout.jsx';
@@ -49,11 +50,36 @@ function ProtectedRoute({ children, allowedRoles }) {
   return children;
 }
 
+// Route-level canonical fallback. Mounted once above <Routes/> so
+// every page gets a <link rel="canonical"> that matches its current
+// pathname, even if the individual page component forgot to set one
+// in its own Helmet. Per-page <Helmet><link rel="canonical">…</Helmet>
+// declarations nest inside this one and win (react-helmet-async uses
+// the innermost declaration for single-tag-type elements).
+function RouteCanonical() {
+  const location = useLocation();
+  const base = 'https://refboost.io';
+  // Strip the trailing slash off non-root paths for canonical
+  // normalisation (/pricing vs /pricing/).
+  const path = location.pathname.length > 1
+    ? location.pathname.replace(/\/+$/, '')
+    : '/';
+  const href = path === '/' ? base + '/' : base + path;
+  return (
+    <Helmet>
+      <link rel="canonical" href={href} />
+      <meta property="og:url" content={href} />
+    </Helmet>
+  );
+}
+
 function AppRoutes() {
   const { user, loading } = useAuth();
   if (loading) return null;
 
   return (
+    <>
+    <RouteCanonical />
     <Routes>
       {/* Public pages */}
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
@@ -106,6 +132,7 @@ function AppRoutes() {
           <Route path="/fonctionnalites/personnalisation" element={<FeaturePersonnalisationPage />} />
           <Route path="/fonctionnalites/tracking" element={<FeatureTrackingPage />} />
           </Routes>
+    </>
   );
 }
 
