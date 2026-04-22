@@ -37,7 +37,10 @@ function generateSlug(title) {
 // GET /api/blog/posts — liste des articles publiés
 router.get('/posts', async (req, res) => {
   try {
-    const { category, limit = 20, offset = 0 } = req.query;
+    // Default limit bumped from 20 → 100. The frontend blog grid
+    // shows every post without pagination UI, so anything under 100
+    // silently truncated the list.
+    const { category, limit = 100, offset = 0 } = req.query;
     const lang = resolveLang(req);
     // Key browser / CDN caches by language so changing locale invalidates.
     res.vary('Accept-Language');
