@@ -27,7 +27,25 @@ const stripeKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 const stripe = stripeKey ? require('stripe')(stripeKey) : null;
 
+// Boot-time visibility into webhook config. Tells Charles immediately
+// from Railway logs whether the env vars are set or missing.
+console.log('[stripe webhook] boot — STRIPE_SECRET_KEY:', !!stripeKey, '| STRIPE_WEBHOOK_SECRET:', !!webhookSecret, '(len:', webhookSecret.length, ')');
+
 const router = express.Router();
+
+// Reachability probe. Stripe only POSTs, but Charles can curl this
+// from anywhere to confirm the path exists and isn't being
+// intercepted by auth/CORS/proxy. Returns 200 always.
+router.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'webhook endpoint active',
+    route: '/api/webhooks/stripe',
+    method: 'GET',
+    stripeConfigured: !!stripe,
+    signatureConfigured: !!webhookSecret,
+    message: 'Webhook endpoint reachable. Stripe must POST with stripe-signature header.',
+  });
+});
 
 async function applyPlanToTenant(tenantId, planKey, { subscriptionId, customerId, periodStart, periodEnd } = {}) {
   if (!tenantId) return;
@@ -60,12 +78,21 @@ async function resolveTenantFromCustomer(customerId) {
 }
 
 router.post('/', async (req, res) => {
-  if (!stripe) return res.status(500).send('stripe not configured');
+  // Inbound trace — confirms the POST is actually reaching us and
+  // surfaces header shape + body size so we can rule out a proxy
+  // stripping the stripe-signature header.
+  const sig = req.headers['stripe-signature'];
+  const bodyLen = Buffer.isBuffer(req.body) ? req.body.length : (req.body ? String(req.body).length : 0);
+  console.log('[stripe webhook] POST received | sig present:', !!sig, '| body bytes:', bodyLen, '| raw:', Buffer.isBuffer(req.body));
+
+  if (!stripe) {
+    console.error('[stripe webhook] aborting — stripe client not configured (STRIPE_SECRET_KEY missing)');
+    return res.status(500).send('stripe not configured');
+  }
 
   let event;
   try {
     if (webhookSecret) {
-      const sig = req.headers['stripe-signature'];
       // req.body is a Buffer here because the route is mounted with
       // express.raw(). Do NOT change that upstream or verification fails.
       event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -78,9 +105,11 @@ router.post('/', async (req, res) => {
         : req.body;
     }
   } catch (err) {
-    console.error('[stripe webhook] signature verification failed:', err.message);
+    console.error('[stripe webhook] signature verification FAILED:', err.message, '| sig prefix:', sig ? String(sig).slice(0, 24) + '…' : 'MISSING', '| secret len:', webhookSecret.length);
     return res.status(400).send('invalid signature');
   }
+
+  console.log('[stripe webhook] event verified:', event.type, '| id:', event.id);
 
   try {
     switch (event.type) {
@@ -243,10 +272,15 @@ router.post('/', async (req, res) => {
         // ignore other events
         break;
     }
-    res.json({ received: true });
+    console.log('[stripe webhook] handled OK:', event.type);
+    res.status(200).json({ received: true });
   } catch (err) {
-    console.error('[stripe webhook] handler error:', err);
-    res.status(500).json({ error: 'webhook handler failed' });
+    // Log the handler error but STILL return 200. The event is
+    // already verified by Stripe; returning 4xx/5xx makes Stripe
+    // retry forever, which the frontend/DB might not tolerate
+    // (e.g. duplicate emails). We record the failure and move on.
+    console.error('[stripe webhook] handler error (returning 200 to stop retries):', event?.type, err.message, err.stack);
+    res.status(200).json({ received: true, warning: 'handler error logged' });
   }
 });
 

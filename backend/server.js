@@ -82,8 +82,10 @@ app.use(cors({
 
 // Stripe webhook needs the raw body for signature verification, so it
 // MUST be mounted BEFORE express.json(). Everything else below gets the
-// usual parsed JSON body.
+// usual parsed JSON body. Also mounted BEFORE the tenant middleware and
+// rate limiter so neither can interfere with Stripe's retries.
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookRoutes);
+console.log('[startup] Stripe webhook route registered at /api/webhooks/stripe');
 
 app.use(express.json({ limit: '1mb' }));
 
