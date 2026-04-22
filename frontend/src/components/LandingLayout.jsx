@@ -169,8 +169,13 @@ export function LandingFooter() {
             </div>
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.legal')}</div>
-              {['cgv','privacy','legal','rgpd'].map(key=>(
-                <a key={key} href="#" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+              {[
+                { key: 'cgv',     href: '/cgv' },
+                { key: 'privacy', href: '/confidentialite' },
+                { key: 'legal',   href: '/mentions-legales' },
+                { key: 'rgpd',    href: '/rgpd' },
+              ].map(({ key, href })=>(
+                <a key={key} href={href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
                   {t(`landing.footer.links.${key}`)}
                 </a>
               ))}

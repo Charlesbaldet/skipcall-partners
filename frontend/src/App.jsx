@@ -18,6 +18,7 @@ import MessagingPage from './pages/MessagingPage.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import PublicApplyPage from './pages/PublicApplyPage.jsx';
 import PublicReferralRedirectPage from './pages/PublicReferralRedirectPage.jsx';
+import LegalPage from './pages/LegalPage.jsx';
 import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
 import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
 import AdminSettingsPage from './pages/AdminSettingsPage.jsx';
@@ -71,6 +72,10 @@ function AppRoutes() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/cgv"             element={<LegalPage which="cgv" />} />
+        <Route path="/confidentialite" element={<LegalPage which="confidentialite" />} />
+        <Route path="/mentions-legales" element={<LegalPage which="mentions-legales" />} />
+        <Route path="/rgpd"            element={<LegalPage which="rgpd" />} />
         <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial */}
