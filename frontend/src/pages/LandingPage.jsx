@@ -131,7 +131,7 @@ export default function LandingPage() {
     center:{textAlign:'center',marginBottom:64},
   };
 
-  const _meta_title = "RefBoost — Plateforme de gestion de programme partenaires et apporteurs d'affaires";
+  const _meta_title = "RefBoost — Gestion de programme partenaires B2B";
   const _meta_desc = "Automatisez le suivi des referrals, commissions et la performance de votre réseau d'apporteurs d'affaires. Gratuit à vie. Configuré en 5 minutes.";
   return (
     <div style={{fontFamily:'inherit',color:C.s,overflow:'hidden'}}>

@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="google-site-verification" content="r8xrRHkjoKKN3z-z166WEXFiyAIYD7zQzFSVj2HZSys" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RefBoost — Gestion de programme partenaires</title>
-    <meta name="description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, commissions et performance." />
+    <title>RefBoost — Gestion de programme partenaires B2B</title>
+    <meta name="description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez referrals, commissions et performance en 5 min." />
 
     <!-- No static canonical here on purpose. react-helmet-async sets
          a per-route <link rel="canonical"> from App.jsx's
@@ -19,18 +19,22 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- Open Graph / Twitter -->
-    <meta property="og:title" content="RefBoost — Gestion de programme partenaires" />
-    <meta property="og:description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, commissions et performance." />
+    <!-- Open Graph / Twitter. og:title / og:description / og:url and
+         twitter:* are rewritten per route by frontend/middleware.js
+         (Edge) and by react-helmet-async on the client. These stay
+         as homepage defaults — they'll be replaced, not duplicated,
+         on matched routes. og:image is a site-wide default. -->
+    <meta property="og:title" content="RefBoost — Gestion de programme partenaires B2B" />
+    <meta property="og:description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez referrals, commissions et performance en 5 min." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://refboost.io" />
+    <meta property="og:url" content="https://refboost.io/" />
     <meta property="og:site_name" content="RefBoost" />
     <meta property="og:image" content="https://refboost.io/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="RefBoost — Gestion de programme partenaires" />
-    <meta name="twitter:description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, commissions et performance." />
+    <meta name="twitter:title" content="RefBoost — Gestion de programme partenaires B2B" />
+    <meta name="twitter:description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez referrals, commissions et performance en 5 min." />
     <meta name="twitter:image" content="https://refboost.io/og-image.png" />
 
     <!-- Performance hints for the Railway API -->

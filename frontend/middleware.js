@@ -6,11 +6,13 @@
 // don't execute JS (Ahrefs, older bots, link previewers) saw the
 // homepage tags on /pricing /blog /marketplace /cgv etc.
 //
-// What this does: on matched routes, fetch the SPA shell,
-// string-replace the <title> + description, and inject a canonical
-// + og tags tailored to the path. For /blog/:slug it hits
-// /api/blog/posts/:slug to pull the article's own meta_title +
-// meta_description.
+// What this does: on matched routes, fetch the SPA shell, REPLACE
+// title + description + existing og:* + twitter:*, and inject a
+// canonical tailored to the path. For /blog it also injects a
+// <noscript> list of article links so crawlers can discover them;
+// for /blog/:slug it hits /api/blog/posts/:slug to pull the
+// article's own meta_title + meta_description and emits an Article
+// JSON-LD blob with a guaranteed image.
 //
 // Kept as plain JS with no framework imports so it runs on Vercel's
 // Edge runtime for a non-Next.js project.
@@ -28,52 +30,76 @@ export const config = {
     '/rgpd',
     '/signup',
     '/login',
+    '/fonctionnalites/:path*',
   ],
 };
 
 const SITE = 'https://refboost.io';
+const OG_FALLBACK = SITE + '/og-image.png';
 
-// Per-path meta. /blog/:slug is resolved separately against the API.
+// Per-path meta. Descriptions are kept in the 120-160 char sweet spot
+// for SERP snippets (Ahrefs flags anything under 120). /blog/:slug is
+// resolved separately against the API.
 function resolveMeta(path) {
   if (path === '/pricing') return {
-    title: 'Tarifs — RefBoost | Starter gratuit, Pro 29€/mois, Business 79€/mois',
-    description: "Découvrez les tarifs RefBoost. Plan Starter gratuit, Pro à 29€/mois, Business à 79€/mois.",
+    title: 'Tarifs RefBoost — Starter gratuit, Pro 29€, Business 79€',
+    description: "Découvrez les tarifs RefBoost. Plan Starter gratuit à vie, Pro à 29€/mois, Business à 79€/mois avec CRM et webhooks illimités pour scaler.",
   };
   if (path === '/blog') return {
-    title: 'Blog — Conseils et ressources pour programmes partenaires B2B',
-    description: "Articles, guides et stratégies pour créer et développer votre programme de partenaires et apporteurs d'affaires.",
+    title: 'Blog RefBoost — Conseils pour programmes partenaires B2B',
+    description: "Articles, guides et stratégies pour créer et développer votre programme de partenaires et apporteurs d'affaires performant en B2B SaaS.",
   };
   if (path === '/marketplace') return {
-    title: "Marketplace — Programmes d'apporteurs d'affaires disponibles",
-    description: "Découvrez les programmes d'apporteurs d'affaires disponibles sur RefBoost Marketplace.",
+    title: "Marketplace RefBoost — Programmes d'apporteurs d'affaires",
+    description: "Découvrez les programmes d'apporteurs d'affaires disponibles sur RefBoost Marketplace. Postulez en quelques clics aux meilleurs programmes B2B.",
   };
   if (path === '/cgv') return {
     title: 'CGV — RefBoost',
-    description: "Conditions générales de vente de RefBoost, plateforme SaaS de gestion de programmes d'apporteurs d'affaires et partenaires.",
+    description: "Conditions générales de vente RefBoost : abonnements, facturation, résiliation, garanties et responsabilités de la plateforme SaaS partenaires.",
   };
   if (path === '/confidentialite') return {
     title: 'Politique de Confidentialité — RefBoost',
-    description: 'Comment RefBoost collecte, utilise et protège vos données personnelles.',
+    description: "Comment RefBoost collecte, utilise et protège vos données personnelles. Détail de nos engagements conformes au RGPD et à la protection de la vie privée.",
   };
   if (path === '/mentions-legales') return {
     title: 'Mentions Légales — RefBoost',
-    description: "Mentions légales du site RefBoost. Informations sur l'éditeur et l'hébergeur.",
+    description: "Mentions légales du site RefBoost : informations sur l'éditeur, le directeur de publication, l'hébergeur et les conditions d'utilisation du site.",
   };
   if (path === '/rgpd') return {
     title: 'RGPD — RefBoost',
-    description: 'Comment RefBoost assure sa conformité au RGPD. Vos droits, nos engagements, et les mesures de protection de vos données.',
+    description: "Comment RefBoost assure sa conformité au RGPD : vos droits d'accès, rectification et suppression, nos engagements et les mesures de protection de vos données.",
   };
   if (path === '/signup') return {
-    title: 'Créer un compte — RefBoost',
-    description: 'Créez votre programme partenaires en 5 minutes. Gratuit, sans carte bancaire.',
+    title: 'Créer votre compte RefBoost — Gratuit, sans carte bancaire',
+    description: "Créez votre programme partenaires en 5 minutes avec RefBoost. Suivi des referrals, commissions, tableau de bord — gratuit à vie, sans carte bancaire.",
   };
   if (path === '/login') return {
-    title: 'Connexion — RefBoost',
-    description: 'Connectez-vous à votre espace RefBoost.',
+    title: 'Connexion à votre espace partenaires RefBoost',
+    description: "Connectez-vous à votre espace RefBoost pour gérer vos partenaires, suivre vos referrals, valider les commissions et piloter votre programme B2B.",
+  };
+  if (path === '/fonctionnalites/pipeline') return {
+    title: 'Pipeline partenaires — Kanban RefBoost',
+    description: "Visualisez et pilotez votre pipeline de leads partenaires avec un Kanban personnalisable. Suivez chaque deal de la soumission à la conversion en B2B.",
+  };
+  if (path === '/fonctionnalites/commissions') return {
+    title: 'Commissions partenaires automatisées — RefBoost',
+    description: "Automatisez le calcul des commissions partenaires. Règles flexibles, validation en un clic, paiements tracés — tout ce qu'il faut pour scaler le programme.",
+  };
+  if (path === '/fonctionnalites/analytics') return {
+    title: 'Analytics de programme partenaires — RefBoost',
+    description: "Mesurez la performance de chaque partenaire, chaque source et chaque campagne. Dashboards, cohortes et exports pour piloter votre programme par la data.",
+  };
+  if (path === '/fonctionnalites/personnalisation') return {
+    title: 'Portail partenaire personnalisé — RefBoost',
+    description: "Offrez à vos partenaires un portail à vos couleurs : logo, domaine, catégories, pipeline et règles de commission adaptés à votre programme B2B.",
+  };
+  if (path === '/fonctionnalites/tracking') return {
+    title: 'Tracking referrals et liens partenaires — RefBoost',
+    description: "Tracez chaque clic, chaque lead et chaque conversion avec des liens partenaires uniques. Script JS, UTM, codes promo et attribution multi-touch intégrés.",
   };
   return {
-    title: 'RefBoost — Plateforme de gestion de programme partenaires et apporteurs d\'affaires',
-    description: "RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez le suivi des referrals, commissions et performance.",
+    title: 'RefBoost — Gestion de programme partenaires B2B',
+    description: "RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez referrals, commissions et performance en 5 min.",
   };
 }
 
@@ -90,6 +116,33 @@ function esc(s) {
 function canonicalPath(path) {
   if (!path || path === '/') return '/';
   return path.replace(/\/+$/, '');
+}
+
+// Build a title that respects the 60-char Ahrefs limit. For blog
+// articles we trust the authored meta_title as-is (it was designed
+// for SERP); only when it's missing do we truncate the full title
+// and append the brand.
+function buildBlogTitle(post) {
+  if (post.meta_title && post.meta_title.length <= 60) return post.meta_title;
+  const raw = post.title || 'Article';
+  const max = 55 - ' — RefBoost'.length + 10; // aim for ≤60 total
+  if (raw.length <= 60 - ' — RefBoost'.length) return raw + ' — RefBoost';
+  return raw.slice(0, 55 - 1).trim() + '… — RefBoost';
+}
+
+// Swap an existing <meta ... > tag (matched by attribute+value) or
+// append it if missing. Used so we never leave two og:title tags on
+// the page after the middleware runs.
+function upsertMeta(html, selector, replacement) {
+  const re = new RegExp('<meta\\s+' + selector + '[^>]*>', 'i');
+  if (re.test(html)) return html.replace(re, replacement);
+  return html.replace('</head>', '    ' + replacement + '\n  </head>');
+}
+
+function upsertLink(html, rel, replacement) {
+  const re = new RegExp('<link\\s+rel="' + rel + '"[^>]*>', 'i');
+  if (re.test(html)) return html.replace(re, replacement);
+  return html.replace('</head>', '    ' + replacement + '\n  </head>');
 }
 
 export default async function middleware(request) {
@@ -111,6 +164,9 @@ export default async function middleware(request) {
   // Resolve meta. Blog articles hit the API for their own meta_title +
   // meta_description so every post gets a unique crawlable head.
   let meta = resolveMeta(path);
+  let articlePost = null;
+  let blogIndexPosts = null;
+
   if (path.startsWith('/blog/') && path !== '/blog/' && path !== '/blog') {
     try {
       const slug = path.slice('/blog/'.length).replace(/\/+$/, '');
@@ -121,37 +177,98 @@ export default async function middleware(request) {
           const data = await apiRes.json().catch(() => null);
           const post = data && data.post;
           if (post) {
+            articlePost = post;
             meta = {
-              title: (post.meta_title || post.title || 'Article') + ' — RefBoost',
+              title: buildBlogTitle(post),
               description: post.meta_description || post.excerpt || meta.description,
             };
           }
         }
       }
     } catch { /* keep generic blog meta */ }
+  } else if (path === '/blog') {
+    // Preload article list for the <noscript> block so crawlers that
+    // don't run JS still have linkable hrefs to every post. The XML
+    // sitemap already covers discovery, but visible in-page links
+    // give us internal-link signal too.
+    try {
+      const apiUrl = new URL('/api/blog/posts?limit=200', url.origin).toString();
+      const apiRes = await fetch(apiUrl, { cf: { cacheTtl: 300 } });
+      if (apiRes.ok) {
+        const data = await apiRes.json().catch(() => null);
+        if (data && Array.isArray(data.posts)) blogIndexPosts = data.posts;
+      }
+    } catch { /* silent */ }
   }
 
   const canonical = SITE + canonicalPath(path);
   const title = esc(meta.title);
   const description = esc(meta.description);
 
-  // Replace the static <title> and description (the SPA shell ships
-  // exactly one of each so a simple regex is safe).
+  // Replace the static <title>.
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`);
-  html = html.replace(/<meta\s+name="description"[^>]*>/, `<meta name="description" content="${description}" />`);
 
-  // Inject canonical + og:* just before </head>. The SPA shell no
-  // longer ships a static canonical, so we're always adding (not
-  // replacing) these.
-  const injected = [
-    `<link rel="canonical" href="${canonical}" />`,
-    `<meta property="og:url" content="${canonical}" />`,
-    `<meta property="og:title" content="${title}" />`,
-    `<meta property="og:description" content="${description}" />`,
-    `<meta name="twitter:title" content="${title}" />`,
-    `<meta name="twitter:description" content="${description}" />`,
-  ].map(s => '    ' + s).join('\n');
-  html = html.replace('</head>', injected + '\n  </head>');
+  // Replace existing meta / link tags (or append if missing). Using
+  // upsert — not inject — keeps og:url single-valued, which was the
+  // root cause of Ahrefs' "og:url ≠ canonical" warnings: the static
+  // index.html shipped a homepage og:url that stayed alongside the
+  // injected per-path one.
+  html = upsertMeta(html, 'name="description"', `<meta name="description" content="${description}" />`);
+  html = upsertLink(html, 'canonical', `<link rel="canonical" href="${canonical}" />`);
+  html = upsertMeta(html, 'property="og:url"', `<meta property="og:url" content="${canonical}" />`);
+  html = upsertMeta(html, 'property="og:title"', `<meta property="og:title" content="${title}" />`);
+  html = upsertMeta(html, 'property="og:description"', `<meta property="og:description" content="${description}" />`);
+  html = upsertMeta(html, 'name="twitter:title"', `<meta name="twitter:title" content="${title}" />`);
+  html = upsertMeta(html, 'name="twitter:description"', `<meta name="twitter:description" content="${description}" />`);
+
+  // /blog/:slug → Article JSON-LD with a guaranteed image (falls back
+  // to the site OG image so Google's structured-data validator stops
+  // complaining about the required `image` field on articles without
+  // a cover_image_url.
+  if (articlePost) {
+    const img = articlePost.cover_image_url || OG_FALLBACK;
+    html = upsertMeta(html, 'property="og:image"', `<meta property="og:image" content="${esc(img)}" />`);
+    html = upsertMeta(html, 'property="og:type"', `<meta property="og:type" content="article" />`);
+    const articleLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: articlePost.title || meta.title,
+      description: articlePost.meta_description || articlePost.excerpt || meta.description,
+      url: canonical,
+      datePublished: articlePost.published_at || articlePost.created_at,
+      dateModified: articlePost.updated_at || articlePost.published_at,
+      author: { '@type': 'Person', name: articlePost.author || 'RefBoost' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'RefBoost',
+        logo: { '@type': 'ImageObject', url: SITE + '/apple-touch-icon.png' },
+      },
+      image: [img],
+      mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+    };
+    const ld = `<script type="application/ld+json">${JSON.stringify(articleLd).replace(/</g, '\\u003c')}</script>`;
+    html = html.replace('</head>', '    ' + ld + '\n  </head>');
+  }
+
+  // /blog → noscript index of every article so non-JS crawlers see
+  // linkable hrefs for every post. These are the 26 "orphan" URLs
+  // Ahrefs flagged — the SPA Link elements in the grid never show up
+  // in the static HTML.
+  if (blogIndexPosts && blogIndexPosts.length) {
+    const items = blogIndexPosts.map(p => {
+      const href = SITE + '/blog/' + encodeURIComponent(p.slug);
+      const label = esc(p.title || p.slug);
+      return `<li><a href="${href}">${label}</a></li>`;
+    }).join('');
+    const block = `<nav aria-label="Liste des articles de blog"><h2>Articles publiés</h2><ul>${items}</ul></nav>`;
+    // Insert just inside the existing <noscript> so there's only ever
+    // one such block even on repeated middleware runs.
+    if (/<noscript>[\s\S]*?<\/noscript>/.test(html)) {
+      html = html.replace(/<\/noscript>/, block + '</noscript>');
+    } else {
+      html = html.replace('</body>', `<noscript>${block}</noscript>\n  </body>`);
+    }
+  }
 
   return new Response(html, {
     status: 200,

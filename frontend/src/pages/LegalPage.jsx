@@ -13,7 +13,7 @@ const LEGAL = {
     path: '/cgv',
     title: 'Conditions Générales de Vente',
     metaTitle: 'CGV — RefBoost',
-    metaDescription: "Conditions générales de vente de RefBoost, plateforme SaaS de gestion de programmes d'apporteurs d'affaires et partenaires.",
+    metaDescription: "Conditions générales de vente RefBoost : abonnements, facturation, résiliation, garanties et responsabilités de la plateforme SaaS partenaires.",
     body: `
 <h2>1. Objet</h2>
 <p>Les présentes Conditions Générales de Vente (CGV) régissent les relations contractuelles entre la société éditrice de RefBoost (ci-après « l'Éditeur ») et toute personne physique ou morale souscrivant à un abonnement sur la plateforme RefBoost (ci-après « le Client »).</p>
@@ -58,7 +58,7 @@ const LEGAL = {
     path: '/confidentialite',
     title: 'Politique de Confidentialité',
     metaTitle: 'Politique de Confidentialité — RefBoost',
-    metaDescription: 'Comment RefBoost collecte, utilise et protège vos données personnelles. Notre politique de confidentialité détaillée.',
+    metaDescription: "Comment RefBoost collecte, utilise et protège vos données personnelles. Détail de nos engagements conformes au RGPD et à la protection de la vie privée.",
     body: `
 <h2>1. Introduction</h2>
 <p>La présente politique de confidentialité décrit comment RefBoost (ci-après « nous ») collecte, utilise, stocke et protège les données personnelles des utilisateurs de la plateforme accessible à l'adresse https://refboost.io.</p>
@@ -106,7 +106,7 @@ const LEGAL = {
     path: '/mentions-legales',
     title: 'Mentions Légales',
     metaTitle: 'Mentions Légales — RefBoost',
-    metaDescription: "Mentions légales du site RefBoost. Informations sur l'éditeur, l'hébergeur et les conditions d'utilisation du site.",
+    metaDescription: "Mentions légales du site RefBoost : informations sur l'éditeur, le directeur de publication, l'hébergeur et les conditions d'utilisation du site.",
     body: `
 <h2>Éditeur du site</h2>
 <p>Le site RefBoost (https://refboost.io) est édité par :</p>
@@ -142,7 +142,7 @@ const LEGAL = {
     path: '/rgpd',
     title: 'Conformité RGPD',
     metaTitle: 'RGPD — RefBoost',
-    metaDescription: 'Comment RefBoost assure sa conformité au RGPD. Vos droits, nos engagements, et les mesures de protection de vos données.',
+    metaDescription: "Comment RefBoost assure sa conformité au RGPD : vos droits d'accès, rectification et suppression, nos engagements et les mesures de protection de vos données.",
     body: `
 <h2>Notre engagement RGPD</h2>
 <p>RefBoost s'engage à respecter le Règlement Général sur la Protection des Données (RGPD - Règlement UE 2016/679) dans l'ensemble de ses traitements de données personnelles. Cette page détaille nos engagements et vos droits.</p>

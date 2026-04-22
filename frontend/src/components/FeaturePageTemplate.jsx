@@ -34,6 +34,10 @@ export default function FeaturePageTemplate({ helmet, accentColor, label, title,
         <title>{helmet.title}</title>
         <meta name="description" content={helmet.description}/>
         <link rel="canonical" href={helmet.canonical}/>
+        <meta property="og:title" content={helmet.title}/>
+        <meta property="og:description" content={helmet.description}/>
+        <meta property="og:url" content={helmet.canonical}/>
+        <meta property="og:type" content="website"/>
       </Helmet>
 
       {/* Hero */}

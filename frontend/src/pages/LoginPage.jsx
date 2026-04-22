@@ -127,11 +127,11 @@ export default function LoginPage() {
       position: 'relative', overflow: 'hidden',
     }}>
       <Helmet>
-        <title>Connexion — RefBoost</title>
-        <meta name="description" content="Connectez-vous à votre espace RefBoost." />
+        <title>Connexion à votre espace partenaires RefBoost</title>
+        <meta name="description" content="Connectez-vous à votre espace RefBoost pour gérer vos partenaires, suivre vos referrals, valider les commissions et piloter votre programme B2B." />
         <link rel="canonical" href="https://refboost.io/login" />
-        <meta property="og:title" content="Connexion — RefBoost" />
-        <meta property="og:description" content="Connectez-vous à votre espace RefBoost." />
+        <meta property="og:title" content="Connexion à votre espace partenaires RefBoost" />
+        <meta property="og:description" content="Connectez-vous à votre espace RefBoost pour gérer vos partenaires, suivre vos referrals, valider les commissions et piloter votre programme B2B." />
         <meta property="og:url" content="https://refboost.io/login" />
         <meta property="og:image" content="https://refboost.io/og-image.png" />
       </Helmet>

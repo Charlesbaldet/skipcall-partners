@@ -51,7 +51,15 @@ export default function BlogPostPage() {
   );
 
   const canonicalUrl = SITE + '/blog/' + post.slug;
-  const metaTitle = post.meta_title || (post.title + ' — Blog RefBoost');
+  // Ahrefs flags >60-char titles. We trust the authored meta_title
+  // as-is (designed for SERP) and only fall back to the raw post
+  // title when it's missing; in that case, truncate to stay under
+  // the limit once " — RefBoost" is appended.
+  const metaTitle = (post.meta_title && post.meta_title.length <= 60)
+    ? post.meta_title
+    : (post.title.length <= 60 - ' — RefBoost'.length
+        ? post.title + ' — RefBoost'
+        : post.title.slice(0, 54).trim() + '… — RefBoost');
   const metaDesc = post.meta_description || post.excerpt || t('blog.default_meta_desc');
 
   const jsonLd = {
@@ -64,7 +72,11 @@ export default function BlogPostPage() {
     dateModified: post.updated_at || post.published_at,
     author: { '@type': 'Person', name: post.author || 'RefBoost' },
     publisher: { '@type': 'Organization', name: 'RefBoost', url: SITE, logo: { '@type': 'ImageObject', url: SITE + '/logo.png' } },
-    image: post.cover_image_url || SITE + '/og-default.png',
+    // Google's structured-data validator requires `image` on Article.
+    // Fall back to the site og-image.png (which ships with the build)
+    // rather than a non-existent og-default.png so every article has
+    // a valid, resolvable URL.
+    image: [post.cover_image_url || (SITE + '/og-image.png')],
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
     articleSection: post.category || 'Blog',
     keywords: (post.tags || []).join(', '),
