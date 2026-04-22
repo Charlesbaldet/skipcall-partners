@@ -81,8 +81,8 @@ const TABLE = [
   ]},
   { cat: 'cat_integrations', rows: [
     { label: 'row_stripe', values: { starter: true, pro: true, business: true } },
-    { label: 'row_crm', values: { starter: false, pro: false, business: 'soon' } },
-    { label: 'row_webhooks', values: { starter: false, pro: false, business: 'soon' } },
+    { label: 'row_crm', values: { starter: false, pro: true, business: true } },
+    { label: 'row_webhooks', values: { starter: false, pro: false, business: true } },
   ]},
   { cat: 'cat_support', rows: [
     { label: 'row_docs', values: { starter: true, pro: true, business: true } },
