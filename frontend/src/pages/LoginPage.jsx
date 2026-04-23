@@ -192,7 +192,7 @@ export default function LoginPage() {
           color: C.m, fontSize: 15, textAlign: 'center',
           margin: '0 0 32px', fontFamily: 'inherit',
         }}>
-          {t("login.subtitle")}s
+          {t("login.subtitle")}
         </p>
 
         {/* Access-revoked banner (set by api.js 401 handler when a
