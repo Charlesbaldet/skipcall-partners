@@ -2197,7 +2197,8 @@
     "sync_ok": "Synchronisation abgeschlossen.",
     "sync_ok_count": "Synchronisation abgeschlossen — {{count}} aktualisiert.",
     "sync_failed": "Synchronisation fehlgeschlagen.",
-    "disconnect_ok": "Notion getrennt."
+    "disconnect_ok": "Notion getrennt.",
+    "sync_ok_push": "Synchronisation abgeschlossen — {{pushed}}/{{total}} an Notion gesendet, {{pulled}} Updates importiert."
   },
   "partner_notifications": {
     "tab": "Benachrichtigungen",

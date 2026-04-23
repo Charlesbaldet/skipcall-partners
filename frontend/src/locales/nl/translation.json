@@ -2197,7 +2197,8 @@
     "sync_ok": "Synchronisatie voltooid.",
     "sync_ok_count": "Synchronisatie voltooid — {{count}} bijgewerkt.",
     "sync_failed": "Synchronisatie mislukt.",
-    "disconnect_ok": "Notion losgekoppeld."
+    "disconnect_ok": "Notion losgekoppeld.",
+    "sync_ok_push": "Synchronisatie voltooid — {{pushed}}/{{total}} naar Notion gestuurd, {{pulled}} updates opgehaald."
   },
   "partner_notifications": {
     "tab": "Meldingen",

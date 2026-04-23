@@ -345,6 +345,7 @@ class ApiClient {
   }
   syncReferralToNotion(referralId) { return this.request('/crm/notion/sync/' + referralId, { method: 'POST' }); }
   pullFromNotion() { return this.request('/crm/notion/pull', { method: 'POST' }); }
+  pushToNotion() { return this.request('/crm/notion/push', { method: 'POST' }); }
   getSalesforceFields() { return this.request('/crm/salesforce/fields'); }
   getSalesforceStages() { return this.request('/crm/salesforce/stages'); }
 

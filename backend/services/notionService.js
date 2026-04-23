@@ -1,6 +1,72 @@
 const { query } = require('../db');
 const { encrypt, decrypt } = require('../middleware/security');
 
+// ─── Sync-log bookkeeping ────────────────────────────────────────────
+// The HubSpot and Salesforce paths log every sync attempt to
+// crm_sync_log (keyed by a crm_integrations.id). We mirror that here
+// so the existing /crm/sync/log endpoint and the "Historique de
+// synchronisation" UI surface Notion pushes alongside HubSpot — no
+// view changes needed. The Notion config itself stays on the
+// tenants.notion_* columns; the crm_integrations row is just a
+// bookkeeping target for the foreign key.
+async function ensureNotionIntegrationRow(tenantId) {
+  if (!tenantId) return null;
+  try {
+    const { rows } = await query(
+      `INSERT INTO crm_integrations (tenant_id, provider, is_active, connected_at)
+       VALUES ($1, 'notion', TRUE, NOW())
+       ON CONFLICT (tenant_id, provider)
+       DO UPDATE SET is_active = TRUE, connected_at = COALESCE(crm_integrations.connected_at, NOW())
+       RETURNING id`,
+      [tenantId]
+    );
+    return rows[0]?.id || null;
+  } catch (err) {
+    console.error('[notion.ensureIntegrationRow]', err.message);
+    return null;
+  }
+}
+
+async function markNotionIntegrationInactive(tenantId) {
+  if (!tenantId) return;
+  try {
+    await query(
+      `UPDATE crm_integrations SET is_active = FALSE
+        WHERE tenant_id = $1 AND provider = 'notion'`,
+      [tenantId]
+    );
+  } catch (err) {
+    console.error('[notion.markInactive]', err.message);
+  }
+}
+
+async function getNotionIntegrationId(tenantId) {
+  if (!tenantId) return null;
+  try {
+    const { rows } = await query(
+      `SELECT id FROM crm_integrations WHERE tenant_id = $1 AND provider = 'notion' LIMIT 1`,
+      [tenantId]
+    );
+    return rows[0]?.id || null;
+  } catch { return null; }
+}
+
+// Write a row to crm_sync_log. Best-effort — a failed log write must
+// never break the actual sync.
+async function logSync(tenantId, { action, status, referralId, details }) {
+  try {
+    const integrationId = await getNotionIntegrationId(tenantId);
+    if (!integrationId) return;
+    await query(
+      `INSERT INTO crm_sync_log (integration_id, referral_id, action, status, details)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [integrationId, referralId || null, action, status || 'success', details ? JSON.stringify(details) : null]
+    );
+  } catch (err) {
+    console.error('[notion.logSync]', err.message);
+  }
+}
+
 const NOTION_API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
 
@@ -334,6 +400,7 @@ async function pushReferralToNotion(referral, tenantId) {
     if (txToCompany && companyId) txProperties[txToCompany] = { relation: [{ id: companyId }] };
 
     let transactionId = referral.notion_transaction_id || referral.notion_page_id || null;
+    const wasCreate = !transactionId;
     if (transactionId) {
       await notionFetch(cfg.token, `/pages/${transactionId}`, { method: 'PATCH', body: JSON.stringify({ properties: txProperties }) });
     } else {
@@ -355,9 +422,31 @@ async function pushReferralToNotion(referral, tenantId) {
       [transactionId, contactId, companyId, referral.id]
     );
 
+    // Sync-log entry — unifies with the HubSpot sync-history view.
+    // Action is 'push' regardless of create vs update; details carries
+    // the operation kind so the UI can distinguish if it ever wants to.
+    logSync(tenantId, {
+      action: 'push',
+      status: 'success',
+      referralId: referral.id,
+      details: {
+        operation: wasCreate ? 'create' : 'update',
+        transaction_id: transactionId,
+        contact_id: contactId,
+        company_id: companyId,
+        prospect_name: referral.prospect_name,
+      },
+    });
+
     return { ok: true, transactionId, contactId, companyId };
   } catch (err) {
     console.error('[notion.push]', err.message, err.body || '');
+    logSync(tenantId, {
+      action: 'push',
+      status: 'error',
+      referralId: referral.id,
+      details: { message: err.message, status: err.status || null, code: err.body?.code || null },
+    });
     return { ok: false, error: err.message };
   }
 }
@@ -489,11 +578,48 @@ function readNotionText(prop) {
   }
 }
 
+// ─── Bulk push ──────────────────────────────────────────────────────
+// Iterates over every referral for the tenant and calls
+// pushReferralToNotion one by one. Sequential on purpose — Notion
+// rate-limits pretty aggressively (~3 req/s per integration), and
+// pushReferralToNotion itself fires 1 request per resolved page
+// (Company → Contact → Transaction), so a parallel fan-out would
+// trip the limiter on any reasonably-sized pipeline.
+async function pushAllReferralsToNotion(tenantId) {
+  const cfg = await getTenantNotion(tenantId);
+  if (!cfg) return { ok: false, reason: 'not_connected' };
+
+  const { rows: referrals } = await query(
+    `SELECT r.*, p.name AS partner_name
+       FROM referrals r
+       LEFT JOIN partners p ON p.id = r.partner_id
+      WHERE r.tenant_id = $1
+      ORDER BY r.created_at ASC`,
+    [tenantId]
+  );
+
+  let pushed = 0;
+  let failed = 0;
+  const errors = [];
+  for (const ref of referrals) {
+    const result = await pushReferralToNotion(ref, tenantId);
+    if (result.ok) pushed++;
+    else {
+      failed++;
+      if (errors.length < 5) errors.push({ referral_id: ref.id, message: result.error });
+    }
+  }
+  return { ok: true, total: referrals.length, pushed, failed, errors };
+}
+
 module.exports = {
   validateConnection,
   fetchDatabase,
   normalizeDatabaseId,
   getTenantNotion,
   pushReferralToNotion,
+  pushAllReferralsToNotion,
   pullFromNotion,
+  ensureNotionIntegrationRow,
+  markNotionIntegrationInactive,
 };

@@ -788,14 +788,28 @@ function CrmIntegrations() {
                 <button type="button" onClick={async (e) => {
                   stopEv(e); setBusy(true); setNotionMsg(null);
                   try {
-                    const r = await api.pullFromNotion();
-                    if (!r.ok) throw new Error(r.error || 'sync failed');
+                    // Bidirectional sync: push every RefBoost referral
+                    // to Notion first (create/update pages in the
+                    // Transactions DB), then pull any changes that
+                    // happened directly inside Notion back into
+                    // RefBoost. Mirrors how the HubSpot "Sync now"
+                    // button behaves. Each individual referral push
+                    // logs its own row in crm_sync_log so the history
+                    // view fills in live.
+                    const pushRes = await api.pushToNotion();
+                    if (!pushRes.ok) throw new Error(pushRes.error || 'push_failed');
+                    let pullUpdated = 0;
+                    try {
+                      const pullRes = await api.pullFromNotion();
+                      if (pullRes.ok && typeof pullRes.updated === 'number') pullUpdated = pullRes.updated;
+                    } catch { /* pull is opportunistic — don't fail the whole sync */ }
                     load();
-                    const n = typeof r.updated === 'number' ? r.updated : null;
-                    setNotionMsg({ tone: 'success', text: n != null
-                      ? t('notion.sync_ok_count', { count: n })
-                      : t('notion.sync_ok') });
-                    setTimeout(() => setNotionMsg(null), 5000);
+                    setNotionMsg({ tone: 'success', text: t('notion.sync_ok_push', {
+                      pushed: pushRes.pushed ?? 0,
+                      total: pushRes.total ?? 0,
+                      pulled: pullUpdated,
+                    }) });
+                    setTimeout(() => setNotionMsg(null), 6000);
                   } catch (err) {
                     setNotionMsg({ tone: 'error', text: err.message || t('notion.sync_failed') });
                   } finally { setBusy(false); }

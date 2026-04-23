@@ -110,6 +110,13 @@ router.post('/connect', async (req, res) => {
       ]
     );
 
+    // Upsert the bookkeeping row in crm_integrations so subsequent
+    // crm_sync_log writes (from every pushReferralToNotion call) have
+    // a valid foreign-key target. The HubSpot sync-history UI then
+    // surfaces Notion entries alongside HubSpot without any extra
+    // plumbing.
+    await notion.ensureNotionIntegrationRow(req.tenantId);
+
     res.json({ connected: true, databases, errors });
   } catch (err) {
     console.error('[notion.connect]', err.message, err.body || '');
@@ -132,6 +139,10 @@ router.post('/disconnect', async (req, res) => {
         WHERE id = $1`,
       [req.tenantId]
     );
+    // Keep the crm_integrations row around (sync-log FKs reference
+    // it) but flip is_active=false so the row stops showing as
+    // "connected" in anywhere the UI filters on that flag.
+    await notion.markNotionIntegrationInactive(req.tenantId);
     res.json({ ok: true });
   } catch (err) {
     console.error('[notion.disconnect]', err.message);
@@ -275,6 +286,22 @@ router.post('/sync/:referralId', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('[notion.sync]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/crm/notion/push — bulk push every referral of the current
+// tenant to Notion. Mirrors the pattern the HubSpot integration uses
+// for manual "sync all" runs. Each referral-level push logs its own
+// row in crm_sync_log, so the sync-history UI fills in live as this
+// runs.
+router.post('/push', async (req, res) => {
+  try {
+    const result = await notion.pushAllReferralsToNotion(req.tenantId);
+    if (!result.ok) return res.status(400).json({ error: result.reason || 'push_failed' });
+    res.json(result);
+  } catch (err) {
+    console.error('[notion.push]', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
