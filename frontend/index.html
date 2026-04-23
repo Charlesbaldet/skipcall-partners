@@ -52,8 +52,16 @@
       "@type": "Organization",
       "name": "RefBoost",
       "url": "https://refboost.io",
-      "logo": "https://refboost.io/apple-touch-icon.png",
-      "description": "Plateforme de gestion de programme d'apporteurs d'affaires et partenaires"
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://refboost.io/apple-touch-icon.png",
+        "width": 180,
+        "height": 180
+      },
+      "description": "Plateforme de gestion de programme d'apporteurs d'affaires et partenaires",
+      "sameAs": [
+        "https://refboost.io"
+      ]
     }
     </script>
 
@@ -104,19 +112,57 @@
     <!-- No-JS fallback for crawlers that don't execute JavaScript.
          Lists the key public routes so they still get indexed
          via the sitemap even when the SPA can't hydrate. -->
+    <!-- NOSCRIPT nav for non-JS crawlers (Ahrefs, Googlebot in
+         no-JS mode, older link previewers). This IS the internal
+         link graph for crawler purposes — the JS-rendered footer
+         and on-page cross-links are invisible to bots that don't
+         hydrate. Every public route lives here so no page ends up
+         orphan from a crawler's POV. Keep in alphabetical-ish
+         groups (marketing, use cases, features, legal) so reviewers
+         can see at a glance that nothing's missing. -->
     <noscript>
       <h1>RefBoost — Plateforme de gestion de programme partenaires et apporteurs d'affaires</h1>
       <p>Automatisez le suivi des referrals, commissions et performance de votre réseau d'apporteurs d'affaires.</p>
-      <nav>
-        <a href="/pricing">Tarifs</a> ·
-        <a href="/blog">Blog</a> ·
-        <a href="/marketplace">Marketplace</a> ·
-        <a href="/login">Connexion</a> ·
-        <a href="/signup">Créer un compte</a> ·
-        <a href="/cgv">CGV</a> ·
-        <a href="/confidentialite">Confidentialité</a> ·
-        <a href="/mentions-legales">Mentions légales</a> ·
-        <a href="/rgpd">RGPD</a>
+      <nav aria-label="Navigation principale">
+        <ul>
+          <li><a href="/">Accueil</a></li>
+          <li><a href="/pricing">Tarifs</a></li>
+          <li><a href="/marketplace">Marketplace</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/login">Connexion</a></li>
+          <li><a href="/signup">Créer un compte</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Cas d'usage">
+        <h2>Cas d'usage</h2>
+        <ul>
+          <li><a href="/cas-dusage">Tous les cas d'usage</a></li>
+          <li><a href="/cas-dusage/saas-b2b">Éditeur SaaS B2B</a></li>
+          <li><a href="/cas-dusage/cabinet-conseil">Cabinet de conseil</a></li>
+          <li><a href="/cas-dusage/startup">Startup</a></li>
+          <li><a href="/cas-dusage/reseau-distribution">Réseau de distribution</a></li>
+          <li><a href="/cas-dusage/marketplace-plateforme">Marketplace &amp; Plateforme</a></li>
+          <li><a href="/cas-dusage/agence-marketing">Agence marketing</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Fonctionnalités">
+        <h2>Fonctionnalités</h2>
+        <ul>
+          <li><a href="/fonctionnalites/pipeline">Pipeline partenaires</a></li>
+          <li><a href="/fonctionnalites/commissions">Commissions automatiques</a></li>
+          <li><a href="/fonctionnalites/analytics">Analytics</a></li>
+          <li><a href="/fonctionnalites/personnalisation">Personnalisation &amp; marque blanche</a></li>
+          <li><a href="/fonctionnalites/tracking">Tracking des referrals</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Mentions légales">
+        <h2>Légal</h2>
+        <ul>
+          <li><a href="/cgv">Conditions générales de vente</a></li>
+          <li><a href="/confidentialite">Politique de confidentialité</a></li>
+          <li><a href="/mentions-legales">Mentions légales</a></li>
+          <li><a href="/rgpd">RGPD</a></li>
+        </ul>
       </nav>
       <p>Ce site utilise JavaScript pour afficher son contenu. Activez JavaScript pour une expérience complète.</p>
     </noscript>

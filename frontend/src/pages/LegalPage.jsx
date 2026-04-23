@@ -12,7 +12,7 @@ const LEGAL = {
   cgv: {
     path: '/cgv',
     title: 'Conditions Générales de Vente',
-    metaTitle: 'CGV — RefBoost',
+    metaTitle: 'Conditions générales de vente — RefBoost',
     metaDescription: "Conditions générales de vente RefBoost : abonnements, facturation, résiliation, garanties et responsabilités de la plateforme SaaS partenaires.",
     body: `
 <h2>1. Objet</h2>
@@ -105,7 +105,7 @@ const LEGAL = {
   'mentions-legales': {
     path: '/mentions-legales',
     title: 'Mentions Légales',
-    metaTitle: 'Mentions Légales — RefBoost',
+    metaTitle: 'Mentions légales & éditeur du site — RefBoost',
     metaDescription: "Mentions légales du site RefBoost : informations sur l'éditeur, le directeur de publication, l'hébergeur et les conditions d'utilisation du site.",
     body: `
 <h2>Éditeur du site</h2>
@@ -141,7 +141,7 @@ const LEGAL = {
   rgpd: {
     path: '/rgpd',
     title: 'Conformité RGPD',
-    metaTitle: 'RGPD — RefBoost',
+    metaTitle: 'RGPD & protection des données — RefBoost',
     metaDescription: "Comment RefBoost assure sa conformité au RGPD : vos droits d'accès, rectification et suppression, nos engagements et les mesures de protection de vos données.",
     body: `
 <h2>Notre engagement RGPD</h2>

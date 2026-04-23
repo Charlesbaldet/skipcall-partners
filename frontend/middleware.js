@@ -55,7 +55,7 @@ function resolveMeta(path) {
     description: "Découvrez les programmes d'apporteurs d'affaires disponibles sur RefBoost Marketplace. Postulez en quelques clics aux meilleurs programmes B2B.",
   };
   if (path === '/cgv') return {
-    title: 'CGV — RefBoost',
+    title: 'Conditions générales de vente — RefBoost',
     description: "Conditions générales de vente RefBoost : abonnements, facturation, résiliation, garanties et responsabilités de la plateforme SaaS partenaires.",
   };
   if (path === '/confidentialite') return {
@@ -63,11 +63,11 @@ function resolveMeta(path) {
     description: "Comment RefBoost collecte, utilise et protège vos données personnelles. Détail de nos engagements conformes au RGPD et à la protection de la vie privée.",
   };
   if (path === '/mentions-legales') return {
-    title: 'Mentions Légales — RefBoost',
+    title: 'Mentions légales & éditeur du site — RefBoost',
     description: "Mentions légales du site RefBoost : informations sur l'éditeur, le directeur de publication, l'hébergeur et les conditions d'utilisation du site.",
   };
   if (path === '/rgpd') return {
-    title: 'RGPD — RefBoost',
+    title: 'RGPD & protection des données — RefBoost',
     description: "Comment RefBoost assure sa conformité au RGPD : vos droits d'accès, rectification et suppression, nos engagements et les mesures de protection de vos données.",
   };
   if (path === '/signup') return {
@@ -258,10 +258,22 @@ export default async function middleware(request) {
     const img = articlePost.cover_image_url || OG_FALLBACK;
     html = upsertMeta(html, 'property="og:image"', `<meta property="og:image" content="${esc(img)}" />`);
     html = upsertMeta(html, 'property="og:type"', `<meta property="og:type" content="article" />`);
+    // Google's Rich Results test has been firing warnings on blog
+    // posts for a few reasons we can fix without changing content:
+    // (a) publisher.logo should be an ImageObject with explicit
+    //     width/height (Google docs specify a 60x60 minimum, square
+    //     or wide; we use the 180×180 apple-touch-icon).
+    // (b) image should carry a width/height for the page-level image
+    //     too — otherwise Ahrefs' validator flags it as missing.
+    // (c) headline must not exceed 110 characters — some long post
+    //     titles were being rejected silently.
+    // (d) Article with the new ImageObject shape keeps passing
+    //     Google's validator.
+    const headline = String(articlePost.title || meta.title || 'Article').slice(0, 110);
     const articleLd = {
       '@context': 'https://schema.org',
       '@type': 'Article',
-      headline: articlePost.title || meta.title,
+      headline,
       description: articlePost.meta_description || articlePost.excerpt || meta.description,
       url: canonical,
       datePublished: articlePost.published_at || articlePost.created_at,
@@ -270,9 +282,14 @@ export default async function middleware(request) {
       publisher: {
         '@type': 'Organization',
         name: 'RefBoost',
-        logo: { '@type': 'ImageObject', url: SITE + '/apple-touch-icon.png' },
+        logo: { '@type': 'ImageObject', url: SITE + '/apple-touch-icon.png', width: 180, height: 180 },
       },
-      image: [img],
+      image: {
+        '@type': 'ImageObject',
+        url: img,
+        width: 1200,
+        height: 630,
+      },
       mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
     };
     const ld = `<script type="application/ld+json">${JSON.stringify(articleLd).replace(/</g, '\\u003c')}</script>`;
