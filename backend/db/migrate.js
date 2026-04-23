@@ -231,6 +231,42 @@ async function runMigrations() {
   //   { "new": "Prospect", "contacted": "En cours", "won": "Signé", … }
   await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS notion_status_mapping JSONB DEFAULT '{}'::jsonb`);
 
+  // ─── v18c: Universal CRM link columns on referrals ──────────────────
+  // The HubSpot + Notion sync code already reads/writes the sibling-
+  // object ids (hubspot_contact_id, hubspot_company_id, notion_*) but
+  // those columns were never actually migrated anywhere. On a fresh
+  // DB every sync would 500. This block makes them real and adds the
+  // dedicated per-CRM "top-level record" ids + the unified
+  // crm_link_status flag the pipeline card uses to badge synced
+  // referrals.
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS hubspot_deal_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS hubspot_contact_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS hubspot_company_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS notion_page_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS notion_transaction_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS notion_contact_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS notion_company_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS salesforce_opportunity_id TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS crm_link_status TEXT`);
+  // Backfill: any row that already carries a crm_deal_id (set by the
+  // pre-split HubSpot/Salesforce push path) gets mirrored into the
+  // new provider-specific column based on the tenant's active
+  // integration. Cheaper one-liner than a data migration script —
+  // idempotent because COALESCE leaves already-populated rows alone.
+  await query(`
+    UPDATE referrals r SET hubspot_deal_id = COALESCE(r.hubspot_deal_id, r.crm_deal_id)
+      FROM crm_integrations i
+     WHERE i.tenant_id = r.tenant_id AND i.provider = 'hubspot' AND i.is_active = TRUE
+       AND r.crm_deal_id IS NOT NULL AND r.hubspot_deal_id IS NULL
+  `).catch(() => {});
+  await query(`
+    UPDATE referrals r SET salesforce_opportunity_id = COALESCE(r.salesforce_opportunity_id, r.crm_deal_id)
+      FROM crm_integrations i
+     WHERE i.tenant_id = r.tenant_id AND i.provider = 'salesforce' AND i.is_active = TRUE
+       AND r.crm_deal_id IS NOT NULL AND r.salesforce_opportunity_id IS NULL
+  `).catch(() => {});
+  console.log('[crm] v18c referral link columns ready');
+
   // ─── v19: Outgoing webhooks ───
   await query(`CREATE TABLE IF NOT EXISTS webhook_endpoints (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -400,37 +400,73 @@ async function pushReferralToNotion(referral, tenantId) {
     if (txToCompany && companyId) txProperties[txToCompany] = { relation: [{ id: companyId }] };
 
     let transactionId = referral.notion_transaction_id || referral.notion_page_id || null;
-    const wasCreate = !transactionId;
+    let linkStatus = null;
+
     if (transactionId) {
+      // Already linked on the referral → PATCH the known page.
       await notionFetch(cfg.token, `/pages/${transactionId}`, { method: 'PATCH', body: JSON.stringify({ properties: txProperties }) });
+      linkStatus = 'updated';
     } else {
-      const created = await notionFetch(cfg.token, '/pages', {
-        method: 'POST',
-        body: JSON.stringify({ parent: { database_id: cfg.dbs.transactions }, properties: txProperties }),
-      });
-      transactionId = created?.id || null;
+      // Dedup probe: look for a pre-existing page in the Transactions
+      // DB that matches this prospect. Priority:
+      //   1. mapped email property on Transactions (most reliable)
+      //   2. title property matched against prospect_name (fallback)
+      // If a match is found we link the referral to that page instead
+      // of creating a new one — universal "check email first" rule.
+      const emailProp = txMapping.email;
+      let dedupId = null;
+      if (emailProp && values.email) {
+        const schemaType = txnsDb.rawSchema[emailProp]?.type;
+        const filter = schemaType === 'email'
+          ? { email: { equals: values.email } }
+          : { rich_text: { equals: values.email } };
+        dedupId = await searchPage(cfg.token, cfg.dbs.transactions, emailProp, filter);
+      }
+      if (!dedupId && values.prospect_name) {
+        const titleKey = findTitleProp(txnsDb.rawSchema);
+        if (titleKey) {
+          dedupId = await searchPage(cfg.token, cfg.dbs.transactions, titleKey, { title: { equals: values.prospect_name } });
+        }
+      }
+      if (dedupId) {
+        await notionFetch(cfg.token, `/pages/${dedupId}`, { method: 'PATCH', body: JSON.stringify({ properties: txProperties }) });
+        transactionId = dedupId;
+        linkStatus = 'linked_existing';
+      } else {
+        const created = await notionFetch(cfg.token, '/pages', {
+          method: 'POST',
+          body: JSON.stringify({ parent: { database_id: cfg.dbs.transactions }, properties: txProperties }),
+        });
+        transactionId = created?.id || null;
+        linkStatus = 'created_new';
+      }
     }
 
-    // Persist every id we resolved.
+    // Persist every id we resolved + the unified link status flag so
+    // the Kanban card can badge this referral as synced.
     await query(
       `UPDATE referrals
           SET notion_transaction_id = COALESCE($1, notion_transaction_id),
               notion_contact_id     = COALESCE($2, notion_contact_id),
               notion_company_id     = COALESCE($3, notion_company_id),
-              notion_page_id        = COALESCE($1, notion_page_id)
-        WHERE id = $4`,
-      [transactionId, contactId, companyId, referral.id]
+              notion_page_id        = COALESCE($1, notion_page_id),
+              crm_link_status       = COALESCE($4, crm_link_status)
+        WHERE id = $5`,
+      [transactionId, contactId, companyId, linkStatus, referral.id]
     );
 
     // Sync-log entry — unifies with the HubSpot sync-history view.
-    // Action is 'push' regardless of create vs update; details carries
-    // the operation kind so the UI can distinguish if it ever wants to.
+    // operation mirrors crm_link_status so the UI can render the same
+    // badge in both places.
     logSync(tenantId, {
       action: 'push',
       status: 'success',
       referralId: referral.id,
       details: {
-        operation: wasCreate ? 'create' : 'update',
+        operation: linkStatus === 'created_new' ? 'create'
+          : linkStatus === 'linked_existing' ? 'linked_existing'
+            : 'update',
+        linkStatus,
         transaction_id: transactionId,
         contact_id: contactId,
         company_id: companyId,
@@ -438,7 +474,7 @@ async function pushReferralToNotion(referral, tenantId) {
       },
     });
 
-    return { ok: true, transactionId, contactId, companyId };
+    return { ok: true, transactionId, contactId, companyId, linkStatus };
   } catch (err) {
     console.error('[notion.push]', err.message, err.body || '');
     logSync(tenantId, {

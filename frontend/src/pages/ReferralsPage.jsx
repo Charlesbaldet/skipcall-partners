@@ -540,48 +540,64 @@ function Select({ value, onChange, children }) {
   return (<select value={value} onChange={e => onChange(e.target.value)} style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#334155', background: '#fff', cursor: 'pointer' }}>{children}</select>);
 }
 
-// Small badge next to a referral's prospect name when it's been
-// pushed to a CRM. crm_deal_id is set by the backend after a
-// successful sync; crm_synced_at carries the timestamp.
+// Per-CRM sync badges — tiny letter circles (H / N / S) shown next to
+// the prospect name on the Kanban card. Each badge lights up green
+// once the referral is linked to that CRM's record; Notion stays a
+// clickable link to the underlying page for quick access. The
+// generic `crm_deal_id` fallback covers legacy rows that predate the
+// split into provider-specific columns.
 function CrmSyncBadge({ referral }) {
+  if (!referral) return null;
+  const date = referral.crm_synced_at ? new Date(referral.crm_synced_at).toLocaleString() : '';
+  const hubspotLinked   = !!referral.hubspot_deal_id;
+  const salesforceLinked = !!referral.salesforce_opportunity_id;
+  const notionLinked    = !!(referral.notion_page_id || referral.notion_transaction_id);
+  // Legacy `crm_deal_id` with no provider-specific column populated —
+  // treat it as a generic sync so pre-migration rows still get a
+  // badge.
+  const legacyLinked = !!referral.crm_deal_id && !hubspotLinked && !salesforceLinked;
+
+  const circle = (bg, fg, letter) => ({
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    width: 16, height: 16, borderRadius: '50%',
+    background: bg, color: fg,
+    fontSize: 9, fontWeight: 800, flexShrink: 0,
+    textDecoration: 'none', border: '1px solid transparent',
+  });
+
+  const suffix = referral.crm_link_status === 'linked_existing'
+    ? ' (linked to existing)'
+    : referral.crm_link_status === 'created_new'
+      ? ' (new)'
+      : '';
+
   const badges = [];
-  if (referral?.crm_deal_id) {
-    const date = referral.crm_synced_at ? new Date(referral.crm_synced_at).toLocaleString() : '';
+  if (hubspotLinked) {
     badges.push(
-      <span
-        key="crm"
-        title={`Synced with CRM${date ? ' — ' + date : ''}`}
-        aria-label="CRM synced"
-        style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 16, height: 16, borderRadius: '50%',
-          background: '#f0fdf4', color: '#059669',
-          fontSize: 9, fontWeight: 800, flexShrink: 0,
-          border: '1px solid #bbf7d0',
-        }}
-      ></span>
+      <span key="hs" title={`HubSpot${suffix}${date ? ' — ' + date : ''}`} aria-label="HubSpot synced"
+        style={circle(hubspotLinked ? '#ff7a59' : '#f1f5f9', '#fff', 'H')}>H</span>
     );
   }
-  if (referral?.notion_page_id) {
-    // Notion's page IDs are hyphenless in the URL; normalise.
-    const id = String(referral.notion_page_id).replace(/-/g, '');
+  if (notionLinked) {
+    const id = String(referral.notion_page_id || referral.notion_transaction_id).replace(/-/g, '');
     badges.push(
-      <a
-        key="notion"
-        href={`https://notion.so/${id}`}
-        target="_blank"
-        rel="noreferrer"
-        onClick={e => e.stopPropagation()}
-        title="Open in Notion"
-        aria-label="Open in Notion"
-        style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 16, height: 16, borderRadius: '50%',
-          background: '#111827', color: '#fff',
-          fontSize: 9, fontWeight: 800, flexShrink: 0,
-          textDecoration: 'none',
-        }}
-      >N</a>
+      <a key="notion" href={`https://notion.so/${id}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+        title={`Notion${suffix}`} aria-label="Open in Notion"
+        style={circle('#111827', '#fff', 'N')}>N</a>
+    );
+  }
+  if (salesforceLinked) {
+    badges.push(
+      <span key="sf" title={`Salesforce${suffix}${date ? ' — ' + date : ''}`} aria-label="Salesforce synced"
+        style={circle('#00a1e0', '#fff', 'S')}>S</span>
+    );
+  }
+  if (legacyLinked) {
+    // Unknown-provider fallback — neutral grey dot so admins at least
+    // see something's been synced.
+    badges.push(
+      <span key="legacy" title={`CRM synced${date ? ' — ' + date : ''}`} aria-label="CRM synced"
+        style={circle('#f0fdf4', '#059669', '')}>•</span>
     );
   }
   if (!badges.length) return null;

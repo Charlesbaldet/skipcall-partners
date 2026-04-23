@@ -209,10 +209,30 @@ async function upsertHubSpotContact(integration, referral, mapping = {}) {
   return created?.id || null;
 }
 
-// Create or update the Deal and return its id. Kept separate so the
-// top-level pushToHubSpot reads as an ordered script: company →
-// contact → deal → associate.
-async function upsertHubSpotDeal(integration, referral, mappings) {
+// Look up the most-recent Deal associated with a Contact via the v4
+// associations endpoint. Returns the deal id (string) or null. Used
+// by upsertHubSpotDeal to dedup before creating a new deal — if the
+// contact already has a deal we update that one instead of piling on
+// a second.
+async function findDealAssociatedWithContact(integration, contactId) {
+  if (!contactId) return null;
+  try {
+    const data = await hs(integration, `/crm/v4/objects/contacts/${contactId}/associations/deals?limit=1`);
+    const toId = data?.results?.[0]?.toObjectId || data?.results?.[0]?.id;
+    return toId ? String(toId) : null;
+  } catch (err) {
+    if (err.status === 404) return null;
+    console.warn('[hubspot.findDealAssoc]', err.message);
+    return null;
+  }
+}
+
+// Create or update the Deal and return { id, linkStatus } where
+// linkStatus is 'created_new' | 'linked_existing' | 'updated'. The
+// caller writes that status onto referrals.crm_link_status so the
+// pipeline UI can badge the card accordingly and so the sync log
+// can distinguish genuine-new deals from dedup hits.
+async function upsertHubSpotDeal(integration, referral, mappings, contactId) {
   const properties = buildPayload(referral, mappings.fields);
   const stage = findStageMapping(mappings.stages, referral.status);
   if (stage) {
@@ -223,10 +243,31 @@ async function upsertHubSpotDeal(integration, referral, mappings) {
     properties.dealname = referral.prospect_company || referral.prospect_name || 'RefBoost referral';
   }
 
-  const url = referral.crm_deal_id ? `/crm/v3/objects/deals/${referral.crm_deal_id}` : '/crm/v3/objects/deals';
-  const method = referral.crm_deal_id ? 'PATCH' : 'POST';
-  const data = await hs(integration, url, { method, body: JSON.stringify({ properties }) });
-  return data?.id || referral.crm_deal_id || null;
+  // Already linked → straight PATCH.
+  const knownId = referral.hubspot_deal_id || referral.crm_deal_id;
+  if (knownId) {
+    const data = await hs(integration, `/crm/v3/objects/deals/${knownId}`, {
+      method: 'PATCH', body: JSON.stringify({ properties }),
+    });
+    return { id: data?.id || knownId, linkStatus: 'updated' };
+  }
+
+  // Not linked yet. Search for a pre-existing deal via the contact's
+  // association graph — any hit means HubSpot already knows about
+  // this prospect; linking prevents duplicate deal rows.
+  const existingDealId = await findDealAssociatedWithContact(integration, contactId);
+  if (existingDealId) {
+    await hs(integration, `/crm/v3/objects/deals/${existingDealId}`, {
+      method: 'PATCH', body: JSON.stringify({ properties }),
+    });
+    return { id: existingDealId, linkStatus: 'linked_existing' };
+  }
+
+  // Brand-new deal.
+  const data = await hs(integration, '/crm/v3/objects/deals', {
+    method: 'POST', body: JSON.stringify({ properties }),
+  });
+  return { id: data?.id || null, linkStatus: 'created_new' };
 }
 
 async function pushToHubSpot(referral, integration, mappings) {
@@ -245,7 +286,7 @@ async function pushToHubSpot(referral, integration, mappings) {
   // persist the ids we have and log the partial state.
   const companyId = await upsertHubSpotCompany(integration, referral, companyMap).catch(e => { console.warn('[hubspot.company]', e.message); return referral.hubspot_company_id || null; });
   const contactId = await upsertHubSpotContact(integration, referral, contactMap).catch(e => { console.warn('[hubspot.contact]', e.message); return referral.hubspot_contact_id || null; });
-  const dealId    = await upsertHubSpotDeal(integration, referral, mappings);
+  const { id: dealId, linkStatus } = await upsertHubSpotDeal(integration, referral, mappings, contactId);
 
   // Associate contact ↔ deal, contact ↔ company, deal ↔ company.
   // All fire-and-forget at the individual call level (they self-log on
@@ -263,10 +304,53 @@ async function pushToHubSpot(referral, integration, mappings) {
     [contactId, companyId, referral.id]
   );
 
-  return dealId;
+  return { dealId, linkStatus };
 }
 
 // ─── Salesforce ──────────────────────────────────────────────────────
+async function sfGet(integration, path) {
+  const resp = await fetch(`${integration.instance_url}${path}`, {
+    headers: { Authorization: `Bearer ${integration.access_token}` },
+  });
+  if (!resp.ok) {
+    const body = await resp.text();
+    const err = new Error(`Salesforce ${resp.status}: ${body.slice(0, 300)}`);
+    err.status = resp.status;
+    throw err;
+  }
+  return resp.json();
+}
+
+// Escape a string for a SOQL literal — replace ' with \' and strip
+// control chars so prospect emails can't break the query.
+function soqlLiteral(s) {
+  return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\r\n]/g, ' ');
+}
+
+// Dedup probe for Salesforce: given a prospect email, find the most
+// recent Opportunity whose primary Contact has that email. Returns
+// the Opportunity id or null.
+async function findSalesforceOpportunityByEmail(integration, email) {
+  if (!email) return null;
+  try {
+    // Contact first — Opportunity doesn't carry email directly, so
+    // we resolve Contact by email then follow OpportunityContactRole.
+    const cData = await sfGet(integration,
+      `/services/data/v59.0/query/?q=${encodeURIComponent(`SELECT Id FROM Contact WHERE Email = '${soqlLiteral(email)}' ORDER BY LastModifiedDate DESC LIMIT 1`)}`
+    );
+    const contactId = cData?.records?.[0]?.Id;
+    if (!contactId) return null;
+    const oData = await sfGet(integration,
+      `/services/data/v59.0/query/?q=${encodeURIComponent(`SELECT OpportunityId FROM OpportunityContactRole WHERE ContactId = '${contactId}' ORDER BY CreatedDate DESC LIMIT 1`)}`
+    );
+    return oData?.records?.[0]?.OpportunityId || null;
+  } catch (err) {
+    if (err.status === 404) return null;
+    console.warn('[salesforce.dedup]', err.message);
+    return null;
+  }
+}
+
 async function pushToSalesforce(referral, integration, mappings) {
   if (!integration.instance_url) throw new Error('Salesforce instance_url missing');
   const properties = buildPayload(referral, mappings.fields);
@@ -280,10 +364,21 @@ async function pushToSalesforce(referral, integration, mappings) {
     properties.CloseDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   }
 
-  const url = referral.crm_deal_id
-    ? `${integration.instance_url}/services/data/v59.0/sobjects/Opportunity/${referral.crm_deal_id}`
-    : `${integration.instance_url}/services/data/v59.0/sobjects/Opportunity`;
-  const method = referral.crm_deal_id ? 'PATCH' : 'POST';
+  // Resolve the Opportunity id to act on:
+  // 1. Already linked on the referral row → PATCH that one.
+  // 2. Dedup probe by prospect email → PATCH the existing Opportunity,
+  //    link status = 'linked_existing'.
+  // 3. Otherwise → POST a new Opportunity, link status = 'created_new'.
+  let opportunityId = referral.salesforce_opportunity_id || referral.crm_deal_id || null;
+  let linkStatus = 'updated';
+  if (!opportunityId) {
+    opportunityId = await findSalesforceOpportunityByEmail(integration, referral.prospect_email);
+    linkStatus = opportunityId ? 'linked_existing' : 'created_new';
+  }
+
+  const base = `${integration.instance_url}/services/data/v59.0/sobjects/Opportunity`;
+  const url = opportunityId ? `${base}/${opportunityId}` : base;
+  const method = opportunityId ? 'PATCH' : 'POST';
 
   const resp = await fetch(url, {
     method,
@@ -297,9 +392,9 @@ async function pushToSalesforce(referral, integration, mappings) {
     const body = await resp.text();
     throw new Error(`Salesforce ${resp.status}: ${body.slice(0, 300)}`);
   }
-  if (referral.crm_deal_id) return referral.crm_deal_id; // PATCH returns 204
+  if (opportunityId) return { dealId: opportunityId, linkStatus };
   const data = await resp.json();
-  return data.id;
+  return { dealId: data.id, linkStatus };
 }
 
 // ─── Generic webhook ─────────────────────────────────────────────────
@@ -341,25 +436,45 @@ async function pushReferralToCRM(referral, tenantId) {
     if (!integration) return { skipped: true, reason: 'no_integration' };
 
     let dealId = null;
+    let linkStatus = null;
     if (integration.provider === 'webhook') {
       await pushToWebhook(referral, integration);
     } else {
       const mappings = await getMappings(integration.id);
       if (integration.provider === 'hubspot') {
-        dealId = await pushToHubSpot(referral, integration, mappings);
+        ({ dealId, linkStatus } = await pushToHubSpot(referral, integration, mappings));
       } else if (integration.provider === 'salesforce') {
-        dealId = await pushToSalesforce(referral, integration, mappings);
+        ({ dealId, linkStatus } = await pushToSalesforce(referral, integration, mappings));
       } else {
         return { skipped: true, reason: 'unknown_provider' };
       }
     }
 
-    // Persist deal id + sync timestamp on the referral.
+    // Persist deal id + provider-specific mirror + link status + sync
+    // timestamp on the referral. crm_deal_id stays populated for
+    // back-compat with older dashboards that read it.
     if (dealId) {
-      await query(
-        'UPDATE referrals SET crm_deal_id = $1, crm_synced_at = NOW() WHERE id = $2',
-        [dealId, referral.id]
-      );
+      const providerCol = integration.provider === 'hubspot'
+        ? 'hubspot_deal_id'
+        : integration.provider === 'salesforce'
+          ? 'salesforce_opportunity_id'
+          : null;
+      if (providerCol) {
+        await query(
+          `UPDATE referrals
+              SET crm_deal_id = $1,
+                  ${providerCol} = COALESCE($1, ${providerCol}),
+                  crm_link_status = COALESCE($2, crm_link_status),
+                  crm_synced_at = NOW()
+            WHERE id = $3`,
+          [dealId, linkStatus, referral.id]
+        );
+      } else {
+        await query(
+          'UPDATE referrals SET crm_deal_id = $1, crm_synced_at = NOW() WHERE id = $2',
+          [dealId, referral.id]
+        );
+      }
     } else {
       await query('UPDATE referrals SET crm_synced_at = NOW() WHERE id = $1', [referral.id]);
     }
@@ -370,8 +485,15 @@ async function pushReferralToCRM(referral, tenantId) {
       const { rows } = await query('SELECT hubspot_contact_id, hubspot_company_id FROM referrals WHERE id = $1', [referral.id]);
       hsIds = rows[0] || {};
     }
-    await logSync(integration.id, referral.id, 'push', 'success', { provider: integration.provider, dealId, ...hsIds });
-    return { ok: true, dealId, ...hsIds };
+    await logSync(integration.id, referral.id, 'push', 'success', {
+      provider: integration.provider,
+      dealId,
+      linkStatus,
+      operation: linkStatus === 'created_new' ? 'create' : linkStatus === 'linked_existing' ? 'linked_existing' : 'update',
+      prospect_name: referral.prospect_name,
+      ...hsIds,
+    });
+    return { ok: true, dealId, linkStatus, ...hsIds };
   } catch (err) {
     console.error('[crm.push] error:', err.message);
     // Best-effort log even on failure — needs the integration id.
