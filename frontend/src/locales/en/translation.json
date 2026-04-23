@@ -2206,7 +2206,10 @@
     "sync_ok_count": "Sync complete — {{count}} record(s) updated.",
     "sync_failed": "Sync failed.",
     "disconnect_ok": "Notion disconnected.",
-    "sync_ok_push": "Sync complete — {{pushed}}/{{total}} pushed to Notion, {{pulled}} updates pulled back."
+    "sync_ok_push": "Sync complete — {{pushed}}/{{total}} pushed to Notion, {{pulled}} updates pulled back.",
+    "last_sync_at": "Last sync: {{at}}",
+    "last_sync_none": "Last sync: never",
+    "nightly_schedule": "Automatic sync: every evening at {{time}} (Paris)"
   },
   "partner_notifications": {
     "tab": "Notifications",

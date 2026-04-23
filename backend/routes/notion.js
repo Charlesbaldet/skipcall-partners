@@ -163,6 +163,10 @@ router.get('/status', async (req, res) => {
       [req.tenantId]
     );
     const t = rows[0] || {};
+    // Pull the unified last_pull_at watermark. Falls back to the
+    // legacy notion_last_sync column for tenants who synced before
+    // the migration.
+    const lastPullAt = await notion.getLastPullAt(req.tenantId);
     res.json({
       connected: !!t.notion_connected,
       databases: {
@@ -175,7 +179,9 @@ router.get('/status', async (req, res) => {
         contacts:     t.notion_mapping_contacts     || {},
         companies:    t.notion_mapping_companies    || {},
       },
-      lastSync: t.notion_last_sync,
+      lastSync: lastPullAt || t.notion_last_sync,
+      lastPullAt: lastPullAt || t.notion_last_sync,
+      nightlyScheduleParis: '21:00',
     });
   } catch (err) {
     console.error('[notion.status]', err.message);
@@ -302,6 +308,44 @@ router.post('/push', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('[notion.push]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/crm/notion/sync-all — one-shot bi-directional sync.
+// Push every referral to Notion, then pull any pages that have been
+// edited in Notion since the last watermark. Returns the merged
+// result so the UI can render a single toast with both counts. This
+// replaces the frontend's former two-request ping-pong.
+router.post('/sync-all', async (req, res) => {
+  try {
+    const pushRes = await notion.pushAllReferralsToNotion(req.tenantId);
+    if (!pushRes.ok) return res.status(400).json({ error: pushRes.reason || 'push_failed' });
+    let pulled = 0;
+    let conflicts = 0;
+    let pullError = null;
+    try {
+      const pullRes = await notion.pullFromNotion(req.tenantId);
+      if (pullRes.ok) {
+        pulled = pullRes.updated || 0;
+        conflicts = pullRes.conflicts || 0;
+      } else {
+        pullError = pullRes.error || pullRes.reason || 'pull_failed';
+      }
+    } catch (err) {
+      pullError = err.message;
+    }
+    res.json({
+      ok: true,
+      pushed: pushRes.pushed || 0,
+      total: pushRes.total || 0,
+      failed: pushRes.failed || 0,
+      pulled,
+      conflicts,
+      pullError,
+    });
+  } catch (err) {
+    console.error('[notion.sync-all]', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

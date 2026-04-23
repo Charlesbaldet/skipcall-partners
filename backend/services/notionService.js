@@ -513,34 +513,109 @@ function findTitleProp(schema) {
   return entry ? entry[0] : null;
 }
 
+// Given a statusMapping { refboost_slug: "Notion option name", ... }
+// produce the inverse { "Notion option name": refboost_slug } so a
+// pull can translate a Notion Status/Select value back into our
+// canonical pipeline slug. Case-insensitive match on the Notion
+// side so mismatched casing doesn't silently lose a status update.
+function buildReverseStatusMapping(statusMapping) {
+  const rev = {};
+  for (const [refSlug, notionName] of Object.entries(statusMapping || {})) {
+    if (typeof notionName === 'string' && notionName.trim()) {
+      rev[notionName.trim().toLowerCase()] = refSlug;
+    }
+  }
+  return rev;
+}
+
+// Read the raw Notion status/select value off a page's properties.
+// Returns the option NAME (string) regardless of whether it's a
+// Status / Select / Multi-select field.
+function readStatusProperty(prop) {
+  if (!prop) return null;
+  if (prop.type === 'status')       return prop.status?.name || null;
+  if (prop.type === 'select')       return prop.select?.name || null;
+  if (prop.type === 'multi_select') return (prop.multi_select?.[0]?.name) || null;
+  return null;
+}
+
 // ─── Pull ───────────────────────────────────────────────────────────
-async function pullFromNotion(tenantId) {
+// `since` is an ISO timestamp — when provided, only pages modified
+// after that instant are considered. The manual "Sync maintenant"
+// button calls us with no since (full re-pull); the scheduled
+// nightly worker passes the tenant's last_pull_at so the run only
+// processes the delta.
+async function pullFromNotion(tenantId, { since } = {}) {
   const cfg = await getTenantNotion(tenantId);
   if (!cfg) return { ok: false, reason: 'not_connected' };
 
   try {
+    // Resolve the watermark. Prefer crm_integrations.last_pull_at
+    // (new unified column) then fall back to tenants.notion_last_sync
+    // for tenants who synced before the migration.
+    const { rows: [intRow] } = await query(
+      `SELECT last_pull_at FROM crm_integrations
+        WHERE tenant_id = $1 AND provider = 'notion' LIMIT 1`,
+      [tenantId]
+    );
+    const watermark = since || intRow?.last_pull_at || cfg.lastSync || null;
+
+    // Ask Notion for pages modified after the watermark. Notion's
+    // filter doesn't accept a null timestamp — omit the filter in
+    // that case and fetch up to 100 rows instead.
+    const body = {
+      page_size: 100,
+      sorts: [{ timestamp: 'last_edited_time', direction: 'ascending' }],
+    };
+    if (watermark) {
+      body.filter = {
+        timestamp: 'last_edited_time',
+        last_edited_time: { after: new Date(watermark).toISOString() },
+      };
+    }
     const pages = await notionFetch(cfg.token, `/databases/${encodeURIComponent(cfg.dbs.transactions)}/query`, {
       method: 'POST',
-      body: JSON.stringify({ page_size: 100, sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }] }),
+      body: JSON.stringify(body),
     });
 
     // Reverse the Transaction mapping so we know which Notion prop
-    // name maps back to which RefBoost field.
+    // name maps back to which RefBoost field. Status gets its own
+    // reverse map (value-level, not field-level).
     const txReverse = reverseMap(cfg.mappings.transactions);
     const ctReverse = reverseMap(cfg.mappings.contacts);
     const coReverse = reverseMap(cfg.mappings.companies);
+    const statusReverse = buildReverseStatusMapping(cfg.statusMapping);
+    const txStatusProp = cfg.mappings.transactions?.status || null;
 
     let updated = 0;
+    let conflicts = 0;
     for (const page of (pages.results || [])) {
-      if (cfg.lastSync && new Date(page.last_edited_time) <= new Date(cfg.lastSync)) continue;
+      // Server-side filter should have done this already, but keep a
+      // belt-and-suspenders check in case the client-side value on
+      // cfg.lastSync was stricter.
+      if (watermark && new Date(page.last_edited_time) <= new Date(watermark)) continue;
       const { rows: [referral] } = await query(
-        'SELECT id FROM referrals WHERE notion_transaction_id = $1 AND tenant_id = $2',
+        `SELECT id, status, updated_at, prospect_name
+           FROM referrals
+          WHERE notion_transaction_id = $1 AND tenant_id = $2`,
         [page.id, tenantId]
       );
       if (!referral) continue;
 
       const patch = {};
       mergeReadable(patch, page.properties, txReverse);
+
+      // Status reverse mapping — read the Notion status property
+      // directly (mergeReadable handles text fields, not
+      // status/select enums) and translate through statusReverse.
+      let newStatus = null;
+      if (txStatusProp && page.properties[txStatusProp]) {
+        const notionStatusName = readStatusProperty(page.properties[txStatusProp]);
+        if (notionStatusName) {
+          const mapped = statusReverse[notionStatusName.toLowerCase()];
+          if (mapped && mapped !== referral.status) newStatus = mapped;
+        }
+      }
 
       // Follow relations into Contacts / Companies for fuller enrichment.
       if (cfg.dbs.contacts) {
@@ -558,6 +633,25 @@ async function pullFromNotion(tenantId) {
         }
       }
 
+      // Conflict resolution: when the referral was modified in
+      // RefBoost more recently than the Notion page, RefBoost wins —
+      // skip the patch and log the conflict.
+      const notionEdited = new Date(page.last_edited_time);
+      const refEdited = referral.updated_at ? new Date(referral.updated_at) : null;
+      if (refEdited && refEdited > notionEdited) {
+        conflicts++;
+        logSync(tenantId, {
+          action: 'pull', status: 'conflict', referralId: referral.id,
+          details: {
+            winner: 'refboost',
+            prospect_name: referral.prospect_name,
+            refboost_updated_at: refEdited.toISOString(),
+            notion_edited_at: notionEdited.toISOString(),
+          },
+        });
+        continue;
+      }
+
       // Write the patch back (translate RefBoost keys → column names).
       const colMap = {
         prospect_name: 'prospect_name', email: 'prospect_email', phone: 'prospect_phone',
@@ -571,15 +665,34 @@ async function pullFromNotion(tenantId) {
         if (!col || v == null || v === '') continue;
         sets.push(`${col} = $${i++}`); params.push(v);
       }
+      if (newStatus) {
+        sets.push(`status = $${i++}`); params.push(newStatus);
+      }
       if (sets.length) {
         params.push(referral.id);
         await query(`UPDATE referrals SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${i}`, params);
         updated++;
+        logSync(tenantId, {
+          action: 'pull', status: 'success', referralId: referral.id,
+          details: {
+            operation: 'update',
+            prospect_name: referral.prospect_name,
+            status_changed: !!newStatus,
+            new_status: newStatus,
+          },
+        });
       }
     }
 
+    // Bump both timestamps — the unified crm_integrations column
+    // (used by the nightly worker) and the legacy tenants column.
+    await query(
+      `UPDATE crm_integrations SET last_pull_at = NOW()
+        WHERE tenant_id = $1 AND provider = 'notion'`,
+      [tenantId]
+    );
     await query('UPDATE tenants SET notion_last_sync = NOW() WHERE id = $1', [tenantId]);
-    return { ok: true, updated };
+    return { ok: true, updated, conflicts };
   } catch (err) {
     console.error('[notion.pull]', err.message, err.body || '');
     return { ok: false, error: err.message };
@@ -669,6 +782,88 @@ async function pushAllReferralsToNotion(tenantId) {
   return { ok: true, total: referrals.length, pushed, failed, errors };
 }
 
+// ─── Nightly pull worker ────────────────────────────────────────────
+// Runs across every tenant with an active Notion integration once
+// per day at 21:00 Europe/Paris. Skipped on every other minute. No
+// new dependency — a bare setInterval that checks wall-clock Paris
+// time each minute is enough; the worker caps at ~1440 cheap clock
+// reads per day, and the actual heavy work (DB + Notion calls) only
+// fires when the minute/hour pair hits.
+const PULL_HOUR_PARIS = 21;
+const PULL_MINUTE_PARIS = 0;
+const TICK_INTERVAL_MS = 60 * 1000;
+
+function parisNowParts() {
+  // Intl-based timezone conversion is the most portable way to
+  // evaluate "what hour/minute is it in Paris right now" without a
+  // timezone library.
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Paris',
+    hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  }).formatToParts(new Date());
+  const get = (t) => parts.find(p => p.type === t)?.value;
+  return {
+    date: `${get('year')}-${get('month')}-${get('day')}`,
+    hour: Number(get('hour')),
+    minute: Number(get('minute')),
+  };
+}
+
+async function runScheduledPullOnce() {
+  let rows;
+  try {
+    ({ rows } = await query(
+      `SELECT tenant_id FROM crm_integrations
+        WHERE provider = 'notion' AND is_active = TRUE`
+    ));
+  } catch (err) {
+    if (!err.message.includes('does not exist')) {
+      console.error('[notion.schedule] fetch tenants failed:', err.message);
+    }
+    return;
+  }
+  for (const r of rows) {
+    try {
+      const result = await pullFromNotion(r.tenant_id);
+      if (result.ok) {
+        console.log(`[notion.schedule] tenant ${r.tenant_id}: pulled ${result.updated}${result.conflicts ? ` (${result.conflicts} conflicts)` : ''}`);
+      } else {
+        console.warn(`[notion.schedule] tenant ${r.tenant_id}: pull failed —`, result.reason || result.error);
+      }
+    } catch (err) {
+      console.error(`[notion.schedule] tenant ${r.tenant_id}:`, err.message);
+    }
+  }
+}
+
+function startScheduledPullWorker() {
+  let lastRun = null;
+  const tick = () => {
+    const { date, hour, minute } = parisNowParts();
+    if (hour !== PULL_HOUR_PARIS || minute !== PULL_MINUTE_PARIS) return;
+    if (lastRun === date) return; // already ran today in Paris
+    lastRun = date;
+    runScheduledPullOnce().catch(err => console.error('[notion.schedule] unhandled:', err.message));
+  };
+  setInterval(tick, TICK_INTERVAL_MS);
+  console.log(`[notion.schedule] nightly pull worker armed — fires at ${String(PULL_HOUR_PARIS).padStart(2, '0')}:${String(PULL_MINUTE_PARIS).padStart(2, '0')} Europe/Paris`);
+}
+
+// Public: last_pull_at for the tenant's Notion integration. UI reads
+// it to render the "Dernière sync" line on the connection card.
+async function getLastPullAt(tenantId) {
+  try {
+    const { rows: [row] } = await query(
+      `SELECT last_pull_at FROM crm_integrations
+        WHERE tenant_id = $1 AND provider = 'notion' LIMIT 1`,
+      [tenantId]
+    );
+    return row?.last_pull_at || null;
+  } catch { return null; }
+}
+
 module.exports = {
   validateConnection,
   fetchDatabase,
@@ -679,4 +874,6 @@ module.exports = {
   pullFromNotion,
   ensureNotionIntegrationRow,
   markNotionIntegrationInactive,
+  startScheduledPullWorker,
+  getLastPullAt,
 };

@@ -2206,7 +2206,10 @@
     "sync_ok_count": "Sincronização concluída — {{count}} atualizado(s).",
     "sync_failed": "Falha na sincronização.",
     "disconnect_ok": "Notion desligado.",
-    "sync_ok_push": "Sincronização concluída — {{pushed}}/{{total}} enviados ao Notion, {{pulled}} atualizações importadas."
+    "sync_ok_push": "Sincronização concluída — {{pushed}}/{{total}} enviados ao Notion, {{pulled}} atualizações importadas.",
+    "last_sync_at": "Última sincronização: {{at}}",
+    "last_sync_none": "Última sincronização: nunca",
+    "nightly_schedule": "Sincronização automática: todas as noites às {{time}} (Paris)"
   },
   "partner_notifications": {
     "tab": "Notificações",

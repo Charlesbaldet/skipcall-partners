@@ -46,6 +46,7 @@ const webhooksRoutes = require('./routes/webhooks');
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
 const { startRetryWorker: startWebhookRetryWorker } = require('./services/webhookService');
+const { startScheduledPullWorker: startNotionNightlyPull } = require('./services/notionService');
 const { runMigrations } = require('./db/migrate');
 const { runSecurityMigrations } = require('./db/migrate-security');
 const { tenantMiddleware } = require('./middleware/tenant');
@@ -195,6 +196,11 @@ app.listen(PORT, () => {
 
   startWebhookRetryWorker();
   console.log('[webhooks] retry worker started');
+
+  // Nightly bi-directional-sync pull for Notion. Wakes at 21:00
+  // Europe/Paris, iterates every active Notion integration, and
+  // fetches the delta since each tenant's last_pull_at watermark.
+  startNotionNightlyPull();
 });
 
 // force rebuild

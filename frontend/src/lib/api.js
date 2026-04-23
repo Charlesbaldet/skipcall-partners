@@ -346,6 +346,10 @@ class ApiClient {
   syncReferralToNotion(referralId) { return this.request('/crm/notion/sync/' + referralId, { method: 'POST' }); }
   pullFromNotion() { return this.request('/crm/notion/pull', { method: 'POST' }); }
   pushToNotion() { return this.request('/crm/notion/push', { method: 'POST' }); }
+  // One-shot bi-directional sync: backend does push+pull server-side
+  // and returns both counts in a single response. Preferred over
+  // two-round-trip pushToNotion()+pullFromNotion() from the UI.
+  syncAllNotion() { return this.request('/crm/notion/sync-all', { method: 'POST' }); }
   getSalesforceFields() { return this.request('/crm/salesforce/fields'); }
   getSalesforceStages() { return this.request('/crm/salesforce/stages'); }
 

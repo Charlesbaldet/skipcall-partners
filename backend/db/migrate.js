@@ -281,6 +281,17 @@ async function runMigrations() {
   await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS contact_last_name  TEXT`);
   console.log('[referrals] v18d contact_first_name + contact_last_name ready');
 
+  // ─── v18e: last_pull_at on crm_integrations ───────────────────────
+  // Cross-provider column for the scheduled nightly-pull worker. Lets
+  // every CRM pull (Notion today, HubSpot/Salesforce next) ask Notion/
+  // HubSpot's /query endpoint for "pages modified since" a known
+  // watermark, so a 21:00 Paris run only fetches the delta — not the
+  // whole database each night. Tenants.notion_last_sync stays around
+  // for back-compat; we update both until the old column can be
+  // dropped.
+  await query(`ALTER TABLE crm_integrations ADD COLUMN IF NOT EXISTS last_pull_at TIMESTAMPTZ`);
+  console.log('[crm] v18e crm_integrations.last_pull_at ready');
+
   // ─── v19: Outgoing webhooks ───
   await query(`CREATE TABLE IF NOT EXISTS webhook_endpoints (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -783,31 +783,30 @@ function CrmIntegrations() {
               {notion.databaseName && (
                 <div style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{notion.databaseName}</div>
               )}
+              <div style={{ fontSize: 11, color: '#64748b' }}>
+                {notion.lastPullAt
+                  ? t('notion.last_sync_at', { at: new Date(notion.lastPullAt).toLocaleString() })
+                  : t('notion.last_sync_none')}
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                {t('notion.nightly_schedule', { time: notion.nightlyScheduleParis || '21:00' })}
+              </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <button type="button" onClick={(e) => { stopEv(e); setShowNotionMappings(true); }} disabled={busy} style={btnSecondary}>{t('notion.configure_mappings')}</button>
                 <button type="button" onClick={async (e) => {
                   stopEv(e); setBusy(true); setNotionMsg(null);
                   try {
-                    // Bidirectional sync: push every RefBoost referral
-                    // to Notion first (create/update pages in the
-                    // Transactions DB), then pull any changes that
-                    // happened directly inside Notion back into
-                    // RefBoost. Mirrors how the HubSpot "Sync now"
-                    // button behaves. Each individual referral push
-                    // logs its own row in crm_sync_log so the history
-                    // view fills in live.
-                    const pushRes = await api.pushToNotion();
-                    if (!pushRes.ok) throw new Error(pushRes.error || 'push_failed');
-                    let pullUpdated = 0;
-                    try {
-                      const pullRes = await api.pullFromNotion();
-                      if (pullRes.ok && typeof pullRes.updated === 'number') pullUpdated = pullRes.updated;
-                    } catch { /* pull is opportunistic — don't fail the whole sync */ }
+                    // One server-side round-trip: /sync-all runs push
+                    // then pull sequentially and returns merged stats.
+                    // The nightly worker handles the recurring delta;
+                    // this button covers the admin "do it now" case.
+                    const r = await api.syncAllNotion();
+                    if (!r.ok) throw new Error(r.error || 'sync_failed');
                     load();
                     setNotionMsg({ tone: 'success', text: t('notion.sync_ok_push', {
-                      pushed: pushRes.pushed ?? 0,
-                      total: pushRes.total ?? 0,
-                      pulled: pullUpdated,
+                      pushed: r.pushed ?? 0,
+                      total: r.total ?? 0,
+                      pulled: r.pulled ?? 0,
                     }) });
                     setTimeout(() => setNotionMsg(null), 6000);
                   } catch (err) {
