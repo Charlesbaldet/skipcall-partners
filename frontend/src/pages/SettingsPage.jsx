@@ -2111,9 +2111,18 @@ function NotionMappingModal({ onClose }) {
   const tf = (k, fallback) => t(k, { defaultValue: fallback });
   const TABS = [
     { id: 'transactions', label: 'Transactions', fields: [
-      { key: 'prospect_name', label: tf('crm.field_prospect_name', 'Nom du prospect'), hints: ['name', 'nom', 'title', 'titre'] },
+      // deal_name sits first because it's the one that typically maps
+      // to the Notion DB's Title property (every Notion DB has exactly
+      // one title column and it's the page header). Hints cover the
+      // common title names so auto-suggest finds it without a click.
+      { key: 'deal_name',     label: tf('crm.field_deal_name',     'Nom du deal / Transaction'), hints: ['name', 'nom', 'title', 'titre', 'deal', 'transaction'] },
+      // prospect_name stays as a separate mapping to a text property
+      // (contact's full name), hence person-specific hints only — we
+      // don't want auto-suggest stealing the Title column from
+      // deal_name above.
+      { key: 'prospect_name', label: tf('crm.field_prospect_name', 'Nom du prospect'), hints: ['contact', 'prospect', 'personne', 'client', 'person'] },
       { key: 'status',        label: tf('crm.field_status',        'Statut'),          hints: ['status', 'statut'] },
-      { key: 'mrr',           label: tf('crm.field_mrr',           'MRR / Montant'),   hints: ['mrr', 'amount', 'montant', 'prix', 'deal'] },
+      { key: 'mrr',           label: tf('crm.field_mrr',           'MRR / Montant'),   hints: ['mrr', 'amount', 'montant', 'prix'] },
       { key: 'notes',         label: tf('crm.field_notes',         'Notes'),           hints: ['notes', 'note'] },
       { key: 'partner_name',  label: tf('crm.field_partner_name',  'Nom du partenaire'), hints: ['partner', 'partenaire'] },
     ] },

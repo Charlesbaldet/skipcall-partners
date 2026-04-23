@@ -2028,7 +2028,8 @@
     "field_mrr": "MRR / Amount",
     "field_partner_name": "Partner name",
     "field_company": "Company",
-    "field_role": "Role"
+    "field_role": "Role",
+    "field_deal_name": "Deal / Transaction name"
   },
   "pipeline": {
     "stages": "Pipeline stages",

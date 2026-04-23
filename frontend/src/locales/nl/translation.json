@@ -2028,7 +2028,8 @@
     "field_mrr": "MRR / Bedrag",
     "field_partner_name": "Partnernaam",
     "field_company": "Bedrijf",
-    "field_role": "Functie"
+    "field_role": "Functie",
+    "field_deal_name": "Deal / transactienaam"
   },
   "pipeline": {
     "stages": "Pipeline-stages",
