@@ -2029,7 +2029,7 @@
     "field_partner_name": "Nome do parceiro",
     "field_company": "Empresa",
     "field_role": "Cargo",
-    "field_deal_name": "Nome do deal / transação"
+    "field_deal_name": "Nome do deal"
   },
   "pipeline": {
     "stages": "Etapas do pipeline",

@@ -265,13 +265,12 @@ function buildPropertiesFor(schema, mapping, values) {
   }
   // Safety net for the title property — Notion refuses to create a
   // page without a title, so when the admin hasn't mapped anything to
-  // the Title column we fill it ourselves. Prefers deal_name (the
-  // explicit field for this purpose) and falls back through prospect
-  // / company / email.
+  // the Title column we fill it ourselves from the best available
+  // text-ish field.
   const hasTitle = Object.entries(properties).some(([k]) => schema[k]?.type === 'title');
   if (!hasTitle) {
     const [titleKey] = Object.entries(schema).find(([, p]) => p.type === 'title') || [];
-    const fallback = values.deal_name || values.prospect_name || values.company || values.email || '(sans titre)';
+    const fallback = values.prospect_name || values.company || values.email || '(sans titre)';
     if (titleKey) {
       properties[titleKey] = { title: [{ text: { content: String(fallback).slice(0, 2000) } }] };
     }
@@ -328,19 +327,11 @@ async function pushReferralToNotion(referral, tenantId) {
       ? cfg.statusMapping[referral.status]
       : undefined;
 
-    // Derive a deal / transaction name. Every Notion DB has exactly
-    // one Title property and every page must have a title, so we want
-    // a deterministic, human-readable value for it. RefBoost doesn't
-    // store an explicit deal_name (yet) — we synthesize one the same
-    // way HubSpot does: company, then prospect name, then a generic
-    // fallback. Admins map this onto the Title property of their
-    // Transactions DB in the mapping modal.
-    const dealName = referral.prospect_company
-      || referral.prospect_name
-      || 'RefBoost referral';
-
+    // One title field, one value. The Transactions tab's "Nom du
+    // deal" row uses the prospect_name key, so values.prospect_name
+    // IS the deal title here. No separate deal_name synthesis — that
+    // produced a duplicate row in the mapping UI.
     const values = {
-      deal_name:     dealName,
       prospect_name: referral.prospect_name,
       email:         referral.prospect_email,
       phone:         referral.prospect_phone,
