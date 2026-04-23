@@ -579,6 +579,19 @@ export default function LandingPage() {
                 ))}
               </div>
               <div>
+                <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.useCases')}</div>
+                {[
+                  { label: t('useCases.nav.saas'),         href: '/cas-dusage/saas-b2b' },
+                  { label: t('useCases.nav.conseil'),      href: '/cas-dusage/cabinet-conseil' },
+                  { label: t('useCases.nav.startup'),      href: '/cas-dusage/startup' },
+                  { label: t('useCases.nav.distribution'), href: '/cas-dusage/reseau-distribution' },
+                  { label: t('useCases.nav.marketplace'),  href: '/cas-dusage/marketplace-plateforme' },
+                  { label: t('useCases.nav.agence'),       href: '/cas-dusage/agence-marketing' },
+                ].map(u => (
+                  <a key={u.href} href={u.href} style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{u.label}</a>
+                ))}
+              </div>
+              <div>
                 <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.resources')}</div>
                 {['blog','guide','faq','contact'].map(key=>(
                   <a key={key} href={key==='blog'?'/blog':'#'} style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>

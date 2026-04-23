@@ -98,6 +98,10 @@ function resolveMeta(path) {
     title: 'Tracking referrals et liens partenaires — RefBoost',
     description: "Tracez chaque clic, chaque lead et chaque conversion avec des liens partenaires uniques. Script JS, UTM, codes promo et attribution multi-touch intégrés.",
   };
+  if (path === '/cas-dusage') return {
+    title: "Cas d'usage RefBoost — Programmes partenaires par secteur",
+    description: "Découvrez comment RefBoost s'adapte à votre modèle : SaaS B2B, cabinet de conseil, startup, réseau de distribution, marketplace ou agence marketing.",
+  };
   if (path === '/cas-dusage/saas-b2b') return {
     title: 'Programme partenaire SaaS B2B — RefBoost',
     description: "Créez un canal partenaire rentable pour votre SaaS B2B. Pipeline visuel, commissions automatiques, intégrations CRM. CAC 4x inférieur au direct.",

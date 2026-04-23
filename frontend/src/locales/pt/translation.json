@@ -235,7 +235,8 @@
       "sections": {
         "features": "Funcionalidades",
         "resources": "Recursos",
-        "legal": "Legal"
+        "legal": "Legal",
+        "useCases": "Casos de uso"
       },
       "links": {
         "pipeline": "Pipeline de leads",
@@ -2378,6 +2379,17 @@
       "step2Desc": "Publica os programas no marketplace, convida os parceiros dos clientes e arranca a dinamização.",
       "step3Title": "Reporte os resultados",
       "step3Desc": "Todos os meses, gera um relatório de ROI por cliente. Os dados são em tempo real — sem consolidação manual."
+    },
+    "related": {
+      "label": "Para saber mais",
+      "title": "Descubra também",
+      "seeAll": "Ver todos os casos de uso",
+      "backHome": "Voltar ao início"
+    },
+    "index": {
+      "metaTitle": "Casos de uso RefBoost — Programas de parceiros por setor",
+      "metaDescription": "Descubra como o RefBoost se adapta ao seu modelo: SaaS B2B, consultoria, startup, rede de distribuição, marketplace ou agência de marketing.",
+      "h1": "Casos de uso RefBoost"
     }
   },
   "webhooks": {

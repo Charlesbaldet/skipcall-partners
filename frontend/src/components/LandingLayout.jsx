@@ -185,6 +185,15 @@ export function LandingFooter() {
     { label: t('landing.featuresDropdown.tracking_label'), href: '/fonctionnalites/tracking' },
   ];
 
+  const USE_CASES = [
+    { label: t('useCases.nav.saas'),         href: '/cas-dusage/saas-b2b' },
+    { label: t('useCases.nav.conseil'),      href: '/cas-dusage/cabinet-conseil' },
+    { label: t('useCases.nav.startup'),      href: '/cas-dusage/startup' },
+    { label: t('useCases.nav.distribution'), href: '/cas-dusage/reseau-distribution' },
+    { label: t('useCases.nav.marketplace'),  href: '/cas-dusage/marketplace-plateforme' },
+    { label: t('useCases.nav.agence'),       href: '/cas-dusage/agence-marketing' },
+  ];
+
   return (
     <footer style={{ padding:mobile?'40px 20px 28px':'48px 48px 32px', background:C.s }}>
       <div style={{ maxWidth:1100, margin:'0 auto' }}>
@@ -197,6 +206,10 @@ export function LandingFooter() {
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.features')}</div>
               {FEATURES.map(f=><a key={f.href} href={f.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{f.label}</a>)}
+            </div>
+            <div>
+              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.useCases')}</div>
+              {USE_CASES.map(u=><a key={u.href} href={u.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{u.label}</a>)}
             </div>
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.resources')}</div>

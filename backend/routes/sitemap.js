@@ -13,6 +13,7 @@ const STATIC_PAGES = [
   { path: '/blog', changefreq: 'weekly', priority: '0.8' },
   { path: '/signup', changefreq: 'monthly', priority: '0.5' },
   { path: '/login', changefreq: 'monthly', priority: '0.3' },
+  { path: '/cas-dusage',                        changefreq: 'monthly', priority: '0.8' },
   { path: '/cas-dusage/saas-b2b',               changefreq: 'monthly', priority: '0.8' },
   { path: '/cas-dusage/cabinet-conseil',        changefreq: 'monthly', priority: '0.8' },
   { path: '/cas-dusage/startup',                changefreq: 'monthly', priority: '0.8' },

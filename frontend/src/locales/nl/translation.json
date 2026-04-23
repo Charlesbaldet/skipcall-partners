@@ -235,7 +235,8 @@
       "sections": {
         "features": "Functies",
         "resources": "Resources",
-        "legal": "Juridisch"
+        "legal": "Juridisch",
+        "useCases": "Gebruiksscenario's"
       },
       "links": {
         "pipeline": "Lead pipeline",
@@ -2378,6 +2379,17 @@
       "step2Desc": "Publiceer programma's in de marketplace, nodig de partners van je klanten uit en start de activatie.",
       "step3Title": "Rapporteer de resultaten",
       "step3Desc": "Genereer elke maand een ROI-rapport per klant. De data zijn realtime — geen handmatige consolidatie."
+    },
+    "related": {
+      "label": "Meer ontdekken",
+      "title": "Misschien ook interessant",
+      "seeAll": "Bekijk alle gebruiksscenario's",
+      "backHome": "Terug naar home"
+    },
+    "index": {
+      "metaTitle": "RefBoost gebruiksscenario's — Partnerprogramma's per sector",
+      "metaDescription": "Ontdek hoe RefBoost past bij jouw model: B2B SaaS, consultancy, startup, distributienetwerk, marketplace of marketingbureau.",
+      "h1": "RefBoost gebruiksscenario's"
     }
   },
   "webhooks": {

@@ -41,6 +41,7 @@ import UseCaseStartupPage from './pages/usecases/UseCaseStartupPage';
 import UseCaseDistributionPage from './pages/usecases/UseCaseDistributionPage';
 import UseCaseMarketplacePage from './pages/usecases/UseCaseMarketplacePage';
 import UseCaseAgencePage from './pages/usecases/UseCaseAgencePage';
+import UseCasesIndexPage from './pages/usecases/UseCasesIndexPage';
 import NewsPage from './pages/NewsPage.jsx';
 import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
@@ -137,6 +138,7 @@ function AppRoutes() {
           <Route path="/fonctionnalites/analytics" element={<FeatureAnalyticsPage />} />
           <Route path="/fonctionnalites/personnalisation" element={<FeaturePersonnalisationPage />} />
           <Route path="/fonctionnalites/tracking" element={<FeatureTrackingPage />} />
+          <Route path="/cas-dusage" element={<UseCasesIndexPage />} />
           <Route path="/cas-dusage/saas-b2b" element={<UseCaseSaasB2BPage />} />
           <Route path="/cas-dusage/cabinet-conseil" element={<UseCaseCabinetConseilPage />} />
           <Route path="/cas-dusage/startup" element={<UseCaseStartupPage />} />

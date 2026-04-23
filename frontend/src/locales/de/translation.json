@@ -235,7 +235,8 @@
       "sections": {
         "features": "Funktionen",
         "resources": "Ressourcen",
-        "legal": "Rechtliches"
+        "legal": "Rechtliches",
+        "useCases": "Anwendungsfälle"
       },
       "links": {
         "pipeline": "Lead-Pipeline",
@@ -2378,6 +2379,17 @@
       "step2Desc": "Veröffentliche Programme im Marketplace, lade die Partner deiner Kunden ein und starte die Aktivierung.",
       "step3Title": "Ergebnisse reporten",
       "step3Desc": "Generiere monatlich einen ROI-Report für jeden Kunden. Die Daten sind in Echtzeit — keine manuelle Konsolidierung nötig."
+    },
+    "related": {
+      "label": "Weiter entdecken",
+      "title": "Das könnte dich auch interessieren",
+      "seeAll": "Alle Anwendungsfälle ansehen",
+      "backHome": "Zurück zur Startseite"
+    },
+    "index": {
+      "metaTitle": "RefBoost-Anwendungsfälle — Partnerprogramme nach Branche",
+      "metaDescription": "Sieh, wie RefBoost zu deinem Modell passt: B2B-SaaS, Beratung, Startup, Vertriebsnetzwerk, Marketplace oder Marketing-Agentur.",
+      "h1": "RefBoost-Anwendungsfälle"
     }
   },
   "webhooks": {

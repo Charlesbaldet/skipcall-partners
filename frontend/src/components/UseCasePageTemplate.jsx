@@ -7,6 +7,17 @@ import LandingLayout from './LandingLayout';
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
+// Master list of personas — kept in the same order as the nav and
+// footer so "related" cards stay deterministic.
+const ALL_PERSONAS = [
+  { slug: 'saas-b2b',               labelKey: 'useCases.nav.saas',         descKey: 'useCases.nav.saasDesc' },
+  { slug: 'cabinet-conseil',        labelKey: 'useCases.nav.conseil',      descKey: 'useCases.nav.conseilDesc' },
+  { slug: 'startup',                labelKey: 'useCases.nav.startup',      descKey: 'useCases.nav.startupDesc' },
+  { slug: 'reseau-distribution',    labelKey: 'useCases.nav.distribution', descKey: 'useCases.nav.distributionDesc' },
+  { slug: 'marketplace-plateforme', labelKey: 'useCases.nav.marketplace',  descKey: 'useCases.nav.marketplaceDesc' },
+  { slug: 'agence-marketing',       labelKey: 'useCases.nav.agence',       descKey: 'useCases.nav.agenceDesc' },
+];
+
 function useMobile() {
   const [mobile, setMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
   useEffect(() => {
@@ -32,20 +43,36 @@ export default function UseCasePageTemplate({
   features,
   steps,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const mobile = useMobile();
 
   const canonical = `https://refboost.io/cas-dusage/${slug}`;
 
-  const breadcrumbLd = {
+  // WebPage schema (per Ahrefs/Google recommendations for use-case
+  // landing pages) with the BreadcrumbList as a nested property. The
+  // trailing ListItem deliberately omits `item` — it's the current
+  // page so Google treats it as the leaf label.
+  const pageLd = {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: t('useCases.breadcrumb.home'), item: 'https://refboost.io/' },
-      { '@type': 'ListItem', position: 2, name: t('useCases.breadcrumb.useCases'), item: 'https://refboost.io/cas-dusage' },
-      { '@type': 'ListItem', position: 3, name: personaLabel, item: canonical },
-    ],
+    '@type': 'WebPage',
+    name: helmet.title,
+    description: helmet.description,
+    url: canonical,
+    inLanguage: (i18n?.language || 'fr').slice(0, 2),
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'RefBoost',
+      url: 'https://refboost.io/',
+    },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: t('useCases.breadcrumb.home'), item: 'https://refboost.io/' },
+        { '@type': 'ListItem', position: 2, name: t('useCases.breadcrumb.useCases'), item: 'https://refboost.io/cas-dusage' },
+        { '@type': 'ListItem', position: 3, name: personaLabel },
+      ],
+    },
   };
 
   return (
@@ -61,7 +88,7 @@ export default function UseCasePageTemplate({
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={helmet.title} />
         <meta name="twitter:description" content={helmet.description} />
-        <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(pageLd)}</script>
       </Helmet>
 
       {/* Hero — matches /blog and /marketplace pages */}
@@ -147,6 +174,34 @@ export default function UseCasePageTemplate({
                 <p style={{ margin: 0, fontSize: 14, color: C.m, lineHeight: 1.7 }}>{st.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Related use cases — 3 other personas + link back home.
+          Gives crawlers real <a href> internal-link signal into every
+          sibling page, which is what Ahrefs was flagging as missing. */}
+      <section style={{ background: C.bg, padding: mobile ? '48px 20px' : '72px 48px', borderTop: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: mobile ? 32 : 40 }}>
+            <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>{t('useCases.related.label')}</p>
+            <h2 style={{ margin: 0, fontSize: mobile ? 22 : 28, fontWeight: 800, color: C.s, letterSpacing: -0.5 }}>{t('useCases.related.title')}</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)', gap: 16 }}>
+            {ALL_PERSONAS.filter(p => p.slug !== slug).slice(0, 3).map(p => (
+              <a key={p.slug} href={`/cas-dusage/${p.slug}`}
+                style={{ display: 'block', padding: 20, borderRadius: 14, background: '#fff', border: `1px solid ${C.border}`, textDecoration: 'none', color: 'inherit', transition: 'transform .2s, box-shadow .2s' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(5,150,105,0.10)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
+                <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: C.s }}>{t(p.labelKey)}</h3>
+                <p style={{ margin: '0 0 10px', fontSize: 13, color: C.m, lineHeight: 1.5 }}>{t(p.descKey)}</p>
+                <span style={{ color: C.p, fontSize: 13, fontWeight: 700 }}>{t('useCases.cardCta')} →</span>
+              </a>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: mobile ? 24 : 32 }}>
+            <a href="/cas-dusage" style={{ color: C.p, fontSize: 14, fontWeight: 700, textDecoration: 'none', marginRight: 20 }}>{t('useCases.related.seeAll')} →</a>
+            <a href="/" style={{ color: C.m, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>← {t('useCases.related.backHome')}</a>
           </div>
         </div>
       </section>
