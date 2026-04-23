@@ -620,6 +620,9 @@ function CrmIntegrations() {
   const [notion, setNotion] = useState(null);
   const [showNotionConnect, setShowNotionConnect] = useState(false);
   const [showNotionMappings, setShowNotionMappings] = useState(false);
+  // Transient status banner for Notion sync / disconnect actions.
+  // Shape: { tone: 'success' | 'error', text: string } | null.
+  const [notionMsg, setNotionMsg] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -783,15 +786,44 @@ function CrmIntegrations() {
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <button type="button" onClick={(e) => { stopEv(e); setShowNotionMappings(true); }} disabled={busy} style={btnSecondary}>{t('notion.configure_mappings')}</button>
                 <button type="button" onClick={async (e) => {
-                  stopEv(e); setBusy(true);
-                  try { const r = await api.pullFromNotion(); if (!r.ok) throw new Error(r.error || 'sync failed'); load(); }
-                  catch (err) { setErr(err.message); } finally { setBusy(false); }
+                  stopEv(e); setBusy(true); setNotionMsg(null);
+                  try {
+                    const r = await api.pullFromNotion();
+                    if (!r.ok) throw new Error(r.error || 'sync failed');
+                    load();
+                    const n = typeof r.updated === 'number' ? r.updated : null;
+                    setNotionMsg({ tone: 'success', text: n != null
+                      ? t('notion.sync_ok_count', { count: n })
+                      : t('notion.sync_ok') });
+                    setTimeout(() => setNotionMsg(null), 5000);
+                  } catch (err) {
+                    setNotionMsg({ tone: 'error', text: err.message || t('notion.sync_failed') });
+                  } finally { setBusy(false); }
                 }} disabled={busy} style={btnSecondary}>{t('notion.sync_now')}</button>
                 <button type="button" onClick={async (e) => {
-                  stopEv(e); setBusy(true);
-                  try { await api.disconnectNotion(); load(); } catch (err) { setErr(err.message); } finally { setBusy(false); }
+                  stopEv(e); setBusy(true); setNotionMsg(null);
+                  try {
+                    await api.disconnectNotion();
+                    load();
+                    setNotionMsg({ tone: 'success', text: t('notion.disconnect_ok') });
+                    setTimeout(() => setNotionMsg(null), 4000);
+                  } catch (err) {
+                    setNotionMsg({ tone: 'error', text: err.message });
+                  } finally { setBusy(false); }
                 }} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('notion.disconnect')}</button>
               </div>
+              {notionMsg && (
+                <div style={{
+                  marginTop: 8,
+                  padding: '7px 10px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: notionMsg.tone === 'success' ? '#ecfdf5' : '#fef2f2',
+                  border: notionMsg.tone === 'success' ? '1px solid #6ee7b7' : '1px solid #fecaca',
+                  color: notionMsg.tone === 'success' ? '#047857' : '#b91c1c',
+                }}>{notionMsg.text}</div>
+              )}
             </div>
           ) : (
             <button type="button" onClick={(e) => { stopEv(e); setShowNotionConnect(true); }} disabled={busy} style={btnPrimary}>{t('notion.connect')}</button>
@@ -832,7 +864,15 @@ function CrmIntegrations() {
       {showNotionConnect && (
         <NotionConnectModal
           onClose={() => setShowNotionConnect(false)}
-          onConnected={() => { setShowNotionConnect(false); load(); }}
+          onConnected={() => {
+            // After a successful /connect, close the connect modal
+            // and immediately hand off to the mapping modal so the
+            // admin can finish wiring field + status mappings without
+            // hunting for the "Configurer" button a second time.
+            setShowNotionConnect(false);
+            load();
+            setShowNotionMappings(true);
+          }}
         />
       )}
 
@@ -2078,6 +2118,7 @@ function NotionMappingModal({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
+  const [savedOk, setSavedOk] = useState(false);
 
   // The 6 RefBoost pipeline stages (canonical slugs). Kept stable so
   // the JSONB in DB always has the same keys regardless of locale.
@@ -2133,10 +2174,14 @@ function NotionMappingModal({ onClose }) {
   }, []);
 
   const save = async () => {
-    setSaving(true); setErr('');
+    setSaving(true); setErr(''); setSavedOk(false);
     try {
       await api.updateNotionMappings(mappings, statusMapping);
-      onClose();
+      // Show the green confirmation and auto-close after 1.3s. Admins
+      // who want to keep tweaking can click the X / backdrop before
+      // the timer fires.
+      setSavedOk(true);
+      setTimeout(() => { onClose(); }, 1300);
     } catch (e) { setErr(e.message); }
     finally { setSaving(false); }
   };
@@ -2278,13 +2323,18 @@ function NotionMappingModal({ onClose }) {
         )}
 
         {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+        {savedOk && (
+          <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', color: '#047857', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, fontWeight: 600 }}>
+            {t('notion.mapping_saved')}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            {t('common.cancel') || 'Annuler'}
+            {t('common.close') || 'Fermer'}
           </button>
-          <button type="button" onClick={save} disabled={saving} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
-            {saving ? '…' : (t('common.save') || 'Enregistrer')}
+          <button type="button" onClick={save} disabled={saving || savedOk} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving || savedOk ? 0.6 : 1 }}>
+            {saving ? '…' : savedOk ? (t('notion.mapping_saved_short') || 'OK') : (t('common.save') || 'Enregistrer')}
           </button>
         </div>
       </div>

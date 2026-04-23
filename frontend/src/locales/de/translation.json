@@ -2191,7 +2191,13 @@
     "status_qualified": "Qualifiziert",
     "status_proposal": "Angebot",
     "status_won": "Gewonnen",
-    "status_lost": "Verloren"
+    "status_lost": "Verloren",
+    "mapping_saved": "Zuordnung erfolgreich gespeichert.",
+    "mapping_saved_short": "Gespeichert",
+    "sync_ok": "Synchronisation abgeschlossen.",
+    "sync_ok_count": "Synchronisation abgeschlossen — {{count}} aktualisiert.",
+    "sync_failed": "Synchronisation fehlgeschlagen.",
+    "disconnect_ok": "Notion getrennt."
   },
   "partner_notifications": {
     "tab": "Benachrichtigungen",

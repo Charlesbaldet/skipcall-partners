@@ -2191,7 +2191,13 @@
     "status_qualified": "Gekwalificeerd",
     "status_proposal": "Voorstel",
     "status_won": "Gewonnen",
-    "status_lost": "Verloren"
+    "status_lost": "Verloren",
+    "mapping_saved": "Koppeling opgeslagen.",
+    "mapping_saved_short": "Opgeslagen",
+    "sync_ok": "Synchronisatie voltooid.",
+    "sync_ok_count": "Synchronisatie voltooid — {{count}} bijgewerkt.",
+    "sync_failed": "Synchronisatie mislukt.",
+    "disconnect_ok": "Notion losgekoppeld."
   },
   "partner_notifications": {
     "tab": "Meldingen",

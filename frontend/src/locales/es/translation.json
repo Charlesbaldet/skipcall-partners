@@ -2191,7 +2191,13 @@
     "status_qualified": "Cualificado",
     "status_proposal": "Propuesta",
     "status_won": "Ganado",
-    "status_lost": "Perdido"
+    "status_lost": "Perdido",
+    "mapping_saved": "Mapeo guardado correctamente.",
+    "mapping_saved_short": "Guardado",
+    "sync_ok": "Sincronización completada.",
+    "sync_ok_count": "Sincronización completada — {{count}} actualizado(s).",
+    "sync_failed": "Error de sincronización.",
+    "disconnect_ok": "Notion desconectado."
   },
   "partner_notifications": {
     "tab": "Notificaciones",
