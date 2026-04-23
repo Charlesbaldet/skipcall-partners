@@ -8,10 +8,10 @@ router.use(authenticate);
 router.use(tenantScope);
 
 const DEFAULTS = [
-  ['Bronze',   0,  10, '#cd7f32', '🥉', 0],
-  ['Silver',   5,  12, '#94a3b8', '🥈', 1],
-  ['Gold',     15, 15, '#f59e0b', '🥇', 2],
-  ['Platinum', 30, 20, '#6366f1', '💎', 3],
+  ['Bronze',   0,  10, '#cd7f32', '', 0],
+  ['Silver',   5,  12, '#94a3b8', '', 1],
+  ['Gold',     15, 15, '#f59e0b', '', 2],
+  ['Platinum', 30, 20, '#6366f1', '', 3],
 ];
 
 async function seedDefaults(tenantId) {

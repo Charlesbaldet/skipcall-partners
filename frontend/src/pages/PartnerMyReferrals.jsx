@@ -229,13 +229,13 @@ function LeadHandlingBadge({ handling }) {
   if (handling === 'client_prospect') {
     return (
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#dbeafe', color: '#2563eb', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-        📞 {t('referral.client_prospect_badge')}
+         {t('referral.client_prospect_badge')}
       </div>
     );
   }
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#f0fdf4', color: '#059669', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-      🤝 {t('referral.partner_managed_badge')}
+       {t('referral.partner_managed_badge')}
     </div>
   );
 }

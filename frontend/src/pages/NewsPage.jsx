@@ -595,7 +595,7 @@ function SocialsEditor({ t }) {
         fontWeight: 600, fontSize: 13, cursor: 'pointer',
         display: 'inline-flex', alignItems: 'center', gap: 6,
       }}>
-        {saved ? <><Check size={14} /> ✓</> : <>{t('news.social_save')}</>}
+        {saved ? <><Check size={14} /> </> : <>{t('news.social_save')}</>}
       </button>
     </div>
   );

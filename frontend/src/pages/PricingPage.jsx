@@ -46,7 +46,7 @@ const PLANS = [
 ];
 
 // ─── Comparison table data ──────────────────────────────────────────
-// `value`: true → ✓ ; false → — ; 'soon' → "Bientôt" ; otherwise raw
+// `value`: true →  ; false → — ; 'soon' → "Bientôt" ; otherwise raw
 // label (numeric or 'unlimited').
 const TABLE = [
   { cat: 'cat_partners', rows: [

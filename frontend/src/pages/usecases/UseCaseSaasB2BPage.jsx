@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import UseCasePageTemplate from '../../components/UseCasePageTemplate';
-import { IconSaaS, IconKanban, IconCoin, IconSync } from './icons';
+import { IconKanban, IconCoin, IconSync } from './icons';
 
 export default function UseCaseSaasB2BPage() {
   const { t } = useTranslation();
@@ -10,7 +10,6 @@ export default function UseCaseSaasB2BPage() {
     <UseCasePageTemplate
       slug="saas-b2b"
       personaLabel={t('useCases.nav.saas')}
-      icon={<IconSaaS hero />}
       helmet={{
         title: t(`${k}.metaTitle`),
         description: t(`${k}.metaDescription`),

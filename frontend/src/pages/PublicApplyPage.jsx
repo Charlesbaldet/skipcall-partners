@@ -101,7 +101,7 @@ export default function PublicApplyPage() {
     return (
       <Page>
         <div style={{ textAlign: 'center', maxWidth: 420, margin: '0 auto', padding: '60px 24px' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#fca5a5', fontSize: 28 }}>⚠</div>
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#fca5a5', fontSize: 28 }}></div>
           <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Lien invalide</h2>
           <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>
             Aucun programme partenaire n'a été trouvé pour ce lien. Vérifiez l'URL auprès de la personne qui vous l'a partagé.

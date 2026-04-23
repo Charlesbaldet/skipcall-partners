@@ -166,7 +166,7 @@ async function runMigrations() {
   try {
     const { rows: tenants } = await query('SELECT id FROM tenants LIMIT 1');
     if (tenants.length === 0) {
-      console.log('🌱 Empty DB detected — running seed...');
+      console.log(' Empty DB detected — running seed...');
       const bcrypt = require('bcryptjs');
       const { rows: [tenant] } = await query(
         `INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color, revenue_model)
@@ -180,7 +180,7 @@ async function runMigrations() {
          ON CONFLICT (email) DO NOTHING`,
         [hash, tenant.id]
       );
-      console.log('✅ Seed complete — admin@skipcall.com / RefBoost2026! (must change on first login)');
+      console.log(' Seed complete — admin@skipcall.com / RefBoost2026! (must change on first login)');
     }
   } catch (seedErr) {
     console.warn('[seed] Skipped:', seedErr.message);
@@ -222,7 +222,7 @@ async function runMigrations() {
   await query(`CREATE INDEX IF NOT EXISTS idx_tenants_marketplace ON tenants(marketplace_visible) WHERE marketplace_visible = true`);
   console.log('[marketplace] v18 columns added to tenants');
 
-  console.log('✅ Migrations completed');
+  console.log(' Migrations completed');
 
   } catch (err) {
     console.error('Migration error:', err.message);

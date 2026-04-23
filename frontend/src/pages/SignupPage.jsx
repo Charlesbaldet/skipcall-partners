@@ -220,7 +220,7 @@ export default function SignupPage() {
                 [/[0-9]/.test(form.password), t("signup.pwd_digit")],
                 [/[^A-Za-z0-9]/.test(form.password), t("signup.pwd_special")],
               ].map(([ok,label],i)=>(
-                <span key={i} style={{ fontSize:11,padding:'3px 8px',borderRadius:6,background:ok?`${C.p}15`:'#f1f5f9',color:ok?C.p:'#94a3b8',fontWeight:600 }}>{ok?'✓':'○'} {label}</span>
+                <span key={i} style={{ fontSize:11,padding:'3px 8px',borderRadius:6,background:ok?`${C.p}15`:'#f1f5f9',color:ok?C.p:'#94a3b8',fontWeight:600 }}>{ok?'':'○'} {label}</span>
               ))}
             </div>
 
@@ -255,7 +255,7 @@ export default function SignupPage() {
         {/* Step 3: Success */}
         {step === 3 && (
           <div style={{ textAlign:'center' }}>
-            <div style={{ width:72,height:72,borderRadius:20,background:`${C.p}10`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}>🎉</div>
+            <div style={{ width:72,height:72,borderRadius:20,background:`${C.p}10`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}></div>
             <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>{t("signup.success_title")}</h2>
             <p style={{ color:C.m,fontSize:14,margin:'0 0 32px',fontFamily:"'DM Sans',sans-serif" }}>
               {t("signup.success_sub", { company: form.company })}<br/>{t("signup.success_sub2")}

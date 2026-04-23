@@ -64,7 +64,7 @@ export default function PublicReferralRedirectPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui, sans-serif', background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)' }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, maxWidth: 480, textAlign: 'center', boxShadow: '0 10px 40px rgba(15,23,42,0.08)' }}>
-        <div style={{ fontSize: 44, marginBottom: 16 }}>👋</div>
+        <div style={{ fontSize: 44, marginBottom: 16 }}></div>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
           You've been referred by a partner of {tenantName || 'RefBoost'}
         </h1>

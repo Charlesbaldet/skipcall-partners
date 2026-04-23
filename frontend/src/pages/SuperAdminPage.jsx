@@ -396,9 +396,9 @@ export default function SuperAdminPage() {
                   <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>/blog/{p.slug} · {p.published_at ? new Date(p.published_at).toLocaleDateString(t('admin.fmt_locale')) : t('admin.blog_not_published')}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <a href={'/blog/' + p.slug} target="_blank" rel="noopener" style={{ padding: '7px 14px', borderRadius: 8, background: '#f1f5f9', color: '#475569', textDecoration: 'none', fontSize: 13 }}>👁️ {t('admin.blog_view')}</a>
-                  <button onClick={() => editBlogPost(p)} style={{ padding: '7px 14px', borderRadius: 8, background: '#fff3cd', color: '#856404', border: 'none', cursor: 'pointer', fontSize: 13 }}>✏️ {t('admin.blog_edit')}</button>
-                  <button onClick={() => deleteBlogPost(p.id)} style={{ padding: '7px 14px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', border: 'none', cursor: 'pointer', fontSize: 13 }}>🗑️</button>
+                  <a href={'/blog/' + p.slug} target="_blank" rel="noopener" style={{ padding: '7px 14px', borderRadius: 8, background: '#f1f5f9', color: '#475569', textDecoration: 'none', fontSize: 13 }}> {t('admin.blog_view')}</a>
+                  <button onClick={() => editBlogPost(p)} style={{ padding: '7px 14px', borderRadius: 8, background: '#fff3cd', color: '#856404', border: 'none', cursor: 'pointer', fontSize: 13 }}> {t('admin.blog_edit')}</button>
+                  <button onClick={() => deleteBlogPost(p.id)} style={{ padding: '7px 14px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', border: 'none', cursor: 'pointer', fontSize: 13 }}></button>
                 </div>
               </div>
             ))}

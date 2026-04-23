@@ -92,7 +92,7 @@ function leadWon({ partnerName, prospectName, dealValue, commissionAmount, curre
   const commissionFormatted = commissionAmount != null ? new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(commissionAmount) + ' ' + cur : '';
   const bodyHtml = `
     <p style="margin:0 0 16px;">Bonjour ${name},</p>
-    <p style="margin:0 0 16px;">Excellente nouvelle ! Le deal que vous avez recommandé <strong>${prospectName}</strong> vient d'être conclu 🎉</p>
+    <p style="margin:0 0 16px;">Excellente nouvelle ! Le deal que vous avez recommandé <strong>${prospectName}</strong> vient d'être conclu </p>
     <div style="margin:24px 0;padding:20px;background:${BG_SOFT};border-radius:10px;border-left:4px solid ${BRAND_PRIMARY};">
       ${dealFormatted ? `<div style="font-size:13px;color:${TEXT_MUTED};text-transform:uppercase;letter-spacing:0.05em;">Valeur du deal</div><div style="font-size:20px;font-weight:700;color:${TEXT_DARK};margin-bottom:12px;">${dealFormatted}</div>` : ''}
       ${commissionFormatted ? `<div style="font-size:13px;color:${TEXT_MUTED};text-transform:uppercase;letter-spacing:0.05em;">Votre commission</div><div style="font-size:24px;font-weight:700;color:${BRAND_PRIMARY};">${commissionFormatted}</div>` : ''}
@@ -100,7 +100,7 @@ function leadWon({ partnerName, prospectName, dealValue, commissionAmount, curre
     <p style="margin:0 0 16px;">Votre commission sera validée puis versée selon les conditions du programme. Vous recevrez un email à chaque étape.</p>
   `;
   const html = baseLayout({
-    title: 'Votre recommandation a été conclue 🎉',
+    title: 'Votre recommandation a été conclue ',
     preheader: `Félicitations ! ${prospectName} vient de signer`,
     tenantName,
     bodyHtml,
@@ -108,7 +108,7 @@ function leadWon({ partnerName, prospectName, dealValue, commissionAmount, curre
     ctaUrl: dashboardUrl,
   });
   return {
-    subject: `🎉 ${prospectName} vient de signer - votre commission : ${commissionFormatted}`,
+    subject: ` ${prospectName} vient de signer - votre commission : ${commissionFormatted}`,
     html,
     text: `Bonjour ${name},\n\nExcellente nouvelle ! Le deal ${prospectName} vient d'être conclu.\n${dealFormatted ? 'Valeur: ' + dealFormatted + '\n' : ''}${commissionFormatted ? 'Votre commission: ' + commissionFormatted + '\n' : ''}\nVoir: ${dashboardUrl}`,
   };
@@ -132,7 +132,7 @@ function commissionValidated({ partnerName, prospectName, commissionAmount, curr
     <p style="margin:0 0 16px;">Vous recevrez un nouvel email dès que le paiement aura été effectué.</p>
   `;
   const html = baseLayout({
-    title: 'Votre commission est validée ✓',
+    title: 'Votre commission est validée ',
     preheader: `Commission validée : ${amountFormatted}`,
     tenantName,
     bodyHtml,
@@ -140,7 +140,7 @@ function commissionValidated({ partnerName, prospectName, commissionAmount, curr
     ctaUrl: dashboardUrl,
   });
   return {
-    subject: `✓ Commission validée : ${amountFormatted}`,
+    subject: ` Commission validée : ${amountFormatted}`,
     html,
     text: `Bonjour ${name},\n\nVotre commission pour ${prospectName} (${amountFormatted}) a été validée.${expectedPayoutDate ? '\nVersement prévu : ' + expectedPayoutDate : ''}\n\nVoir: ${dashboardUrl}`,
   };
@@ -164,7 +164,7 @@ function commissionPaid({ partnerName, prospectName, commissionAmount, currency,
     <p style="margin:0 0 16px;">Merci pour votre confiance et continuez à nous recommander de nouveaux prospects !</p>
   `;
   const html = baseLayout({
-    title: 'Votre commission a été versée 💚',
+    title: 'Votre commission a été versée ',
     preheader: `Versement effectué : ${amountFormatted}`,
     tenantName,
     bodyHtml,
@@ -172,7 +172,7 @@ function commissionPaid({ partnerName, prospectName, commissionAmount, currency,
     ctaUrl: dashboardUrl,
   });
   return {
-    subject: `💚 Votre commission de ${amountFormatted} a été versée`,
+    subject: ` Votre commission de ${amountFormatted} a été versée`,
     html,
     text: `Bonjour ${name},\n\nVotre commission pour ${prospectName} (${amountFormatted}) vient d'être versée.${paymentReference ? '\nRéférence : ' + paymentReference : ''}\n\nVoir: ${dashboardUrl}`,
   };

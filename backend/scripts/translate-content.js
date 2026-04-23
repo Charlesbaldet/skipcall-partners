@@ -31,7 +31,7 @@ const TARGET_LANGS = [
 const DRY_RUN = process.argv.includes('--dry-run');
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!API_KEY) {
-  console.error('✗ ANTHROPIC_API_KEY is not set.');
+  console.error(' ANTHROPIC_API_KEY is not set.');
   process.exit(1);
 }
 
@@ -125,12 +125,12 @@ async function translateTenants() {
       }
       try {
         const translated = await translate(row.short_description, name, 'description');
-        console.log(`  ✓ ${row.name} [${code}]: ${translated.slice(0, 60)}${translated.length > 60 ? '…' : ''}`);
+        console.log(`   ${row.name} [${code}]: ${translated.slice(0, 60)}${translated.length > 60 ? '…' : ''}`);
         if (!DRY_RUN) {
           await query(`UPDATE tenants SET ${col} = $1 WHERE id = $2`, [translated, row.id]);
         }
       } catch (err) {
-        console.error(`  ✗ ${row.name} [${code}]: ${err.message}`);
+        console.error(`   ${row.name} [${code}]: ${err.message}`);
       }
     }
   }
@@ -157,12 +157,12 @@ async function translatePartners() {
       }
       try {
         const translated = await translate(row.description, name, 'description');
-        console.log(`  ✓ ${row.name} [${code}]: ${translated.slice(0, 60)}${translated.length > 60 ? '…' : ''}`);
+        console.log(`   ${row.name} [${code}]: ${translated.slice(0, 60)}${translated.length > 60 ? '…' : ''}`);
         if (!DRY_RUN) {
           await query(`UPDATE partners SET ${col} = $1 WHERE id = $2`, [translated, row.id]);
         }
       } catch (err) {
-        console.error(`  ✗ ${row.name} [${code}]: ${err.message}`);
+        console.error(`   ${row.name} [${code}]: ${err.message}`);
       }
     }
   }
@@ -190,10 +190,10 @@ async function translateBlogPosts() {
       } else if (row.title && row.title.trim()) {
         try {
           const t = await translate(row.title, name, 'title');
-          console.log(`  ✓ ${row.slug} [${code}] title: ${t.slice(0, 60)}${t.length > 60 ? '…' : ''}`);
+          console.log(`   ${row.slug} [${code}] title: ${t.slice(0, 60)}${t.length > 60 ? '…' : ''}`);
           if (!DRY_RUN) await query(`UPDATE blog_posts SET ${titleCol} = $1 WHERE id = $2`, [t, row.id]);
         } catch (err) {
-          console.error(`  ✗ ${row.slug} [${code}] title: ${err.message}`);
+          console.error(`   ${row.slug} [${code}] title: ${err.message}`);
         }
       }
 
@@ -204,10 +204,10 @@ async function translateBlogPosts() {
       } else if (row.excerpt && row.excerpt.trim()) {
         try {
           const e = await translate(row.excerpt, name, 'description');
-          console.log(`  ✓ ${row.slug} [${code}] excerpt: ${e.slice(0, 60)}${e.length > 60 ? '…' : ''}`);
+          console.log(`   ${row.slug} [${code}] excerpt: ${e.slice(0, 60)}${e.length > 60 ? '…' : ''}`);
           if (!DRY_RUN) await query(`UPDATE blog_posts SET ${excerptCol} = $1 WHERE id = $2`, [e, row.id]);
         } catch (err) {
-          console.error(`  ✗ ${row.slug} [${code}] excerpt: ${err.message}`);
+          console.error(`   ${row.slug} [${code}] excerpt: ${err.message}`);
         }
       }
 
@@ -218,10 +218,10 @@ async function translateBlogPosts() {
       } else if (row.meta_description && row.meta_description.trim()) {
         try {
           const m = await translate(row.meta_description, name, 'meta');
-          console.log(`  ✓ ${row.slug} [${code}] meta: ${m.slice(0, 60)}${m.length > 60 ? '…' : ''}`);
+          console.log(`   ${row.slug} [${code}] meta: ${m.slice(0, 60)}${m.length > 60 ? '…' : ''}`);
           if (!DRY_RUN) await query(`UPDATE blog_posts SET ${metaCol} = $1 WHERE id = $2`, [m, row.id]);
         } catch (err) {
-          console.error(`  ✗ ${row.slug} [${code}] meta: ${err.message}`);
+          console.error(`   ${row.slug} [${code}] meta: ${err.message}`);
         }
       }
 
@@ -232,10 +232,10 @@ async function translateBlogPosts() {
       } else if (row.content && row.content.trim()) {
         try {
           const c = await translate(row.content, name, 'content');
-          console.log(`  ✓ ${row.slug} [${code}] content: ${c.length} chars`);
+          console.log(`   ${row.slug} [${code}] content: ${c.length} chars`);
           if (!DRY_RUN) await query(`UPDATE blog_posts SET ${contentCol} = $1 WHERE id = $2`, [c, row.id]);
         } catch (err) {
-          console.error(`  ✗ ${row.slug} [${code}] content: ${err.message}`);
+          console.error(`   ${row.slug} [${code}] content: ${err.message}`);
         }
       }
     }
@@ -249,10 +249,10 @@ async function translateBlogPosts() {
     await translateTenants();
     await translatePartners();
     await translateBlogPosts();
-    console.log('\n✅ Done');
+    console.log('\n Done');
     process.exit(0);
   } catch (err) {
-    console.error('\n✗ Fatal:', err.message);
+    console.error('\n Fatal:', err.message);
     process.exit(1);
   }
 })();

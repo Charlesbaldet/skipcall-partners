@@ -199,7 +199,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 1 && createdUser && (
-            <SuccessBox text={t('onboarding.user_created')} code={'✓ ' + t('onboarding.user_created_success_code', { email: createdUser.email })} />
+            <SuccessBox text={t('onboarding.user_created')} code={' ' + t('onboarding.user_created_success_code', { email: createdUser.email })} />
           )}
 
           {step === 2 && !createdPartner && (
@@ -216,7 +216,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 2 && createdPartner && (
-            <SuccessBox text={t('onboarding.partner_added')} code={'✓ ' + t('onboarding.partner_added_success_code', { email: createdPartner.email })} />
+            <SuccessBox text={t('onboarding.partner_added')} code={' ' + t('onboarding.partner_added_success_code', { email: createdPartner.email })} />
           )}
 
           {step === 3 && !customized && (
@@ -240,7 +240,7 @@ export default function OnboardingWizard({ onClose }) {
           )}
           {step === 3 && customized && (
             <div style={{ textAlign: 'center', padding: 20, background: '#f0fdf4', borderRadius: 12, color: '#166534' }}>
-              ✓ {t('onboarding.space_customized')}
+               {t('onboarding.space_customized')}
             </div>
           )}
 
@@ -358,7 +358,7 @@ function Input({ value, onChange, placeholder, type = 'text' }) {
 function SuccessBox({ text, code }) {
   return (
     <div style={{ padding: 16, background: '#f0fdf4', borderRadius: 12, border: '1px solid #bbf7d0', textAlign: 'center' }}>
-      <div style={{ color: '#166534', fontSize: 14, marginBottom: 8 }}>✓ {text}</div>
+      <div style={{ color: '#166534', fontSize: 14, marginBottom: 8 }}> {text}</div>
       <code style={{ display: 'inline-block', padding: '8px 14px', background: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#0f172a', border: '1px solid #bbf7d0' }}>{code}</code>
     </div>
   );

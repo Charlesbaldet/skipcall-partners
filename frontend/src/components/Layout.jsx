@@ -401,7 +401,7 @@ export default function Layout({ children }) {
                       background: space.role === 'partner' ? `${C.a}22` : `${C.p}22`,
                       color: space.role === 'partner' ? C.al : C.pl,
                     }}>{roleLabel}</span>
-                    {isActive && <span style={{ color: '#10b981', fontSize: 12 }}>✓</span>}
+                    {isActive && <span style={{ color: '#10b981', fontSize: 12 }}></span>}
                   </button>
                 );
               })}

@@ -168,7 +168,7 @@ async function cleanupOldData() {
         )
       )
     `);
-    console.log('🧹 Data cleanup complete');
+    console.log(' Data cleanup complete');
   } catch (err) {
     console.error('Cleanup error:', err.message);
   }

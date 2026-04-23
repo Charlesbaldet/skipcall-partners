@@ -283,7 +283,7 @@ router.post('/', [
     );
 
     const _dashUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/referrals';
-    const _levelLabel = { hot: '🔥 Chaud', warm: '🌤️ Tiède', cold: '❄️ Froid' }[recommendation_level] || recommendation_level;
+    const _levelLabel = { hot: ' Chaud', warm: ' Tiède', cold: ' Froid' }[recommendation_level] || recommendation_level;
     for (const admin of admins) {
       const _bodyHtml = `<p style="margin:0 0 16px;">Bonjour ${admin.full_name},</p>
         <p style="margin:0 0 16px;"><strong>${partner.name}</strong> vient de soumettre un nouveau prospect :</p>
@@ -610,7 +610,7 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
         const { rows: [pRow] } = await query('SELECT name, commission_rate FROM partners WHERE id = $1', [current.partner_id]);
         const commissionAmount = Math.round(effectiveDealValue * (parseFloat(pRow?.commission_rate) || 0)) / 100;
         notify.fanoutAdminNotification(req.tenantId, 'deal_won', {
-          title: `🎉 Deal gagné — ${current.prospect_name}`,
+          title: ` Deal gagné — ${current.prospect_name}`,
           message: `${pRow?.name || ''} · ${effectiveDealValue}€ · commission ${commissionAmount}€ à approuver`,
           link: '/commissions',
         }, { includeCommercial: true }).catch(() => {});

@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
   if (sent) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: C.bg }}>
       <div style={{ maxWidth: 440, width: '100%', textAlign: 'center', background: '#fff', borderRadius: 24, padding: 48, boxShadow: '0 20px 60px rgba(0,0,0,0.08)' }}>
-        <div style={{ fontSize: 52, marginBottom: 16 }}>📬</div>
+        <div style={{ fontSize: 52, marginBottom: 16 }}></div>
         <h2 style={{ fontWeight: 800, fontSize: 24, color: C.s, margin: '0 0 12px' }}>{t("forgotPwd.sent_title")}</h2>
         <p style={{ color: C.m, marginBottom: 32, lineHeight: 1.6 }}>
           {t("forgotPwd.sent_text")}

@@ -6,7 +6,7 @@ const { Pool } = require('pg');
 const DATABASE_URL = process.env.DATABASE_URL || process.argv[2];
 
 if (!DATABASE_URL) {
-  console.error('❌ Usage: DATABASE_URL=... node backend/db/run-migration-v2.js');
+  console.error(' Usage: DATABASE_URL=... node backend/db/run-migration-v2.js');
   console.error('   or:   node backend/db/run-migration-v2.js "postgresql://..."');
   process.exit(1);
 }
@@ -71,33 +71,33 @@ const statements = [
 ];
 
 async function migrate() {
-  console.log('🚀 Running migration v2...\n');
+  console.log(' Running migration v2...\n');
 
   for (let i = 0; i < statements.length; i++) {
     const sql = statements[i];
     const label = sql.trim().substring(0, 60).replace(/\s+/g, ' ');
     try {
       await pool.query(sql);
-      console.log(`  ✅ ${i + 1}/${statements.length} — ${label}...`);
+      console.log(`   ${i + 1}/${statements.length} — ${label}...`);
     } catch (err) {
-      console.error(`  ❌ ${i + 1}/${statements.length} — ${label}...`);
+      console.error(`   ${i + 1}/${statements.length} — ${label}...`);
       console.error(`     ${err.message}`);
     }
   }
 
-  console.log('\n✅ Migration v2 terminée !');
+  console.log('\n Migration v2 terminée !');
 
   // Verify
   const { rows } = await pool.query(
     `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
   );
-  console.log('\n📋 Tables actuelles :');
+  console.log('\n Tables actuelles :');
   rows.forEach(r => console.log(`   - ${r.table_name}`));
 
   await pool.end();
 }
 
 migrate().catch(err => {
-  console.error('❌ Migration failed:', err.message);
+  console.error(' Migration failed:', err.message);
   process.exit(1);
 });

@@ -8,9 +8,9 @@ import { Send, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 // referrals.recommendation_level (hot / warm / cold). These are the
 // original Chaud / Tiède / Froid options, not the program tier levels.
 const TEMPERATURES = [
-  { key: 'hot',  emoji: '🔥', label: 'Chaud',  desc: 'Prêt à signer',         color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
-  { key: 'warm', emoji: '🌤️', label: 'Tiède',  desc: 'Intéressé, à relancer', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  { key: 'cold', emoji: '❄️', label: 'Froid',  desc: 'À qualifier',            color: '#0284c7', bg: '#eff6ff', border: '#bfdbfe' },
+  { key: 'hot',  emoji: '', label: 'Chaud',  desc: 'Prêt à signer',         color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+  { key: 'warm', emoji: '', label: 'Tiède',  desc: 'Intéressé, à relancer', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  { key: 'cold', emoji: '', label: 'Froid',  desc: 'À qualifier',            color: '#0284c7', bg: '#eff6ff', border: '#bfdbfe' },
 ];
 const tempByKey = Object.fromEntries(TEMPERATURES.map(t => [t.key, t]));
 
@@ -157,8 +157,8 @@ export default function PartnerSubmitPage() {
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
               {[
-                { value: 'partner_managed', icon: '🤝', title: t('referral.partner_managed'), helper: t('referral.partner_managed_helper') },
-                { value: 'client_prospect', icon: '📞', title: t('referral.client_prospect'), helper: t('referral.client_prospect_helper') },
+                { value: 'partner_managed', icon: '', title: t('referral.partner_managed'), helper: t('referral.partner_managed_helper') },
+                { value: 'client_prospect', icon: '', title: t('referral.client_prospect'), helper: t('referral.client_prospect_helper') },
               ].map(opt => {
                 const active = form.lead_handling === opt.value;
                 return (
@@ -189,7 +189,7 @@ export default function PartnerSubmitPage() {
 
           {/* Recap */}
           <div style={{ background: '#f8fafc', borderRadius: 16, padding: 24, marginBottom: 28, border: '1px solid #e2e8f0' }}>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 16 }}>📋 Récapitulatif</div>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 16 }}> Récapitulatif</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', fontSize: 14 }}>
               <RecapRow label="Contact" value={form.prospect_name} />
               <RecapRow label="Entreprise" value={form.prospect_company} />

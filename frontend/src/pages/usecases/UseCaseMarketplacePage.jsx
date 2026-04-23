@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import UseCasePageTemplate from '../../components/UseCasePageTemplate';
-import { IconMarketplace, IconLink, IconPalette, IconChart } from './icons';
+import { IconLink, IconPalette, IconChart } from './icons';
 
 export default function UseCaseMarketplacePage() {
   const { t } = useTranslation();
@@ -10,7 +10,6 @@ export default function UseCaseMarketplacePage() {
     <UseCasePageTemplate
       slug="marketplace-plateforme"
       personaLabel={t('useCases.nav.marketplace')}
-      icon={<IconMarketplace hero />}
       helmet={{
         title: t(`${k}.metaTitle`),
         description: t(`${k}.metaDescription`),

@@ -277,7 +277,7 @@ export default function MessagingPage() {
                   const badge = ROLE_BADGE[u.role];
                   return (
                     <div key={u.id} onClick={() => toggleParticipant(u.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, cursor: 'pointer', background: selected ? '#eef2ff' : '#fff', border: selected ? '1px solid #c7d2fe' : '1px solid transparent', marginBottom: 4 }}>
-                      <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${selected ? '#6366f1' : '#d1d5db'}`, background: selected ? '#6366f1' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff', fontWeight: 700, flexShrink: 0 }}>{selected ? '✓' : ''}</div>
+                      <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${selected ? '#6366f1' : '#d1d5db'}`, background: selected ? '#6366f1' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff', fontWeight: 700, flexShrink: 0 }}>{selected ? '' : ''}</div>
                       <span style={{ fontWeight: 500, color: '#0f172a', fontSize: 14 }}>{u.full_name}</span>
                       {badge && <span style={{ padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: badge.bg, color: badge.color }}>{badge.label}</span>}
                       {u.partner_name && <span style={{ fontSize: 11, color: '#94a3b8' }}>({u.partner_name})</span>}

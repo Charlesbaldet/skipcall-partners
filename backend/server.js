@@ -183,11 +183,11 @@ app.listen(PORT, () => {
   setInterval(cleanupOldData, 24 * 60 * 60 * 1000);
   setTimeout(cleanupOldData, 60000); // First cleanup after 1 min
 
-  console.log(`🚀 Skipcall API running on port ${PORT}`);
+  console.log(` Skipcall API running on port ${PORT}`);
 
   if (process.env.SMTP_HOST) {
     startNotificationWorker();
-    console.log('📧 Email notification worker started');
+    console.log(' Email notification worker started');
   }
 });
 

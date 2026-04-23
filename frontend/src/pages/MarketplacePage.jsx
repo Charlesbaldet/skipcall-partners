@@ -206,7 +206,7 @@ export default function MarketplacePage() {
             </div>
           ) : partners.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px', background: C.card, borderRadius: 20, boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+              <div style={{ fontSize: 48, marginBottom: 16 }}></div>
               <h3 style={{ fontSize: 20, fontWeight: 700, color: C.s, margin: '0 0 8px' }}>{t('marketplace.no_result')}</h3>
               <p style={{ color: C.m, margin: '0 0 20px' }}>
                 {(search || activeSector) ? t("marketplace.reset") : t("marketplace.no_result")}

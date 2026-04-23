@@ -207,7 +207,7 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (params.get('success') === '1') {
-      setSuccess('✓ ' + t('billing.current_plan'));
+      setSuccess(' ' + t('billing.current_plan'));
       setParams({}, { replace: true });
       // Webhook-less sync: ask the backend to pull the user's latest
       // subscription from Stripe and write the plan back to the tenant
@@ -284,7 +284,7 @@ export default function BillingPage() {
       if (resp.url) { window.location.href = resp.url; return; }
       setChangePreview(null);
       reload();
-      setSuccess('✓ ' + t('billing.current_plan'));
+      setSuccess(' ' + t('billing.current_plan'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (e) {
       console.error('[billing] applyPlanChange failed', e);
@@ -319,7 +319,7 @@ export default function BillingPage() {
     setBusy(true); setError('');
     try {
       await api.reactivateSubscription();
-      setSuccess('✓ ' + t('billing.reactivated'));
+      setSuccess(' ' + t('billing.reactivated'));
       setTimeout(() => setSuccess(''), 3500);
       reload();
     } catch (e) {

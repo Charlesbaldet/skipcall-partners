@@ -115,7 +115,7 @@ async function fetchDatabase(token, databaseId) {
 }
 
 // Validate up to 3 databases in one shot. Returns what each resolved
-// to so the frontend can surface "⚠️ Contacts DB invalid — skipped"
+// to so the frontend can surface " Contacts DB invalid — skipped"
 // when needed.
 async function validateConnection(token, { transactions, contacts, companies }) {
   const out = { transactions: null, contacts: null, companies: null };

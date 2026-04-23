@@ -534,7 +534,7 @@ function ClassementTab({ leaderboard, levels, loading, myTenant }) {
               return (
                 <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '13px 14px', fontWeight: 800, color: p.rank <= 3 ? '#f59e0b' : '#94a3b8', fontSize: 16 }}>
-                    {p.rank <= 3 ? ['🥇', '🥈', '🥉'][p.rank - 1] : p.rank}
+                    {p.rank <= 3 ? ['', '', ''][p.rank - 1] : p.rank}
                   </td>
                   <td style={{ padding: '13px 14px' }}>
                     <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div>
@@ -589,7 +589,7 @@ function PodiumCard({ partner: p, isFirst }) {
       textAlign: 'center', boxShadow: isFirst ? '0 8px 30px rgba(99,102,241,0.15)' : 'none',
       transform: isFirst ? 'scale(1)' : 'scale(0.95)',
     }}>
-      <div style={{ fontSize: isFirst ? 40 : 32, marginBottom: 8 }}>{['🥇', '🥈', '🥉'][p.rank - 1]}</div>
+      <div style={{ fontSize: isFirst ? 40 : 32, marginBottom: 8 }}>{['', '', ''][p.rank - 1]}</div>
       <div style={{ fontWeight: 800, color: '#0f172a', fontSize: isFirst ? 18 : 16, marginBottom: 4 }}>{p.name}</div>
       <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: lc.bg, color: lc.color }}>{p.level_icon} {p.level}</span>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 16 }}>

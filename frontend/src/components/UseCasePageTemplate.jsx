@@ -31,7 +31,6 @@ export default function UseCasePageTemplate({
   roi2Desc,
   features,
   steps,
-  icon,
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -65,37 +64,24 @@ export default function UseCasePageTemplate({
         <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
       </Helmet>
 
-      {/* Hero */}
-      <section style={{ background: 'linear-gradient(180deg,#f8fafc 0%,#fff 100%)', padding: mobile ? '32px 20px 48px' : '48px 48px 80px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" style={{ marginBottom: 24, fontSize: 13, color: C.m }}>
-            <a href="/" style={{ color: C.m, textDecoration: 'none' }}>{t('useCases.breadcrumb.home')}</a>
-            <span style={{ margin: '0 8px', color: '#cbd5e1' }}>›</span>
-            <span style={{ color: C.m }}>{t('useCases.breadcrumb.useCases')}</span>
-            <span style={{ margin: '0 8px', color: '#cbd5e1' }}>›</span>
-            <span style={{ color: C.s, fontWeight: 600 }}>{personaLabel}</span>
+      {/* Hero — matches /blog and /marketplace pages */}
+      <section style={{ background: `linear-gradient(135deg, ${C.s} 0%, #1e293b 100%)`, padding: mobile ? '56px 20px 48px' : '80px 24px 64px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <nav aria-label="Breadcrumb" style={{ marginBottom: 20, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+            <a href="/" style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>{t('useCases.breadcrumb.home')}</a>
+            <span style={{ margin: '0 8px', color: 'rgba(255,255,255,0.35)' }}>›</span>
+            <span style={{ color: 'rgba(255,255,255,0.55)' }}>{t('useCases.breadcrumb.useCases')}</span>
+            <span style={{ margin: '0 8px', color: 'rgba(255,255,255,0.35)' }}>›</span>
+            <span style={{ color: '#fff', fontWeight: 600 }}>{personaLabel}</span>
           </nav>
-
-          <div style={{ display: mobile ? 'block' : 'grid', gridTemplateColumns: '1fr auto', gap: 32, alignItems: 'flex-start' }}>
-            <div>
-              <span style={{ display: 'inline-block', padding: '4px 14px', borderRadius: 20, background: `${C.p}15`, border: `1px solid ${C.p}30`, fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20 }}>
-                {t('useCases.hero.badge')}
-              </span>
-              <h1 style={{ margin: '0 0 20px', fontSize: mobile ? 30 : 48, fontWeight: 900, color: C.s, lineHeight: 1.1, letterSpacing: -1.5 }}>{h1}</h1>
-              <p style={{ margin: '0 0 32px', fontSize: mobile ? 17 : 20, color: C.m, lineHeight: 1.6, maxWidth: 680 }}>{subtitle}</p>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button onClick={() => navigate('/signup')} style={{ padding: mobile ? '13px 24px' : '15px 32px', borderRadius: 12, border: 'none', background: g(C.p, C.pl), color: '#fff', fontWeight: 700, fontSize: mobile ? 15 : 16, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}30`, fontFamily: 'inherit' }}>
-                  {t('useCases.hero.cta')} →
-                </button>
-              </div>
-            </div>
-            {!mobile && (
-              <div style={{ width: 140, height: 140, borderRadius: 28, background: g(`${C.p}15`, `${C.pl}10`), display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${C.p}25` }}>
-                {icon}
-              </div>
-            )}
-          </div>
+          <span style={{ display: 'inline-block', color: C.pl, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
+            {t('useCases.hero.badge')}
+          </span>
+          <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -1 }}>{h1}</h1>
+          <p style={{ margin: '0 auto 32px', fontSize: mobile ? 16 : 18, color: '#94a3b8', lineHeight: 1.6, maxWidth: 620 }}>{subtitle}</p>
+          <button onClick={() => navigate('/signup')} style={{ padding: mobile ? '13px 26px' : '15px 32px', borderRadius: 12, border: 'none', background: g(C.p, C.pl), color: '#fff', fontWeight: 700, fontSize: mobile ? 15 : 16, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}40`, fontFamily: 'inherit' }}>
+            {t('useCases.hero.cta')} →
+          </button>
         </div>
       </section>
 

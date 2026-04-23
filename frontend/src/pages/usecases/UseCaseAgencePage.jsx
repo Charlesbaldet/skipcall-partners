@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import UseCasePageTemplate from '../../components/UseCasePageTemplate';
-import { IconAgence, IconLayers, IconPalette, IconReport } from './icons';
+import { IconLayers, IconPalette, IconReport } from './icons';
 
 export default function UseCaseAgencePage() {
   const { t } = useTranslation();
@@ -10,7 +10,6 @@ export default function UseCaseAgencePage() {
     <UseCasePageTemplate
       slug="agence-marketing"
       personaLabel={t('useCases.nav.agence')}
-      icon={<IconAgence hero />}
       helmet={{
         title: t(`${k}.metaTitle`),
         description: t(`${k}.metaDescription`),

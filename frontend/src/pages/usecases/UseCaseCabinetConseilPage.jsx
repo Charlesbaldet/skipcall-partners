@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import UseCasePageTemplate from '../../components/UseCasePageTemplate';
-import { IconConseil, IconLock, IconEye, IconBell } from './icons';
+import { IconLock, IconEye, IconBell } from './icons';
 
 export default function UseCaseCabinetConseilPage() {
   const { t } = useTranslation();
@@ -10,7 +10,6 @@ export default function UseCaseCabinetConseilPage() {
     <UseCasePageTemplate
       slug="cabinet-conseil"
       personaLabel={t('useCases.nav.conseil')}
-      icon={<IconConseil hero />}
       helmet={{
         title: t(`${k}.metaTitle`),
         description: t(`${k}.metaDescription`),

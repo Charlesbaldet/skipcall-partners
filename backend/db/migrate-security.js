@@ -1,7 +1,7 @@
 const { query } = require('../db');
 
 async function runSecurityMigrations() {
-  console.log('🔒 Running security & multi-tenant migrations...');
+  console.log(' Running security & multi-tenant migrations...');
 
   // ═══ TENANTS TABLE (White-label) ═══
   await query(`CREATE TABLE IF NOT EXISTS tenants (
@@ -34,7 +34,7 @@ async function runSecurityMigrations() {
       // Set default tenant for existing data
       await query(`UPDATE ${table} SET tenant_id = (SELECT id FROM tenants WHERE slug = 'skipcall') WHERE tenant_id IS NULL`);
     } catch (err) {
-      if (!err.message.includes('already exists')) console.log(`  ⚠ ${table}: ${err.message}`);
+      if (!err.message.includes('already exists')) console.log(`   ${table}: ${err.message}`);
     }
   }
 
@@ -117,7 +117,7 @@ async function runSecurityMigrations() {
   
   // Promote admin to superadmin
   await query("UPDATE users SET role = 'superadmin' WHERE email IN ('c.baldet@hotmail.fr', 'admin@skipcall.com')").catch(() => {});
-  console.log('✅ Security & multi-tenant migrations complete');
+  console.log(' Security & multi-tenant migrations complete');
 }
 
 module.exports = { runSecurityMigrations };

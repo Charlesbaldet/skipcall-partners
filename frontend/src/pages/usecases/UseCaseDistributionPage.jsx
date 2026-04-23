@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import UseCasePageTemplate from '../../components/UseCasePageTemplate';
-import { IconDistribution, IconTrophy, IconChart, IconSync } from './icons';
+import { IconTrophy, IconChart, IconSync } from './icons';
 
 export default function UseCaseDistributionPage() {
   const { t } = useTranslation();
@@ -10,7 +10,6 @@ export default function UseCaseDistributionPage() {
     <UseCasePageTemplate
       slug="reseau-distribution"
       personaLabel={t('useCases.nav.distribution')}
-      icon={<IconDistribution hero />}
       helmet={{
         title: t(`${k}.metaTitle`),
         description: t(`${k}.metaDescription`),

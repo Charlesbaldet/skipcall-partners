@@ -135,7 +135,7 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
               >
                 <span style={{ fontSize: 16 }}>{l.flag}</span>
                 <span>{l.label}</span>
-                {l.code === i18n.language && <span style={{ marginLeft: 'auto', fontSize: 11 }}>✓</span>}
+                {l.code === i18n.language && <span style={{ marginLeft: 'auto', fontSize: 11 }}></span>}
               </button>
             ))}
           </div>

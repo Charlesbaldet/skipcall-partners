@@ -85,9 +85,9 @@ async function seed() {
     }
 
     await client.query('COMMIT');
-    console.log('✅ Database seeded successfully');
+    console.log(' Database seeded successfully');
     console.log('');
-    console.log('📋 Test accounts:');
+    console.log(' Test accounts:');
     console.log('   Admin:      admin@skipcall.com / skipcall2026!');
     console.log('   Commercial: commercial@skipcall.com / commercial2026!');
     console.log('   Partners:   marc@techalliance.fr / partner2026!');
@@ -95,7 +95,7 @@ async function seed() {
     console.log('               julien@cloudexperts.io / partner2026!');
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('❌ Seed error:', err.message);
+    console.error(' Seed error:', err.message);
   } finally {
     client.release();
     await pool.end();

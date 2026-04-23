@@ -203,7 +203,7 @@ function PostCard({ post, attachments, t }) {
 
       {isKit && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontWeight: 700, color: '#0891b2', fontSize: 13 }}>
-          📦 {t('news.commercial_kit')}
+           {t('news.commercial_kit')}
         </div>
       )}
 

@@ -5,10 +5,10 @@ const { authenticate, tenantScope } = require('../middleware/auth');
 const router = express.Router();
 
 const DEFAULT_LEVELS = [
-  { name: 'Bronze',   min_threshold: 0,  commission_rate: 10, color: '#cd7f32', icon: '🥉', position: 0 },
-  { name: 'Silver',   min_threshold: 5,  commission_rate: 12, color: '#94a3b8', icon: '🥈', position: 1 },
-  { name: 'Gold',     min_threshold: 15, commission_rate: 15, color: '#f59e0b', icon: '🥇', position: 2 },
-  { name: 'Platinum', min_threshold: 30, commission_rate: 20, color: '#6366f1', icon: '💎', position: 3 },
+  { name: 'Bronze',   min_threshold: 0,  commission_rate: 10, color: '#cd7f32', icon: '', position: 0 },
+  { name: 'Silver',   min_threshold: 5,  commission_rate: 12, color: '#94a3b8', icon: '', position: 1 },
+  { name: 'Gold',     min_threshold: 15, commission_rate: 15, color: '#f59e0b', icon: '', position: 2 },
+  { name: 'Platinum', min_threshold: 30, commission_rate: 20, color: '#6366f1', icon: '', position: 3 },
 ];
 
 async function getOrCreateLevels(tenantId) {

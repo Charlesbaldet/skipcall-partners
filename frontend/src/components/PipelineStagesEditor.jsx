@@ -189,7 +189,7 @@ export default function PipelineStagesEditor() {
 
       {/* Info banner for won */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, fontSize: 12, color: '#047857', marginBottom: 16, lineHeight: 1.5 }}>
-        <span style={{ fontSize: 14 }}>💰</span>
+        <span style={{ fontSize: 14 }}></span>
         <span>{t('pipeline.won_stage_info')}</span>
       </div>
 

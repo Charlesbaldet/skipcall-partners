@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import UseCasePageTemplate from '../../components/UseCasePageTemplate';
-import { IconStartup, IconGift, IconStore, IconTarget } from './icons';
+import { IconGift, IconStore, IconTarget } from './icons';
 
 export default function UseCaseStartupPage() {
   const { t } = useTranslation();
@@ -10,7 +10,6 @@ export default function UseCaseStartupPage() {
     <UseCasePageTemplate
       slug="startup"
       personaLabel={t('useCases.nav.startup')}
-      icon={<IconStartup hero />}
       helmet={{
         title: t(`${k}.metaTitle`),
         description: t(`${k}.metaDescription`),

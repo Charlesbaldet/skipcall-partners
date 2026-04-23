@@ -22,9 +22,14 @@ i18n
       nl: { translation: nl },
       pt: { translation: pt },
     },
+    lng: (typeof window !== 'undefined' && window.localStorage?.getItem('i18nextLng')) || 'fr',
     fallbackLng: 'fr',
     supportedLngs: ['fr', 'en', 'it', 'es', 'de', 'nl', 'pt'],
-    detection: { order: ['localStorage', 'navigator', 'htmlTag'], caches: ['localStorage'] },
+    // localStorage only — if the user has picked a language it sticks,
+    // otherwise the site renders in French. Navigator-based detection
+    // was leaving French-content pages with an English nav for users
+    // on English browsers.
+    detection: { order: ['localStorage'], caches: ['localStorage'] },
     interpolation: { escapeValue: false },
   });
 

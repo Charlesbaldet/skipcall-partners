@@ -4,7 +4,7 @@
 async function sendEmail(to, subject, html) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.log(`📧 [MOCK] Email to ${to}: ${subject}`);
+    console.log(` [MOCK] Email to ${to}: ${subject}`);
     return { success: true, mock: true };
   }
 
@@ -22,7 +22,7 @@ async function sendEmail(to, subject, html) {
 
     const data = await res.json();
     if (!res.ok) { console.error('Resend error:', data); return { success: false, error: data }; }
-    console.log(`📧 Email sent to ${to}: ${subject}`);
+    console.log(` Email sent to ${to}: ${subject}`);
     return { success: true, id: data.id };
   } catch (err) {
     console.error('Email send error:', err.message);
@@ -136,7 +136,7 @@ function dealWonTpl(partnerName, prospectName, dealValue) {
     subject: `Deal gagné ! ${prospectName} — ${dealValue}€`,
     html: frame({
       accent: '#16a34a',
-      heading: '🎉 Deal gagné !',
+      heading: ' Deal gagné !',
       bodyHtml: `
         <p>La recommandation <strong>${prospectName}</strong> apportée par <strong>${partnerName}</strong> vient d'être signée.</p>
         <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-radius: 12px; padding: 20px; margin: 16px 0; text-align: center; border: 1px solid #bbf7d0;">
