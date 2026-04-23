@@ -2178,7 +2178,20 @@
     "sync_success": "Sync completed successfully",
     "field_mapping": "Field mapping",
     "refboost_field": "RefBoost field",
-    "notion_property": "Notion property"
+    "notion_property": "Notion property",
+    "status_mapping_title": "Statussen koppelen",
+    "status_mapping_hint": "Koppel elke pipelinefase van RefBoost aan een optie van je Status-eigenschap in Notion. Niet-gekoppelde fases worden niet verstuurd.",
+    "status_mapping_pick_property": "Kies eerst hierboven de Notion-eigenschap voor het veld \"Status\" om de beschikbare opties te zien.",
+    "status_mapping_no_options": "De gekozen eigenschap heeft geen opties. Gebruik een eigenschap van type Status, Select of Multi-select.",
+    "status_col_refboost": "RefBoost-fase",
+    "status_col_notion": "Notion-optie",
+    "status_ignore": "— Niet versturen —",
+    "status_new": "Nieuw",
+    "status_contacted": "Gecontacteerd",
+    "status_qualified": "Gekwalificeerd",
+    "status_proposal": "Voorstel",
+    "status_won": "Gewonnen",
+    "status_lost": "Verloren"
   },
   "partner_notifications": {
     "tab": "Meldingen",

@@ -2178,7 +2178,20 @@
     "sync_success": "Sync completed successfully",
     "field_mapping": "Field mapping",
     "refboost_field": "RefBoost field",
-    "notion_property": "Notion property"
+    "notion_property": "Notion property",
+    "status_mapping_title": "Mapeamento de estados",
+    "status_mapping_hint": "Faça corresponder cada fase do pipeline RefBoost a uma opção da sua propriedade Estado no Notion. As fases sem mapeamento não serão enviadas.",
+    "status_mapping_pick_property": "Escolha primeiro a propriedade Notion correspondente ao campo «Estado» acima para ver as opções disponíveis.",
+    "status_mapping_no_options": "A propriedade selecionada não tem opções. Use uma propriedade do tipo Estado, Select ou Multi-select.",
+    "status_col_refboost": "Fase RefBoost",
+    "status_col_notion": "Opção Notion",
+    "status_ignore": "— Não enviar —",
+    "status_new": "Novo",
+    "status_contacted": "Contactado",
+    "status_qualified": "Qualificado",
+    "status_proposal": "Proposta",
+    "status_won": "Ganho",
+    "status_lost": "Perdido"
   },
   "partner_notifications": {
     "tab": "Notificações",

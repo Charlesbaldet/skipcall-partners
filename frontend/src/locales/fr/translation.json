@@ -2178,7 +2178,20 @@
     "sync_success": "Synchronisation terminée",
     "field_mapping": "Mapping des champs",
     "refboost_field": "Champ RefBoost",
-    "notion_property": "Propriété Notion"
+    "notion_property": "Propriété Notion",
+    "status_mapping_title": "Mapping des statuts",
+    "status_mapping_hint": "Faites correspondre chaque étape du pipeline RefBoost avec l'option de votre propriété Statut dans Notion. Les statuts non mappés ne seront pas envoyés.",
+    "status_mapping_pick_property": "Choisissez d'abord la propriété Notion correspondant au champ « Statut » ci-dessus pour afficher les options disponibles.",
+    "status_mapping_no_options": "La propriété sélectionnée n'a pas d'options. Utilisez une propriété de type Statut, Select ou Multi-select.",
+    "status_col_refboost": "Statut RefBoost",
+    "status_col_notion": "Statut Notion",
+    "status_ignore": "— Ne pas envoyer —",
+    "status_new": "Nouveau",
+    "status_contacted": "Contacté",
+    "status_qualified": "Qualifié",
+    "status_proposal": "Proposition",
+    "status_won": "Gagné",
+    "status_lost": "Perdu"
   },
   "partner_notifications": {
     "tab": "Notifications",

@@ -222,6 +222,15 @@ async function runMigrations() {
   await query(`CREATE INDEX IF NOT EXISTS idx_tenants_marketplace ON tenants(marketplace_visible) WHERE marketplace_visible = true`);
   console.log('[marketplace] v18 columns added to tenants');
 
+  // ─── v18b: Notion status-value mapping ───
+  // Maps RefBoost canonical stage slugs (new/contacted/qualified/
+  // proposal/won/lost) to the names of the customer's Notion Status
+  // or Select property options. Without this, pushing { status: 'new' }
+  // to a Notion DB whose status options are "Prospect" / "Signé" etc.
+  // fails because Status options are fixed. Shape:
+  //   { "new": "Prospect", "contacted": "En cours", "won": "Signé", … }
+  await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS notion_status_mapping JSONB DEFAULT '{}'::jsonb`);
+
   // ─── v19: Outgoing webhooks ───
   await query(`CREATE TABLE IF NOT EXISTS webhook_endpoints (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

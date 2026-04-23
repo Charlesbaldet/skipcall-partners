@@ -2178,7 +2178,20 @@
     "sync_success": "Sync completed successfully",
     "field_mapping": "Field mapping",
     "refboost_field": "RefBoost field",
-    "notion_property": "Notion property"
+    "notion_property": "Notion property",
+    "status_mapping_title": "Status-Zuordnung",
+    "status_mapping_hint": "Verknüpfe jede Pipeline-Phase von RefBoost mit einer Option deiner Status-Eigenschaft in Notion. Nicht zugeordnete Phasen werden nicht synchronisiert.",
+    "status_mapping_pick_property": "Wähle zuerst oben die Notion-Eigenschaft für das Feld „Status“, um die verfügbaren Optionen zu sehen.",
+    "status_mapping_no_options": "Die gewählte Eigenschaft hat keine Optionen. Verwende eine Eigenschaft vom Typ Status, Select oder Multi-Select.",
+    "status_col_refboost": "RefBoost-Phase",
+    "status_col_notion": "Notion-Option",
+    "status_ignore": "— Nicht senden —",
+    "status_new": "Neu",
+    "status_contacted": "Kontaktiert",
+    "status_qualified": "Qualifiziert",
+    "status_proposal": "Angebot",
+    "status_won": "Gewonnen",
+    "status_lost": "Verloren"
   },
   "partner_notifications": {
     "tab": "Benachrichtigungen",

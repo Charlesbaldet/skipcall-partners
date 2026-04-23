@@ -335,7 +335,14 @@ class ApiClient {
   disconnectNotion() { return this.request('/crm/notion/disconnect', { method: 'POST' }); }
   getNotionProperties(type) { return this.request('/crm/notion/properties/' + encodeURIComponent(type)); }
   getNotionMappings() { return this.request('/crm/notion/mappings'); }
-  updateNotionMappings(mappings) { return this.request('/crm/notion/mappings', { method: 'PUT', body: JSON.stringify({ mappings }) }); }
+  updateNotionMappings(mappings, statusMapping) {
+    // statusMapping is optional — callers that only touch field
+    // mappings can omit it. The backend applies each key it sees
+    // and leaves the others untouched.
+    const body = { mappings };
+    if (statusMapping !== undefined) body.statusMapping = statusMapping;
+    return this.request('/crm/notion/mappings', { method: 'PUT', body: JSON.stringify(body) });
+  }
   syncReferralToNotion(referralId) { return this.request('/crm/notion/sync/' + referralId, { method: 'POST' }); }
   pullFromNotion() { return this.request('/crm/notion/pull', { method: 'POST' }); }
   getSalesforceFields() { return this.request('/crm/salesforce/fields'); }

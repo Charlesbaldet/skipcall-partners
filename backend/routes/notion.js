@@ -194,7 +194,8 @@ router.get('/properties/:type', async (req, res) => {
 router.get('/mappings', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT notion_mapping_transactions, notion_mapping_contacts, notion_mapping_companies
+      `SELECT notion_mapping_transactions, notion_mapping_contacts, notion_mapping_companies,
+              notion_status_mapping
          FROM tenants WHERE id = $1`,
       [req.tenantId]
     );
@@ -205,17 +206,27 @@ router.get('/mappings', async (req, res) => {
         contacts:     t.notion_mapping_contacts     || {},
         companies:    t.notion_mapping_companies    || {},
       },
+      statusMapping: t.notion_status_mapping || {},
     });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
+// Canonical RefBoost stage slugs we offer in the status-mapping UI.
+// Any string not in this list is silently dropped so a malicious or
+// buggy client can't poison the JSONB.
+const CANONICAL_STATUSES = new Set(['new', 'contacted', 'qualified', 'meeting', 'proposal', 'won', 'lost']);
+
 // PUT /api/crm/notion/mappings
-// Body: { mappings: { transactions?: {...}, contacts?: {...}, companies?: {...} } }
+// Body: {
+//   mappings?: { transactions?: {...}, contacts?: {...}, companies?: {...} },
+//   statusMapping?: { new: "Prospect", contacted: "En cours", ... }
+// }
 router.put('/mappings', async (req, res) => {
   try {
     const m = req.body?.mappings && typeof req.body.mappings === 'object' ? req.body.mappings : {};
+    const sm = req.body?.statusMapping && typeof req.body.statusMapping === 'object' ? req.body.statusMapping : null;
     const sets = [];
     const params = [];
     let i = 1;
@@ -224,6 +235,18 @@ router.put('/mappings', async (req, res) => {
         sets.push(`notion_mapping_${type} = $${i++}`);
         params.push(JSON.stringify(m[type]));
       }
+    }
+    if (sm) {
+      // Keep only canonical keys + string values; drop empty strings so
+      // omitted rows in the UI become "unmapped → don't send status".
+      const clean = {};
+      for (const [k, v] of Object.entries(sm)) {
+        if (CANONICAL_STATUSES.has(k) && typeof v === 'string' && v.trim()) {
+          clean[k] = v.trim().slice(0, 100);
+        }
+      }
+      sets.push(`notion_status_mapping = $${i++}`);
+      params.push(JSON.stringify(clean));
     }
     if (!sets.length) return res.json({ ok: true, noop: true });
     params.push(req.tenantId);

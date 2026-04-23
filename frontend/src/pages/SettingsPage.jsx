@@ -2051,9 +2051,24 @@ function NotionMappingModal({ onClose }) {
   const [status, setStatus] = useState({ databases: { transactions: null, contacts: null, companies: null } });
   const [propsByType, setPropsByType] = useState({ transactions: [], contacts: [], companies: [] });
   const [mappings, setMappings] = useState({ transactions: {}, contacts: {}, companies: {} });
+  // RefBoost canonical stage slug → Notion Status/Select option name.
+  // Empty string = "don't map this stage" → sync will omit the status
+  // field for referrals in that stage.
+  const [statusMapping, setStatusMapping] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
+
+  // The 6 RefBoost pipeline stages (canonical slugs). Kept stable so
+  // the JSONB in DB always has the same keys regardless of locale.
+  const REFBOOST_STATUSES = [
+    { slug: 'new',        labelKey: 'notion.status_new',        fallback: 'Nouveau' },
+    { slug: 'contacted',  labelKey: 'notion.status_contacted',  fallback: 'Contacté' },
+    { slug: 'qualified',  labelKey: 'notion.status_qualified',  fallback: 'Qualifié' },
+    { slug: 'proposal',   labelKey: 'notion.status_proposal',   fallback: 'Proposition' },
+    { slug: 'won',        labelKey: 'notion.status_won',        fallback: 'Gagné' },
+    { slug: 'lost',       labelKey: 'notion.status_lost',       fallback: 'Perdu' },
+  ];
 
   useEffect(() => {
     (async () => {
@@ -2091,6 +2106,7 @@ function NotionMappingModal({ onClose }) {
           }
         }
         setMappings(merged);
+        setStatusMapping(m.statusMapping || {});
       } catch (e) { setErr(e.message); }
       finally { setLoading(false); }
     })();
@@ -2099,7 +2115,7 @@ function NotionMappingModal({ onClose }) {
   const save = async () => {
     setSaving(true); setErr('');
     try {
-      await api.updateNotionMappings(mappings);
+      await api.updateNotionMappings(mappings, statusMapping);
       onClose();
     } catch (e) { setErr(e.message); }
     finally { setSaving(false); }
@@ -2180,6 +2196,64 @@ function NotionMappingModal({ onClose }) {
                 ))}
               </tbody>
             </table>
+
+            {/* ─── Status value mapping (Transactions tab only) ─────
+                Lets the admin map each of the 6 canonical RefBoost
+                stages to the matching option of their Notion Status
+                or Select property. Without this, pushing
+                `{ status: 'new' }` to a Notion Status property whose
+                options are "Prospect" / "Signé" / etc. fails — Notion
+                Status options are fixed and can't be auto-created.
+                Dropdown values come from the Notion property the user
+                picked in the field-mapping row above (status row). */}
+            {active === 'transactions' && (() => {
+              const statusPropName = mappings.transactions?.status;
+              const statusProp = currentProps.find(p => p.name === statusPropName);
+              const options = Array.isArray(statusProp?.options) ? statusProp.options : [];
+              return (
+                <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid #e2e8f0' }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{t('notion.status_mapping_title')}</h4>
+                  <p style={{ margin: '0 0 12px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>{t('notion.status_mapping_hint')}</p>
+                  {!statusPropName ? (
+                    <div style={{ padding: 12, background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', borderRadius: 8, fontSize: 12 }}>
+                      {t('notion.status_mapping_pick_property')}
+                    </div>
+                  ) : !options.length ? (
+                    <div style={{ padding: 12, background: '#f1f5f9', color: '#475569', borderRadius: 8, fontSize: 12 }}>
+                      {t('notion.status_mapping_no_options')}
+                    </div>
+                  ) : (
+                    <table style={{ width: '100%' }}>
+                      <thead>
+                        <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+                          <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.status_col_refboost')}</th>
+                          <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.status_col_notion')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {REFBOOST_STATUSES.map(s => (
+                          <tr key={s.slug}>
+                            <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t(s.labelKey) || s.fallback}</td>
+                            <td style={{ padding: '4px 8px' }}>
+                              <select
+                                value={statusMapping[s.slug] || ''}
+                                onChange={e => setStatusMapping(sm => ({ ...sm, [s.slug]: e.target.value }))}
+                                style={inp}
+                              >
+                                <option value="">{t('notion.status_ignore')}</option>
+                                {options.map(opt => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
+            })()}
           </>
         )}
 

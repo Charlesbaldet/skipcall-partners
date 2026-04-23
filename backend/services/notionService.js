@@ -24,6 +24,7 @@ async function getTenantNotion(tenantId) {
     `SELECT notion_token, notion_connected,
             notion_db_transactions, notion_db_contacts, notion_db_companies,
             notion_mapping_transactions, notion_mapping_contacts, notion_mapping_companies,
+            notion_status_mapping,
             notion_last_sync
        FROM tenants WHERE id = $1 LIMIT 1`,
     [tenantId]
@@ -42,6 +43,7 @@ async function getTenantNotion(tenantId) {
       contacts:     t.notion_mapping_contacts     || {},
       companies:    t.notion_mapping_companies    || {},
     },
+    statusMapping: t.notion_status_mapping || {},
     lastSync: t.notion_last_sync,
   };
 }
@@ -104,11 +106,24 @@ function readDbTitle(db) {
 
 // Summarise a database's schema so the frontend can render dropdowns:
 // [{ id, name, type }]. Relation types also carry the target database_id.
+// select / status / multi_select additionally carry their allowed option
+// names so the status-mapping UI can offer real values instead of a
+// free-text input.
 function readDbProperties(db) {
-  return Object.entries(db.properties || {}).map(([name, p]) => ({
-    id: p.id, name, type: p.type,
-    ...(p.type === 'relation' && p.relation?.database_id ? { relation_database_id: p.relation.database_id } : {}),
-  }));
+  return Object.entries(db.properties || {}).map(([name, p]) => {
+    const base = { id: p.id, name, type: p.type };
+    if (p.type === 'relation' && p.relation?.database_id) {
+      base.relation_database_id = p.relation.database_id;
+    }
+    if (p.type === 'select' && Array.isArray(p.select?.options)) {
+      base.options = p.select.options.map(o => o.name).filter(Boolean);
+    } else if (p.type === 'multi_select' && Array.isArray(p.multi_select?.options)) {
+      base.options = p.multi_select.options.map(o => o.name).filter(Boolean);
+    } else if (p.type === 'status' && Array.isArray(p.status?.options)) {
+      base.options = p.status.options.map(o => o.name).filter(Boolean);
+    }
+    return base;
+  });
 }
 
 async function fetchDatabase(token, databaseId) {
@@ -234,13 +249,23 @@ async function pushReferralToNotion(referral, tenantId) {
       cfg.dbs.companies ? fetchDatabase(cfg.token, cfg.dbs.companies).catch(() => null) : null,
     ]);
 
+    // Translate the RefBoost stage slug ('new', 'contacted', 'won', …)
+    // through the tenant's status-mapping into the Notion option name
+    // ("Prospect", "Signé", …). When there's no mapping entry for this
+    // slug we set status to undefined so buildPropertiesFor skips the
+    // status property entirely — writing a bad option name into a
+    // Notion Status field fails with a validation error.
+    const mappedStatus = referral.status && cfg.statusMapping && cfg.statusMapping[referral.status]
+      ? cfg.statusMapping[referral.status]
+      : undefined;
+
     const values = {
       prospect_name: referral.prospect_name,
       email:         referral.prospect_email,
       phone:         referral.prospect_phone,
       company:       referral.prospect_company,
       notes:         referral.notes,
-      status:        referral.status,
+      status:        mappedStatus,
       mrr:           referral.deal_value,
       partner_name:  referral.partner_name,
       role:          referral.prospect_role,
