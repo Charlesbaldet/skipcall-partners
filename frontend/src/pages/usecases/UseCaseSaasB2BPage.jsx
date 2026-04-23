@@ -9,6 +9,7 @@ export default function UseCaseSaasB2BPage() {
   return (
     <UseCasePageTemplate
       slug="saas-b2b"
+      relatedSlugs={['startup', 'reseau-distribution']}
       personaLabel={t('useCases.nav.saas')}
       helmet={{
         title: t(`${k}.metaTitle`),

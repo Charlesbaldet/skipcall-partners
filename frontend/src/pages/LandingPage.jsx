@@ -367,6 +367,9 @@ export default function LandingPage() {
               </a>
             ))}
           </div>
+          <div style={{textAlign:'center',marginTop:32}}>
+            <a href="/cas-dusage" style={{display:'inline-flex',alignItems:'center',gap:6,color:C.p,fontSize:15,fontWeight:700,textDecoration:'none'}}>{t('useCases.related.seeAll')} →</a>
+          </div>
         </div>
       </section>
 

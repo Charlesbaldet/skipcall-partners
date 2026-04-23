@@ -42,6 +42,10 @@ export default function UseCasePageTemplate({
   roi2Desc,
   features,
   steps,
+  // Hand-curated 2–3 sibling persona slugs for the "Découvrez aussi"
+  // section. Falls back to the first 3 non-current personas so a
+  // caller that forgets the prop still gets useful cross-links.
+  relatedSlugs,
 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -187,8 +191,13 @@ export default function UseCasePageTemplate({
             <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>{t('useCases.related.label')}</p>
             <h2 style={{ margin: 0, fontSize: mobile ? 22 : 28, fontWeight: 800, color: C.s, letterSpacing: -0.5 }}>{t('useCases.related.title')}</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)', gap: 16 }}>
-            {ALL_PERSONAS.filter(p => p.slug !== slug).slice(0, 3).map(p => (
+          {(() => {
+            const pool = Array.isArray(relatedSlugs) && relatedSlugs.length
+              ? relatedSlugs.map(s => ALL_PERSONAS.find(p => p.slug === s)).filter(Boolean)
+              : ALL_PERSONAS.filter(p => p.slug !== slug).slice(0, 3);
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : `repeat(${Math.min(pool.length, 3)},1fr)`, gap: 16, maxWidth: pool.length === 2 ? 760 : 'none', margin: pool.length === 2 ? '0 auto' : undefined }}>
+                {pool.map(p => (
               <a key={p.slug} href={`/cas-dusage/${p.slug}`}
                 style={{ display: 'block', padding: 20, borderRadius: 14, background: '#fff', border: `1px solid ${C.border}`, textDecoration: 'none', color: 'inherit', transition: 'transform .2s, box-shadow .2s' }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(5,150,105,0.10)'; }}
@@ -197,8 +206,10 @@ export default function UseCasePageTemplate({
                 <p style={{ margin: '0 0 10px', fontSize: 13, color: C.m, lineHeight: 1.5 }}>{t(p.descKey)}</p>
                 <span style={{ color: C.p, fontSize: 13, fontWeight: 700 }}>{t('useCases.cardCta')} →</span>
               </a>
-            ))}
-          </div>
+                ))}
+              </div>
+            );
+          })()}
           <div style={{ textAlign: 'center', marginTop: mobile ? 24 : 32 }}>
             <a href="/cas-dusage" style={{ color: C.p, fontSize: 14, fontWeight: 700, textDecoration: 'none', marginRight: 20 }}>{t('useCases.related.seeAll')} →</a>
             <a href="/" style={{ color: C.m, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>← {t('useCases.related.backHome')}</a>

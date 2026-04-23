@@ -9,6 +9,7 @@ export default function UseCaseCabinetConseilPage() {
   return (
     <UseCasePageTemplate
       slug="cabinet-conseil"
+      relatedSlugs={['agence-marketing', 'marketplace-plateforme']}
       personaLabel={t('useCases.nav.conseil')}
       helmet={{
         title: t(`${k}.metaTitle`),

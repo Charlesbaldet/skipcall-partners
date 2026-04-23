@@ -9,6 +9,7 @@ export default function UseCaseDistributionPage() {
   return (
     <UseCasePageTemplate
       slug="reseau-distribution"
+      relatedSlugs={['saas-b2b', 'agence-marketing']}
       personaLabel={t('useCases.nav.distribution')}
       helmet={{
         title: t(`${k}.metaTitle`),

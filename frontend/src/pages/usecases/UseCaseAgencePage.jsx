@@ -9,6 +9,7 @@ export default function UseCaseAgencePage() {
   return (
     <UseCasePageTemplate
       slug="agence-marketing"
+      relatedSlugs={['reseau-distribution', 'marketplace-plateforme']}
       personaLabel={t('useCases.nav.agence')}
       helmet={{
         title: t(`${k}.metaTitle`),

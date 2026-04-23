@@ -9,6 +9,7 @@ export default function UseCaseMarketplacePage() {
   return (
     <UseCasePageTemplate
       slug="marketplace-plateforme"
+      relatedSlugs={['startup', 'cabinet-conseil']}
       personaLabel={t('useCases.nav.marketplace')}
       helmet={{
         title: t(`${k}.metaTitle`),
