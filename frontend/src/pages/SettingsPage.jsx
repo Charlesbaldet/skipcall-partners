@@ -1988,7 +1988,27 @@ function NotionConnectModal({ onClose, onConnected }) {
         </div>
 
         <label style={lbl}>{t('notion.token')}</label>
-        <input type="password" value={form.token} onChange={e => setForm(f => ({ ...f, token: e.target.value }))} placeholder="secret_..." style={inp}/>
+        {/* Notion internal-integration tokens (ntn_... / secret_...)
+            are API tokens, not passwords. Keeping type="password" here
+            (a) hides the value so the admin can't verify a paste, and
+            (b) triggers 1Password / iCloud Keychain to auto-fill the
+            saved site password over it. type="text" + autoComplete
+            off + the 1P opt-out attr keep the paste visible and
+            leave the manager alone. */}
+        <input
+          type="text"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-1p-ignore
+          data-lpignore="true"
+          data-form-type="other"
+          value={form.token}
+          onChange={e => setForm(f => ({ ...f, token: e.target.value }))}
+          placeholder="ntn_..."
+          style={{ ...inp, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+        />
 
         <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginTop: 18, marginBottom: 4 }}>
           Configurez vos bases de données
