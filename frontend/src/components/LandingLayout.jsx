@@ -114,7 +114,7 @@ export function LandingNav() {
                 </div>
               )}
             </div>
-            {[['nav.marketplace','/marketplace'],['nav.pricing','/#tarifs'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+            {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
                 onMouseEnter={e=>e.target.style.color=C.p}
                 onMouseLeave={e=>e.target.style.color=C.m}>
@@ -157,7 +157,7 @@ export function LandingNav() {
             ))}
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:4,marginTop:16 }}>
-            {[['nav.marketplace','/marketplace'],['nav.pricing','/#tarifs'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+            {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>
                 {t(key)}
               </a>
