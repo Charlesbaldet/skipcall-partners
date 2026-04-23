@@ -2023,7 +2023,12 @@
     "status_proposal": "Voorstel",
     "status_meeting": "Afspraak",
     "status_won": "Gewonnen",
-    "status_lost": "Verloren"
+    "status_lost": "Verloren",
+    "field_status": "Status",
+    "field_mrr": "MRR / Bedrag",
+    "field_partner_name": "Partnernaam",
+    "field_company": "Bedrijf",
+    "field_role": "Functie"
   },
   "pipeline": {
     "stages": "Pipeline-stages",

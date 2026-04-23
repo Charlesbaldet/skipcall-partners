@@ -2023,7 +2023,12 @@
     "status_proposal": "Proposta",
     "status_meeting": "Riunione",
     "status_won": "Vinto",
-    "status_lost": "Perso"
+    "status_lost": "Perso",
+    "field_status": "Stato",
+    "field_mrr": "MRR / Importo",
+    "field_partner_name": "Nome del partner",
+    "field_company": "Azienda",
+    "field_role": "Ruolo"
   },
   "pipeline": {
     "stages": "Fasi del pipeline",

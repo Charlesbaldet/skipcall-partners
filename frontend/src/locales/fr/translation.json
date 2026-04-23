@@ -2023,7 +2023,12 @@
     "status_proposal": "Proposition",
     "status_meeting": "RDV planifié",
     "status_won": "Gagné",
-    "status_lost": "Perdu"
+    "status_lost": "Perdu",
+    "field_status": "Statut",
+    "field_mrr": "MRR / Montant",
+    "field_partner_name": "Nom du partenaire",
+    "field_company": "Entreprise",
+    "field_role": "Rôle"
   },
   "pipeline": {
     "stages": "Statuts du pipeline",

@@ -2102,22 +2102,29 @@ function NotionConnectModal({ onClose, onConnected }) {
 // tab is disabled.
 function NotionMappingModal({ onClose }) {
   const { t } = useTranslation();
+  // i18next returns the key name itself when a key is missing, so
+  // `t('foo') || fallback` NEVER hits the fallback — the missing-key
+  // echo ("crm.field_status") is truthy. `t(key, { defaultValue })`
+  // is the correct pattern: if the key is missing, i18next substitutes
+  // the default, and a future missing key still renders a human
+  // string instead of leaking the key.
+  const tf = (k, fallback) => t(k, { defaultValue: fallback });
   const TABS = [
     { id: 'transactions', label: 'Transactions', fields: [
-      { key: 'prospect_name', label: t('crm.field_prospect_name') || 'Nom du prospect', hints: ['name', 'nom', 'title', 'titre'] },
-      { key: 'status',        label: t('crm.field_status')        || 'Statut',          hints: ['status', 'statut'] },
-      { key: 'mrr',           label: t('crm.field_mrr')           || 'MRR',             hints: ['mrr', 'amount', 'montant', 'prix', 'deal'] },
-      { key: 'notes',         label: t('crm.field_notes')         || 'Notes',           hints: ['notes', 'note'] },
-      { key: 'partner_name',  label: t('crm.field_partner_name')  || 'Partenaire',      hints: ['partner', 'partenaire'] },
+      { key: 'prospect_name', label: tf('crm.field_prospect_name', 'Nom du prospect'), hints: ['name', 'nom', 'title', 'titre'] },
+      { key: 'status',        label: tf('crm.field_status',        'Statut'),          hints: ['status', 'statut'] },
+      { key: 'mrr',           label: tf('crm.field_mrr',           'MRR / Montant'),   hints: ['mrr', 'amount', 'montant', 'prix', 'deal'] },
+      { key: 'notes',         label: tf('crm.field_notes',         'Notes'),           hints: ['notes', 'note'] },
+      { key: 'partner_name',  label: tf('crm.field_partner_name',  'Nom du partenaire'), hints: ['partner', 'partenaire'] },
     ] },
     { id: 'contacts', label: 'Contacts', fields: [
-      { key: 'prospect_name', label: t('crm.field_prospect_name') || 'Nom',             hints: ['name', 'nom', 'title', 'titre'] },
-      { key: 'email',         label: t('crm.field_email')         || 'Email',           hints: ['email', 'e-mail', 'mail'] },
-      { key: 'phone',         label: t('crm.field_phone')         || 'Téléphone',       hints: ['phone', 'téléphone', 'telephone', 'tel'] },
-      { key: 'role',          label: t('crm.field_role')          || 'Rôle',            hints: ['role', 'poste', 'title', 'titre'] },
+      { key: 'prospect_name', label: tf('crm.field_prospect_name', 'Nom'),             hints: ['name', 'nom', 'title', 'titre'] },
+      { key: 'email',         label: tf('crm.field_email',         'Email'),           hints: ['email', 'e-mail', 'mail'] },
+      { key: 'phone',         label: tf('crm.field_phone',         'Téléphone'),       hints: ['phone', 'téléphone', 'telephone', 'tel'] },
+      { key: 'role',          label: tf('crm.field_role',          'Rôle'),            hints: ['role', 'poste', 'title', 'titre'] },
     ] },
     { id: 'companies', label: 'Entreprises', fields: [
-      { key: 'company',       label: t('crm.field_company')       || 'Entreprise',      hints: ['name', 'nom', 'company', 'société', 'entreprise'] },
+      { key: 'company',       label: tf('crm.field_company',       'Entreprise'),      hints: ['name', 'nom', 'company', 'société', 'entreprise'] },
     ] },
   ];
 
