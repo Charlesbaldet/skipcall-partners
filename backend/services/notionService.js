@@ -66,7 +66,16 @@ async function notionFetch(token, path, init = {}) {
     },
   });
   const data = await res.json().catch(() => ({}));
-  console.log('[notion] ←', res.status, data?.code || data?.message || 'ok');
+  if (res.ok) {
+    console.log('[notion] ←', res.status, 'ok');
+  } else {
+    // On failure, dump the full Notion response body (truncated) so
+    // Railway logs carry the exact error — helps tell "token is bad"
+    // (401 unauthorized) from "database not shared with integration"
+    // (404 object_not_found) from request_validation / rate_limited.
+    console.log('[notion] ←', res.status, 'FAIL code:', data?.code || '-', '| message:', data?.message || '-');
+    console.log('[notion]    raw body:', JSON.stringify(data).slice(0, 800));
+  }
   if (!res.ok) {
     const err = new Error(data?.message || `Notion ${res.status}`);
     err.status = res.status; err.body = data;

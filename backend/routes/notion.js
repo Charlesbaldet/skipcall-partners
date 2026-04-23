@@ -21,11 +21,47 @@ router.post('/connect', async (req, res) => {
   // Inbound request tracing. Logs token PREFIX only — never the full
   // secret. Helps spot paste artefacts ("ntn_" prefix mis-copied,
   // trailing whitespace, 32-char hex vs UUID) on the Railway side.
-  console.log('[notion.connect] token prefix:', String(token).slice(0, 10) + '…', 'length:', String(token).length);
+  console.log('[notion.connect] body keys:', Object.keys(req.body || {}));
+  console.log('[notion.connect] token prefix:', String(token).slice(0, 15) + '…', 'length:', String(token).length);
+  console.log('[notion.connect] token tail:', '…' + String(token).slice(-4));
   console.log('[notion.connect] dbTransactions:', dbTransactions);
   if (dbContacts)  console.log('[notion.connect] dbContacts:',  dbContacts);
   if (dbCompanies) console.log('[notion.connect] dbCompanies:', dbCompanies);
   console.log('[notion.connect] normalized dbTransactions:', notion.normalizeDatabaseId(dbTransactions));
+
+  // ─── Step 1: probe /users/me to verify the TOKEN itself ─────────────
+  // This disambiguates "token is invalid" from "database wasn't shared
+  // with the integration". If /users/me returns 200 but /databases/:id
+  // returns 404, we can tell the user the exact action to take in the
+  // Notion UI (Connect → Add connection on each DB) instead of blaming
+  // the token.
+  try {
+    const probeRes = await fetch('https://api.notion.com/v1/users/me', {
+      headers: {
+        Authorization: 'Bearer ' + String(token).trim(),
+        'Notion-Version': '2022-06-28',
+      },
+    });
+    const probeBody = await probeRes.json().catch(() => ({}));
+    console.log('[notion.connect] /users/me status:', probeRes.status, '| code:', probeBody.code || '-', '| message:', probeBody.message || '-');
+    if (probeRes.status === 401) {
+      return res.status(400).json({
+        error: 'Token Notion invalide',
+        detail: probeBody.message || 'Notion returned 401 Unauthorized on /users/me',
+        status: 401,
+        code: probeBody.code || 'unauthorized',
+      });
+    }
+    // Non-401 failures on /users/me are weird — log and keep going,
+    // the DB-fetch step will surface a better diagnostic.
+    if (!probeRes.ok) {
+      console.log('[notion.connect] /users/me non-OK non-401:', JSON.stringify(probeBody).slice(0, 500));
+    } else {
+      console.log('[notion.connect] /users/me OK — bot user id:', probeBody?.bot?.id || probeBody?.id || '-');
+    }
+  } catch (probeErr) {
+    console.log('[notion.connect] /users/me threw:', probeErr.message);
+  }
 
   try {
     const { databases, errors } = await notion.validateConnection(token.trim(), {
@@ -39,14 +75,18 @@ router.post('/connect', async (req, res) => {
     if (!databases.transactions) {
       const e = errors.transactions || {};
       // A 401 / "unauthorized" from Notion means the integration
-      // token is wrong — labelling that "Base invalide" was sending
-      // users on a wild goose chase. 404 / object_not_found remains
-      // a database-ID problem (or the DB not being shared with the
-      // integration).
-      const isTokenError = e.status === 401 || e.code === 'unauthorized'
-        || /token/i.test(e.message || '') || /unauthoriz/i.test(e.message || '');
+      // token is wrong. 404 / object_not_found means the database ID
+      // is wrong OR the DB wasn't shared with the integration (the
+      // more common problem — users forget to click "Connect" inside
+      // the database).
+      const isTokenError = e.status === 401 || e.code === 'unauthorized';
+      const isNotShared = e.status === 404 || e.code === 'object_not_found';
+      let errorLabel;
+      if (isTokenError) errorLabel = 'Token Notion invalide';
+      else if (isNotShared) errorLabel = 'Base Transactions introuvable — pensez à partager la base avec votre intégration Notion';
+      else errorLabel = 'Base Transactions invalide';
       return res.status(400).json({
-        error: isTokenError ? 'Token Notion invalide' : 'Base Transactions invalide',
+        error: errorLabel,
         detail: e.message || null,
         status: e.status || null,
         code: e.code || null,
