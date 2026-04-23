@@ -342,8 +342,7 @@
       "billing": "Billing",
       "referrals": "Referrals",
       "explore_programs": "Explore programs",
-      "search": "Search",
-      "webhooks": "Webhooks"
+      "search": "Search"
     },
     "collapse": "Collapse",
     "logout": "Logout",

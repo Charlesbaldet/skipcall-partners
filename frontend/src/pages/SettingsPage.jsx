@@ -5,6 +5,7 @@ import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import PipelineStagesEditor from '../components/PipelineStagesEditor.jsx';
+import WebhooksSection from '../components/WebhooksSection.jsx';
 import {
   Trophy, Plus, Edit2,
   Palette,
@@ -863,6 +864,11 @@ function CrmIntegrations() {
             </div>
           )}
       </div>
+
+      {/* Outgoing webhooks — shares the Intégrations tab with the CRM
+          block above. Lives on its own component so we can keep
+          SettingsPage lean. */}
+      <WebhooksSection />
     </div>
   );
 }

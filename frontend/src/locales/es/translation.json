@@ -342,8 +342,7 @@
       "billing": "Facturación",
       "referrals": "Referrals",
       "explore_programs": "Explorar programas",
-      "search": "Buscar",
-      "webhooks": "Webhooks"
+      "search": "Buscar"
     },
     "collapse": "Reducir",
     "logout": "Cerrar sesión",
