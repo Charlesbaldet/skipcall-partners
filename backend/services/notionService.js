@@ -376,7 +376,22 @@ async function pushReferralToNotion(referral, tenantId) {
           : { rich_text: { equals: values.email } };
         contactId = await searchPage(cfg.token, cfg.dbs.contacts, emailProp, filter);
       }
-      const properties = buildPropertiesFor(contactsDb.rawSchema, mapping, values);
+      // Context-specific override: the Contacts tab's "Nom du prospect"
+      // row keeps its key as prospect_name (to preserve every
+      // tenant's saved mapping), but its VALUE should be the
+      // contact person's full name — not the deal/company name that
+      // prospect_name carries everywhere else. Compose first+last
+      // here and fall back to the legacy prospect_name string when
+      // the admin hasn't filled in the new columns.
+      const contactFullName = [referral.contact_first_name, referral.contact_last_name]
+        .filter(Boolean).map(s => String(s).trim()).filter(Boolean).join(' ');
+      const contactsValues = {
+        ...values,
+        prospect_name: contactFullName || values.prospect_name,
+        contact_first_name: referral.contact_first_name || null,
+        contact_last_name:  referral.contact_last_name  || null,
+      };
+      const properties = buildPropertiesFor(contactsDb.rawSchema, mapping, contactsValues);
       // Auto-relation: if the Contacts DB has a relation property that
       // points at the Companies DB, populate it with the company we
       // just upserted.

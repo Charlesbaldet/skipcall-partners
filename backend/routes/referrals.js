@@ -155,9 +155,14 @@ router.post('/', [
     const {
       prospect_name, prospect_email, prospect_phone,
       prospect_company, prospect_role,
+      contact_first_name, contact_last_name,
       recommendation_level, notes, lead_handling,
       referral_code_used, promo_code,
     } = req.body;
+    // Both contact fields are optional — normalise empty strings to
+    // null so we don't store blank rows.
+    const safeContactFirst = (contact_first_name || '').trim() || null;
+    const safeContactLast  = (contact_last_name  || '').trim() || null;
     const safeLeadHandling = lead_handling === 'client_prospect' ? 'client_prospect' : 'partner_managed';
 
     // Track the submission source for admin analytics. Tracking codes
@@ -248,12 +253,14 @@ router.post('/', [
       `INSERT INTO referrals
         (partner_id, submitted_by, prospect_name, prospect_email,
          prospect_phone, prospect_company, prospect_role,
+         contact_first_name, contact_last_name,
          recommendation_level, notes, tenant_id, stage_id, lead_handling,
          source, promo_code_id, referral_code_used)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
       [partnerId, req.user.id, prospect_name, prospect_email,
        prospect_phone, prospect_company, prospect_role,
+       safeContactFirst, safeContactLast,
        recommendation_level, notes, req.tenantId || null, defaultStageId,
        safeLeadHandling, source, promoCodeId, refCodeNorm]
     );
@@ -357,7 +364,8 @@ Voir : ${_dashUrl}`,
 router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), async (req, res) => {
   const client = await getClient();
   try {
-    let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement } = req.body;
+    let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement,
+          contact_first_name, contact_last_name } = req.body;
 
     // Get current state (with tenant check)
     let selectQuery = 'SELECT * FROM referrals WHERE id = $1';
@@ -398,6 +406,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       notes = undefined;
       lost_reason = undefined;
       engagement = undefined;
+      contact_first_name = undefined;
+      contact_last_name = undefined;
     }
 
     // Resolve stage_id → derive canonical status so all the legacy
@@ -473,6 +483,17 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     if (engagement && engagement !== current.engagement) {
       updates.engagement = engagement;
       activities.push({ action: 'engagement_updated', old_value: current.engagement, new_value: engagement });
+    }
+
+    // Contact person fields — optional, any non-undefined value
+    // (including explicit '') wins, so admins can clear a wrong
+    // entry. Partners can't write these (stripped above alongside
+    // the other admin-only fields).
+    if (contact_first_name !== undefined && contact_first_name !== current.contact_first_name) {
+      updates.contact_first_name = (contact_first_name || '').trim() || null;
+    }
+    if (contact_last_name !== undefined && contact_last_name !== current.contact_last_name) {
+      updates.contact_last_name = (contact_last_name || '').trim() || null;
     }
 
     if (assigned_to && assigned_to !== current.assigned_to) {

@@ -806,7 +806,9 @@
     "unit_month": "€ / mese",
     "value_ph": "Es: 24000",
     "act_value_updated": "Valore aggiornato: {{value}}",
-    "act_engagement_updated": "Impegno aggiornato: {{value}}"
+    "act_engagement_updated": "Impegno aggiornato: {{value}}",
+    "field_first_name": "Nome",
+    "field_last_name": "Cognome"
   },
   "commissions": {
     "title": "Commissioni",

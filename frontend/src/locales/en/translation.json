@@ -806,7 +806,9 @@
     "unit_month": "€ / month",
     "value_ph": "Ex: 24000",
     "act_value_updated": "Value updated: {{value}}",
-    "act_engagement_updated": "Commitment updated: {{value}}"
+    "act_engagement_updated": "Commitment updated: {{value}}",
+    "field_first_name": "First name",
+    "field_last_name": "Last name"
   },
   "commissions": {
     "title": "Commissions",

@@ -806,7 +806,9 @@
     "unit_month": "€ / maand",
     "value_ph": "Bijv.: 24000",
     "act_value_updated": "Waarde bijgewerkt: {{value}}",
-    "act_engagement_updated": "Toezegging bijgewerkt: {{value}}"
+    "act_engagement_updated": "Toezegging bijgewerkt: {{value}}",
+    "field_first_name": "Voornaam",
+    "field_last_name": "Achternaam"
   },
   "commissions": {
     "title": "Commissies",

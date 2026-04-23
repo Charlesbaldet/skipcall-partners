@@ -806,7 +806,9 @@
     "unit_month": "€ / Monat",
     "value_ph": "Bsp.: 24000",
     "act_value_updated": "Wert aktualisiert: {{value}}",
-    "act_engagement_updated": "Engagement aktualisiert: {{value}}"
+    "act_engagement_updated": "Engagement aktualisiert: {{value}}",
+    "field_first_name": "Vorname",
+    "field_last_name": "Nachname"
   },
   "commissions": {
     "title": "Provisionen",

@@ -268,7 +268,12 @@ export default function ReferralsPage() {
                         <GripVertical size={14} color="#cbd5e1" />
                       </div>
                       <LeadHandlingBadge handling={r.lead_handling}/>
-                      {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{r.prospect_company}</div>}
+                      {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>{r.prospect_company}</div>}
+                      {(r.contact_first_name || r.contact_last_name) && (
+                        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, fontStyle: 'italic' }}>
+                          {[r.contact_first_name, r.contact_last_name].filter(Boolean).join(' ')}
+                        </div>
+                      )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600 }}>{r.partner_name}</span>
                         {r.deal_value > 0 && <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</span>}
@@ -402,7 +407,12 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{referral.prospect_name}</h2>
               <Badge config={LEVEL_CONFIG} value={referral.recommendation_level} />
             </div>
-            <p style={{ color: '#64748b', fontSize: 14 }}>{referral.prospect_company} · {referral.partner_name}</p>
+            <p style={{ color: '#64748b', fontSize: 14 }}>
+              {referral.prospect_company} · {referral.partner_name}
+              {(referral.contact_first_name || referral.contact_last_name) && (
+                <> · <span style={{ fontStyle: 'italic' }}>{[referral.contact_first_name, referral.contact_last_name].filter(Boolean).join(' ')}</span></>
+              )}
+            </p>
           </div>
           <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', width: 38, height: 38, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} color="#475569" /></button>
         </div>
@@ -415,9 +425,11 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
           {tab === 'info' && (
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginBottom: 24 }}>
+                <InfoRow label={t('referrals.field_first_name', { defaultValue: 'Prénom' })} value={referral.contact_first_name || '—'} />
+                <InfoRow label={t('referrals.field_last_name',  { defaultValue: 'Nom' })}    value={referral.contact_last_name  || '—'} />
+                <InfoRow label={t('referrals.field_role')} value={referral.prospect_role || '—'} />
                 <InfoRow label={t('referrals.field_email')} value={referral.prospect_email} />
                 <InfoRow label={t('referrals.field_phone')} value={referral.prospect_phone || '—'} />
-                <InfoRow label={t('referrals.field_role')} value={referral.prospect_role || '—'} />
                 <InfoRow label={t('referrals.field_partner')} value={referral.partner_name} />
                 <InfoRow label={t('referrals.field_assigned')} value={referral.assigned_name || t('referrals.not_assigned')} />
                 <InfoRow label={t('referrals.field_created')} value={fmtDate(referral.created_at)} />

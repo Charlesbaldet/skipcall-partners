@@ -24,7 +24,9 @@ export default function PartnerSubmitPage() {
   const [tenantName, setTenantName] = useState('');
   const [form, setForm] = useState({
     prospect_name: '', prospect_email: '', prospect_phone: '',
-    prospect_company: '', prospect_role: '', recommendation_level: 'warm', notes: '',
+    prospect_company: '', prospect_role: '',
+    contact_first_name: '', contact_last_name: '',
+    recommendation_level: 'warm', notes: '',
     lead_handling: 'partner_managed',
   });
 
@@ -66,7 +68,7 @@ export default function PartnerSubmitPage() {
           <p style={{ color: '#64748b', fontSize: 16, lineHeight: 1.6, marginBottom: 32 }}>
             Merci pour votre recommandation. {tenantName ? `L'équipe ${tenantName}` : "L'équipe"} va prendre contact avec le prospect rapidement. Vous serez notifié des mises à jour par email.
           </p>
-          <button onClick={() => { setForm({ prospect_name: '', prospect_email: '', prospect_phone: '', prospect_company: '', prospect_role: '', recommendation_level: 'warm', notes: '' }); setStep(1); setSubmitted(false); }}
+          <button onClick={() => { setForm({ prospect_name: '', prospect_email: '', prospect_phone: '', prospect_company: '', prospect_role: '', contact_first_name: '', contact_last_name: '', recommendation_level: 'warm', notes: '', lead_handling: 'partner_managed' }); setStep(1); setSubmitted(false); }}
             style={{ padding: '12px 28px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
             <Send size={14} style={{ marginRight: 8, verticalAlign: -2 }} />
             Nouvelle recommandation
@@ -98,9 +100,21 @@ export default function PartnerSubmitPage() {
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>Informations du prospect</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Deal identification — what shows on the Kanban card and
+                what maps to the Notion Transactions Title. "Nom du deal"
+                is the header; the actual contact person's name goes in
+                the Contact section below. */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <Field label="Nom du contact *" value={form.prospect_name} onChange={set('prospect_name')} placeholder="Jean Dupont" />
+              <Field label="Nom du deal / Entreprise *" value={form.prospect_name} onChange={set('prospect_name')} placeholder="Ex: Acme Corp" />
               <Field label="Entreprise *" value={form.prospect_company} onChange={set('prospect_company')} placeholder="Nom de la société" />
+            </div>
+            {/* Contact person — optional, split into first/last so Notion
+                Contacts + HubSpot Contacts can sync a clean
+                { firstname, lastname } pair. */}
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.4, marginTop: 4 }}>Contact</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <Field label="Prénom" value={form.contact_first_name} onChange={set('contact_first_name')} placeholder="Jean" />
+              <Field label="Nom" value={form.contact_last_name} onChange={set('contact_last_name')} placeholder="Dupont" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <Field label="Email *" value={form.prospect_email} onChange={set('prospect_email')} placeholder="email@entreprise.fr" type="email" />
@@ -191,8 +205,9 @@ export default function PartnerSubmitPage() {
           <div style={{ background: '#f8fafc', borderRadius: 16, padding: 24, marginBottom: 28, border: '1px solid #e2e8f0' }}>
             <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 16 }}> Récapitulatif</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', fontSize: 14 }}>
-              <RecapRow label="Contact" value={form.prospect_name} />
+              <RecapRow label="Deal" value={form.prospect_name} />
               <RecapRow label="Entreprise" value={form.prospect_company} />
+              <RecapRow label="Contact" value={[form.contact_first_name, form.contact_last_name].filter(Boolean).join(' ') || '—'} />
               <RecapRow label="Email" value={form.prospect_email} />
               <RecapRow label="Téléphone" value={form.prospect_phone || '—'} />
               <RecapRow label="Rôle" value={form.prospect_role || '—'} />

@@ -183,7 +183,19 @@ async function upsertHubSpotCompany(integration, referral, mapping = {}) {
 async function upsertHubSpotContact(integration, referral, mapping = {}) {
   const email = referral.prospect_email;
   if (!email) return null;
-  const { firstname, lastname } = splitName(referral.prospect_name);
+  // Prefer the explicit first/last columns when available — they
+  // carry the contact PERSON's name. Legacy rows only have
+  // prospect_name (which often holds the company / deal header),
+  // so splitName stays the fallback. The result is HubSpot
+  // Contacts with clean firstname/lastname instead of "Acme" /
+  // "Corp" split from the deal title.
+  let firstname = (referral.contact_first_name || '').trim();
+  let lastname  = (referral.contact_last_name  || '').trim();
+  if (!firstname && !lastname) {
+    const parts = splitName(referral.prospect_name);
+    firstname = parts.firstname;
+    lastname  = parts.lastname;
+  }
   const values = {
     firstname,
     lastname,

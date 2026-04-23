@@ -267,6 +267,20 @@ async function runMigrations() {
   `).catch(() => {});
   console.log('[crm] v18c referral link columns ready');
 
+  // ─── v18d: Distinct contact-person fields on referrals ──────────────
+  // Up to now prospect_name served as both the card header AND a
+  // stand-in for the contact's full name depending on how each
+  // tenant used the form. The UI is splitting them: prospect_name
+  // stays the deal / company header (what the Kanban card shows
+  // and what Notion's Transactions Title is set to), while these
+  // two new columns carry the actual contact person's name, which
+  // feeds the Notion Contacts tab and a new Contact section on the
+  // referral card. Both optional — existing rows keep working with
+  // the old single-field flow until an admin re-edits them.
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS contact_first_name TEXT`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS contact_last_name  TEXT`);
+  console.log('[referrals] v18d contact_first_name + contact_last_name ready');
+
   // ─── v19: Outgoing webhooks ───
   await query(`CREATE TABLE IF NOT EXISTS webhook_endpoints (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
