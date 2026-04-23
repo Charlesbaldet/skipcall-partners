@@ -35,6 +35,12 @@ import FeatureCommissionsPage from './pages/features/FeatureCommissionsPage';
 import FeatureAnalyticsPage from './pages/features/FeatureAnalyticsPage';
 import FeaturePersonnalisationPage from './pages/features/FeaturePersonnalisationPage';
 import FeatureTrackingPage from './pages/features/FeatureTrackingPage';
+import UseCaseSaasB2BPage from './pages/usecases/UseCaseSaasB2BPage';
+import UseCaseCabinetConseilPage from './pages/usecases/UseCaseCabinetConseilPage';
+import UseCaseStartupPage from './pages/usecases/UseCaseStartupPage';
+import UseCaseDistributionPage from './pages/usecases/UseCaseDistributionPage';
+import UseCaseMarketplacePage from './pages/usecases/UseCaseMarketplacePage';
+import UseCaseAgencePage from './pages/usecases/UseCaseAgencePage';
 import NewsPage from './pages/NewsPage.jsx';
 import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
@@ -131,6 +137,12 @@ function AppRoutes() {
           <Route path="/fonctionnalites/analytics" element={<FeatureAnalyticsPage />} />
           <Route path="/fonctionnalites/personnalisation" element={<FeaturePersonnalisationPage />} />
           <Route path="/fonctionnalites/tracking" element={<FeatureTrackingPage />} />
+          <Route path="/cas-dusage/saas-b2b" element={<UseCaseSaasB2BPage />} />
+          <Route path="/cas-dusage/cabinet-conseil" element={<UseCaseCabinetConseilPage />} />
+          <Route path="/cas-dusage/startup" element={<UseCaseStartupPage />} />
+          <Route path="/cas-dusage/reseau-distribution" element={<UseCaseDistributionPage />} />
+          <Route path="/cas-dusage/marketplace-plateforme" element={<UseCaseMarketplacePage />} />
+          <Route path="/cas-dusage/agence-marketing" element={<UseCaseAgencePage />} />
           </Routes>
     </>
   );

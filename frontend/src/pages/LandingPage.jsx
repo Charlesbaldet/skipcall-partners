@@ -81,6 +81,7 @@ export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [scrollY, setScrollY] = useState(0);
   const [featOpen, setFeatOpen] = useState(false);
+  const [useCasesOpen, setUseCasesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [featuredPartners, setFeaturedPartners] = useState([]);
 
@@ -122,6 +123,14 @@ export default function LandingPage() {
     {href:'/fonctionnalites/analytics',label:t('landing.featuresDropdown.analytics_label'),desc:t('landing.featuresDropdown.analytics_desc')},
     {href:'/fonctionnalites/personnalisation',label:t('landing.featuresDropdown.branding_label'),desc:t('landing.featuresDropdown.branding_desc')},
     {href:'/fonctionnalites/tracking',label:t('landing.featuresDropdown.tracking_label'),desc:t('landing.featuresDropdown.tracking_desc')},
+  ];
+  const useCasesDropdown = [
+    {href:'/cas-dusage/saas-b2b',label:t('useCases.nav.saas'),desc:t('useCases.nav.saasDesc')},
+    {href:'/cas-dusage/cabinet-conseil',label:t('useCases.nav.conseil'),desc:t('useCases.nav.conseilDesc')},
+    {href:'/cas-dusage/startup',label:t('useCases.nav.startup'),desc:t('useCases.nav.startupDesc')},
+    {href:'/cas-dusage/reseau-distribution',label:t('useCases.nav.distribution'),desc:t('useCases.nav.distributionDesc')},
+    {href:'/cas-dusage/marketplace-plateforme',label:t('useCases.nav.marketplace'),desc:t('useCases.nav.marketplaceDesc')},
+    {href:'/cas-dusage/agence-marketing',label:t('useCases.nav.agence'),desc:t('useCases.nav.agenceDesc')},
   ];
 
   const s = {
@@ -191,6 +200,22 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
+            {/* Cas d'usage dropdown */}
+            <div style={{position:'relative'}} onMouseEnter={()=>setUseCasesOpen(true)} onMouseLeave={()=>setUseCasesOpen(false)}>
+              <span style={{color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4}}>
+                {t('useCases.nav.menuLabel')} <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+              </span>
+              {useCasesOpen && (
+                <div style={{position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:280,zIndex:200}}>
+                  {useCasesDropdown.map(({href,label,desc})=>(
+                    <a key={href} href={href} style={{display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none'}} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <div style={{fontWeight:600,fontSize:14,color:'#0f172a'}}>{label}</div>
+                      <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{desc}</div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
             {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} style={{color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,cursor:'pointer',transition:'color .2s'}} onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>
                 {t(key)}
@@ -207,6 +232,15 @@ export default function LandingPage() {
             <div style={{marginBottom:16}}>
               <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('nav.features')}</div>
               {featDropdown.map(({href,label,desc})=>(
+                <a key={href} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none'}}>
+                  <div style={{fontWeight:600,fontSize:15,color:'#0f172a'}}>{label}</div>
+                  <div style={{fontSize:13,color:'#64748b',marginTop:2}}>{desc}</div>
+                </a>
+              ))}
+            </div>
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('useCases.nav.menuLabel')}</div>
+              {useCasesDropdown.map(({href,label,desc})=>(
                 <a key={href} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none'}}>
                   <div style={{fontWeight:600,fontSize:15,color:'#0f172a'}}>{label}</div>
                   <div style={{fontSize:13,color:'#64748b',marginTop:2}}>{desc}</div>
@@ -294,6 +328,49 @@ export default function LandingPage() {
       </section>
 
       {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ TESTIMONIALS Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
+      {/* --- USE CASES TEASER --- */}
+      <section id="cas-dusage" style={{...s.section,background:C.bg}}>
+        <div style={{maxWidth:1100,margin:'0 auto'}}>
+          <div style={s.center}>
+            <div style={s.label}>{t('useCases.sectionLabel')}</div>
+            <h2 style={s.h2}>{t('useCases.sectionTitle')}</h2>
+            <p style={{color:C.m,fontSize:16,marginTop:16,maxWidth:640,margin:'16px auto 0',lineHeight:1.6,fontFamily:'inherit'}}>{t('useCases.sectionSubtitle')}</p>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'repeat(auto-fit,minmax(300px,1fr))',gap:20}}>
+            {[
+              {href:'/cas-dusage/saas-b2b',label:t('useCases.nav.saas'),desc:t('useCases.nav.saasDesc'),icon:(
+                <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.p} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 10l2 2 4-4" stroke={C.pl}/></svg>
+              )},
+              {href:'/cas-dusage/cabinet-conseil',label:t('useCases.nav.conseil'),desc:t('useCases.nav.conseilDesc'),icon:(
+                <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.p} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21v-7a4 4 0 014-4h8a4 4 0 014 4v7"/><circle cx="12" cy="6" r="3"/><path d="M9 14h6" stroke={C.pl}/></svg>
+              )},
+              {href:'/cas-dusage/startup',label:t('useCases.nav.startup'),desc:t('useCases.nav.startupDesc'),icon:(
+                <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.p} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.5-2 5-2 5s3.5-.5 5-2"/><path d="M12 15l-3-3a11 11 0 017-7 11 11 0 014 4 11 11 0 01-7 7z"/><circle cx="15.5" cy="8.5" r="1.5" stroke={C.pl}/></svg>
+              )},
+              {href:'/cas-dusage/reseau-distribution',label:t('useCases.nav.distribution'),desc:t('useCases.nav.distributionDesc'),icon:(
+                <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.p} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2" stroke={C.pl}/><circle cx="19" cy="5" r="2" stroke={C.pl}/><circle cx="5" cy="19" r="2" stroke={C.pl}/><circle cx="19" cy="19" r="2" stroke={C.pl}/><path d="M7 6l3 4M17 6l-3 4M7 18l3-4M17 18l-3-4"/></svg>
+              )},
+              {href:'/cas-dusage/marketplace-plateforme',label:t('useCases.nav.marketplace'),desc:t('useCases.nav.marketplaceDesc'),icon:(
+                <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.p} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9v10a2 2 0 002 2h14a2 2 0 002-2V9"/><path d="M3 9h18" stroke={C.pl}/><path d="M9 13h6"/></svg>
+              )},
+              {href:'/cas-dusage/agence-marketing',label:t('useCases.nav.agence'),desc:t('useCases.nav.agenceDesc'),icon:(
+                <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.p} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>
+              )},
+            ].map((card)=>(
+              <a key={card.href} href={card.href} className="hl" style={{display:'block',padding:28,borderRadius:20,background:'#fff',border:'1px solid #f1f5f9',boxShadow:'0 4px 20px rgba(0,0,0,.03)',textDecoration:'none',color:'inherit',cursor:'pointer',transition:'transform .25s,box-shadow .25s'}}>
+                <div style={{width:52,height:52,borderRadius:14,background:`${C.p}15`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18}}>
+                  {card.icon}
+                </div>
+                <h3 style={{fontSize:18,fontWeight:800,marginBottom:8,color:C.s}}>{card.label}</h3>
+                <p style={{color:C.m,fontSize:14,lineHeight:1.6,margin:'0 0 16px',fontFamily:'inherit'}}>{card.desc}</p>
+                <span style={{color:C.p,fontSize:14,fontWeight:700,display:'inline-flex',alignItems:'center',gap:6}}>{t('useCases.cardCta')} →</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- TESTIMONIALS --- */}
       <section id="temoignages" style={{...s.section,background:'#fff'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={s.center}>

@@ -6,6 +6,8 @@ Allow: /pricing
 Allow: /marketplace
 Allow: /login
 Allow: /signup
+Allow: /fonctionnalites/
+Allow: /cas-dusage/
 
 Disallow: /dashboard
 Disallow: /referrals

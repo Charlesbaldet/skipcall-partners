@@ -37,6 +37,7 @@ export function LandingNav() {
   const navigate = useNavigate();
   const mobile = useMobile();
   const [featOpen, setFeatOpen] = useState(false);
+  const [useCasesOpen, setUseCasesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const FEATURES = [
@@ -45,6 +46,15 @@ export function LandingNav() {
     { label: t('landing.featuresDropdown.analytics_label'), href: '/fonctionnalites/analytics', desc: t('landing.featuresDropdown.analytics_desc') },
     { label: t('landing.featuresDropdown.branding_label'), href: '/fonctionnalites/personnalisation', desc: t('landing.featuresDropdown.branding_desc') },
     { label: t('landing.featuresDropdown.tracking_label'), href: '/fonctionnalites/tracking', desc: t('landing.featuresDropdown.tracking_desc') },
+  ];
+
+  const USE_CASES = [
+    { label: t('useCases.nav.saas'), href: '/cas-dusage/saas-b2b', desc: t('useCases.nav.saasDesc') },
+    { label: t('useCases.nav.conseil'), href: '/cas-dusage/cabinet-conseil', desc: t('useCases.nav.conseilDesc') },
+    { label: t('useCases.nav.startup'), href: '/cas-dusage/startup', desc: t('useCases.nav.startupDesc') },
+    { label: t('useCases.nav.distribution'), href: '/cas-dusage/reseau-distribution', desc: t('useCases.nav.distributionDesc') },
+    { label: t('useCases.nav.marketplace'), href: '/cas-dusage/marketplace-plateforme', desc: t('useCases.nav.marketplaceDesc') },
+    { label: t('useCases.nav.agence'), href: '/cas-dusage/agence-marketing', desc: t('useCases.nav.agenceDesc') },
   ];
 
   return (
@@ -84,6 +94,26 @@ export function LandingNav() {
                 </div>
               )}
             </div>
+            <div style={{ position:'relative' }} onMouseEnter={()=>setUseCasesOpen(true)} onMouseLeave={()=>setUseCasesOpen(false)}>
+              <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
+                {t('useCases.nav.menuLabel')}
+                <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:useCasesOpen?'rotate(180deg)':'none' }}>
+                  <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                </svg>
+              </span>
+              {useCasesOpen && (
+                <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:280,zIndex:200 }}>
+                  {USE_CASES.map(u=>(
+                    <a key={u.href} href={u.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
+                      onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{u.label}</div>
+                      <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{u.desc}</div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
             {[['nav.marketplace','/marketplace'],['nav.pricing','/#tarifs'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
                 onMouseEnter={e=>e.target.style.color=C.p}
@@ -114,6 +144,15 @@ export function LandingNav() {
               <a key={f.href} href={f.href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none' }}>
                 <div style={{ fontWeight:600,fontSize:15,color:C.s }}>{f.label}</div>
                 <div style={{ fontSize:13,color:C.m,marginTop:2 }}>{f.desc}</div>
+              </a>
+            ))}
+          </div>
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('useCases.nav.menuLabel')}</div>
+            {USE_CASES.map(u=>(
+              <a key={u.href} href={u.href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none' }}>
+                <div style={{ fontWeight:600,fontSize:15,color:C.s }}>{u.label}</div>
+                <div style={{ fontSize:13,color:C.m,marginTop:2 }}>{u.desc}</div>
               </a>
             ))}
           </div>

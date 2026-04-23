@@ -31,6 +31,7 @@ export const config = {
     '/signup',
     '/login',
     '/fonctionnalites/:path*',
+    '/cas-dusage/:path*',
   ],
 };
 
@@ -96,6 +97,30 @@ function resolveMeta(path) {
   if (path === '/fonctionnalites/tracking') return {
     title: 'Tracking referrals et liens partenaires — RefBoost',
     description: "Tracez chaque clic, chaque lead et chaque conversion avec des liens partenaires uniques. Script JS, UTM, codes promo et attribution multi-touch intégrés.",
+  };
+  if (path === '/cas-dusage/saas-b2b') return {
+    title: 'Programme partenaire SaaS B2B — RefBoost',
+    description: "Créez un canal partenaire rentable pour votre SaaS B2B. Pipeline visuel, commissions automatiques, intégrations CRM. CAC 4x inférieur au direct.",
+  };
+  if (path === '/cas-dusage/cabinet-conseil') return {
+    title: "Apporteur d'affaires cabinet conseil — RefBoost",
+    description: "Vous recommandez des solutions à vos clients ? Monétisez chaque recommandation avec RefBoost. Portail dédié, suivi temps réel, commissions auto.",
+  };
+  if (path === '/cas-dusage/startup') return {
+    title: 'Programme partenaire startup — RefBoost',
+    description: "Lancez votre programme d'apporteurs d'affaires sans budget avec le plan gratuit RefBoost. Recrutez vos premiers partenaires et payez au résultat.",
+  };
+  if (path === '/cas-dusage/reseau-distribution') return {
+    title: 'Gestion revendeurs et prescripteurs — RefBoost',
+    description: "Gérez des dizaines de revendeurs et prescripteurs sur une seule plateforme. Niveaux, gamification, synchronisation CRM et commissions automatiques.",
+  };
+  if (path === '/cas-dusage/marketplace-plateforme') return {
+    title: 'Programme ambassadeur marketplace — RefBoost',
+    description: "Transformez vos utilisateurs en ambassadeurs. Liens de recommandation, portail en marque blanche, analytics par partenaire. Conversion 2 à 4x supérieure.",
+  };
+  if (path === '/cas-dusage/agence-marketing') return {
+    title: 'Gestion programme partenaire multi-client — RefBoost',
+    description: "Gérez les programmes partenaires de tous vos clients depuis une seule plateforme. Multi-tenant, marque blanche, reporting ROI par client inclus.",
   };
   return {
     title: 'RefBoost — Gestion de programme partenaires B2B',
