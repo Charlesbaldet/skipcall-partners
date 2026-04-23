@@ -342,7 +342,8 @@
       "billing": "Billing",
       "referrals": "Referrals",
       "explore_programs": "Explore programs",
-      "search": "Search"
+      "search": "Search",
+      "webhooks": "Webhooks"
     },
     "collapse": "Collapse",
     "logout": "Logout",
@@ -2379,5 +2380,42 @@
       "step3Title": "Report the results",
       "step3Desc": "Every month, generate a ROI report for every client. The data is real-time — no need to consolidate manually."
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Receive real-time notifications whenever something happens in your RefBoost account. Connect RefBoost to any CRM or external tool.",
+    "add_title": "Add a webhook",
+    "add_button": "Add webhook",
+    "creating": "Creating…",
+    "url_label": "Destination URL",
+    "url_hint": "Must start with https:// (HTTP not allowed).",
+    "events_label": "Events to subscribe to",
+    "endpoints_title": "Configured webhooks",
+    "empty": "No webhook configured yet.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "view_log": "View deliveries",
+    "hide_log": "Hide deliveries",
+    "delete": "Delete",
+    "confirm_delete": "Delete this webhook?",
+    "secret_created": "Secret key generated",
+    "secret_shown_once": "Copy this key now — it will never be shown again. Use it to verify the HMAC signature of incoming requests.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "recent_deliveries": "Recent deliveries",
+    "no_deliveries": "No deliveries yet.",
+    "col_event": "Event",
+    "col_when": "When",
+    "col_status": "Status",
+    "col_http": "HTTP code",
+    "col_attempts": "Attempts",
+    "col_actions": "Actions",
+    "st_success": "Success",
+    "st_failed": "Failed",
+    "st_pending": "Pending",
+    "retry": "Retry",
+    "doc_title": "Signature verification",
+    "doc_intro": "Every request is signed with HMAC-SHA256 and sent in the X-RefBoost-Signature header. Verify it with your secret key before processing the event."
   }
 }

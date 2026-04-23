@@ -342,7 +342,8 @@
       "billing": "Faturação",
       "referrals": "Referrals",
       "explore_programs": "Explorar programas",
-      "search": "Pesquisa"
+      "search": "Pesquisa",
+      "webhooks": "Webhooks"
     },
     "collapse": "Recolher",
     "logout": "Sair",
@@ -2379,5 +2380,42 @@
       "step3Title": "Reporte os resultados",
       "step3Desc": "Todos os meses, gera um relatório de ROI por cliente. Os dados são em tempo real — sem consolidação manual."
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Receba notificações em tempo real quando acontecem eventos na sua conta RefBoost. Ligue o RefBoost a qualquer CRM ou ferramenta externa.",
+    "add_title": "Adicionar um webhook",
+    "add_button": "Adicionar webhook",
+    "creating": "A criar…",
+    "url_label": "URL de destino",
+    "url_hint": "Tem de começar por https:// (HTTP não permitido).",
+    "events_label": "Eventos a subscrever",
+    "endpoints_title": "Webhooks configurados",
+    "empty": "Ainda não há webhooks configurados.",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "view_log": "Ver entregas",
+    "hide_log": "Ocultar entregas",
+    "delete": "Eliminar",
+    "confirm_delete": "Eliminar este webhook?",
+    "secret_created": "Chave secreta gerada",
+    "secret_shown_once": "Copie esta chave agora — não será mostrada novamente. Use-a para verificar a assinatura HMAC dos pedidos recebidos.",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "close": "Fechar",
+    "recent_deliveries": "Entregas recentes",
+    "no_deliveries": "Ainda não há entregas.",
+    "col_event": "Evento",
+    "col_when": "Quando",
+    "col_status": "Estado",
+    "col_http": "Código HTTP",
+    "col_attempts": "Tentativas",
+    "col_actions": "Ações",
+    "st_success": "Sucesso",
+    "st_failed": "Falhou",
+    "st_pending": "Pendente",
+    "retry": "Reenviar",
+    "doc_title": "Verificação da assinatura",
+    "doc_intro": "Cada pedido é assinado com HMAC-SHA256 e enviado no cabeçalho X-RefBoost-Signature. Verifique-o com a sua chave secreta antes de processar o evento."
   }
 }

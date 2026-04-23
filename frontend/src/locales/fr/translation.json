@@ -342,7 +342,8 @@
       "billing": "Facturation",
       "referrals": "Referrals",
       "explore_programs": "Explorer les programmes",
-      "search": "Recherche"
+      "search": "Recherche",
+      "webhooks": "Webhooks"
     },
     "collapse": "Réduire",
     "logout": "Déconnexion",
@@ -2379,5 +2380,42 @@
       "step3Title": "Reportez les résultats",
       "step3Desc": "Chaque mois, générez un rapport ROI pour chaque client. Les données sont en temps réel, pas besoin de consolider manuellement."
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Recevez des notifications en temps réel quand des événements se produisent dans votre compte RefBoost. Connectez RefBoost à n'importe quel CRM ou outil externe.",
+    "add_title": "Ajouter un webhook",
+    "add_button": "Ajouter un webhook",
+    "creating": "Création…",
+    "url_label": "URL de destination",
+    "url_hint": "Doit commencer par https:// (HTTP non autorisé).",
+    "events_label": "Événements à écouter",
+    "endpoints_title": "Webhooks configurés",
+    "empty": "Aucun webhook configuré pour le moment.",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "view_log": "Voir les livraisons",
+    "hide_log": "Masquer les livraisons",
+    "delete": "Supprimer",
+    "confirm_delete": "Supprimer ce webhook ?",
+    "secret_created": "Clé secrète générée",
+    "secret_shown_once": "Copiez cette clé maintenant — elle ne sera plus jamais affichée. Elle sert à vérifier la signature HMAC des requêtes reçues.",
+    "copy": "Copier",
+    "copied": "Copié",
+    "close": "Fermer",
+    "recent_deliveries": "Dernières livraisons",
+    "no_deliveries": "Aucune livraison pour le moment.",
+    "col_event": "Événement",
+    "col_when": "Quand",
+    "col_status": "Statut",
+    "col_http": "Code HTTP",
+    "col_attempts": "Tentatives",
+    "col_actions": "Actions",
+    "st_success": "Succès",
+    "st_failed": "Échec",
+    "st_pending": "En attente",
+    "retry": "Renvoyer",
+    "doc_title": "Vérification de la signature",
+    "doc_intro": "Chaque requête est signée avec HMAC-SHA256 et envoyée dans l'en-tête X-RefBoost-Signature. Vérifiez-la avec votre clé secrète avant de traiter l'événement."
   }
 }

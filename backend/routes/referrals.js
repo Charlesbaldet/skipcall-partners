@@ -9,6 +9,7 @@ const notify = require('../services/notifyService');
 const { sendEmail, referralStatusChangedTpl, newCommissionAvailableTpl, dealWonTpl } = require('../services/emailService');
 const crmService = require('../services/crmService');
 const notionService = require('../services/notionService');
+const { sendWebhookEvent } = require('../services/webhookService');
 
 const router = express.Router();
 
@@ -329,6 +330,23 @@ Voir : ${_dashUrl}`,
     // Same fire-and-forget story for Notion — if the tenant has
     // notion_connected=false the service short-circuits.
     notionService.pushReferralToNotion({ ...referral, partner_name: partner.name }, req.tenantId).catch(() => {});
+    // Outgoing webhook — customers subscribed to referral.created
+    // get a HMAC-signed POST with the public referral payload.
+    (async () => {
+      const { rows: [p] } = await query('SELECT name, email FROM partners WHERE id = $1', [partnerId]);
+      sendWebhookEvent(req.tenantId, 'referral.created', {
+        referral_id: referral.id,
+        partner_id: partnerId,
+        partner_name: p?.name || null,
+        partner_email: p?.email || null,
+        prospect_name: referral.prospect_name,
+        prospect_company: referral.prospect_company,
+        prospect_email: referral.prospect_email,
+        prospect_phone: referral.prospect_phone,
+        notes: referral.notes,
+        created_at: referral.created_at,
+      });
+    })().catch(() => {});
   } catch (err) {
     console.error('Create referral error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -503,11 +521,12 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         // or 'rejected'. Legacy rows created before this flow stayed
         // on approval_status='pending' (the column default) and are
         // treated as already approved.
-        await client.query(
+        const { rows: [createdCommission] } = await client.query(
           `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status)
            VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval')
            ON CONFLICT (referral_id)
-           DO UPDATE SET amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value`,
+           DO UPDATE SET amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value
+           RETURNING id, amount, rate, deal_value, created_at`,
           [req.params.id, partner.id,
            effectiveDealValue * partner.commission_rate / 100,
            partner.commission_rate, effectiveDealValue,
@@ -519,6 +538,19 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           [partner.id]
         );
         // deal_won email handled by resend.sendAndLog fire-and-forget below
+
+        // Outgoing webhook: commission.created
+        sendWebhookEvent(req.tenantId, 'commission.created', {
+          commission_id: createdCommission.id,
+          referral_id: req.params.id,
+          partner_id: partner.id,
+          partner_name: partner.name,
+          amount: parseFloat(createdCommission.amount) || 0,
+          rate: parseFloat(createdCommission.rate) || 0,
+          deal_value: parseFloat(createdCommission.deal_value) || 0,
+          currency: 'EUR',
+          created_at: createdCommission.created_at,
+        });
       }
     }
 
@@ -681,6 +713,45 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
     // crm_sync_log; never blocks the response.
     crmService.pushReferralToCRM(updated, req.tenantId).catch(() => {});
     notionService.pushReferralToNotion(updated, req.tenantId).catch(() => {});
+
+    // ─── Outgoing webhooks ────────────────────────────────────────
+    // Fire referral.updated whenever the status moved; fire the more
+    // specific referral.won / referral.lost in addition when the
+    // transition lands on a terminal state. Customers can subscribe
+    // to just the generic event, just the terminal events, or both.
+    if (updates.status && updates.status !== current.status) {
+      (async () => {
+        const { rows: [p] } = await query('SELECT email FROM partners WHERE id = $1', [updated.partner_id]);
+        const basePayload = {
+          referral_id: updated.id,
+          partner_id: updated.partner_id,
+          partner_name: updated.partner_name || null,
+          partner_email: p?.email || null,
+          prospect_name: updated.prospect_name,
+          prospect_company: updated.prospect_company,
+          prospect_email: updated.prospect_email,
+          prospect_phone: updated.prospect_phone,
+          notes: updated.notes,
+          created_at: updated.created_at,
+        };
+        sendWebhookEvent(req.tenantId, 'referral.updated', {
+          ...basePayload,
+          old_status: current.status,
+          new_status: updates.status,
+        });
+        if (updates.status === 'won') {
+          sendWebhookEvent(req.tenantId, 'referral.won', {
+            ...basePayload,
+            deal_value: parseFloat(updated.deal_value) || null,
+          });
+        } else if (updates.status === 'lost') {
+          sendWebhookEvent(req.tenantId, 'referral.lost', {
+            ...basePayload,
+            lost_reason: updated.lost_reason || null,
+          });
+        }
+      })().catch(() => {});
+    }
 
     // Fire-and-forget: send 'lead won' email to partner user(s) if status just transitioned to 'won'
     if (updates.status === 'won' && current.status !== 'won') {

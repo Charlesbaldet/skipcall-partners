@@ -222,6 +222,35 @@ async function runMigrations() {
   await query(`CREATE INDEX IF NOT EXISTS idx_tenants_marketplace ON tenants(marketplace_visible) WHERE marketplace_visible = true`);
   console.log('[marketplace] v18 columns added to tenants');
 
+  // ─── v19: Outgoing webhooks ───
+  await query(`CREATE TABLE IF NOT EXISTS webhook_endpoints (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    secret TEXT NOT NULL,
+    events TEXT[] NOT NULL DEFAULT '{}',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_webhook_endpoints_tenant ON webhook_endpoints(tenant_id) WHERE is_active = true`);
+
+  await query(`CREATE TABLE IF NOT EXISTS webhook_deliveries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    webhook_endpoint_id UUID NOT NULL REFERENCES webhook_endpoints(id) ON DELETE CASCADE,
+    event_type TEXT NOT NULL,
+    payload JSONB NOT NULL,
+    response_status INTEGER,
+    response_body TEXT,
+    success BOOLEAN DEFAULT false,
+    attempts INTEGER DEFAULT 0,
+    next_retry_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_endpoint ON webhook_deliveries(webhook_endpoint_id, created_at DESC)`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_retry ON webhook_deliveries(next_retry_at) WHERE success = false AND next_retry_at IS NOT NULL`);
+  console.log('[webhooks] v19 tables ready');
+
   console.log(' Migrations completed');
 
   } catch (err) {

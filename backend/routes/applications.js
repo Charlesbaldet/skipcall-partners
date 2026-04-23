@@ -7,6 +7,7 @@ const resend = require('../services/resend');
 const templates = require('../services/email-templates');
 const { sendEmail, partnerAccessRevoked, newPartnerApplicationTpl } = require('../services/emailService');
 const notify = require('../services/notifyService');
+const { sendWebhookEvent } = require('../services/webhookService');
 
 const router = express.Router();
 
@@ -170,6 +171,21 @@ Voir : ${_appDashUrl}`,
     }
 
     res.status(201).json({ message: 'Candidature envoyée avec succès', application: { id: application.id } });
+
+    // Outgoing webhook: partner.registered fires on every new
+    // application submission (the approval event fires separately
+    // from the /approve handler).
+    sendWebhookEvent(resolvedTenantId, 'partner.registered', {
+      application_id: application.id,
+      company_name,
+      contact_name,
+      email,
+      phone: phone || null,
+      company_website: company_website || null,
+      company_size: company_size || null,
+      motivation: motivation || null,
+      created_at: application.created_at,
+    });
   } catch (err) {
     // Verbose tracing so we can diagnose 500s from Railway logs. Also
     // surfaces the real error message on the wire — keep for now
@@ -431,6 +447,18 @@ Connexion: ${_loginUrl}`,
     }
 
     res.json({ partner, tempPassword, isNewUser, userId });
+
+    // Outgoing webhook: partner.approved
+    sendWebhookEvent(req.tenantId, 'partner.approved', {
+      partner_id: partner.id,
+      application_id: req.params.id,
+      name: partner.name,
+      contact_name: partner.contact_name,
+      email: partner.email,
+      phone: partner.phone || null,
+      commission_rate: partner.commission_rate != null ? Number(partner.commission_rate) : null,
+      approved_at: new Date().toISOString(),
+    });
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.code === '23505') {

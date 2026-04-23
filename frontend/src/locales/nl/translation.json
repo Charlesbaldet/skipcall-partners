@@ -342,7 +342,8 @@
       "billing": "Facturatie",
       "referrals": "Referrals",
       "explore_programs": "Programma's verkennen",
-      "search": "Zoeken"
+      "search": "Zoeken",
+      "webhooks": "Webhooks"
     },
     "collapse": "Inklappen",
     "logout": "Uitloggen",
@@ -2379,5 +2380,42 @@
       "step3Title": "Rapporteer de resultaten",
       "step3Desc": "Genereer elke maand een ROI-rapport per klant. De data zijn realtime — geen handmatige consolidatie."
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Ontvang realtime meldingen wanneer er events plaatsvinden in je RefBoost-account. Verbind RefBoost met elk CRM of extern systeem.",
+    "add_title": "Webhook toevoegen",
+    "add_button": "Webhook toevoegen",
+    "creating": "Bezig met aanmaken…",
+    "url_label": "Doel-URL",
+    "url_hint": "Moet beginnen met https:// (HTTP niet toegestaan).",
+    "events_label": "Events om op te abonneren",
+    "endpoints_title": "Geconfigureerde webhooks",
+    "empty": "Nog geen webhook geconfigureerd.",
+    "active": "Actief",
+    "inactive": "Inactief",
+    "view_log": "Leveringen bekijken",
+    "hide_log": "Leveringen verbergen",
+    "delete": "Verwijderen",
+    "confirm_delete": "Deze webhook verwijderen?",
+    "secret_created": "Geheime sleutel gegenereerd",
+    "secret_shown_once": "Kopieer deze sleutel nu — hij wordt nooit meer getoond. Gebruik hem om de HMAC-handtekening van binnenkomende requests te verifiëren.",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd",
+    "close": "Sluiten",
+    "recent_deliveries": "Recente leveringen",
+    "no_deliveries": "Nog geen leveringen.",
+    "col_event": "Event",
+    "col_when": "Wanneer",
+    "col_status": "Status",
+    "col_http": "HTTP-code",
+    "col_attempts": "Pogingen",
+    "col_actions": "Acties",
+    "st_success": "Geslaagd",
+    "st_failed": "Mislukt",
+    "st_pending": "In behandeling",
+    "retry": "Opnieuw verzenden",
+    "doc_title": "Handtekeningverificatie",
+    "doc_intro": "Elke request is ondertekend met HMAC-SHA256 en meegestuurd in de header X-RefBoost-Signature. Verifieer hem met je geheime sleutel voordat je het event verwerkt."
   }
 }

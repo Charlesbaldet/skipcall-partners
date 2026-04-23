@@ -342,7 +342,8 @@
       "billing": "Fatturazione",
       "referrals": "Referrals",
       "explore_programs": "Esplora programmi",
-      "search": "Ricerca"
+      "search": "Ricerca",
+      "webhooks": "Webhook"
     },
     "collapse": "Comprimi",
     "logout": "Esci",
@@ -2379,5 +2380,42 @@
       "step3Title": "Riporta i risultati",
       "step3Desc": "Ogni mese genera un report ROI per ciascun cliente. I dati sono in tempo reale, niente consolidamento manuale."
     }
+  },
+  "webhooks": {
+    "title": "Webhook",
+    "subtitle": "Ricevi notifiche in tempo reale quando accadono eventi nel tuo account RefBoost. Collega RefBoost a qualsiasi CRM o strumento esterno.",
+    "add_title": "Aggiungi un webhook",
+    "add_button": "Aggiungi webhook",
+    "creating": "Creazione in corso…",
+    "url_label": "URL di destinazione",
+    "url_hint": "Deve iniziare con https:// (HTTP non consentito).",
+    "events_label": "Eventi a cui iscriversi",
+    "endpoints_title": "Webhook configurati",
+    "empty": "Nessun webhook configurato al momento.",
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "view_log": "Vedi consegne",
+    "hide_log": "Nascondi consegne",
+    "delete": "Elimina",
+    "confirm_delete": "Eliminare questo webhook?",
+    "secret_created": "Chiave segreta generata",
+    "secret_shown_once": "Copia questa chiave ora: non sarà più mostrata. Usala per verificare la firma HMAC delle richieste in arrivo.",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "close": "Chiudi",
+    "recent_deliveries": "Ultime consegne",
+    "no_deliveries": "Nessuna consegna al momento.",
+    "col_event": "Evento",
+    "col_when": "Quando",
+    "col_status": "Stato",
+    "col_http": "Codice HTTP",
+    "col_attempts": "Tentativi",
+    "col_actions": "Azioni",
+    "st_success": "Successo",
+    "st_failed": "Errore",
+    "st_pending": "In attesa",
+    "retry": "Riprova",
+    "doc_title": "Verifica della firma",
+    "doc_intro": "Ogni richiesta è firmata con HMAC-SHA256 e inviata nell'header X-RefBoost-Signature. Verificala con la tua chiave segreta prima di elaborare l'evento."
   }
 }

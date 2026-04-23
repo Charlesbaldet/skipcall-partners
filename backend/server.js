@@ -41,9 +41,11 @@ const referralRedirectRoutes = require('./routes/referralRedirect');
 const notionRoutes = require('./routes/notion');
 const partnerNotificationPrefsRoutes = require('./routes/partnerNotificationPrefs');
 const dashboardStatsRoutes = require('./routes/dashboardStats');
+const webhooksRoutes = require('./routes/webhooks');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
+const { startRetryWorker: startWebhookRetryWorker } = require('./services/webhookService');
 const { runMigrations } = require('./db/migrate');
 const { runSecurityMigrations } = require('./db/migrate-security');
 const { tenantMiddleware } = require('./middleware/tenant');
@@ -162,6 +164,7 @@ app.use('/api/referral-links', referralLinksRoutes);
 app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/tracking', trackingScriptRoutes);
 app.use('/api/partner-categories', partnerCategoriesRoutes);
+app.use('/api/webhooks', webhooksRoutes);
 // Public referral-link short URL (mounted at app root, not /api).
 // Vercel rewrites /r/:path* to this service.
 app.use('/r', referralRedirectRoutes);
@@ -189,6 +192,9 @@ app.listen(PORT, () => {
     startNotificationWorker();
     console.log(' Email notification worker started');
   }
+
+  startWebhookRetryWorker();
+  console.log('[webhooks] retry worker started');
 });
 
 // force rebuild

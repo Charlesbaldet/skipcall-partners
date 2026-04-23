@@ -5,6 +5,7 @@ const resend = require('../services/resend');
 const templates = require('../services/email-templates');
 const { sendEmail } = require('../services/emailService');
 const notify = require('../services/notifyService');
+const { sendWebhookEvent } = require('../services/webhookService');
 
 const router = express.Router();
 
@@ -203,6 +204,46 @@ router.put('/:id', authorize('admin'), async (req, res) => {
         }
     
     res.json({ commission });
+
+    // Outgoing webhook: commission.approved / commission.paid
+    if (status === 'approved' || status === 'paid') {
+      (async () => {
+        const { rows: [enriched] } = await query(
+          `SELECT c.id, c.amount, c.status, c.referral_id, c.partner_id,
+                  c.approved_at, c.paid_at,
+                  r.prospect_name, r.prospect_company,
+                  p.name AS partner_name, p.email AS partner_email
+             FROM commissions c
+             JOIN referrals r ON c.referral_id = r.id
+             JOIN partners p ON c.partner_id = p.id
+            WHERE c.id = $1`,
+          [req.params.id]
+        );
+        if (!enriched) return;
+        const basePayload = {
+          commission_id: enriched.id,
+          referral_id: enriched.referral_id,
+          partner_id: enriched.partner_id,
+          partner_name: enriched.partner_name,
+          partner_email: enriched.partner_email,
+          prospect_name: enriched.prospect_name,
+          prospect_company: enriched.prospect_company,
+          amount: parseFloat(enriched.amount) || 0,
+          currency: 'EUR',
+        };
+        if (status === 'approved') {
+          sendWebhookEvent(req.tenantId, 'commission.approved', {
+            ...basePayload,
+            approved_at: enriched.approved_at,
+          });
+        } else if (status === 'paid') {
+          sendWebhookEvent(req.tenantId, 'commission.paid', {
+            ...basePayload,
+            paid_at: enriched.paid_at,
+          });
+        }
+      })().catch(() => {});
+    }
   } catch (err) {
     console.error('Update commission error:', err);
     res.status(500).json({ error: 'Erreur serveur' });

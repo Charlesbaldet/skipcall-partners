@@ -342,7 +342,8 @@
       "billing": "Abrechnung",
       "referrals": "Referrals",
       "explore_programs": "Programme erkunden",
-      "search": "Suche"
+      "search": "Suche",
+      "webhooks": "Webhooks"
     },
     "collapse": "Einklappen",
     "logout": "Abmelden",
@@ -2379,5 +2380,42 @@
       "step3Title": "Ergebnisse reporten",
       "step3Desc": "Generiere monatlich einen ROI-Report für jeden Kunden. Die Daten sind in Echtzeit — keine manuelle Konsolidierung nötig."
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Erhalte Echtzeit-Benachrichtigungen, wenn in deinem RefBoost-Konto etwas passiert. Verbinde RefBoost mit jedem CRM oder externem Tool.",
+    "add_title": "Webhook hinzufügen",
+    "add_button": "Webhook hinzufügen",
+    "creating": "Wird erstellt…",
+    "url_label": "Ziel-URL",
+    "url_hint": "Muss mit https:// beginnen (HTTP nicht erlaubt).",
+    "events_label": "Events, die du abonnieren möchtest",
+    "endpoints_title": "Konfigurierte Webhooks",
+    "empty": "Noch kein Webhook konfiguriert.",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "view_log": "Zustellungen anzeigen",
+    "hide_log": "Zustellungen ausblenden",
+    "delete": "Löschen",
+    "confirm_delete": "Diesen Webhook löschen?",
+    "secret_created": "Geheimer Schlüssel erstellt",
+    "secret_shown_once": "Kopiere diesen Schlüssel jetzt — er wird nie wieder angezeigt. Verwende ihn, um die HMAC-Signatur eingehender Requests zu prüfen.",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "close": "Schließen",
+    "recent_deliveries": "Letzte Zustellungen",
+    "no_deliveries": "Noch keine Zustellungen.",
+    "col_event": "Event",
+    "col_when": "Wann",
+    "col_status": "Status",
+    "col_http": "HTTP-Code",
+    "col_attempts": "Versuche",
+    "col_actions": "Aktionen",
+    "st_success": "Erfolg",
+    "st_failed": "Fehlgeschlagen",
+    "st_pending": "Ausstehend",
+    "retry": "Erneut senden",
+    "doc_title": "Signaturprüfung",
+    "doc_intro": "Jeder Request wird mit HMAC-SHA256 signiert und im Header X-RefBoost-Signature mitgeschickt. Prüfe ihn mit deinem geheimen Schlüssel, bevor du das Event verarbeitest."
   }
 }

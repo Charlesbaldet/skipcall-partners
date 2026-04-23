@@ -342,7 +342,8 @@
       "billing": "Facturación",
       "referrals": "Referrals",
       "explore_programs": "Explorar programas",
-      "search": "Buscar"
+      "search": "Buscar",
+      "webhooks": "Webhooks"
     },
     "collapse": "Reducir",
     "logout": "Cerrar sesión",
@@ -2379,5 +2380,42 @@
       "step3Title": "Reporta los resultados",
       "step3Desc": "Cada mes, genera un informe de ROI para cada cliente. Los datos están en tiempo real, sin necesidad de consolidarlos a mano."
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Recibe notificaciones en tiempo real cuando ocurren eventos en tu cuenta de RefBoost. Conecta RefBoost a cualquier CRM o herramienta externa.",
+    "add_title": "Añadir un webhook",
+    "add_button": "Añadir webhook",
+    "creating": "Creando…",
+    "url_label": "URL de destino",
+    "url_hint": "Debe empezar por https:// (HTTP no permitido).",
+    "events_label": "Eventos a los que suscribirse",
+    "endpoints_title": "Webhooks configurados",
+    "empty": "Aún no hay ningún webhook configurado.",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "view_log": "Ver entregas",
+    "hide_log": "Ocultar entregas",
+    "delete": "Eliminar",
+    "confirm_delete": "¿Eliminar este webhook?",
+    "secret_created": "Clave secreta generada",
+    "secret_shown_once": "Copia esta clave ahora: no se volverá a mostrar. Úsala para verificar la firma HMAC de las peticiones entrantes.",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "close": "Cerrar",
+    "recent_deliveries": "Entregas recientes",
+    "no_deliveries": "Aún no hay entregas.",
+    "col_event": "Evento",
+    "col_when": "Cuándo",
+    "col_status": "Estado",
+    "col_http": "Código HTTP",
+    "col_attempts": "Intentos",
+    "col_actions": "Acciones",
+    "st_success": "Éxito",
+    "st_failed": "Fallo",
+    "st_pending": "Pendiente",
+    "retry": "Reintentar",
+    "doc_title": "Verificación de la firma",
+    "doc_intro": "Cada petición se firma con HMAC-SHA256 y se envía en la cabecera X-RefBoost-Signature. Verifícala con tu clave secreta antes de procesar el evento."
   }
 }
