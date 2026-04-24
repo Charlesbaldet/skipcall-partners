@@ -2459,5 +2459,10 @@
     "retry": "Retry",
     "doc_title": "Signature verification",
     "doc_intro": "Every request is signed with HMAC-SHA256 and sent in the X-RefBoost-Signature header. Verify it with your secret key before processing the event."
+  },
+  "temperature": {
+    "hot": "Hot",
+    "warm": "Warm",
+    "cold": "Cold"
   }
 }

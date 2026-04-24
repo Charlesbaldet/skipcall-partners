@@ -2459,5 +2459,10 @@
     "retry": "Opnieuw verzenden",
     "doc_title": "Handtekeningverificatie",
     "doc_intro": "Elke request is ondertekend met HMAC-SHA256 en meegestuurd in de header X-RefBoost-Signature. Verifieer hem met je geheime sleutel voordat je het event verwerkt."
+  },
+  "temperature": {
+    "hot": "Heet",
+    "warm": "Warm",
+    "cold": "Koud"
   }
 }

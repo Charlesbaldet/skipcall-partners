@@ -2459,5 +2459,10 @@
     "retry": "Reenviar",
     "doc_title": "Verificação da assinatura",
     "doc_intro": "Cada pedido é assinado com HMAC-SHA256 e enviado no cabeçalho X-RefBoost-Signature. Verifique-o com a sua chave secreta antes de processar o evento."
+  },
+  "temperature": {
+    "hot": "Quente",
+    "warm": "Morno",
+    "cold": "Frio"
   }
 }

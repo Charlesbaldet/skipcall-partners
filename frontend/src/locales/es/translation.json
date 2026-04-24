@@ -2459,5 +2459,10 @@
     "retry": "Reintentar",
     "doc_title": "Verificación de la firma",
     "doc_intro": "Cada petición se firma con HMAC-SHA256 y se envía en la cabecera X-RefBoost-Signature. Verifícala con tu clave secreta antes de procesar el evento."
+  },
+  "temperature": {
+    "hot": "Caliente",
+    "warm": "Tibio",
+    "cold": "Frío"
   }
 }

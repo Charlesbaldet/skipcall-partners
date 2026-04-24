@@ -2459,5 +2459,10 @@
     "retry": "Renvoyer",
     "doc_title": "Vérification de la signature",
     "doc_intro": "Chaque requête est signée avec HMAC-SHA256 et envoyée dans l'en-tête X-RefBoost-Signature. Vérifiez-la avec votre clé secrète avant de traiter l'événement."
+  },
+  "temperature": {
+    "hot": "Chaud",
+    "warm": "Tiède",
+    "cold": "Froid"
   }
 }

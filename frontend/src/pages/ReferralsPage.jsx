@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../lib/api';
-import { STATUS_CONFIG, LEVEL_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
+import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
@@ -202,7 +202,7 @@ export default function ReferralsPage() {
                     <div style={{ color: '#94a3b8', fontSize: 12 }}>{r.prospect_company}</div>
                   </td>
                   <td style={{ padding: '13px 16px', color: '#475569' }}>{r.partner_name}</td>
-                  <td style={{ padding: '13px 16px' }}><Badge config={LEVEL_CONFIG} value={r.recommendation_level} /></td>
+                  <td style={{ padding: '13px 16px' }}><Badge config={TEMPERATURE_CONFIG} value={r.recommendation_level} /></td>
                   <td style={{ padding: '13px 16px' }}><Badge config={stageStatusConfig} value={(stages.find(s => s.id === r.stage_id)?.slug) || r.status} /></td>
                   <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
                   <td style={{ padding: '13px 16px', color: '#94a3b8', fontSize: 13 }}>{fmtDate(r.created_at)}</td>
@@ -278,6 +278,28 @@ export default function ReferralsPage() {
                         <span style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600 }}>{r.partner_name}</span>
                         {r.deal_value > 0 && <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</span>}
                       </div>
+                      {/* Deal temperature — sits between the partner
+                          row and the status dropdown so admins can
+                          read it at a glance without opening the
+                          card. Pill styled like the other status
+                          badges. */}
+                      {r.recommendation_level && TEMPERATURE_CONFIG[r.recommendation_level] && (
+                        <div style={{ marginTop: 8, display: 'flex' }}>
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '2px 8px', borderRadius: 999,
+                            background: TEMPERATURE_CONFIG[r.recommendation_level].bg,
+                            color: TEMPERATURE_CONFIG[r.recommendation_level].color,
+                            fontSize: 11, fontWeight: 700,
+                          }}>
+                            <span aria-hidden="true" style={{
+                              width: 6, height: 6, borderRadius: '50%',
+                              background: TEMPERATURE_CONFIG[r.recommendation_level].color,
+                            }}/>
+                            {TEMPERATURE_CONFIG[r.recommendation_level].label}
+                          </span>
+                        </div>
+                      )}
                       {/* Quick status change */}
                       <div style={{ marginTop: 10, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
                         <select value={r.status} onChange={e => { e.stopPropagation(); handleStatusChangeFromCard(r.id, e.target.value); }}
@@ -405,7 +427,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{referral.prospect_name}</h2>
-              <Badge config={LEVEL_CONFIG} value={referral.recommendation_level} />
+              <Badge config={TEMPERATURE_CONFIG} value={referral.recommendation_level} />
             </div>
             <p style={{ color: '#64748b', fontSize: 14 }}>
               {referral.prospect_company} · {referral.partner_name}

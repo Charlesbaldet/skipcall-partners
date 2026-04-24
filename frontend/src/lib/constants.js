@@ -19,6 +19,19 @@ export const LEVEL_CONFIG = {
   Platinum: { get label() { return i18n.t('level.Platinum', 'Platinum'); }, color: 'var(--rb-primary, #059669)', bg: '#eef2ff', icon: '\ud83d\udc8e' },
 };
 
+// Deal-temperature pill displayed on Kanban cards, table rows and
+// the referral detail modal. Keyed by referrals.recommendation_level
+// (hot / warm / cold) \u2014 note that two existing call sites were
+// passing this value into LEVEL_CONFIG (partner tiers), so the badge
+// was silently falling through to raw text. TEMPERATURE_CONFIG is the
+// correct config to hand to <Badge>. Colours are the task spec:
+// red / orange / blue.
+export const TEMPERATURE_CONFIG = {
+  hot:  { get label() { return i18n.t('temperature.hot',  'Chaud'); }, color: '#DC2626', bg: '#FEE2E2' },
+  warm: { get label() { return i18n.t('temperature.warm', 'Ti\u00e8de'); }, color: '#D97706', bg: '#FEF3C7' },
+  cold: { get label() { return i18n.t('temperature.cold', 'Froid'); }, color: '#2563EB', bg: '#DBEAFE' },
+};
+
 export const fmt = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
 export const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 export const fmtDateTime = (d) => d ? new Date(d).toLocaleString('fr-FR') : '—';
