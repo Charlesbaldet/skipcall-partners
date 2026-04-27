@@ -8,6 +8,31 @@ const { auditLog, recordLoginAttempt, isAccountLocked, validatePassword } = requ
 
 const router = express.Router();
 
+// /me/spaces reads from user_roles, so a user only appears in the
+// space-switcher dropdown for tenants that have a row there. Both the
+// legacy users.tenant_id column and user_roles must agree, otherwise a
+// user who signed up before this row was written can land on a tenant
+// (e.g. via /auth/login or /auth/google → users.tenant_id) that they
+// can never switch back to once they leave it. This helper makes the
+// (user, tenant, role) triplet idempotently present and active.
+async function ensureUserRoleEntry(userId, tenantId, role, partnerId) {
+  if (!userId || !tenantId || !role) return;
+  if (!['admin', 'commercial', 'partner'].includes(role)) return;
+  try {
+    await query(
+      `INSERT INTO user_roles (user_id, tenant_id, role, partner_id, is_active)
+       VALUES ($1, $2, $3, $4, TRUE)
+       ON CONFLICT (user_id, role, tenant_id)
+       DO UPDATE SET is_active = TRUE,
+                     partner_id = COALESCE(EXCLUDED.partner_id, user_roles.partner_id)`,
+      [userId, tenantId, role, partnerId || null]
+    );
+  } catch (e) {
+    // user_roles may not exist on very old deployments — non-fatal.
+    console.error('[ensureUserRoleEntry]', e.message);
+  }
+}
+
 // ─── Login (ISO 27001 A.9.4 - brute force protection) ───
 router.post('/login', [
   body('email').isEmail().normalizeEmail(),
@@ -58,6 +83,11 @@ router.post('/login', [
     // Success — reset failed attempts
     await recordLoginAttempt(email, ip, true);
 
+    // Self-heal: legacy users created before user_roles existed (or via
+    // signup paths that never wrote to it) can otherwise lose their
+    // primary tenant from the space-switcher.
+    await ensureUserRoleEntry(user.id, user.tenant_id, user.role, user.partner_id);
+
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, partnerId: user.partner_id, fullName: user.full_name, tenantId: user.tenant_id },
       process.env.JWT_SECRET,
@@ -68,7 +98,7 @@ router.post('/login', [
 
     res.json({
       token,
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, partnerId: user.partner_id, partnerName: user.partner_name, mustChangePassword: user.must_change_password || false },
+      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, partnerId: user.partner_id, partnerName: user.partner_name, tenantId: user.tenant_id, mustChangePassword: user.must_change_password || false },
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -146,6 +176,11 @@ router.post('/google', async (req, res) => {
       } catch { /* avatar_url column may not exist yet — ignore */ }
     }
 
+    // Self-heal: same reason as /auth/login. Without this, a user who
+    // signed up via Google (which never wrote user_roles for the tenant
+    // it created) can never return to that tenant from the switcher.
+    await ensureUserRoleEntry(user.id, user.tenant_id, user.role, user.partner_id);
+
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, partnerId: user.partner_id, fullName: user.full_name, tenantId: user.tenant_id },
       process.env.JWT_SECRET,
@@ -159,6 +194,7 @@ router.post('/google', async (req, res) => {
       user: {
         id: user.id, email: user.email, fullName: user.full_name,
         role: user.role, partnerId: user.partner_id, partnerName: user.partner_name,
+        tenantId: user.tenant_id,
         mustChangePassword: user.must_change_password || false,
         avatarUrl: user.avatar_url || null,
       },
@@ -397,6 +433,7 @@ router.post('/signup', [
       "INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, 'admin', $4) RETURNING id, email, full_name, role, tenant_id",
       [email, hash, fullName, tenant.id]
     );
+    await ensureUserRoleEntry(user.id, tenant.id, 'admin', null);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, tenantId: tenant.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     try { await query("INSERT INTO audit_logs (user_id, tenant_id, action, resource_type, resource_id, details) VALUES ($1, $2, 'signup', 'tenant', $3, $4)", [user.id, tenant.id, tenant.id, JSON.stringify({ company, email })]); } catch(e) {}
     res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, tenantId: tenant.id } });
@@ -473,6 +510,8 @@ router.post('/signup-google', [
       );
       user = r.rows[0];
     }
+
+    await ensureUserRoleEntry(user.id, tenant.id, 'admin', null);
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, tenantId: tenant.id, fullName: user.full_name },
