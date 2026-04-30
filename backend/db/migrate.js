@@ -396,6 +396,11 @@ async function runMigrations() {
   // everything from Qonto every render).
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_transfer_id TEXT`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_attachment_id TEXT`);
+  // Qonto requires X-Qonto-Idempotency-Key on every transfer POST.
+  // We persist the key per-commission so a retry after a network blip
+  // reuses the same key — Qonto then returns the original transfer
+  // instead of creating a duplicate one.
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_idempotency_key TEXT`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_initiated_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_reference TEXT`);

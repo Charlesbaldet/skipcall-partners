@@ -509,6 +509,7 @@ async function loadCommissionForPayment(commissionId, tenantId) {
   const { rows } = await query(
     `SELECT c.id, c.tenant_id, c.amount, c.status, c.qonto_transfer_id,
             c.invoice_url, c.invoice_filename, c.qonto_attachment_id,
+            c.qonto_idempotency_key,
             p.id AS partner_id, p.name AS partner_name,
             p.iban, p.bic, p.account_holder, p.bank_name,
             r.prospect_name, r.prospect_company
@@ -556,6 +557,7 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
             buffer: decoded.buffer,
             contentType: decoded.contentType,
             filename: c.invoice_filename || `invoice-${c.id}.pdf`,
+            idempotencyKey: qonto.newIdempotencyKey(),
           });
           attachmentId = att?.id || null;
           if (attachmentId) {
@@ -571,6 +573,20 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     const dealName = c.prospect_company || c.prospect_name || '';
     const beneficiaryName = c.account_holder || c.partner_name;
 
+    // Reuse the previously-stored idempotency key if any (so a retry
+    // after a network blip lands on the SAME Qonto transfer instead
+    // of double-paying). Otherwise generate one and persist it
+    // BEFORE the API call — we want the key on disk even if the
+    // process crashes mid-request.
+    let idempotencyKey = c.qonto_idempotency_key;
+    if (!idempotencyKey) {
+      idempotencyKey = qonto.newIdempotencyKey();
+      await query(
+        'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
+        [c.id, idempotencyKey]
+      );
+    }
+
     const result = await qonto.createSingleTransfer(req.tenantId, {
       commissionId: c.id,
       debitBankAccountId: integ.bank_account_id,
@@ -581,6 +597,7 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
       beneficiaryName,
       beneficiaryId: beneficiary?.id || null,
       attachmentIds: attachmentId ? [attachmentId] : [],
+      idempotencyKey,
     });
 
     const transfer = result.transfer || {};
@@ -636,6 +653,7 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
     const placeholders = ids.map((_, i) => `$${i + 2}`).join(',');
     const { rows: list } = await query(
       `SELECT c.id, c.amount, c.status, c.invoice_url, c.invoice_filename, c.qonto_attachment_id,
+              c.qonto_idempotency_key,
               p.id AS partner_id, p.name AS partner_name,
               p.iban, p.account_holder,
               r.prospect_name, r.prospect_company
@@ -672,6 +690,7 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
             buffer: decoded.buffer,
             contentType: decoded.contentType,
             filename: c.invoice_filename || `invoice-${c.id}.pdf`,
+            idempotencyKey: qonto.newIdempotencyKey(),
           });
           if (att?.id) {
             c.qonto_attachment_id = att.id;
@@ -700,9 +719,27 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
       attachmentIds: c.qonto_attachment_id ? [c.qonto_attachment_id] : [],
     }));
 
+    // Bulk idempotency key: reuse the previously-stored key only when
+    // every commission in the batch already shares the SAME key (i.e.
+    // we're retrying the exact same batch). Otherwise mint a fresh
+    // key and stamp it on all eligible rows BEFORE the API call so a
+    // crashed retry hits the same Qonto bulk_transfer.
+    const existingKeys = new Set(eligible.map(c => c.qonto_idempotency_key).filter(Boolean));
+    const bulkKey = (existingKeys.size === 1 && existingKeys.values().next().value)
+      ? existingKeys.values().next().value
+      : qonto.newIdempotencyKey();
+    if (existingKeys.size !== 1 || existingKeys.values().next().value !== bulkKey) {
+      const phs = eligible.map((_, i) => `$${i + 2}`).join(',');
+      await query(
+        `UPDATE commissions SET qonto_idempotency_key = $1 WHERE id IN (${phs})`,
+        [bulkKey, ...eligible.map(c => c.id)]
+      );
+    }
+
     const result = await qonto.createBulkTransfer(req.tenantId, {
       debitBankAccountId: integ.bank_account_id,
       transfers,
+      idempotencyKey: bulkKey,
     });
 
     // Map the returned transfer ids back to our commissions positionally.

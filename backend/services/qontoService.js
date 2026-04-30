@@ -17,7 +17,24 @@
 // approve it inside their Qonto app. We expose that nuance to the
 // caller via the `requires_sca` field on the transfer response.
 
+const crypto = require('crypto');
 const { query } = require('../db');
+
+// Generate a fresh UUIDv4 for use as a Qonto X-Qonto-Idempotency-Key.
+// Qonto requires this header on every transfer / bulk-transfer /
+// attachment POST and uses it to dedupe retries — if the same key
+// arrives twice, the second call returns the original response
+// instead of creating a second transfer.
+function newIdempotencyKey() {
+  // Node 14.17+ has crypto.randomUUID available globally; fall back to
+  // a manual v4 builder if we land on an older runtime.
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.randomBytes(16);
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = b.toString('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
 
 const OAUTH_AUTHORIZE_URL = 'https://oauth.qonto.com/oauth2/auth';
 const OAUTH_TOKEN_URL = 'https://oauth.qonto.com/oauth2/token';
@@ -184,7 +201,7 @@ async function findBeneficiaryByIban(tenantId, iban) {
 // Multipart upload of an invoice PDF that's already in memory (we
 // store the partner's invoice as a base64 data URL in the DB; the
 // caller has already decoded it into a Buffer).
-async function uploadAttachment(tenantId, { buffer, filename, contentType }) {
+async function uploadAttachment(tenantId, { buffer, filename, contentType, idempotencyKey }) {
   const token = await getAccessToken(tenantId);
   const fd = new FormData();
   // Node 20+ has global FormData + Blob. Fall back gracefully.
@@ -192,7 +209,10 @@ async function uploadAttachment(tenantId, { buffer, filename, contentType }) {
   fd.append('file', blob, filename || 'invoice.pdf');
   const r = await fetch(`${API_BASE}/attachments`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Qonto-Idempotency-Key': idempotencyKey || newIdempotencyKey(),
+    },
     body: fd,
   });
   if (!r.ok) {
@@ -219,6 +239,7 @@ async function createSingleTransfer(tenantId, {
   beneficiaryName,
   beneficiaryId, // optional, when we found a trusted match
   attachmentIds = [],
+  idempotencyKey,
 }) {
   const reference = buildReference(commissionId);
   const note = `Commission partenaire — ${partnerName || ''}${dealName ? ' — ' + dealName : ''}`.slice(0, 140);
@@ -243,20 +264,24 @@ async function createSingleTransfer(tenantId, {
   }
   if (attachmentIds.length) transfer.attachment_ids = attachmentIds;
 
+  const key = idempotencyKey || newIdempotencyKey();
   const data = await api(tenantId, '/sepa/transfers', {
     method: 'POST',
+    headers: { 'X-Qonto-Idempotency-Key': key },
     body: JSON.stringify({ transfer }),
   });
   return {
     transfer: data?.transfer || data,
     requires_sca: !!(data?.transfer?.requires_sca || data?.requires_sca),
     reference,
+    idempotency_key: key,
   };
 }
 
 async function createBulkTransfer(tenantId, {
   debitBankAccountId,
   transfers, // [{ commissionId, amount, iban, beneficiaryName, partnerName, dealName, attachmentIds }]
+  idempotencyKey,
 }) {
   const items = transfers.map(t => {
     const item = {
@@ -274,8 +299,10 @@ async function createBulkTransfer(tenantId, {
   const body = { bulk_transfer: { transfers: items } };
   if (debitBankAccountId) body.bulk_transfer.debit_bank_account_id = debitBankAccountId;
 
+  const key = idempotencyKey || newIdempotencyKey();
   const data = await api(tenantId, '/sepa/bulk_transfers', {
     method: 'POST',
+    headers: { 'X-Qonto-Idempotency-Key': key },
     body: JSON.stringify(body),
   });
   // Qonto returns the list of created transfers (id + status). Map
@@ -285,6 +312,7 @@ async function createBulkTransfer(tenantId, {
     bulk_id: data?.bulk_transfer?.id || data?.id || null,
     transfers: created,
     requires_sca: !!(data?.requires_sca || data?.bulk_transfer?.requires_sca),
+    idempotency_key: key,
   };
 }
 
@@ -306,5 +334,6 @@ module.exports = {
   createBulkTransfer,
   getTransfer,
   buildReference,
+  newIdempotencyKey,
   SCOPES,
 };
