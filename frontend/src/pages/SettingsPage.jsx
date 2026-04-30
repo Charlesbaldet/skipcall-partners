@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import PipelineStagesEditor from '../components/PipelineStagesEditor.jsx';
 import WebhooksSection from '../components/WebhooksSection.jsx';
+import { showConfirm, showPrompt, showToast } from '../components/Dialogs.jsx';
 import {
   Trophy, Plus, Edit2,
   Palette,
@@ -323,24 +324,31 @@ function SuperAdminsTab() {
     setSaSubmitting(true);
     try {
       await api.request('/super-admin/invite-superadmin', { method: 'POST', body: JSON.stringify({ email: saEmail, full_name: saName || saEmail }), headers: { 'Content-Type': 'application/json' } });
-      alert('✅ ' + t('settings.sa_invited_prefix') + saEmail);
+      showToast.success(t('settings.sa_invited_prefix') + saEmail);
       setSaEmail('');
       setSaName('');
       loadSuperadmins();
     } catch (e) {
-      alert('❌ ' + t('settings.erreur_prefix') + e.message);
+      showToast.error(t('settings.erreur_prefix') + e.message);
     }
     setSaSubmitting(false);
   };
 
   const handleDeleteSA = async (sa) => {
-    if (!window.confirm(t('settings.confirm_remove_superadmin', { name: sa.full_name || sa.email }))) return;
+    const ok = await showConfirm({
+      title: t('settings.remove_superadmin_title', 'Retirer ce super admin ?'),
+      message: t('settings.confirm_remove_superadmin', { name: sa.full_name || sa.email }),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Retirer'),
+      cancelLabel: t('common.cancel', 'Annuler'),
+    });
+    if (!ok) return;
     try {
       await api.request('/super-admin/delete-superadmin/' + sa.id, { method: 'DELETE' });
-      alert(t('settings.sa_deleted'));
+      showToast.success(t('settings.sa_deleted'));
       loadSuperadmins();
     } catch (e) {
-      alert(t('settings.erreur_prefix') + e.message);
+      showToast.error(t('settings.erreur_prefix') + e.message);
     }
   };
 
@@ -409,7 +417,7 @@ function MembersTab() {
 
   const handleDeleteUser = async (id) => {
     try { await api.request('/admin/users/' + id, { method: 'DELETE' }); setDeleteUserConfirm(null); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { showToast.error(err.message); }
   };
 
   const load = async () => { try { const u = await api.getAdminUsers(); setUsers(u.users); } catch {} setLoading(false); };
@@ -419,7 +427,7 @@ function MembersTab() {
   const handleInvite = async () => {
     setSending(true); setInviteResult(null);
     try { const data = await api.inviteUser(inviteForm); setInviteResult({ email: data.email || inviteForm.email, tempPassword: data.tempPassword }); setInviteForm({ email: '', full_name: '', role: 'commercial' }); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { showToast.error(err.message); }
     setSending(false);
   };
 
@@ -537,13 +545,19 @@ function IntegrationsTab() {
   const handleCreate = async () => {
     setCreating(true);
     try { const data = await api.createApiKey({ name: keyName, partner_id: partnerId || null }); setNewKey(data.apiKey); setKeyName(''); setPartnerId(''); load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { showToast.error(err.message); }
     setCreating(false);
   };
 
   const handleRevoke = async (id) => {
-    if (!confirm(t('settings.revoke_confirm'))) return;
-    try { await api.revokeApiKey(id); load(); } catch (err) { alert(err.message); }
+    const ok = await showConfirm({
+      title: t('settings.revoke_title', 'Révoquer cette clé API ?'),
+      message: t('settings.revoke_confirm'),
+      variant: 'danger',
+      confirmLabel: t('settings.revoke', 'Révoquer'),
+    });
+    if (!ok) return;
+    try { await api.revokeApiKey(id); load(); } catch (err) { showToast.error(err.message); }
   };
 
   const copyToClipboard = (tx) => { navigator.clipboard.writeText(tx); setCopied(true); setTimeout(() => setCopied(false), 2000); };
@@ -989,7 +1003,13 @@ function QontoSection() {
   };
 
   const disconnect = async () => {
-    if (!confirm(t('qonto.disconnect_confirm', 'Déconnecter Qonto ?'))) return;
+    const ok = await showConfirm({
+      title: t('qonto.disconnect_title', 'Déconnecter Qonto'),
+      message: t('qonto.disconnect_confirm', 'Êtes-vous sûr de vouloir déconnecter Qonto ?'),
+      variant: 'danger',
+      confirmLabel: t('crm.disconnect', 'Déconnecter'),
+    });
+    if (!ok) return;
     setBusy(true);
     try { await api.disconnectQonto(); await load(); }
     catch (e) { setErr(e.message); }
@@ -1235,7 +1255,7 @@ function CrmMappingModal({ integration, onClose }) {
       setSavedMsg(t('crm.saved'));
       setTimeout(() => setSavedMsg(''), 2000);
     } catch (e) {
-      alert(e.message);
+      showToast.error(e.message);
     } finally { setSaving(false); }
   };
 
@@ -1682,7 +1702,13 @@ function ProgramTab() {
   };
 
   const del = async (id) => {
-    if (!window.confirm(t('programme.delete_confirm'))) return;
+    const ok = await showConfirm({
+      title: t('programme.delete_title', 'Supprimer ce niveau ?'),
+      message: t('programme.delete_confirm'),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Supprimer'),
+    });
+    if (!ok) return;
     try {
       await api.deleteTenantLevel(id);
       load();
@@ -1692,7 +1718,13 @@ function ProgramTab() {
   };
 
   const reset = async () => {
-    if (!window.confirm(t('programme.reset_confirm'))) return;
+    const ok = await showConfirm({
+      title: t('programme.reset_title', 'Réinitialiser les niveaux ?'),
+      message: t('programme.reset_confirm'),
+      variant: 'warning',
+      confirmLabel: t('programme.reset', 'Réinitialiser'),
+    });
+    if (!ok) return;
     try {
       await api.resetTenantLevels();
       load();
@@ -1841,7 +1873,7 @@ function NotificationsTab() {
     try {
       await api.updateNotificationPreferences({ preferences: prefs });
       setSavedAt(Date.now());
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
     setSaving(false);
   };
 
@@ -1987,7 +2019,7 @@ function TrackingFeaturesTab() {
     try {
       const { features } = await api.updateTenantFeatures(diff);
       setFlags(features);
-    } catch (e) { alert(e.message); }
+    } catch (e) { showToast.error(e.message); }
     setSaving(false);
   };
 
@@ -2072,13 +2104,24 @@ function PartnerCategoriesTab() {
 
   const del = async (c) => {
     if (c.partners_count > 0 || c.is_default) return;
-    if (!window.confirm(t('partner_category.delete') + ' ?')) return;
+    const ok = await showConfirm({
+      title: t('partner_category.delete', 'Supprimer cette catégorie ?'),
+      message: c.name,
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Supprimer'),
+    });
+    if (!ok) return;
     try { await api.deletePartnerCategory(c.id); reload(); }
     catch (e) { setErr(e.message || t('partner_category.cannot_delete_has_partners', { count: c.partners_count || 0 })); }
   };
 
   const add = async () => {
-    const name = window.prompt(t('partner_category.name'));
+    const name = await showPrompt({
+      title: t('partner_category.add', 'Ajouter une catégorie'),
+      label: t('partner_category.name', 'Nom de la catégorie'),
+      placeholder: t('partner_category.name', 'Nom de la catégorie'),
+      confirmLabel: t('common.add', 'Ajouter'),
+    });
     if (!name || !name.trim()) return;
     try {
       await api.createPartnerCategory({ name: name.trim(), color: '#6B7280' });
@@ -2595,7 +2638,7 @@ function PartnerNotificationsTab() {
   const save = async () => {
     setSaving(true);
     try { await api.updatePartnerNotificationPreferences(prefs); setSavedAt(Date.now()); }
-    catch (err) { alert(err.message); }
+    catch (err) { showToast.error(err.message); }
     setSaving(false);
   };
 

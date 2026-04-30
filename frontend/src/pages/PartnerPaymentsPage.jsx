@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { fmt, fmtDate } from '../lib/constants';
 import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, FileText, ShieldCheck, AlertTriangle } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export default function PartnerPaymentsPage() {
     pendingUploadIdRef.current = null;
     if (!file || !id) return;
     if (file.size > 10 * 1024 * 1024) {
-      alert(t('commission.invoice_too_large'));
+      showToast.error(t('commission.invoice_too_large'));
       return;
     }
     setUploadingId(id);
@@ -70,14 +71,14 @@ export default function PartnerPaymentsPage() {
       await api.uploadCommissionInvoice(id, { filename: file.name, dataUrl });
       await reload();
     } catch (err) {
-      alert(err.message || 'Error');
+      showToast.error(err.message || "Error");
     }
     setUploadingId(null);
   };
 
   const handleDownload = async (id) => {
     try { await api.downloadCommissionInvoice(id); }
-    catch (err) { alert(err.message || 'Error'); }
+    catch (err) { showToast.error(err.message || "Error"); }
   };
 
   const totalAll = commissions.reduce((s, c) => s + parseFloat(c.amount || 0), 0);

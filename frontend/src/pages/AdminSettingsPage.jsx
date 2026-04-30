@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { Settings, UserPlus, Shield, Briefcase, Mail, X, CheckCircle, Clock, Copy, Trash2, ToggleLeft, ToggleRight, Lock, Eye, EyeOff } from 'lucide-react';
 
@@ -51,20 +52,20 @@ export default function AdminSettingsPage() {
       setInviteResult({ email: data.email || inviteForm.email, tempPassword: data.tempPassword });
       setInviteForm({ email: '', full_name: '', role: 'commercial' });
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
     setSending(false);
   };
 
   const handleToggleActive = async (u) => {
-    try { await api.updateAdminUser(u.id, { is_active: !u.is_active }); load(); } catch (err) { alert(err.message); }
+    try { await api.updateAdminUser(u.id, { is_active: !u.is_active }); load(); } catch (err) { showToast.error(err.message); }
   };
 
   const handleRoleChange = async (u, newRole) => {
-    try { await api.updateAdminUser(u.id, { role: newRole }); load(); } catch (err) { alert(err.message); }
+    try { await api.updateAdminUser(u.id, { role: newRole }); load(); } catch (err) { showToast.error(err.message); }
   };
 
   const handleDeleteInvitation = async (id) => {
-    try { await api.deleteInvitation(id); load(); } catch (err) { alert(err.message); }
+    try { await api.deleteInvitation(id); load(); } catch (err) { showToast.error(err.message); }
   };
 
   const handlePasswordChange = async () => {

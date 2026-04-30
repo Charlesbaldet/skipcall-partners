@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { fmtDateTime } from '../lib/constants';
 import { MessageCircle, Plus, Send, X, Archive, Trash2, Users } from 'lucide-react';
 
@@ -86,7 +87,7 @@ export default function MessagingPage() {
       const data = await api.createConversation(newConvForm);
       setShowNew(false); setNewConvForm({ subject: '', participant_ids: [], message: '' });
       await loadConversations(); openConversation(data.conversation);
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
     setCreating(false);
   };
 
@@ -95,7 +96,7 @@ export default function MessagingPage() {
       await api.request(`/messages/conversations/${id}`, { method: 'DELETE' });
       if (activeConv?.id === id) { setActiveConv(null); setMessages([]); }
       setDeleteConfirm(null); loadConversations();
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
   };
 
   const toggleParticipant = (uid) => {

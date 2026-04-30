@@ -215,7 +215,7 @@ export default function CommissionsPage() {
   const handleApprove = async (id) => {
     setBusyId(id);
     try { await api.approveCommission(id); await reload(); }
-    catch (err) { alert(err.message || 'Error'); }
+    catch (err) { showToast(err.message || 'Error', 'error'); }
     setBusyId(null);
   };
 
@@ -230,7 +230,7 @@ export default function CommissionsPage() {
 
   const handleDownloadInvoice = async (id) => {
     try { await api.downloadCommissionInvoice(id); }
-    catch (err) { alert(err.message || 'Error'); }
+    catch (err) { showToast(err.message || 'Error', 'error'); }
   };
 
   const openReject = (commission) => {
@@ -247,7 +247,7 @@ export default function CommissionsPage() {
       setRejectReason('');
       await reload();
     } catch (err) {
-      alert(err.message || 'Error');
+      showToast(err.message || 'Error', 'error');
     }
     setRejecting(false);
   };
@@ -255,7 +255,7 @@ export default function CommissionsPage() {
   const handleConfirmPay = async () => {
     setPaying(true);
     try { await api.updateCommission(payModal.commission.id, 'paid'); setPayModal(null); await reload(); }
-    catch (err) { alert(t('commissions.modal_error')); }
+    catch (err) { showToast(t('commissions.modal_error'), 'error'); }
     setPaying(false);
   };
 

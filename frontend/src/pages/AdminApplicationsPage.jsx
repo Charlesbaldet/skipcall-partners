@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { UserPlus, CheckCircle, XCircle, Clock, Building, Mail, Phone, Globe, Users, User, X } from 'lucide-react';
 import UpgradeModal from '../components/UpgradeModal.jsx';
 
@@ -44,7 +45,7 @@ export default function AdminApplicationsPage() {
         setSelected(null);
         setUpgradePrompt({ limit: err.data.limit, plan: err.data.plan, upgradeTo: err.data.upgradeTo });
       } else {
-        alert(err.message);
+        showToast.error(err.message);
       }
     }
     setProcessing(false);
@@ -56,7 +57,7 @@ export default function AdminApplicationsPage() {
       await api.rejectApplication(id, rejectReason);
       setSelected(null);
       load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
     setProcessing(false);
   };
 

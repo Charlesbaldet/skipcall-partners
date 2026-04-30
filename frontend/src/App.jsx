@@ -5,6 +5,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
+import { DialogsHost } from './components/Dialogs.jsx';
 import Layout from './components/Layout.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
@@ -155,6 +156,7 @@ export default function App() {
 
       <TenantProvider><AuthProvider>
         <AppRoutes />
+        <DialogsHost />
       </AuthProvider></TenantProvider>
 
   );

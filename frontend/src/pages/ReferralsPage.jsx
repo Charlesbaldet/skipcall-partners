@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
@@ -99,7 +100,7 @@ export default function ReferralsPage() {
     try {
       await api.deleteReferral(deleteId);
       setSelected(null); setActivities([]); load();
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
     finally { setDeleteId(null); }
   };
 
@@ -134,7 +135,7 @@ export default function ReferralsPage() {
         || (code === 'commission_locked' && t('referrals.error_commission_locked', 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.'))
         || err.message
         || 'Error';
-      alert(friendly);
+      showToast.error(friendly);
     }
     setDraggedId(null);
   };

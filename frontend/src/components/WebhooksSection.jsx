@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Zap } from 'lucide-react';
 import api from '../lib/api';
+import { showConfirm, showToast } from './Dialogs.jsx';
 
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#f8fafc', border: '#e2e8f0', danger: '#dc2626' };
 
@@ -79,7 +80,7 @@ export default function WebhooksSection() {
       setForm({ url: '', events: [] });
       await loadAll();
     } catch (err) {
-      alert(err.message || 'error');
+      showToast.error(err.message || 'error');
     } finally { setCreating(false); }
   };
 
@@ -90,22 +91,29 @@ export default function WebhooksSection() {
         body: JSON.stringify({ is_active: !ep.is_active }),
       });
       await loadAll();
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
   };
 
   const removeEndpoint = async (ep) => {
-    if (!confirm(t('webhooks.confirm_delete'))) return;
+    const ok = await showConfirm({
+      title: t('webhooks.delete_title', 'Supprimer ce webhook ?'),
+      message: t('webhooks.confirm_delete'),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Supprimer'),
+      cancelLabel: t('common.cancel', 'Annuler'),
+    });
+    if (!ok) return;
     try {
       await api.request(`/webhooks/endpoints/${ep.id}`, { method: 'DELETE' });
       await loadAll();
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
   };
 
   const loadDeliveries = async (id) => {
     try {
       const res = await api.request(`/webhooks/endpoints/${id}/deliveries`);
       setDeliveriesById(d => ({ ...d, [id]: res.deliveries || [] }));
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
   };
 
   const toggleExpanded = async (id) => {
@@ -118,7 +126,7 @@ export default function WebhooksSection() {
     try {
       await api.request(`/webhooks/endpoints/${endpointId}/deliveries/${deliveryId}/retry`, { method: 'POST' });
       await loadDeliveries(endpointId);
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
   };
 
   return (

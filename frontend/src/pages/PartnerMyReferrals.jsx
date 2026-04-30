@@ -100,7 +100,7 @@ export default function PartnerMyReferrals() {
       await api.deleteReferral(id);
       setReferrals(prev => prev.filter(r => r.id !== id));
       if (selected?.id === id) setSelected(null);
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast(err.message || 'Error', 'error'); }
     setDeleting(null);
   };
 

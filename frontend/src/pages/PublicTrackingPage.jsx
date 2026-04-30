@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { CheckCircle, Send, AlertTriangle } from 'lucide-react';
+import { showToast } from '../components/Dialogs.jsx';
 
 export default function PublicTrackingPage() {
   const { t } = useTranslation();
@@ -52,8 +53,8 @@ export default function PublicTrackingPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (res.ok) { setSubmitted(true); } else { alert(data.error || t('common.error')); }
-    } catch { alert(t('publicTracking.connection_error')); }
+      if (res.ok) { setSubmitted(true); } else { showToast.error(data.error || t('common.error')); }
+    } catch { showToast.error(t('publicTracking.connection_error')); }
     setSending(false);
   };
 

@@ -5,6 +5,7 @@ import {
   ChevronDown, ChevronUp, Save, Link as LinkIcon,
 } from 'lucide-react';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const C = {
@@ -102,7 +103,7 @@ export default function NewsPage() {
       await load();
       cancel();
     } catch (err) {
-      alert(err.message || 'Error');
+      showToast.error(err.message || "Error");
     }
     setSaving(false);
   };
@@ -111,25 +112,25 @@ export default function NewsPage() {
   const confirmRemove = async () => {
     if (!deleteId) return;
     try { await api.deleteNews(deleteId); await load(); }
-    catch (err) { alert(err.message); }
+    catch (err) { showToast.error(err.message); }
     finally { setDeleteId(null); }
   };
 
   const addAttachment = async (data) => {
     if (editing === 'new') {
-      alert('Save the post first before adding attachments.');
+      showToast.warning(t('news.save_first_for_attachments', 'Enregistrez l\'article avant d\'ajouter des pièces jointes.'));
       return;
     }
     try {
       const d = await api.addNewsAttachment(editing, data);
       setAttachmentsFor(prev => [...prev, d.attachment]);
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
   };
   const removeAttachment = async (attId) => {
     try {
       await api.deleteNewsAttachment(attId);
       setAttachmentsFor(prev => prev.filter(a => a.id !== attId));
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast.error(err.message); }
   };
 
   return (
@@ -559,7 +560,7 @@ function SocialsEditor({ t }) {
   const save = async () => {
     setSaving(true);
     try { await api.updateSocials(s); setSaved(true); setTimeout(() => setSaved(false), 2000); }
-    catch (err) { alert(err.message); }
+    catch (err) { showToast.error(err.message); }
     setSaving(false);
   };
 

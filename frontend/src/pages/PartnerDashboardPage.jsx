@@ -5,6 +5,7 @@ import { FileText, TrendingUp, DollarSign, Search, Link as LinkIcon, Copy, Rotat
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { fmt } from '../lib/constants';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 
 // Partner landing page. Three KPI tiles + (feature-gated) referral
 // link card + promo codes table. The Kanban lives on the dedicated
@@ -121,13 +122,19 @@ function ReferralLinkCard({ partnerId }) {
   };
 
   const regenerate = async () => {
-    if (!window.confirm(t('referral_link.regenerate_confirm'))) return;
+    const ok = await showConfirm({
+      title: t('referral_link.regenerate', 'Régénérer le code'),
+      message: t('referral_link.regenerate_confirm'),
+      variant: 'warning',
+      confirmLabel: t('referral_link.regenerate', 'Régénérer'),
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await api.regenerateReferralCode(partnerId);
       const fresh = await api.getPartnerReferralLink(partnerId);
       setData(fresh);
-    } catch (e) { alert(e.message); }
+    } catch (e) { showToast.error(e.message); }
     setBusy(false);
   };
 

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { fmt, fmtDate, categoryName } from '../lib/constants';
 import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -105,14 +106,14 @@ export default function PartnersPage() {
         loadPartners(showArchived);
       }
     } catch (e) {
-      alert(e.message);
+      showToast.error(e.message);
     } finally {
       setConfirmAction(null);
     }
   };
 
   const startEdit = (p) => { setEditingId(p.id); setEditForm({ name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '', company_website: p.company_website || '', commission_rate: p.commission_rate, iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '', category_id: p.category_id || '' }); };
-  const saveEdit = async () => { try { await api.updatePartner(editingId, editForm); setEditingId(null); await loadPartners(showArchived); } catch(e) { alert(e.message); } };
+  const saveEdit = async () => { try { await api.updatePartner(editingId, editForm); setEditingId(null); await loadPartners(showArchived); } catch(e) { showToast.error(e.message); } };
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setSaving(true);
@@ -128,7 +129,7 @@ export default function PartnersPage() {
         setUpgradePrompt({ limit: err.data.limit, plan: err.data.plan, upgradeTo: err.data.upgradeTo });
       } else {
         console.error(err);
-        alert(err.message);
+        showToast.error(err.message);
       }
     }
     setSaving(false);
@@ -141,12 +142,12 @@ export default function PartnersPage() {
         setSelectedApp(null);
         setUpgradePrompt({ limit: e.data.limit, plan: e.data.plan, upgradeTo: e.data.upgradeTo });
       } else {
-        alert(e.message);
+        showToast.error(e.message);
       }
     }
   };
   const handleReject = async () => {
-    try { await api.rejectApplication(selectedApp.id, rejectReason); setSelectedApp(null); setRejectReason(''); loadApplications(); } catch(e) { alert(e.message); }
+    try { await api.rejectApplication(selectedApp.id, rejectReason); setSelectedApp(null); setRejectReason(''); loadApplications(); } catch(e) { showToast.error(e.message); }
   };
 
   const categoryMatches = (p) => categoryFilter === 'all' || p.category_id === categoryFilter;

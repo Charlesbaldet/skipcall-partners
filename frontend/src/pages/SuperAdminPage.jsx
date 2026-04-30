@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
+import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
@@ -113,7 +114,7 @@ export default function SuperAdminPage() {
       setShowCreate(false);
       setForm({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #059669)', secondary_color: '#8b5cf6', accent_color: '#f59e0b', logo_url: '' });
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { showToast.error(e.message); }
     setSaving(false);
   };
 
@@ -127,7 +128,7 @@ export default function SuperAdminPage() {
       await api.request('/super-admin/tenants/' + editingId, { method: 'PUT', body: JSON.stringify(editForm), headers: { 'Content-Type': 'application/json' } });
       setEditingId(null);
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { showToast.error(e.message); }
   };
 
   const handleDelete = async (id, force = false) => {
@@ -138,7 +139,7 @@ export default function SuperAdminPage() {
     } catch (e) {
       if (e.message?.includes('utilisateur')) {
         setForceDeleteTenant({ id, reason: e.message });
-      } else { alert(e.message); }
+      } else { showToast.error(e.message); }
     }
   };
 
