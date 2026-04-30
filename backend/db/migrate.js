@@ -361,6 +361,9 @@ async function runMigrations() {
   // column stays around so 'rejected' rows keep their flag.
   console.log('[commissions] v20 status lifecycle + invoice columns ready');
 
+  // ─── v21: Partner bank_name column for the new Settings tab ───
+  await query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS bank_name TEXT`);
+
   console.log(' Migrations completed');
 
   } catch (err) {

@@ -16,7 +16,8 @@
     "optional": "opcional",
     "server_error": "Erro do servidor",
     "saving": "A guardar…",
-    "saved": "Guardado"
+    "saved": "Guardado",
+    "go_to_settings": "Abrir definições"
   },
   "nav": {
     "features": "Funcionalidades",
@@ -1049,7 +1050,19 @@
     "holder_label_long": "Titular da conta",
     "holder_ph": "Nome do titular",
     "subtitle_v2": "Histórico e estado das suas comissões",
-    "iban_hint": "Adicione os seus dados bancários para receber os pagamentos mais rapidamente."
+    "iban_hint": "Adicione os seus dados bancários para receber os pagamentos mais rapidamente.",
+    "empty_col": "Sem comissões",
+    "bank_incomplete_banner": "Complete os seus dados bancários nas definições para receber os pagamentos."
+  },
+  "partnerBankInfo": {
+    "title": "Dados bancários",
+    "subtitle": "Adicione os seus dados bancários para receber os pagamentos mais rapidamente.",
+    "account_holder": "Titular da conta",
+    "account_holder_ph": "Nome e apelido",
+    "iban": "IBAN",
+    "bic": "BIC / SWIFT",
+    "bank_name": "Nome do banco",
+    "bank_name_ph": "Caixa Geral de Depósitos"
   },
   "messaging": {
     "title": "Mensagens",
@@ -1423,7 +1436,8 @@
     "language": "Idioma",
     "language_help": "Escolhe o idioma da interface.",
     "tab_pipeline": "Pipeline e etapas",
-    "tab_features": "Funcionalidades"
+    "tab_features": "Funcionalidades",
+    "tab_bank_info": "Dados bancários"
   },
   "status": {
     "new": "Novo",

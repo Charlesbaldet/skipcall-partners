@@ -12,7 +12,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell,
+  Bell, Banknote, Save,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -147,6 +147,7 @@ export default function SettingsPage() {
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
     ] : []),
     ...(isPartner ? [
+      { id: 'bank', icon: Banknote, label: t('settings.tab_bank_info', 'Informations bancaires') },
       { section: t('layout.section.preferences') },
       { id: 'partner-notifications', icon: Bell, label: t('partner_notifications.tab', 'Notifications') },
     ] : []),
@@ -200,6 +201,7 @@ export default function SettingsPage() {
             {tab === 'team' && isAdmin && <MembersTab />}
             {tab === 'notifications' && isAdmin && <NotificationsTab />}
             {tab === 'partner-notifications' && isPartner && <PartnerNotificationsTab />}
+            {tab === 'bank' && isPartner && <PartnerBankInfoTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
             {tab === 'pipeline' && isAdmin && (
@@ -2443,6 +2445,185 @@ function PartnerNotificationsTab() {
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+// ═══ INFORMATIONS BANCAIRES (vue partenaire) ═══
+function PartnerBankInfoTab() {
+  const { t } = useTranslation();
+  const [form, setForm] = useState({ account_holder: '', iban: '', bic: '', bank_name: '' });
+  const [saved, setSaved] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState(0);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    api.getMyBankInfo()
+      .then(d => {
+        const info = d.bank_info || {};
+        setSaved(info);
+        setForm({
+          account_holder: info.account_holder || '',
+          iban: info.iban || '',
+          bic: info.bic || '',
+          bank_name: info.bank_name || '',
+        });
+        setEditing(!info.iban);
+      })
+      .catch(() => setEditing(true))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const formatIban = (v) => v.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+
+  const handleSave = async () => {
+    setErr('');
+    setSaving(true);
+    try {
+      const payload = {
+        account_holder: form.account_holder.trim() || null,
+        iban: form.iban.replace(/\s/g, '').toUpperCase() || null,
+        bic: form.bic.toUpperCase() || null,
+        bank_name: form.bank_name.trim() || null,
+      };
+      const res = await api.updateMyBankInfo(payload);
+      setSaved(res.bank_info);
+      setEditing(false);
+      setSavedAt(Date.now());
+    } catch (e) {
+      setErr(e.message || 'Erreur');
+    }
+    setSaving(false);
+  };
+
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 };
+
+  if (loading) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+
+  const hasSaved = !!(saved && saved.iban);
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+        {t('partnerBankInfo.title', 'Informations bancaires')}
+      </h2>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+        {t('partnerBankInfo.subtitle', 'Ajoutez vos coordonnées bancaires pour recevoir vos paiements plus rapidement.')}
+      </p>
+
+      {err && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontSize: 13 }}>
+          {err}
+        </div>
+      )}
+
+      {!editing && hasSaved ? (
+        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+            <Field label={t('partnerBankInfo.account_holder', 'Titulaire du compte')} value={saved.account_holder || '—'} />
+            <Field label={t('partnerBankInfo.bank_name', 'Nom de la banque')} value={saved.bank_name || '—'} />
+            <Field
+              label={t('partnerBankInfo.iban', 'IBAN')}
+              value={<span style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{formatIban(saved.iban)}</span>}
+            />
+            <Field
+              label={t('partnerBankInfo.bic', 'BIC / SWIFT')}
+              value={<span style={{ fontFamily: 'monospace' }}>{saved.bic || '—'}</span>}
+            />
+          </div>
+          <button onClick={() => setEditing(true)} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10,
+            background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+          }}>
+            <Edit2 size={14} /> {t('common.edit', 'Modifier')}
+          </button>
+        </div>
+      ) : (
+        <div style={{ maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={labelStyle}>{t('partnerBankInfo.account_holder', 'Titulaire du compte')}</label>
+            <input
+              value={form.account_holder}
+              onChange={e => setForm(f => ({ ...f, account_holder: e.target.value }))}
+              placeholder={t('partnerBankInfo.account_holder_ph', 'Nom et prénom')}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>{t('partnerBankInfo.iban', 'IBAN')}</label>
+            <input
+              value={form.iban}
+              onChange={e => setForm(f => ({ ...f, iban: e.target.value.toUpperCase() }))}
+              placeholder="FR76 3000 1007 9412 3456 7890 185"
+              style={{ ...inputStyle, fontFamily: 'monospace' }}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div>
+              <label style={labelStyle}>{t('partnerBankInfo.bic', 'BIC / SWIFT')}</label>
+              <input
+                value={form.bic}
+                onChange={e => setForm(f => ({ ...f, bic: e.target.value.toUpperCase() }))}
+                placeholder="BNPAFRPP"
+                style={{ ...inputStyle, fontFamily: 'monospace' }}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                {t('partnerBankInfo.bank_name', 'Nom de la banque')}
+                <span style={{ color: '#94a3b8', fontWeight: 400, marginLeft: 4 }}>({t('common.optional', 'optionnel')})</span>
+              </label>
+              <input
+                value={form.bank_name}
+                onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))}
+                placeholder={t('partnerBankInfo.bank_name_ph', 'BNP Paribas')}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+            <button onClick={handleSave} disabled={saving} style={{
+              padding: '10px 20px', borderRadius: 10, border: 'none',
+              background: 'var(--rb-primary, #059669)', color: '#fff',
+              fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1,
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+            }}>
+              <Save size={14} /> {saving ? t('common.saving', 'Enregistrement…') : t('common.save', 'Enregistrer')}
+            </button>
+            {hasSaved && (
+              <button onClick={() => { setEditing(false); setForm({
+                account_holder: saved.account_holder || '',
+                iban: saved.iban || '',
+                bic: saved.bic || '',
+                bank_name: saved.bank_name || '',
+              }); }} disabled={saving} style={{
+                padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
+                background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              }}>
+                {t('common.cancel', 'Annuler')}
+              </button>
+            )}
+            {savedAt && Date.now() - savedAt < 3000 && (
+              <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, value }) {
+  return (
+    <div>
+      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4 }}>{value}</div>
     </div>
   );
 }

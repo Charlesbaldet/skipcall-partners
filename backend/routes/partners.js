@@ -553,7 +553,7 @@ router.get('/me/profile', async (req, res) => {
 
     const { rows } = await query(
       `SELECT id, name, contact_name, email, phone, company_website,
-              commission_rate, iban, bic, account_holder
+              commission_rate, iban, bic, account_holder, bank_name
        FROM partners WHERE id = $1`,
       [req.user.partnerId]
     );

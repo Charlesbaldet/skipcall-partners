@@ -16,7 +16,8 @@
     "optional": "opzionale",
     "server_error": "Errore del server",
     "saving": "Salvataggio…",
-    "saved": "Salvato"
+    "saved": "Salvato",
+    "go_to_settings": "Apri le impostazioni"
   },
   "nav": {
     "features": "Funzionalità",
@@ -1049,7 +1050,19 @@
     "holder_label_long": "Titolare del conto",
     "holder_ph": "Nome del titolare",
     "subtitle_v2": "Cronologia e stato delle tue commissioni",
-    "iban_hint": "Aggiungi i tuoi dati bancari per ricevere i pagamenti più velocemente."
+    "iban_hint": "Aggiungi i tuoi dati bancari per ricevere i pagamenti più velocemente.",
+    "empty_col": "Nessuna commissione",
+    "bank_incomplete_banner": "Completa i tuoi dati bancari nelle impostazioni per ricevere i pagamenti."
+  },
+  "partnerBankInfo": {
+    "title": "Dati bancari",
+    "subtitle": "Aggiungi i tuoi dati bancari per ricevere i pagamenti più velocemente.",
+    "account_holder": "Intestatario del conto",
+    "account_holder_ph": "Nome e cognome",
+    "iban": "IBAN",
+    "bic": "BIC / SWIFT",
+    "bank_name": "Nome della banca",
+    "bank_name_ph": "Intesa Sanpaolo"
   },
   "messaging": {
     "title": "Messaggistica",
@@ -1423,7 +1436,8 @@
     "language": "Lingua",
     "language_help": "Scegli la lingua dell'interfaccia.",
     "tab_pipeline": "Pipeline e fasi",
-    "tab_features": "Funzionalità"
+    "tab_features": "Funzionalità",
+    "tab_bank_info": "Dati bancari"
   },
   "status": {
     "new": "Nuovo",

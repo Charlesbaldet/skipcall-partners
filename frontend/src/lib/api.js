@@ -152,6 +152,8 @@ class ApiClient {
   deletePartner(id) { return this.request(`/partners/${id}`, { method: 'DELETE' }); }
   getMyPartnerProfile() { return this.request('/partners/me/profile'); }
   updateMyIban(id, data) { return this.request(`/partners/${id}/iban`, { method: 'PUT', body: JSON.stringify(data) }); }
+  getMyBankInfo() { return this.request('/partner/bank-info'); }
+  updateMyBankInfo(data) { return this.request('/partner/bank-info', { method: 'PUT', body: JSON.stringify(data) }); }
 
   // Referrals
   getReferrals(params = {}) { const qs = new URLSearchParams(params).toString(); return this.request(`/referrals?${qs}`); }

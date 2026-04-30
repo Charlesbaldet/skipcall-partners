@@ -16,7 +16,8 @@
     "optional": "optionnel",
     "server_error": "Erreur serveur",
     "saving": "Enregistrement…",
-    "saved": "Sauvegardé"
+    "saved": "Sauvegardé",
+    "go_to_settings": "Ouvrir les paramètres"
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -1049,7 +1050,19 @@
     "holder_label_long": "Titulaire du compte",
     "holder_ph": "Nom du titulaire",
     "subtitle_v2": "Historique et statut de vos commissions",
-    "iban_hint": "Ajoutez vos coordonnées bancaires pour recevoir vos paiements plus rapidement."
+    "iban_hint": "Ajoutez vos coordonnées bancaires pour recevoir vos paiements plus rapidement.",
+    "empty_col": "Aucune commission",
+    "bank_incomplete_banner": "Complétez vos informations bancaires dans les paramètres pour recevoir vos paiements."
+  },
+  "partnerBankInfo": {
+    "title": "Informations bancaires",
+    "subtitle": "Ajoutez vos coordonnées bancaires pour recevoir vos paiements plus rapidement.",
+    "account_holder": "Titulaire du compte",
+    "account_holder_ph": "Nom et prénom",
+    "iban": "IBAN",
+    "bic": "BIC / SWIFT",
+    "bank_name": "Nom de la banque",
+    "bank_name_ph": "BNP Paribas"
   },
   "messaging": {
     "title": "Messagerie",
@@ -1423,7 +1436,8 @@
     "language": "Langue",
     "language_help": "Choisissez la langue d'affichage de l'interface.",
     "tab_pipeline": "Pipeline et statuts",
-    "tab_features": "Fonctionnalités"
+    "tab_features": "Fonctionnalités",
+    "tab_bank_info": "Informations bancaires"
   },
   "status": {
     "new": "Nouveau",

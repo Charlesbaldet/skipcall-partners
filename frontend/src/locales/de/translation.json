@@ -16,7 +16,8 @@
     "optional": "optional",
     "server_error": "Serverfehler",
     "saving": "Speichern…",
-    "saved": "Gespeichert"
+    "saved": "Gespeichert",
+    "go_to_settings": "Einstellungen öffnen"
   },
   "nav": {
     "features": "Funktionen",
@@ -1049,7 +1050,19 @@
     "holder_label_long": "Kontoinhaber",
     "holder_ph": "Name des Inhabers",
     "subtitle_v2": "Verlauf und Status Ihrer Provisionen",
-    "iban_hint": "Fügen Sie Ihre Bankverbindung hinzu, um Ihre Zahlungen schneller zu erhalten."
+    "iban_hint": "Fügen Sie Ihre Bankverbindung hinzu, um Ihre Zahlungen schneller zu erhalten.",
+    "empty_col": "Keine Provision",
+    "bank_incomplete_banner": "Vervollständigen Sie Ihre Bankdaten in den Einstellungen, um Ihre Zahlungen zu erhalten."
+  },
+  "partnerBankInfo": {
+    "title": "Bankverbindung",
+    "subtitle": "Fügen Sie Ihre Bankverbindung hinzu, um Ihre Zahlungen schneller zu erhalten.",
+    "account_holder": "Kontoinhaber",
+    "account_holder_ph": "Vor- und Nachname",
+    "iban": "IBAN",
+    "bic": "BIC / SWIFT",
+    "bank_name": "Name der Bank",
+    "bank_name_ph": "Deutsche Bank"
   },
   "messaging": {
     "title": "Nachrichten",
@@ -1423,7 +1436,8 @@
     "language": "Sprache",
     "language_help": "Wähle die Sprache der Oberfläche.",
     "tab_pipeline": "Pipeline & Stages",
-    "tab_features": "Funktionen"
+    "tab_features": "Funktionen",
+    "tab_bank_info": "Bankverbindung"
   },
   "status": {
     "new": "Neu",

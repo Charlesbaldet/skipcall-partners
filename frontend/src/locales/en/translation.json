@@ -16,7 +16,8 @@
     "optional": "optional",
     "server_error": "Server error",
     "saving": "Saving…",
-    "saved": "Saved"
+    "saved": "Saved",
+    "go_to_settings": "Open settings"
   },
   "nav": {
     "features": "Features",
@@ -1049,7 +1050,19 @@
     "holder_label_long": "Account holder",
     "holder_ph": "Holder name",
     "subtitle_v2": "History and status of your commissions",
-    "iban_hint": "Add your bank details to receive your payments faster."
+    "iban_hint": "Add your bank details to receive your payments faster.",
+    "empty_col": "No commission",
+    "bank_incomplete_banner": "Add your bank details in settings to receive your payments."
+  },
+  "partnerBankInfo": {
+    "title": "Bank details",
+    "subtitle": "Add your bank details to receive your payments faster.",
+    "account_holder": "Account holder",
+    "account_holder_ph": "First and last name",
+    "iban": "IBAN",
+    "bic": "BIC / SWIFT",
+    "bank_name": "Bank name",
+    "bank_name_ph": "BNP Paribas"
   },
   "messaging": {
     "title": "Messaging",
@@ -1423,7 +1436,8 @@
     "language": "Language",
     "language_help": "Choose the interface display language.",
     "tab_pipeline": "Pipeline & stages",
-    "tab_features": "Features"
+    "tab_features": "Features",
+    "tab_bank_info": "Bank details"
   },
   "status": {
     "new": "New",

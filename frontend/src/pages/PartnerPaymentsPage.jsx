@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building, XCircle, Upload, Download, FileText, ShieldCheck } from 'lucide-react';
+import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, FileText, ShieldCheck, AlertTriangle } from 'lucide-react';
 
+// 4-column lifecycle, ordered left → right.
+const STATUS_KEYS = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
 const PAY_STATUS_META = {
   pending_approval:   { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
   awaiting_invoice:   { color: '#6366f1', bg: '#eef2ff', icon: FileText },
@@ -12,18 +14,12 @@ const PAY_STATUS_META = {
   paid:               { color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
 };
 
-const STATUS_ORDER = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
-
 export default function PartnerPaymentsPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const [commissions, setCommissions] = useState([]);
   const [totals, setTotals] = useState({ pending: 0, paid: 0 });
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
-  const [editIban, setEditIban] = useState(false);
-  const [ibanForm, setIbanForm] = useState({ iban: '', bic: '', account_holder: '' });
-  const [savingIban, setSavingIban] = useState(false);
+  const [bankInfo, setBankInfo] = useState(null);
   const [uploadingId, setUploadingId] = useState(null);
   const fileInputRef = useRef(null);
   const pendingUploadIdRef = useRef(null);
@@ -37,33 +33,16 @@ export default function PartnerPaymentsPage() {
 
   const reload = () => Promise.all([
     api.getCommissions(),
-    api.getMyPartnerProfile(),
-  ]).then(([c, p]) => {
+    api.getMyBankInfo().catch(() => ({ bank_info: null })),
+  ]).then(([c, b]) => {
     setCommissions(c.commissions);
     setTotals({ pending: c.totalPending, paid: c.totalPaid });
-    setProfile(p.partner);
-    setIbanForm({
-      iban: p.partner.iban || '',
-      bic: p.partner.bic || '',
-      account_holder: p.partner.account_holder || '',
-    });
+    setBankInfo(b && b.bank_info ? b.bank_info : null);
   });
 
   useEffect(() => {
     reload().catch(console.error).finally(() => setLoading(false));
   }, []);
-
-  const handleSaveIban = async () => {
-    setSavingIban(true);
-    try {
-      await api.updateMyIban(user.partnerId, ibanForm);
-      setProfile(prev => ({ ...prev, ...ibanForm }));
-      setEditIban(false);
-    } catch (err) {
-      alert(err.message);
-    }
-    setSavingIban(false);
-  };
 
   const triggerUpload = (commissionId) => {
     pendingUploadIdRef.current = commissionId;
@@ -102,17 +81,9 @@ export default function PartnerPaymentsPage() {
   };
 
   const totalAll = commissions.reduce((s, c) => s + parseFloat(c.amount || 0), 0);
-
-  // Group commissions by status so partners see their workflow at a
-  // glance. Rejected rows surface separately at the top via the badge
-  // path below.
-  const byStatus = {};
-  for (const k of STATUS_ORDER) byStatus[k] = [];
-  for (const c of commissions) {
-    if (c.approval_status === 'rejected') continue;
-    if (byStatus[c.status]) byStatus[c.status].push(c);
-  }
   const rejectedRows = commissions.filter(c => c.approval_status === 'rejected');
+  const visibleRows = commissions.filter(c => c.approval_status !== 'rejected');
+  const bankIncomplete = !bankInfo || !bankInfo.iban;
 
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerPayments.loading')}</div>;
 
@@ -120,7 +91,30 @@ export default function PartnerPaymentsPage() {
     <div className="fade-in">
       <input ref={fileInputRef} type="file" accept="application/pdf,image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
       <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerPayments.title')}</h1>
-      <p style={{ color: '#64748b', marginBottom: 24 }}>{t('partnerPayments.subtitle')}</p>
+      <p style={{ color: '#64748b', marginBottom: 20 }}>{t('partnerPayments.subtitle')}</p>
+
+      {/* Bank-info banner: only when the partner hasn't filled the new
+          settings tab yet. Linking to /settings?tab=bank lands directly
+          on the right tab. */}
+      {bankIncomplete && (
+        <Link
+          to="/settings?tab=bank"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '12px 16px', borderRadius: 12, marginBottom: 20,
+            background: '#fffbeb', border: '1px solid #fcd34d',
+            color: '#92400e', textDecoration: 'none',
+          }}
+        >
+          <AlertTriangle size={18} />
+          <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>
+            {t('partnerPayments.bank_incomplete_banner', 'Complétez vos informations bancaires dans les paramètres pour recevoir vos paiements.')}
+          </span>
+          <span style={{ fontWeight: 700, fontSize: 13 }}>
+            {t('common.go_to_settings', 'Ouvrir les paramètres')} →
+          </span>
+        </Link>
+      )}
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
@@ -129,103 +123,7 @@ export default function PartnerPaymentsPage() {
         <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')} value={fmt(totals.paid)} color="#16a34a" />
       </div>
 
-      {/* Workflow legend */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, padding: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, flexWrap: 'wrap' }}>
-        {STATUS_ORDER.map((k, i) => {
-          const st = PAY_STATUS[k];
-          const Icon = st.icon;
-          return (
-            <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: st.color, fontWeight: 600 }}>
-              <Icon size={14} /> {st.label}
-              {i < STATUS_ORDER.length - 1 && <span style={{ color: '#cbd5e1', margin: '0 4px' }}>→</span>}
-            </span>
-          );
-        })}
-      </div>
-
-      {/* IBAN Section */}
-      <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Building size={18} color="#6366f1" />
-            </div>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{t('partnerPayments.bank_info')}</h3>
-          </div>
-          {!editIban ? (
-            <button onClick={() => setEditIban(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10,
-              background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-            }}>
-              <Edit3 size={14} />
-              {profile?.iban ? t('common.edit') : t('settings.add')}
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setEditIban(false)} style={{
-                display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 10,
-                background: '#f1f5f9', border: 'none', color: '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-              }}><X size={14} /> {t('common.cancel')}</button>
-              <button onClick={handleSaveIban} disabled={savingIban} style={{
-                display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 10,
-                background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
-                fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: savingIban ? 0.7 : 1,
-              }}><Save size={14} /> {savingIban ? t('partnerPayments.saving') : t('partnerPayments.iban_save')}</button>
-            </div>
-          )}
-        </div>
-
-        {editIban ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('partnerPayments.holder_label_long')}</label>
-              <input value={ibanForm.account_holder} onChange={e => setIbanForm(f => ({ ...f, account_holder: e.target.value }))}
-                placeholder={t('partnerPayments.holder_ph')}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('partnerPayments.iban_label')}</label>
-              <input value={ibanForm.iban} onChange={e => setIbanForm(f => ({ ...f, iban: e.target.value.toUpperCase() }))}
-                placeholder={t('partnerPayments.iban_ph')}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, fontFamily: 'monospace', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>{t('partnerPayments.bic_label')}</label>
-              <input value={ibanForm.bic} onChange={e => setIbanForm(f => ({ ...f, bic: e.target.value.toUpperCase() }))}
-                placeholder="BNPAFRPP"
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, fontFamily: 'monospace', boxSizing: 'border-box' }} />
-            </div>
-          </div>
-        ) : (
-          profile?.iban ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-              <div>
-                <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{t('partnerPayments.holder_label')}</div>
-                <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4 }}>{profile.account_holder || '—'}</div>
-              </div>
-              <div>
-                <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{t('partnerPayments.iban_label')}</div>
-                <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4, fontFamily: 'monospace', letterSpacing: 1 }}>
-                  {profile.iban.replace(/(.{4})/g, '$1 ').trim()}
-                </div>
-              </div>
-              <div>
-                <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{t('partnerPayments.bic_label')}</div>
-                <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4, fontFamily: 'monospace' }}>{profile.bic || '—'}</div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ background: '#fffbeb', borderRadius: 10, padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Clock size={16} color="#f59e0b" />
-              <span style={{ color: '#92400e', fontSize: 14 }}>
-                {t('partnerPayments.iban_hint')}
-              </span>
-            </div>
-          )
-        )}
-      </div>
-
-      {/* Rejected commissions surfaced first so the partner sees them */}
+      {/* Rejected rows surfaced before the kanban so partners actually see them */}
       {rejectedRows.length > 0 && (
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #fecaca', padding: 16, marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b91c1c', fontWeight: 700, marginBottom: 12 }}>
@@ -235,7 +133,7 @@ export default function PartnerPaymentsPage() {
             {rejectedRows.map(c => (
               <div key={c.id} style={{ padding: 12, background: '#fef2f2', borderRadius: 10, border: '1px solid #fecaca' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name || c.prospect_company}</div>
+                  <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_company || c.prospect_name}</div>
                   <div style={{ fontWeight: 700, color: '#dc2626' }}>{fmt(c.amount)}</div>
                 </div>
                 {c.rejection_reason && (
@@ -249,75 +147,139 @@ export default function PartnerPaymentsPage() {
         </div>
       )}
 
-      {/* Commissions grouped by status */}
-      <div style={{ display: 'grid', gap: 16 }}>
-        {STATUS_ORDER.map(statusKey => {
-          const rows = byStatus[statusKey];
-          const st = PAY_STATUS[statusKey];
-          if (rows.length === 0) return null;
-          return (
-            <div key={statusKey} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: st.bg }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: st.color, fontWeight: 700 }}>
-                  <st.icon size={16} /> {st.label}
+      {/* Kanban — same card/column style as PartnerMyReferrals */}
+      <div style={{ overflow: 'hidden', borderRadius: 16 }}>
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 280px)', minHeight: 420 }}>
+          {STATUS_KEYS.map(statusKey => {
+            const st = PAY_STATUS[statusKey];
+            const cards = visibleRows.filter(c => c.status === statusKey);
+            const colTotal = cards.reduce((s, c) => s + parseFloat(c.amount || 0), 0);
+            const StIcon = st.icon;
+            return (
+              <div
+                key={statusKey}
+                style={{
+                  minWidth: 280, width: 280, flexShrink: 0, background: '#f8fafc', borderRadius: 16,
+                  padding: 12, display: 'flex', flexDirection: 'column',
+                  border: '1px solid #e2e8f0',
+                  borderTop: `3px solid ${st.color}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.label}</span>
+                  </div>
+                  <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, flexShrink: 0 }}>{cards.length}</span>
                 </div>
-                <div style={{ color: st.color, fontWeight: 700, fontSize: 14 }}>
-                  {rows.length} · {fmt(rows.reduce((s, r) => s + parseFloat(r.amount || 0), 0))}
-                </div>
-              </div>
-              <div style={{ padding: 8 }}>
-                {rows.map(c => (
-                  <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.5fr', gap: 12, alignItems: 'center', padding: '12px 14px', borderRadius: 10 }}>
-                    <div>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div>
-                      <div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#94a3b8', fontSize: 11 }}>{t('partnerPayments.tbl_commission')}</div>
-                      <div style={{ fontWeight: 700, color: '#0f172a' }}>{fmt(c.amount)} <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>· {c.rate}%</span></div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#94a3b8', fontSize: 11 }}>{statusKey === 'paid' ? t('commissions.paid_on') : t('partnerPayments.tbl_date')}</div>
-                      <div style={{ color: '#475569', fontSize: 13 }}>
-                        {statusKey === 'paid' ? (c.paid_at ? fmtDate(c.paid_at) : '—') : fmtDate(c.created_at)}
+
+                {colTotal > 0 && (
+                  <div style={{ padding: '4px 10px 8px', fontSize: 11, fontWeight: 700, color: st.color }}>
+                    {fmt(colTotal)}
+                  </div>
+                )}
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
+                  {cards.map(c => (
+                    <div
+                      key={c.id}
+                      style={{
+                        background: '#fff', borderRadius: 12, padding: 14,
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.prospect_company || c.prospect_name || '—'}
+                        </div>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 3,
+                          padding: '2px 8px', borderRadius: 999,
+                          background: st.bg, color: st.color,
+                          fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
+                        }}>
+                          <StIcon size={10} /> {st.label}
+                        </span>
                       </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
+
+                      {c.prospect_company && c.prospect_name && c.prospect_company !== c.prospect_name && (
+                        <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{c.prospect_name}</div>
+                      )}
+
+                      <div style={{ fontSize: 22, fontWeight: 800, color: st.color, letterSpacing: -0.5, marginBottom: 4 }}>
+                        {fmt(c.amount)}
+                      </div>
+                      <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>
+                        {c.rate}% · {fmt(c.deal_value)} · {fmtDate(c.created_at)}
+                      </div>
+
                       {statusKey === 'awaiting_invoice' && (
-                        <button onClick={() => triggerUpload(c.id)} disabled={uploadingId === c.id}
-                          style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, opacity: uploadingId === c.id ? 0.7 : 1 }}>
-                          <Upload size={13} /> {uploadingId === c.id ? t('commission.uploading') : t('commission.upload_invoice')}
+                        <button
+                          onClick={() => triggerUpload(c.id)}
+                          disabled={uploadingId === c.id}
+                          style={{
+                            width: '100%', padding: '8px 12px', borderRadius: 10,
+                            background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
+                            fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            opacity: uploadingId === c.id ? 0.7 : 1,
+                          }}
+                        >
+                          <Upload size={12} /> {uploadingId === c.id ? t('commission.uploading') : t('commission.upload_invoice')}
                         </button>
                       )}
                       {statusKey === 'pending_validation' && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#eff6ff', color: '#0284c7', fontWeight: 600, fontSize: 12 }}>
-                          <ShieldCheck size={13} /> {t('commission.invoice_under_review')}
-                        </span>
+                        <div style={{
+                          padding: '7px 10px', borderRadius: 8,
+                          background: '#eff6ff', color: '#0284c7',
+                          fontSize: 11, textAlign: 'center', fontWeight: 600,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                        }}>
+                          <ShieldCheck size={12} /> {t('commission.invoice_under_review')}
+                        </div>
                       )}
-                      {statusKey === 'paid' && c.has_invoice && (
-                        <button onClick={() => handleDownload(c.id)}
-                          style={{ padding: '8px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          <Download size={13} /> {t('commission.download_receipt')}
-                        </button>
-                      )}
-                      {statusKey === 'pending_approval' && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#fffbeb', color: '#d97706', fontWeight: 600, fontSize: 12 }}>
-                          <Clock size={13} /> {t('commission.status.pending_approval')}
-                        </span>
+                      {statusKey === 'paid' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {c.has_invoice && (
+                            <button
+                              onClick={() => handleDownload(c.id)}
+                              style={{
+                                width: '100%', padding: '7px', borderRadius: 8,
+                                background: '#f0fdf4', border: '1px solid #bbf7d0',
+                                color: '#166534', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                              }}
+                            >
+                              <Download size={12} /> {t('commission.download_receipt')}
+                            </button>
+                          )}
+                          {c.paid_at && (
+                            <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>
+                              {t('commissions.paid_on')} {fmtDate(c.paid_at)}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  ))}
+                  {cards.length === 0 && (
+                    <div style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', padding: 16 }}>
+                      {t('partnerPayments.empty_col', 'Aucune commission')}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-        {commissions.length === 0 && (
-          <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', color: '#94a3b8', border: '1px solid #e2e8f0' }}>
-            {t('partnerPayments.no_payments')}
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
+
+      {commissions.length === 0 && (
+        <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', color: '#94a3b8', border: '1px solid #e2e8f0', marginTop: 16 }}>
+          {t('partnerPayments.no_payments')}
+        </div>
+      )}
     </div>
   );
 }

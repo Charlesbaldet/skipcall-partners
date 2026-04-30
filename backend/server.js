@@ -40,6 +40,7 @@ const partnerCategoriesRoutes = require('./routes/partnerCategories');
 const referralRedirectRoutes = require('./routes/referralRedirect');
 const notionRoutes = require('./routes/notion');
 const partnerNotificationPrefsRoutes = require('./routes/partnerNotificationPrefs');
+const partnerBankInfoRoutes = require('./routes/partnerBankInfo');
 const dashboardStatsRoutes = require('./routes/dashboardStats');
 const webhooksRoutes = require('./routes/webhooks');
 
@@ -161,6 +162,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/crm/notion', notionRoutes);
 app.use('/api/partner/notification-preferences', partnerNotificationPrefsRoutes);
+app.use('/api/partner/bank-info', partnerBankInfoRoutes);
 app.use('/api/pipeline-stages', pipelineStagesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api', sitemapRoutes);

@@ -16,7 +16,8 @@
     "optional": "opcional",
     "server_error": "Error del servidor",
     "saving": "Guardando…",
-    "saved": "Guardado"
+    "saved": "Guardado",
+    "go_to_settings": "Abrir ajustes"
   },
   "nav": {
     "features": "Funcionalidades",
@@ -1049,7 +1050,19 @@
     "holder_label_long": "Titular de la cuenta",
     "holder_ph": "Nombre del titular",
     "subtitle_v2": "Historial y estado de tus comisiones",
-    "iban_hint": "Añade tus datos bancarios para recibir tus pagos más rápido."
+    "iban_hint": "Añade tus datos bancarios para recibir tus pagos más rápido.",
+    "empty_col": "Sin comisiones",
+    "bank_incomplete_banner": "Completa tus datos bancarios en los ajustes para recibir tus pagos."
+  },
+  "partnerBankInfo": {
+    "title": "Datos bancarios",
+    "subtitle": "Añade tus datos bancarios para recibir tus pagos más rápido.",
+    "account_holder": "Titular de la cuenta",
+    "account_holder_ph": "Nombre y apellidos",
+    "iban": "IBAN",
+    "bic": "BIC / SWIFT",
+    "bank_name": "Nombre del banco",
+    "bank_name_ph": "BBVA"
   },
   "messaging": {
     "title": "Mensajería",
@@ -1423,7 +1436,8 @@
     "language": "Idioma",
     "language_help": "Elige el idioma de la interfaz.",
     "tab_pipeline": "Pipeline y etapas",
-    "tab_features": "Funcionalidades"
+    "tab_features": "Funcionalidades",
+    "tab_bank_info": "Datos bancarios"
   },
   "status": {
     "new": "Nuevo",

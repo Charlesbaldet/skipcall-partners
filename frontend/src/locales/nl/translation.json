@@ -16,7 +16,8 @@
     "optional": "optioneel",
     "server_error": "Serverfout",
     "saving": "Opslaan…",
-    "saved": "Opgeslagen"
+    "saved": "Opgeslagen",
+    "go_to_settings": "Open instellingen"
   },
   "nav": {
     "features": "Functies",
@@ -1049,7 +1050,19 @@
     "holder_label_long": "Rekeninghouder",
     "holder_ph": "Naam van houder",
     "subtitle_v2": "Geschiedenis en status van je commissies",
-    "iban_hint": "Voeg je bankgegevens toe om je betalingen sneller te ontvangen."
+    "iban_hint": "Voeg je bankgegevens toe om je betalingen sneller te ontvangen.",
+    "empty_col": "Geen commissie",
+    "bank_incomplete_banner": "Vul je bankgegevens aan in de instellingen om je betalingen te ontvangen."
+  },
+  "partnerBankInfo": {
+    "title": "Bankgegevens",
+    "subtitle": "Voeg je bankgegevens toe om je betalingen sneller te ontvangen.",
+    "account_holder": "Rekeninghouder",
+    "account_holder_ph": "Voor- en achternaam",
+    "iban": "IBAN",
+    "bic": "BIC / SWIFT",
+    "bank_name": "Naam van de bank",
+    "bank_name_ph": "ING"
   },
   "messaging": {
     "title": "Berichten",
@@ -1423,7 +1436,8 @@
     "language": "Taal",
     "language_help": "Kies de taal van de interface.",
     "tab_pipeline": "Pipeline & stages",
-    "tab_features": "Functies"
+    "tab_features": "Functies",
+    "tab_bank_info": "Bankgegevens"
   },
   "status": {
     "new": "Nieuw",
