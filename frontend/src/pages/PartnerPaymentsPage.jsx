@@ -147,10 +147,10 @@ export default function PartnerPaymentsPage() {
         </div>
       )}
 
-      {/* Kanban — same card/column style as PartnerMyReferrals */}
-      <div style={{ overflow: 'hidden', borderRadius: 16 }}>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 280px)', minHeight: 420 }}>
-          {STATUS_KEYS.map(statusKey => {
+      {/* Kanban — columns flex to fill width, matching the admin
+          /commissions Pipeline tab. */}
+      <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 420 }}>
+        {STATUS_KEYS.map(statusKey => {
             const st = PAY_STATUS[statusKey];
             const cards = visibleRows.filter(c => c.status === statusKey);
             const colTotal = cards.reduce((s, c) => s + parseFloat(c.amount || 0), 0);
@@ -159,7 +159,7 @@ export default function PartnerPaymentsPage() {
               <div
                 key={statusKey}
                 style={{
-                  minWidth: 280, width: 280, flexShrink: 0, background: '#f8fafc', borderRadius: 16,
+                  flex: 1, minWidth: 0, background: '#f8fafc', borderRadius: 16,
                   padding: 12, display: 'flex', flexDirection: 'column',
                   border: '1px solid #e2e8f0',
                   borderTop: `3px solid ${st.color}`,
@@ -271,8 +271,7 @@ export default function PartnerPaymentsPage() {
                 </div>
               </div>
             );
-          })}
-        </div>
+        })}
       </div>
 
       {commissions.length === 0 && (

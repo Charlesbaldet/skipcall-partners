@@ -2094,6 +2094,9 @@
     "partner_managed_badge": "Beheerd door partner",
     "client_prospect_badge": "Te prospecteren",
     "cannot_move_client_lead": "Deze lead wordt beheerd door het salesteam. Je kunt de status niet wijzigen.",
+    "managed_by_company": "Beheerd door bedrijf",
+    "managed_by_you": "Jij beheert deze lead",
+    "managed_by_company_tooltip": "Beheerd door bedrijf — alleen lezen",
     "lead_handling_changed": "Leadbeheer bijgewerkt"
   },
   "commission": {

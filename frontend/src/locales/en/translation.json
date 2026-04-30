@@ -2094,6 +2094,9 @@
     "partner_managed_badge": "Managed by partner",
     "client_prospect_badge": "To be prospected",
     "cannot_move_client_lead": "This lead is managed by the sales team. You cannot change its status.",
+    "managed_by_company": "Managed by company",
+    "managed_by_you": "You manage this lead",
+    "managed_by_company_tooltip": "Managed by company — read-only",
     "lead_handling_changed": "Lead handling updated"
   },
   "commission": {

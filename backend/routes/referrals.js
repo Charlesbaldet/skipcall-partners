@@ -394,7 +394,11 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         client.release();
         return res.status(403).json({ error: 'partner_not_owner' });
       }
-      if (current.lead_handling === 'client_prospect') {
+      // Anything that isn't explicitly partner_managed (NULL legacy
+      // rows, client_prospect, future values) is read-only for the
+      // partner. The frontend already blocks the drag, but the API
+      // mirrors it so a hand-rolled request can't bypass the lock.
+      if (current.lead_handling !== 'partner_managed') {
         client.release();
         return res.status(403).json({ error: 'client_prospect_locked' });
       }
@@ -524,55 +528,95 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       );
     }
 
-    // Handle commission on deal won. Use effectiveDealValue so a simple
-    // status flip (no deal_value in the request) still produces a
-    // commission row from the previously-saved deal value.
-    if (status === 'won' && effectiveDealValue > 0) {
+    // Handle commission on deal won. The row gets created even when
+    // deal_value is 0 — admin sees the card in the "À approuver" column
+    // and adjusts the amount if needed before approving. Without this,
+    // partner-submitted leads (which usually have no deal_value at
+    // creation) would never produce a commission card when moved to
+    // Gagné.
+    const leftWon = current.status === 'won' && status && status !== 'won';
+
+    if (status === 'won') {
       const { rows: [partner] } = await client.query(
-        `SELECT p.id, p.commission_rate
+        `SELECT p.id, p.name, p.commission_rate
          FROM partners p JOIN referrals r ON r.partner_id = p.id
          WHERE r.id = $1`,
         [req.params.id]
       );
 
       if (partner) {
-        // New commissions start in the approval flow: approval_status
-        // 'pending_approval'. Admin clicks Approve/Reject in
-        // CommissionsPage → flips it to 'approved' (ready for payment)
-        // or 'rejected'. Legacy rows created before this flow stayed
-        // on approval_status='pending' (the column default) and are
-        // treated as already approved.
-        const { rows: [createdCommission] } = await client.query(
-          `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status)
-           VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval')
-           ON CONFLICT (referral_id)
-           DO UPDATE SET amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value
-           RETURNING id, amount, rate, deal_value, created_at`,
-          [req.params.id, partner.id,
-           effectiveDealValue * partner.commission_rate / 100,
-           partner.commission_rate, effectiveDealValue,
-           req.tenantId || null]
+        const rate = parseFloat(partner.commission_rate) || 0;
+        const amount = effectiveDealValue * rate / 100;
+
+        // Look up an existing commission first so we can decide between
+        // INSERT and a status-aware UPDATE: a row that already moved
+        // past pending_approval (awaiting_invoice / pending_validation /
+        // paid) shouldn't get its lifecycle reset by a re-drag onto the
+        // same column.
+        const { rows: [existingCom] } = await client.query(
+          'SELECT id, status FROM commissions WHERE referral_id = $1',
+          [req.params.id]
         );
 
-        const { rows: [partnerUser] } = await client.query(
-          `SELECT u.email, u.full_name FROM users u WHERE u.partner_id = $1 LIMIT 1`,
-          [partner.id]
-        );
-        // deal_won email handled by resend.sendAndLog fire-and-forget below
+        let createdCommission;
+        if (!existingCom) {
+          ({ rows: [createdCommission] } = await client.query(
+            `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status)
+             VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval')
+             RETURNING id, amount, rate, deal_value, created_at`,
+            [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null]
+          ));
+        } else if (existingCom.status === 'pending_approval') {
+          ({ rows: [createdCommission] } = await client.query(
+            `UPDATE commissions
+                SET amount = $2, rate = $3, deal_value = $4
+              WHERE id = $1
+              RETURNING id, amount, rate, deal_value, created_at`,
+            [existingCom.id, amount, rate, effectiveDealValue]
+          ));
+        } else {
+          // Already approved or further along — keep numbers in sync
+          // with the latest deal_value but don't fire the
+          // commission.created webhook (it isn't a fresh creation).
+          ({ rows: [createdCommission] } = await client.query(
+            `UPDATE commissions
+                SET amount = $2, deal_value = $3
+              WHERE id = $1
+              RETURNING id, amount, rate, deal_value, created_at`,
+            [existingCom.id, amount, effectiveDealValue]
+          ));
+        }
 
-        // Outgoing webhook: commission.created
-        sendWebhookEvent(req.tenantId, 'commission.created', {
-          commission_id: createdCommission.id,
-          referral_id: req.params.id,
-          partner_id: partner.id,
-          partner_name: partner.name,
-          amount: parseFloat(createdCommission.amount) || 0,
-          rate: parseFloat(createdCommission.rate) || 0,
-          deal_value: parseFloat(createdCommission.deal_value) || 0,
-          currency: 'EUR',
-          created_at: createdCommission.created_at,
-        });
+        // Outgoing webhook: commission.created (only on the real
+        // first-time creation, not on subsequent value sync updates).
+        if (!existingCom && createdCommission) {
+          sendWebhookEvent(req.tenantId, 'commission.created', {
+            commission_id: createdCommission.id,
+            referral_id: req.params.id,
+            partner_id: partner.id,
+            partner_name: partner.name,
+            amount: parseFloat(createdCommission.amount) || 0,
+            rate: parseFloat(createdCommission.rate) || 0,
+            deal_value: parseFloat(createdCommission.deal_value) || 0,
+            currency: 'EUR',
+            created_at: createdCommission.created_at,
+          });
+        }
       }
+    }
+
+    // Reverse: if the deal moves OUT of 'won' (back to proposition,
+    // contacted, etc.), drop the still-unapproved commission so it
+    // doesn't linger in "À approuver". A commission that already moved
+    // to awaiting_invoice / pending_validation / paid is preserved —
+    // those states represent real-world money flows we can't undo by
+    // dragging a card.
+    if (leftWon) {
+      await client.query(
+        `DELETE FROM commissions
+          WHERE referral_id = $1 AND status = 'pending_approval'`,
+        [req.params.id]
+      );
     }
 
     // Notify partner of status changes
@@ -659,6 +703,10 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
       // prompt. The commission row itself was inserted with
       // approval_status='pending_approval' further up; here we tell
       // the admins there's something waiting for them.
+      // Email/in-app blast still gated on a meaningful deal value —
+      // emailing partners about a 0 € commission would be noise. The
+      // commission row itself was already created above for admin
+      // approval regardless.
       if (status === 'won' && effectiveDealValue > 0) {
         const { rows: [pRow] } = await query('SELECT name, commission_rate FROM partners WHERE id = $1', [current.partner_id]);
         const commissionAmount = Math.round(effectiveDealValue * (parseFloat(pRow?.commission_rate) || 0)) / 100;

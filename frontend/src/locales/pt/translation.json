@@ -2094,6 +2094,9 @@
     "partner_managed_badge": "Gerido pelo parceiro",
     "client_prospect_badge": "Para prospetar",
     "cannot_move_client_lead": "Este lead é gerido pela equipa comercial. Não podes alterar o seu estado.",
+    "managed_by_company": "Gerido pela empresa",
+    "managed_by_you": "Tu geres este lead",
+    "managed_by_company_tooltip": "Gerido pela empresa — só leitura",
     "lead_handling_changed": "Gestão do lead atualizada"
   },
   "commission": {

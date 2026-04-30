@@ -2094,7 +2094,10 @@
     "partner_managed_badge": "Géré par partenaire",
     "client_prospect_badge": "À prospecter",
     "cannot_move_client_lead": "Ce lead est géré par l'équipe commerciale. Vous ne pouvez pas modifier son statut.",
-    "lead_handling_changed": "Gestion du lead mise à jour"
+    "lead_handling_changed": "Gestion du lead mise à jour",
+    "managed_by_company": "Géré par l'entreprise",
+    "managed_by_you": "Vous gérez ce lead",
+    "managed_by_company_tooltip": "Géré par l'entreprise — non modifiable"
   },
   "commission": {
     "pending_approval": "À approuver",

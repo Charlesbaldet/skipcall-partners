@@ -37,8 +37,14 @@ export default function PartnerMyReferrals() {
     setTimeout(() => setToast(null), 3500);
   };
 
+  // Only cards the partner explicitly manages are draggable. Treat
+  // anything else — client_prospect, null, missing field — as
+  // company-managed and locked. Matches the semantic the partner UI
+  // surfaces: "Géré par l'entreprise" → read-only.
+  const canDrag = (r) => r && r.lead_handling === 'partner_managed';
+
   const handleDragStart = (e, r) => {
-    if (r.lead_handling === 'client_prospect') {
+    if (!canDrag(r)) {
       e.preventDefault();
       showToast(t('referral.cannot_move_client_lead'));
       return;
@@ -52,7 +58,7 @@ export default function PartnerMyReferrals() {
     if (!draggedId) return;
     const ref = referrals.find(r => r.id === draggedId);
     if (!ref || ref.stage_id === targetStage.id) { setDraggedId(null); return; }
-    if (ref.lead_handling === 'client_prospect') {
+    if (!canDrag(ref)) {
       setDraggedId(null);
       showToast(t('referral.cannot_move_client_lead'));
       return;
@@ -186,19 +192,24 @@ function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelec
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                 {cards.map(r => {
-                  const locked = r.lead_handling === 'client_prospect';
+                  // Locked === anything that isn't explicitly
+                  // partner_managed: company-managed leads are read-only
+                  // for the partner.
+                  const locked = r.lead_handling !== 'partner_managed';
                   return (
                     <div
                       key={r.id}
                       draggable={!locked}
                       onDragStart={e => onDragStart(e, r)}
                       onClick={() => onSelect(r)}
+                      title={locked ? t('referral.managed_by_company_tooltip') : undefined}
                       style={{
-                        background: '#fff', borderRadius: 12, padding: 14,
-                        cursor: locked ? 'pointer' : 'grab',
+                        background: locked ? '#f8fafc' : '#fff',
+                        borderRadius: 12, padding: 14,
+                        cursor: locked ? 'not-allowed' : 'grab',
                         border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                        opacity: draggedId === r.id ? 0.5 : 1,
+                        boxShadow: locked ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
+                        opacity: draggedId === r.id ? 0.5 : (locked ? 0.75 : 1),
                         transition: 'all 0.15s',
                       }}
                     >
@@ -208,7 +219,7 @@ function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelec
                           ? <Lock size={13} color="#94a3b8" />
                           : <GripVertical size={14} color="#cbd5e1" />}
                       </div>
-                      <LeadHandlingBadge handling={r.lead_handling} />
+                      <LeadHandlingBadge locked={locked} />
                       {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4, marginBottom: 6 }}>{r.prospect_company}</div>}
                       {r.deal_value > 0 && <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</div>}
                     </div>
@@ -224,18 +235,18 @@ function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelec
   );
 }
 
-function LeadHandlingBadge({ handling }) {
+function LeadHandlingBadge({ locked }) {
   const { t } = useTranslation();
-  if (handling === 'client_prospect') {
+  if (locked) {
     return (
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#dbeafe', color: '#2563eb', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-         {t('referral.client_prospect_badge')}
+        {t('referral.managed_by_company')}
       </div>
     );
   }
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#f0fdf4', color: '#059669', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-       {t('referral.partner_managed_badge')}
+      {t('referral.managed_by_you')}
     </div>
   );
 }

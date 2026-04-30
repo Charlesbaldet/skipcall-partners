@@ -2094,6 +2094,9 @@
     "partner_managed_badge": "Vom Partner betreut",
     "client_prospect_badge": "Zu akquirieren",
     "cannot_move_client_lead": "Dieser Lead wird vom Vertriebsteam betreut. Du kannst seinen Status nicht ändern.",
+    "managed_by_company": "Vom Unternehmen betreut",
+    "managed_by_you": "Du betreust diesen Lead",
+    "managed_by_company_tooltip": "Vom Unternehmen betreut — schreibgeschützt",
     "lead_handling_changed": "Lead-Betreuung aktualisiert"
   },
   "commission": {
