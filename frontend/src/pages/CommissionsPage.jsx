@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
-import { fmt, fmtDate } from '../lib/constants';
+import { fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
@@ -630,15 +630,39 @@ export default function CommissionsPage() {
                       </div>
                       <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>{fmtDate(c.created_at)}</div>
 
-                      {scaPending && (
+                      {/* Qonto in-flight status block: only renders
+                          once a payment has been initiated. Tells
+                          the admin where the transfer stands and
+                          links straight to app.qonto.com. */}
+                      {(c.payment_initiated_at || c.qonto_transfer_id) && status !== 'paid' && (
                         <div style={{
                           padding: '8px 10px', borderRadius: 8,
-                          background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e',
+                          background: scaPending ? '#fffbeb' : '#eff6ff',
+                          border: `1px solid ${scaPending ? '#fde68a' : '#bfdbfe'}`,
+                          color: scaPending ? '#92400e' : '#1e40af',
                           fontSize: 11, marginBottom: 8, lineHeight: 1.45,
-                          display: 'flex', alignItems: 'center', gap: 6,
                         }}>
-                          <Clock size={12} className="rb-pulse" />
-                          {t('qonto.sca_pending_card', 'Approuvez le virement dans votre app Qonto')}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <Clock size={12} className={scaPending ? 'rb-pulse' : ''} />
+                            <strong>
+                              {scaPending
+                                ? t('qonto.status_label_sca', 'Statut Qonto : En attente de validation SCA')
+                                : t('qonto.status_label_processing', 'Statut Qonto : En cours de traitement')}
+                            </strong>
+                          </div>
+                          {c.payment_initiated_at && (
+                            <div>
+                              {t('qonto.initiated_on', 'Virement initié le')} {fmtDateTime(c.payment_initiated_at)}
+                            </div>
+                          )}
+                          <a
+                            href="https://app.qonto.com/business-account"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'inline-block', marginTop: 4, color: 'inherit', fontWeight: 700, textDecoration: 'underline' }}
+                          >
+                            {t('qonto.check_on_qonto', 'Vérifier sur Qonto')} →
+                          </a>
                         </div>
                       )}
                       {!scaPending && errBanner && (
@@ -717,6 +741,14 @@ export default function CommissionsPage() {
                           {c.paid_at && (
                             <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>{t('commissions.paid_on')} {fmtDate(c.paid_at)}</div>
                           )}
+                          <a
+                            href="https://app.qonto.com/business-account"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textAlign: 'center', color: '#16a34a', fontWeight: 600, fontSize: 11, textDecoration: 'underline' }}
+                          >
+                            {t('qonto.check_on_qonto', 'Vérifier sur Qonto')} →
+                          </a>
                         </div>
                       )}
                     </div>

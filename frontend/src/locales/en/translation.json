@@ -806,6 +806,12 @@
     "delete": "Delete",
     "saved_ok": "Changes saved",
     "save_error": "Error saving",
+    "deal_value_locked": "Locked",
+    "deal_value_locked_tooltip": "Amount locked — a commission is currently being processed",
+    "deal_value_locked_help": "The amount can no longer be changed — a transfer is in flight for this commission.",
+    "status_locked_tooltip": "Status locked — payment in progress",
+    "error_deal_value_locked": "The amount can no longer be changed — a transfer is in flight for this commission.",
+    "error_commission_locked": "This commission is already being paid, the status cannot be changed.",
     "unit_year": "€ / year",
     "unit_month": "€ / month",
     "value_ph": "Ex: 24000",
@@ -2068,7 +2074,11 @@
     "confirm_sca_hint": "Each transfer will require SCA approval in your Qonto app.",
     "confirm_button_single": "Confirm payment — {{total}}",
     "confirm_button_bulk": "Confirm payment — {{total}}",
-    "confirm_running": "Processing payment…"
+    "confirm_running": "Processing payment…",
+    "status_label_sca": "Qonto status: Awaiting SCA approval",
+    "status_label_processing": "Qonto status: Processing",
+    "initiated_on": "Transfer initiated on",
+    "check_on_qonto": "Check on Qonto"
   },
   "crm": {
     "title": "CRM integration",

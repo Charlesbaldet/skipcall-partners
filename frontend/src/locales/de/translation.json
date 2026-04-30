@@ -806,6 +806,12 @@
     "delete": "Löschen",
     "saved_ok": "Änderungen gespeichert",
     "save_error": "Fehler beim Speichern",
+    "deal_value_locked": "Gesperrt",
+    "deal_value_locked_tooltip": "Betrag gesperrt — Provision wird gerade bearbeitet",
+    "deal_value_locked_help": "Der Betrag kann nicht mehr geändert werden — eine Überweisung ist für diese Provision unterwegs.",
+    "status_locked_tooltip": "Status gesperrt — Zahlung läuft",
+    "error_deal_value_locked": "Der Betrag kann nicht mehr geändert werden — eine Überweisung ist für diese Provision unterwegs.",
+    "error_commission_locked": "Diese Provision wird bereits bezahlt, der Status kann nicht geändert werden.",
     "unit_year": "€ / Jahr",
     "unit_month": "€ / Monat",
     "value_ph": "Bsp.: 24000",
@@ -2068,7 +2074,11 @@
     "confirm_sca_hint": "Jede Überweisung muss in deiner Qonto-App per SCA bestätigt werden.",
     "confirm_button_single": "Zahlung bestätigen — {{total}}",
     "confirm_button_bulk": "Zahlung bestätigen — {{total}}",
-    "confirm_running": "Zahlung wird verarbeitet…"
+    "confirm_running": "Zahlung wird verarbeitet…",
+    "status_label_sca": "Qonto-Status: Wartet auf SCA-Bestätigung",
+    "status_label_processing": "Qonto-Status: In Bearbeitung",
+    "initiated_on": "Überweisung initiiert am",
+    "check_on_qonto": "In Qonto prüfen"
   },
   "crm": {
     "title": "CRM-Integration",

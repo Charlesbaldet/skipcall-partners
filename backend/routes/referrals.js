@@ -119,6 +119,21 @@ router.get('/:id', async (req, res) => {
       return res.status(403).json({ error: 'AccÃ¨s interdit' });
     }
 
+    // Surface whether the deal_value / status is currently locked
+    // by an in-flight commission so the frontend can grey out the
+    // editor without a second round-trip. Mirrors the same guard
+    // applied in PUT /:id.
+    const { rows: lockingComm } = await query(
+      `SELECT id, status FROM commissions
+        WHERE referral_id = $1
+          AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
+        ORDER BY created_at DESC LIMIT 1`,
+      [req.params.id]
+    );
+    const referral = rows[0];
+    referral.deal_value_locked = lockingComm.length > 0;
+    referral.locking_commission_status = lockingComm[0]?.status || null;
+
     // Get activity log
     const { rows: activities } = await query(
       `SELECT ra.*, u.full_name as user_name
@@ -129,7 +144,7 @@ router.get('/:id', async (req, res) => {
       [req.params.id]
     );
 
-    res.json({ referral: rows[0], activities });
+    res.json({ referral, activities });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
@@ -480,8 +495,55 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     }
 
     if (deal_value !== undefined && deal_value !== current.deal_value) {
+      // Once a commission has moved past pending_approval (i.e. a
+      // payment is in flight via Qonto), the deal_value MUST stay
+      // frozen — otherwise the auto-recompute below would change the
+      // partner's commission amount mid-transfer and create a money
+      // mismatch with what's been or is being wired out.
+      const { rows: comm } = await client.query(
+        `SELECT id, status FROM commissions
+          WHERE referral_id = $1
+            AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
+          LIMIT 1`,
+        [req.params.id]
+      );
+      if (comm.length > 0) {
+        await client.query('ROLLBACK');
+        client.release();
+        return res.status(400).json({
+          error: 'deal_value_locked',
+          message: 'Le montant ne peut plus être modifié car une commission est déjà en cours de traitement.',
+          commission_status: comm[0].status,
+        });
+      }
       updates.deal_value = deal_value;
       activities.push({ action: 'value_updated', old_value: String(current.deal_value), new_value: String(deal_value) });
+    }
+
+    // Symmetric guard: blocking the user from dragging a card OUT of
+    // the won column once a commission has crossed pending_approval.
+    // Letting them do so would leave a paid commission attached to a
+    // referral that's no longer "won" — confusing for everyone and
+    // bad for accounting.
+    const movingOutOfWon = (status && status !== 'won' && current.status === 'won')
+      || (stage_id && stage_id !== current.stage_id && current.status === 'won');
+    if (movingOutOfWon) {
+      const { rows: comm } = await client.query(
+        `SELECT id, status FROM commissions
+          WHERE referral_id = $1
+            AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
+          LIMIT 1`,
+        [req.params.id]
+      );
+      if (comm.length > 0) {
+        await client.query('ROLLBACK');
+        client.release();
+        return res.status(400).json({
+          error: 'commission_locked',
+          message: 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.',
+          commission_status: comm[0].status,
+        });
+      }
     }
 
     if (engagement && engagement !== current.engagement) {

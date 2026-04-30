@@ -806,6 +806,12 @@
     "delete": "Elimina",
     "saved_ok": "Modifiche salvate",
     "save_error": "Errore durante il salvataggio",
+    "deal_value_locked": "Bloccato",
+    "deal_value_locked_tooltip": "Importo bloccato — commissione in corso di elaborazione",
+    "deal_value_locked_help": "L'importo non può più essere modificato — un bonifico è in corso per questa commissione.",
+    "status_locked_tooltip": "Stato bloccato — pagamento in corso",
+    "error_deal_value_locked": "L'importo non può più essere modificato — un bonifico è in corso per questa commissione.",
+    "error_commission_locked": "Questa commissione è già in pagamento, lo stato non può essere modificato.",
     "unit_year": "€ / anno",
     "unit_month": "€ / mese",
     "value_ph": "Es: 24000",
@@ -2068,7 +2074,11 @@
     "confirm_sca_hint": "Ogni bonifico richiederà una validazione SCA nell'app Qonto.",
     "confirm_button_single": "Conferma il pagamento — {{total}}",
     "confirm_button_bulk": "Conferma il pagamento — {{total}}",
-    "confirm_running": "Pagamento in corso…"
+    "confirm_running": "Pagamento in corso…",
+    "status_label_sca": "Stato Qonto: In attesa di convalida SCA",
+    "status_label_processing": "Stato Qonto: In elaborazione",
+    "initiated_on": "Bonifico avviato il",
+    "check_on_qonto": "Verifica su Qonto"
   },
   "crm": {
     "title": "Integrazione CRM",

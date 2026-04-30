@@ -806,6 +806,12 @@
     "delete": "Supprimer",
     "saved_ok": "Modifications enregistrées",
     "save_error": "Erreur lors de la sauvegarde",
+    "deal_value_locked": "Verrouillé",
+    "deal_value_locked_tooltip": "Montant verrouillé — commission en cours de traitement",
+    "deal_value_locked_help": "Le montant ne peut plus être modifié — un virement est en cours pour cette commission.",
+    "status_locked_tooltip": "Statut verrouillé — commission en cours de paiement",
+    "error_deal_value_locked": "Le montant ne peut plus être modifié — un virement est en cours pour cette commission.",
+    "error_commission_locked": "Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.",
     "unit_year": "€ / an",
     "unit_month": "€ / mois",
     "value_ph": "Ex: 24000",
@@ -2068,7 +2074,11 @@
     "confirm_sca_hint": "Chaque virement nécessitera une validation SCA dans votre application Qonto.",
     "confirm_button_single": "Confirmer le paiement — {{total}}",
     "confirm_button_bulk": "Confirmer le paiement — {{total}}",
-    "confirm_running": "Paiement en cours…"
+    "confirm_running": "Paiement en cours…",
+    "status_label_sca": "Statut Qonto : En attente de validation SCA",
+    "status_label_processing": "Statut Qonto : En cours de traitement",
+    "initiated_on": "Virement initié le",
+    "check_on_qonto": "Vérifier sur Qonto"
   },
   "crm": {
     "title": "Intégration CRM",

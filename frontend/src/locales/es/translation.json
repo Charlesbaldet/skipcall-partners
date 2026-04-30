@@ -806,6 +806,12 @@
     "delete": "Eliminar",
     "saved_ok": "Cambios guardados",
     "save_error": "Error al guardar",
+    "deal_value_locked": "Bloqueado",
+    "deal_value_locked_tooltip": "Importe bloqueado — comisión en curso de tratamiento",
+    "deal_value_locked_help": "El importe ya no puede modificarse — hay una transferencia en curso para esta comisión.",
+    "status_locked_tooltip": "Estado bloqueado — pago en curso",
+    "error_deal_value_locked": "El importe ya no puede modificarse — hay una transferencia en curso para esta comisión.",
+    "error_commission_locked": "Esta comisión ya se está pagando, el estado no puede modificarse.",
     "unit_year": "€ / año",
     "unit_month": "€ / mes",
     "value_ph": "Ej: 24000",
@@ -2068,7 +2074,11 @@
     "confirm_sca_hint": "Cada transferencia requerirá una validación SCA en tu app Qonto.",
     "confirm_button_single": "Confirmar el pago — {{total}}",
     "confirm_button_bulk": "Confirmar el pago — {{total}}",
-    "confirm_running": "Procesando el pago…"
+    "confirm_running": "Procesando el pago…",
+    "status_label_sca": "Estado Qonto: A la espera de validación SCA",
+    "status_label_processing": "Estado Qonto: En proceso",
+    "initiated_on": "Transferencia iniciada el",
+    "check_on_qonto": "Comprobar en Qonto"
   },
   "crm": {
     "title": "Integración CRM",

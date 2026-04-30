@@ -806,6 +806,12 @@
     "delete": "Verwijderen",
     "saved_ok": "Wijzigingen opgeslagen",
     "save_error": "Fout bij opslaan",
+    "deal_value_locked": "Vergrendeld",
+    "deal_value_locked_tooltip": "Bedrag vergrendeld — commissie wordt verwerkt",
+    "deal_value_locked_help": "Het bedrag kan niet meer worden gewijzigd — er is een overschrijving onderweg voor deze commissie.",
+    "status_locked_tooltip": "Status vergrendeld — betaling wordt verwerkt",
+    "error_deal_value_locked": "Het bedrag kan niet meer worden gewijzigd — er is een overschrijving onderweg voor deze commissie.",
+    "error_commission_locked": "Deze commissie wordt al betaald, de status kan niet worden gewijzigd.",
     "unit_year": "€ / jaar",
     "unit_month": "€ / maand",
     "value_ph": "Bijv.: 24000",
@@ -2068,7 +2074,11 @@
     "confirm_sca_hint": "Elke overschrijving vereist SCA-goedkeuring in je Qonto-app.",
     "confirm_button_single": "Betaling bevestigen — {{total}}",
     "confirm_button_bulk": "Betaling bevestigen — {{total}}",
-    "confirm_running": "Betaling wordt verwerkt…"
+    "confirm_running": "Betaling wordt verwerkt…",
+    "status_label_sca": "Qonto-status: Wacht op SCA-goedkeuring",
+    "status_label_processing": "Qonto-status: Wordt verwerkt",
+    "initiated_on": "Overschrijving gestart op",
+    "check_on_qonto": "Controleren op Qonto"
   },
   "crm": {
     "title": "CRM-integratie",

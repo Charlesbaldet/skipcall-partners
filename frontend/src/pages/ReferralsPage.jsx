@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
-import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical } from 'lucide-react';
+import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
@@ -128,7 +128,14 @@ export default function ReferralsPage() {
     try {
       const { referral } = await api.updateReferral(draggedId, { stage_id: targetStage.id, deal_value: ref.deal_value || 0, engagement: ref.engagement || 'monthly' });
       setReferrals(prev => prev.map(r => r.id === draggedId ? { ...r, ...referral } : r));
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      const code = err?.data?.error || err?.message;
+      const friendly = err?.data?.message
+        || (code === 'commission_locked' && t('referrals.error_commission_locked', 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.'))
+        || err.message
+        || 'Error';
+      alert(friendly);
+    }
     setDraggedId(null);
   };
 
@@ -434,7 +441,16 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
       setSaveToast({ type: 'success', text: t('referrals.saved_ok') });
       setTimeout(() => setSaveToast(null), 2500);
     } catch (e) {
-      setSaveToast({ type: 'error', text: e.message || t('referrals.save_error') });
+      // The backend uses `error` as a short code and `message` for
+      // the human-readable sentence (deal_value_locked /
+      // commission_locked are the two we map here). Fall back to
+      // the generic save_error otherwise.
+      const code = e?.data?.error || e?.message;
+      const friendly = e?.data?.message
+        || (code === 'deal_value_locked' && t('referrals.error_deal_value_locked', 'Le montant ne peut plus être modifié — un virement est en cours pour cette commission.'))
+        || (code === 'commission_locked' && t('referrals.error_commission_locked', 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.'))
+        || t('referrals.save_error');
+      setSaveToast({ type: 'error', text: friendly });
     }
     setSaving(false);
   };
@@ -499,16 +515,29 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   ).map(opt => {
                     const active = opt.isStage ? editStageId === opt.id : editStatus === opt.slug;
                     const bg = opt.isStage ? (opt.color + '15') : opt.bg;
+                    // Status locked when a commission is past
+                    // pending_approval: only the currently-active
+                    // (won) stage stays clickable so the user can't
+                    // walk the card out of "Gagné" mid-payment.
+                    const stageLocked = !!referral.deal_value_locked && !active;
                     return (
                       <button
                         key={opt.id}
-                        onClick={() => opt.isStage ? pickStage(opt.stage) : (setEditStageId(null), setEditStatus(opt.slug))}
+                        onClick={() => {
+                          if (stageLocked) return;
+                          if (opt.isStage) pickStage(opt.stage);
+                          else { setEditStageId(null); setEditStatus(opt.slug); }
+                        }}
+                        disabled={stageLocked}
+                        title={stageLocked ? t('referrals.status_locked_tooltip', 'Statut verrouillé — commission en cours de paiement') : undefined}
                         style={{
                           padding: '8px 14px', borderRadius: 10,
                           border: active ? `2px solid ${opt.color}` : '2px solid #e2e8f0',
                           background: active ? bg : '#fff',
+                          opacity: stageLocked ? 0.45 : 1,
                           color: opt.color,
-                          fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                          fontWeight: 600, fontSize: 12,
+                          cursor: stageLocked ? 'not-allowed' : 'pointer',
                         }}
                       >
                         {opt.label}
@@ -518,8 +547,36 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                 </div>
               </div>
               <div style={{ marginBottom: 24 }}>
-                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{rLabel} ({rUnit})</div>
-                <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} placeholder={t('referrals.value_ph')} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 600, color: '#0f172a', boxSizing: 'border-box' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>
+                  {rLabel} ({rUnit})
+                  {referral.deal_value_locked && (
+                    <span title={t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 8px', marginLeft: 4 }}>
+                      <Lock size={11} /> {t('referrals.deal_value_locked', 'Verrouillé')}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  placeholder={t('referrals.value_ph')}
+                  disabled={referral.deal_value_locked}
+                  title={referral.deal_value_locked ? t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement') : undefined}
+                  style={{
+                    width: '100%', padding: '12px 16px', borderRadius: 12,
+                    border: '2px solid #e2e8f0',
+                    fontSize: 16, fontWeight: 600,
+                    color: referral.deal_value_locked ? '#94a3b8' : '#0f172a',
+                    background: referral.deal_value_locked ? '#f8fafc' : '#fff',
+                    cursor: referral.deal_value_locked ? 'not-allowed' : 'text',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {referral.deal_value_locked && (
+                  <div style={{ marginTop: 6, fontSize: 12, color: '#92400e' }}>
+                    {t('referrals.deal_value_locked_help', 'Le montant ne peut plus être modifié — un virement est en cours pour cette commission.')}
+                  </div>
+                )}
               </div>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('referrals.engagement')}</div>
