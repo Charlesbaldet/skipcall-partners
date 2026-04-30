@@ -192,6 +192,26 @@ function commissionApproved({ partnerName, prospectName, amount, currency, dashb
   });
 }
 
+function commissionPaymentSent({ partnerName, amount, currency, tenantName, dealName, transferReference, transferDateLabel, ibanLast4, dashboardUrl } = {}) {
+  const amt = fmtMoney(amount, currency);
+  const ibanLine = ibanLast4 ? ` (IBAN se terminant par ${ibanLast4})` : '';
+  return renderEmail({
+    subject: `Commission versée — ${amt}${tenantName ? ' — ' + tenantName : ''}`,
+    heading: `Votre commission a été virée`,
+    bodyHtml: `
+      <p>Bonjour ${partnerName || ''},</p>
+      <p>Votre commission de <strong>${amt}</strong>${dealName ? ` pour le deal <strong>${dealName}</strong>` : ''} a été virée sur votre compte${ibanLine}.</p>
+      <div class="highlight">
+        <div style="margin-bottom:6px"><strong>Référence du virement :</strong> ${transferReference || '—'}</div>
+        <div><strong>Date du virement :</strong> ${transferDateLabel || new Date().toLocaleDateString('fr-FR')}</div>
+      </div>
+      <p>Le montant sera visible sur votre compte sous 1 à 2 jours ouvrés.</p>
+      <p>Cordialement,<br/>L'équipe ${tenantName || 'RefBoost'}</p>`,
+    ctaUrl: dashboardUrl || `${FRONTEND}/partner/payments`,
+    ctaLabel: 'Voir mes paiements',
+  });
+}
+
 function commissionRejected({ partnerName, prospectName, reason, dashboardUrl } = {}) {
   return renderEmail({
     subject: `Votre commission pour ${prospectName} nécessite une révision`,
@@ -302,6 +322,7 @@ const PREVIEW_SAMPLES = {
   commissionToApprove: { adminName: 'Charles', partnerName: 'Partner Pro', prospectName: 'Jean Dupont', amount: 1250, currency: '€' },
   commissionApproved: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', amount: 1250, currency: '€' },
   commissionRejected: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', reason: "Le deal n'a pas encore été officiellement signé." },
+  commissionPaymentSent: { partnerName: 'Partner Pro', amount: 1250, currency: '€', tenantName: 'Acme Partenaires', dealName: 'Dupont SARL', transferReference: 'REFBOOSTCOMABCDEF123456', transferDateLabel: '30 avril 2026', ibanLast4: '0185' },
   paymentFailure: { recipientName: 'Charles', planLabel: 'Pro' },
   subscriptionCancelled: { recipientName: 'Charles', endDate: '30 avril 2026' },
   passwordReset: { recipientName: 'Charles', resetUrl: 'https://refboost.io/reset/sample-token' },
@@ -318,6 +339,7 @@ const TEMPLATES = {
   commissionToApprove,
   commissionApproved,
   commissionRejected,
+  commissionPaymentSent,
   paymentFailure,
   subscriptionCancelled,
   passwordReset,

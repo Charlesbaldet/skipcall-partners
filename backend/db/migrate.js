@@ -364,6 +364,45 @@ async function runMigrations() {
   // ─── v21: Partner bank_name column for the new Settings tab ───
   await query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS bank_name TEXT`);
 
+  // ─── v22: Qonto banking integration ─────────────────────────────────
+  // Per-tenant payment provider config (currently Qonto-only). Stored
+  // separately from crm_integrations so a CRM disconnect can never
+  // accidentally drop a banking connection. Tokens come from the
+  // OAuth code exchange; bank_account_id is what the admin picks
+  // among the organization's accounts to debit transfers from.
+  await query(`
+    CREATE TABLE IF NOT EXISTS payment_integrations (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      provider TEXT NOT NULL DEFAULT 'qonto',
+      access_token TEXT,
+      refresh_token TEXT,
+      token_expires_at TIMESTAMPTZ,
+      organization_slug TEXT,
+      bank_account_id TEXT,
+      bank_account_iban TEXT,
+      bank_account_label TEXT,
+      is_active BOOLEAN DEFAULT TRUE,
+      connected_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (tenant_id, provider)
+    )
+  `);
+  await query(`CREATE INDEX IF NOT EXISTS idx_payment_integrations_tenant ON payment_integrations(tenant_id) WHERE is_active = TRUE`);
+
+  // Per-commission Qonto bookkeeping. The transfer_id is the link to
+  // the SEPA transfer in Qonto so we can poll its status; the rest is
+  // surface for the admin/partner UI (so we don't have to refetch
+  // everything from Qonto every render).
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_transfer_id TEXT`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_attachment_id TEXT`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_initiated_at TIMESTAMPTZ`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_reference TEXT`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_error TEXT`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_commissions_qonto_transfer ON commissions(qonto_transfer_id) WHERE qonto_transfer_id IS NOT NULL`);
+  console.log('[payments] v22 Qonto integration tables ready');
+
   console.log(' Migrations completed');
 
   } catch (err) {

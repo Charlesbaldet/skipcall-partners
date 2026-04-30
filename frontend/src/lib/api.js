@@ -155,6 +155,18 @@ class ApiClient {
   getMyBankInfo() { return this.request('/partner/bank-info'); }
   updateMyBankInfo(data) { return this.request('/partner/bank-info', { method: 'PUT', body: JSON.stringify(data) }); }
 
+  // Qonto
+  getQontoStatus() { return this.request('/integrations/qonto/status'); }
+  getQontoConnectUrl() { return this.request('/integrations/qonto/connect'); }
+  getQontoBankAccounts() { return this.request('/integrations/qonto/bank-accounts'); }
+  selectQontoBankAccount(payload) { return this.request('/integrations/qonto/bank-account', { method: 'PUT', body: JSON.stringify(payload) }); }
+  disconnectQonto() { return this.request('/integrations/qonto/disconnect', { method: 'POST' }); }
+
+  // Qonto payments
+  payCommissionViaQonto(id) { return this.request(`/commissions/${id}/pay-qonto`, { method: 'POST' }); }
+  payCommissionsBulk(ids) { return this.request('/commissions/pay-bulk', { method: 'POST', body: JSON.stringify({ commission_ids: ids }) }); }
+  pollQontoTransfers() { return this.request('/commissions/poll-qonto', { method: 'POST' }); }
+
   // Referrals
   getReferrals(params = {}) { const qs = new URLSearchParams(params).toString(); return this.request(`/referrals?${qs}`); }
   getReferral(id) { return this.request(`/referrals/${id}`); }

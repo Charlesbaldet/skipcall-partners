@@ -1,0 +1,306 @@
+// Qonto Banking integration service.
+//
+// Wraps the OAuth flow and the subset of the thirdparty.qonto.com API
+// we need to drive automated commission payments:
+//   1. exchange OAuth code → tokens
+//   2. refresh tokens before they expire
+//   3. list the connected organization's bank accounts (so the admin
+//      picks which one to debit)
+//   4. upload the partner's invoice PDF as a Qonto attachment
+//   5. look up an existing trusted beneficiary by IBAN
+//   6. POST a single SEPA transfer or POST a bulk SEPA transfer
+//   7. fetch a transfer's status (so the polling worker can flip the
+//      commission to 'paid' once Qonto reports completion)
+//
+// Defensive note: Qonto's API requires SCA for untrusted beneficiaries,
+// so creating a transfer to a brand-new IBAN requires the admin to
+// approve it inside their Qonto app. We expose that nuance to the
+// caller via the `requires_sca` field on the transfer response.
+
+const { query } = require('../db');
+
+const OAUTH_AUTHORIZE_URL = 'https://oauth.qonto.com/oauth2/auth';
+const OAUTH_TOKEN_URL = 'https://oauth.qonto.com/oauth2/token';
+const API_BASE = 'https://thirdparty.qonto.com/v2';
+const SCOPES = ['payment.write', 'organization.read', 'attachment.write', 'beneficiary.read'];
+
+function clientId() { return process.env.QONTO_CLIENT_ID || ''; }
+function clientSecret() { return process.env.QONTO_CLIENT_SECRET || ''; }
+
+function authorizeUrl(state, redirectUri) {
+  if (!clientId()) return null;
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: clientId(),
+    redirect_uri: redirectUri,
+    scope: SCOPES.join(' '),
+    state,
+  });
+  return `${OAUTH_AUTHORIZE_URL}?${params.toString()}`;
+}
+
+async function exchangeCode(code, redirectUri) {
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: redirectUri,
+    client_id: clientId(),
+    client_secret: clientSecret(),
+  });
+  const r = await fetch(OAUTH_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => '');
+    throw new Error(`Qonto token exchange failed (${r.status}): ${txt.slice(0, 300)}`);
+  }
+  return r.json(); // { access_token, refresh_token, expires_in, token_type }
+}
+
+async function refreshAccessToken(refreshToken) {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: clientId(),
+    client_secret: clientSecret(),
+  });
+  const r = await fetch(OAUTH_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => '');
+    throw new Error(`Qonto token refresh failed (${r.status}): ${txt.slice(0, 300)}`);
+  }
+  return r.json();
+}
+
+// Returns a fresh access_token for the tenant, refreshing if it's
+// within 60 s of expiry. Persists the new token + expiry back into
+// payment_integrations so the next call doesn't re-refresh.
+async function getAccessToken(tenantId) {
+  const { rows } = await query(
+    `SELECT id, access_token, refresh_token, token_expires_at
+       FROM payment_integrations
+      WHERE tenant_id = $1 AND provider = 'qonto' AND is_active = TRUE`,
+    [tenantId]
+  );
+  const integ = rows[0];
+  if (!integ) throw new Error('qonto_not_connected');
+
+  const now = Date.now();
+  const expiresAt = integ.token_expires_at ? new Date(integ.token_expires_at).getTime() : 0;
+  if (integ.access_token && expiresAt > now + 60_000) {
+    return integ.access_token;
+  }
+  if (!integ.refresh_token) {
+    // Token is expired and we can't refresh — force a reconnect.
+    throw new Error('qonto_reconnect_required');
+  }
+
+  const tokens = await refreshAccessToken(integ.refresh_token);
+  const newExpiresAt = new Date(Date.now() + (tokens.expires_in || 3600) * 1000);
+  await query(
+    `UPDATE payment_integrations
+        SET access_token = $2,
+            refresh_token = COALESCE($3, refresh_token),
+            token_expires_at = $4,
+            updated_at = NOW()
+      WHERE id = $1`,
+    [integ.id, tokens.access_token, tokens.refresh_token || null, newExpiresAt]
+  );
+  return tokens.access_token;
+}
+
+// Generic authenticated fetch with one auto-retry on 401 (token may
+// have been revoked between getAccessToken and the actual call).
+async function api(tenantId, path, init = {}) {
+  const token = await getAccessToken(tenantId);
+  const url = path.startsWith('http') ? path : API_BASE + path;
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+    ...(init.headers || {}),
+  };
+  if (init.body && !headers['Content-Type'] && !(init.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const r = await fetch(url, { ...init, headers });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => '');
+    const err = new Error(`Qonto ${init.method || 'GET'} ${path} failed (${r.status}): ${txt.slice(0, 500)}`);
+    err.status = r.status;
+    err.body = txt;
+    throw err;
+  }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+async function fetchOrganization(tenantId) {
+  // Per Qonto docs the v2/organization endpoint returns the org +
+  // bank_accounts array. The exact field for the bank account id is
+  // `id` (UUID) and for the IBAN is `iban`.
+  return api(tenantId, '/organization');
+}
+
+async function listBankAccounts(tenantId) {
+  const data = await fetchOrganization(tenantId);
+  const org = data?.organization || data;
+  return {
+    organization_slug: org?.slug || org?.legal_name || null,
+    bank_accounts: (org?.bank_accounts || []).map(b => ({
+      id: b.id,
+      slug: b.slug,
+      iban: b.iban,
+      bic: b.bic,
+      currency: b.currency,
+      balance: b.balance,
+      label: b.name || b.slug || b.iban,
+    })),
+  };
+}
+
+async function findBeneficiaryByIban(tenantId, iban) {
+  if (!iban) return null;
+  const cleanIban = iban.replace(/\s+/g, '').toUpperCase();
+  try {
+    const data = await api(tenantId, `/beneficiaries?iban=${encodeURIComponent(cleanIban)}`);
+    const list = data?.beneficiaries || [];
+    return list.find(b => (b.iban || '').replace(/\s+/g, '').toUpperCase() === cleanIban) || null;
+  } catch (e) {
+    // 404 / scope issues fall through to "no trusted beneficiary"
+    return null;
+  }
+}
+
+// Multipart upload of an invoice PDF that's already in memory (we
+// store the partner's invoice as a base64 data URL in the DB; the
+// caller has already decoded it into a Buffer).
+async function uploadAttachment(tenantId, { buffer, filename, contentType }) {
+  const token = await getAccessToken(tenantId);
+  const fd = new FormData();
+  // Node 20+ has global FormData + Blob. Fall back gracefully.
+  const blob = new Blob([buffer], { type: contentType || 'application/pdf' });
+  fd.append('file', blob, filename || 'invoice.pdf');
+  const r = await fetch(`${API_BASE}/attachments`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd,
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => '');
+    throw new Error(`Qonto attachment upload failed (${r.status}): ${txt.slice(0, 300)}`);
+  }
+  const data = await r.json();
+  return data?.attachment || data;
+}
+
+function buildReference(commissionId) {
+  // Qonto SEPA references must be ≤ 35 alphanumeric chars.
+  const short = String(commissionId).replace(/-/g, '').slice(0, 12).toUpperCase();
+  return `REFBOOSTCOM${short}`.slice(0, 35);
+}
+
+async function createSingleTransfer(tenantId, {
+  commissionId,
+  debitBankAccountId,
+  amount,
+  partnerName,
+  dealName,
+  iban,
+  beneficiaryName,
+  beneficiaryId, // optional, when we found a trusted match
+  attachmentIds = [],
+}) {
+  const reference = buildReference(commissionId);
+  const note = `Commission partenaire — ${partnerName || ''}${dealName ? ' — ' + dealName : ''}`.slice(0, 140);
+
+  const transfer = {
+    reference,
+    note,
+    currency: 'EUR',
+    amount: Number(amount).toFixed(2),
+  };
+  if (debitBankAccountId) transfer.debit_bank_account_id = debitBankAccountId;
+  if (beneficiaryId) {
+    transfer.beneficiary_id = beneficiaryId;
+  } else {
+    // Inline beneficiary — Qonto will create an untrusted one and
+    // require the admin to approve via SCA. The response carries
+    // requires_sca so the caller can surface that.
+    transfer.beneficiary = {
+      iban: iban.replace(/\s+/g, '').toUpperCase(),
+      name: beneficiaryName,
+    };
+  }
+  if (attachmentIds.length) transfer.attachment_ids = attachmentIds;
+
+  const data = await api(tenantId, '/sepa/transfers', {
+    method: 'POST',
+    body: JSON.stringify({ transfer }),
+  });
+  return {
+    transfer: data?.transfer || data,
+    requires_sca: !!(data?.transfer?.requires_sca || data?.requires_sca),
+    reference,
+  };
+}
+
+async function createBulkTransfer(tenantId, {
+  debitBankAccountId,
+  transfers, // [{ commissionId, amount, iban, beneficiaryName, partnerName, dealName, attachmentIds }]
+}) {
+  const items = transfers.map(t => {
+    const item = {
+      reference: buildReference(t.commissionId),
+      note: `Commission partenaire — ${t.partnerName || ''}${t.dealName ? ' — ' + t.dealName : ''}`.slice(0, 140),
+      currency: 'EUR',
+      amount: Number(t.amount).toFixed(2),
+    };
+    if (t.beneficiaryId) item.beneficiary_id = t.beneficiaryId;
+    else item.beneficiary = { iban: t.iban.replace(/\s+/g, '').toUpperCase(), name: t.beneficiaryName };
+    if (t.attachmentIds && t.attachmentIds.length) item.attachment_ids = t.attachmentIds;
+    return item;
+  });
+
+  const body = { bulk_transfer: { transfers: items } };
+  if (debitBankAccountId) body.bulk_transfer.debit_bank_account_id = debitBankAccountId;
+
+  const data = await api(tenantId, '/sepa/bulk_transfers', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  // Qonto returns the list of created transfers (id + status). Map
+  // them positionally back to the input commissions.
+  const created = data?.transfers || data?.bulk_transfer?.transfers || [];
+  return {
+    bulk_id: data?.bulk_transfer?.id || data?.id || null,
+    transfers: created,
+    requires_sca: !!(data?.requires_sca || data?.bulk_transfer?.requires_sca),
+  };
+}
+
+async function getTransfer(tenantId, transferId) {
+  const data = await api(tenantId, `/sepa/transfers/${transferId}`);
+  return data?.transfer || data;
+}
+
+module.exports = {
+  authorizeUrl,
+  exchangeCode,
+  refreshAccessToken,
+  getAccessToken,
+  fetchOrganization,
+  listBankAccounts,
+  findBeneficiaryByIban,
+  uploadAttachment,
+  createSingleTransfer,
+  createBulkTransfer,
+  getTransfer,
+  buildReference,
+  SCOPES,
+};

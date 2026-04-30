@@ -920,10 +920,207 @@ function CrmIntegrations() {
           )}
       </div>
 
+      {/* Qonto banking integration — pays partner commissions
+          automatically. Sits next to the CRM cards but in its own
+          component so the connect/select-account flow doesn't tangle
+          with CRM state. */}
+      <div style={{ height: 1, background: '#e2e8f0', margin: '24px 0' }} />
+      <QontoSection />
+
       {/* Outgoing webhooks — shares the Intégrations tab with the CRM
           block above. Lives on its own component so we can keep
           SettingsPage lean. */}
       <WebhooksSection />
+    </div>
+  );
+}
+
+// ═══ QONTO BANKING (Intégrations) ═══
+function QontoSection() {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [accounts, setAccounts] = useState([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [err, setErr] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const s = await api.getQontoStatus();
+      setStatus(s);
+    } catch (e) {
+      setErr(e.message);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  // Pick up the OAuth callback redirect ?qonto=connected|error and
+  // surface it inline so the admin sees the result without bouncing
+  // through a full page reload.
+  useEffect(() => {
+    const u = new URL(window.location.href);
+    const flag = u.searchParams.get('qonto');
+    if (flag === 'connected') {
+      setSuccessMsg(t('qonto.connected_ok', 'Qonto connecté.'));
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } else if (flag === 'error') {
+      setErr(t('qonto.connect_error', 'Connexion Qonto échouée.'));
+    }
+    if (flag) {
+      u.searchParams.delete('qonto');
+      window.history.replaceState({}, '', u.toString());
+    }
+  }, [t]);
+
+  const connect = async () => {
+    setBusy(true); setErr('');
+    try {
+      const { url } = await api.getQontoConnectUrl();
+      if (url) window.location.href = url;
+    } catch (e) {
+      setErr(e.message);
+    }
+    setBusy(false);
+  };
+
+  const disconnect = async () => {
+    if (!confirm(t('qonto.disconnect_confirm', 'Déconnecter Qonto ?'))) return;
+    setBusy(true);
+    try { await api.disconnectQonto(); await load(); }
+    catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const openPicker = async () => {
+    setBusy(true); setErr('');
+    try {
+      const data = await api.getQontoBankAccounts();
+      setAccounts(data?.bank_accounts || []);
+      setPickerOpen(true);
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const pickAccount = async (acc) => {
+    setBusy(true); setErr('');
+    try {
+      await api.selectQontoBankAccount({ bank_account_id: acc.id, iban: acc.iban, label: acc.label });
+      setPickerOpen(false);
+      await load();
+      setSuccessMsg(t('qonto.account_selected', 'Compte sélectionné.'));
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  if (loading) return <div style={{ color: '#94a3b8', padding: 16 }}>{t('settings.loading')}</div>;
+
+  const connected = !!status?.connected;
+  const configured = !!status?.configured;
+
+  return (
+    <div>
+      <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Banknote size={16} color="#6366f1" /> {t('qonto.section_title', 'Paiements automatisés')}
+      </h4>
+
+      {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{err}</div>}
+      {successMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{successMsg}</div>}
+
+      <div style={{ padding: 18, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff5d215', color: '#d4a015', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800 }}>Q</div>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{t('qonto.title', 'Qonto')}</div>
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: connected ? '#f0fdf4' : '#f1f5f9', color: connected ? '#059669' : '#64748b' }}>
+            {connected ? t('crm.connected') : t('crm.not_connected')}
+          </span>
+        </div>
+        <p style={{ margin: 0, color: '#64748b', fontSize: 12, lineHeight: 1.55, marginBottom: 12 }}>
+          {t('qonto.description', 'Connectez votre compte Qonto pour payer les commissions automatiquement.')}
+        </p>
+
+        {!configured && (
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 10 }}>
+            {t('qonto.not_configured', 'QONTO_CLIENT_ID non configuré côté serveur.')}
+          </div>
+        )}
+
+        {connected ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {status.organization_slug && (
+              <div style={{ fontSize: 12, color: '#64748b' }}>
+                {t('qonto.organization', 'Organisation')} : <strong style={{ color: '#0f172a' }}>{status.organization_slug}</strong>
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: '#64748b' }}>
+              {t('qonto.debit_account', 'Compte à débiter')} :{' '}
+              {status.bank_account_iban ? (
+                <strong style={{ color: '#0f172a', fontFamily: 'monospace' }}>
+                  {status.bank_account_label || status.bank_account_iban}
+                </strong>
+              ) : (
+                <em style={{ color: '#dc2626' }}>{t('qonto.no_account_selected', 'Aucun compte sélectionné')}</em>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button type="button" onClick={openPicker} disabled={busy} style={btnSecondary}>
+                {t('qonto.choose_account', 'Choisir le compte à débiter')}
+              </button>
+              <button type="button" onClick={disconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+                {t('crm.disconnect')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={connect} disabled={busy || !configured} style={btnPrimary}>
+            {t('crm.connect')}
+          </button>
+        )}
+      </div>
+
+      {pickerOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={() => setPickerOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)' }} />
+          <div style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 480, maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', padding: 24 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
+              {t('qonto.choose_account', 'Choisir le compte à débiter')}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
+              {accounts.length === 0 && (
+                <div style={{ color: '#94a3b8', fontSize: 13, padding: 12 }}>{t('qonto.no_accounts', 'Aucun compte trouvé.')}</div>
+              )}
+              {accounts.map(acc => (
+                <button
+                  key={acc.id}
+                  type="button"
+                  onClick={() => pickAccount(acc)}
+                  disabled={busy}
+                  style={{
+                    textAlign: 'left', padding: '12px 14px', borderRadius: 10,
+                    border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: '#0f172a' }}>{acc.label || acc.slug || acc.iban}</div>
+                  <div style={{ color: '#64748b', fontSize: 12, fontFamily: 'monospace', marginTop: 2 }}>{acc.iban}</div>
+                  {typeof acc.balance !== 'undefined' && (
+                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 2 }}>{acc.currency || 'EUR'} · {acc.balance}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+              <button onClick={() => setPickerOpen(false)} style={btnSecondary}>{t('common.close', 'Fermer')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

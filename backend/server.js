@@ -41,6 +41,7 @@ const referralRedirectRoutes = require('./routes/referralRedirect');
 const notionRoutes = require('./routes/notion');
 const partnerNotificationPrefsRoutes = require('./routes/partnerNotificationPrefs');
 const partnerBankInfoRoutes = require('./routes/partnerBankInfo');
+const qontoRoutes = require('./routes/qonto');
 const dashboardStatsRoutes = require('./routes/dashboardStats');
 const webhooksRoutes = require('./routes/webhooks');
 
@@ -163,6 +164,7 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/crm/notion', notionRoutes);
 app.use('/api/partner/notification-preferences', partnerNotificationPrefsRoutes);
 app.use('/api/partner/bank-info', partnerBankInfoRoutes);
+app.use('/api/integrations/qonto', qontoRoutes);
 app.use('/api/pipeline-stages', pipelineStagesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api', sitemapRoutes);
@@ -206,6 +208,19 @@ app.listen(PORT, () => {
   // Europe/Paris, iterates every active Notion integration, and
   // fetches the delta since each tenant's last_pull_at watermark.
   startNotionNightlyPull();
+
+  // Qonto transfer polling — every 5 minutes the worker sweeps every
+  // commission with a qonto_transfer_id but no payment_completed_at,
+  // asks Qonto for the current status, and finalizes the ones Qonto
+  // marks as completed (status → 'paid' + proof-of-payment email).
+  // Qonto webhooks aren't yet wired so polling is the source of truth.
+  if (process.env.QONTO_CLIENT_ID) {
+    const { reconcileQontoTransfers } = require('./routes/commissions');
+    const tick = () => reconcileQontoTransfers(null).catch(e => console.error('[qonto.poll] tick error:', e.message));
+    setTimeout(tick, 30_000);          // first sweep ~30 s after boot
+    setInterval(tick, 5 * 60 * 1000);  // then every 5 min
+    console.log('[qonto] transfer polling worker started');
+  }
 });
 
 // force rebuild

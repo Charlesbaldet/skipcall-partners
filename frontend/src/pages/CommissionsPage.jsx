@@ -2,8 +2,24 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+
+// Translate the structured backend error codes (qonto_not_connected,
+// partner_iban_missing, …) into a human-friendly label.
+function qontoErrorLabel(t, code) {
+  if (!code) return null;
+  const map = {
+    qonto_not_connected: t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'),
+    qonto_bank_account_missing: t('qonto.error_bank_account_missing', 'Choisissez le compte Qonto à débiter.'),
+    qonto_reconnect_required: t('qonto.error_reconnect_required', 'Reconnectez Qonto — la session a expiré.'),
+    partner_iban_missing: t('qonto.error_partner_iban_missing', 'Ce partenaire n\'a pas renseigné ses informations bancaires.'),
+    amount_zero: t('qonto.error_amount_zero', 'Montant nul, virement impossible.'),
+    commission_not_payable: t('qonto.error_not_payable', 'Cette commission n\'est pas dans le statut À valider.'),
+    no_eligible_commissions: t('qonto.error_no_eligible', 'Aucune commission éligible au paiement.'),
+  };
+  return map[code] || null;
+}
 
 // New 4-stage lifecycle. Order matters — drives the kanban column order.
 const STATUS_KEYS = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
@@ -37,14 +53,25 @@ export default function CommissionsPage() {
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
+  const [qontoStatus, setQontoStatus] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [refreshingPolls, setRefreshingPolls] = useState(false);
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
 
   const reload = async () => {
-    const [s, c, mt] = await Promise.all([api.getCommissionsSummary(), api.getCommissions(), api.getMyTenant()]);
+    const [s, c, mt, q] = await Promise.all([
+      api.getCommissionsSummary(),
+      api.getCommissions(),
+      api.getMyTenant(),
+      api.getQontoStatus().catch(() => ({ connected: false })),
+    ]);
     setMyTenant(mt && (mt.tenant || mt));
     setSummary(s.summary); setCommissions(c.commissions);
     setTotals({ pending: c.totalPending, paid: c.totalPaid });
+    setQontoStatus(q);
   };
 
   useEffect(() => { reload().catch(console.error).finally(() => setLoading(false)); }, []);
@@ -94,6 +121,82 @@ export default function CommissionsPage() {
     try { await api.updateCommission(payModal.commission.id, 'paid'); setPayModal(null); await reload(); }
     catch (err) { alert(t('commissions.modal_error')); }
     setPaying(false);
+  };
+
+  // Qonto pay flow — initiate the SEPA transfer via the connected Qonto
+  // account. The commission stays in pending_validation; the polling
+  // worker flips it to 'paid' once Qonto confirms the transfer.
+  const handlePayViaQonto = async (commission) => {
+    if (!qontoStatus?.connected) {
+      alert(t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'));
+      return;
+    }
+    setBusyId(commission.id);
+    try {
+      const r = await api.payCommissionViaQonto(commission.id);
+      const msg = r.requires_sca
+        ? t('qonto.transfer_initiated_sca', 'Virement initié — approuvez-le dans votre application Qonto.')
+        : t('qonto.transfer_initiated', 'Virement initié.');
+      alert(msg);
+      await reload();
+    } catch (err) {
+      const code = err?.data?.error || err.message;
+      alert(qontoErrorLabel(t, code) || (err.message || 'Error'));
+    }
+    setBusyId(null);
+  };
+
+  const togglePick = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllPayable = () => {
+    const ids = visibleCommissions
+      .filter(c => c.status === 'pending_validation')
+      .map(c => c.id);
+    setSelected(new Set(ids));
+  };
+
+  const clearSelection = () => setSelected(new Set());
+
+  const handlePayBulk = async () => {
+    if (!qontoStatus?.connected) {
+      alert(t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'));
+      return;
+    }
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(t('qonto.bulk_confirm', { count: ids.length, defaultValue: 'Lancer le paiement de {{count}} commission(s) ?' }))) return;
+    setBulkBusy(true);
+    try {
+      const r = await api.payCommissionsBulk(ids);
+      const okCount = (r.transfers || []).filter(t => !!t.transfer_id).length;
+      setBulkResult({
+        ok: true,
+        message: r.requires_sca
+          ? t('qonto.bulk_initiated_sca', { count: okCount, defaultValue: '{{count}} virement(s) initié(s) — approuvez-les dans Qonto.' })
+          : t('qonto.bulk_initiated', { count: okCount, defaultValue: '{{count}} virement(s) initié(s).' }),
+        skipped: r.skipped || [],
+      });
+      clearSelection();
+      await reload();
+    } catch (err) {
+      const code = err?.data?.error || err.message;
+      setBulkResult({ ok: false, message: qontoErrorLabel(t, code) || err.message || 'Error' });
+    }
+    setBulkBusy(false);
+  };
+
+  const handleRefreshPolls = async () => {
+    setRefreshingPolls(true);
+    try { await api.pollQontoTransfers(); await reload(); }
+    catch (err) { alert(err.message || 'Error'); }
+    setRefreshingPolls(false);
   };
 
   const exportCSV = () => {
@@ -199,6 +302,54 @@ export default function CommissionsPage() {
         </div>
       )}
 
+      {/* Bulk-pay action bar — only renders when at least one
+          pending_validation card is checked. The "Tout payer" button
+          shows independently so the admin can one-click select every
+          payable card. */}
+      {tab === 'pipeline' && qontoStatus?.connected && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+          {selected.size > 0 ? (
+            <>
+              <button onClick={handlePayBulk} disabled={bulkBusy}
+                style={{ padding: '9px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: bulkBusy ? 0.7 : 1 }}>
+                <Send size={14} /> {bulkBusy ? t('common.saving', 'Enregistrement…') : t('qonto.pay_selection', { count: selected.size, defaultValue: 'Payer la sélection ({{count}})' })}
+              </button>
+              <button onClick={clearSelection} disabled={bulkBusy}
+                style={{ padding: '9px 14px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                {t('common.cancel', 'Annuler')}
+              </button>
+            </>
+          ) : (
+            <button onClick={selectAllPayable}
+              style={{ padding: '9px 14px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+              {t('qonto.pay_all', 'Tout payer (À valider)')}
+            </button>
+          )}
+          <button onClick={handleRefreshPolls} disabled={refreshingPolls}
+            style={{ padding: '9px 12px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: refreshingPolls ? 0.7 : 1 }}
+            title={t('qonto.refresh_status_tooltip', 'Rafraîchir les statuts Qonto')}>
+            <RefreshCw size={13} /> {t('qonto.refresh_status', 'Statuts')}
+          </button>
+          {bulkResult && (
+            <div style={{
+              padding: '8px 14px', borderRadius: 10,
+              background: bulkResult.ok ? '#f0fdf4' : '#fef2f2',
+              border: `1px solid ${bulkResult.ok ? '#bbf7d0' : '#fecaca'}`,
+              color: bulkResult.ok ? '#15803d' : '#b91c1c',
+              fontSize: 13, fontWeight: 600,
+            }}>
+              {bulkResult.message}
+              {bulkResult.skipped && bulkResult.skipped.length > 0 && (
+                <span style={{ marginLeft: 6, color: '#92400e', fontWeight: 500 }}>
+                  · {t('qonto.skipped', { count: bulkResult.skipped.length, defaultValue: '{{count}} ignorée(s)' })}
+                </span>
+              )}
+              <button onClick={() => setBulkResult(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', marginLeft: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>×</button>
+            </div>
+          )}
+        </div>
+      )}
+
       {tab === 'pipeline' && viewMode === 'kanban' && (
         <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 400 }}>
           {STATUS_KEYS.map(status => {
@@ -220,10 +371,23 @@ export default function CommissionsPage() {
                   </div>
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
-                  {cards.map(c => (
-                    <div key={c.id} style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  {cards.map(c => {
+                    const isSelected = selected.has(c.id);
+                    const isInitiated = !!c.qonto_transfer_id && !c.payment_completed_at;
+                    return (
+                    <div key={c.id} style={{ background: '#fff', borderRadius: 12, padding: 14, border: isSelected ? `2px solid ${sc.color}` : '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, gap: 6 }}>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{c.partner_name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          {status === 'pending_validation' && qontoStatus?.connected && (
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => togglePick(c.id)}
+                              style={{ cursor: 'pointer', flexShrink: 0 }}
+                            />
+                          )}
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.partner_name}</div>
+                        </div>
                         <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: sc.bg, color: sc.color, whiteSpace: 'nowrap' }}>{sc.label}</span>
                       </div>
                       {c.prospect_name && <div style={{ color: '#475569', fontSize: 12, marginBottom: 8 }}>{c.prospect_name}{c.prospect_company ? ' · ' + c.prospect_company : ''}</div>}
@@ -232,6 +396,12 @@ export default function CommissionsPage() {
                         <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.rate}% · {fmt(c.deal_value)}</span>
                       </div>
                       <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>{fmtDate(c.created_at)}</div>
+
+                      {c.payment_error && (
+                        <div style={{ padding: '6px 10px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
+                          {c.payment_error}
+                        </div>
+                      )}
 
                       {status === 'pending_approval' && (
                         <div style={{ display: 'flex', gap: 6 }}>
@@ -255,21 +425,38 @@ export default function CommissionsPage() {
                           {c.has_invoice && (
                             <button onClick={() => handleDownloadInvoice(c.id)}
                               style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                              <Download size={12} /> {t('commission.download_invoice')}
+                              <Download size={12} /> {t('commission.view_invoice', 'Voir la facture')}
                             </button>
                           )}
-                          <button onClick={() => handlePayClick(c)}
-                            style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                            <CreditCard size={12} /> {t('commission.validate_payment')}
-                          </button>
+                          {isInitiated ? (
+                            <div style={{ padding: '7px 10px', borderRadius: 8, background: '#eef2ff', color: '#4338ca', fontSize: 11, textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                              <Send size={12} /> {t('qonto.transfer_in_progress', 'Virement en cours')}
+                            </div>
+                          ) : qontoStatus?.connected ? (
+                            <button onClick={() => handlePayViaQonto(c)} disabled={busyId === c.id}
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
+                              <Send size={12} /> {t('qonto.pay', 'Payer')}
+                            </button>
+                          ) : (
+                            <button onClick={() => handlePayClick(c)}
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                              <CreditCard size={12} /> {t('commission.validate_payment')}
+                            </button>
+                          )}
                         </div>
                       )}
                       {status === 'paid' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {c.payment_reference && (
+                            <div style={{ padding: '6px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 11, color: '#475569' }}>
+                              <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('qonto.transfer_reference', 'Réf. virement')}</div>
+                              <div style={{ fontFamily: 'monospace', color: '#0f172a', wordBreak: 'break-all' }}>{c.payment_reference}</div>
+                            </div>
+                          )}
                           {c.has_invoice && (
                             <button onClick={() => handleDownloadInvoice(c.id)}
                               style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                              <Download size={12} /> {t('commission.download_invoice')}
+                              <Download size={12} /> {t('qonto.payment_proof', 'Preuve de virement')}
                             </button>
                           )}
                           {c.paid_at && (
@@ -278,7 +465,8 @@ export default function CommissionsPage() {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                   {cards.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: '#cbd5e1', fontSize: 13 }}>{t('commissions.no_commission')}</div>}
                   {hasMore && (
                     <button onClick={() => setComLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
