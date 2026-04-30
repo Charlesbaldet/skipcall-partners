@@ -14,11 +14,19 @@ const qonto = require('../services/qontoService');
 const router = express.Router();
 
 const FRONTEND = () => process.env.FRONTEND_URL || 'https://refboost.io';
-const BACKEND = () => {
-  if (process.env.BACKEND_URL) return process.env.BACKEND_URL;
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-  return 'https://skipcall-partners-production.up.railway.app';
-};
+
+// Qonto OAuth redirect_uri must be:
+//   1. Registered verbatim in the Qonto app config.
+//   2. Reachable by the *user's browser* — not the backend's
+//      internal hostname.
+// Vercel rewrites refboost.io/api/* → the Railway backend, so the
+// public refboost.io URL is the right entry point. Prefer APP_URL
+// (a deliberate override), then the existing FRONTEND_URL, then a
+// hardcoded fallback. Never use RAILWAY_PUBLIC_DOMAIN for this — it
+// changes per-deployment and would break the OAuth app whitelist.
+const REDIRECT_BASE = () =>
+  process.env.APP_URL || process.env.FRONTEND_URL || 'https://refboost.io';
+const REDIRECT_URI = () => REDIRECT_BASE().replace(/\/$/, '') + '/api/integrations/qonto/callback';
 
 const STATE_SECRET = () => process.env.JWT_SECRET || 'dev-state-secret';
 
@@ -46,10 +54,11 @@ router.get('/connect', authenticate, tenantScope, authorize('admin'), (req, res)
   if (!process.env.QONTO_CLIENT_ID) {
     return res.status(500).json({ error: 'qonto_not_configured' });
   }
-  const redirectUri = BACKEND() + '/api/integrations/qonto/callback';
+  const redirectUri = REDIRECT_URI();
   const state = signState({ tenantId: req.tenantId });
   const url = qonto.authorizeUrl(state, redirectUri);
   if (!url) return res.status(500).json({ error: 'qonto_not_configured' });
+  console.log('[qonto.connect] redirect_uri:', redirectUri);
   res.json({ url });
 });
 
@@ -68,7 +77,9 @@ router.get('/callback', async (req, res) => {
     const payload = verifyState(state);
     if (!payload || !payload.tenantId) return res.status(400).send('Invalid state');
 
-    const redirectUri = BACKEND() + '/api/integrations/qonto/callback';
+    // MUST reuse the exact same redirect_uri that was passed to
+    // /authorize — Qonto validates it on the /token exchange.
+    const redirectUri = REDIRECT_URI();
     const tokens = await qonto.exchangeCode(code, redirectUri);
     const expiresAt = new Date(Date.now() + (tokens.expires_in || 3600) * 1000);
 

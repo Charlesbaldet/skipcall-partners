@@ -22,7 +22,11 @@ const { query } = require('../db');
 const OAUTH_AUTHORIZE_URL = 'https://oauth.qonto.com/oauth2/auth';
 const OAUTH_TOKEN_URL = 'https://oauth.qonto.com/oauth2/token';
 const API_BASE = 'https://thirdparty.qonto.com/v2';
-const SCOPES = ['payment.write', 'organization.read', 'attachment.write', 'beneficiary.read'];
+// Only the documented Qonto OAuth scopes. attachment.write and
+// beneficiary.read aren't accepted by the authorize endpoint and
+// trigger an `invalid_scope` error — those endpoints sit under the
+// payment.write / organization.read scopes already.
+const SCOPES = ['payment.write', 'organization.read'];
 
 function clientId() { return process.env.QONTO_CLIENT_ID || ''; }
 function clientSecret() { return process.env.QONTO_CLIENT_SECRET || ''; }
