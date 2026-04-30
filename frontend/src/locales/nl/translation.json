@@ -2053,7 +2053,13 @@
     "error_amount_too_high": "Bedrag overschrijdt de toegestane limiet.",
     "error_beneficiary_not_found": "Begunstigde niet gevonden.",
     "error_transfer_declined": "Overschrijving geweigerd door Qonto.",
-    "error_generic_contact": "Betaalfout — neem contact op met support."
+    "error_generic_contact": "Betaalfout — neem contact op met support.",
+    "toast_paid": "{{count}} overschrijving(en) bevestigd — Betaald ✅",
+    "toast_adopted": "{{count}} overschrijving(en) gevonden — Qonto verwerkt ze.",
+    "toast_declined": "{{count}} overschrijving(en) geweigerd door Qonto.",
+    "toast_no_change": "Geen wijziging gedetecteerd. Qonto verwerkt de overschrijving wellicht nog.",
+    "toast_auto_poll_paid": "Overschrijving bevestigd!",
+    "toast_auto_poll_progress": "Qonto-status bijgewerkt."
   },
   "crm": {
     "title": "CRM-integratie",

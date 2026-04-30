@@ -2053,7 +2053,13 @@
     "error_amount_too_high": "Le montant dépasse le plafond autorisé.",
     "error_beneficiary_not_found": "Bénéficiaire non trouvé.",
     "error_transfer_declined": "Virement refusé par Qonto.",
-    "error_generic_contact": "Erreur de paiement — contactez le support."
+    "error_generic_contact": "Erreur de paiement — contactez le support.",
+    "toast_paid": "{{count}} virement(s) confirmé(s) — Payé ✅",
+    "toast_adopted": "{{count}} virement(s) retrouvé(s) — Qonto traite la demande.",
+    "toast_declined": "{{count}} virement(s) refusé(s) par Qonto.",
+    "toast_no_change": "Aucun changement détecté. Le virement est peut-être encore en cours de traitement par Qonto.",
+    "toast_auto_poll_paid": "Virement confirmé !",
+    "toast_auto_poll_progress": "Statut Qonto mis à jour."
   },
   "crm": {
     "title": "Intégration CRM",

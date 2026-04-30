@@ -944,13 +944,21 @@ async function reconcileQontoTransfers(tenantId) {
     }
   }
 
-  // Second pass: SCA-pending commissions never got a Qonto transfer
-  // ID (the 428 response carried only an sca_session_token). Replay
-  // the same POST with the saved idempotency key + SCA session
-  // token. If the admin has approved on their phone, Qonto returns
-  // the created transfer; if they haven't, Qonto answers 428 again
-  // and we leave the row alone for the next tick.
-  const { rows: scaRows } = await query(
+  // Second pass: orphaned commissions — payment_initiated_at set,
+  // qonto_transfer_id NULL — typically from a 428 response that
+  // carried no transfer id. Two recovery paths:
+  //
+  //   a) Search Qonto's recent SEPA transfers for one matching our
+  //      reference (preferred) or amount+commission-id-in-note. If
+  //      found, adopt the transfer id and let the next reconcile
+  //      pass handle status.
+  //
+  //   b) For SCA-pending rows where (a) didn't find anything, replay
+  //      the same POST with the saved idempotency key + SCA session
+  //      token. If the admin has approved on their phone, Qonto
+  //      returns the created transfer; otherwise it answers 428
+  //      again and we leave the row alone.
+  const { rows: orphanRows } = await query(
     `SELECT c.id, c.tenant_id, c.amount, c.payment_reference,
             c.qonto_idempotency_key, c.qonto_sca_session_token,
             c.qonto_attachment_id,
@@ -962,49 +970,101 @@ async function reconcileQontoTransfers(tenantId) {
        JOIN partners p ON p.id = c.partner_id
        JOIN referrals r ON r.id = c.referral_id
        JOIN payment_integrations pi ON pi.tenant_id = c.tenant_id AND pi.provider = 'qonto' AND pi.is_active = TRUE
-      WHERE c.qonto_sca_session_token IS NOT NULL
-        AND c.qonto_transfer_id IS NULL
+      WHERE c.qonto_transfer_id IS NULL
+        AND c.payment_initiated_at IS NOT NULL
         AND c.payment_completed_at IS NULL
         AND ($1::uuid IS NULL OR c.tenant_id = $1)
       LIMIT 50`,
     [tenantId || null]
   );
 
-  for (const c of scaRows) {
+  // Group by tenant so we only fetch the recent-transfers list once
+  // per tenant per reconcile tick.
+  const byTenant = new Map();
+  for (const c of orphanRows) {
+    if (!byTenant.has(c.tenant_id)) byTenant.set(c.tenant_id, []);
+    byTenant.get(c.tenant_id).push(c);
+  }
+
+  for (const [tid, group] of byTenant) {
+    let recent = [];
     try {
-      const result = await qonto.createSingleTransfer(c.tenant_id, {
-        commissionId: c.id,
-        bankAccountId: c.bank_account_id,
-        amount: parseFloat(c.amount) || 0,
-        partnerName: c.partner_name,
-        dealName: c.prospect_company || c.prospect_name || '',
-        iban: c.iban,
-        beneficiaryName: c.account_holder || c.partner_name,
-        beneficiaryId: null,
-        attachmentIds: c.qonto_attachment_id ? [c.qonto_attachment_id] : [],
-        idempotencyKey: c.qonto_idempotency_key,
-        scaSessionToken: c.qonto_sca_session_token,
-      });
-      if (result.requires_sca) {
-        // Still pending admin approval — leave the row alone.
-        updates.push({ commission_id: c.id, status: 'sca_pending' });
-        continue;
+      recent = await qonto.listRecentTransfers(tid, { perPage: 100 });
+    } catch (e) {
+      console.warn('[qonto.reconcile.search] listRecentTransfers failed for tenant', tid, ':', e.message);
+    }
+    const byReference = new Map();
+    for (const t of recent) {
+      const ref = (t.reference || '').trim();
+      if (ref) byReference.set(ref, t);
+    }
+
+    for (const c of group) {
+      // (a) Match by reference first.
+      const ourRef = c.payment_reference || qonto.buildReference(c.id);
+      let match = byReference.get(ourRef);
+
+      // Fallback: scan by amount + commission-id-in-note. Reference
+      // is the canonical match path; this is the safety net for the
+      // case where Qonto stripped/normalized our reference.
+      if (!match) {
+        const amount = (parseFloat(c.amount) || 0).toFixed(2);
+        const idHint = String(c.id).replace(/-/g, '').slice(0, 12).toUpperCase();
+        match = recent.find(t => {
+          const tAmount = parseFloat(t.amount).toFixed(2);
+          const tNote = (t.note || '').toUpperCase();
+          return tAmount === amount && tNote.includes(idHint);
+        });
       }
-      const transfer = result.transfer || {};
-      if (transfer.id) {
+
+      if (match && match.id) {
         await query(
           `UPDATE commissions
               SET qonto_transfer_id = $2,
-                  qonto_sca_session_token = NULL,
-                  payment_initiated_at = COALESCE(payment_initiated_at, NOW()),
-                  payment_error = NULL
+                  qonto_sca_session_token = NULL
             WHERE id = $1`,
-          [c.id, transfer.id]
+          [c.id, match.id]
         );
-        updates.push({ commission_id: c.id, transfer_id: transfer.id, status: 'initiated_after_sca' });
+        updates.push({ commission_id: c.id, transfer_id: match.id, status: 'matched_by_reference', reference: ourRef });
+        continue;
       }
-    } catch (e) {
-      console.warn('[qonto.reconcile.sca] retry failed for', c.id, ':', e.message);
+
+      // (b) Still no match — try the SCA replay if we have a session token.
+      if (!c.qonto_sca_session_token) {
+        updates.push({ commission_id: c.id, status: 'orphan_no_match' });
+        continue;
+      }
+      try {
+        const result = await qonto.createSingleTransfer(tid, {
+          commissionId: c.id,
+          bankAccountId: c.bank_account_id,
+          amount: parseFloat(c.amount) || 0,
+          partnerName: c.partner_name,
+          dealName: c.prospect_company || c.prospect_name || '',
+          iban: c.iban,
+          beneficiaryName: c.account_holder || c.partner_name,
+          beneficiaryId: null,
+          attachmentIds: c.qonto_attachment_id ? [c.qonto_attachment_id] : [],
+          idempotencyKey: c.qonto_idempotency_key,
+          scaSessionToken: c.qonto_sca_session_token,
+        });
+        const transfer = result.transfer || {};
+        if (transfer.id) {
+          await query(
+            `UPDATE commissions
+                SET qonto_transfer_id = $2,
+                    qonto_sca_session_token = $3,
+                    payment_error = NULL
+              WHERE id = $1`,
+            [c.id, transfer.id, result.requires_sca ? c.qonto_sca_session_token : null]
+          );
+          updates.push({ commission_id: c.id, transfer_id: transfer.id, status: result.requires_sca ? 'sca_pending' : 'initiated_after_sca' });
+        } else {
+          updates.push({ commission_id: c.id, status: 'sca_pending' });
+        }
+      } catch (e) {
+        console.warn('[qonto.reconcile.sca] retry failed for', c.id, ':', e.message);
+      }
     }
   }
 

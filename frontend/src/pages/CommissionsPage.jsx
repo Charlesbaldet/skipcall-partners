@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
 import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw } from 'lucide-react';
@@ -118,11 +118,56 @@ export default function CommissionsPage() {
   const [selected, setSelected] = useState(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [refreshingPolls, setRefreshingPolls] = useState(false);
+  const [toast, setToast] = useState(null);
   // qontoModal holds whatever the most recent Qonto pay action wants
   // to surface — initiated, bulk progress / summary, or a failure
   // with a French-mapped message. Shape:
   //   { kind: 'initiated' | 'bulk' | 'error', ...payload }
   const [qontoModal, setQontoModal] = useState(null);
+  // Auto-poll loop after a Payer action: tick every 30 s, max 10 min.
+  // Refs so we can cancel from a different render without a stale
+  // closure.
+  const autoPollIntervalRef = useRef(null);
+  const autoPollStopperRef = useRef(null);
+
+  const showToast = (text, type = 'success') => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 4500);
+  };
+
+  const clearAutoPoll = () => {
+    if (autoPollIntervalRef.current) clearInterval(autoPollIntervalRef.current);
+    if (autoPollStopperRef.current) clearTimeout(autoPollStopperRef.current);
+    autoPollIntervalRef.current = null;
+    autoPollStopperRef.current = null;
+  };
+
+  // Cleanup on unmount.
+  useEffect(() => () => clearAutoPoll(), []);
+
+  const startAutoPoll = () => {
+    clearAutoPoll();
+    const tick = async () => {
+      try {
+        const r = await api.pollQontoTransfers();
+        const updates = (r && r.updates) || [];
+        const meaningful = updates.filter(u => u && u.status !== 'sca_pending' && u.status !== 'orphan_no_match');
+        if (meaningful.length > 0) {
+          clearAutoPoll();
+          await reload();
+          const paid = meaningful.find(u => u.status === 'paid');
+          showToast(
+            paid
+              ? t('qonto.toast_auto_poll_paid', 'Virement confirmé !')
+              : t('qonto.toast_auto_poll_progress', 'Statut Qonto mis à jour.'),
+            'success'
+          );
+        }
+      } catch { /* swallow — keep polling */ }
+    };
+    autoPollIntervalRef.current = setInterval(tick, 30_000);
+    autoPollStopperRef.current = setTimeout(clearAutoPoll, 600_000); // 10 min cap
+  };
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
 
@@ -210,6 +255,10 @@ export default function CommissionsPage() {
         requiresSca: !!r.requires_sca,
       });
       await reload();
+      // Background reconciliation — quietly polls Qonto every 30 s
+      // (up to 10 min) so a successful SCA approval flips the card
+      // to Payé without the admin having to click anything.
+      startAutoPoll();
     } catch (err) {
       const code = err?.data?.error || err?.body?.code;
       const message = qontoErrorLabel(t, code, err?.message);
@@ -273,6 +322,7 @@ export default function CommissionsPage() {
       });
       clearSelection();
       await reload();
+      startAutoPoll();
     } catch (err) {
       const code = err?.data?.error || err?.body?.code;
       const message = qontoErrorLabel(t, code, err?.message);
@@ -283,8 +333,33 @@ export default function CommissionsPage() {
 
   const handleRefreshPolls = async () => {
     setRefreshingPolls(true);
-    try { await api.pollQontoTransfers(); await reload(); }
-    catch (err) { alert(err.message || 'Error'); }
+    try {
+      const r = await api.pollQontoTransfers();
+      const updates = (r && r.updates) || [];
+      await reload();
+      // Status semantics from the backend reconcile worker:
+      //   paid                   → commission moved to Payé
+      //   matched_by_reference   → adopted a Qonto transfer_id
+      //   initiated_after_sca    → SCA approved, transfer in flight
+      //   sca_pending            → still waiting on the admin's phone
+      //   declined / failed / canceled → transfer failed
+      //   orphan_no_match        → couldn't find anything yet
+      const paid = updates.filter(u => u.status === 'paid');
+      const adopted = updates.filter(u => u.status === 'matched_by_reference' || u.status === 'initiated_after_sca');
+      const declined = updates.filter(u => ['declined', 'failed', 'canceled', 'cancelled'].includes(u.status));
+      if (paid.length > 0) {
+        showToast(t('qonto.toast_paid', { count: paid.length, defaultValue: '{{count}} virement(s) confirmé(s) — Payé ✅' }), 'success');
+      } else if (adopted.length > 0) {
+        showToast(t('qonto.toast_adopted', { count: adopted.length, defaultValue: '{{count}} virement(s) retrouvé(s) — Qonto traite la demande.' }), 'success');
+      } else if (declined.length > 0) {
+        showToast(t('qonto.toast_declined', { count: declined.length, defaultValue: '{{count}} virement(s) refusé(s) par Qonto.' }), 'error');
+      } else {
+        showToast(t('qonto.toast_no_change', 'Aucun changement détecté. Le virement est peut-être encore en cours de traitement par Qonto.'), 'info');
+      }
+    }
+    catch (err) {
+      showToast(err.message || t('qonto.error_generic', 'Une erreur est survenue. Veuillez réessayer.'), 'error');
+    }
     setRefreshingPolls(false);
   };
 
@@ -699,6 +774,21 @@ export default function CommissionsPage() {
 
       {qontoModal && (
         <QontoResultModal modal={qontoModal} onClose={() => setQontoModal(null)} t={t} />
+      )}
+
+      {toast && (
+        <div role="status" style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 2000,
+          padding: '14px 18px', borderRadius: 12,
+          background: toast.type === 'error' ? '#fef2f2' : toast.type === 'info' ? '#f0f9ff' : '#f0fdf4',
+          color:      toast.type === 'error' ? '#b91c1c' : toast.type === 'info' ? '#075985' : '#166534',
+          border: `1px solid ${toast.type === 'error' ? '#fecaca' : toast.type === 'info' ? '#bae6fd' : '#bbf7d0'}`,
+          fontSize: 13, fontWeight: 600,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          maxWidth: 420,
+        }}>
+          {toast.text}
+        </div>
       )}
     </div>
   );

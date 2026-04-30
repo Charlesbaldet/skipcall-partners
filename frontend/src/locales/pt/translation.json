@@ -2053,7 +2053,13 @@
     "error_amount_too_high": "O montante excede o limite permitido.",
     "error_beneficiary_not_found": "Beneficiário não encontrado.",
     "error_transfer_declined": "Transferência recusada pelo Qonto.",
-    "error_generic_contact": "Erro de pagamento — contacta o suporte."
+    "error_generic_contact": "Erro de pagamento — contacta o suporte.",
+    "toast_paid": "{{count}} transferência(s) confirmada(s) — Pago ✅",
+    "toast_adopted": "{{count}} transferência(s) localizada(s) — Qonto está a processar.",
+    "toast_declined": "{{count}} transferência(s) recusada(s) pelo Qonto.",
+    "toast_no_change": "Sem alterações detetadas. O Qonto pode ainda estar a processar a transferência.",
+    "toast_auto_poll_paid": "Transferência confirmada!",
+    "toast_auto_poll_progress": "Estado Qonto atualizado."
   },
   "crm": {
     "title": "Integração CRM",

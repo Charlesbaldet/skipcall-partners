@@ -2053,7 +2053,13 @@
     "error_amount_too_high": "L'importo supera il limite consentito.",
     "error_beneficiary_not_found": "Beneficiario non trovato.",
     "error_transfer_declined": "Bonifico rifiutato da Qonto.",
-    "error_generic_contact": "Errore di pagamento — contatta il supporto."
+    "error_generic_contact": "Errore di pagamento — contatta il supporto.",
+    "toast_paid": "{{count}} bonifico(i) confermato(i) — Pagato ✅",
+    "toast_adopted": "{{count}} bonifico(i) trovato(i) — Qonto li sta elaborando.",
+    "toast_declined": "{{count}} bonifico(i) rifiutato(i) da Qonto.",
+    "toast_no_change": "Nessun cambiamento rilevato. Qonto potrebbe ancora elaborare il bonifico.",
+    "toast_auto_poll_paid": "Bonifico confermato!",
+    "toast_auto_poll_progress": "Stato Qonto aggiornato."
   },
   "crm": {
     "title": "Integrazione CRM",

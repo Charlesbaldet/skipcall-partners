@@ -230,7 +230,11 @@ function buildReference(commissionId) {
 }
 
 // Decode a 428 sca_required body. Returns null if the response isn't
-// actually an SCA challenge so the caller can rethrow.
+// actually an SCA challenge so the caller can rethrow. Some Qonto
+// 428 responses ship the (already-created) transfer alongside the
+// challenge — when that's the case we forward the transfer id so the
+// caller can persist it and the polling worker can fetch its status
+// without having to re-POST.
 function parseScaChallenge(err) {
   if (!err || err.status !== 428) return null;
   try {
@@ -240,6 +244,10 @@ function parseScaChallenge(err) {
         sca_session_token: body.sca_session_token,
         sca_recovery_token: body.sca_recovery_token || null,
         action_type: body.action_type || null,
+        // Best-effort id extraction — Qonto's 428 shape isn't fully
+        // documented and varies by endpoint.
+        transfer_id: body.transfer?.id || body.id || body.resource_id || null,
+        transfer: body.transfer || null,
       };
     }
   } catch { /* unparseable → not an SCA challenge */ }
@@ -312,7 +320,7 @@ async function createSingleTransfer(tenantId, {
       // isn't trusted yet — Qonto created the challenge, the admin
       // must approve it on their phone. Surface as a non-error.
       return {
-        transfer: null,
+        transfer: sca.transfer || (sca.transfer_id ? { id: sca.transfer_id } : null),
         requires_sca: true,
         sca_session_token: sca.sca_session_token,
         reference,
@@ -397,6 +405,20 @@ async function getTransfer(tenantId, transferId) {
   return data?.transfer || data;
 }
 
+// Recent SEPA transfers, optionally filtered by status. Used as the
+// fallback when a 428 didn't carry a transfer_id but Qonto did
+// actually create the transfer behind the scenes — we then match by
+// reference / amount.
+async function listRecentTransfers(tenantId, { statuses, perPage = 50 } = {}) {
+  const params = new URLSearchParams();
+  for (const s of (statuses || ['completed', 'pending', 'processing', 'declined'])) {
+    params.append('status[]', s);
+  }
+  params.set('per_page', String(perPage));
+  const data = await api(tenantId, `/sepa/transfers?${params.toString()}`);
+  return data?.transfers || data || [];
+}
+
 module.exports = {
   authorizeUrl,
   exchangeCode,
@@ -409,6 +431,7 @@ module.exports = {
   createSingleTransfer,
   createBulkTransfer,
   getTransfer,
+  listRecentTransfers,
   buildReference,
   newIdempotencyKey,
   SCOPES,

@@ -2053,7 +2053,13 @@
     "error_amount_too_high": "Betrag überschreitet das erlaubte Limit.",
     "error_beneficiary_not_found": "Empfänger nicht gefunden.",
     "error_transfer_declined": "Überweisung von Qonto abgelehnt.",
-    "error_generic_contact": "Zahlungsfehler — bitte den Support kontaktieren."
+    "error_generic_contact": "Zahlungsfehler — bitte den Support kontaktieren.",
+    "toast_paid": "{{count}} Überweisung(en) bestätigt — Bezahlt ✅",
+    "toast_adopted": "{{count}} Überweisung(en) gefunden — Qonto verarbeitet sie.",
+    "toast_declined": "{{count}} Überweisung(en) von Qonto abgelehnt.",
+    "toast_no_change": "Keine Änderung erkannt. Qonto verarbeitet die Überweisung möglicherweise noch.",
+    "toast_auto_poll_paid": "Überweisung bestätigt!",
+    "toast_auto_poll_progress": "Qonto-Status aktualisiert."
   },
   "crm": {
     "title": "CRM-Integration",
