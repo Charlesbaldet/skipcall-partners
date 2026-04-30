@@ -229,6 +229,23 @@ function buildReference(commissionId) {
   return `REFBOOSTCOM${short}`.slice(0, 35);
 }
 
+// Decode a 428 sca_required body. Returns null if the response isn't
+// actually an SCA challenge so the caller can rethrow.
+function parseScaChallenge(err) {
+  if (!err || err.status !== 428) return null;
+  try {
+    const body = typeof err.body === 'string' ? JSON.parse(err.body) : err.body;
+    if (body && body.code === 'sca_required' && body.sca_session_token) {
+      return {
+        sca_session_token: body.sca_session_token,
+        sca_recovery_token: body.sca_recovery_token || null,
+        action_type: body.action_type || null,
+      };
+    }
+  } catch { /* unparseable → not an SCA challenge */ }
+  return null;
+}
+
 async function createSingleTransfer(tenantId, {
   commissionId,
   bankAccountId,
@@ -240,6 +257,7 @@ async function createSingleTransfer(tenantId, {
   beneficiaryId, // optional, when we found a trusted match
   attachmentIds = [],
   idempotencyKey,
+  scaSessionToken,
 }) {
   if (!bankAccountId) {
     // Defense-in-depth: the route already 400s on this case, but
@@ -274,11 +292,36 @@ async function createSingleTransfer(tenantId, {
   if (attachmentIds.length) transfer.attachment_ids = attachmentIds;
 
   const key = idempotencyKey || newIdempotencyKey();
-  const data = await api(tenantId, '/sepa/transfers', {
-    method: 'POST',
-    headers: { 'X-Qonto-Idempotency-Key': key },
-    body: JSON.stringify({ transfer }),
-  });
+  const headers = { 'X-Qonto-Idempotency-Key': key };
+  // When we already have an SCA session token (admin approved or we're
+  // retrying after a prior 428), forward it so Qonto skips the
+  // challenge and returns the actual transfer.
+  if (scaSessionToken) headers['X-Qonto-SCA-Session-Token'] = scaSessionToken;
+
+  let data;
+  try {
+    data = await api(tenantId, '/sepa/transfers', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ transfer }),
+    });
+  } catch (err) {
+    const sca = parseScaChallenge(err);
+    if (sca) {
+      // 428 sca_required is the EXPECTED branch when the beneficiary
+      // isn't trusted yet — Qonto created the challenge, the admin
+      // must approve it on their phone. Surface as a non-error.
+      return {
+        transfer: null,
+        requires_sca: true,
+        sca_session_token: sca.sca_session_token,
+        reference,
+        idempotency_key: key,
+      };
+    }
+    throw err;
+  }
+
   return {
     transfer: data?.transfer || data,
     requires_sca: !!(data?.transfer?.requires_sca || data?.requires_sca),
@@ -291,6 +334,7 @@ async function createBulkTransfer(tenantId, {
   bankAccountId,
   transfers, // [{ commissionId, amount, iban, beneficiaryName, partnerName, dealName, attachmentIds }]
   idempotencyKey,
+  scaSessionToken,
 }) {
   if (!bankAccountId) {
     throw new Error('qonto_bank_account_missing');
@@ -314,11 +358,29 @@ async function createBulkTransfer(tenantId, {
   const body = { bulk_transfer: { bank_account_id: bankAccountId, transfers: items } };
 
   const key = idempotencyKey || newIdempotencyKey();
-  const data = await api(tenantId, '/sepa/bulk_transfers', {
-    method: 'POST',
-    headers: { 'X-Qonto-Idempotency-Key': key },
-    body: JSON.stringify(body),
-  });
+  const headers = { 'X-Qonto-Idempotency-Key': key };
+  if (scaSessionToken) headers['X-Qonto-SCA-Session-Token'] = scaSessionToken;
+
+  let data;
+  try {
+    data = await api(tenantId, '/sepa/bulk_transfers', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    const sca = parseScaChallenge(err);
+    if (sca) {
+      return {
+        bulk_id: null,
+        transfers: [],
+        requires_sca: true,
+        sca_session_token: sca.sca_session_token,
+        idempotency_key: key,
+      };
+    }
+    throw err;
+  }
   // Qonto returns the list of created transfers (id + status). Map
   // them positionally back to the input commissions.
   const created = data?.transfers || data?.bulk_transfer?.transfers || [];

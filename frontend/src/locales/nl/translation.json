@@ -2045,7 +2045,15 @@
     "modal_bulk_partial_title": "Gedeeltelijke betaling",
     "modal_bulk_partial_summary": "{{ok}} overschrijving(en) gestart, {{fail}} mislukt.",
     "modal_bulk_sca_hint": "Keur de overschrijvingen goed in je Qonto-app.",
-    "modal_bulk_failed_label": "Mislukt"
+    "modal_bulk_failed_label": "Mislukt",
+    "sca_pending_card": "Keur de overschrijving goed in je Qonto-app",
+    "sca_pending_banner": "⏳ Wacht op SCA-goedkeuring — Keur de overschrijving goed in je Qonto-app",
+    "check_status": "Status controleren",
+    "error_amount_too_low": "Bedrag is te laag.",
+    "error_amount_too_high": "Bedrag overschrijdt de toegestane limiet.",
+    "error_beneficiary_not_found": "Begunstigde niet gevonden.",
+    "error_transfer_declined": "Overschrijving geweigerd door Qonto.",
+    "error_generic_contact": "Betaalfout — neem contact op met support."
   },
   "crm": {
     "title": "CRM-integratie",

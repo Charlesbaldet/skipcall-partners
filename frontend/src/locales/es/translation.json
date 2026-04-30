@@ -2045,7 +2045,15 @@
     "modal_bulk_partial_title": "Pago parcial",
     "modal_bulk_partial_summary": "{{ok}} transferencia(s) iniciadas, {{fail}} con error.",
     "modal_bulk_sca_hint": "Aprueba las transferencias en tu app Qonto.",
-    "modal_bulk_failed_label": "Con error"
+    "modal_bulk_failed_label": "Con error",
+    "sca_pending_card": "Aprueba la transferencia en tu app Qonto",
+    "sca_pending_banner": "⏳ A la espera de validación SCA — Aprueba la transferencia en tu app Qonto",
+    "check_status": "Verificar estado",
+    "error_amount_too_low": "El importe es demasiado bajo.",
+    "error_amount_too_high": "El importe supera el límite permitido.",
+    "error_beneficiary_not_found": "Beneficiario no encontrado.",
+    "error_transfer_declined": "Transferencia rechazada por Qonto.",
+    "error_generic_contact": "Error de pago — contacta con soporte."
   },
   "crm": {
     "title": "Integración CRM",

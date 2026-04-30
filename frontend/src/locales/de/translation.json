@@ -2045,7 +2045,15 @@
     "modal_bulk_partial_title": "Teilweise Zahlung",
     "modal_bulk_partial_summary": "{{ok}} Überweisung(en) initiiert, {{fail}} fehlgeschlagen.",
     "modal_bulk_sca_hint": "Bestätige die Überweisungen in deiner Qonto-App.",
-    "modal_bulk_failed_label": "Fehlgeschlagen"
+    "modal_bulk_failed_label": "Fehlgeschlagen",
+    "sca_pending_card": "Bestätige die Überweisung in deiner Qonto-App",
+    "sca_pending_banner": "⏳ Warte auf SCA-Bestätigung — Bestätige die Überweisung in deiner Qonto-App",
+    "check_status": "Status prüfen",
+    "error_amount_too_low": "Betrag liegt unter dem Mindestbetrag.",
+    "error_amount_too_high": "Betrag überschreitet das erlaubte Limit.",
+    "error_beneficiary_not_found": "Empfänger nicht gefunden.",
+    "error_transfer_declined": "Überweisung von Qonto abgelehnt.",
+    "error_generic_contact": "Zahlungsfehler — bitte den Support kontaktieren."
   },
   "crm": {
     "title": "CRM-Integration",

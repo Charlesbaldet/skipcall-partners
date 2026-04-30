@@ -401,6 +401,18 @@ async function runMigrations() {
   // reuses the same key — Qonto then returns the original transfer
   // instead of creating a duplicate one.
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_idempotency_key TEXT`);
+  // Qonto returns HTTP 428 with code=sca_required when a transfer
+  // needs the admin to approve it via SCA in their Qonto app. We
+  // persist the sca_session_token returned in that 428 response so
+  // the polling worker can retry the same POST (with the idempotency
+  // key + X-Qonto-SCA-Session-Token header) until Qonto either
+  // accepts the transfer (admin approved) or hard-fails it.
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_sca_session_token TEXT`);
+  // One-off cleanup: previous releases stored the raw 428 JSON body
+  // in payment_error, which then rendered verbatim on the card. SCA
+  // is not an error — clear those rows so the new card UI can pick
+  // them up as "SCA en attente" instead of red.
+  await query(`UPDATE commissions SET payment_error = NULL WHERE payment_error ILIKE '%sca_required%'`).catch(() => {});
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_initiated_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_reference TEXT`);

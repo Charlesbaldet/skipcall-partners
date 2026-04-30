@@ -5,6 +5,50 @@ import { fmt, fmtDate } from '../lib/constants';
 import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
+// Map a payment_error column value (which the backend now stores as
+// a SHORT code, not a JSON dump — but legacy rows might still hold
+// the raw 428 body) to a structured banner descriptor: { tone:
+// 'info'|'error', message }. SCA renders as info (yellow), real
+// failures render as error (red), unparseable rows fall through to a
+// generic "contactez le support" tone-error string.
+function getPaymentErrorMessage(t, rawError) {
+  if (!rawError) return null;
+  const tryCode = (code) => {
+    if (!code) return null;
+    if (code === 'sca_required') {
+      return {
+        tone: 'info',
+        message: t('qonto.sca_pending_banner', '⏳ En attente de validation SCA — Approuvez le virement dans votre app Qonto'),
+      };
+    }
+    return { tone: 'error', message: qontoErrorLabel(t, code, code) };
+  };
+  // Short-code path (the common case after the v23 sanitizer): the
+  // column already holds something like "insufficient_funds".
+  const shortPath = tryCode(rawError);
+  if (shortPath && shortPath.message !== t('qonto.error_generic', 'Une erreur est survenue. Veuillez réessayer.')) {
+    return shortPath;
+  }
+  // Legacy path: parse JSON or scan-for-substring.
+  try {
+    const parsed = JSON.parse(rawError);
+    if (parsed && parsed.code) {
+      const r = tryCode(parsed.code);
+      if (r) return r;
+    }
+  } catch { /* not JSON */ }
+  for (const code of ['sca_required', 'insufficient_funds', 'beneficiary_bic_invalid', 'invalid_bic', 'invalid_iban', 'amount_too_low', 'amount_too_high', 'beneficiary_not_found']) {
+    if (rawError.includes(code)) {
+      const r = tryCode(code);
+      if (r) return r;
+    }
+  }
+  return {
+    tone: 'error',
+    message: t('qonto.error_generic_contact', 'Erreur de paiement — contactez le support.'),
+  };
+}
+
 // Translate the structured backend error codes (qonto_not_connected,
 // partner_iban_missing, …) and the Qonto-side error strings
 // (insufficient_funds, beneficiary_bic_invalid, …) into a single
@@ -23,6 +67,10 @@ function qontoErrorLabel(t, code, rawMessage) {
     beneficiary_bic_invalid: t('qonto.error_bic_invalid', 'Le BIC du bénéficiaire est invalide.'),
     invalid_iban: t('qonto.error_invalid_iban', 'L\'IBAN du bénéficiaire est invalide.'),
     invalid_bic: t('qonto.error_bic_invalid', 'Le BIC du bénéficiaire est invalide.'),
+    amount_too_low: t('qonto.error_amount_too_low', 'Le montant est trop faible.'),
+    amount_too_high: t('qonto.error_amount_too_high', 'Le montant dépasse le plafond autorisé.'),
+    beneficiary_not_found: t('qonto.error_beneficiary_not_found', 'Bénéficiaire non trouvé.'),
+    transfer_declined: t('qonto.error_transfer_declined', 'Virement refusé par Qonto.'),
   };
   if (code && map[code]) return map[code];
   // Last-ditch: scan the raw message for a known substring before
@@ -264,7 +312,7 @@ export default function CommissionsPage() {
 
   return (
     <div className="fade-in">
-      <style>{`@keyframes rb-spin{to{transform:rotate(360deg)}}.rb-spin{animation:rb-spin 1s linear infinite}`}</style>
+      <style>{`@keyframes rb-spin{to{transform:rotate(360deg)}}.rb-spin{animation:rb-spin 1s linear infinite}@keyframes rb-pulse{0%,100%{opacity:1}50%{opacity:.4}}.rb-pulse{animation:rb-pulse 1.4s ease-in-out infinite}`}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('commissions.title')}</h1>
@@ -408,7 +456,11 @@ export default function CommissionsPage() {
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                   {cards.map(c => {
                     const isSelected = selected.has(c.id);
-                    const isInitiated = !!c.qonto_transfer_id && !c.payment_completed_at;
+                    // SCA-pending: backend stamped payment_initiated_at + a
+                    // qonto_sca_session_token but no transfer ID yet.
+                    const scaPending = !!c.sca_pending;
+                    const isInitiated = (!!c.qonto_transfer_id || !!c.payment_initiated_at) && !c.payment_completed_at;
+                    const errBanner = getPaymentErrorMessage(t, c.payment_error);
                     return (
                     <div key={c.id} style={{ background: '#fff', borderRadius: 12, padding: 14, border: isSelected ? `2px solid ${sc.color}` : '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, gap: 6 }}>
@@ -432,9 +484,26 @@ export default function CommissionsPage() {
                       </div>
                       <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>{fmtDate(c.created_at)}</div>
 
-                      {c.payment_error && (
-                        <div style={{ padding: '6px 10px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
-                          {c.payment_error}
+                      {scaPending && (
+                        <div style={{
+                          padding: '8px 10px', borderRadius: 8,
+                          background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e',
+                          fontSize: 11, marginBottom: 8, lineHeight: 1.45,
+                          display: 'flex', alignItems: 'center', gap: 6,
+                        }}>
+                          <Clock size={12} className="rb-pulse" />
+                          {t('qonto.sca_pending_card', 'Approuvez le virement dans votre app Qonto')}
+                        </div>
+                      )}
+                      {!scaPending && errBanner && (
+                        <div style={{
+                          padding: '6px 10px', borderRadius: 8,
+                          background: errBanner.tone === 'info' ? '#fffbeb' : '#fef2f2',
+                          border: `1px solid ${errBanner.tone === 'info' ? '#fde68a' : '#fecaca'}`,
+                          color: errBanner.tone === 'info' ? '#92400e' : '#b91c1c',
+                          fontSize: 11, marginBottom: 8, lineHeight: 1.45,
+                        }}>
+                          {errBanner.message}
                         </div>
                       )}
 
@@ -463,7 +532,12 @@ export default function CommissionsPage() {
                               <Download size={12} /> {t('commission.view_invoice', 'Voir la facture')}
                             </button>
                           )}
-                          {isInitiated ? (
+                          {scaPending ? (
+                            <button onClick={handleRefreshPolls} disabled={refreshingPolls}
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #fde68a', color: '#92400e', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: refreshingPolls ? 0.7 : 1 }}>
+                              <RefreshCw size={12} className={refreshingPolls ? 'rb-spin' : ''} /> {t('qonto.check_status', 'Vérifier le statut')}
+                            </button>
+                          ) : isInitiated ? (
                             <div style={{ padding: '7px 10px', borderRadius: 8, background: '#eef2ff', color: '#4338ca', fontSize: 11, textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                               <Send size={12} /> {t('qonto.transfer_in_progress', 'Virement en cours')}
                             </div>

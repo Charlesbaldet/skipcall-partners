@@ -2045,7 +2045,15 @@
     "modal_bulk_partial_title": "Pagamento parziale",
     "modal_bulk_partial_summary": "{{ok}} bonifico(i) avviati, {{fail}} in errore.",
     "modal_bulk_sca_hint": "Approva i bonifici nella tua app Qonto.",
-    "modal_bulk_failed_label": "In errore"
+    "modal_bulk_failed_label": "In errore",
+    "sca_pending_card": "Approva il bonifico nella tua app Qonto",
+    "sca_pending_banner": "⏳ In attesa di convalida SCA — Approva il bonifico nella tua app Qonto",
+    "check_status": "Verifica stato",
+    "error_amount_too_low": "L'importo è troppo basso.",
+    "error_amount_too_high": "L'importo supera il limite consentito.",
+    "error_beneficiary_not_found": "Beneficiario non trovato.",
+    "error_transfer_declined": "Bonifico rifiutato da Qonto.",
+    "error_generic_contact": "Errore di pagamento — contatta il supporto."
   },
   "crm": {
     "title": "Integrazione CRM",

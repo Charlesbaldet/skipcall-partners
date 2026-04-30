@@ -2045,7 +2045,15 @@
     "modal_bulk_partial_title": "Paiement partiel",
     "modal_bulk_partial_summary": "{{ok}} virement(s) initié(s), {{fail}} en erreur.",
     "modal_bulk_sca_hint": "Validez les virements dans votre application Qonto.",
-    "modal_bulk_failed_label": "En erreur"
+    "modal_bulk_failed_label": "En erreur",
+    "sca_pending_card": "Approuvez le virement dans votre app Qonto",
+    "sca_pending_banner": "⏳ En attente de validation SCA — Approuvez le virement dans votre app Qonto",
+    "check_status": "Vérifier le statut",
+    "error_amount_too_low": "Le montant est trop faible.",
+    "error_amount_too_high": "Le montant dépasse le plafond autorisé.",
+    "error_beneficiary_not_found": "Bénéficiaire non trouvé.",
+    "error_transfer_declined": "Virement refusé par Qonto.",
+    "error_generic_contact": "Erreur de paiement — contactez le support."
   },
   "crm": {
     "title": "Intégration CRM",
