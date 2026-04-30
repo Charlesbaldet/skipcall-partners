@@ -166,6 +166,29 @@ class ApiClient {
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
   approveCommission(id) { return this.request('/commissions/' + id + '/approve', { method: 'POST' }); }
   rejectCommission(id, reason) { return this.request('/commissions/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason }) }); }
+  uploadCommissionInvoice(id, { filename, dataUrl }) {
+    return this.request('/commissions/' + id + '/upload-invoice', {
+      method: 'POST',
+      body: JSON.stringify({ filename, data_url: dataUrl }),
+    });
+  }
+  async downloadCommissionInvoice(id) {
+    // Auth lives in the Authorization header, so a plain <a href> can't
+    // open the protected route. Fetch the file ourselves, then trigger
+    // a browser download from a blob URL.
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/commissions/${id}/invoice`, { headers });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erreur téléchargement');
+    const blob = await res.blob();
+    const cd = res.headers.get('Content-Disposition') || '';
+    const match = /filename="?([^";]+)"?/.exec(cd);
+    const fname = match ? match[1] : `invoice-${id}.pdf`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fname; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
 
   // Dashboard
   getKPIs() { return this.request('/dashboard/kpis'); }

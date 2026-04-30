@@ -35,7 +35,9 @@ router.post('/create/:commissionId', authenticate, tenantScope, authorize('admin
     const { rows: [commission] } = await query(sql, params);
 
     if (!commission) return res.status(404).json({ error: 'Commission introuvable' });
-    if (commission.status !== 'approved') return res.status(400).json({ error: 'Commission doit etre approuvee' });
+    if (commission.status !== 'awaiting_invoice' && commission.status !== 'pending_validation') {
+      return res.status(400).json({ error: 'Commission doit etre approuvee' });
+    }
 
     // Tenant-scoped partner lookup
     let partnerSql = 'SELECT * FROM partners WHERE id = $1';

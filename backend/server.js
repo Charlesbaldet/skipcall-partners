@@ -90,7 +90,10 @@ app.use(cors({
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookRoutes);
 console.log('[startup] Stripe webhook route registered at /api/webhooks/stripe');
 
-app.use(express.json({ limit: '1mb' }));
+// Invoice uploads on /api/commissions/:id/upload-invoice send the PDF as
+// a base64 data URL inside JSON, so the global limit needs to fit a
+// reasonably-sized invoice (~10MB raw → ~14MB base64).
+app.use(express.json({ limit: '15mb' }));
 
 // ─── Rate limiting ───
 const limiter = rateLimit({

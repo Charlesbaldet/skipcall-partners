@@ -2,34 +2,38 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, ShieldCheck } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
+// New 4-stage lifecycle. Order matters — drives the kanban column order.
+const STATUS_KEYS = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
 const COM_STATUS_META = {
-  pending: { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
-  approved: { color: 'var(--rb-primary, #059669)', bg: '#eef2ff', icon: CheckCircle },
-  paid: { color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
+  pending_approval:   { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
+  awaiting_invoice:   { color: '#6366f1', bg: '#eef2ff', icon: FileText },
+  pending_validation: { color: '#0284c7', bg: '#eff6ff', icon: ShieldCheck },
+  paid:               { color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
 };
 
 export default function CommissionsPage() {
   const { t } = useTranslation();
   const COM_STATUS = {
-    pending: { label: t('commissions.pending'), ...COM_STATUS_META.pending },
-    approved: { label: t('commissions.approved'), ...COM_STATUS_META.approved },
-    paid: { label: t('commissions.paid'), ...COM_STATUS_META.paid },
+    pending_approval:   { label: t('commission.status.pending_approval'), ...COM_STATUS_META.pending_approval },
+    awaiting_invoice:   { label: t('commission.status.awaiting_invoice'), ...COM_STATUS_META.awaiting_invoice },
+    pending_validation: { label: t('commission.status.pending_validation'), ...COM_STATUS_META.pending_validation },
+    paid:               { label: t('commission.status.paid'), ...COM_STATUS_META.paid },
   };
   const [summary, setSummary] = useState([]);
   const [commissions, setCommissions] = useState([]);
   const [totals, setTotals] = useState({ pending: 0, paid: 0 });
   const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('summary');
+  const [tab, setTab] = useState('pipeline');
   const [viewMode, setViewMode] = useState('kanban');
   const [payModal, setPayModal] = useState(null);
   const [paying, setPaying] = useState(false);
   const [comLimits, setComLimits] = useState({});
   const [myTenant, setMyTenant] = useState(null);
-  const [approvingId, setApprovingId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
@@ -45,9 +49,11 @@ export default function CommissionsPage() {
 
   useEffect(() => { reload().catch(console.error).finally(() => setLoading(false)); }, []);
 
-  const handleStatusChange = async (id, status) => {
-    setCommissions(prev => prev.map(c => c.id === id ? { ...c, status } : c));
-    try { await api.updateCommission(id, status); await reload(); } catch (err) { console.error(err); await reload(); }
+  const handleApprove = async (id) => {
+    setBusyId(id);
+    try { await api.approveCommission(id); await reload(); }
+    catch (err) { alert(err.message || 'Error'); }
+    setBusyId(null);
   };
 
   const handlePayClick = async (commission) => {
@@ -59,15 +65,9 @@ export default function CommissionsPage() {
     }
   };
 
-  const handleApprove = async (id) => {
-    setApprovingId(id);
-    try {
-      await api.approveCommission(id);
-      await reload();
-    } catch (err) {
-      alert(err.message || 'Error');
-    }
-    setApprovingId(null);
+  const handleDownloadInvoice = async (id) => {
+    try { await api.downloadCommissionInvoice(id); }
+    catch (err) { alert(err.message || 'Error'); }
   };
 
   const openReject = (commission) => {
@@ -100,17 +100,21 @@ export default function CommissionsPage() {
     const headers = [t('commissions.tbl_prospect'), t('referrals.company'), t('commissions.tbl_partner'), t('commissions.tbl_rate') + ' %', t('commissions.tbl_deal') + ' €', t('commissions.tbl_commission') + ' €', t('commissions.tbl_status'), t('referrals.created_at'), t('commissions.date_validated'), t('commissions.paid_on')];
     const rows = commissions.map(c => [c.prospect_name, c.prospect_company, c.partner_name, c.rate, c.deal_value, c.amount, COM_STATUS[c.status]?.label || c.status, c.created_at?.split('T')[0] || '', c.approved_at?.split('T')[0] || '', c.paid_at?.split('T')[0] || '']);
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `commissions_${new Date().toISOString().split('T')[0]}.csv`; a.click();
   };
 
   const totalAll = summary.reduce((s, p) => s + parseFloat(p.total_amount || 0), 0);
-  const pendingApprovals = commissions.filter(c => c.approval_status === 'pending_approval');
-  const approvedCommissions = commissions.filter(c => c.approval_status !== 'pending_approval' && c.approval_status !== 'rejected');
+  // 'pipeline' tab shows ALL commissions across the 4 lifecycle columns,
+  // including those that are awaiting admin approval. Rejected rows are
+  // surfaced via the rejection_reason banner inside their card and not
+  // duplicated in their own column — the reject action is still
+  // available next to Approuver in the pending_approval column.
+  const visibleCommissions = commissions.filter(c => c.approval_status !== 'rejected');
   const filtered = filterStatus === 'all'
-    ? approvedCommissions
-    : approvedCommissions.filter(c => c.status === filterStatus);
+    ? visibleCommissions
+    : visibleCommissions.filter(c => c.status === filterStatus);
 
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('commissions.loading')}</div>;
 
@@ -137,9 +141,8 @@ export default function CommissionsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
           {[
-            { id: 'approval', label: t('commission.approval_section'), badge: pendingApprovals.length },
             { id: 'summary', label: t('commissions.tab_by_partner') },
-            { id: 'detail', label: t('commissions.tab_detail') },
+            { id: 'pipeline', label: t('commissions.tab_pipeline') },
           ].map(tab_ => (
             <button key={tab_.id} onClick={() => setTab(tab_.id)} style={{
               padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
@@ -148,14 +151,11 @@ export default function CommissionsPage() {
               boxShadow: tab === tab_.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
             }}>
               {tab_.label}
-              {tab_.badge > 0 && (
-                <span style={{ background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 800, padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{tab_.badge}</span>
-              )}
             </button>
           ))}
         </div>
 
-        {tab === 'detail' && (
+        {tab === 'pipeline' && (
           <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
             <button onClick={() => setViewMode('kanban')} style={{
               padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
@@ -170,59 +170,6 @@ export default function CommissionsPage() {
           </div>
         )}
       </div>
-
-      {tab === 'approval' && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', background: '#fffbeb', borderBottom: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <ShieldCheck size={18} color="#f59e0b" />
-            <div>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{t('commission.approval_section')}</div>
-              <div style={{ fontSize: 12, color: '#92400e', marginTop: 2 }}>{pendingApprovals.length} × {t('commission.pending_approval').toLowerCase()}</div>
-            </div>
-          </div>
-          {pendingApprovals.length === 0 ? (
-            <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('commissions.no_commission')}</div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, padding: 20 }}>
-              {pendingApprovals.map(c => (
-                <div key={c.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderLeft: '3px solid #f59e0b', borderRadius: 12, padding: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{c.prospect_name}</div>
-                      {c.prospect_company && <div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div>}
-                    </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: '#fef3c7', color: '#92400e', whiteSpace: 'nowrap' }}>{t('commission.pending_approval')}</div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-                    <div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_partner')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{c.partner_name}</div></div>
-                    <div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.tbl_deal')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{fmt(c.deal_value)}</div></div>
-                  </div>
-                  <div style={{ background: 'linear-gradient(135deg,#fef3c7,#fffbeb)', borderRadius: 10, padding: 12, textAlign: 'center', marginBottom: 12, border: '1px solid #fde68a' }}>
-                    <div style={{ color: '#92400e', fontSize: 11, fontWeight: 600 }}>{t('commissions.tbl_commission')}</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>{fmt(c.amount)}</div>
-                    <div style={{ fontSize: 11, color: '#92400e' }}>({c.rate}%)</div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      onClick={() => handleApprove(c.id)}
-                      disabled={approvingId === c.id}
-                      style={{ flex: 2, padding: '10px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 8px rgba(5,150,105,0.25)', opacity: approvingId === c.id ? 0.7 : 1 }}
-                    >
-                      <CheckCircle size={14} /> {t('commission.approve')}
-                    </button>
-                    <button
-                      onClick={() => openReject(c)}
-                      style={{ flex: 1, padding: '10px', borderRadius: 10, background: '#fff', border: '1px solid #fecaca', color: '#dc2626', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                    >
-                      <X size={14} /> {t('commission.reject')}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {tab === 'summary' && (
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
@@ -252,10 +199,11 @@ export default function CommissionsPage() {
         </div>
       )}
 
-      {tab === 'detail' && viewMode === 'kanban' && (
+      {tab === 'pipeline' && viewMode === 'kanban' && (
         <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 400 }}>
-          {Object.entries(COM_STATUS).map(([status, sc]) => {
-            const allCards = approvedCommissions.filter(c => c.status === status);
+          {STATUS_KEYS.map(status => {
+            const sc = COM_STATUS[status];
+            const allCards = visibleCommissions.filter(c => c.status === status);
             const limit = comLimits[status] || 25;
             const cards = allCards.slice(0, limit);
             const hasMore = allCards.length > limit;
@@ -274,26 +222,60 @@ export default function CommissionsPage() {
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                   {cards.map(c => (
                     <div key={c.id} style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>{c.prospect_name}</div>
-                      {c.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{c.prospect_company}</div>}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <span style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600 }}>{c.partner_name}</span>
-                        <span style={{ fontWeight: 800, color: sc.color, fontSize: 15 }}>{fmt(c.amount)}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, gap: 6 }}>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{c.partner_name}</div>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: sc.bg, color: sc.color, whiteSpace: 'nowrap' }}>{sc.label}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: '#94a3b8', marginBottom: 10 }}>
-                        <span>Deal: {fmt(c.deal_value)}</span>
-                        <span>{c.rate}%</span>
+                      {c.prospect_name && <div style={{ color: '#475569', fontSize: 12, marginBottom: 8 }}>{c.prospect_name}{c.prospect_company ? ' · ' + c.prospect_company : ''}</div>}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span style={{ fontWeight: 800, color: sc.color, fontSize: 16 }}>{fmt(c.amount)}</span>
+                        <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.rate}% · {fmt(c.deal_value)}</span>
                       </div>
-                      {status === 'pending' && (
-                        <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commissions.approve')}</button>
+                      <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>{fmtDate(c.created_at)}</div>
+
+                      {status === 'pending_approval' && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => handleApprove(c.id)} disabled={busyId === c.id}
+                            style={{ flex: 2, padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
+                            <CheckCircle size={12} /> {t('commission.approve')}
+                          </button>
+                          <button onClick={() => openReject(c)}
+                            style={{ flex: 1, padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #fecaca', color: '#dc2626', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                            {t('commission.reject')}
+                          </button>
+                        </div>
                       )}
-                      {status === 'approved' && (
-                        <button onClick={() => handlePayClick(c)} style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#f0fdf4', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                          <CreditCard size={12} /> {t('commissions.pay')}
-                        </button>
+                      {status === 'awaiting_invoice' && (
+                        <div style={{ padding: '7px 10px', borderRadius: 8, background: '#fffbeb', color: '#92400e', fontSize: 11, textAlign: 'center', fontWeight: 600 }}>
+                          {t('commission.waiting_for_partner_invoice')}
+                        </div>
                       )}
-                      {status === 'paid' && c.paid_at && (
-                        <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>{t('commissions.paid_on')} {fmtDate(c.paid_at)}</div>
+                      {status === 'pending_validation' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {c.has_invoice && (
+                            <button onClick={() => handleDownloadInvoice(c.id)}
+                              style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                              <Download size={12} /> {t('commission.download_invoice')}
+                            </button>
+                          )}
+                          <button onClick={() => handlePayClick(c)}
+                            style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <CreditCard size={12} /> {t('commission.validate_payment')}
+                          </button>
+                        </div>
+                      )}
+                      {status === 'paid' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {c.has_invoice && (
+                            <button onClick={() => handleDownloadInvoice(c.id)}
+                              style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                              <Download size={12} /> {t('commission.download_invoice')}
+                            </button>
+                          )}
+                          {c.paid_at && (
+                            <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>{t('commissions.paid_on')} {fmtDate(c.paid_at)}</div>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
@@ -311,12 +293,12 @@ export default function CommissionsPage() {
         </div>
       )}
 
-      {tab === 'detail' && viewMode === 'table' && (
+      {tab === 'pipeline' && viewMode === 'table' && (
         <>
           <div style={{ marginBottom: 16 }}>
             <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#334155', background: '#fff', cursor: 'pointer' }}>
               <option value="all">{t('commissions.all_statuses')}</option>
-              {Object.entries(COM_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              {STATUS_KEYS.map(k => <option key={k} value={k}>{COM_STATUS[k].label}</option>)}
             </select>
           </div>
           <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
@@ -327,7 +309,7 @@ export default function CommissionsPage() {
                 ))}
               </tr></thead>
               <tbody>{filtered.map(c => {
-                const cs = COM_STATUS[c.status];
+                const cs = COM_STATUS[c.status] || COM_STATUS.pending_approval;
                 return (
                   <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                     <td style={{ padding: '13px 16px' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div></td>
@@ -341,8 +323,9 @@ export default function CommissionsPage() {
                       {c.payment_due_date ? (<span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#dc2626' : '#64748b', fontWeight: c.is_late ? 700 : 400 }}>{c.is_late && <AlertTriangle size={14} />}{fmtDate(c.payment_due_date)}</span>) : '—'}
                     </td>
                     <td style={{ padding: '13px 16px' }}>
-                      {c.status === 'pending' && <button onClick={() => handleStatusChange(c.id, 'approved')} style={{ padding: '6px 12px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commissions.approve')}</button>}
-                      {c.status === 'approved' && <button onClick={() => handlePayClick(c)} style={{ padding: '6px 12px', borderRadius: 8, background: '#f0fdf4', border: 'none', color: '#16a34a', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><CreditCard size={12} /> {t('commissions.pay')}</button>}
+                      {c.status === 'pending_approval' && <button onClick={() => handleApprove(c.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.approve')}</button>}
+                      {c.status === 'awaiting_invoice' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{t('commission.waiting_for_partner_invoice')}</span>}
+                      {c.status === 'pending_validation' && <button onClick={() => handlePayClick(c)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.validate_payment')}</button>}
                       {c.status === 'paid' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
                     </td>
                   </tr>
@@ -354,7 +337,6 @@ export default function CommissionsPage() {
         </>
       )}
 
-      {/* Reject commission modal (uses ConfirmModal with a reason textarea) */}
       <ConfirmModal
         isOpen={!!rejectModal}
         title={t('commission.reject')}
@@ -383,7 +365,6 @@ export default function CommissionsPage() {
         onCancel={() => { setRejectModal(null); setRejectReason(''); }}
       />
 
-      {/* Payment modal */}
       {payModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div onClick={() => setPayModal(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />

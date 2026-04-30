@@ -58,7 +58,7 @@ router.get('/kpis', async (req, res) => {
     const { rows: [comKpis] } = await query(
       `SELECT
         COALESCE(SUM(amount), 0) as total_commission,
-        COALESCE(SUM(CASE WHEN status = 'pending' THEN amount END), 0) as pending_commission,
+        COALESCE(SUM(CASE WHEN status IN ('pending_approval','awaiting_invoice','pending_validation') THEN amount END), 0) as pending_commission,
         COALESCE(SUM(CASE WHEN status = 'paid' THEN amount END), 0) as paid_commission
        FROM commissions c
        ${comFilter}`,

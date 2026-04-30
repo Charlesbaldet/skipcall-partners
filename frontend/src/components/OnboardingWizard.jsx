@@ -6,6 +6,14 @@ import api from '../lib/api';
 const C = { p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)', s: '#0f172a', m: '#64748b', a: 'var(--rb-accent, #f97316)' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
+// <input type="color"> requires a literal `#rrggbb` value; CSS var() strings
+// are rejected silently by the browser, leaving primary_color/accent_color
+// as invalid CSS strings if the user only touches one swatch — which the
+// backend then rejects. Use real hex defaults so a single-swatch edit
+// still produces a valid payload.
+const DEFAULT_PRIMARY_HEX = '#059669';
+const DEFAULT_ACCENT_HEX = '#f97316';
+
 const STEPS = [
   { id: 'welcome',       icon: Sparkles },
   { id: 'createUser',    icon: Users },
@@ -28,7 +36,7 @@ export default function OnboardingWizard({ onClose }) {
   const [partnerForm, setPartnerForm] = useState({ name: '', contact_name: '', email: '', commission_rate: 10 });
   const [createdPartner, setCreatedPartner] = useState(null);
 
-  const [customizeForm, setCustomizeForm] = useState({ name: '', primary_color: C.p, accent_color: C.a, revenue_model: 'MRR' });
+  const [customizeForm, setCustomizeForm] = useState({ name: '', primary_color: DEFAULT_PRIMARY_HEX, accent_color: DEFAULT_ACCENT_HEX, revenue_model: 'MRR' });
   const [customized, setCustomized] = useState(false);
   const [marketplaceForm, setMarketplaceForm] = useState({ sector: '', website: '', icp: '', short_description: '', marketplace_visible: false });
   const setMkt = (k, v) => setMarketplaceForm(f => ({ ...f, [k]: v }));

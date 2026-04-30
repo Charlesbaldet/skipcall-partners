@@ -817,7 +817,8 @@
     "kpi_pending": "Pending",
     "kpi_paid": "Paid",
     "tab_by_partner": "By partner",
-    "tab_detail": "Detail",
+    "tab_detail": "Pipeline",
+    "tab_pipeline": "Pipeline",
     "export_csv": "Export CSV",
     "loading": "Loading...",
     "approve": "Approve",
@@ -2093,7 +2094,21 @@
     "reject_reason_placeholder": "Explain why this commission is being rejected…",
     "approved_message": "Commission approved",
     "rejected_message": "Commission rejected",
-    "rejection_reason_label": "Reason"
+    "rejection_reason_label": "Reason",
+    "validate_payment": "Validate payment",
+    "upload_invoice": "Upload invoice",
+    "uploading": "Uploading…",
+    "download_invoice": "Download invoice",
+    "download_receipt": "Download receipt",
+    "waiting_for_partner_invoice": "Waiting for partner invoice",
+    "invoice_under_review": "Invoice under review",
+    "invoice_too_large": "Invoice exceeds 10 MB",
+    "status": {
+      "pending_approval": "Pending approval",
+      "awaiting_invoice": "Awaiting invoice",
+      "pending_validation": "Pending validation",
+      "paid": "Paid"
+    }
   },
   "referral_link": {
     "title": "My referral link",

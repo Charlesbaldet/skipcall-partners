@@ -321,6 +321,46 @@ async function runMigrations() {
   await query(`CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_retry ON webhook_deliveries(next_retry_at) WHERE success = false AND next_retry_at IS NOT NULL`);
   console.log('[webhooks] v19 tables ready');
 
+  // ─── v20: Commission status overhaul + invoice upload ──────────────
+  // Replace the legacy 3-state status (pending/approved/paid) with the
+  // new 4-state lifecycle that mirrors the real workflow:
+  //   pending_approval   → admin must approve the calculated commission
+  //   awaiting_invoice   → approved, waiting for the partner to upload
+  //                        their invoice PDF
+  //   pending_validation → invoice received, admin must validate before
+  //                        paying
+  //   paid               → final
+  // approval_status stays in place for the 'rejected' flag; everything
+  // else collapses into status.
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS invoice_url TEXT`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS invoice_uploaded_at TIMESTAMPTZ`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS invoice_filename TEXT`);
+  await query(`ALTER TABLE commissions DROP CONSTRAINT IF EXISTS commissions_status_check`);
+  // Migrate existing rows BEFORE the new CHECK constraint goes in,
+  // otherwise we'd fail to attach it on a populated table.
+  await query(`
+    UPDATE commissions
+       SET status = CASE
+         WHEN status = 'paid' THEN 'paid'
+         WHEN approval_status = 'pending_approval' THEN 'pending_approval'
+         WHEN approval_status = 'rejected' THEN 'pending_approval'
+         WHEN status IN ('approved', 'pending', 'to_approve') THEN 'awaiting_invoice'
+         ELSE 'pending_approval'
+       END
+     WHERE status NOT IN ('pending_approval','awaiting_invoice','pending_validation','paid')
+  `);
+  await query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'commissions_status_check_v2') THEN
+        ALTER TABLE commissions ADD CONSTRAINT commissions_status_check_v2
+          CHECK (status IN ('pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'));
+      END IF;
+    END $$
+  `);
+  // approval_status default no longer used by new commissions, but the
+  // column stays around so 'rejected' rows keep their flag.
+  console.log('[commissions] v20 status lifecycle + invoice columns ready');
+
   console.log(' Migrations completed');
 
   } catch (err) {

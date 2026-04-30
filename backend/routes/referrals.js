@@ -543,8 +543,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         // on approval_status='pending' (the column default) and are
         // treated as already approved.
         const { rows: [createdCommission] } = await client.query(
-          `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status)
-           VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval')
+          `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status)
+           VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval')
            ON CONFLICT (referral_id)
            DO UPDATE SET amount = EXCLUDED.amount, deal_value = EXCLUDED.deal_value
            RETURNING id, amount, rate, deal_value, created_at`,

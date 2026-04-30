@@ -817,7 +817,8 @@
     "kpi_pending": "Ausstehend",
     "kpi_paid": "Bezahlt",
     "tab_by_partner": "Nach Partner",
-    "tab_detail": "Details",
+    "tab_detail": "Pipeline",
+    "tab_pipeline": "Pipeline",
     "export_csv": "CSV exportieren",
     "loading": "Laden...",
     "approve": "Genehmigen",
@@ -2082,7 +2083,7 @@
     "lead_handling_changed": "Lead-Betreuung aktualisiert"
   },
   "commission": {
-    "pending_approval": "Wartet auf Freigabe",
+    "pending_approval": "Zu genehmigen",
     "approved": "Freigegeben",
     "rejected": "Abgelehnt",
     "paid_label": "Bezahlt",
@@ -2093,7 +2094,21 @@
     "reject_reason_placeholder": "Begründe die Ablehnung dieser Provision…",
     "approved_message": "Provision genehmigt",
     "rejected_message": "Provision abgelehnt",
-    "rejection_reason_label": "Grund"
+    "rejection_reason_label": "Grund",
+    "validate_payment": "Zahlung bestätigen",
+    "upload_invoice": "Rechnung hochladen",
+    "uploading": "Wird hochgeladen…",
+    "download_invoice": "Rechnung herunterladen",
+    "download_receipt": "Beleg herunterladen",
+    "waiting_for_partner_invoice": "Warte auf Partnerrechnung",
+    "invoice_under_review": "Rechnung wird geprüft",
+    "invoice_too_large": "Rechnung überschreitet 10 MB",
+    "status": {
+      "pending_approval": "Zu genehmigen",
+      "awaiting_invoice": "Wartet auf Rechnung",
+      "pending_validation": "Zu validieren",
+      "paid": "Bezahlt"
+    }
   },
   "referral_link": {
     "title": "Mein Empfehlungslink",

@@ -817,7 +817,8 @@
     "kpi_pending": "Pendentes",
     "kpi_paid": "Pagas",
     "tab_by_partner": "Por parceiro",
-    "tab_detail": "Detalhe",
+    "tab_detail": "Pipeline",
+    "tab_pipeline": "Pipeline",
     "export_csv": "Exportar CSV",
     "loading": "Carregando...",
     "approve": "Aprovar",
@@ -2082,7 +2083,7 @@
     "lead_handling_changed": "Gestão do lead atualizada"
   },
   "commission": {
-    "pending_approval": "A aguardar aprovação",
+    "pending_approval": "Para aprovar",
     "approved": "Aprovada",
     "rejected": "Rejeitada",
     "paid_label": "Paga",
@@ -2093,7 +2094,21 @@
     "reject_reason_placeholder": "Explica porque esta comissão é rejeitada…",
     "approved_message": "Comissão aprovada",
     "rejected_message": "Comissão rejeitada",
-    "rejection_reason_label": "Motivo"
+    "rejection_reason_label": "Motivo",
+    "validate_payment": "Validar pagamento",
+    "upload_invoice": "Enviar fatura",
+    "uploading": "A enviar…",
+    "download_invoice": "Descarregar fatura",
+    "download_receipt": "Descarregar recibo",
+    "waiting_for_partner_invoice": "À espera da fatura do parceiro",
+    "invoice_under_review": "Fatura em análise",
+    "invoice_too_large": "A fatura excede 10 MB",
+    "status": {
+      "pending_approval": "Para aprovar",
+      "awaiting_invoice": "Aguarda faturação",
+      "pending_validation": "Para validar",
+      "paid": "Pago"
+    }
   },
   "referral_link": {
     "title": "O meu link de referência",

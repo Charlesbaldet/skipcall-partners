@@ -817,7 +817,8 @@
     "kpi_pending": "In behandeling",
     "kpi_paid": "Betaald",
     "tab_by_partner": "Per partner",
-    "tab_detail": "Detail",
+    "tab_detail": "Pipeline",
+    "tab_pipeline": "Pipeline",
     "export_csv": "CSV exporteren",
     "loading": "Laden...",
     "approve": "Goedkeuren",
@@ -2082,7 +2083,7 @@
     "lead_handling_changed": "Leadbeheer bijgewerkt"
   },
   "commission": {
-    "pending_approval": "In afwachting van goedkeuring",
+    "pending_approval": "Goed te keuren",
     "approved": "Goedgekeurd",
     "rejected": "Afgewezen",
     "paid_label": "Betaald",
@@ -2093,7 +2094,21 @@
     "reject_reason_placeholder": "Leg uit waarom deze commissie wordt afgewezen…",
     "approved_message": "Commissie goedgekeurd",
     "rejected_message": "Commissie afgewezen",
-    "rejection_reason_label": "Reden"
+    "rejection_reason_label": "Reden",
+    "validate_payment": "Betaling valideren",
+    "upload_invoice": "Factuur uploaden",
+    "uploading": "Bezig met uploaden…",
+    "download_invoice": "Factuur downloaden",
+    "download_receipt": "Bewijs downloaden",
+    "waiting_for_partner_invoice": "Wacht op factuur van partner",
+    "invoice_under_review": "Factuur wordt beoordeeld",
+    "invoice_too_large": "Factuur is groter dan 10 MB",
+    "status": {
+      "pending_approval": "Goed te keuren",
+      "awaiting_invoice": "Wacht op factuur",
+      "pending_validation": "Te valideren",
+      "paid": "Betaald"
+    }
   },
   "referral_link": {
     "title": "Mijn referral-link",

@@ -22,7 +22,18 @@ function nextQuarterEnd(date) {
   return nextQ.toISOString().split('T')[0];
 }
 
-// âââ List commissions âââ
+const NEW_STATUSES = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
+
+// Translate legacy status values that older clients may still send.
+function normalizeStatus(s) {
+  if (!s) return null;
+  if (s === 'pending' || s === 'to_approve') return 'pending_approval';
+  if (s === 'approved') return 'awaiting_invoice';
+  if (NEW_STATUSES.includes(s)) return s;
+  return null;
+}
+
+// ─── List commissions ───
 router.get('/', async (req, res) => {
   try {
     const { status, partner_id, approval_status } = req.query;
@@ -30,7 +41,6 @@ router.get('/', async (req, res) => {
     let params = [];
     let i = 1;
 
-    // Tenant isolation
     if (req.tenantId && !req.skipTenantFilter) {
       where.push(`c.tenant_id = $${i++}`);
       params.push(req.tenantId);
@@ -45,8 +55,11 @@ router.get('/', async (req, res) => {
     }
 
     if (status && status !== 'all') {
-      where.push(`c.status = $${i++}`);
-      params.push(status);
+      const norm = normalizeStatus(status);
+      if (norm) {
+        where.push(`c.status = $${i++}`);
+        params.push(norm);
+      }
     }
     if (approval_status && approval_status !== 'all') {
       where.push(`c.approval_status = $${i++}`);
@@ -56,7 +69,12 @@ router.get('/', async (req, res) => {
     const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
     const { rows } = await query(
-      `SELECT c.*, p.name as partner_name, p.contact_name as partner_contact,
+      `SELECT c.id, c.referral_id, c.partner_id, c.amount, c.rate, c.deal_value,
+              c.status, c.approval_status, c.rejection_reason,
+              c.approved_at, c.paid_at, c.created_at, c.tenant_id,
+              c.invoice_uploaded_at,
+              (c.invoice_url IS NOT NULL) AS has_invoice,
+              p.name as partner_name, p.contact_name as partner_contact,
               r.prospect_name, r.prospect_company
        FROM commissions c
        JOIN partners p ON c.partner_id = p.id
@@ -66,8 +84,8 @@ router.get('/', async (req, res) => {
       params
     );
 
-    const totalPending = rows.filter(r => r.status === 'pending').reduce((s, r) => s + parseFloat(r.amount), 0);
-    const totalApproved = rows.filter(r => r.status === 'approved').reduce((s, r) => s + parseFloat(r.amount), 0);
+    const totalPending = rows.filter(r => r.status === 'pending_approval').reduce((s, r) => s + parseFloat(r.amount), 0);
+    const totalApproved = rows.filter(r => r.status === 'awaiting_invoice' || r.status === 'pending_validation').reduce((s, r) => s + parseFloat(r.amount), 0);
     const totalPaid = rows.filter(r => r.status === 'paid').reduce((s, r) => s + parseFloat(r.amount), 0);
 
     const enriched = rows.map(c => ({
@@ -83,14 +101,13 @@ router.get('/', async (req, res) => {
   }
 });
 
-// âââ Summary by partner âââ
+// ─── Summary by partner ───
 router.get('/summary', authorize('admin', 'commercial'), async (req, res) => {
   try {
     let where = ['p.is_active = true'];
     let params = [];
     let i = 1;
 
-    // Tenant isolation
     if (req.tenantId && !req.skipTenantFilter) {
       where.push(`p.tenant_id = $${i++}`);
       params.push(req.tenantId);
@@ -100,8 +117,8 @@ router.get('/summary', authorize('admin', 'commercial'), async (req, res) => {
       `SELECT p.id, p.name, p.contact_name, p.commission_rate,
               COUNT(c.id) as total_commissions,
               COALESCE(SUM(c.amount), 0) as total_amount,
-              COALESCE(SUM(CASE WHEN c.status = 'pending' THEN c.amount END), 0) as pending_amount,
-              COALESCE(SUM(CASE WHEN c.status = 'approved' THEN c.amount END), 0) as approved_amount,
+              COALESCE(SUM(CASE WHEN c.status = 'pending_approval' THEN c.amount END), 0) as pending_amount,
+              COALESCE(SUM(CASE WHEN c.status IN ('awaiting_invoice','pending_validation') THEN c.amount END), 0) as approved_amount,
               COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.amount END), 0) as paid_amount,
               COALESCE(SUM(c.deal_value), 0) as total_deal_value
        FROM partners p
@@ -117,18 +134,18 @@ router.get('/summary', authorize('admin', 'commercial'), async (req, res) => {
   }
 });
 
-// âââ Update commission status (admin only) âââ
+// ─── Update commission status (admin only) ───
+// Accepts the new lifecycle values. Legacy values ('pending','approved')
+// are translated for backwards compat. 'paid' here is the
+// admin's "Valider le paiement" action from the pending_validation column.
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!['pending', 'approved', 'paid'].includes(status)) {
-      return res.status(400).json({ error: 'Statut invalide' });
-    }
+    const status = normalizeStatus(req.body.status);
+    if (!status) return res.status(400).json({ error: 'Statut invalide' });
 
-    const approvedAt = status === 'approved' ? new Date().toISOString() : null;
+    const approvedAt = (status === 'awaiting_invoice') ? new Date().toISOString() : null;
     const paidAt = status === 'paid' ? new Date().toISOString() : null;
 
-    // Tenant check
     let whereExtra = '';
     let params = [req.params.id, status, approvedAt, paidAt];
     if (req.tenantId && !req.skipTenantFilter) {
@@ -146,67 +163,53 @@ router.put('/:id', authorize('admin'), async (req, res) => {
     if (!commission) return res.status(404).json({ error: 'Commission introuvable' });
 
     commission.payment_due_date = commission.approved_at ? nextQuarterEnd(commission.approved_at) : null;
-    commission.is_late = commission.approved_at && commission.status !== 'paid' && new Date(nextQuarterEnd(commission.aproved_at)) < new Date();
+    commission.is_late = commission.approved_at && commission.status !== 'paid' && new Date(nextQuarterEnd(commission.approved_at)) < new Date();
 
-    // Fire-and-forget email when commission is approved or paid
-        if (status === 'approved' || status === 'paid') {
-          (async () => {
-            try {
-              const { rows: [enriched] } = await query(
-                `SELECT c.id, c.amount, c.status, c.referral_id, c.partner_id,
-                        r.prospect_name, r.prospect_company,
-                        t.name as tenant_name
-                 FROM commissions c
-                 JOIN referrals r ON c.referral_id = r.id
-                 JOIN partners p ON c.partner_id = p.id
-                 JOIN tenants t ON p.tenant_id = t.id
-                 WHERE c.id = $1`,
-                [req.params.id]
-              );
-              if (!enriched) return;
-              const { rows: partnerUsers } = await query(
-                `SELECT email, full_name FROM users WHERE partner_id = $1 AND is_active = true`,
-                [enriched.partner_id]
-              );
-              const dashboardUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/commissions';
-              const prospectName = enriched.prospect_name || enriched.prospect_company || 'votre prospect';
-              const amount = parseFloat(enriched.amount) || 0;
-              for (const u of partnerUsers) {
-                const tmpl = status === 'approved'
-                  ? templates.commissionValidated({
-                      partnerName: u.full_name,
-                      prospectName,
-                      commissionAmount: amount,
-                      currency: '€',
-                      dashboardUrl,
-                      tenantName: enriched.tenant_name,
-                    })
-                  : templates.commissionPaid({
-                      partnerName: u.full_name,
-                      prospectName,
-                      commissionAmount: amount,
-                      currency: '€',
-                      dashboardUrl,
-                      tenantName: enriched.tenant_name,
-                    });
-                await resend.sendAndLog({
-                  to: u.email,
-                  subject: tmpl.subject,
-                  html: tmpl.html,
-                  text: tmpl.text,
-                  template: status === 'approved' ? 'commission_validated' : 'commission_paid',
-                  payload: { recipient_name: u.full_name, commission_id: enriched.id, amount },
-                  query,
-                });
-              }
-            } catch (e) { console.error('[commissions.statusChange] email error:', e.message); }
-          })();
-        }
-    
+    if (status === 'awaiting_invoice' || status === 'paid') {
+      const emailKey = status === 'paid' ? 'commission_paid' : 'commission_validated';
+      (async () => {
+        try {
+          const { rows: [enriched] } = await query(
+            `SELECT c.id, c.amount, c.status, c.referral_id, c.partner_id,
+                    r.prospect_name, r.prospect_company,
+                    t.name as tenant_name
+             FROM commissions c
+             JOIN referrals r ON c.referral_id = r.id
+             JOIN partners p ON c.partner_id = p.id
+             JOIN tenants t ON p.tenant_id = t.id
+             WHERE c.id = $1`,
+            [req.params.id]
+          );
+          if (!enriched) return;
+          const { rows: partnerUsers } = await query(
+            `SELECT email, full_name FROM users WHERE partner_id = $1 AND is_active = true`,
+            [enriched.partner_id]
+          );
+          const dashboardUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/commissions';
+          const prospectName = enriched.prospect_name || enriched.prospect_company || 'votre prospect';
+          const amount = parseFloat(enriched.amount) || 0;
+          for (const u of partnerUsers) {
+            const tmpl = status === 'paid'
+              ? templates.commissionPaid({ partnerName: u.full_name, prospectName, commissionAmount: amount, currency: '€', dashboardUrl, tenantName: enriched.tenant_name })
+              : templates.commissionValidated({ partnerName: u.full_name, prospectName, commissionAmount: amount, currency: '€', dashboardUrl, tenantName: enriched.tenant_name });
+            await resend.sendAndLog({
+              to: u.email,
+              subject: tmpl.subject,
+              html: tmpl.html,
+              text: tmpl.text,
+              template: emailKey,
+              payload: { recipient_name: u.full_name, commission_id: enriched.id, amount },
+              query,
+            });
+          }
+        } catch (e) { console.error('[commissions.statusChange] email error:', e.message); }
+      })();
+    }
+
     res.json({ commission });
 
-    // Outgoing webhook: commission.approved / commission.paid
-    if (status === 'approved' || status === 'paid') {
+    // Outgoing webhooks
+    if (status === 'awaiting_invoice' || status === 'paid') {
       (async () => {
         const { rows: [enriched] } = await query(
           `SELECT c.id, c.amount, c.status, c.referral_id, c.partner_id,
@@ -231,16 +234,10 @@ router.put('/:id', authorize('admin'), async (req, res) => {
           amount: parseFloat(enriched.amount) || 0,
           currency: 'EUR',
         };
-        if (status === 'approved') {
-          sendWebhookEvent(req.tenantId, 'commission.approved', {
-            ...basePayload,
-            approved_at: enriched.approved_at,
-          });
+        if (status === 'awaiting_invoice') {
+          sendWebhookEvent(req.tenantId, 'commission.approved', { ...basePayload, approved_at: enriched.approved_at });
         } else if (status === 'paid') {
-          sendWebhookEvent(req.tenantId, 'commission.paid', {
-            ...basePayload,
-            paid_at: enriched.paid_at,
-          });
+          sendWebhookEvent(req.tenantId, 'commission.paid', { ...basePayload, paid_at: enriched.paid_at });
         }
       })().catch(() => {});
     }
@@ -251,12 +248,6 @@ router.put('/:id', authorize('admin'), async (req, res) => {
 });
 
 // ─── Approve / Reject commission (admin approval flow) ─────────────
-// A commission is created with approval_status='pending_approval'
-// whenever a referral transitions to a won stage. An admin must
-// then explicitly approve (→ 'approved', payment eligible) or reject
-// (→ 'rejected', with an optional reason). Both paths notify the
-// partner; approve is email-framed as good news, reject as
-// "requires review".
 async function loadCommissionWithContext(commissionId, tenantId) {
   const { rows } = await query(
     `SELECT c.*, p.name AS partner_name, r.prospect_name
@@ -283,22 +274,25 @@ const fmtMoney = (n) => {
   catch { return num.toFixed(2) + ' €'; }
 };
 
+// Admin approve: pending_approval → awaiting_invoice
 router.post('/:id/approve', authorize('admin'), async (req, res) => {
   try {
     const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
     if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
-    if (existing.approval_status === 'approved') return res.json({ commission: existing, noop: true });
+    if (existing.status === 'awaiting_invoice' || existing.status === 'pending_validation' || existing.status === 'paid') {
+      return res.json({ commission: existing, noop: true });
+    }
 
     const { rows: [updated] } = await query(
       `UPDATE commissions
-          SET approval_status = 'approved',
+          SET status = 'awaiting_invoice',
+              approval_status = 'approved',
               rejection_reason = NULL,
               approved_at = COALESCE(approved_at, NOW())
         WHERE id = $1 RETURNING *`,
       [req.params.id]
     );
 
-    // In-app + email notify the partner
     (async () => {
       try {
         const users = await partnerUsers(existing.partner_id);
@@ -306,7 +300,7 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
         for (const u of users) {
           notify.createNotification(u.id, 'commission', {
             title: `Commission approuvée — ${amountLabel}`,
-            message: `Pour ${existing.prospect_name || 'votre lead'}`,
+            message: `Pour ${existing.prospect_name || 'votre lead'} — merci de déposer votre facture.`,
             link: '/partner/payments',
             tenantId: existing.tenant_id,
           }).catch(() => {});
@@ -370,6 +364,120 @@ router.post('/:id/reject', authorize('admin'), async (req, res) => {
     res.json({ commission: updated });
   } catch (err) {
     console.error('Reject commission error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Partner uploads invoice ───
+// awaiting_invoice → pending_validation. Body is JSON with a base64 data
+// URL: { filename, data_url } where data_url = "data:application/pdf;base64,...".
+// Stored verbatim in invoice_url; the GET endpoint streams it back.
+router.post('/:id/upload-invoice', async (req, res) => {
+  try {
+    const { filename, data_url } = req.body || {};
+    if (!data_url || typeof data_url !== 'string' || !data_url.startsWith('data:')) {
+      return res.status(400).json({ error: 'Fichier requis (PDF)' });
+    }
+
+    let where = 'id = $1';
+    const params = [req.params.id];
+    let i = 2;
+    if (req.tenantId && !req.skipTenantFilter) {
+      where += ` AND tenant_id = $${i++}`;
+      params.push(req.tenantId);
+    }
+    if (req.partnerScope) {
+      where += ` AND partner_id = $${i++}`;
+      params.push(req.partnerScope);
+    }
+
+    const { rows: [existing] } = await query(`SELECT * FROM commissions WHERE ${where}`, params);
+    if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
+    if (existing.status !== 'awaiting_invoice') {
+      return res.status(409).json({ error: 'Cette commission n\'attend pas de facture' });
+    }
+
+    const safeName = (filename && typeof filename === 'string' ? filename : 'invoice.pdf').replace(/[^\w.\-]/g, '_').slice(0, 120);
+
+    const { rows: [updated] } = await query(
+      `UPDATE commissions
+          SET invoice_url = $2,
+              invoice_filename = $3,
+              invoice_uploaded_at = NOW(),
+              status = 'pending_validation'
+        WHERE id = $1 RETURNING id, status, invoice_uploaded_at`,
+      [req.params.id, data_url, safeName]
+    );
+
+    res.json({ commission: updated });
+  } catch (err) {
+    // The invoice_filename column is best-effort — if it doesn't exist
+    // yet (column was added at runtime), retry without it.
+    if (err && /invoice_filename/.test(err.message || '')) {
+      try {
+        await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS invoice_filename TEXT`);
+        const { rows: [updated] } = await query(
+          `UPDATE commissions
+              SET invoice_url = $2,
+                  invoice_filename = $3,
+                  invoice_uploaded_at = NOW(),
+                  status = 'pending_validation'
+            WHERE id = $1 RETURNING id, status, invoice_uploaded_at`,
+          [req.params.id, req.body.data_url, (req.body.filename || 'invoice.pdf').replace(/[^\w.\-]/g, '_').slice(0, 120)]
+        );
+        return res.json({ commission: updated });
+      } catch (e2) { console.error('Upload invoice retry error:', e2); }
+    }
+    console.error('Upload invoice error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Download invoice ───
+// Admin: any commission in their tenant. Partner: only their own.
+router.get('/:id/invoice', async (req, res) => {
+  try {
+    let where = 'id = $1';
+    const params = [req.params.id];
+    let i = 2;
+    if (req.tenantId && !req.skipTenantFilter) {
+      where += ` AND tenant_id = $${i++}`;
+      params.push(req.tenantId);
+    }
+    if (req.partnerScope) {
+      where += ` AND partner_id = $${i++}`;
+      params.push(req.partnerScope);
+    }
+
+    const { rows: [c] } = await query(
+      `SELECT invoice_url,
+              COALESCE(NULLIF(invoice_filename, ''), 'invoice.pdf') AS invoice_filename
+         FROM commissions WHERE ${where}`,
+      params
+    );
+    if (!c || !c.invoice_url) return res.status(404).json({ error: 'Aucune facture' });
+
+    const m = /^data:([^;]+);base64,(.+)$/.exec(c.invoice_url);
+    if (!m) return res.status(500).json({ error: 'Fichier corrompu' });
+    const mime = m[1];
+    const buf = Buffer.from(m[2], 'base64');
+    res.setHeader('Content-Type', mime);
+    res.setHeader('Content-Disposition', `attachment; filename="${c.invoice_filename}"`);
+    res.send(buf);
+  } catch (err) {
+    if (err && /invoice_filename/.test(err.message || '')) {
+      // Older DBs without invoice_filename — fall back to plain SELECT.
+      try {
+        const { rows: [c] } = await query(`SELECT invoice_url FROM commissions WHERE id = $1`, [req.params.id]);
+        if (!c || !c.invoice_url) return res.status(404).json({ error: 'Aucune facture' });
+        const m = /^data:([^;]+);base64,(.+)$/.exec(c.invoice_url);
+        if (!m) return res.status(500).json({ error: 'Fichier corrompu' });
+        res.setHeader('Content-Type', m[1]);
+        res.setHeader('Content-Disposition', `attachment; filename="invoice.pdf"`);
+        return res.send(Buffer.from(m[2], 'base64'));
+      } catch (e2) { console.error('Download invoice fallback error:', e2); }
+    }
+    console.error('Download invoice error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

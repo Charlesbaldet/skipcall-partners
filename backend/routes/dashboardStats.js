@@ -120,15 +120,14 @@ async function monthlyMrr(tenantId) {
 }
 
 async function commissionStatus(tenantId) {
-  // Status labels the frontend will colour-code:
-  //   pending_approval → En attente (amber)
-  //   approved         → Approuvées (green)
-  //   paid             → Payées (blue)   — matches commissions.status
-  //   rejected         → Rejetées (red)
+  // Status labels the frontend will colour-code. The 'approved' bucket
+  // here covers both awaiting_invoice (post-approval, no invoice yet)
+  // and pending_validation (invoice received, awaiting payment) — both
+  // are "approved but not yet paid" from a partner-finance perspective.
   const { rows } = await query(
     `SELECT
-       COALESCE(SUM(amount) FILTER (WHERE approval_status = 'pending_approval'), 0)::numeric AS pending,
-       COALESCE(SUM(amount) FILTER (WHERE approval_status = 'approved' AND status <> 'paid'), 0)::numeric AS approved,
+       COALESCE(SUM(amount) FILTER (WHERE status = 'pending_approval'), 0)::numeric AS pending,
+       COALESCE(SUM(amount) FILTER (WHERE status IN ('awaiting_invoice','pending_validation')), 0)::numeric AS approved,
        COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0)::numeric AS paid,
        COALESCE(SUM(amount) FILTER (WHERE approval_status = 'rejected'), 0)::numeric AS rejected
      FROM commissions

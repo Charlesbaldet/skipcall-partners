@@ -1,15 +1,18 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
-import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building, XCircle } from 'lucide-react';
+import { CreditCard, Clock, CheckCircle, DollarSign, Edit3, Save, X, Building, XCircle, Upload, Download, FileText, ShieldCheck } from 'lucide-react';
 
 const PAY_STATUS_META = {
-  pending: { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
-  approved: { color: 'var(--rb-primary, #059669)', bg: '#eef2ff', icon: CheckCircle },
-  paid: { color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
+  pending_approval:   { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
+  awaiting_invoice:   { color: '#6366f1', bg: '#eef2ff', icon: FileText },
+  pending_validation: { color: '#0284c7', bg: '#eff6ff', icon: ShieldCheck },
+  paid:               { color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
 };
+
+const STATUS_ORDER = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
 
 export default function PartnerPaymentsPage() {
   const { t } = useTranslation();
@@ -21,27 +24,33 @@ export default function PartnerPaymentsPage() {
   const [editIban, setEditIban] = useState(false);
   const [ibanForm, setIbanForm] = useState({ iban: '', bic: '', account_holder: '' });
   const [savingIban, setSavingIban] = useState(false);
+  const [uploadingId, setUploadingId] = useState(null);
+  const fileInputRef = useRef(null);
+  const pendingUploadIdRef = useRef(null);
 
   const PAY_STATUS = {
-    pending: { label: t('partnerPayments.pending'), ...PAY_STATUS_META.pending },
-    approved: { label: t('commissions.approved'), ...PAY_STATUS_META.approved },
-    paid: { label: t('partnerPayments.paid'), ...PAY_STATUS_META.paid },
+    pending_approval:   { label: t('commission.status.pending_approval'), ...PAY_STATUS_META.pending_approval },
+    awaiting_invoice:   { label: t('commission.status.awaiting_invoice'), ...PAY_STATUS_META.awaiting_invoice },
+    pending_validation: { label: t('commission.status.pending_validation'), ...PAY_STATUS_META.pending_validation },
+    paid:               { label: t('commission.status.paid'), ...PAY_STATUS_META.paid },
   };
 
+  const reload = () => Promise.all([
+    api.getCommissions(),
+    api.getMyPartnerProfile(),
+  ]).then(([c, p]) => {
+    setCommissions(c.commissions);
+    setTotals({ pending: c.totalPending, paid: c.totalPaid });
+    setProfile(p.partner);
+    setIbanForm({
+      iban: p.partner.iban || '',
+      bic: p.partner.bic || '',
+      account_holder: p.partner.account_holder || '',
+    });
+  });
+
   useEffect(() => {
-    Promise.all([
-      api.getCommissions(),
-      api.getMyPartnerProfile(),
-    ]).then(([c, p]) => {
-      setCommissions(c.commissions);
-      setTotals({ pending: c.totalPending, paid: c.totalPaid });
-      setProfile(p.partner);
-      setIbanForm({
-        iban: p.partner.iban || '',
-        bic: p.partner.bic || '',
-        account_holder: p.partner.account_holder || '',
-      });
-    }).catch(console.error).finally(() => setLoading(false));
+    reload().catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const handleSaveIban = async () => {
@@ -56,12 +65,60 @@ export default function PartnerPaymentsPage() {
     setSavingIban(false);
   };
 
+  const triggerUpload = (commissionId) => {
+    pendingUploadIdRef.current = commissionId;
+    fileInputRef.current && fileInputRef.current.click();
+  };
+
+  const handleFileSelected = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    const id = pendingUploadIdRef.current;
+    pendingUploadIdRef.current = null;
+    if (!file || !id) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert(t('commission.invoice_too_large'));
+      return;
+    }
+    setUploadingId(id);
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(file);
+      });
+      await api.uploadCommissionInvoice(id, { filename: file.name, dataUrl });
+      await reload();
+    } catch (err) {
+      alert(err.message || 'Error');
+    }
+    setUploadingId(null);
+  };
+
+  const handleDownload = async (id) => {
+    try { await api.downloadCommissionInvoice(id); }
+    catch (err) { alert(err.message || 'Error'); }
+  };
+
   const totalAll = commissions.reduce((s, c) => s + parseFloat(c.amount || 0), 0);
+
+  // Group commissions by status so partners see their workflow at a
+  // glance. Rejected rows surface separately at the top via the badge
+  // path below.
+  const byStatus = {};
+  for (const k of STATUS_ORDER) byStatus[k] = [];
+  for (const c of commissions) {
+    if (c.approval_status === 'rejected') continue;
+    if (byStatus[c.status]) byStatus[c.status].push(c);
+  }
+  const rejectedRows = commissions.filter(c => c.approval_status === 'rejected');
 
   if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerPayments.loading')}</div>;
 
   return (
     <div className="fade-in">
+      <input ref={fileInputRef} type="file" accept="application/pdf,image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
       <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerPayments.title')}</h1>
       <p style={{ color: '#64748b', marginBottom: 24 }}>{t('partnerPayments.subtitle')}</p>
 
@@ -70,6 +127,20 @@ export default function PartnerPaymentsPage() {
         <PayKPI icon={DollarSign} label={t('commissions.kpi_total')} value={fmt(totalAll)} color="#6366f1" />
         <PayKPI icon={Clock} label={t('partnerPayments.kpi_pending')} value={fmt(totals.pending)} color="#f59e0b" />
         <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')} value={fmt(totals.paid)} color="#16a34a" />
+      </div>
+
+      {/* Workflow legend */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, padding: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, flexWrap: 'wrap' }}>
+        {STATUS_ORDER.map((k, i) => {
+          const st = PAY_STATUS[k];
+          const Icon = st.icon;
+          return (
+            <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: st.color, fontWeight: 600 }}>
+              <Icon size={14} /> {st.label}
+              {i < STATUS_ORDER.length - 1 && <span style={{ color: '#cbd5e1', margin: '0 4px' }}>→</span>}
+            </span>
+          );
+        })}
       </div>
 
       {/* IBAN Section */}
@@ -154,71 +225,98 @@ export default function PartnerPaymentsPage() {
         )}
       </div>
 
-      {/* Payments list */}
-      <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-          <thead>
-            <tr style={{ background: '#f8fafc' }}>
-              {[t('partnerPayments.tbl_prospect'), t('partnerPayments.tbl_deal'), t('partnerPayments.tbl_rate'), t('partnerPayments.tbl_commission'), t('partnerPayments.tbl_status'), t('partnerPayments.tbl_date'), t('commissions.paid_on')].map((h, i) => (
-                <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {commissions.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerPayments.no_payments')}</td></tr>
-            ) : commissions.map(c => {
-              // Approval state (pending_approval / rejected) takes priority
-              // over the payment-status badge — partners need to see
-              // "waiting on approval" or "rejected" before the payment
-              // lifecycle starts.
-              let badgeBg, badgeColor, badgeLabel, BadgeIcon, amountColor;
-              if (c.approval_status === 'pending_approval') {
-                badgeBg = '#fffbeb'; badgeColor = '#d97706'; badgeLabel = t('commission.pending_approval'); BadgeIcon = Clock; amountColor = '#d97706';
-              } else if (c.approval_status === 'rejected') {
-                badgeBg = '#fef2f2'; badgeColor = '#dc2626'; badgeLabel = t('commission.rejected'); BadgeIcon = XCircle; amountColor = '#dc2626';
-              } else {
-                const st = PAY_STATUS[c.status] || PAY_STATUS.pending;
-                badgeBg = st.bg; badgeColor = st.color; badgeLabel = st.label; BadgeIcon = st.icon; amountColor = st.color;
-              }
-              return (
-                <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  <td style={{ padding: '13px 16px' }}>
-                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div>
-                    <div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div>
-                    {c.approval_status === 'rejected' && c.rejection_reason && (
-                      <div style={{ marginTop: 6, padding: '6px 10px', borderRadius: 6, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', fontSize: 11, lineHeight: 1.4 }}>
-                        <strong>{t('commission.rejection_reason_label')}:</strong> {c.rejection_reason}
+      {/* Rejected commissions surfaced first so the partner sees them */}
+      {rejectedRows.length > 0 && (
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #fecaca', padding: 16, marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b91c1c', fontWeight: 700, marginBottom: 12 }}>
+            <XCircle size={16} /> {t('commission.rejected')} ({rejectedRows.length})
+          </div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {rejectedRows.map(c => (
+              <div key={c.id} style={{ padding: 12, background: '#fef2f2', borderRadius: 10, border: '1px solid #fecaca' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name || c.prospect_company}</div>
+                  <div style={{ fontWeight: 700, color: '#dc2626' }}>{fmt(c.amount)}</div>
+                </div>
+                {c.rejection_reason && (
+                  <div style={{ color: '#991b1b', fontSize: 12 }}>
+                    <strong>{t('commission.rejection_reason_label')}:</strong> {c.rejection_reason}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Commissions grouped by status */}
+      <div style={{ display: 'grid', gap: 16 }}>
+        {STATUS_ORDER.map(statusKey => {
+          const rows = byStatus[statusKey];
+          const st = PAY_STATUS[statusKey];
+          if (rows.length === 0) return null;
+          return (
+            <div key={statusKey} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: st.bg }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: st.color, fontWeight: 700 }}>
+                  <st.icon size={16} /> {st.label}
+                </div>
+                <div style={{ color: st.color, fontWeight: 700, fontSize: 14 }}>
+                  {rows.length} · {fmt(rows.reduce((s, r) => s + parseFloat(r.amount || 0), 0))}
+                </div>
+              </div>
+              <div style={{ padding: 8 }}>
+                {rows.map(c => (
+                  <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.5fr', gap: 12, alignItems: 'center', padding: '12px 14px', borderRadius: 10 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div>
+                      <div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: 11 }}>{t('partnerPayments.tbl_commission')}</div>
+                      <div style={{ fontWeight: 700, color: '#0f172a' }}>{fmt(c.amount)} <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>· {c.rate}%</span></div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: 11 }}>{statusKey === 'paid' ? t('commissions.paid_on') : t('partnerPayments.tbl_date')}</div>
+                      <div style={{ color: '#475569', fontSize: 13 }}>
+                        {statusKey === 'paid' ? (c.paid_at ? fmtDate(c.paid_at) : '—') : fmtDate(c.created_at)}
                       </div>
-                    )}
-                  </td>
-                  <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(c.deal_value)}</td>
-                  <td style={{ padding: '13px 16px' }}>
-                    <span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span>
-                  </td>
-                  <td style={{ padding: '13px 16px', fontWeight: 800, color: amountColor, fontSize: 16 }}>{fmt(c.amount)}</td>
-                  <td style={{ padding: '13px 16px' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: badgeBg, color: badgeColor }}>
-                      <BadgeIcon size={13} />
-                      {badgeLabel}
-                    </span>
-                  </td>
-                  <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{fmtDate(c.created_at)}</td>
-                  <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{c.paid_at ? fmtDate(c.paid_at) : '—'}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-          {commissions.length > 0 && (
-            <tfoot>
-              <tr style={{ background: '#f8fafc' }}>
-                <td colSpan={3} style={{ padding: '13px 16px', fontWeight: 700, color: '#0f172a' }}>{t('commissions.total')}</td>
-                <td style={{ padding: '13px 16px', fontWeight: 800, color: 'var(--rb-primary, #059669)', fontSize: 18 }}>{fmt(totalAll)}</td>
-                <td colSpan={3}></td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      {statusKey === 'awaiting_invoice' && (
+                        <button onClick={() => triggerUpload(c.id)} disabled={uploadingId === c.id}
+                          style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, opacity: uploadingId === c.id ? 0.7 : 1 }}>
+                          <Upload size={13} /> {uploadingId === c.id ? t('commission.uploading') : t('commission.upload_invoice')}
+                        </button>
+                      )}
+                      {statusKey === 'pending_validation' && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#eff6ff', color: '#0284c7', fontWeight: 600, fontSize: 12 }}>
+                          <ShieldCheck size={13} /> {t('commission.invoice_under_review')}
+                        </span>
+                      )}
+                      {statusKey === 'paid' && c.has_invoice && (
+                        <button onClick={() => handleDownload(c.id)}
+                          style={{ padding: '8px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <Download size={13} /> {t('commission.download_receipt')}
+                        </button>
+                      )}
+                      {statusKey === 'pending_approval' && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#fffbeb', color: '#d97706', fontWeight: 600, fontSize: 12 }}>
+                          <Clock size={13} /> {t('commission.status.pending_approval')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {commissions.length === 0 && (
+          <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', color: '#94a3b8', border: '1px solid #e2e8f0' }}>
+            {t('partnerPayments.no_payments')}
+          </div>
+        )}
       </div>
     </div>
   );
