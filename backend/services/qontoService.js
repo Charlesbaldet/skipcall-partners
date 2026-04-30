@@ -39,11 +39,14 @@ function newIdempotencyKey() {
 const OAUTH_AUTHORIZE_URL = 'https://oauth.qonto.com/oauth2/auth';
 const OAUTH_TOKEN_URL = 'https://oauth.qonto.com/oauth2/token';
 const API_BASE = 'https://thirdparty.qonto.com/v2';
-// Only the documented Qonto OAuth scopes. attachment.write and
-// beneficiary.read aren't accepted by the authorize endpoint and
-// trigger an `invalid_scope` error — those endpoints sit under the
-// payment.write / organization.read scopes already.
-const SCOPES = ['payment.write', 'organization.read'];
+// Documented Qonto OAuth scopes we actually exercise.
+// attachment.write was dropped in an earlier round because we hit an
+// invalid_scope error — but the actual culprit was beneficiary.read,
+// not this one. POST /v2/attachments needs attachment.write or it
+// 403s with "missing required oauth scope", so it goes back in.
+// Existing tenants must reconnect (Settings → Intégrations → Qonto
+// → Disconnect / Connect) for the new scope to take effect.
+const SCOPES = ['payment.write', 'organization.read', 'attachment.write'];
 
 function clientId() { return process.env.QONTO_CLIENT_ID || ''; }
 function clientSecret() { return process.env.QONTO_CLIENT_SECRET || ''; }
@@ -347,11 +350,12 @@ async function createBulkTransfer(tenantId, {
   if (!bankAccountId) {
     throw new Error('qonto_bank_account_missing');
   }
+  // Per Qonto's docs, bank_account_id is set ONCE at the
+  // bulk_transfer root and applies to every line — the API
+  // rejects payloads that repeat it on each transfer item with
+  // "bank_account_id is missing" or "bulk_transfers is missing".
   const items = transfers.map(t => {
     const item = {
-      // Each line carries its own bank_account_id so partial-debit
-      // setups (one bulk, multiple debit accounts) keep working.
-      bank_account_id: bankAccountId,
       reference: buildReference(t.commissionId),
       note: `Commission partenaire — ${t.partnerName || ''}${t.dealName ? ' — ' + t.dealName : ''}`.slice(0, 140),
       currency: 'EUR',
@@ -409,9 +413,13 @@ async function getTransfer(tenantId, transferId) {
 // fallback when a 428 didn't carry a transfer_id but Qonto did
 // actually create the transfer behind the scenes — we then match by
 // reference / amount.
+//
+// Qonto's enum is { pending, processing, settled, declined,
+// canceled }. We previously asked for 'completed' which 400s the
+// request — 'settled' is the canonical "money sent" terminal state.
 async function listRecentTransfers(tenantId, { statuses, perPage = 50 } = {}) {
   const params = new URLSearchParams();
-  for (const s of (statuses || ['completed', 'pending', 'processing', 'declined'])) {
+  for (const s of (statuses || ['pending', 'processing', 'settled', 'declined', 'canceled'])) {
     params.append('status[]', s);
   }
   params.set('per_page', String(perPage));

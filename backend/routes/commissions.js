@@ -851,12 +851,12 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
   }
 });
 
-// ─── Internal: poll Qonto and finalize completed transfers ──────────
+// ─── Internal: poll Qonto and finalize settled transfers ──────────
 // Called from the polling worker AND exposed as POST /poll-qonto for
 // manual reconciliation. Iterates every commission with a
 // qonto_transfer_id but no payment_completed_at, asks Qonto for the
 // current status, flips the commission to 'paid' + emails the partner
-// when Qonto reports completion.
+// when Qonto reports `settled` (its canonical "money sent" state).
 async function reconcileQontoTransfers(tenantId) {
   const { rows } = await query(
     `SELECT c.id, c.qonto_transfer_id, c.amount, c.payment_reference,
@@ -880,7 +880,11 @@ async function reconcileQontoTransfers(tenantId) {
     try {
       const t = await qonto.getTransfer(c.tenant_id, c.qonto_transfer_id);
       const status = t?.status;
-      if (status === 'completed' || status === 'settled') {
+      // Qonto's terminal "money sent" state is `settled` (the API
+      // rejects status filters using `completed` outright). Keep
+      // `completed` as a forward-compat fallback so a future API
+      // rename doesn't silently strand transfers.
+      if (status === 'settled' || status === 'completed') {
         await query(
           `UPDATE commissions
               SET status = 'paid',
