@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { fmt, fmtDate, categoryName } from '../lib/constants';
 import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react';
@@ -49,6 +49,30 @@ export default function PartnersPage() {
   };
 
   useEffect(() => { loadPartners(false).finally(() => setLoading(false)); }, []);
+
+  // Deep-link from /search: open the matching partner in the existing
+  // edit modal. Wait until the partner list has loaded so startEdit
+  // can pick its row up; if the id isn't found (archived?) fall back
+  // to a one-shot fetch and seed the form by hand.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openIdRef = useRef(null);
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (!openId || openIdRef.current === openId) return;
+    if (loading) return; // wait for the first list load
+    openIdRef.current = openId;
+    const match = partners.find(p => p.id === openId);
+    if (match) {
+      startEdit(match);
+    } else {
+      api.getPartner(openId)
+        .then(d => { const p = d.partner || d; if (p && p.id) startEdit(p); })
+        .catch(() => {});
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('open');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, partners, loading]);
   useEffect(() => {
     api.getPartnerCategories()
       .then(d => {

@@ -154,7 +154,6 @@ export default function PartnerPaymentsPage() {
             const st = PAY_STATUS[statusKey];
             const cards = visibleRows.filter(c => c.status === statusKey);
             const colTotal = cards.reduce((s, c) => s + parseFloat(c.amount || 0), 0);
-            const StIcon = st.icon;
             return (
               <div
                 key={statusKey}
@@ -189,18 +188,12 @@ export default function PartnerPaymentsPage() {
                         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                      {/* Status pill removed — the column header
+                          already conveys the lifecycle stage. */}
+                      <div style={{ marginBottom: 6 }}>
                         <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {c.prospect_company || c.prospect_name || '—'}
                         </div>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 3,
-                          padding: '2px 8px', borderRadius: 999,
-                          background: st.bg, color: st.color,
-                          fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
-                        }}>
-                          <StIcon size={10} /> {st.label}
-                        </span>
                       </div>
 
                       {c.prospect_company && c.prospect_name && c.prospect_company !== c.prospect_name && (

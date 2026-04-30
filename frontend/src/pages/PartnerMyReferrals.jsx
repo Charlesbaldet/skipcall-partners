@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
 import { DollarSign, Trash2, LayoutGrid, List, ChevronRight, X, Lock, GripVertical } from 'lucide-react';
@@ -31,6 +32,23 @@ export default function PartnerMyReferrals() {
   };
 
   useEffect(() => { load().finally(() => setLoading(false)); }, []);
+
+  // Deep-link from /search: open the matching referral in the
+  // existing detail modal, then strip the ?open= param so a refresh
+  // won't keep firing it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openIdRef = useRef(null);
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (!openId || openIdRef.current === openId) return;
+    openIdRef.current = openId;
+    api.getReferral(openId)
+      .then(d => { if (d?.referral) setSelected(d.referral); })
+      .catch(() => {});
+    const next = new URLSearchParams(searchParams);
+    next.delete('open');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const showToast = (text, type = 'warning') => {
     setToast({ text, type });

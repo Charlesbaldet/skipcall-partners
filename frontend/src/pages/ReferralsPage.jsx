@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical } from 'lucide-react';
@@ -49,6 +50,29 @@ export default function ReferralsPage() {
   }, [filters]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Deep-link from /search: navigate('/referrals?open=<id>') opens
+  // that referral in the existing detail modal. Strip the param after
+  // we consume it so a refresh doesn't re-open the modal forever.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openIdRef = useRef(null);
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (!openId || openIdRef.current === openId) return;
+    openIdRef.current = openId;
+    (async () => {
+      try {
+        const data = await api.getReferral(openId);
+        if (data.referral) {
+          setSelected(data.referral);
+          setActivities(data.activities || []);
+        }
+      } catch {}
+    })();
+    const next = new URLSearchParams(searchParams);
+    next.delete('open');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const openDetail = async (ref) => {
     setSelected(ref);

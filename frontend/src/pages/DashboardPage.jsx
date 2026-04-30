@@ -235,9 +235,10 @@ function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, bil
         <KPICard icon={Users} label={t('dashboard.kpi_rate')} value={`${kpis?.win_rate || 0}%`} color="#c026d3" />
       </div>
 
-      <PartnersByCategoryCard />
-
-      {/* Row 3: Monthly area + pipeline donut */}
+      {/* Row 3: Évolution mensuelle (2/3) + Partenaires par
+          catégorie pie (1/3). The category card moved out of its
+          own full-width row above to free up vertical real estate
+          and pair its pie with the broader monthly area chart. */}
       <div style={{ display: 'grid', gridTemplateColumns: '65fr 35fr', gap: 20, marginBottom: 20 }}>
         <ChartCard title={t('dashboard.chart_monthly')}>
           <ResponsiveContainer width="100%" height={260}>
@@ -262,6 +263,11 @@ function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, bil
           </div>
         </ChartCard>
 
+        <PartnersByCategoryCard />
+      </div>
+
+      {/* Row 3.5: Pipeline donut on its own row, half-width. */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
         <PipelineDonutCard stages={stageData} total={stageTotal} />
       </div>
 
@@ -663,25 +669,47 @@ function PartnersByCategoryCard() {
     count: partners.filter(p => p.category_id === c.id && p.is_active !== false).length,
   }));
   const total = counts.reduce((s, c) => s + c.count, 0) || 0;
+  const data = counts.map(c => ({
+    id: c.id,
+    name: categoryName(c),
+    value: c.count,
+    color: c.color || '#6B7280',
+  }));
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20, marginBottom: 20 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>
         {t('partner_category.stats')}
       </div>
-      <div style={{ display: 'flex', gap: 4, height: 10, borderRadius: 999, overflow: 'hidden', background: '#f1f5f9', marginBottom: 10 }}>
-        {counts.map(c => (
-          <div key={c.id} style={{ width: total ? (c.count / total * 100) + '%' : '0%', background: c.color || '#6B7280' }} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontSize: 13, color: '#475569' }}>
-        {counts.map(c => (
-          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.color || '#6B7280' }} />
-            {categoryName(c)} — <strong>{c.count}</strong>
+      {total === 0 ? (
+        <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>—</div>
+      ) : (
+        <>
+          <div style={{ position: 'relative', height: 180 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={2} isAnimationActive={false}>
+                  {data.map((d, i) => <Cell key={i} fill={d.color} stroke="#fff" strokeWidth={2} />)}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#1a2236', letterSpacing: -1 }}>{total}</div>
+              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
+            </div>
           </div>
-        ))}
-      </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 12, fontSize: 12 }}>
+            {data.map(d => (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4b5563' }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: d.color, flexShrink: 0 }}/>
+                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</span>
+                <span style={{ fontWeight: 700, color: '#1a2236' }}>{d.value}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

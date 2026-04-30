@@ -237,7 +237,19 @@ export default function SearchPage() {
                 <button
                   key={group.key + '-' + item.id}
                   type="button"
-                  onClick={() => navigate(item.url)}
+                  onClick={() => {
+                    // Data-typed results carry an id we want the
+                    // target page to pick up on mount and open in
+                    // its detail modal — pass it through ?open=.
+                    // Navigation items are page jumps; keep their
+                    // url verbatim.
+                    if (group.key === 'navigation') {
+                      navigate(item.url);
+                    } else {
+                      const sep = item.url.includes('?') ? '&' : '?';
+                      navigate(`${item.url}${sep}open=${encodeURIComponent(item.id)}`);
+                    }
+                  }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     width: '100%', textAlign: 'left',

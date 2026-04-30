@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { fmt, fmtDate } from '../lib/constants';
 import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw } from 'lucide-react';
@@ -185,6 +186,31 @@ export default function CommissionsPage() {
   };
 
   useEffect(() => { reload().catch(console.error).finally(() => setLoading(false)); }, []);
+
+  // Deep-link from /search: scroll the matching commission card
+  // into view, focus it, and briefly highlight it. We don't have a
+  // per-commission detail modal yet — surfacing the card on the
+  // Pipeline kanban is the closest equivalent. Honours the param
+  // once and strips it so reloads don't re-trigger the highlight.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [highlightId, setHighlightId] = useState(null);
+  const openIdRef = useRef(null);
+  useEffect(() => {
+    const openId = searchParams.get('open');
+    if (!openId || openIdRef.current === openId) return;
+    if (loading) return;
+    openIdRef.current = openId;
+    setTab('pipeline');
+    setHighlightId(openId);
+    setTimeout(() => {
+      const el = document.getElementById('commission-' + openId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    setTimeout(() => setHighlightId(null), 4000);
+    const next = new URLSearchParams(searchParams);
+    next.delete('open');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, loading]);
 
   const handleApprove = async (id) => {
     setBusyId(id);
@@ -537,20 +563,36 @@ export default function CommissionsPage() {
                     const isInitiated = (!!c.qonto_transfer_id || !!c.payment_initiated_at) && !c.payment_completed_at;
                     const errBanner = getPaymentErrorMessage(t, c.payment_error);
                     return (
-                    <div key={c.id} style={{ background: '#fff', borderRadius: 12, padding: 14, border: isSelected ? `2px solid ${sc.color}` : '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, gap: 6 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          {status === 'pending_validation' && qontoStatus?.connected && (
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => togglePick(c.id)}
-                              style={{ cursor: 'pointer', flexShrink: 0 }}
-                            />
-                          )}
-                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.partner_name}</div>
-                        </div>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: sc.bg, color: sc.color, whiteSpace: 'nowrap' }}>{sc.label}</span>
+                    <div
+                      key={c.id}
+                      id={'commission-' + c.id}
+                      style={{
+                        background: '#fff', borderRadius: 12, padding: 14,
+                        border: highlightId === c.id
+                          ? `2px solid ${sc.color}`
+                          : isSelected
+                            ? `2px solid ${sc.color}`
+                            : '1px solid #e2e8f0',
+                        boxShadow: highlightId === c.id
+                          ? `0 0 0 4px ${sc.color}25`
+                          : '0 1px 3px rgba(0,0,0,0.04)',
+                        transition: 'box-shadow .3s, border-color .3s',
+                      }}
+                    >
+                      {/* Status pill removed from kanban cards — the
+                          column header already conveys it. Card top
+                          row keeps just the partner name + the
+                          bulk-pay checkbox. */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, marginBottom: 4 }}>
+                        {status === 'pending_validation' && qontoStatus?.connected && (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => togglePick(c.id)}
+                            style={{ cursor: 'pointer', flexShrink: 0 }}
+                          />
+                        )}
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.partner_name}</div>
                       </div>
                       {c.prospect_name && <div style={{ color: '#475569', fontSize: 12, marginBottom: 8 }}>{c.prospect_name}{c.prospect_company ? ' · ' + c.prospect_company : ''}</div>}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
