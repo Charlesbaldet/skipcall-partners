@@ -235,40 +235,45 @@ function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, bil
         <KPICard icon={Users} label={t('dashboard.kpi_rate')} value={`${kpis?.win_rate || 0}%`} color="#c026d3" />
       </div>
 
-      {/* Row 3: Évolution mensuelle (2/3) + Partenaires par
-          catégorie pie (1/3). The category card moved out of its
-          own full-width row above to free up vertical real estate
-          and pair its pie with the broader monthly area chart. */}
-      <div style={{ display: 'grid', gridTemplateColumns: '65fr 35fr', gap: 20, marginBottom: 20 }}>
+      {/* Row 3: 3 cartes côte à côte. Évolution mensuelle réduite
+          (slider horizontal interne quand la série dépasse la largeur
+          de la colonne), puis Pipeline par statut au milieu, puis
+          Partenaires par catégorie à droite. Hauteurs alignées
+          sur ~180 px pour matcher les deux donuts. */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 20, marginBottom: 20 }}>
         <ChartCard title={t('dashboard.chart_monthly')}>
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={monthlyData} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
-              <defs>
-                <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#059669" stopOpacity={0.18}/>
-                  <stop offset="100%" stopColor="#059669" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="#f3f4f6" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={36} />
-              <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }} />
-              <Area type="monotone" dataKey="total" stroke="#059669" strokeWidth={2} fill="url(#totalGrad)" name="Total" isAnimationActive={false} />
-              <Area type="monotone" dataKey="won"   stroke="#059669" strokeWidth={2} strokeDasharray="4 4" strokeOpacity={0.55} fill="transparent" name="Gagnés" isAnimationActive={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: 18, justifyContent: 'center', fontSize: 11, color: '#6b7280', marginTop: 6 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 18, height: 2, background: '#059669' }}/> Total</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 18, height: 0, borderTop: '2px dashed #059669', opacity: 0.55 }}/> Gagnés</span>
+          {/* Slider horizontal interne : on force un min-width
+              proportionnel au nombre de points (~46 px / mois) pour
+              qu'avec ~12 mois ça remplisse la colonne, et qu'au-delà
+              le chart scroll plutôt que de comprimer les ticks. */}
+          <div style={{ overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ minWidth: Math.max(220, (monthlyData.length || 1) * 46), height: 180 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={monthlyData} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#059669" stopOpacity={0.18}/>
+                      <stop offset="100%" stopColor="#059669" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#f3f4f6" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }} />
+                  <Area type="monotone" dataKey="total" stroke="#059669" strokeWidth={2} fill="url(#totalGrad)" name="Total" isAnimationActive={false} />
+                  <Area type="monotone" dataKey="won"   stroke="#059669" strokeWidth={2} strokeDasharray="4 4" strokeOpacity={0.55} fill="transparent" name="Gagnés" isAnimationActive={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', fontSize: 11, color: '#6b7280', marginTop: 6 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 2, background: '#059669' }}/> Total</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 0, borderTop: '2px dashed #059669', opacity: 0.55 }}/> Gagnés</span>
           </div>
         </ChartCard>
 
-        <PartnersByCategoryCard />
-      </div>
-
-      {/* Row 3.5: Pipeline donut on its own row, half-width. */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
         <PipelineDonutCard stages={stageData} total={stageTotal} />
+        <PartnersByCategoryCard />
       </div>
 
       {/* Row 4: MRR area + Temperature bars */}
