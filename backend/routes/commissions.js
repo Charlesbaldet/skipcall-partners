@@ -589,7 +589,7 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
 
     const result = await qonto.createSingleTransfer(req.tenantId, {
       commissionId: c.id,
-      debitBankAccountId: integ.bank_account_id,
+      bankAccountId: integ.bank_account_id,
       amount,
       partnerName: c.partner_name,
       dealName,
@@ -737,7 +737,7 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
     }
 
     const result = await qonto.createBulkTransfer(req.tenantId, {
-      debitBankAccountId: integ.bank_account_id,
+      bankAccountId: integ.bank_account_id,
       transfers,
       idempotencyKey: bulkKey,
     });

@@ -231,7 +231,7 @@ function buildReference(commissionId) {
 
 async function createSingleTransfer(tenantId, {
   commissionId,
-  debitBankAccountId,
+  bankAccountId,
   amount,
   partnerName,
   dealName,
@@ -241,16 +241,25 @@ async function createSingleTransfer(tenantId, {
   attachmentIds = [],
   idempotencyKey,
 }) {
+  if (!bankAccountId) {
+    // Defense-in-depth: the route already 400s on this case, but
+    // throwing here keeps the service honest if a caller forgets.
+    throw new Error('qonto_bank_account_missing');
+  }
+
   const reference = buildReference(commissionId);
   const note = `Commission partenaire — ${partnerName || ''}${dealName ? ' — ' + dealName : ''}`.slice(0, 140);
 
+  // Qonto's POST /v2/sepa/transfers expects the source account under
+  // `bank_account_id` (not `debit_bank_account_id`). Without it the
+  // API responds with "bank_account_id is missing".
   const transfer = {
+    bank_account_id: bankAccountId,
     reference,
     note,
     currency: 'EUR',
     amount: Number(amount).toFixed(2),
   };
-  if (debitBankAccountId) transfer.debit_bank_account_id = debitBankAccountId;
   if (beneficiaryId) {
     transfer.beneficiary_id = beneficiaryId;
   } else {
@@ -279,12 +288,18 @@ async function createSingleTransfer(tenantId, {
 }
 
 async function createBulkTransfer(tenantId, {
-  debitBankAccountId,
+  bankAccountId,
   transfers, // [{ commissionId, amount, iban, beneficiaryName, partnerName, dealName, attachmentIds }]
   idempotencyKey,
 }) {
+  if (!bankAccountId) {
+    throw new Error('qonto_bank_account_missing');
+  }
   const items = transfers.map(t => {
     const item = {
+      // Each line carries its own bank_account_id so partial-debit
+      // setups (one bulk, multiple debit accounts) keep working.
+      bank_account_id: bankAccountId,
       reference: buildReference(t.commissionId),
       note: `Commission partenaire — ${t.partnerName || ''}${t.dealName ? ' — ' + t.dealName : ''}`.slice(0, 140),
       currency: 'EUR',
@@ -296,8 +311,7 @@ async function createBulkTransfer(tenantId, {
     return item;
   });
 
-  const body = { bulk_transfer: { transfers: items } };
-  if (debitBankAccountId) body.bulk_transfer.debit_bank_account_id = debitBankAccountId;
+  const body = { bulk_transfer: { bank_account_id: bankAccountId, transfers: items } };
 
   const key = idempotencyKey || newIdempotencyKey();
   const data = await api(tenantId, '/sepa/bulk_transfers', {
