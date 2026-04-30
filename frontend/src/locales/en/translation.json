@@ -2059,7 +2059,16 @@
     "toast_declined": "{{count}} transfer(s) declined by Qonto.",
     "toast_no_change": "No change detected. Qonto may still be processing the transfer.",
     "toast_auto_poll_paid": "Transfer confirmed!",
-    "toast_auto_poll_progress": "Qonto status updated."
+    "toast_auto_poll_progress": "Qonto status updated.",
+    "confirm_title": "Confirm payment",
+    "confirm_subtitle": "You are about to launch transfers via Qonto.",
+    "confirm_count_label": "Number of transfers",
+    "confirm_count_value": "{{count}} transfer(s)",
+    "confirm_total_label": "Total amount",
+    "confirm_sca_hint": "Each transfer will require SCA approval in your Qonto app.",
+    "confirm_button_single": "Confirm payment — {{total}}",
+    "confirm_button_bulk": "Confirm payment — {{total}}",
+    "confirm_running": "Processing payment…"
   },
   "crm": {
     "title": "CRM integration",

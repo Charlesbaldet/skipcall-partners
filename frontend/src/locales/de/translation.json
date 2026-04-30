@@ -2059,7 +2059,16 @@
     "toast_declined": "{{count}} Überweisung(en) von Qonto abgelehnt.",
     "toast_no_change": "Keine Änderung erkannt. Qonto verarbeitet die Überweisung möglicherweise noch.",
     "toast_auto_poll_paid": "Überweisung bestätigt!",
-    "toast_auto_poll_progress": "Qonto-Status aktualisiert."
+    "toast_auto_poll_progress": "Qonto-Status aktualisiert.",
+    "confirm_title": "Zahlung bestätigen",
+    "confirm_subtitle": "Du startest gleich Überweisungen über Qonto.",
+    "confirm_count_label": "Anzahl der Vorgänge",
+    "confirm_count_value": "{{count}} Überweisung(en)",
+    "confirm_total_label": "Gesamtbetrag",
+    "confirm_sca_hint": "Jede Überweisung muss in deiner Qonto-App per SCA bestätigt werden.",
+    "confirm_button_single": "Zahlung bestätigen — {{total}}",
+    "confirm_button_bulk": "Zahlung bestätigen — {{total}}",
+    "confirm_running": "Zahlung wird verarbeitet…"
   },
   "crm": {
     "title": "CRM-Integration",

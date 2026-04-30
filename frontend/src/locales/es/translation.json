@@ -2059,7 +2059,16 @@
     "toast_declined": "{{count}} transferencia(s) rechazada(s) por Qonto.",
     "toast_no_change": "Sin cambios. Qonto puede seguir procesando la transferencia.",
     "toast_auto_poll_paid": "¡Transferencia confirmada!",
-    "toast_auto_poll_progress": "Estado Qonto actualizado."
+    "toast_auto_poll_progress": "Estado Qonto actualizado.",
+    "confirm_title": "Confirmar el pago",
+    "confirm_subtitle": "Estás a punto de iniciar transferencias vía Qonto.",
+    "confirm_count_label": "Número de operaciones",
+    "confirm_count_value": "{{count}} transferencia(s)",
+    "confirm_total_label": "Importe total",
+    "confirm_sca_hint": "Cada transferencia requerirá una validación SCA en tu app Qonto.",
+    "confirm_button_single": "Confirmar el pago — {{total}}",
+    "confirm_button_bulk": "Confirmar el pago — {{total}}",
+    "confirm_running": "Procesando el pago…"
   },
   "crm": {
     "title": "Integración CRM",

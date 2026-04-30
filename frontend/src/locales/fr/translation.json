@@ -2059,7 +2059,16 @@
     "toast_declined": "{{count}} virement(s) refusé(s) par Qonto.",
     "toast_no_change": "Aucun changement détecté. Le virement est peut-être encore en cours de traitement par Qonto.",
     "toast_auto_poll_paid": "Virement confirmé !",
-    "toast_auto_poll_progress": "Statut Qonto mis à jour."
+    "toast_auto_poll_progress": "Statut Qonto mis à jour.",
+    "confirm_title": "Confirmer le paiement",
+    "confirm_subtitle": "Vous êtes sur le point de lancer des virements via Qonto.",
+    "confirm_count_label": "Nombre d'opérations",
+    "confirm_count_value": "{{count}} virement(s)",
+    "confirm_total_label": "Montant total",
+    "confirm_sca_hint": "Chaque virement nécessitera une validation SCA dans votre application Qonto.",
+    "confirm_button_single": "Confirmer le paiement — {{total}}",
+    "confirm_button_bulk": "Confirmer le paiement — {{total}}",
+    "confirm_running": "Paiement en cours…"
   },
   "crm": {
     "title": "Intégration CRM",

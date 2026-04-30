@@ -2059,7 +2059,16 @@
     "toast_declined": "{{count}} bonifico(i) rifiutato(i) da Qonto.",
     "toast_no_change": "Nessun cambiamento rilevato. Qonto potrebbe ancora elaborare il bonifico.",
     "toast_auto_poll_paid": "Bonifico confermato!",
-    "toast_auto_poll_progress": "Stato Qonto aggiornato."
+    "toast_auto_poll_progress": "Stato Qonto aggiornato.",
+    "confirm_title": "Conferma il pagamento",
+    "confirm_subtitle": "Stai per avviare bonifici tramite Qonto.",
+    "confirm_count_label": "Numero di operazioni",
+    "confirm_count_value": "{{count}} bonifico(i)",
+    "confirm_total_label": "Importo totale",
+    "confirm_sca_hint": "Ogni bonifico richiederà una validazione SCA nell'app Qonto.",
+    "confirm_button_single": "Conferma il pagamento — {{total}}",
+    "confirm_button_bulk": "Conferma il pagamento — {{total}}",
+    "confirm_running": "Pagamento in corso…"
   },
   "crm": {
     "title": "Integrazione CRM",

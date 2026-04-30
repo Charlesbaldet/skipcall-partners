@@ -2059,7 +2059,16 @@
     "toast_declined": "{{count}} overschrijving(en) geweigerd door Qonto.",
     "toast_no_change": "Geen wijziging gedetecteerd. Qonto verwerkt de overschrijving wellicht nog.",
     "toast_auto_poll_paid": "Overschrijving bevestigd!",
-    "toast_auto_poll_progress": "Qonto-status bijgewerkt."
+    "toast_auto_poll_progress": "Qonto-status bijgewerkt.",
+    "confirm_title": "Betaling bevestigen",
+    "confirm_subtitle": "Je staat op het punt overschrijvingen via Qonto te starten.",
+    "confirm_count_label": "Aantal verrichtingen",
+    "confirm_count_value": "{{count}} overschrijving(en)",
+    "confirm_total_label": "Totaalbedrag",
+    "confirm_sca_hint": "Elke overschrijving vereist SCA-goedkeuring in je Qonto-app.",
+    "confirm_button_single": "Betaling bevestigen — {{total}}",
+    "confirm_button_bulk": "Betaling bevestigen — {{total}}",
+    "confirm_running": "Betaling wordt verwerkt…"
   },
   "crm": {
     "title": "CRM-integratie",

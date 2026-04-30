@@ -259,10 +259,13 @@ export default function CommissionsPage() {
     setPaying(false);
   };
 
-  // Qonto pay flow — initiate the SEPA transfer via the connected Qonto
-  // account. The commission stays in pending_validation; the polling
-  // worker flips it to 'paid' once Qonto confirms the transfer.
-  const handlePayViaQonto = async (commission) => {
+  // Qonto pay flow — initiate the SEPA transfer via the connected
+  // Qonto account. Two-phase modal: confirm → run. handlePayViaQonto
+  // and handlePayBulk now just OPEN the confirm modal; the actual
+  // executor is executeConfirmedPay (called from the modal's
+  // "Confirmer" button) so the user always gets a branded recap +
+  // total before any money moves.
+  const handlePayViaQonto = (commission) => {
     if (!qontoStatus?.connected) {
       setQontoModal({
         kind: 'error',
@@ -270,7 +273,16 @@ export default function CommissionsPage() {
       });
       return;
     }
+    setQontoModal({
+      kind: 'confirm',
+      mode: 'single',
+      commissions: [commission],
+    });
+  };
+
+  const executeSinglePay = async (commission) => {
     setBusyId(commission.id);
+    setQontoModal(prev => prev ? { ...prev, executing: true } : prev);
     try {
       const r = await api.payCommissionViaQonto(commission.id);
       setQontoModal({
@@ -311,7 +323,7 @@ export default function CommissionsPage() {
 
   const clearSelection = () => setSelected(new Set());
 
-  const handlePayBulk = async () => {
+  const handlePayBulk = () => {
     if (!qontoStatus?.connected) {
       setQontoModal({
         kind: 'error',
@@ -321,7 +333,16 @@ export default function CommissionsPage() {
     }
     const ids = Array.from(selected);
     if (!ids.length) return;
-    if (!confirm(t('qonto.bulk_confirm', { count: ids.length, defaultValue: 'Lancer le paiement de {{count}} commission(s) ?' }))) return;
+    const list = visibleCommissions.filter(c => ids.includes(c.id));
+    setQontoModal({
+      kind: 'confirm',
+      mode: 'bulk',
+      commissions: list,
+    });
+  };
+
+  const executeBulkPay = async (commissions) => {
+    const ids = commissions.map(c => c.id);
     setBulkBusy(true);
     setQontoModal({ kind: 'bulk', phase: 'running', total: ids.length });
     try {
@@ -330,10 +351,9 @@ export default function CommissionsPage() {
       const okCount = transfers.filter(t => !!t.transfer_id).length;
       const failed = transfers.filter(t => !t.transfer_id).map(t => ({ id: t.commission_id, reason: t.error || 'unknown' }));
       // Total amount of the successfully-initiated transfers — pull
-      // it out of the in-memory commission list so we don't have to
-      // wait for reload().
+      // it out of the recap list so we don't have to wait for reload().
       const okIds = new Set(transfers.filter(t => !!t.transfer_id).map(t => t.commission_id));
-      const totalAmount = visibleCommissions
+      const totalAmount = commissions
         .filter(c => okIds.has(c.id))
         .reduce((s, c) => s + parseFloat(c.amount || 0), 0);
       setQontoModal({
@@ -355,6 +375,15 @@ export default function CommissionsPage() {
       setQontoModal({ kind: 'error', message });
     }
     setBulkBusy(false);
+  };
+
+  // Bridge from the confirm modal's "Confirmer le paiement" button to
+  // the right executor (single or bulk).
+  const confirmAndPay = () => {
+    const m = qontoModal;
+    if (!m || m.kind !== 'confirm') return;
+    if (m.mode === 'single') executeSinglePay(m.commissions[0]);
+    else executeBulkPay(m.commissions);
   };
 
   const handleRefreshPolls = async () => {
@@ -815,7 +844,12 @@ export default function CommissionsPage() {
       )}
 
       {qontoModal && (
-        <QontoResultModal modal={qontoModal} onClose={() => setQontoModal(null)} t={t} />
+        <QontoResultModal
+          modal={qontoModal}
+          onClose={() => setQontoModal(null)}
+          onConfirm={confirmAndPay}
+          t={t}
+        />
       )}
 
       {toast && (
@@ -836,15 +870,130 @@ export default function CommissionsPage() {
   );
 }
 
-function QontoResultModal({ modal, onClose, t }) {
-  const Wrap = ({ children }) => (
+function QontoResultModal({ modal, onClose, onConfirm, t }) {
+  const Wrap = ({ children, width = 480 }) => (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)' }} />
-      <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 20, width: 480, maxWidth: '100%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', padding: 28 }}>
+      <div onClick={modal.executing ? undefined : onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)' }} />
+      <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 20, width, maxWidth: '100%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', padding: 28 }}>
         {children}
       </div>
     </div>
   );
+
+  if (modal.kind === 'confirm') {
+    const list = modal.commissions || [];
+    const total = list.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
+    const isBulk = modal.mode === 'bulk';
+    const totalLabel = fmt(total);
+    return (
+      <Wrap width={520}>
+        <div style={{ marginBottom: 18 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
+            {t('qonto.confirm_title', 'Confirmer le paiement')}
+          </h2>
+          <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>
+            {t('qonto.confirm_subtitle', 'Vous êtes sur le point de lancer des virements via Qonto.')}
+          </p>
+        </div>
+
+        <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1.4fr 1.2fr 0.8fr',
+            background: '#f8fafc', padding: '10px 14px',
+            fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5,
+          }}>
+            <div>{t('commissions.tbl_partner', 'Partenaire')}</div>
+            <div>{t('commissions.tbl_deal', 'Deal')}</div>
+            <div style={{ textAlign: 'right' }}>{t('commissions.tbl_commission', 'Montant')}</div>
+          </div>
+          <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+            {list.map((c, i) => (
+              <div key={c.id} style={{
+                display: 'grid', gridTemplateColumns: '1.4fr 1.2fr 0.8fr',
+                padding: '10px 14px', fontSize: 13,
+                background: i % 2 === 0 ? '#fff' : '#fafbfc',
+                borderTop: i === 0 ? 'none' : '1px solid #f1f5f9',
+                alignItems: 'center',
+              }}>
+                <div style={{ fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.partner_name || '—'}
+                </div>
+                <div style={{ color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.prospect_company || c.prospect_name || '—'}
+                </div>
+                <div style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                  {fmt(c.amount)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 16px', borderRadius: 12, background: '#f0fdf4', border: '1px solid #bbf7d0',
+          marginBottom: 12,
+        }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('qonto.confirm_count_label', 'Nombre d\'opérations')}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#166534', marginTop: 2 }}>
+              {t('qonto.confirm_count_value', { count: list.length, defaultValue: '{{count}} virement(s)' })}
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('qonto.confirm_total_label', 'Montant total')}
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#16A34A', letterSpacing: -0.5, marginTop: 2 }}>
+              {totalLabel}
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          padding: '10px 14px', borderRadius: 10,
+          background: '#fffbeb', border: '1px solid #fde68a',
+          color: '#92400e', fontSize: 12, fontWeight: 500, marginBottom: 18,
+        }}>
+          {t('qonto.confirm_sca_hint', 'Chaque virement nécessitera une validation SCA dans votre application Qonto.')}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <button
+            onClick={onClose}
+            disabled={modal.executing}
+            style={{
+              padding: '11px 18px', borderRadius: 10,
+              background: '#fff', border: '1px solid #e2e8f0',
+              color: '#475569', fontWeight: 600, fontSize: 14, cursor: modal.executing ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {t('common.cancel', 'Annuler')}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={modal.executing || list.length === 0}
+            style={{
+              padding: '11px 22px', borderRadius: 10,
+              background: '#16A34A', border: 'none', color: '#fff',
+              fontWeight: 700, fontSize: 14, cursor: modal.executing ? 'wait' : 'pointer',
+              opacity: modal.executing ? 0.75 : 1,
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              boxShadow: '0 4px 14px rgba(22,163,74,0.25)',
+            }}
+          >
+            {modal.executing
+              ? t('qonto.confirm_running', 'Paiement en cours…')
+              : isBulk
+                ? t('qonto.confirm_button_bulk', { total: totalLabel, defaultValue: 'Confirmer le paiement — {{total}}' })
+                : t('qonto.confirm_button_single', { total: totalLabel, defaultValue: 'Confirmer le paiement — {{total}}' })}
+          </button>
+        </div>
+      </Wrap>
+    );
+  }
 
   if (modal.kind === 'initiated') {
     return (
