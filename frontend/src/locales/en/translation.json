@@ -17,7 +17,8 @@
     "server_error": "Server error",
     "saving": "Saving…",
     "saved": "Saved",
-    "go_to_settings": "Open settings"
+    "go_to_settings": "Open settings",
+    "understood": "Got it"
   },
   "nav": {
     "features": "Features",
@@ -2019,6 +2020,8 @@
     "bulk_initiated_sca": "{{count}} transfer(s) initiated — approve in Qonto.",
     "skipped": "{{count}} skipped",
     "refresh_status": "Status",
+    "refresh_status_full": "Refresh statuses",
+    "refreshing_status": "Refreshing…",
     "refresh_status_tooltip": "Refresh Qonto statuses",
     "error_not_connected": "Connect Qonto in Settings → Integrations.",
     "error_bank_account_missing": "Choose the Qonto account to debit.",
@@ -2026,7 +2029,23 @@
     "error_partner_iban_missing": "This partner has not provided bank information.",
     "error_amount_zero": "Amount is zero, cannot transfer.",
     "error_not_payable": "This commission is not in Pending validation.",
-    "error_no_eligible": "No eligible commission for payment."
+    "error_no_eligible": "No eligible commission for payment.",
+    "error_generic": "Something went wrong. Please try again.",
+    "error_insufficient_funds": "Insufficient funds on your Qonto account.",
+    "error_bic_invalid": "The beneficiary's BIC is invalid.",
+    "error_invalid_iban": "The beneficiary's IBAN is invalid.",
+    "modal_initiated_title": "Transfer initiated",
+    "modal_initiated_message": "A {{amount}} € transfer to {{partner}} has been sent to Qonto.",
+    "modal_initiated_sca_hint": "Approve it in your Qonto app (SCA push notification).",
+    "modal_error_title": "Transfer failed",
+    "modal_bulk_running_title": "Processing payments…",
+    "modal_bulk_running_message": "Sending {{count}} transfer(s) to Qonto…",
+    "modal_bulk_done_title": "Transfers initiated",
+    "modal_bulk_done_summary": "{{count}} transfer(s) initiated for a total of {{total}} €.",
+    "modal_bulk_partial_title": "Partial payment",
+    "modal_bulk_partial_summary": "{{ok}} transfer(s) initiated, {{fail}} failed.",
+    "modal_bulk_sca_hint": "Approve the transfers in your Qonto app.",
+    "modal_bulk_failed_label": "Failed"
   },
   "crm": {
     "title": "CRM integration",

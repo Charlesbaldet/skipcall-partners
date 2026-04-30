@@ -17,7 +17,8 @@
     "server_error": "Erreur serveur",
     "saving": "Enregistrement…",
     "saved": "Sauvegardé",
-    "go_to_settings": "Ouvrir les paramètres"
+    "go_to_settings": "Ouvrir les paramètres",
+    "understood": "Compris"
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -2019,6 +2020,8 @@
     "bulk_initiated_sca": "{{count}} virement(s) initié(s) — approuvez-les dans Qonto.",
     "skipped": "{{count}} ignorée(s)",
     "refresh_status": "Statuts",
+    "refresh_status_full": "Actualiser les statuts",
+    "refreshing_status": "Actualisation…",
     "refresh_status_tooltip": "Rafraîchir les statuts Qonto",
     "error_not_connected": "Connectez Qonto dans Paramètres → Intégrations.",
     "error_bank_account_missing": "Choisissez le compte Qonto à débiter.",
@@ -2026,7 +2029,23 @@
     "error_partner_iban_missing": "Ce partenaire n'a pas renseigné ses informations bancaires.",
     "error_amount_zero": "Montant nul, virement impossible.",
     "error_not_payable": "Cette commission n'est pas dans le statut À valider.",
-    "error_no_eligible": "Aucune commission éligible au paiement."
+    "error_no_eligible": "Aucune commission éligible au paiement.",
+    "error_generic": "Une erreur est survenue. Veuillez réessayer.",
+    "error_insufficient_funds": "Solde insuffisant sur votre compte Qonto.",
+    "error_bic_invalid": "Le BIC du bénéficiaire est invalide.",
+    "error_invalid_iban": "L'IBAN du bénéficiaire est invalide.",
+    "modal_initiated_title": "Virement initié",
+    "modal_initiated_message": "Un virement de {{amount}} € vers {{partner}} a été envoyé à Qonto.",
+    "modal_initiated_sca_hint": "Validez le virement dans votre application Qonto (notification SCA).",
+    "modal_error_title": "Échec du virement",
+    "modal_bulk_running_title": "Paiement en cours…",
+    "modal_bulk_running_message": "Envoi de {{count}} virement(s) à Qonto…",
+    "modal_bulk_done_title": "Virements initiés",
+    "modal_bulk_done_summary": "{{count}} virement(s) initié(s) pour un total de {{total}} €.",
+    "modal_bulk_partial_title": "Paiement partiel",
+    "modal_bulk_partial_summary": "{{ok}} virement(s) initié(s), {{fail}} en erreur.",
+    "modal_bulk_sca_hint": "Validez les virements dans votre application Qonto.",
+    "modal_bulk_failed_label": "En erreur"
   },
   "crm": {
     "title": "Intégration CRM",

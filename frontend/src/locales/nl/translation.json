@@ -17,7 +17,8 @@
     "server_error": "Serverfout",
     "saving": "Opslaan…",
     "saved": "Opgeslagen",
-    "go_to_settings": "Open instellingen"
+    "go_to_settings": "Open instellingen",
+    "understood": "Begrepen"
   },
   "nav": {
     "features": "Functies",
@@ -2019,6 +2020,8 @@
     "bulk_initiated_sca": "{{count}} overschrijving(en) gestart — keur ze goed in Qonto.",
     "skipped": "{{count}} overgeslagen",
     "refresh_status": "Statussen",
+    "refresh_status_full": "Statussen vernieuwen",
+    "refreshing_status": "Vernieuwen…",
     "refresh_status_tooltip": "Qonto-statussen verversen",
     "error_not_connected": "Verbind Qonto via Instellingen → Integraties.",
     "error_bank_account_missing": "Kies de Qonto-rekening die gedebiteerd moet worden.",
@@ -2026,7 +2029,23 @@
     "error_partner_iban_missing": "Deze partner heeft geen bankgegevens ingevoerd.",
     "error_amount_zero": "Bedrag is nul, overschrijving onmogelijk.",
     "error_not_payable": "Deze commissie staat niet op Te valideren.",
-    "error_no_eligible": "Geen betaalbare commissies."
+    "error_no_eligible": "Geen betaalbare commissies.",
+    "error_generic": "Er is iets misgegaan. Probeer het opnieuw.",
+    "error_insufficient_funds": "Onvoldoende saldo op je Qonto-rekening.",
+    "error_bic_invalid": "De BIC van de begunstigde is ongeldig.",
+    "error_invalid_iban": "Het IBAN van de begunstigde is ongeldig.",
+    "modal_initiated_title": "Overschrijving gestart",
+    "modal_initiated_message": "Een overschrijving van {{amount}} € naar {{partner}} is naar Qonto verzonden.",
+    "modal_initiated_sca_hint": "Keur deze goed in je Qonto-app (SCA-melding).",
+    "modal_error_title": "Overschrijving mislukt",
+    "modal_bulk_running_title": "Betaling bezig…",
+    "modal_bulk_running_message": "{{count}} overschrijving(en) naar Qonto verzenden…",
+    "modal_bulk_done_title": "Overschrijvingen gestart",
+    "modal_bulk_done_summary": "{{count}} overschrijving(en) gestart voor in totaal {{total}} €.",
+    "modal_bulk_partial_title": "Gedeeltelijke betaling",
+    "modal_bulk_partial_summary": "{{ok}} overschrijving(en) gestart, {{fail}} mislukt.",
+    "modal_bulk_sca_hint": "Keur de overschrijvingen goed in je Qonto-app.",
+    "modal_bulk_failed_label": "Mislukt"
   },
   "crm": {
     "title": "CRM-integratie",

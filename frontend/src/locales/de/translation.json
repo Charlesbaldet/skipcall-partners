@@ -17,7 +17,8 @@
     "server_error": "Serverfehler",
     "saving": "Speichern…",
     "saved": "Gespeichert",
-    "go_to_settings": "Einstellungen öffnen"
+    "go_to_settings": "Einstellungen öffnen",
+    "understood": "Verstanden"
   },
   "nav": {
     "features": "Funktionen",
@@ -2019,6 +2020,8 @@
     "bulk_initiated_sca": "{{count}} Überweisung(en) initiiert — in Qonto bestätigen.",
     "skipped": "{{count}} übersprungen",
     "refresh_status": "Status",
+    "refresh_status_full": "Status aktualisieren",
+    "refreshing_status": "Aktualisierung…",
     "refresh_status_tooltip": "Qonto-Status aktualisieren",
     "error_not_connected": "Verbinden Sie Qonto unter Einstellungen → Integrationen.",
     "error_bank_account_missing": "Wählen Sie das zu belastende Qonto-Konto.",
@@ -2026,7 +2029,23 @@
     "error_partner_iban_missing": "Dieser Partner hat keine Bankdaten hinterlegt.",
     "error_amount_zero": "Betrag null, Überweisung nicht möglich.",
     "error_not_payable": "Diese Provision ist nicht im Status Zu validieren.",
-    "error_no_eligible": "Keine zahlbare Provision."
+    "error_no_eligible": "Keine zahlbare Provision.",
+    "error_generic": "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
+    "error_insufficient_funds": "Unzureichende Mittel auf deinem Qonto-Konto.",
+    "error_bic_invalid": "Der BIC des Empfängers ist ungültig.",
+    "error_invalid_iban": "Der IBAN des Empfängers ist ungültig.",
+    "modal_initiated_title": "Überweisung initiiert",
+    "modal_initiated_message": "Eine Überweisung von {{amount}} € an {{partner}} wurde an Qonto gesendet.",
+    "modal_initiated_sca_hint": "Bestätige sie in deiner Qonto-App (SCA-Push-Benachrichtigung).",
+    "modal_error_title": "Überweisung fehlgeschlagen",
+    "modal_bulk_running_title": "Zahlung läuft…",
+    "modal_bulk_running_message": "Sende {{count}} Überweisung(en) an Qonto…",
+    "modal_bulk_done_title": "Überweisungen initiiert",
+    "modal_bulk_done_summary": "{{count}} Überweisung(en) initiiert für insgesamt {{total}} €.",
+    "modal_bulk_partial_title": "Teilweise Zahlung",
+    "modal_bulk_partial_summary": "{{ok}} Überweisung(en) initiiert, {{fail}} fehlgeschlagen.",
+    "modal_bulk_sca_hint": "Bestätige die Überweisungen in deiner Qonto-App.",
+    "modal_bulk_failed_label": "Fehlgeschlagen"
   },
   "crm": {
     "title": "CRM-Integration",

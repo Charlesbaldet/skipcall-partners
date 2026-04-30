@@ -17,7 +17,8 @@
     "server_error": "Error del servidor",
     "saving": "Guardando…",
     "saved": "Guardado",
-    "go_to_settings": "Abrir ajustes"
+    "go_to_settings": "Abrir ajustes",
+    "understood": "Entendido"
   },
   "nav": {
     "features": "Funcionalidades",
@@ -2019,6 +2020,8 @@
     "bulk_initiated_sca": "{{count}} transferencia(s) iniciada(s) — apruébalas en Qonto.",
     "skipped": "{{count}} omitida(s)",
     "refresh_status": "Estados",
+    "refresh_status_full": "Actualizar estados",
+    "refreshing_status": "Actualizando…",
     "refresh_status_tooltip": "Actualizar estados Qonto",
     "error_not_connected": "Conecta Qonto en Ajustes → Integraciones.",
     "error_bank_account_missing": "Elige la cuenta Qonto a debitar.",
@@ -2026,7 +2029,23 @@
     "error_partner_iban_missing": "Este socio no ha registrado sus datos bancarios.",
     "error_amount_zero": "Importe cero, transferencia imposible.",
     "error_not_payable": "Esta comisión no está en Por validar.",
-    "error_no_eligible": "No hay comisiones elegibles para pago."
+    "error_no_eligible": "No hay comisiones elegibles para pago.",
+    "error_generic": "Se ha producido un error. Inténtalo de nuevo.",
+    "error_insufficient_funds": "Saldo insuficiente en tu cuenta Qonto.",
+    "error_bic_invalid": "El BIC del beneficiario no es válido.",
+    "error_invalid_iban": "El IBAN del beneficiario no es válido.",
+    "modal_initiated_title": "Transferencia iniciada",
+    "modal_initiated_message": "Una transferencia de {{amount}} € a {{partner}} se ha enviado a Qonto.",
+    "modal_initiated_sca_hint": "Apruébala en tu app Qonto (notificación SCA).",
+    "modal_error_title": "Transferencia fallida",
+    "modal_bulk_running_title": "Procesando pagos…",
+    "modal_bulk_running_message": "Enviando {{count}} transferencia(s) a Qonto…",
+    "modal_bulk_done_title": "Transferencias iniciadas",
+    "modal_bulk_done_summary": "{{count}} transferencia(s) iniciadas por un total de {{total}} €.",
+    "modal_bulk_partial_title": "Pago parcial",
+    "modal_bulk_partial_summary": "{{ok}} transferencia(s) iniciadas, {{fail}} con error.",
+    "modal_bulk_sca_hint": "Aprueba las transferencias en tu app Qonto.",
+    "modal_bulk_failed_label": "Con error"
   },
   "crm": {
     "title": "Integración CRM",

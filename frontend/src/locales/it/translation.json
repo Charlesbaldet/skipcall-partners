@@ -17,7 +17,8 @@
     "server_error": "Errore del server",
     "saving": "Salvataggio…",
     "saved": "Salvato",
-    "go_to_settings": "Apri le impostazioni"
+    "go_to_settings": "Apri le impostazioni",
+    "understood": "Capito"
   },
   "nav": {
     "features": "Funzionalità",
@@ -2019,6 +2020,8 @@
     "bulk_initiated_sca": "{{count}} bonifico(i) avviato(i) — approva su Qonto.",
     "skipped": "{{count}} ignorate",
     "refresh_status": "Stato",
+    "refresh_status_full": "Aggiorna gli stati",
+    "refreshing_status": "Aggiornamento…",
     "refresh_status_tooltip": "Aggiorna stati Qonto",
     "error_not_connected": "Collega Qonto in Impostazioni → Integrazioni.",
     "error_bank_account_missing": "Seleziona il conto Qonto da addebitare.",
@@ -2026,7 +2029,23 @@
     "error_partner_iban_missing": "Questo partner non ha inserito i propri dati bancari.",
     "error_amount_zero": "Importo zero, bonifico impossibile.",
     "error_not_payable": "Questa commissione non è in stato Da convalidare.",
-    "error_no_eligible": "Nessuna commissione pagabile."
+    "error_no_eligible": "Nessuna commissione pagabile.",
+    "error_generic": "Si è verificato un errore. Riprova.",
+    "error_insufficient_funds": "Saldo insufficiente sul tuo conto Qonto.",
+    "error_bic_invalid": "Il BIC del beneficiario non è valido.",
+    "error_invalid_iban": "L'IBAN del beneficiario non è valido.",
+    "modal_initiated_title": "Bonifico avviato",
+    "modal_initiated_message": "Un bonifico di {{amount}} € verso {{partner}} è stato inviato a Qonto.",
+    "modal_initiated_sca_hint": "Approvalo nella tua app Qonto (notifica SCA).",
+    "modal_error_title": "Bonifico fallito",
+    "modal_bulk_running_title": "Pagamento in corso…",
+    "modal_bulk_running_message": "Invio di {{count}} bonifico(i) a Qonto…",
+    "modal_bulk_done_title": "Bonifici avviati",
+    "modal_bulk_done_summary": "{{count}} bonifico(i) avviati per un totale di {{total}} €.",
+    "modal_bulk_partial_title": "Pagamento parziale",
+    "modal_bulk_partial_summary": "{{ok}} bonifico(i) avviati, {{fail}} in errore.",
+    "modal_bulk_sca_hint": "Approva i bonifici nella tua app Qonto.",
+    "modal_bulk_failed_label": "In errore"
   },
   "crm": {
     "title": "Integrazione CRM",

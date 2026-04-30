@@ -6,9 +6,11 @@ import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X,
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 // Translate the structured backend error codes (qonto_not_connected,
-// partner_iban_missing, …) into a human-friendly label.
-function qontoErrorLabel(t, code) {
-  if (!code) return null;
+// partner_iban_missing, …) and the Qonto-side error strings
+// (insufficient_funds, beneficiary_bic_invalid, …) into a single
+// human-readable French label. Falls back to a generic "Une erreur
+// est survenue" so the user never sees raw JSON.
+function qontoErrorLabel(t, code, rawMessage) {
   const map = {
     qonto_not_connected: t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'),
     qonto_bank_account_missing: t('qonto.error_bank_account_missing', 'Choisissez le compte Qonto à débiter.'),
@@ -17,8 +19,19 @@ function qontoErrorLabel(t, code) {
     amount_zero: t('qonto.error_amount_zero', 'Montant nul, virement impossible.'),
     commission_not_payable: t('qonto.error_not_payable', 'Cette commission n\'est pas dans le statut À valider.'),
     no_eligible_commissions: t('qonto.error_no_eligible', 'Aucune commission éligible au paiement.'),
+    insufficient_funds: t('qonto.error_insufficient_funds', 'Solde insuffisant sur votre compte Qonto.'),
+    beneficiary_bic_invalid: t('qonto.error_bic_invalid', 'Le BIC du bénéficiaire est invalide.'),
+    invalid_iban: t('qonto.error_invalid_iban', 'L\'IBAN du bénéficiaire est invalide.'),
+    invalid_bic: t('qonto.error_bic_invalid', 'Le BIC du bénéficiaire est invalide.'),
   };
-  return map[code] || null;
+  if (code && map[code]) return map[code];
+  // Last-ditch: scan the raw message for a known substring before
+  // surrendering to the generic fallback.
+  const haystack = (rawMessage || code || '').toLowerCase();
+  for (const key of Object.keys(map)) {
+    if (haystack.includes(key)) return map[key];
+  }
+  return t('qonto.error_generic', 'Une erreur est survenue. Veuillez réessayer.');
 }
 
 // New 4-stage lifecycle. Order matters — drives the kanban column order.
@@ -56,8 +69,12 @@ export default function CommissionsPage() {
   const [qontoStatus, setQontoStatus] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [bulkResult, setBulkResult] = useState(null);
   const [refreshingPolls, setRefreshingPolls] = useState(false);
+  // qontoModal holds whatever the most recent Qonto pay action wants
+  // to surface — initiated, bulk progress / summary, or a failure
+  // with a French-mapped message. Shape:
+  //   { kind: 'initiated' | 'bulk' | 'error', ...payload }
+  const [qontoModal, setQontoModal] = useState(null);
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
 
@@ -128,20 +145,27 @@ export default function CommissionsPage() {
   // worker flips it to 'paid' once Qonto confirms the transfer.
   const handlePayViaQonto = async (commission) => {
     if (!qontoStatus?.connected) {
-      alert(t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'));
+      setQontoModal({
+        kind: 'error',
+        message: t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'),
+      });
       return;
     }
     setBusyId(commission.id);
     try {
       const r = await api.payCommissionViaQonto(commission.id);
-      const msg = r.requires_sca
-        ? t('qonto.transfer_initiated_sca', 'Virement initié — approuvez-le dans votre application Qonto.')
-        : t('qonto.transfer_initiated', 'Virement initié.');
-      alert(msg);
+      setQontoModal({
+        kind: 'initiated',
+        amount: parseFloat(commission.amount) || 0,
+        partnerName: commission.partner_name,
+        reference: r.reference,
+        requiresSca: !!r.requires_sca,
+      });
       await reload();
     } catch (err) {
-      const code = err?.data?.error || err.message;
-      alert(qontoErrorLabel(t, code) || (err.message || 'Error'));
+      const code = err?.data?.error || err?.body?.code;
+      const message = qontoErrorLabel(t, code, err?.message);
+      setQontoModal({ kind: 'error', message });
     }
     setBusyId(null);
   };
@@ -166,28 +190,45 @@ export default function CommissionsPage() {
 
   const handlePayBulk = async () => {
     if (!qontoStatus?.connected) {
-      alert(t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'));
+      setQontoModal({
+        kind: 'error',
+        message: t('qonto.error_not_connected', 'Connectez Qonto dans Paramètres → Intégrations.'),
+      });
       return;
     }
     const ids = Array.from(selected);
     if (!ids.length) return;
     if (!confirm(t('qonto.bulk_confirm', { count: ids.length, defaultValue: 'Lancer le paiement de {{count}} commission(s) ?' }))) return;
     setBulkBusy(true);
+    setQontoModal({ kind: 'bulk', phase: 'running', total: ids.length });
     try {
       const r = await api.payCommissionsBulk(ids);
-      const okCount = (r.transfers || []).filter(t => !!t.transfer_id).length;
-      setBulkResult({
-        ok: true,
-        message: r.requires_sca
-          ? t('qonto.bulk_initiated_sca', { count: okCount, defaultValue: '{{count}} virement(s) initié(s) — approuvez-les dans Qonto.' })
-          : t('qonto.bulk_initiated', { count: okCount, defaultValue: '{{count}} virement(s) initié(s).' }),
+      const transfers = r.transfers || [];
+      const okCount = transfers.filter(t => !!t.transfer_id).length;
+      const failed = transfers.filter(t => !t.transfer_id).map(t => ({ id: t.commission_id, reason: t.error || 'unknown' }));
+      // Total amount of the successfully-initiated transfers — pull
+      // it out of the in-memory commission list so we don't have to
+      // wait for reload().
+      const okIds = new Set(transfers.filter(t => !!t.transfer_id).map(t => t.commission_id));
+      const totalAmount = visibleCommissions
+        .filter(c => okIds.has(c.id))
+        .reduce((s, c) => s + parseFloat(c.amount || 0), 0);
+      setQontoModal({
+        kind: 'bulk',
+        phase: 'done',
+        okCount,
+        totalCount: ids.length,
+        totalAmount,
+        requiresSca: !!r.requires_sca,
         skipped: r.skipped || [],
+        failed,
       });
       clearSelection();
       await reload();
     } catch (err) {
-      const code = err?.data?.error || err.message;
-      setBulkResult({ ok: false, message: qontoErrorLabel(t, code) || err.message || 'Error' });
+      const code = err?.data?.error || err?.body?.code;
+      const message = qontoErrorLabel(t, code, err?.message);
+      setQontoModal({ kind: 'error', message });
     }
     setBulkBusy(false);
   };
@@ -223,6 +264,7 @@ export default function CommissionsPage() {
 
   return (
     <div className="fade-in">
+      <style>{`@keyframes rb-spin{to{transform:rotate(360deg)}}.rb-spin{animation:rb-spin 1s linear infinite}`}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('commissions.title')}</h1>
@@ -326,27 +368,20 @@ export default function CommissionsPage() {
             </button>
           )}
           <button onClick={handleRefreshPolls} disabled={refreshingPolls}
-            style={{ padding: '9px 12px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: refreshingPolls ? 0.7 : 1 }}
+            style={{
+              marginLeft: 'auto',
+              padding: '9px 16px', borderRadius: 10,
+              background: '#fff', border: '1px solid #e2e8f0',
+              color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+              opacity: refreshingPolls ? 0.7 : 1,
+            }}
             title={t('qonto.refresh_status_tooltip', 'Rafraîchir les statuts Qonto')}>
-            <RefreshCw size={13} /> {t('qonto.refresh_status', 'Statuts')}
+            <RefreshCw size={14} className={refreshingPolls ? 'rb-spin' : ''} />
+            {refreshingPolls
+              ? t('qonto.refreshing_status', 'Actualisation…')
+              : t('qonto.refresh_status_full', 'Actualiser les statuts')}
           </button>
-          {bulkResult && (
-            <div style={{
-              padding: '8px 14px', borderRadius: 10,
-              background: bulkResult.ok ? '#f0fdf4' : '#fef2f2',
-              border: `1px solid ${bulkResult.ok ? '#bbf7d0' : '#fecaca'}`,
-              color: bulkResult.ok ? '#15803d' : '#b91c1c',
-              fontSize: 13, fontWeight: 600,
-            }}>
-              {bulkResult.message}
-              {bulkResult.skipped && bulkResult.skipped.length > 0 && (
-                <span style={{ marginLeft: 6, color: '#92400e', fontWeight: 500 }}>
-                  · {t('qonto.skipped', { count: bulkResult.skipped.length, defaultValue: '{{count}} ignorée(s)' })}
-                </span>
-              )}
-              <button onClick={() => setBulkResult(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', marginLeft: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>×</button>
-            </div>
-          )}
         </div>
       )}
 
@@ -587,8 +622,149 @@ export default function CommissionsPage() {
           </div>
         </div>
       )}
+
+      {qontoModal && (
+        <QontoResultModal modal={qontoModal} onClose={() => setQontoModal(null)} t={t} />
+      )}
     </div>
   );
+}
+
+function QontoResultModal({ modal, onClose, t }) {
+  const Wrap = ({ children }) => (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)' }} />
+      <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 20, width: 480, maxWidth: '100%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', padding: 28 }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  if (modal.kind === 'initiated') {
+    return (
+      <Wrap>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f0fdf4', border: '2px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <CheckCircle size={32} color="#16a34a" />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            {t('qonto.modal_initiated_title', 'Virement initié')}
+          </h2>
+          <p style={{ color: '#475569', fontSize: 15, margin: '0 0 6px' }}>
+            {t('qonto.modal_initiated_message', 'Un virement de {{amount}} € vers {{partner}} a été envoyé à Qonto.', {
+              amount: fmt(modal.amount).replace(/\s?€/, ''),
+              partner: modal.partnerName || '—',
+            })}
+          </p>
+          {modal.requiresSca && (
+            <p style={{ color: '#92400e', fontSize: 13, fontWeight: 600, margin: '4px 0 0' }}>
+              {t('qonto.modal_initiated_sca_hint', 'Validez le virement dans votre application Qonto (notification SCA).')}
+            </p>
+          )}
+          {modal.reference && (
+            <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 12, color: '#475569' }}>
+              <span style={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('qonto.transfer_reference', 'Référence')}</span>
+              <span style={{ marginLeft: 8, fontFamily: 'monospace', color: '#0f172a' }}>{modal.reference}</span>
+            </div>
+          )}
+          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            {t('common.understood', 'Compris')}
+          </button>
+        </div>
+      </Wrap>
+    );
+  }
+
+  if (modal.kind === 'error') {
+    return (
+      <Wrap>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#fef2f2', border: '2px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <X size={32} color="#dc2626" />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            {t('qonto.modal_error_title', 'Échec du virement')}
+          </h2>
+          <p style={{ color: '#475569', fontSize: 15, margin: '0 0 6px' }}>{modal.message}</p>
+          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            {t('common.close', 'Fermer')}
+          </button>
+        </div>
+      </Wrap>
+    );
+  }
+
+  // bulk
+  if (modal.kind === 'bulk') {
+    if (modal.phase === 'running') {
+      return (
+        <Wrap>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#eef2ff', border: '2px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <Send size={32} color="#4f46e5" />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+              {t('qonto.modal_bulk_running_title', 'Paiement en cours…')}
+            </h2>
+            <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>
+              {t('qonto.modal_bulk_running_message', { count: modal.total, defaultValue: 'Envoi de {{count}} virement(s) à Qonto…' })}
+            </p>
+          </div>
+        </Wrap>
+      );
+    }
+    const partial = modal.failed && modal.failed.length > 0;
+    return (
+      <Wrap>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: partial ? '#fffbeb' : '#f0fdf4', border: `2px solid ${partial ? '#fde68a' : '#bbf7d0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            {partial ? <AlertTriangle size={32} color="#d97706" /> : <CheckCircle size={32} color="#16a34a" />}
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            {partial
+              ? t('qonto.modal_bulk_partial_title', 'Paiement partiel')
+              : t('qonto.modal_bulk_done_title', 'Virements initiés')}
+          </h2>
+          <p style={{ color: '#475569', fontSize: 15, margin: '0 0 6px' }}>
+            {partial
+              ? t('qonto.modal_bulk_partial_summary', { ok: modal.okCount, fail: modal.failed.length, defaultValue: '{{ok}} virement(s) initié(s), {{fail}} en erreur.' })
+              : t('qonto.modal_bulk_done_summary', { count: modal.okCount, total: fmt(modal.totalAmount).replace(/\s?€/, ''), defaultValue: '{{count}} virement(s) initié(s) pour un total de {{total}} €.' })
+            }
+          </p>
+          {modal.requiresSca && modal.okCount > 0 && (
+            <p style={{ color: '#92400e', fontSize: 13, fontWeight: 600, margin: '6px 0 0' }}>
+              {t('qonto.modal_bulk_sca_hint', 'Validez les virements dans votre application Qonto.')}
+            </p>
+          )}
+          {modal.skipped && modal.skipped.length > 0 && (
+            <div style={{ marginTop: 14, alignSelf: 'stretch', textAlign: 'left', padding: '10px 14px', borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a', fontSize: 12, color: '#92400e' }}>
+              <strong>{t('qonto.skipped', { count: modal.skipped.length, defaultValue: '{{count}} ignorée(s)' })}</strong>
+              <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                {modal.skipped.slice(0, 5).map((s, i) => (
+                  <li key={i}>{qontoErrorLabel(t, s.reason)}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {partial && (
+            <div style={{ marginTop: 12, alignSelf: 'stretch', textAlign: 'left', padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', fontSize: 12, color: '#b91c1c' }}>
+              <strong>{t('qonto.modal_bulk_failed_label', 'En erreur')}</strong>
+              <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                {modal.failed.slice(0, 5).map((f, i) => (
+                  <li key={i}>{qontoErrorLabel(t, f.reason, f.reason)}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            {t('common.understood', 'Compris')}
+          </button>
+        </div>
+      </Wrap>
+    );
+  }
+
+  return null;
 }
 
 function ComKPI({ icon: Icon, label, value, color }) {

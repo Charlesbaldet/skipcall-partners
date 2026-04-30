@@ -840,13 +840,28 @@ async function reconcileQontoTransfers(tenantId) {
         }
         updates.push({ commission_id: c.id, transfer_id: c.qonto_transfer_id, status: 'paid' });
       } else if (status === 'declined' || status === 'canceled' || status === 'cancelled' || status === 'failed') {
+        // Qonto refused / cancelled / outright failed the transfer.
+        // Revert the commission to a re-payable state by clearing the
+        // transfer pointer + initiated-at timestamp so the card stops
+        // showing "Virement en cours" and the Payer button comes
+        // back. Keep payment_reference for audit history. Persist
+        // whatever reason Qonto gave us (declined_reason, error
+        // message, status code) into payment_error so the admin can
+        // see it on the card.
+        const reason = t?.declined_reason
+          || t?.error_message
+          || t?.failure_reason
+          || `Qonto status: ${status}`;
         await query(
           `UPDATE commissions
-              SET payment_error = $2
+              SET payment_error = $2,
+                  qonto_transfer_id = NULL,
+                  payment_initiated_at = NULL,
+                  status = 'pending_validation'
             WHERE id = $1`,
-          [c.id, `Qonto status: ${status}`]
+          [c.id, String(reason).slice(0, 500)]
         );
-        updates.push({ commission_id: c.id, transfer_id: c.qonto_transfer_id, status });
+        updates.push({ commission_id: c.id, transfer_id: c.qonto_transfer_id, status, reason });
       } else {
         // pending / processing — leave as-is.
         updates.push({ commission_id: c.id, transfer_id: c.qonto_transfer_id, status: status || 'unknown' });
