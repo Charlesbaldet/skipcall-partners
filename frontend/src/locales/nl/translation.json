@@ -282,7 +282,9 @@
     "access_revoked": "Je toegang is ingetrokken door de beheerder. Als je denkt dat dit een vergissing is, neem dan contact op met je programma.",
     "google_continue": "Doorgaan met Google",
     "or": "of",
-    "google_error": "Aanmelden met Google mislukt"
+    "google_error": "Aanmelden met Google mislukt",
+    "select_space_title": "Kies je werkruimte",
+    "select_space_desc": "Je hebt toegang tot meerdere werkruimtes. Selecteer degene waarmee je wilt inloggen."
   },
   "signup": {
     "title": "Maak uw ruimte aan",

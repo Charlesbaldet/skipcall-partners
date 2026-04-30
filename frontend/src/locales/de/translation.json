@@ -282,7 +282,9 @@
     "access_revoked": "Ihr Zugriff wurde vom Administrator widerrufen. Falls Sie glauben, dass es sich um einen Fehler handelt, kontaktieren Sie Ihr Programm.",
     "google_continue": "Mit Google fortfahren",
     "or": "oder",
-    "google_error": "Google-Anmeldung fehlgeschlagen"
+    "google_error": "Google-Anmeldung fehlgeschlagen",
+    "select_space_title": "Wähle deinen Arbeitsbereich",
+    "select_space_desc": "Du hast Zugang zu mehreren Arbeitsbereichen. Wähle den, in den du dich anmelden möchtest."
   },
   "signup": {
     "title": "Erstellen Sie Ihren Bereich",

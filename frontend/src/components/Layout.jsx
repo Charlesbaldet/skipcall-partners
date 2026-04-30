@@ -286,11 +286,17 @@ export default function Layout({ children }) {
   );
 
   const hasMultipleSpaces = spaces && spaces.length > 1;
+  // Tenant label resolution order:
+  //   1. JWT-derived user.tenantName  (always matches the active workspace)
+  //   2. currentSpace.tenant_name     (fresh from /auth/me/spaces)
+  //   3. host-derived tenant?.name    (legacy single-tenant fallback)
+  // Reading user.tenantName first means a switch-space is reflected
+  // immediately, before /auth/me/spaces re-fetches.
   const programLabel = isSuperAdmin
     ? t('layout_extra.super_admin')
     : (currentSpace?.role === 'partner' && currentSpace?.partner_name)
       ? currentSpace.partner_name
-      : (currentSpace?.tenant_name || tenant?.name || 'RefBoost');
+      : (user?.tenantName || currentSpace?.tenant_name || tenant?.name || 'RefBoost');
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>

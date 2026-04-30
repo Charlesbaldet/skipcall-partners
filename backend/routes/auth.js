@@ -33,6 +33,130 @@ async function ensureUserRoleEntry(userId, tenantId, role, partnerId) {
   }
 }
 
+// All active workspaces a user belongs to. Mirrors the filter used by
+// /me/spaces (rejects inactive partner rows so admins flipping
+// partners.is_active out-of-band can't be bypassed). Returned in
+// stable creation order so the "first space" we auto-pick is
+// deterministic.
+async function listUserSpaces(userId) {
+  const { rows } = await query(
+    `SELECT
+       ur.id, ur.tenant_id, ur.role, ur.partner_id, ur.is_active,
+       t.name AS tenant_name, t.slug AS tenant_slug,
+       p.name AS partner_name
+     FROM user_roles ur
+     LEFT JOIN tenants t ON t.id = ur.tenant_id
+     LEFT JOIN partners p ON p.id = ur.partner_id
+     WHERE ur.user_id = $1
+       AND ur.is_active = TRUE
+       AND (
+         ur.role <> 'partner'
+         OR (p.id IS NOT NULL AND p.is_active = TRUE)
+       )
+     ORDER BY ur.created_at ASC`,
+    [userId]
+  );
+  return rows;
+}
+
+// Pick the space we should bind a fresh JWT to:
+//   * 0 spaces → null (caller falls through to legacy users.tenant_id)
+//   * 1 space  → that one
+//   * 2+       → if users.tenant_id matches one, "last-used wins"; else null
+//                (caller surfaces requiresSpaceSelection so the user picks)
+function pickInitialSpace(spaces, lastTenantId) {
+  if (!Array.isArray(spaces) || spaces.length === 0) return null;
+  if (spaces.length === 1) return spaces[0];
+  if (lastTenantId) {
+    const match = spaces.find(s => s.tenant_id === lastTenantId);
+    if (match) return match;
+  }
+  return null;
+}
+
+// Build the post-login JSON. Always includes the spaces list so the
+// frontend can render a switcher; sets requiresSpaceSelection when the
+// caller couldn't disambiguate.
+function buildLoginResponse({ user, space, spaces, token, requiresSpaceSelection = false }) {
+  const tenantId = space?.tenant_id || user.tenant_id || null;
+  const tenantName = space?.tenant_name || null;
+  const tenantSlug = space?.tenant_slug || null;
+  const role = space?.role || user.role;
+  const partnerId = (space && 'partner_id' in space) ? (space.partner_id || null) : (user.partner_id || null);
+  const partnerName = space?.partner_name || user.partner_name || null;
+  return {
+    token,
+    requiresSpaceSelection,
+    spaces,
+    user: {
+      id: user.id,
+      email: user.email,
+      fullName: user.full_name,
+      role,
+      partnerId,
+      partnerName,
+      tenantId,
+      tenantName,
+      tenantSlug,
+      mustChangePassword: user.must_change_password || false,
+      avatarUrl: user.avatar_url || null,
+    },
+  };
+}
+
+// Sign a normal session JWT bound to a specific (user, tenant, role).
+function signSessionToken({ user, tenantId, role, partnerId }) {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: role || user.role,
+      partnerId: partnerId ?? user.partner_id ?? null,
+      fullName: user.full_name,
+      tenantId,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+  );
+}
+
+// Short-lived JWT for the in-between state where the user has been
+// authenticated but hasn't picked a workspace yet. It carries no
+// tenantId, so any tenant-scoped endpoint will refuse it; the only
+// thing it's good for is hitting /auth/me/spaces and /auth/switch-space.
+function signPendingSelectionToken(user) {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      fullName: user.full_name,
+      pendingSpaceSelection: true,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+}
+
+// Persist users.tenant_id (and role/partner_id) to whichever space the
+// user is now landing in. This is what makes the next login default
+// back to the same workspace instead of springing the picker again.
+async function persistActiveSpace(userId, space) {
+  if (!space || !space.tenant_id) return;
+  try {
+    await query(
+      `UPDATE users
+          SET tenant_id = $2,
+              role = $3,
+              partner_id = $4,
+              updated_at = NOW()
+        WHERE id = $1`,
+      [userId, space.tenant_id, space.role, space.partner_id || null]
+    );
+  } catch (e) {
+    console.error('[persistActiveSpace]', e.message);
+  }
+}
+
 // ─── Login (ISO 27001 A.9.4 - brute force protection) ───
 router.post('/login', [
   body('email').isEmail().normalizeEmail(),
@@ -88,18 +212,44 @@ router.post('/login', [
     // primary tenant from the space-switcher.
     await ensureUserRoleEntry(user.id, user.tenant_id, user.role, user.partner_id);
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, partnerId: user.partner_id, fullName: user.full_name, tenantId: user.tenant_id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+    // Multi-tenant disambiguation. Source of truth = user_roles (the
+    // legacy users.tenant_id column can lag behind when an admin adds
+    // a second tenant role through the team UI without flipping the
+    // primary one). For multi-space users we either re-use the
+    // last-used tenant (so a refresh stays put) or surface
+    // requiresSpaceSelection so the frontend opens the picker modal.
+    const spaces = await listUserSpaces(user.id);
+    const space = pickInitialSpace(spaces, user.tenant_id);
 
-    auditLog(req, 'login_success', 'user', user.id, { email });
+    auditLog(req, 'login_success', 'user', user.id, { email, spaces: spaces.length });
 
-    res.json({
-      token,
-      user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, partnerId: user.partner_id, partnerName: user.partner_name, tenantId: user.tenant_id, mustChangePassword: user.must_change_password || false },
+    if (!space && spaces.length > 1) {
+      const tempToken = signPendingSelectionToken(user);
+      return res.json({
+        token: tempToken,
+        requiresSpaceSelection: true,
+        spaces,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name,
+          mustChangePassword: user.must_change_password || false,
+        },
+      });
+    }
+
+    // Single-space (or last-used match): persist the chosen tenant so
+    // users.tenant_id stays in sync with what's actually being used.
+    if (space) await persistActiveSpace(user.id, space);
+
+    const tenantId = space?.tenant_id || user.tenant_id;
+    const token = signSessionToken({
+      user,
+      tenantId,
+      role: space?.role || user.role,
+      partnerId: space ? (space.partner_id || null) : user.partner_id,
     });
+    res.json(buildLoginResponse({ user, space, spaces, token }));
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -181,24 +331,37 @@ router.post('/google', async (req, res) => {
     // it created) can never return to that tenant from the switcher.
     await ensureUserRoleEntry(user.id, user.tenant_id, user.role, user.partner_id);
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, partnerId: user.partner_id, fullName: user.full_name, tenantId: user.tenant_id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+    const spaces = await listUserSpaces(user.id);
+    const space = pickInitialSpace(spaces, user.tenant_id);
 
-    auditLog(req, 'google_login_success', 'user', user.id, { email });
+    auditLog(req, 'google_login_success', 'user', user.id, { email, spaces: spaces.length });
 
-    res.json({
-      token,
-      user: {
-        id: user.id, email: user.email, fullName: user.full_name,
-        role: user.role, partnerId: user.partner_id, partnerName: user.partner_name,
-        tenantId: user.tenant_id,
-        mustChangePassword: user.must_change_password || false,
-        avatarUrl: user.avatar_url || null,
-      },
+    if (!space && spaces.length > 1) {
+      const tempToken = signPendingSelectionToken(user);
+      return res.json({
+        token: tempToken,
+        requiresSpaceSelection: true,
+        spaces,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name,
+          avatarUrl: user.avatar_url || null,
+          mustChangePassword: user.must_change_password || false,
+        },
+      });
+    }
+
+    if (space) await persistActiveSpace(user.id, space);
+
+    const tenantId = space?.tenant_id || user.tenant_id;
+    const token = signSessionToken({
+      user,
+      tenantId,
+      role: space?.role || user.role,
+      partnerId: space ? (space.partner_id || null) : user.partner_id,
     });
+    res.json(buildLoginResponse({ user, space, spaces, token }));
   } catch (err) {
     console.error('[google sso]', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -222,8 +385,12 @@ router.get('/me', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT u.id, u.email, u.full_name, u.role, u.partner_id, u.tenant_id, u.must_change_password,
-              p.name as partner_name, p.commission_rate
-       FROM users u LEFT JOIN partners p ON u.partner_id = p.id WHERE u.id = $1`,
+              p.name as partner_name, p.commission_rate,
+              t.name as tenant_name, t.slug as tenant_slug
+       FROM users u
+       LEFT JOIN partners p ON u.partner_id = p.id
+       LEFT JOIN tenants t ON u.tenant_id = t.id
+       WHERE u.id = $1`,
       [req.user.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
@@ -298,6 +465,8 @@ router.get('/me', authenticate, async (req, res) => {
         partnerId,
         partnerName,
         tenantId: u.tenant_id,
+        tenantName: u.tenant_name || null,
+        tenantSlug: u.tenant_slug || null,
         commissionRate,
         mustChangePassword: u.must_change_password || false,
       },
@@ -706,33 +875,45 @@ router.post('/switch-space',
         [role, tenantId, partnerId || null, req.user.id]
       );
 
-      const userRes = await query('SELECT id, email, full_name FROM users WHERE id = $1', [req.user.id]);
+      // Pull the user + tenant + partner names in one shot so the
+      // response carries everything the frontend sidebar needs without
+      // an extra /me round-trip.
+      const userRes = await query(
+        `SELECT u.id, u.email, u.full_name, u.must_change_password, u.avatar_url,
+                t.name AS tenant_name, t.slug AS tenant_slug,
+                p.name AS partner_name, p.commission_rate
+           FROM users u
+           LEFT JOIN tenants t ON t.id = $2
+           LEFT JOIN partners p ON p.id = $3
+          WHERE u.id = $1`,
+        [req.user.id, tenantId, partnerId || null]
+      );
       const user = userRes.rows[0];
       if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
-      const token = jwt.sign(
-        {
-          id: user.id,
-          email: user.email,
-          role,
-          partnerId: partnerId || null,
-          fullName: user.full_name,
-          tenantId
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-      );
+      const token = signSessionToken({
+        user: { id: user.id, email: user.email, full_name: user.full_name, role, partner_id: partnerId || null },
+        tenantId,
+        role,
+        partnerId: partnerId || null,
+      });
 
       res.json({
         token,
         user: {
           id: user.id,
           email: user.email,
-          full_name: user.full_name,
+          fullName: user.full_name,
           role,
-          partner_id: partnerId || null,
-          tenant_id: tenantId
-        }
+          partnerId: partnerId || null,
+          partnerName: user.partner_name || null,
+          tenantId,
+          tenantName: user.tenant_name || null,
+          tenantSlug: user.tenant_slug || null,
+          commissionRate: user.commission_rate || null,
+          mustChangePassword: user.must_change_password || false,
+          avatarUrl: user.avatar_url || null,
+        },
       });
     } catch (err) {
       console.error('[POST /switch-space] error:', err);

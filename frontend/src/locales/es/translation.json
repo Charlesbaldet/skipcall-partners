@@ -282,7 +282,9 @@
     "access_revoked": "Tu acceso ha sido revocado por el administrador. Si crees que es un error, contacta con tu programa.",
     "google_continue": "Continuar con Google",
     "or": "o",
-    "google_error": "Error al iniciar sesión con Google"
+    "google_error": "Error al iniciar sesión con Google",
+    "select_space_title": "Elige tu espacio",
+    "select_space_desc": "Tienes acceso a varios espacios. Selecciona aquel al que deseas conectarte."
   },
   "signup": {
     "title": "Crea tu espacio",

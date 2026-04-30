@@ -3,10 +3,29 @@ import api from '../lib/api';
 
 const AuthContext = createContext(null);
 
+// Wipe any cached tenant blob from localStorage so the sidebar can't
+// briefly flash the previous tenant's name when the user switches
+// workspaces. Keep skipcall_token + skipcall_user since useAuth
+// rewrites them in the same tick.
+function clearTenantCache() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('skipcall_tenant') || key === 'rb_tenant' || key === 'rb_tenant_name') {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {}
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => api.getUser());
   const [loading, setLoading] = useState(true);
   const [spaces, setSpaces] = useState([]);
+  // When /auth/login or /auth/google returns requiresSpaceSelection
+  // we stash the spaces list here so the LoginPage can render the
+  // picker modal. The temp token is already sitting in api.token by
+  // then, scoped to /auth/me/spaces + /auth/switch-space only.
+  const [pendingSpaceSelection, setPendingSpaceSelection] = useState(null);
 
   const refreshSpaces = useCallback(async () => {
     try {
@@ -31,6 +50,7 @@ export function AuthProvider({ children }) {
       try {
         const data = await api.getMe();
         setUser(data.user);
+        api.setUser(data.user);
         await refreshSpaces();
       } catch {
         setUser(null);
@@ -42,39 +62,59 @@ export function AuthProvider({ children }) {
   }, [refreshSpaces]);
 
   const login = async (email, password) => {
+    clearTenantCache();
     const data = await api.login(email, password);
+    if (data.requiresSpaceSelection) {
+      // Don't materialize the user yet — the temp token can't load
+      // any tenant-scoped data, and we don't want the sidebar to
+      // flash a partial profile. The picker modal owns the next step.
+      setPendingSpaceSelection({ spaces: data.spaces || [], user: data.user });
+      setSpaces(data.spaces || []);
+      setUser(null);
+      return data;
+    }
     setUser(data.user);
+    setPendingSpaceSelection(null);
     await refreshSpaces();
     return data;
   };
 
-  // Google SSO — same post-login steps as `login`, plus a caller
-  // signal (`needsSignup`) when the email isn't registered yet so
-  // pages can route the visitor to /signup with the email pre-filled.
   const loginWithGoogle = async (credential) => {
+    clearTenantCache();
     const data = await api.loginWithGoogle(credential);
     if (data.needsSignup) return data;
+    if (data.requiresSpaceSelection) {
+      setPendingSpaceSelection({ spaces: data.spaces || [], user: data.user });
+      setSpaces(data.spaces || []);
+      setUser(null);
+      return data;
+    }
     setUser(data.user);
+    setPendingSpaceSelection(null);
     await refreshSpaces();
     return data;
   };
 
   const logout = async () => {
+    clearTenantCache();
     await api.logout();
     setUser(null);
     setSpaces([]);
+    setPendingSpaceSelection(null);
   };
 
   const switchSpace = async (space) => {
+    clearTenantCache();
     const data = await api.switchSpace({
       tenantId: space.tenant_id,
       role: space.role,
       partnerId: space.partner_id || null,
     });
-    // Persist new JWT and user so subsequent requests use the new role
     if (data.token) api.setToken(data.token);
     if (data.user) api.setUser(data.user);
     setUser(data.user);
+    setPendingSpaceSelection(null);
+    await refreshSpaces();
     return data;
   };
 
@@ -89,7 +129,18 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, spaces, currentSpace, login, loginWithGoogle, logout, switchSpace, refreshSpaces }}
+      value={{
+        user,
+        loading,
+        spaces,
+        currentSpace,
+        pendingSpaceSelection,
+        login,
+        loginWithGoogle,
+        logout,
+        switchSpace,
+        refreshSpaces,
+      }}
     >
       {children}
     </AuthContext.Provider>

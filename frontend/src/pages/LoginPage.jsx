@@ -41,7 +41,7 @@ function Logo({ size = 40, white = false }) {
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, switchSpace } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const revoked = searchParams.get('revoked') === '1';
@@ -50,6 +50,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // When the backend returns requiresSpaceSelection (multi-tenant
+  // user), this holds the spaces list so we can render the picker
+  // modal. Cleared once the user picks one.
+  const [pickerSpaces, setPickerSpaces] = useState(null);
+  const [pickerBusy, setPickerBusy] = useState(false);
+
+  const finishLogin = (u) => {
+    navigate(u.role === 'partner' ? '/partner/submit' : '/');
+  };
+
+  const handlePickSpace = async (space) => {
+    setError('');
+    setPickerBusy(true);
+    try {
+      const data = await switchSpace(space);
+      setPickerSpaces(null);
+      finishLogin(data.user);
+    } catch (err) {
+      setError(err.message || t('login.error_default'));
+    } finally {
+      setPickerBusy(false);
+    }
+  };
 
   // Complete the Google OAuth redirect flow: when Google sends the
   // user back here with `#access_token=…` in the URL, trade the
@@ -91,7 +114,11 @@ export default function LoginPage() {
           navigate('/signup?' + qs.toString());
           return;
         }
-        navigate(data.user.role === 'partner' ? '/partner/submit' : '/');
+        if (data.requiresSpaceSelection) {
+          setPickerSpaces(data.spaces || []);
+        } else {
+          finishLogin(data.user);
+        }
       } catch (err) {
         if (!cancelled) setError(err.message || t('login.google_error'));
       } finally {
@@ -107,8 +134,15 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const user = await login(email, password);
-      navigate(user.role === 'partner' ? '/partner/submit' : '/');
+      const data = await login(email, password);
+      // login() returns the full backend payload. Multi-tenant
+      // accounts get requiresSpaceSelection + a temp token; the
+      // picker modal owns the next step.
+      if (data.requiresSpaceSelection) {
+        setPickerSpaces(data.spaces || []);
+      } else {
+        finishLogin(data.user);
+      }
     } catch (err) {
       setError(err.message || t("login.error_default"));
     } finally {
@@ -330,6 +364,71 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+
+      {/* Workspace picker — shown when /auth/login or /auth/google
+          returns requiresSpaceSelection because the user belongs to
+          multiple tenants and we couldn't auto-pick the last-used one. */}
+      {pickerSpaces && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)',
+        }}>
+          <div style={{
+            width: '100%', maxWidth: 480, background: '#fff', borderRadius: 20,
+            padding: 32, boxShadow: '0 25px 80px rgba(0,0,0,0.25)',
+          }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.s, margin: '0 0 6px' }}>
+              {t('login.select_space_title', 'Choisissez votre espace')}
+            </h2>
+            <p style={{ color: C.m, fontSize: 14, margin: '0 0 20px' }}>
+              {t('login.select_space_desc', 'Vous avez accès à plusieurs espaces. Sélectionnez celui auquel vous souhaitez vous connecter.')}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
+              {pickerSpaces.map((space) => {
+                const label = space.role === 'partner'
+                  ? (space.partner_name || t('layout_extra.space_partner', 'Espace partenaire'))
+                  : (space.tenant_name || t('layout_extra.space_space', 'Espace'));
+                const initials = (label || '??').slice(0, 2).toUpperCase();
+                const roleLabel = space.role === 'partner'
+                  ? t('layout_extra.space_partner', 'Partenaire')
+                  : t('layout_extra.space_admin', space.role);
+                return (
+                  <button
+                    key={`pick-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
+                    type="button"
+                    onClick={() => handlePickSpace(space)}
+                    disabled={pickerBusy}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '14px 16px', borderRadius: 12,
+                      border: '1.5px solid #e2e8f0', background: '#fafbfc',
+                      cursor: pickerBusy ? 'wait' : 'pointer',
+                      textAlign: 'left', fontFamily: 'inherit',
+                      transition: 'all .15s',
+                      opacity: pickerBusy ? 0.6 : 1,
+                    }}
+                    onMouseEnter={e => !pickerBusy && (e.currentTarget.style.borderColor = C.p)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = '#e2e8f0')}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                      background: g(C.p, C.pl), color: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 800, fontSize: 14, letterSpacing: -0.5,
+                    }}>{initials}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: C.s, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                      <div style={{ color: C.m, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{roleLabel}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

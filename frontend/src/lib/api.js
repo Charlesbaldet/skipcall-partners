@@ -121,11 +121,20 @@ class ApiClient {
   // Auth
   async login(email, password) {
     const data = await this.request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-    this.setToken(data.token); this.setUser(data.user); return data;
+    // Always store the token (it may be a short-lived selection token
+    // that only authorizes /auth/me/spaces + /auth/switch-space).
+    if (data.token) this.setToken(data.token);
+    // Only persist the user blob when the login is fully resolved.
+    // requiresSpaceSelection means we still need the picker — the
+    // user payload at that point is intentionally minimal (no
+    // tenantId yet) and would mislead useAuth's bootstrap path.
+    if (data.user && !data.requiresSpaceSelection) this.setUser(data.user);
+    return data;
   }
   async loginWithGoogle(accessToken) {
     const data = await this.request('/auth/google', { method: 'POST', body: JSON.stringify({ access_token: accessToken }) });
-    if (data.token) { this.setToken(data.token); this.setUser(data.user); }
+    if (data.token) this.setToken(data.token);
+    if (data.user && !data.requiresSpaceSelection) this.setUser(data.user);
     return data;
   }
   async signupWithGoogle({ company, fullName, phone, access_token }) {
