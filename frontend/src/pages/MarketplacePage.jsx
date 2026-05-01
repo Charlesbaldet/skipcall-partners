@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ExternalLink, Globe, Users, Tag, X, Filter } from 'lucide-react';
+import { Search, ArrowRight, Users, Tag, X, Filter } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import LandingLayout from '../components/LandingLayout';
 import api from '../lib/api';
@@ -60,23 +60,11 @@ function PartnerCard({ partner }) {
             <span><strong style={{ color: C.s }}>{t("marketplace.target")}</strong> {partner.icp}</span>
           </div>
         )}
-        <a href={'/marketplace/' + partner.slug}
-           style={{ display: 'inline-block', marginTop: 12, color: C.p, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-          {t('marketplace.learn_more')} →
-        </a>
       </div>
-      <div style={{ display: 'flex', gap: 8, padding: '0 24px 24px', marginTop: 'auto' }}>
-        {partner.website && (
-          <a href={partner.website} target="_blank" rel="noopener noreferrer"
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 14px', borderRadius: 10, border: '1.5px solid ' + color, color, fontWeight: 600, fontSize: 13, textDecoration: 'none', transition: 'all .2s' }}
-            onMouseEnter={e => { e.currentTarget.style.background = color; e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = color; }}>
-            <Globe size={14} /> {t("marketplace.website")}
-          </a>
-        )}
-        <a href={'/r/' + partner.slug}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 14px', borderRadius: 10, background: 'linear-gradient(135deg,' + C.p + ',' + C.pl + ')', color: '#fff', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
-          <ExternalLink size={14} /> {t("marketplace.join")}
+      <div style={{ padding: '0 24px 24px', marginTop: 'auto' }}>
+        <a href={'/marketplace/' + partner.slug}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 14px', borderRadius: 10, background: 'linear-gradient(135deg,' + C.p + ',' + C.pl + ')', color: '#fff', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+          {t('marketplace.learn_more')} <ArrowRight size={14} />
         </a>
       </div>
     </article>

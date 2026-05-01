@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff, Save, Languages, ExternalLink, GripVertical } from 'lucide-react';
+import { Eye, EyeOff, Save, Languages, ExternalLink, GripVertical, Tag, Users, ArrowRight, Upload } from 'lucide-react';
 import api from '../lib/api';
 import { showToast } from '../components/Dialogs.jsx';
 import { BLOCK_COMPONENTS } from './marketplaceBlocks/MarketplaceEditorBlocks.jsx';
+
+// Sector list mirrors the public /marketplace filter so admins can
+// only pick a value the listing already filters by.
+const SECTORS = [
+  'SaaS / Logiciel', 'Conseil & Services', 'Finance & Fintech', 'RH & Recrutement',
+  'Marketing & Communication', 'Immobilier', 'Commerce', 'Formation',
+  'Juridique', 'Comptabilité', 'Industrie', 'Autre',
+];
 
 // WYSIWYG editor for /marketplace/:slug. Top bar + ordered blocks read
 // from page.page_blocks. Visible blocks render in order; hidden blocks
@@ -51,6 +59,197 @@ function Toggle({ value, onChange, disabled }) {
 }
 
 const DEFAULT_BLOCKS = ['hero', 'tiers', 'conditions', 'about', 'ideal_client', 'why_join', 'references', 'additional_info', 'cta'];
+
+// ── Marketplace card preview ─────────────────────────────────────────
+// Pinned to the top of the editor (above the reorderable page blocks)
+// because the listing card is the gatekeeper to the detail page —
+// admins should be able to tweak it without scrolling. Visual is a
+// pixel-mirror of <PartnerCard> in MarketplacePage.jsx so the preview
+// matches what /marketplace will actually render.
+function CardPreview({ tenant, t }) {
+  const initials = (tenant.company_name || '?').split(' ').slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+  const color = tenant.primary_color || C.p;
+  return (
+    <article style={{
+      background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,.06)',
+      display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden',
+      width: 320, margin: '0 auto',
+    }}>
+      <div style={{ padding: '24px 24px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+          {tenant.logo_url
+            ? <img src={tenant.logo_url} alt={tenant.company_name} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'contain', border: '1px solid #f1f5f9' }} />
+            : <div style={{ width: 48, height: 48, borderRadius: 12, background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color }}>{initials}</div>}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontWeight: 700, fontSize: 16, color: C.s, display: 'block' }}>
+              {tenant.company_name || t('marketplace.editor.preview_no_name', 'Nom de l\'entreprise')}
+            </span>
+            {tenant.sector && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color, background: color + '15', borderRadius: 20, padding: '2px 10px', marginTop: 4 }}>
+                <Tag size={10} /> {tenant.sector}
+              </span>
+            )}
+          </div>
+        </div>
+        <p style={{ fontSize: 14, color: C.m, lineHeight: 1.6, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {tenant.short_description || t('marketplace.editor.preview_no_desc', 'Description courte de votre programme — apparaît sur la liste des programmes.')}
+        </p>
+        {tenant.icp && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.m, background: '#f8fafc', borderRadius: 8, padding: '6px 10px', marginTop: 12 }}>
+            <Users size={12} color={C.p} />
+            <span><strong style={{ color: C.s }}>{t('marketplace.target', 'Cible :')}</strong> {tenant.icp}</span>
+          </div>
+        )}
+      </div>
+      <div style={{ padding: '0 24px 24px', marginTop: 'auto' }}>
+        <span style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          padding: '12px 14px', borderRadius: 10,
+          background: 'linear-gradient(135deg,' + C.p + ',#10b981)',
+          color: '#fff', fontWeight: 600, fontSize: 13,
+        }}>
+          {t('marketplace.learn_more', 'En savoir plus')} <ArrowRight size={14} />
+        </span>
+      </div>
+    </article>
+  );
+}
+
+// Form field — label + input + optional helper. Kept inline so the
+// card preview block stays self-contained.
+function Field({ label, children, full = false }) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: full ? '1 / -1' : 'auto' }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: C.s, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+const inputStyle = {
+  padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`,
+  fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#fff',
+};
+
+function CardEditor({ tenant, onPatch, t }) {
+  const handleLogoFile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return showToast('Choisissez une image', 'error');
+    if (file.size > 500 * 1024) return showToast('Logo trop volumineux (500 KB max)', 'error');
+    const reader = new FileReader();
+    reader.onload = (ev) => onPatch({ logo_url: ev.target.result });
+    reader.onerror = () => showToast('Lecture du fichier échouée', 'error');
+    reader.readAsDataURL(file);
+  };
+  return (
+    <section style={{
+      background: '#fff', padding: '32px 32px 36px', borderRadius: 20,
+      border: `1px solid ${C.border}`,
+    }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>
+          {t('marketplace.editor.card_label', 'Aperçu carte marketplace')}
+        </p>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.s }}>
+          {t('marketplace.editor.card_title', 'Comment votre programme apparaît sur /marketplace')}
+        </h2>
+      </div>
+
+      <div style={{ marginBottom: 28 }}>
+        <CardPreview tenant={tenant} t={t} />
+      </div>
+
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14,
+        maxWidth: 880, margin: '0 auto',
+      }}>
+        <Field label={t('marketplace.editor.field_name', 'Nom de l\'entreprise')}>
+          <input
+            value={tenant.company_name || ''}
+            onChange={e => onPatch({ company_name: e.target.value })}
+            placeholder="Acme Corp"
+            style={inputStyle}
+          />
+        </Field>
+        <Field label={t('marketplace.editor.field_sector', 'Secteur')}>
+          <select
+            value={tenant.sector || ''}
+            onChange={e => onPatch({ sector: e.target.value })}
+            style={{ ...inputStyle, cursor: 'pointer' }}
+          >
+            <option value="">{t('marketplace.editor.field_sector_ph', '— Choisir un secteur —')}</option>
+            {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </Field>
+        <Field label={t('marketplace.editor.field_short_desc', 'Description courte (carte)')} full>
+          <textarea
+            value={tenant.short_description || ''}
+            onChange={e => onPatch({ short_description: e.target.value })}
+            rows={2}
+            placeholder={t('marketplace.editor.field_short_desc_ph', 'Une phrase qui résume votre programme. Visible sur la liste.')}
+            style={{ ...inputStyle, resize: 'vertical', minHeight: 60 }}
+            maxLength={240}
+          />
+        </Field>
+        <Field label={t('marketplace.editor.field_icp', 'Cible (ICP)')}>
+          <input
+            value={tenant.icp || ''}
+            onChange={e => onPatch({ icp: e.target.value })}
+            placeholder={t('marketplace.editor.field_icp_ph', 'PME, indépendants, retail…')}
+            style={inputStyle}
+          />
+        </Field>
+        <Field label={t('marketplace.editor.field_website', 'Site web')}>
+          <input
+            type="url"
+            value={tenant.website || ''}
+            onChange={e => onPatch({ website: e.target.value })}
+            placeholder="https://example.com"
+            style={inputStyle}
+          />
+        </Field>
+        <Field label={t('marketplace.editor.field_logo', 'Logo')} full>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: 12, background: C.bg,
+              border: `1px solid ${C.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 6, overflow: 'hidden', flexShrink: 0,
+            }}>
+              {tenant.logo_url
+                ? <img src={tenant.logo_url} alt={tenant.company_name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                : <span style={{ color: C.m, fontSize: 11 }}>—</span>}
+            </div>
+            <label style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '10px 16px', borderRadius: 10,
+              background: C.bg, border: `1.5px solid ${C.border}`,
+              color: C.s, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            }}>
+              <Upload size={14} />
+              {t('marketplace.editor.field_logo_upload', 'Téléverser un logo (PNG/JPG, 500 KB max)')}
+              <input type="file" accept="image/*" onChange={handleLogoFile} style={{ display: 'none' }} />
+            </label>
+            {tenant.logo_url && (
+              <button
+                onClick={() => onPatch({ logo_url: null })}
+                style={{
+                  padding: '8px 12px', borderRadius: 8,
+                  background: 'transparent', border: 'none',
+                  color: C.m, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                {t('marketplace.editor.field_logo_remove', 'Retirer')}
+              </button>
+            )}
+          </div>
+        </Field>
+      </div>
+    </section>
+  );
+}
 
 // Block-level toolbar (drag handle + visibility toggle) shown on hover.
 function BlockToolbar({ id, visible, dragArmed, onArmDrag, onDisarmDrag, onToggle, t }) {
@@ -396,6 +595,10 @@ export default function MarketplaceEditorPage() {
       </div>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 24px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Marketplace card preview + form. Pinned above the
+            reorderable page blocks because the listing card
+            is what gates the detail page. */}
+        <CardEditor tenant={tenant} onPatch={onPatch} t={t} />
         {/* Visible blocks in their saved order */}
         {visibleBlocks.map(id => renderBlock(id, true))}
         {/* Hidden blocks at the bottom (default order) */}
