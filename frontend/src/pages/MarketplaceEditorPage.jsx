@@ -131,8 +131,17 @@ const inputStyle = {
   padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`,
   fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#fff',
 };
+const inputStyleLocked = {
+  ...inputStyle,
+  background: '#f8fafc', color: '#64748b', cursor: 'not-allowed',
+};
 
-function CardEditor({ tenant, onPatch, t }) {
+function CardEditor({ tenant, onPatch, t, editable = true }) {
+  // When the editor is in read mode, every form field switches to a
+  // gray "disabled" look mirroring the contenteditable lockdown on
+  // the Page tab. The visual is the same form so the admin sees what
+  // they have, but they can't change anything until they hit Éditer.
+  const fieldStyle = editable ? inputStyle : inputStyleLocked;
   const handleLogoFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -171,14 +180,16 @@ function CardEditor({ tenant, onPatch, t }) {
             value={tenant.company_name || ''}
             onChange={e => onPatch({ company_name: e.target.value })}
             placeholder="Acme Corp"
-            style={inputStyle}
+            style={fieldStyle}
+            disabled={!editable}
           />
         </Field>
         <Field label={t('marketplace.editor.field_sector', 'Secteur')}>
           <select
             value={tenant.sector || ''}
             onChange={e => onPatch({ sector: e.target.value })}
-            style={{ ...inputStyle, cursor: 'pointer' }}
+            style={{ ...fieldStyle, cursor: editable ? 'pointer' : 'not-allowed' }}
+            disabled={!editable}
           >
             <option value="">{t('marketplace.editor.field_sector_ph', '— Choisir un secteur —')}</option>
             {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -190,8 +201,9 @@ function CardEditor({ tenant, onPatch, t }) {
             onChange={e => onPatch({ short_description: e.target.value })}
             rows={2}
             placeholder={t('marketplace.editor.field_short_desc_ph', 'Une phrase qui résume votre programme. Visible sur la liste.')}
-            style={{ ...inputStyle, resize: 'vertical', minHeight: 60 }}
+            style={{ ...fieldStyle, resize: editable ? 'vertical' : 'none', minHeight: 60 }}
             maxLength={240}
+            disabled={!editable}
           />
         </Field>
         <Field label={t('marketplace.editor.field_icp', 'Cible (ICP)')}>
@@ -199,7 +211,8 @@ function CardEditor({ tenant, onPatch, t }) {
             value={tenant.icp || ''}
             onChange={e => onPatch({ icp: e.target.value })}
             placeholder={t('marketplace.editor.field_icp_ph', 'PME, indépendants, retail…')}
-            style={inputStyle}
+            style={fieldStyle}
+            disabled={!editable}
           />
         </Field>
         <Field label={t('marketplace.editor.field_website', 'Site web')}>
@@ -208,7 +221,8 @@ function CardEditor({ tenant, onPatch, t }) {
             value={tenant.website || ''}
             onChange={e => onPatch({ website: e.target.value })}
             placeholder="https://example.com"
-            style={inputStyle}
+            style={fieldStyle}
+            disabled={!editable}
           />
         </Field>
         <Field label={t('marketplace.editor.field_logo', 'Logo')} full>
@@ -223,17 +237,21 @@ function CardEditor({ tenant, onPatch, t }) {
                 ? <img src={tenant.logo_url} alt={tenant.company_name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 : <span style={{ color: C.m, fontSize: 11 }}>—</span>}
             </div>
-            <label style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '10px 16px', borderRadius: 10,
-              background: C.bg, border: `1.5px solid ${C.border}`,
-              color: C.s, fontWeight: 600, fontSize: 13, cursor: 'pointer',
-            }}>
-              <Upload size={14} />
-              {t('marketplace.editor.field_logo_upload', 'Téléverser un logo (PNG/JPG, 500 KB max)')}
-              <input type="file" accept="image/*" onChange={handleLogoFile} style={{ display: 'none' }} />
-            </label>
-            {tenant.logo_url && (
+            {/* Upload + Retirer only show in edit mode. The preview tile
+                above stays so the admin can still see what's saved. */}
+            {editable && (
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '10px 16px', borderRadius: 10,
+                background: C.bg, border: `1.5px solid ${C.border}`,
+                color: C.s, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              }}>
+                <Upload size={14} />
+                {t('marketplace.editor.field_logo_upload', 'Téléverser un logo (PNG/JPG, 500 KB max)')}
+                <input type="file" accept="image/*" onChange={handleLogoFile} style={{ display: 'none' }} />
+              </label>
+            )}
+            {editable && tenant.logo_url && (
               <button
                 onClick={() => onPatch({ logo_url: null })}
                 style={{
@@ -658,30 +676,16 @@ export default function MarketplaceEditorPage() {
             </span>
           )}
         </div>
+        {/* Top bar right side: Publier toggle only. The Éditer /
+            Fermer l'éditeur button moved into the content area
+            (rendered below as a floating top-right button) so
+            switching between read and edit modes feels grounded
+            on the content rather than tucked into the chrome. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.s, cursor: 'pointer' }}>
             <Toggle value={!!tenant.marketplace_visible} onChange={v => onPatch({ marketplace_visible: v })} />
             <span style={{ fontWeight: 600 }}>{t('marketplace.editor.publish_toggle', 'Publier sur la marketplace')}</span>
           </label>
-          <button
-            onClick={handleToggleEdit}
-            style={editMode ? {
-              padding: '8px 14px', borderRadius: 10,
-              background: '#fff', border: `1.5px solid ${C.border}`, color: C.s,
-              fontWeight: 600, fontSize: 13, cursor: 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-            } : {
-              padding: '8px 14px', borderRadius: 10,
-              background: C.p, border: 'none', color: '#fff',
-              fontWeight: 700, fontSize: 13, cursor: 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-            }}
-          >
-            {editMode ? <XIcon size={14} /> : <Pencil size={14} />}
-            {editMode
-              ? t('marketplace.editor.close_editor', "Fermer l'éditeur")
-              : t('marketplace.editor.edit_button', 'Éditer')}
-          </button>
         </div>
       </div>
 
@@ -748,11 +752,12 @@ export default function MarketplaceEditorPage() {
 
       {/* Sub-tabs — purely local navigation, never trigger the
           unsaved-changes guard. Both tabs share the same { tenant,
-          page } state, so swapping doesn't lose data. */}
+          page } state, so swapping doesn't lose data. The tabs no
+          longer sit inside a card; they float on the page background
+          with a thin separator below. */}
       <div style={{
-        background: '#fff', borderBottom: `1px solid ${C.border}`,
-        padding: '0 28px',
-        display: 'flex', alignItems: 'center', gap: 0,
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        gap: 4, paddingTop: 16,
       }}>
         {[
           { id: 'card', label: t('marketplace.editor.tab_card', 'Carte marketplace') },
@@ -764,13 +769,13 @@ export default function MarketplaceEditorPage() {
               key={tab.id}
               onClick={() => setActiveSubTab(tab.id)}
               style={{
-                padding: '14px 4px', marginRight: 24,
+                padding: '10px 20px',
                 background: 'transparent', border: 'none',
                 borderBottom: '2px solid ' + (active ? C.p : 'transparent'),
                 color: active ? C.p : C.m,
-                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                fontSize: 14, fontWeight: active ? 600 : 500, cursor: 'pointer',
                 fontFamily: 'inherit', transition: 'color .15s, border-color .15s',
-                marginBottom: -1, // overlap the parent's border-bottom
+                marginBottom: -1, // overlap the separator below
               }}
             >
               {tab.label}
@@ -778,13 +783,35 @@ export default function MarketplaceEditorPage() {
           );
         })}
       </div>
+      <div style={{ borderBottom: `1px solid ${C.border}` }} />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 24px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Content area — position:relative so the floating Edit
+          button (top-right) anchors here. */}
+      <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: '24px 24px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <button
+          onClick={handleToggleEdit}
+          style={{
+            position: 'absolute', top: 16, right: 24, zIndex: 10,
+            padding: '6px 16px', borderRadius: 8,
+            background: editMode ? '#fff' : C.p,
+            border: editMode ? `1px solid ${C.border}` : 'none',
+            color: editMode ? C.s : '#fff',
+            fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            boxShadow: editMode ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
+          }}
+        >
+          {editMode ? <XIcon size={13} /> : <Pencil size={13} />}
+          {editMode
+            ? t('marketplace.editor.close_editor', "Fermer l'éditeur")
+            : t('marketplace.editor.edit_button', 'Éditer')}
+        </button>
+
         {activeSubTab === 'card' ? (
-          // Card-tab fields are simple <input>/<textarea>, so they're
-          // always editable — there's no contenteditable surface to
-          // gate.
-          <CardEditor tenant={tenant} onPatch={onPatch} t={t} />
+          // editable={editMode} disables the form fields and hides the
+          // logo upload affordance when the user is not in edit mode,
+          // matching the contenteditable lockdown on the Page tab.
+          <CardEditor tenant={tenant} onPatch={onPatch} t={t} editable={editMode} />
         ) : (
           <>
             {/* Visible blocks in their saved order */}
