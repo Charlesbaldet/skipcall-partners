@@ -137,9 +137,10 @@ export default function IntegrationsIndexPage() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Intégrations — RefBoost" />
         <meta name="twitter:description" content="Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Google SSO." />
-        {HREF_LANGS.map(l => (
-          <link key={l} rel="alternate" hrefLang={l} href={SITE + '/integrations'} />
-        ))}
+        {/* Single x-default — every locale on this site is served from
+            the same URL (no /en/* / /es/* paths), so emitting per-lang
+            hreflang tags pointing at the same href triggers Ahrefs'
+            "page referenced for more than one language" warning. */}
         <link rel="alternate" hrefLang="x-default" href={SITE + '/integrations'} />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>

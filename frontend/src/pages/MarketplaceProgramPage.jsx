@@ -424,9 +424,10 @@ export default function MarketplaceProgramPage() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={seoDesc} />
-        {HREF_LANGS.map(l => (
-          <link key={l} rel="alternate" hrefLang={l} href={url} />
-        ))}
+        {/* Single x-default — every locale on this site is served from
+            the same URL, so emitting per-lang hreflang tags pointing
+            at the same href triggers Ahrefs' "page referenced for more
+            than one language" warning. */}
         <link rel="alternate" hrefLang="x-default" href={url} />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>

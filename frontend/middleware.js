@@ -317,7 +317,7 @@ export default async function middleware(request) {
   // want to drag the React app's data files into the edge runtime.
   const STATIC_BODIES = {
     '/integrations':
-      '<h1>Connectez vos outils</h1>' +
+      '<h2>Connectez vos outils</h2>' +
       '<p>RefBoost s\'intègre avec vos CRM, outils de paiement et d\'authentification pour automatiser votre programme partenaires.</p>' +
       '<h2>Intégrations disponibles</h2>' +
       '<ul>' +
@@ -328,7 +328,7 @@ export default async function middleware(request) {
       '<li><a href="' + SITE + '/integrations/google-sso">Google SSO — Connexion sans mot de passe (Authentification)</a></li>' +
       '</ul>',
     '/integrations/notion':
-      '<h1>Intégration Notion</h1>' +
+      '<h2>Intégration Notion</h2>' +
       '<p>Connectez vos bases Notion à RefBoost pour synchroniser votre pipeline partenaires en temps réel. Mapping bidirectionnel des statuts, des champs et des contacts.</p>' +
       '<h2>Ce que vous pouvez faire</h2>' +
       '<ul><li>Sync bidirectionnelle des referrals entre RefBoost et Notion sans duplication.</li>' +
@@ -337,7 +337,7 @@ export default async function middleware(request) {
       '<li>Détection des doublons avant chaque écriture, vos données sont protégées.</li></ul>' +
       '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
     '/integrations/hubspot':
-      '<h1>Intégration HubSpot</h1>' +
+      '<h2>Intégration HubSpot</h2>' +
       '<p>Connectez votre HubSpot CRM à RefBoost. Chaque referral devient un Deal HubSpot, chaque prospect un Contact, le tout synchronisé en temps réel via OAuth.</p>' +
       '<h2>Ce que vous pouvez faire</h2>' +
       '<ul><li>Sync des deals HubSpot dans le pipeline de votre choix.</li>' +
@@ -346,7 +346,7 @@ export default async function middleware(request) {
       '<li>Liens automatiques aux contacts existants pour éviter les doublons.</li></ul>' +
       '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
     '/integrations/salesforce':
-      '<h1>Intégration Salesforce</h1>' +
+      '<h2>Intégration Salesforce</h2>' +
       '<p>Connectez votre instance Salesforce à RefBoost. Synchronisation des Opportunities, Contacts et Accounts avec mapping personnalisé des objets standards et custom.</p>' +
       '<h2>Ce que vous pouvez faire</h2>' +
       '<ul><li>Chaque referral RefBoost devient une Opportunity Salesforce.</li>' +
@@ -355,7 +355,7 @@ export default async function middleware(request) {
       '<li>Support des custom objects et fields via l\'éditeur de mapping.</li></ul>' +
       '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
     '/integrations/qonto':
-      '<h1>Intégration Qonto</h1>' +
+      '<h2>Intégration Qonto</h2>' +
       '<p>Connectez votre compte pro Qonto à RefBoost et payez les commissions de vos partenaires en un clic. Virements SEPA, validation SCA conforme DSP2 et preuve de virement automatisée.</p>' +
       '<h2>Ce que vous pouvez faire</h2>' +
       '<ul><li>Virements SEPA automatisés depuis votre compte Qonto, sans ressaisie d\'IBAN.</li>' +
@@ -364,7 +364,7 @@ export default async function middleware(request) {
       '<li>Email de preuve de virement envoyé automatiquement au partenaire.</li></ul>' +
       '<p>Disponible avec le plan Business. <a href="' + SITE + '/pricing">Voir les tarifs</a> · <a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
     '/integrations/google-sso':
-      '<h1>Google SSO</h1>' +
+      '<h2>Google SSO</h2>' +
       '<p>Activé par défaut sur tous les plans. Vos équipes et vos partenaires se connectent à RefBoost via leur compte Google en un clic — zéro mot de passe à gérer, sécurité renforcée.</p>' +
       '<h2>Ce que vous pouvez faire</h2>' +
       '<ul><li>Connexion en un clic via le compte Google de l\'utilisateur.</li>' +
@@ -388,12 +388,12 @@ export default async function middleware(request) {
   // never make it into the static HTML on this Vite SPA, so this is
   // the only place the meta is actually crawlable.
   if (path === '/integrations' || path.startsWith('/integrations/')) {
-    const langs = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
-    const altLinks = langs
-      .map(l => `<link rel="alternate" hrefLang="${l}" href="${esc(canonical)}" />`)
-      .join('\n    ');
-    const xDefault = `<link rel="alternate" hrefLang="x-default" href="${esc(canonical)}" />`;
-    html = html.replace('</head>', '    ' + altLinks + '\n    ' + xDefault + '\n  </head>');
+    // Single x-default — every locale on this site is served from the
+    // same URL (no /en/* / /es/* paths exist), so emitting 7 hreflang
+    // tags pointing at the same href triggers Ahrefs' "page referenced
+    // for more than one language" error. x-default alone is the
+    // documented signal for "any language, same URL".
+    html = html.replace('</head>', '    <link rel="alternate" hrefLang="x-default" href="' + esc(canonical) + '" />\n  </head>');
 
     const webpageLd = {
       '@context': 'https://schema.org',
@@ -464,7 +464,7 @@ export default async function middleware(request) {
     const dateLabel = dateRaw ? esc(String(dateRaw).slice(0, 10)) : '';
     const articleBlock =
       `<article>` +
-      `<h1>${esc(articlePost.title || '')}</h1>` +
+      `<h2>${esc(articlePost.title || '')}</h2>` +
       (dateLabel ? `<p><em>${authorLine} · ${dateLabel}</em></p>` : `<p><em>${authorLine}</em></p>`) +
       articleBody +
       `<p><a href="${SITE}/blog">← Tous les articles</a></p>` +
@@ -486,11 +486,9 @@ export default async function middleware(request) {
     if (p.logo_url) {
       html = upsertMeta(html, 'property="og:image"', `<meta property="og:image" content="${esc(p.logo_url)}" />`);
     }
-    const langs = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
-    const altLinks = langs
-      .map(l => `<link rel="alternate" hrefLang="${l}" href="${esc(canonical)}" />`)
-      .join('\n    ');
-    html = html.replace('</head>', '    ' + altLinks + '\n    <link rel="alternate" hrefLang="x-default" href="' + esc(canonical) + '" />\n  </head>');
+    // Single x-default per same-URL-for-all-locales pattern (see
+    // /integrations* block above for the full reasoning).
+    html = html.replace('</head>', '    <link rel="alternate" hrefLang="x-default" href="' + esc(canonical) + '" />\n  </head>');
 
     const webpageLd = {
       '@context': 'https://schema.org',
@@ -522,7 +520,7 @@ export default async function middleware(request) {
     const conditions = items(p.commission_blocks, c =>
       `<li><strong>${safe(c && c.metric)} ${safe(c && c.label)}</strong>${c && c.description ? ' — ' + safe(c.description) : ''}</li>`);
     const block = `<article>` +
-      `<h1>${safe(p.company_name)}</h1>` +
+      `<h2>${safe(p.company_name)}</h2>` +
       (p.short_description ? `<p>${safe(p.short_description)}</p>` : '') +
       (p.page_description ? `<p>${safe(p.page_description)}</p>` : '') +
       (conditions ? `<h2>Conditions du programme</h2>${conditions}` : '') +
@@ -565,27 +563,53 @@ export default async function middleware(request) {
   // so the injections never duplicate. Same single-canonical pattern
   // the rest of the site uses (every locale's hreflang points at the
   // same URL — no per-locale paths exist on this site).
-  const langs = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
+  // hreflang fallback: single x-default for any matched path that
+  // doesn't already have hreflang set upstream. Single URL per
+  // locale = single x-default, NOT 7 same-URL hreflang tags
+  // (Ahrefs flags those as "page referenced for more than one
+  // language").
   const hasHreflang = html.includes('rel="alternate" hrefLang') || html.includes('rel="alternate" hreflang');
   if (!hasHreflang) {
-    const altLinks = langs
-      .map(l => `<link rel="alternate" hrefLang="${l}" href="${esc(canonical)}" />`)
-      .join('\n    ');
-    const xDefault = `<link rel="alternate" hrefLang="x-default" href="${esc(canonical)}" />`;
-    html = html.replace('</head>', '    ' + altLinks + '\n    ' + xDefault + '\n  </head>');
+    html = html.replace('</head>', '    <link rel="alternate" hrefLang="x-default" href="' + esc(canonical) + '" />\n  </head>');
   }
-  // /blog/:slug already gets Article JSON-LD; only inject WebPage when
-  // there's no structured data at all on the page.
+  // Per-path-aware @type for the WebPage / WebSite / CollectionPage
+  // fallback, so Google's structured-data validator picks the right
+  // schema for each page kind. /blog/:slug already gets Article LD
+  // upstream and is skipped here.
   if (!html.includes('application/ld+json')) {
-    const webpageLd = {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: meta.title,
-      description: meta.description,
-      url: canonical,
-      isPartOf: { '@type': 'WebSite', name: 'RefBoost', url: SITE + '/' },
-    };
-    const ldScript = `<script type="application/ld+json">${JSON.stringify(webpageLd).replace(/</g, '\\u003c')}</script>`;
+    let ld;
+    if (path === '/' || path === '') {
+      ld = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'RefBoost',
+        url: SITE + '/',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: SITE + '/blog?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
+      };
+    } else if (path === '/blog' || path === '/marketplace') {
+      ld = {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: meta.title,
+        description: meta.description,
+        url: canonical,
+        isPartOf: { '@type': 'WebSite', name: 'RefBoost', url: SITE + '/' },
+      };
+    } else {
+      ld = {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: meta.title,
+        description: meta.description,
+        url: canonical,
+        isPartOf: { '@type': 'WebSite', name: 'RefBoost', url: SITE + '/' },
+      };
+    }
+    const ldScript = `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
     html = html.replace('</head>', '    ' + ldScript + '\n  </head>');
   }
 
