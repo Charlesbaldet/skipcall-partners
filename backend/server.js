@@ -190,6 +190,31 @@ app.listen(PORT, () => {
   runMigrations();
   runSecurityMigrations();
 
+  // Stale Qonto state cleanup — runs on every deploy. The
+  // migrate.js .catch(() => {}) was silently eating cleanup
+  // errors when columns weren't yet present; this version logs
+  // loudly and always runs after the schema migrations are done.
+  (async () => {
+    try {
+      const { rowCount } = await query(`
+        UPDATE commissions
+           SET payment_error = NULL,
+               qonto_transfer_id = NULL,
+               qonto_attachment_id = NULL,
+               payment_initiated_at = NULL,
+               payment_completed_at = NULL,
+               qonto_sca_session_token = NULL,
+               qonto_idempotency_key = NULL,
+               qonto_retry_count = 0
+         WHERE status <> 'paid'
+           AND payment_error IS NOT NULL
+      `);
+      console.log('[cleanup] Cleared stale payment errors on', rowCount, 'commission(s).');
+    } catch (e) {
+      console.error('[cleanup] Failed to clear stale payment errors:', e.message);
+    }
+  })();
+
   // Cleanup old data every 24h (ISO 27001 A.12.4)
   setInterval(cleanupOldData, 24 * 60 * 60 * 1000);
   setTimeout(cleanupOldData, 60000); // First cleanup after 1 min

@@ -9,44 +9,94 @@ import ConfirmModal from '../components/ConfirmModal.jsx';
 // Map a payment_error column value (which the backend now stores as
 // a SHORT code, not a JSON dump — but legacy rows might still hold
 // the raw 428 body) to a structured banner descriptor: { tone:
-// 'info'|'error', message }. SCA renders as info (yellow), real
-// failures render as error (red), unparseable rows fall through to a
-// generic "contactez le support" tone-error string.
+// 'info'|'error', message, action }.
+//
+//   tone     — 'info' (amber) for SCA-pending, 'error' (red) for
+//              actual failures.
+//   action   — 'check' for SCA flows (the user clicks "J'ai déjà
+//              approuvé"), 'retry' for everything else (the user
+//              clicks "Réessayer le paiement"). The card surfaces
+//              exactly the right action button so the admin is
+//              never stuck staring at a "contact support" dead end.
+//
+// CRITICAL: every code path must return action='retry' or
+// action='check' on a real failure — never the legacy "contactez
+// le support" fallback. The admin IS the support.
 function getPaymentErrorMessage(t, rawError) {
   if (!rawError) return null;
-  const tryCode = (code) => {
-    if (!code) return null;
-    if (code === 'sca_required') {
-      return {
-        tone: 'info',
-        message: t('qonto.sca_pending_banner', '⏳ En attente de validation SCA — Approuvez le virement dans votre app Qonto'),
-      };
-    }
-    return { tone: 'error', message: qontoErrorLabel(t, code, code) };
+
+  const codeMessages = {
+    sca_required: {
+      tone: 'info',
+      action: 'check',
+      message: t('qonto.sca_pending_banner', '⏳ En attente de validation SCA — Approuvez le virement dans votre app Qonto'),
+    },
+    sca_replay_max_retries_exceeded: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_sca_max_retries', 'La validation SCA a échoué après plusieurs tentatives.'),
+    },
+    insufficient_funds: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_insufficient_funds', 'Solde insuffisant sur votre compte Qonto.'),
+    },
+    beneficiary_bic_invalid: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_bic_invalid_help', 'Le BIC du bénéficiaire est invalide. Vérifiez les informations bancaires du partenaire.'),
+    },
+    invalid_bic: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_bic_invalid_help', 'Le BIC du bénéficiaire est invalide. Vérifiez les informations bancaires du partenaire.'),
+    },
+    invalid_iban: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_invalid_iban', 'L\'IBAN du bénéficiaire est invalide.'),
+    },
+    amount_too_low: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_amount_too_low', 'Le montant est trop faible.'),
+    },
+    amount_too_high: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_amount_too_high', 'Le montant dépasse le plafond autorisé.'),
+    },
+    beneficiary_not_found: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_beneficiary_not_found', 'Bénéficiaire non trouvé.'),
+    },
+    transfer_declined: {
+      tone: 'error',
+      action: 'retry',
+      message: t('qonto.error_transfer_declined', 'Virement refusé par Qonto.'),
+    },
   };
-  // Short-code path (the common case after the v23 sanitizer): the
-  // column already holds something like "insufficient_funds".
-  const shortPath = tryCode(rawError);
-  if (shortPath && shortPath.message !== t('qonto.error_generic', 'Une erreur est survenue. Veuillez réessayer.')) {
-    return shortPath;
-  }
-  // Legacy path: parse JSON or scan-for-substring.
+
+  // Short-code path (after the v23 sanitizer): the column holds a
+  // single code like "insufficient_funds".
+  if (codeMessages[rawError]) return codeMessages[rawError];
+
+  // Legacy paths: try JSON-parse, then substring scan.
   try {
     const parsed = JSON.parse(rawError);
-    if (parsed && parsed.code) {
-      const r = tryCode(parsed.code);
-      if (r) return r;
-    }
+    if (parsed && parsed.code && codeMessages[parsed.code]) return codeMessages[parsed.code];
   } catch { /* not JSON */ }
-  for (const code of ['sca_required', 'insufficient_funds', 'beneficiary_bic_invalid', 'invalid_bic', 'invalid_iban', 'amount_too_low', 'amount_too_high', 'beneficiary_not_found']) {
-    if (rawError.includes(code)) {
-      const r = tryCode(code);
-      if (r) return r;
-    }
+  for (const key of Object.keys(codeMessages)) {
+    if (rawError.includes(key)) return codeMessages[key];
   }
+
+  // Unknown error → generic "Le paiement a échoué" with retry. Never
+  // "contactez le support" — the admin can always reset and try again.
   return {
     tone: 'error',
-    message: t('qonto.error_generic_contact', 'Erreur de paiement — contactez le support.'),
+    action: 'retry',
+    message: t('qonto.error_payment_failed', 'Le paiement a échoué.'),
   };
 }
 
@@ -426,6 +476,24 @@ export default function CommissionsPage() {
     setRefreshingPolls(false);
   };
 
+  // Wipes the Qonto-side state on a single commission and re-arms
+  // it for another Pay attempt. Bound to the "Réessayer le paiement"
+  // button on the error banner; the next click on Payer mints a
+  // fresh idempotency key automatically because the column is now
+  // NULL.
+  const [resettingId, setResettingId] = useState(null);
+  const handleResetPayment = async (commissionId) => {
+    setResettingId(commissionId);
+    try {
+      await api.resetCommissionPayment(commissionId);
+      await reload();
+      showToast(t('qonto.toast_reset_ok', 'Paiement réinitialisé. Vous pouvez réessayer.'), 'success');
+    } catch (err) {
+      showToast(err.message || t('qonto.error_generic', 'Une erreur est survenue. Veuillez réessayer.'), 'error');
+    }
+    setResettingId(null);
+  };
+
   const exportCSV = () => {
     const headers = [t('commissions.tbl_prospect'), t('referrals.company'), t('commissions.tbl_partner'), t('commissions.tbl_rate') + ' %', t('commissions.tbl_deal') + ' €', t('commissions.tbl_commission') + ' €', t('commissions.tbl_status'), t('referrals.created_at'), t('commissions.date_validated'), t('commissions.paid_on')];
     const rows = commissions.map(c => [c.prospect_name, c.prospect_company, c.partner_name, c.rate, c.deal_value, c.amount, COM_STATUS[c.status]?.label || c.status, c.created_at?.split('T')[0] || '', c.approved_at?.split('T')[0] || '', c.paid_at?.split('T')[0] || '']);
@@ -675,13 +743,34 @@ export default function CommissionsPage() {
                       )}
                       {!scaPending && errBanner && (
                         <div style={{
-                          padding: '6px 10px', borderRadius: 8,
+                          padding: '8px 10px', borderRadius: 8,
                           background: errBanner.tone === 'info' ? '#fffbeb' : '#fef2f2',
                           border: `1px solid ${errBanner.tone === 'info' ? '#fde68a' : '#fecaca'}`,
                           color: errBanner.tone === 'info' ? '#92400e' : '#b91c1c',
                           fontSize: 11, marginBottom: 8, lineHeight: 1.45,
                         }}>
-                          {errBanner.message}
+                          <div style={{ marginBottom: errBanner.action === 'retry' ? 6 : 0 }}>
+                            {errBanner.message}
+                          </div>
+                          {errBanner.action === 'retry' && (
+                            <button
+                              onClick={() => handleResetPayment(c.id)}
+                              disabled={resettingId === c.id}
+                              style={{
+                                width: '100%', padding: '6px', borderRadius: 6,
+                                background: '#fff', border: '1px solid #fecaca',
+                                color: '#b91c1c', fontWeight: 700, fontSize: 11,
+                                cursor: resettingId === c.id ? 'wait' : 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                                opacity: resettingId === c.id ? 0.7 : 1,
+                              }}
+                            >
+                              <RefreshCw size={11} className={resettingId === c.id ? 'rb-spin' : ''} />
+                              {resettingId === c.id
+                                ? t('qonto.resetting_payment', 'Réinitialisation…')
+                                : t('qonto.retry_payment', 'Réessayer le paiement')}
+                            </button>
+                          )}
                         </div>
                       )}
 

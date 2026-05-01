@@ -1178,5 +1178,44 @@ router.post('/poll-qonto', authorize('admin'), async (req, res) => {
   }
 });
 
+// ─── POST /commissions/:id/reset-payment ──────────────────────────
+// Wipes every Qonto-side scratch field on the commission so the
+// admin can hit Pay again from a clean state. Used by the
+// "Réessayer le paiement" button on the error banner.
+//
+// Idempotent and safe to call repeatedly. Refuses to touch a paid
+// commission — once money's wired we don't pretend it never
+// happened.
+router.post('/:id/reset-payment', authorize('admin'), async (req, res) => {
+  try {
+    let where = 'id = $1 AND status <> \'paid\'';
+    const params = [req.params.id];
+    let i = 2;
+    if (req.tenantId && !req.skipTenantFilter) {
+      where += ` AND tenant_id = $${i++}`;
+      params.push(req.tenantId);
+    }
+    const { rowCount } = await query(
+      `UPDATE commissions
+          SET payment_error = NULL,
+              qonto_transfer_id = NULL,
+              qonto_attachment_id = NULL,
+              payment_initiated_at = NULL,
+              payment_completed_at = NULL,
+              qonto_sca_session_token = NULL,
+              qonto_idempotency_key = NULL,
+              qonto_retry_count = 0,
+              status = 'pending_validation'
+        WHERE ${where}`,
+      params
+    );
+    if (!rowCount) return res.status(404).json({ error: 'Commission introuvable ou déjà payée' });
+    res.json({ ok: true, message: 'Payment state reset — ready to retry' });
+  } catch (err) {
+    console.error('[commissions.reset-payment] error:', err);
+    res.status(500).json({ error: err.message || 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
 module.exports.reconcileQontoTransfers = reconcileQontoTransfers;
