@@ -557,6 +557,38 @@ export default async function middleware(request) {
     }
   }
 
+  // ─── Final fallback: hreflang + WebPage JSON-LD ─────────────────────
+  // For every matched path that hasn't already had per-path hreflang or
+  // structured data injected upstream (e.g. /integrations*, /blog/:slug,
+  // /marketplace/:slug all do their own), inject a generic hreflang
+  // bundle + WebPage JSON-LD here. Idempotent via .includes() guards
+  // so the injections never duplicate. Same single-canonical pattern
+  // the rest of the site uses (every locale's hreflang points at the
+  // same URL — no per-locale paths exist on this site).
+  const langs = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
+  const hasHreflang = html.includes('rel="alternate" hrefLang') || html.includes('rel="alternate" hreflang');
+  if (!hasHreflang) {
+    const altLinks = langs
+      .map(l => `<link rel="alternate" hrefLang="${l}" href="${esc(canonical)}" />`)
+      .join('\n    ');
+    const xDefault = `<link rel="alternate" hrefLang="x-default" href="${esc(canonical)}" />`;
+    html = html.replace('</head>', '    ' + altLinks + '\n    ' + xDefault + '\n  </head>');
+  }
+  // /blog/:slug already gets Article JSON-LD; only inject WebPage when
+  // there's no structured data at all on the page.
+  if (!html.includes('application/ld+json')) {
+    const webpageLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: meta.title,
+      description: meta.description,
+      url: canonical,
+      isPartOf: { '@type': 'WebSite', name: 'RefBoost', url: SITE + '/' },
+    };
+    const ldScript = `<script type="application/ld+json">${JSON.stringify(webpageLd).replace(/</g, '\\u003c')}</script>`;
+    html = html.replace('</head>', '    ' + ldScript + '\n  </head>');
+  }
+
   return new Response(html, {
     status: 200,
     headers: {
