@@ -226,6 +226,22 @@ function commissionRejected({ partnerName, prospectName, reason, dashboardUrl } 
   });
 }
 
+function commissionCancelled({ partnerName, prospectName, dealName, amount, currency, tenantName, reason, dashboardUrl } = {}) {
+  const dealLabel = dealName || prospectName || '';
+  const amt = amount != null ? `${amount} ${currency || '€'}` : '';
+  return renderEmail({
+    subject: `Commission annulée${tenantName ? ' — ' + tenantName : ''}`,
+    heading: 'Commission annulée',
+    bodyHtml: `
+      <p>Bonjour ${partnerName || ''},</p>
+      <p>${amt ? `La commission de <strong>${amt}</strong> ` : 'La commission '}${dealLabel ? `pour le deal <strong>${dealLabel}</strong> ` : ''}a été annulée.</p>
+      ${reason ? `<div class="highlight"><strong>Motif :</strong><br/>${reason}</div>` : ''}
+      <p>Pour toute question, contactez votre gestionnaire de programme${tenantName ? ` ${tenantName}` : ''}.</p>`,
+    ctaUrl: dashboardUrl || `${FRONTEND}/partner/payments`,
+    ctaLabel: 'Voir les commissions',
+  });
+}
+
 function paymentFailure({ recipientName, planLabel, dashboardUrl } = {}) {
   return renderEmail({
     subject: `Échec de paiement pour votre abonnement RefBoost`,
@@ -322,6 +338,7 @@ const PREVIEW_SAMPLES = {
   commissionToApprove: { adminName: 'Charles', partnerName: 'Partner Pro', prospectName: 'Jean Dupont', amount: 1250, currency: '€' },
   commissionApproved: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', amount: 1250, currency: '€' },
   commissionRejected: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', reason: "Le deal n'a pas encore été officiellement signé." },
+  commissionCancelled: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', dealName: 'Dupont SARL', amount: 1250, currency: '€', tenantName: 'Acme Partenaires', reason: 'Le client a annulé son contrat.' },
   commissionPaymentSent: { partnerName: 'Partner Pro', amount: 1250, currency: '€', tenantName: 'Acme Partenaires', dealName: 'Dupont SARL', transferReference: 'REFBOOSTCOMABCDEF123456', transferDateLabel: '30 avril 2026', ibanLast4: '0185' },
   paymentFailure: { recipientName: 'Charles', planLabel: 'Pro' },
   subscriptionCancelled: { recipientName: 'Charles', endDate: '30 avril 2026' },
@@ -339,6 +356,7 @@ const TEMPLATES = {
   commissionToApprove,
   commissionApproved,
   commissionRejected,
+  commissionCancelled,
   commissionPaymentSent,
   paymentFailure,
   subscriptionCancelled,

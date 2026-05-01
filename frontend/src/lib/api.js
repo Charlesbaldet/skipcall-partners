@@ -191,6 +191,7 @@ class ApiClient {
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
   approveCommission(id) { return this.request('/commissions/' + id + '/approve', { method: 'POST' }); }
   rejectCommission(id, reason) { return this.request('/commissions/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason }) }); }
+  deleteCommission(id, reason) { return this.request('/commissions/' + id, { method: 'DELETE', body: JSON.stringify({ reason }) }); }
   uploadCommissionInvoice(id, { filename, dataUrl }) {
     return this.request('/commissions/' + id + '/upload-invoice', {
       method: 'POST',
@@ -213,6 +214,22 @@ class ApiClient {
     const a = document.createElement('a');
     a.href = url; a.download = fname; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+  // Returns { url, filename, blob } so the caller can embed in an
+  // <iframe> for preview AND fall back to a download if the embed
+  // fails. The caller MUST URL.revokeObjectURL(url) when done — the
+  // blob URL leaks until then.
+  async fetchCommissionInvoiceObjectUrl(id) {
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/commissions/${id}/invoice`, { headers });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erreur chargement facture');
+    const blob = await res.blob();
+    const cd = res.headers.get('Content-Disposition') || '';
+    const match = /filename="?([^";]+)"?/.exec(cd);
+    const filename = match ? match[1] : `invoice-${id}.pdf`;
+    const url = URL.createObjectURL(blob);
+    return { url, filename, blob };
   }
 
   // Dashboard

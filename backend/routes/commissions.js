@@ -371,6 +371,77 @@ router.post('/:id/reject', authorize('admin'), async (req, res) => {
   }
 });
 
+// ─── Delete commission ─────────────────────────────────────────────
+// Hard-delete a commission row + email the partner. Refuses if the
+// commission is already paid, or if a Qonto transfer is mid-flight
+// (qonto_transfer_id set + payment_completed_at NULL) — once money's
+// in motion we don't pretend the commission never existed.
+router.delete('/:id', authorize('admin'), async (req, res) => {
+  try {
+    const { reason } = req.body || {};
+    const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
+    if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
+    if (existing.status === 'paid') {
+      return res.status(409).json({ error: 'commission_paid', message: 'Une commission payée ne peut pas être supprimée.' });
+    }
+    if (existing.qonto_transfer_id && !existing.payment_completed_at) {
+      return res.status(409).json({ error: 'transfer_in_flight', message: 'Un virement est en cours pour cette commission. Annulez-le côté Qonto avant de la supprimer.' });
+    }
+
+    // Pull tenant + deal context for the email before we drop the row.
+    const { rows: [ctx] } = await query(
+      `SELECT t.name AS tenant_name,
+              r.prospect_name, r.prospect_company,
+              p.name AS partner_label
+         FROM commissions c
+         JOIN tenants t ON t.id = c.tenant_id
+         JOIN partners p ON p.id = c.partner_id
+         JOIN referrals r ON r.id = c.referral_id
+        WHERE c.id = $1
+        LIMIT 1`,
+      [req.params.id]
+    );
+
+    await query('DELETE FROM commissions WHERE id = $1', [req.params.id]);
+
+    (async () => {
+      try {
+        const users = await partnerUsers(existing.partner_id);
+        const dealLabel = ctx?.prospect_company || ctx?.prospect_name || existing.prospect_name || '';
+        const amount = parseFloat(existing.amount) || 0;
+        for (const u of users) {
+          notify.createNotification(u.id, 'commission', {
+            title: `Commission annulée — ${fmtMoney(amount)}`,
+            message: reason || `La commission pour ${dealLabel || 'votre deal'} a été annulée.`,
+            link: '/partner/payments',
+            tenantId: existing.tenant_id,
+          }).catch(() => {});
+          const p = await notify.shouldNotifyPartner(existing.partner_id, 'email_commission_update');
+          if (p.email) {
+            const tpl = require('../utils/emailTemplates').commissionCancelled({
+              partnerName: u.full_name,
+              prospectName: ctx?.prospect_name || existing.prospect_name,
+              dealName: dealLabel,
+              amount,
+              currency: '€',
+              tenantName: ctx?.tenant_name,
+              reason,
+            });
+            sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.error('[commissions.delete] notify error:', e.message);
+      }
+    })();
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete commission error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ─── Partner uploads invoice ───
 // awaiting_invoice → pending_validation. Body is JSON with a base64 data
 // URL: { filename, data_url } where data_url = "data:application/pdf;base64,...".

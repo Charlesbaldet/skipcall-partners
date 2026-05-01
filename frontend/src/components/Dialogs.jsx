@@ -94,6 +94,7 @@ export function showPrompt({
   confirmLabel,
   cancelLabel,
   required = true,
+  variant = 'default', // 'default' | 'danger' | 'warning'
 } = {}) {
   return new Promise((resolve) => {
     const id = ++_id;
@@ -107,6 +108,7 @@ export function showPrompt({
       confirmLabel: confirmLabel || 'OK',
       cancelLabel: cancelLabel || 'Annuler',
       required,
+      variant,
       resolve: (value) => {
         if (_state.prompt && _state.prompt.id === id) {
           _state.prompt = null;
@@ -278,10 +280,19 @@ function PromptModalImpl({ prompt }) {
             disabled={!canSubmit}
             style={{
               padding: '10px 18px', borderRadius: 10,
-              border: 'none', background: canSubmit ? '#059669' : '#94a3b8',
+              border: 'none',
+              background: !canSubmit
+                ? '#94a3b8'
+                : prompt.variant === 'danger'  ? '#dc2626'
+                : prompt.variant === 'warning' ? '#f59e0b'
+                : '#059669',
               color: '#fff', fontSize: 14, fontWeight: 700,
               cursor: canSubmit ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
-              boxShadow: canSubmit ? '0 6px 18px rgba(5,150,105,0.25)' : 'none',
+              boxShadow: !canSubmit
+                ? 'none'
+                : prompt.variant === 'danger'  ? '0 6px 18px rgba(220,38,38,0.25)'
+                : prompt.variant === 'warning' ? '0 6px 18px rgba(245,158,11,0.25)'
+                : '0 6px 18px rgba(5,150,105,0.25)',
             }}
           >
             {prompt.confirmLabel}

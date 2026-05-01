@@ -3,8 +3,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { fmt, fmtDate, fmtDateTime } from '../lib/constants';
-import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw, Trash2, Eye } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import { showPrompt } from '../components/Dialogs.jsx';
 
 // Map a payment_error column value (which the backend now stores as
 // a SHORT code, not a JSON dump — but legacy rows might still hold
@@ -170,6 +171,11 @@ export default function CommissionsPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [refreshingPolls, setRefreshingPolls] = useState(false);
   const [toast, setToast] = useState(null);
+  // Invoice preview modal — opens when admin clicks "Voir la facture"
+  // on a pending_validation card. Holds the blob URL + filename so
+  // we can embed in an <iframe> and offer a Télécharger button. The
+  // URL must be revoked on close to avoid leaking blobs.
+  const [invoicePreview, setInvoicePreview] = useState(null);
   // qontoModal holds whatever the most recent Qonto pay action wants
   // to surface — initiated, bulk progress / summary, or a failure
   // with a French-mapped message. Shape:
@@ -281,6 +287,59 @@ export default function CommissionsPage() {
   const handleDownloadInvoice = async (id) => {
     try { await api.downloadCommissionInvoice(id); }
     catch (err) { showToast(err.message || 'Error', 'error'); }
+  };
+
+  // Opens the invoice preview modal. Falls back to a download toast
+  // if the blob fetch fails (auth blip, missing file, etc.).
+  const handlePreviewInvoice = async (commission) => {
+    setInvoicePreview({ commissionId: commission.id, loading: true, partnerName: commission.partner_name });
+    try {
+      const { url, filename } = await api.fetchCommissionInvoiceObjectUrl(commission.id);
+      setInvoicePreview({ commissionId: commission.id, url, filename, partnerName: commission.partner_name });
+    } catch (err) {
+      setInvoicePreview(null);
+      showToast(err.message || t('commission.invoice_load_failed', 'Impossible de charger la facture.'), 'error');
+    }
+  };
+  const closeInvoicePreview = () => {
+    if (invoicePreview?.url) URL.revokeObjectURL(invoicePreview.url);
+    setInvoicePreview(null);
+  };
+
+  // Hard-delete a commission with an optional motif. Backend refuses
+  // paid + transfer-in-flight rows with a 409, which we surface as a
+  // toast. The partner gets an email + in-app notification.
+  const handleDeleteCommission = async (c) => {
+    const reason = await showPrompt({
+      title: t('commission.delete_title', 'Supprimer la commission'),
+      message: t('commission.delete_message', {
+        amount: fmt(c.amount),
+        partner: c.partner_name || '',
+        defaultValue: 'Êtes-vous sûr de vouloir supprimer la commission de {{amount}} pour {{partner}} ? Le partenaire sera informé par email.',
+      }),
+      label: t('commission.delete_reason_label', 'Motif de suppression (optionnel)'),
+      placeholder: t('commission.delete_reason_placeholder', 'Ex : le client a annulé son contrat'),
+      confirmLabel: t('common.delete', 'Supprimer'),
+      cancelLabel: t('common.cancel', 'Annuler'),
+      required: false,
+      variant: 'danger',
+    });
+    if (reason === null) return; // user cancelled / pressed Escape
+    setBusyId(c.id);
+    try {
+      await api.deleteCommission(c.id, reason ? reason : undefined);
+      showToast(t('commission.delete_success', 'Commission supprimée. Le partenaire a été informé.'), 'success');
+      await reload();
+    } catch (err) {
+      const code = err?.data?.error;
+      const msg = code === 'commission_paid'
+        ? t('commission.delete_blocked_paid', 'Une commission payée ne peut pas être supprimée.')
+        : code === 'transfer_in_flight'
+          ? t('commission.delete_blocked_transfer', 'Un virement est en cours pour cette commission. Annulez-le côté Qonto avant de la supprimer.')
+          : (err?.message || 'Error');
+      showToast(msg, 'error');
+    }
+    setBusyId(null);
   };
 
   const openReject = (commission) => {
@@ -602,27 +661,36 @@ export default function CommissionsPage() {
 
       {tab === 'summary' && (
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
             <thead><tr style={{ background: '#f8fafc' }}>
               {[t('commissions.tbl_partner'), t('commissions.tbl_rate'), t('commissions.tbl_deals'), `${rLabel} ${t('commissions.tbl_generated')}`, t('commissions.tbl_pending'), t('commissions.tbl_approved'), t('commissions.tbl_paid'), t('commissions.tbl_total')].map((h, i) => (
-                <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                <th
+                  key={i}
+                  style={{
+                    padding: '13px 16px',
+                    textAlign: i === 0 ? 'left' : 'right',
+                    fontWeight: 600, color: '#64748b', fontSize: 11,
+                    textTransform: 'uppercase', letterSpacing: 0.5,
+                    borderBottom: '1px solid #e2e8f0',
+                  }}
+                >{h}</th>
               ))}
             </tr></thead>
             <tbody>{summary.map(p => (
               <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                <td style={{ padding: '13px 16px' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{p.contact_name}</div></td>
-                <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{p.commission_rate}%</span></td>
-                <td style={{ padding: '13px 16px', fontWeight: 600 }}>{p.total_commissions}</td>
-                <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(p.total_deal_value)}</td>
-                <td style={{ padding: '13px 16px', color: '#f59e0b', fontWeight: 600 }}>{fmt(p.pending_amount)}</td>
-                <td style={{ padding: '13px 16px', color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{fmt(p.approved_amount)}</td>
-                <td style={{ padding: '13px 16px', color: '#16a34a', fontWeight: 600 }}>{fmt(p.paid_amount)}</td>
-                <td style={{ padding: '13px 16px', fontWeight: 800, fontSize: 16, color: '#0f172a' }}>{fmt(p.total_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'left' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{p.contact_name}</div></td>
+                <td style={{ padding: '13px 16px', textAlign: 'right' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{p.commission_rate}%</span></td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 600 }}>{p.total_commissions}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 600 }}>{fmt(p.total_deal_value)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', color: '#f59e0b', fontWeight: 600 }}>{fmt(p.pending_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{fmt(p.approved_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', color: '#16a34a', fontWeight: 600 }}>{fmt(p.paid_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#0f172a' }}>{fmt(p.total_amount)}</td>
               </tr>
             ))}</tbody>
             <tfoot><tr style={{ background: '#fefce8' }}>
-              <td colSpan={7} style={{ padding: '13px 16px', fontWeight: 700, color: '#0f172a' }}>{t('commissions.total')}</td>
-              <td style={{ padding: '13px 16px', fontWeight: 800, color: '#f59e0b', fontSize: 18 }}>{fmt(totalAll)}</td>
+              <td colSpan={7} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 700, color: '#0f172a' }}>{t('commissions.total')}</td>
+              <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#f59e0b', fontSize: 18 }}>{fmt(totalAll)}</td>
             </tr></tfoot>
           </table>
         </div>
@@ -727,7 +795,31 @@ export default function CommissionsPage() {
                             style={{ cursor: 'pointer', flexShrink: 0 }}
                           />
                         )}
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.partner_name}</div>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{c.partner_name}</div>
+                        {/* Delete button — hidden on paid + on rows
+                            with an in-flight Qonto transfer. The
+                            backend will 409 those cases anyway, but
+                            the UI shouldn't tempt the click. */}
+                        {status !== 'paid' && !(c.qonto_transfer_id && !c.payment_completed_at) && (
+                          <button
+                            onClick={() => handleDeleteCommission(c)}
+                            disabled={busyId === c.id}
+                            title={t('commission.delete_tooltip', 'Supprimer la commission')}
+                            aria-label={t('commission.delete_tooltip', 'Supprimer la commission')}
+                            style={{
+                              flexShrink: 0,
+                              padding: 5, borderRadius: 6, background: 'transparent',
+                              border: '1px solid transparent', color: '#94a3b8',
+                              cursor: busyId === c.id ? 'wait' : 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'background .15s, color .15s, border-color .15s',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = '#fecaca'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'transparent'; }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                       {c.prospect_name && <div style={{ color: '#475569', fontSize: 12, marginBottom: 8 }}>{c.prospect_name}{c.prospect_company ? ' · ' + c.prospect_company : ''}</div>}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -824,9 +916,9 @@ export default function CommissionsPage() {
                       {status === 'pending_validation' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           {c.has_invoice && (
-                            <button onClick={() => handleDownloadInvoice(c.id)}
+                            <button onClick={() => handlePreviewInvoice(c)}
                               style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                              <Download size={12} /> {t('commission.view_invoice', 'Voir la facture')}
+                              <Eye size={12} /> {t('commission.view_invoice', 'Voir la facture')}
                             </button>
                           )}
                           {scaPending ? (
@@ -1033,6 +1125,97 @@ export default function CommissionsPage() {
           </div>
         );
       })()}
+
+      {invoicePreview && (
+        <div
+          onClick={closeInvoicePreview}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 3000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            style={{
+              background: '#fff', borderRadius: 16,
+              width: '100%', maxWidth: 800, maxHeight: '80vh',
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '0 25px 80px rgba(15,23,42,0.25)',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '16px 20px', borderBottom: '1px solid #e2e8f0',
+            }}>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>
+                {t('commission.invoice_modal_title', { name: invoicePreview.partnerName || '', defaultValue: 'Facture — {{name}}' })}
+              </div>
+              <button
+                onClick={closeInvoicePreview}
+                aria-label={t('common.close', 'Fermer')}
+                style={{
+                  padding: 6, borderRadius: 8, background: 'transparent',
+                  border: '1px solid transparent', color: '#64748b',
+                  cursor: 'pointer', display: 'flex',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ flex: 1, minHeight: 320, background: '#f8fafc' }}>
+              {invoicePreview.loading ? (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 13 }}>
+                  {t('common.loading', 'Chargement…')}
+                </div>
+              ) : invoicePreview.url ? (
+                <iframe
+                  src={invoicePreview.url}
+                  title={invoicePreview.filename || 'invoice'}
+                  style={{ width: '100%', height: '100%', minHeight: 'calc(80vh - 130px)', border: 'none', background: '#fff' }}
+                />
+              ) : (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: '#64748b', fontSize: 13, padding: 24, textAlign: 'center' }}>
+                  {t('commission.invoice_preview_failed', 'Impossible de prévisualiser la facture. Téléchargez-la pour la consulter.')}
+                </div>
+              )}
+            </div>
+            <div style={{
+              display: 'flex', gap: 10, justifyContent: 'flex-end',
+              padding: '14px 20px', borderTop: '1px solid #e2e8f0', background: '#fff',
+            }}>
+              <button
+                onClick={closeInvoicePreview}
+                style={{
+                  padding: '10px 18px', borderRadius: 10,
+                  border: '1.5px solid #e2e8f0', background: '#fff',
+                  color: '#0f172a', fontSize: 14, fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('common.close', 'Fermer')}
+              </button>
+              <button
+                onClick={() => handleDownloadInvoice(invoicePreview.commissionId)}
+                style={{
+                  padding: '10px 18px', borderRadius: 10,
+                  border: 'none', background: 'var(--rb-primary, #059669)',
+                  color: '#fff', fontSize: 14, fontWeight: 700,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  boxShadow: '0 6px 18px rgba(5,150,105,0.25)',
+                }}
+              >
+                <Download size={14} /> {t('common.download', 'Télécharger')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
