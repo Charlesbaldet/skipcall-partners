@@ -2773,5 +2773,43 @@
         { "metric": "Built-in 2FA", "description": "Enhanced security inherited from Google with zero setup." }
       ]
     }
+  },
+  "marketplace": {
+    "editor": {
+      "publish_toggle": "Publish on the marketplace",
+      "preview": "Preview",
+      "save": "Save",
+      "saved": "Saved",
+      "translate": "Auto-translate",
+      "translate_started": "Translation started. It takes about 6 minutes in the background.",
+      "translate_running": "Translation already in progress",
+      "add_condition": "Add a condition",
+      "add_advantage": "Add an advantage",
+      "add_reference": "Add a reference",
+      "add_info": "Add an info",
+      "add_tag": "Add",
+      "hidden": "Hidden",
+      "hidden_blocks": "Hidden blocks",
+      "tiers_note": "Configured in Program → Levels",
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "public": {
+      "partner_program": "Partner program",
+      "tiers_title": "Partner levels",
+      "conditions_title": "Program conditions",
+      "about_title": "About",
+      "discover": "Discover {{company}}",
+      "ideal_client": "Ideal client",
+      "why_join": "Why become a partner",
+      "references": "Trusted by",
+      "additional_info": "Additional info",
+      "apply": "Apply to the program",
+      "apply_now": "Apply now",
+      "visit_site": "Visit site",
+      "similar": "Similar programs",
+      "view_all": "See all programs",
+      "back_home": "Back home"
+    }
   }
 }

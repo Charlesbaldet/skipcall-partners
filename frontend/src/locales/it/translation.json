@@ -2773,5 +2773,43 @@
         { "metric": "2FA nativo", "description": "Sicurezza rafforzata ereditata da Google senza configurare nulla." }
       ]
     }
+  },
+  "marketplace": {
+    "editor": {
+      "publish_toggle": "Pubblica sulla marketplace",
+      "preview": "Anteprima",
+      "save": "Salva",
+      "saved": "Salvato",
+      "translate": "Traduci automaticamente",
+      "translate_started": "Traduzione avviata. Richiede circa 6 minuti in background.",
+      "translate_running": "Traduzione già in corso",
+      "add_condition": "Aggiungi una condizione",
+      "add_advantage": "Aggiungi un vantaggio",
+      "add_reference": "Aggiungi una referenza",
+      "add_info": "Aggiungi un'informazione",
+      "add_tag": "Aggiungi",
+      "hidden": "Nascosto",
+      "hidden_blocks": "Blocchi nascosti",
+      "tiers_note": "Configurato in Programma → Livelli",
+      "published": "Pubblicato",
+      "draft": "Bozza"
+    },
+    "public": {
+      "partner_program": "Programma partner",
+      "tiers_title": "Livelli partner",
+      "conditions_title": "Condizioni del programma",
+      "about_title": "Chi siamo",
+      "discover": "Scopri {{company}}",
+      "ideal_client": "Cliente ideale",
+      "why_join": "Perché diventare partner",
+      "references": "Si fidano di noi",
+      "additional_info": "Informazioni aggiuntive",
+      "apply": "Candidati al programma",
+      "apply_now": "Candidati ora",
+      "visit_site": "Visita il sito",
+      "similar": "Programmi simili",
+      "view_all": "Vedi tutti i programmi",
+      "back_home": "Torna alla homepage"
+    }
   }
 }

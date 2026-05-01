@@ -2773,5 +2773,43 @@
         { "metric": "2FA natif", "description": "Sécurité renforcée héritée de Google sans rien configurer." }
       ]
     }
+  },
+  "marketplace": {
+    "editor": {
+      "publish_toggle": "Publier sur la marketplace",
+      "preview": "Prévisualiser",
+      "save": "Sauvegarder",
+      "saved": "Sauvegardé",
+      "translate": "Traduire automatiquement",
+      "translate_started": "Traduction lancée. Cela prend environ 6 minutes en arrière-plan.",
+      "translate_running": "Traduction déjà en cours",
+      "add_condition": "Ajouter une condition",
+      "add_advantage": "Ajouter un avantage",
+      "add_reference": "Ajouter une référence",
+      "add_info": "Ajouter une information",
+      "add_tag": "Ajouter",
+      "hidden": "Masqué",
+      "hidden_blocks": "Blocs masqués",
+      "tiers_note": "Configuré dans Programme → Niveaux",
+      "published": "Publié",
+      "draft": "Brouillon"
+    },
+    "public": {
+      "partner_program": "Programme partenaire",
+      "tiers_title": "Niveaux partenaires",
+      "conditions_title": "Conditions du programme",
+      "about_title": "À propos",
+      "discover": "Découvrez {{company}}",
+      "ideal_client": "Client idéal",
+      "why_join": "Pourquoi devenir partenaire",
+      "references": "Ils nous font confiance",
+      "additional_info": "Informations complémentaires",
+      "apply": "Postuler au programme",
+      "apply_now": "Postuler maintenant",
+      "visit_site": "Voir le site",
+      "similar": "Programmes similaires",
+      "view_all": "Voir tous les programmes",
+      "back_home": "Retour à l'accueil"
+    }
   }
 }
