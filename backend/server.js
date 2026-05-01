@@ -190,13 +190,16 @@ app.listen(PORT, () => {
   runMigrations();
   runSecurityMigrations();
 
-  // Stale Qonto state cleanup — runs on every deploy. The
-  // migrate.js .catch(() => {}) was silently eating cleanup
-  // errors when columns weren't yet present; this version logs
-  // loudly and always runs after the schema migrations are done.
+  // Stale Qonto state cleanup — runs on every deploy. Uses
+  // RETURNING id so the log line names the rows we touched, which
+  // is the only way to confirm the cleanup actually fired in Railway
+  // logs. Reaches every non-paid / non-awaiting-invoice commission
+  // that's carrying a payment_error OR a non-zero retry counter so
+  // a row stuck mid-replay also gets reset, not just the obvious
+  // error rows.
   (async () => {
     try {
-      const { rowCount } = await query(`
+      const result = await query(`
         UPDATE commissions
            SET payment_error = NULL,
                qonto_transfer_id = NULL,
@@ -206,13 +209,19 @@ app.listen(PORT, () => {
                qonto_sca_session_token = NULL,
                qonto_idempotency_key = NULL,
                qonto_request_body = NULL,
-               qonto_retry_count = 0
-         WHERE status <> 'paid'
-           AND payment_error IS NOT NULL
+               qonto_retry_count = 0,
+               status = 'pending_validation'
+         WHERE status NOT IN ('paid', 'awaiting_invoice')
+           AND (payment_error IS NOT NULL OR COALESCE(qonto_retry_count, 0) > 0)
+         RETURNING id
       `);
-      console.log('[cleanup] Cleared stale payment errors on', rowCount, 'commission(s).');
+      if (result.rowCount > 0) {
+        console.log(`[startup.cleanup] Reset ${result.rowCount} stuck commission(s):`, result.rows.map(r => r.id));
+      } else {
+        console.log('[startup.cleanup] No stuck commissions — nothing to reset.');
+      }
     } catch (e) {
-      console.error('[cleanup] Failed to clear stale payment errors:', e.message);
+      console.error('[startup.cleanup] Failed to clear stale payment errors:', e.message);
     }
   })();
 

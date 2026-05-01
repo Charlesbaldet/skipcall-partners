@@ -658,6 +658,20 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     });
 
     const transfer = result.transfer || {};
+    if (result.requires_sca) {
+      console.log(`[pay-qonto] SCA required for commission ${c.id}`, {
+        has_sca_token: !!result.sca_session_token,
+        has_request_body: !!result.request_body,
+        has_idempotency_key: !!result.idempotency_key,
+        reference: result.reference,
+      });
+    } else {
+      console.log(`[pay-qonto] Transfer accepted for commission ${c.id}`, {
+        transfer_id: transfer.id || null,
+        status: transfer.status || null,
+        reference: result.reference,
+      });
+    }
     // SCA-pending → persist the exact body Qonto rejected with 428,
     // alongside the SCA token + idempotency key, so the
     // /confirm-sca endpoint can replay it byte-for-byte once the
@@ -1216,6 +1230,7 @@ router.post('/poll-qonto', authorize('admin'), async (req, res) => {
 // new header." We persist the exact original body in
 // qonto_request_body to satisfy that requirement.
 router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
+  console.log(`[confirm-sca] Starting for commission ${req.params.id}`);
   try {
     let where = 'id = $1';
     const params = [req.params.id];
@@ -1225,16 +1240,27 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       params.push(req.tenantId);
     }
     const { rows } = await query(
-      `SELECT id, tenant_id, partner_id, amount, payment_reference,
+      `SELECT id, tenant_id, status, partner_id, amount, payment_reference,
               qonto_request_body, qonto_idempotency_key,
-              qonto_sca_session_token
+              qonto_sca_session_token, payment_initiated_at
          FROM commissions
         WHERE ${where} LIMIT 1`,
       params
     );
     const c = rows[0];
-    if (!c) return res.status(404).json({ error: 'Commission introuvable' });
+    if (!c) {
+      console.log(`[confirm-sca] Commission ${req.params.id} not found`);
+      return res.status(404).json({ error: 'Commission introuvable' });
+    }
+    console.log(`[confirm-sca] Commission state:`, {
+      status: c.status,
+      has_sca_token: !!c.qonto_sca_session_token,
+      has_request_body: !!c.qonto_request_body,
+      has_idempotency_key: !!c.qonto_idempotency_key,
+      payment_initiated_at: c.payment_initiated_at,
+    });
     if (!c.qonto_sca_session_token || !c.qonto_request_body || !c.qonto_idempotency_key) {
+      console.log(`[confirm-sca] Missing SCA data for ${c.id} — cannot replay`);
       return res.status(400).json({ error: 'no_pending_sca', message: 'Aucun virement en attente de validation SCA pour cette commission.' });
     }
 
@@ -1243,9 +1269,17 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       idempotencyKey: c.qonto_idempotency_key,
       scaSessionToken: c.qonto_sca_session_token,
     });
+    console.log(`[confirm-sca] Replay result for ${c.id}:`, {
+      ok: !!result.ok,
+      expired: !!result.expired,
+      sca_still_pending: !!result.sca_still_pending,
+      transfer_id: result.transfer?.id || null,
+      transfer_status: result.transfer?.status || null,
+    });
 
     if (result.ok) {
       const transfer = result.transfer || {};
+      console.log(`[confirm-sca] SUCCESS for ${c.id} — transfer created: ${transfer.id || '(no id returned)'} (status=${transfer.status || 'pending'})`);
       // Transfer actually created on Qonto's side. The polling worker
       // will flip status to 'paid' + email the partner once Qonto
       // moves it from 'pending' / 'processing' to 'settled'.
@@ -1279,6 +1313,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
     }
 
     if (result.expired) {
+      console.log(`[confirm-sca] SCA token expired (412) for ${c.id} — resetting for fresh retry`);
       // Token aged out (15 min). Reset SCA-side state so the admin
       // can hit Pay again from a clean slate; keep payment_reference
       // for audit but null everything Qonto would refuse to replay.
@@ -1302,6 +1337,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
     }
 
     if (result.sca_still_pending) {
+      console.log(`[confirm-sca] SCA still pending for ${c.id} — admin hasn't approved on phone yet`);
       // Admin hasn't approved on their phone yet. Refresh the SCA
       // token in case Qonto rotated it.
       if (result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token) {
