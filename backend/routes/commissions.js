@@ -1332,37 +1332,45 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       });
     }
 
-    // Legit "still waiting on the admin's phone" — preserved as a
-    // distinct UX state. Qonto returned 428 sca_required, the
-    // approval just hasn't landed yet. Refresh rotated tokens so a
-    // future call uses Qonto's latest values.
+    // 428 sca_required from the replay. We split this into two paths:
+    //   * with vop_proof_token → legit "admin hasn't approved on
+    //     phone yet" — preserve the still-pending UX so the user
+    //     keeps waiting instead of being told to restart.
+    //   * without vop_proof_token → Qonto's response can't be
+    //     replayed (subsequent attempts would 401), so we fall
+    //     through to the catch-all and ask the user to restart.
     if (result.sca_still_pending) {
-      console.log(`[confirm-sca] SCA still pending for ${c.id} — admin hasn't approved on phone yet`);
-      const newSca = result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token
-        ? result.sca_session_token : null;
-      const newVop = result.vop_proof_token && result.vop_proof_token !== c.qonto_vop_proof_token
-        ? result.vop_proof_token : null;
-      if (newSca || newVop) {
-        await query(
-          `UPDATE commissions
-              SET qonto_sca_session_token = COALESCE($2, qonto_sca_session_token),
-                  qonto_vop_proof_token = COALESCE($3, qonto_vop_proof_token)
-            WHERE id = $1`,
-          [c.id, newSca, newVop]
-        );
+      if (result.vop_proof_token) {
+        console.log(`[confirm-sca] SCA still pending for ${c.id} — admin hasn't approved on phone yet`);
+        const newSca = result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token
+          ? result.sca_session_token : null;
+        const newVop = result.vop_proof_token !== c.qonto_vop_proof_token
+          ? result.vop_proof_token : null;
+        if (newSca || newVop) {
+          await query(
+            `UPDATE commissions
+                SET qonto_sca_session_token = COALESCE($2, qonto_sca_session_token),
+                    qonto_vop_proof_token = COALESCE($3, qonto_vop_proof_token)
+              WHERE id = $1`,
+            [c.id, newSca, newVop]
+          );
+        }
+        return res.json({
+          ok: false,
+          sca_still_pending: true,
+          message: 'Le virement attend toujours votre validation dans Qonto.',
+        });
       }
-      return res.json({
-        ok: false,
-        sca_still_pending: true,
-        message: 'Le virement attend toujours votre validation dans Qonto.',
-      });
+      console.log(`[confirm-sca] 428 sca_required without vop_proof_token for ${c.id} — treating as needs_restart`);
+      // Falls through to the catch-all below.
     }
 
     // Catch-all for any other failure: 412 (token aged out, 15 min) /
     // 422 (Qonto lost the session or admin tapped "un problème est
-    // survenu") / 401 vop_proof_token_missing / any unknown shape.
-    // All require the admin to start over from a clean slate.
-    console.log(`[confirm-sca] Replay failed for ${c.id} (${result.expired ? '412' : result.not_found ? '422/401' : 'unknown'}) — full reset, asking user to restart`);
+    // survenu") / 401 vop_proof_token_missing / 428 without
+    // vop_proof_token / any unknown shape. All require the admin to
+    // start over from a clean slate.
+    console.log(`[confirm-sca] Replay failed for ${c.id} (${result.expired ? '412' : result.not_found ? '422/401' : result.sca_still_pending ? '428-no-vop' : 'unknown'}) — full reset, asking user to restart`);
     await query(
       `UPDATE commissions
           SET qonto_sca_session_token = NULL,
