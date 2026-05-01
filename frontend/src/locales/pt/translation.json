@@ -1280,7 +1280,18 @@
       "hidden_blocks": "Blocos ocultos",
       "tiers_note": "Configurado em Programa → Níveis",
       "published": "Publicado",
-      "draft": "Rascunho"
+      "draft": "Rascunho",
+      "saving": "Guardando…",
+      "edit_button": "Editar",
+      "close_editor": "Fechar editor",
+      "tab_card": "Cartão marketplace",
+      "tab_page": "Página completa",
+      "unsaved_indicator": "Alterações não guardadas",
+      "unsaved_title": "Alterações não guardadas",
+      "unsaved_message": "Tem alterações não guardadas. Sair sem guardar?",
+      "unsaved_close_message": "Tem alterações não guardadas. Fechar o editor sem guardar?",
+      "leave": "Sair sem guardar",
+      "stay": "Permanecer na página"
     },
     "public": {
       "partner_program": "Programa de parceiros",

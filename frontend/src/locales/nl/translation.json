@@ -1280,7 +1280,18 @@
       "hidden_blocks": "Verborgen blokken",
       "tiers_note": "Geconfigureerd in Programma → Niveaus",
       "published": "Gepubliceerd",
-      "draft": "Concept"
+      "draft": "Concept",
+      "saving": "Opslaan…",
+      "edit_button": "Bewerken",
+      "close_editor": "Editor sluiten",
+      "tab_card": "Marketplace-kaart",
+      "tab_page": "Volledige pagina",
+      "unsaved_indicator": "Niet-opgeslagen wijzigingen",
+      "unsaved_title": "Niet-opgeslagen wijzigingen",
+      "unsaved_message": "Je hebt niet-opgeslagen wijzigingen. Verlaten zonder op te slaan?",
+      "unsaved_close_message": "Je hebt niet-opgeslagen wijzigingen. De editor sluiten zonder op te slaan?",
+      "leave": "Verlaten zonder opslaan",
+      "stay": "Op de pagina blijven"
     },
     "public": {
       "partner_program": "Partnerprogramma",

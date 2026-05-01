@@ -1280,7 +1280,18 @@
       "hidden_blocks": "Ausgeblendete Blöcke",
       "tiers_note": "Konfiguriert in Programm → Stufen",
       "published": "Veröffentlicht",
-      "draft": "Entwurf"
+      "draft": "Entwurf",
+      "saving": "Speichern…",
+      "edit_button": "Bearbeiten",
+      "close_editor": "Editor schließen",
+      "tab_card": "Marketplace-Karte",
+      "tab_page": "Vollständige Seite",
+      "unsaved_indicator": "Nicht gespeicherte Änderungen",
+      "unsaved_title": "Nicht gespeicherte Änderungen",
+      "unsaved_message": "Sie haben nicht gespeicherte Änderungen. Ohne Speichern verlassen?",
+      "unsaved_close_message": "Sie haben nicht gespeicherte Änderungen. Editor ohne Speichern schließen?",
+      "leave": "Ohne Speichern verlassen",
+      "stay": "Auf der Seite bleiben"
     },
     "public": {
       "partner_program": "Partnerprogramm",

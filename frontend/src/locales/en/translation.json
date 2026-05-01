@@ -1280,7 +1280,18 @@
       "hidden_blocks": "Hidden blocks",
       "tiers_note": "Configured in Program → Levels",
       "published": "Published",
-      "draft": "Draft"
+      "draft": "Draft",
+      "saving": "Saving…",
+      "edit_button": "Edit",
+      "close_editor": "Close editor",
+      "tab_card": "Marketplace card",
+      "tab_page": "Full page",
+      "unsaved_indicator": "Unsaved changes",
+      "unsaved_title": "Unsaved changes",
+      "unsaved_message": "You have unsaved changes. Leave without saving?",
+      "unsaved_close_message": "You have unsaved changes. Close the editor without saving?",
+      "leave": "Leave without saving",
+      "stay": "Stay on page"
     },
     "public": {
       "partner_program": "Partner program",

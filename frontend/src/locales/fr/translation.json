@@ -1280,7 +1280,18 @@
       "hidden_blocks": "Blocs masqués",
       "tiers_note": "Configuré dans Programme → Niveaux",
       "published": "Publié",
-      "draft": "Brouillon"
+      "draft": "Brouillon",
+      "saving": "Enregistrement…",
+      "edit_button": "Éditer",
+      "close_editor": "Fermer l'éditeur",
+      "tab_card": "Carte marketplace",
+      "tab_page": "Page complète",
+      "unsaved_indicator": "Modifications non sauvegardées",
+      "unsaved_title": "Modifications non sauvegardées",
+      "unsaved_message": "Vous avez des modifications non sauvegardées. Voulez-vous quitter sans sauvegarder ?",
+      "unsaved_close_message": "Vous avez des modifications non sauvegardées. Fermer l'éditeur sans sauvegarder ?",
+      "leave": "Quitter sans sauvegarder",
+      "stay": "Rester sur la page"
     },
     "public": {
       "partner_program": "Programme partenaire",

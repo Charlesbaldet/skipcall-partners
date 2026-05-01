@@ -1280,7 +1280,18 @@
       "hidden_blocks": "Blocchi nascosti",
       "tiers_note": "Configurato in Programma → Livelli",
       "published": "Pubblicato",
-      "draft": "Bozza"
+      "draft": "Bozza",
+      "saving": "Salvataggio…",
+      "edit_button": "Modifica",
+      "close_editor": "Chiudi editor",
+      "tab_card": "Scheda marketplace",
+      "tab_page": "Pagina completa",
+      "unsaved_indicator": "Modifiche non salvate",
+      "unsaved_title": "Modifiche non salvate",
+      "unsaved_message": "Hai modifiche non salvate. Uscire senza salvare?",
+      "unsaved_close_message": "Hai modifiche non salvate. Chiudere l'editor senza salvare?",
+      "leave": "Esci senza salvare",
+      "stay": "Resta sulla pagina"
     },
     "public": {
       "partner_program": "Programma partner",
