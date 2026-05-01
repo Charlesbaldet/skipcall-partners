@@ -489,6 +489,12 @@ export default function CommissionsPage() {
         showToast(t('qonto.toast_sca_paid', 'Virement confirmé — Payé ✅'), 'success');
       } else if (r.ok) {
         showToast(t('qonto.toast_sca_initiated', 'Virement validé — Qonto traite la demande.'), 'success');
+      } else if (r.needs_restart) {
+        // Reconcile worker did a partial reset after a 412 — the SCA
+        // token aged out before the admin tapped "J'ai déjà approuvé".
+        // Backend cleared the SCA / VOP tokens; reload pulls the
+        // Payer button back so the next click mints a fresh challenge.
+        showToast(r.message || t('qonto.toast_sca_needs_restart', 'La validation SCA a expiré. Veuillez cliquer sur Payer pour relancer le virement.'), 'warning');
       } else if (r.expired) {
         showToast(t('qonto.toast_sca_expired', 'Le délai de validation SCA a expiré (15 min). Veuillez relancer le paiement.'), 'error');
       } else if (r.not_found) {
