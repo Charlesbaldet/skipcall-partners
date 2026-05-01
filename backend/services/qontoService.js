@@ -350,10 +350,14 @@ async function createBulkTransfer(tenantId, {
   if (!bankAccountId) {
     throw new Error('qonto_bank_account_missing');
   }
-  // Per Qonto's docs, bank_account_id is set ONCE at the
-  // bulk_transfer root and applies to every line — the API
-  // rejects payloads that repeat it on each transfer item with
-  // "bank_account_id is missing" or "bulk_transfers is missing".
+  // Qonto's POST /v2/sepa/bulk_transfers expects, at the JSON
+  // ROOT, two keys:
+  //   bank_account_id  → which Qonto account to debit (single)
+  //   bulk_transfers   → array of transfer items (PLURAL, with `s`)
+  // The API rejects any wrapper around them with the misleading
+  // "bank_account_id is missing" / "bulk_transfers is missing"
+  // messages whose JSON pointers ("/bank_account_id",
+  // "/bulk_transfers") explicitly tell us they live at the root.
   const items = transfers.map(t => {
     const item = {
       reference: buildReference(t.commissionId),
@@ -367,11 +371,16 @@ async function createBulkTransfer(tenantId, {
     return item;
   });
 
-  const body = { bulk_transfer: { bank_account_id: bankAccountId, transfers: items } };
+  const body = {
+    bank_account_id: bankAccountId,
+    bulk_transfers: items,
+  };
 
   const key = idempotencyKey || newIdempotencyKey();
   const headers = { 'X-Qonto-Idempotency-Key': key };
   if (scaSessionToken) headers['X-Qonto-SCA-Session-Token'] = scaSessionToken;
+
+  console.log('[qonto.bulk] Request body:', JSON.stringify(body, null, 2));
 
   let data;
   try {
@@ -394,8 +403,13 @@ async function createBulkTransfer(tenantId, {
     throw err;
   }
   // Qonto returns the list of created transfers (id + status). Map
-  // them positionally back to the input commissions.
-  const created = data?.transfers || data?.bulk_transfer?.transfers || [];
+  // them positionally back to the input commissions. The response
+  // shape tracks the request shape, so try `bulk_transfers` first
+  // and fall through to legacy alternatives.
+  const created = data?.bulk_transfers
+    || data?.transfers
+    || data?.bulk_transfer?.transfers
+    || [];
   return {
     bulk_id: data?.bulk_transfer?.id || data?.id || null,
     transfers: created,
