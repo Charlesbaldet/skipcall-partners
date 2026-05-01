@@ -60,6 +60,24 @@ router.get('/sitemap.xml', async (req, res) => {
       console.warn('[sitemap] blog query failed:', err.message);
     }
 
+    // Marketplace programs — every published tenant gets a
+    // /marketplace/:slug entry. lastmod uses the marketplace_settings
+    // updated_at when available, otherwise tenants.updated_at.
+    let programs = [];
+    try {
+      const { rows } = await query(
+        `SELECT t.slug, COALESCE(ms.updated_at, t.updated_at) AS updated_at
+           FROM tenants t
+           LEFT JOIN marketplace_settings ms ON ms.tenant_id = t.id
+          WHERE t.marketplace_visible = true
+            AND t.short_description IS NOT NULL AND t.short_description <> ''
+          ORDER BY COALESCE(ms.updated_at, t.updated_at) DESC NULLS LAST`
+      );
+      programs = rows;
+    } catch (err) {
+      console.warn('[sitemap] marketplace query failed:', err.message);
+    }
+
     const entries = [
       ...STATIC_PAGES.map(p => ({
         loc: `${base}${p.path}`,
@@ -71,6 +89,12 @@ router.get('/sitemap.xml', async (req, res) => {
         loc: `${base}/blog/${p.slug}`,
         lastmod: (p.updated_at || p.published_at)?.toISOString().split('T')[0] || today,
         changefreq: 'monthly',
+        priority: '0.7',
+      })),
+      ...programs.map(p => ({
+        loc: `${base}/marketplace/${p.slug}`,
+        lastmod: p.updated_at ? new Date(p.updated_at).toISOString().split('T')[0] : today,
+        changefreq: 'weekly',
         priority: '0.7',
       })),
     ];

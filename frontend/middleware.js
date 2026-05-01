@@ -24,6 +24,7 @@ export const config = {
     '/blog',
     '/blog/:path*',
     '/marketplace',
+    '/marketplace/:path*',
     '/cgv',
     '/confidentialite',
     '/mentions-legales',
@@ -55,6 +56,12 @@ function resolveMeta(path) {
   if (path === '/marketplace') return {
     title: "Marketplace RefBoost — Programmes d'apporteurs d'affaires",
     description: "Découvrez les programmes d'apporteurs d'affaires disponibles sur RefBoost Marketplace. Postulez en quelques clics aux meilleurs programmes B2B.",
+  };
+  // Generic default for /marketplace/:slug — overridden in the
+  // article-style fetch block below once we have the program data.
+  if (path.startsWith('/marketplace/') && path !== '/marketplace/') return {
+    title: 'Programme partenaire — RefBoost',
+    description: "Découvrez ce programme partenaires sur RefBoost. Conditions, niveaux et avantages détaillés. Postulez en quelques clics.",
   };
   if (path === '/cgv') return {
     title: 'Conditions générales de vente — RefBoost',
@@ -221,6 +228,7 @@ export default async function middleware(request) {
   let meta = resolveMeta(path);
   let articlePost = null;
   let blogIndexPosts = null;
+  let marketplaceProgram = null;
 
   if (path.startsWith('/blog/') && path !== '/blog/' && path !== '/blog') {
     try {
@@ -241,6 +249,29 @@ export default async function middleware(request) {
         }
       }
     } catch { /* keep generic blog meta */ }
+  } else if (path.startsWith('/marketplace/') && path !== '/marketplace/' && path !== '/marketplace') {
+    try {
+      const slug = path.slice('/marketplace/'.length).replace(/\/+$/, '');
+      if (slug) {
+        const apiUrl = new URL('/api/marketplace/programs/' + encodeURIComponent(slug), url.origin).toString();
+        const apiRes = await fetch(apiUrl, { cf: { cacheTtl: 300 } });
+        if (apiRes.ok) {
+          const data = await apiRes.json().catch(() => null);
+          const program = data && data.program;
+          if (program) {
+            marketplaceProgram = program;
+            const company = String(program.company_name || 'Programme').slice(0, 40);
+            const title = `Programme partenaire ${company} | RefBoost`.slice(0, 60);
+            const desc = String(program.page_description || program.short_description || '')
+              .replace(/\s+/g, ' ').trim().slice(0, 160);
+            meta = {
+              title,
+              description: desc || meta.description,
+            };
+          }
+        }
+      }
+    } catch { /* keep generic marketplace meta */ }
   } else if (path === '/blog') {
     // Preload article list for the <noscript> block so crawlers that
     // don't run JS still have linkable hrefs to every post. The XML
@@ -442,6 +473,67 @@ export default async function middleware(request) {
       html = html.replace(/<\/noscript>/, articleBlock + '</noscript>');
     } else {
       html = html.replace('</body>', `<noscript>${articleBlock}</noscript>\n  </body>`);
+    }
+  }
+
+  // /marketplace/:slug → WebPage JSON-LD + noscript body for crawlers.
+  // Same pattern as the blog: the SPA shell is empty, so without
+  // injecting real content here Googlebot sees nothing and the page
+  // never gets indexed. Hreflang for the 7 supported langs points at
+  // the same canonical (single-locale URL pattern this site uses).
+  if (marketplaceProgram) {
+    const p = marketplaceProgram;
+    if (p.logo_url) {
+      html = upsertMeta(html, 'property="og:image"', `<meta property="og:image" content="${esc(p.logo_url)}" />`);
+    }
+    const langs = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
+    const altLinks = langs
+      .map(l => `<link rel="alternate" hrefLang="${l}" href="${esc(canonical)}" />`)
+      .join('\n    ');
+    html = html.replace('</head>', '    ' + altLinks + '\n    <link rel="alternate" hrefLang="x-default" href="' + esc(canonical) + '" />\n  </head>');
+
+    const webpageLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: meta.title,
+      description: meta.description,
+      url: canonical,
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE + '/' },
+          { '@type': 'ListItem', position: 2, name: 'Marketplace', item: SITE + '/marketplace' },
+          { '@type': 'ListItem', position: 3, name: p.company_name },
+        ],
+      },
+    };
+    const ldScript = `<script type="application/ld+json">${JSON.stringify(webpageLd).replace(/</g, '\\u003c')}</script>`;
+    html = html.replace('</head>', '    ' + ldScript + '\n  </head>');
+
+    // noscript body — h1, hero description, why_join list, references list,
+    // and a back-link to the marketplace index for crawl-graph weight.
+    const safe = (s) => esc(String(s || ''));
+    const items = (arr, fmt) => Array.isArray(arr) && arr.length
+      ? '<ul>' + arr.map(fmt).join('') + '</ul>'
+      : '';
+    const whyJoin = items(p.why_join, it => `<li>${safe(it && it.text)}</li>`);
+    const refs = items(p.client_references, r =>
+      `<li><strong>${safe(r && r.name)}</strong>${r && r.description ? ': ' + safe(r.description) : ''}</li>`);
+    const conditions = items(p.commission_blocks, c =>
+      `<li><strong>${safe(c && c.metric)} ${safe(c && c.label)}</strong>${c && c.description ? ' — ' + safe(c.description) : ''}</li>`);
+    const block = `<article>` +
+      `<h1>${safe(p.company_name)}</h1>` +
+      (p.short_description ? `<p>${safe(p.short_description)}</p>` : '') +
+      (p.page_description ? `<p>${safe(p.page_description)}</p>` : '') +
+      (conditions ? `<h2>Conditions du programme</h2>${conditions}` : '') +
+      (whyJoin ? `<h2>Pourquoi devenir partenaire</h2>${whyJoin}` : '') +
+      (refs ? `<h2>Ils nous font confiance</h2>${refs}` : '') +
+      `<p><a href="${SITE}/marketplace">← Tous les programmes</a></p>` +
+      `</article>`;
+    if (/<noscript>[\s\S]*?<\/noscript>/.test(html)) {
+      html = html.replace(/<\/noscript>/, block + '</noscript>');
+    } else {
+      html = html.replace('</body>', `<noscript>${block}</noscript>\n  </body>`);
     }
   }
 

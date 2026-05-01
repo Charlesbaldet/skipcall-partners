@@ -32,6 +32,7 @@ import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
 import BlogPage from './pages/BlogPage.jsx';
 import BlogPostPage from './pages/BlogPostPage.jsx';
 import MarketplacePage from './pages/MarketplacePage.jsx';
+import MarketplaceProgramPage from './pages/MarketplaceProgramPage.jsx';
 import FeaturePipelinePage from './pages/features/FeaturePipelinePage';
 import FeatureCommissionsPage from './pages/features/FeatureCommissionsPage';
 import FeatureAnalyticsPage from './pages/features/FeatureAnalyticsPage';
@@ -108,6 +109,7 @@ function AppRoutes() {
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/marketplace/:slug" element={<MarketplaceProgramPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/cgv"             element={<LegalPage which="cgv" />} />
         <Route path="/confidentialite" element={<LegalPage which="confidentialite" />} />
