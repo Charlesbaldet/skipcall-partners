@@ -207,6 +207,7 @@ app.listen(PORT, () => {
                payment_initiated_at = NULL,
                payment_completed_at = NULL,
                qonto_sca_session_token = NULL,
+               qonto_vop_proof_token = NULL,
                qonto_idempotency_key = NULL,
                qonto_request_body = NULL,
                qonto_retry_count = 0,

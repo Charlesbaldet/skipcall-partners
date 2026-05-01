@@ -232,6 +232,61 @@ function buildReference(commissionId) {
   return `REFBOOSTCOM${short}`.slice(0, 35);
 }
 
+// VoP (Verification of Payee) — required by EU regulation since
+// October 2025. Every SEPA transfer POST must carry a vop_proof_token
+// at the JSON root, obtained from POST /v2/sepa/verify_payee. Without
+// it Qonto returns 401 vop_proof_token_missing and the transfer never
+// gets created.
+//
+// The proof_token is valid regardless of the match result — even on
+// MATCH_RESULT_NO_MATCH Qonto still issues a token (the admin then
+// has to acknowledge the name mismatch in their Qonto app SCA
+// challenge before the transfer goes through).
+async function verifyPayee(tenantId, { iban, beneficiaryName }) {
+  const data = await api(tenantId, '/sepa/verify_payee', {
+    method: 'POST',
+    body: JSON.stringify({
+      iban: iban.replace(/\s+/g, '').toUpperCase(),
+      beneficiary_name: beneficiaryName,
+    }),
+  });
+  console.log('[qonto.vop] Verify payee result:', {
+    iban_prefix: (iban || '').replace(/\s+/g, '').slice(0, 6) + '…',
+    name: beneficiaryName,
+    match_result: data?.match_result,
+    has_proof_token: !!data?.proof_token,
+  });
+  return {
+    proof_token: data?.proof_token || null,
+    // MATCH_RESULT_MATCH / MATCH_RESULT_CLOSE_MATCH /
+    // MATCH_RESULT_NO_MATCH / MATCH_RESULT_NOT_POSSIBLE.
+    match_result: data?.match_result || null,
+    matched_name: data?.matched_name || null,
+  };
+}
+
+// Bulk-mode counterpart: one POST gets a single proof_token good for
+// up to 23h that covers every (iban, name) tuple in `requests`. Used
+// by the bulk pay path to avoid N round-trips when sending dozens of
+// transfers at once.
+async function skipVerifyPayee(tenantId, beneficiaries) {
+  const data = await api(tenantId, '/sepa/skip_verify_payee', {
+    method: 'POST',
+    body: JSON.stringify({
+      requests: beneficiaries.map(b => ({
+        id: b.id,
+        beneficiary_name: b.beneficiary_name,
+        iban: (b.iban || '').replace(/\s+/g, '').toUpperCase(),
+      })),
+    }),
+  });
+  console.log('[qonto.vop] Skip verify payee result:', {
+    count: beneficiaries.length,
+    has_proof_token: !!data?.proof_token,
+  });
+  return { proof_token: data?.proof_token || null };
+}
+
 // Decode a 428 sca_required body + extract VOP proof token if present.
 // Returns null when the response isn't actually an SCA challenge so the
 // caller can rethrow. Some Qonto 428 responses ship the
@@ -281,11 +336,22 @@ async function createSingleTransfer(tenantId, {
   attachmentIds = [],
   idempotencyKey,
   scaSessionToken,
+  vopProofToken, // optional — auto-fetched via verifyPayee when absent
 }) {
   if (!bankAccountId) {
     // Defense-in-depth: the route already 400s on this case, but
     // throwing here keeps the service honest if a caller forgets.
     throw new Error('qonto_bank_account_missing');
+  }
+
+  // Step 1 — VoP. Required since October 2025; without a fresh
+  // proof_token at the body root Qonto returns 401
+  // vop_proof_token_missing. Callers that already hold a valid token
+  // (e.g. SCA replay through createSingleTransfer) can pass it in.
+  let proofToken = vopProofToken || null;
+  if (!proofToken) {
+    const vop = await verifyPayee(tenantId, { iban, beneficiaryName });
+    proofToken = vop.proof_token;
   }
 
   const reference = buildReference(commissionId);
@@ -324,8 +390,10 @@ async function createSingleTransfer(tenantId, {
   // Capture the exact body we send so the caller can persist it for
   // a verbatim SCA replay later. Qonto's docs require the replay to
   // be byte-identical to the original — anything reconstructed from
-  // current row state on retry could drift.
-  const requestBody = { transfer };
+  // current row state on retry could drift. Note: vop_proof_token
+  // sits at the JSON ROOT, OUTSIDE the `transfer` object — that's
+  // where Qonto looks for it.
+  const requestBody = { vop_proof_token: proofToken, transfer };
 
   let data;
   try {
@@ -589,6 +657,8 @@ module.exports = {
   listBankAccounts,
   findBeneficiaryByIban,
   uploadAttachment,
+  verifyPayee,
+  skipVerifyPayee,
   createSingleTransfer,
   createBulkTransfer,
   replayTransfer,
