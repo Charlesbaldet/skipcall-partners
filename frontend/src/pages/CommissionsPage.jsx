@@ -490,19 +490,10 @@ export default function CommissionsPage() {
       } else if (r.ok) {
         showToast(t('qonto.toast_sca_initiated', 'Virement validé — Qonto traite la demande.'), 'success');
       } else if (r.needs_restart) {
-        // Reconcile worker did a partial reset after a 412 — the SCA
-        // token aged out before the admin tapped "J'ai déjà approuvé".
-        // Backend cleared the SCA / VOP tokens; reload pulls the
-        // Payer button back so the next click mints a fresh challenge.
+        // 412 expired / 422 not_found / 401 vop_proof_token_missing
+        // all funnel here: backend reset the row, reload pulled the
+        // Payer button back, toast points the user at it.
         showToast(r.message || t('qonto.toast_sca_needs_restart', 'La validation SCA a expiré. Veuillez cliquer sur Payer pour relancer le virement.'), 'warning');
-      } else if (r.expired) {
-        showToast(t('qonto.toast_sca_expired', 'Le délai de validation SCA a expiré (15 min). Veuillez relancer le paiement.'), 'error');
-      } else if (r.not_found) {
-        // Qonto rejected the SCA approval (admin tapped "un
-        // problème est survenu" on their phone, or the session was
-        // invalidated server-side). Backend already reset the row
-        // to pending_validation; reload pulls the Payer button back.
-        showToast(t('qonto.toast_sca_not_found', 'La validation n\'a pas abouti. Cliquez sur Payer pour relancer le virement.'), 'warning');
       } else if (r.sca_still_pending) {
         showToast(t('qonto.toast_sca_still_pending', 'Le virement attend toujours votre validation dans Qonto.'), 'info');
       } else {
