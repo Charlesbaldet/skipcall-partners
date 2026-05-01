@@ -108,11 +108,21 @@ async function loadOrCreatePage(tenantId) {
 async function tenantBundle(tenantId) {
   const { rows } = await query(
     `SELECT id, name AS company_name, slug, logo_url, sector, website, icp,
-            short_description, marketplace_visible
+            short_description, marketplace_visible,
+            revenue_model, level_threshold_type
        FROM tenants WHERE id = $1`,
     [tenantId]
   );
-  return rows[0] || null;
+  if (!rows[0]) return null;
+  // Normalize threshold_type alias so the FE doesn't have to know
+  // whether it lives on tenants.level_threshold_type or somewhere
+  // else.
+  const t = rows[0];
+  return {
+    ...t,
+    revenue_model: t.revenue_model || 'CA',
+    threshold_type: t.level_threshold_type || 'deals',
+  };
 }
 
 // ─── GET /api/marketplace/page ───────────────────────────────────────
@@ -320,6 +330,7 @@ router.get('/programs/:slug', async (req, res) => {
     const { rows } = await query(
       `SELECT t.id, t.name AS company_name, t.slug, t.logo_url, t.sector,
               t.website, t.icp, t.marketplace_visible,
+              t.revenue_model, t.level_threshold_type,
               ${descCol} AS short_description,
               ms.page_headline, ms.page_description, ms.ideal_client,
               ms.ideal_client_tags, ms.why_join, ms.commission_blocks,
@@ -335,6 +346,16 @@ router.get('/programs/:slug', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Programme introuvable' });
     const r = rows[0];
+    // Public tier list — stripped to the public-facing fields only.
+    // Empty tenants get an empty array, not null, so the FE doesn't
+    // need to nullcheck.
+    const { rows: tierRows } = await query(
+      `SELECT name, min_threshold, commission_rate, color, icon, position
+         FROM tenant_levels
+        WHERE tenant_id = $1
+        ORDER BY position ASC, min_threshold ASC`,
+      [r.id]
+    );
     const pickI18n = (base, i18nObj) => {
       if (lang === 'fr') return base;
       const v = i18nObj && typeof i18nObj === 'object' ? i18nObj[lang] : null;
@@ -359,6 +380,9 @@ router.get('/programs/:slug', async (req, res) => {
         client_references: pickI18n(r.client_references || [], r.client_references_i18n),
         additional_info: pickI18n(r.additional_info || [], r.additional_info_i18n),
         page_blocks: Array.isArray(r.page_blocks) && r.page_blocks.length ? r.page_blocks : DEFAULT_PAGE_BLOCKS,
+        revenue_model: r.revenue_model || 'CA',
+        threshold_type: r.level_threshold_type || 'deals',
+        tiers: tierRows,
       },
     });
   } catch (err) {

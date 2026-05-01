@@ -1,8 +1,14 @@
-// All block components for the marketplace WYSIWYG editor live here.
-// Each block takes { tenant, page, onPatch, t } and renders an
-// editable section that visually mirrors its public counterpart in
-// MarketplaceProgramPage.jsx. Editing primitives (EditableText,
-// TagEditor) are shared across blocks.
+// All block components for the marketplace page live here. Each block
+// accepts { tenant, page, onPatch, t, editable } and renders the SAME
+// visual whether it's the WYSIWYG editor (/marketplace-admin) or the
+// public page (/marketplace/:slug). The only difference is whether
+// inline edit affordances (contenteditable, delete buttons, dashed
+// "+ ajouter" cards, the logo pencil overlay) are shown.
+//
+// Editor: editable=true (default), drag/visibility wrapper added by
+//   MarketplaceEditorPage.
+// Public: editable=false, sections with no content return null so the
+//   page doesn't render hollow empty states.
 
 import { useEffect, useRef, useState } from 'react';
 import { Link as LinkIcon, Pencil, X, Plus, Trash2, Upload, Award } from 'lucide-react';
@@ -12,15 +18,45 @@ import { showToast } from '../../components/Dialogs.jsx';
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
+// ─── Threshold label (BUG 3) ─────────────────────────────────────────
+// Builds the per-tier "À partir de N {ventes|€ de MRR/CA/ARR}" line.
+// Reads:
+//   - level.min_threshold (number)
+//   - thresholdType: 'deals' | 'volume'
+//   - revenueModel:  'MRR' | 'ARR' | 'CA' | 'Other'  (only when 'volume')
+export function formatThreshold(level, thresholdType, revenueModel, t) {
+  const min = Number(level?.min_threshold || 0);
+  if (!min) return t('marketplace.editor.tiers_starting', 'Niveau de départ');
+  if (thresholdType === 'volume') {
+    const unit = (revenueModel && revenueModel !== 'Other') ? revenueModel : 'CA';
+    const formatted = min.toLocaleString('fr-FR');
+    return t('marketplace.editor.tiers_volume', {
+      n: formatted, unit,
+      defaultValue: 'À partir de {{n}} € de {{unit}}',
+    });
+  }
+  return t('marketplace.editor.tiers_deals', {
+    n: min,
+    defaultValue: 'À partir de {{n}} ventes',
+  });
+}
+
 // ─── Editing primitives ──────────────────────────────────────────────
 
-export function EditableText({ value, onChange, placeholder, multiline = false, style, className }) {
+export function EditableText({ value, onChange, placeholder, multiline = false, style, className, readOnly }) {
   const ref = useRef(null);
   useEffect(() => {
+    if (readOnly) return;
     if (ref.current && ref.current.innerText !== (value || '')) {
       ref.current.innerText = value || '';
     }
-  }, [value]);
+  }, [value, readOnly]);
+  if (readOnly) {
+    // Plain text rendering for the public page. Multiline preserves
+    // newlines so a paragraph break in the editor survives in print.
+    const ws = multiline ? { whiteSpace: 'pre-wrap' } : null;
+    return <span className={className} style={{ ...style, ...ws }}>{value || ''}</span>;
+  }
   return (
     <div
       ref={ref}
@@ -35,7 +71,7 @@ export function EditableText({ value, onChange, placeholder, multiline = false, 
   );
 }
 
-export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false }) {
+export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false, readOnly = false }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
   const commit = () => {
@@ -49,26 +85,28 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false }
         <span key={i} style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           fontSize: 13, fontWeight: 600,
-          padding: '6px 6px 6px 14px', borderRadius: 999,
+          padding: readOnly ? '6px 14px' : '6px 6px 6px 14px', borderRadius: 999,
           background: dark ? 'rgba(255,255,255,0.08)' : '#f0fdf4',
           border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : '#bbf7d0'}`,
           color: dark ? '#cbd5e1' : '#059669',
         }}>
           {tg}
-          <button
-            onClick={() => onChange(tags.filter((_, j) => j !== i))}
-            aria-label={`Retirer ${tg}`}
-            style={{
-              background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(5,150,105,0.12)',
-              border: 'none', borderRadius: '50%', width: 18, height: 18,
-              cursor: 'pointer', color: dark ? '#cbd5e1' : '#059669',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, lineHeight: 1,
-            }}
-          >×</button>
+          {!readOnly && (
+            <button
+              onClick={() => onChange(tags.filter((_, j) => j !== i))}
+              aria-label={`Retirer ${tg}`}
+              style={{
+                background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(5,150,105,0.12)',
+                border: 'none', borderRadius: '50%', width: 18, height: 18,
+                cursor: 'pointer', color: dark ? '#cbd5e1' : '#059669',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, lineHeight: 1,
+              }}
+            >×</button>
+          )}
         </span>
       ))}
-      {adding ? (
+      {!readOnly && (adding ? (
         <input
           autoFocus
           value={draft}
@@ -95,12 +133,12 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false }
             color: dark ? '#94a3b8' : C.m, cursor: 'pointer',
           }}
         >+ {addLabel}</button>
-      )}
+      ))}
     </div>
   );
 }
 
-// ─── Section header (label + title), matches public page ─────────────
+// ─── Section header (label + title) ──────────────────────────────────
 
 function SectionHeader({ label, title }) {
   return (
@@ -117,14 +155,10 @@ function SectionHeader({ label, title }) {
   );
 }
 
-// Used for sections that paint on a white card with a subtle border.
 const sectionCard = {
   background: '#fff', padding: '64px 32px', borderRadius: 20,
   border: `1px solid ${C.border}`,
 };
-
-// Sections that should look like a full-bleed band on the public page —
-// in the editor we render them as a card with the same internal layout.
 const sectionBand = {
   background: C.bg, padding: '56px 32px', borderRadius: 20,
   border: `1px solid ${C.border}`,
@@ -174,7 +208,26 @@ function LogoEditor({ tenant, onPatch }) {
   );
 }
 
-export function HeroBlock({ tenant, onPatch, t }) {
+function LogoDisplay({ tenant }) {
+  return (
+    <div style={{
+      width: 84, height: 84, borderRadius: 20, background: '#fff',
+      margin: '0 auto 24px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 14,
+      boxShadow: '0 12px 32px rgba(0,0,0,0.25)',
+    }}>
+      {tenant.logo_url ? (
+        <img src={tenant.logo_url} alt={tenant.company_name || ''} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      ) : (
+        <span style={{ color: C.m, fontWeight: 800, fontSize: 32 }}>
+          {(tenant.company_name || '?').charAt(0).toUpperCase()}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function HeroBlock({ tenant, onPatch, t, editable = true }) {
   return (
     <section style={{
       background: g(C.s, '#1e293b'),
@@ -185,7 +238,7 @@ export function HeroBlock({ tenant, onPatch, t }) {
           {t('marketplace.public.partner_program', 'Programme partenaire')}
         </span>
 
-        <LogoEditor tenant={tenant} onPatch={onPatch} />
+        {editable ? <LogoEditor tenant={tenant} onPatch={onPatch} /> : <LogoDisplay tenant={tenant} />}
 
         <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -1 }}>
           <EditableText
@@ -193,6 +246,7 @@ export function HeroBlock({ tenant, onPatch, t }) {
             onChange={v => onPatch({ company_name: v })}
             placeholder={t('marketplace.editor.company_name_ph', 'Nom de votre entreprise')}
             style={{ color: '#fff' }}
+            readOnly={!editable}
           />
         </h1>
 
@@ -203,10 +257,11 @@ export function HeroBlock({ tenant, onPatch, t }) {
             placeholder={t('marketplace.editor.short_desc_ph', 'Décrivez votre programme partenaires en une ligne…')}
             multiline
             style={{ color: '#cbd5e1' }}
+            readOnly={!editable}
           />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: editable ? 0 : 24 }}>
           {tenant.sector && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
               {tenant.sector}
@@ -217,35 +272,78 @@ export function HeroBlock({ tenant, onPatch, t }) {
               {tenant.icp}
             </span>
           )}
-          {!tenant.sector && !tenant.icp && (
+          {editable && !tenant.sector && !tenant.icp && (
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
               {t('marketplace.editor.badges_hint', 'Ajoutez secteur et ICP dans Paramètres pour afficher des badges')}
             </span>
           )}
         </div>
+
+        {!editable && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <a
+              href={'/apply/' + tenant.slug}
+              style={{
+                padding: '14px 28px', borderRadius: 12,
+                background: g(C.p, C.pl), color: '#fff', textDecoration: 'none',
+                fontWeight: 700, fontSize: 15, boxShadow: `0 8px 30px ${C.p}40`,
+              }}
+            >
+              {t('marketplace.public.apply', 'Postuler au programme')} →
+            </a>
+            {tenant.website && (
+              <a
+                href={tenant.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '14px 28px', borderRadius: 12,
+                  background: 'transparent', color: '#fff', textDecoration: 'none',
+                  fontWeight: 600, fontSize: 15, border: '1.5px solid rgba(255,255,255,0.25)',
+                }}
+              >
+                {t('marketplace.public.visit_site', 'Voir le site')}
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-// ─── Block: Tiers (read-only, fetches real tenant_levels) ────────────
+// ─── Block: Tiers ────────────────────────────────────────────────────
+//
+// Editor mode: fetches via api.getTenantLevels(); reads
+// tenant.revenue_model for the "X € de MRR/CA" suffix.
+// Public mode: receives levels + threshold_type as part of `tenant`
+// (the public page packs program.tiers / program.threshold_type into
+// the tenant prop before render).
 
-export function TiersBlock({ t }) {
-  const [data, setData] = useState({ levels: [], threshold_type: 'deals', loading: true });
+export function TiersBlock({ tenant, t, editable = true }) {
+  const [data, setData] = useState({
+    levels: Array.isArray(tenant?.tiers) ? tenant.tiers : null,
+    threshold_type: tenant?.threshold_type || 'deals',
+    loading: editable && !Array.isArray(tenant?.tiers),
+  });
   useEffect(() => {
+    // Public-page path: data already came in via props.
+    if (Array.isArray(tenant?.tiers)) {
+      setData({ levels: tenant.tiers, threshold_type: tenant.threshold_type || 'deals', loading: false });
+      return;
+    }
+    if (!editable) return;
     api.getTenantLevels()
       .then(d => setData({ levels: d.levels || [], threshold_type: d.threshold_type || 'deals', loading: false }))
       .catch(() => setData({ levels: [], threshold_type: 'deals', loading: false }));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant?.tiers, tenant?.threshold_type, editable]);
 
   const { levels, threshold_type, loading } = data;
-  const formatThreshold = (lvl) => {
-    if (!lvl.min_threshold || Number(lvl.min_threshold) === 0) return t('marketplace.editor.tiers_starting', 'Niveau de départ');
-    if (threshold_type === 'volume') {
-      return t('marketplace.editor.tiers_volume', 'À partir de {{n}} € de CA', { n: Number(lvl.min_threshold).toLocaleString('fr-FR') });
-    }
-    return t('marketplace.editor.tiers_deals', 'À partir de {{n}} ventes', { n: Number(lvl.min_threshold) });
-  };
+  const revenueModel = tenant?.revenue_model || 'CA';
+
+  // Public page: hide entirely when no tiers.
+  if (!editable && (!levels || levels.length === 0)) return null;
 
   return (
     <section style={sectionCard}>
@@ -256,7 +354,7 @@ export function TiersBlock({ t }) {
 
       {loading ? (
         <div style={{ textAlign: 'center', color: C.m, fontSize: 14, padding: 24 }}>Chargement…</div>
-      ) : levels.length === 0 ? (
+      ) : (!levels || levels.length === 0) ? (
         <div style={{
           textAlign: 'center', padding: 32,
           background: C.bg, border: `1px dashed ${C.border}`, borderRadius: 14,
@@ -279,10 +377,10 @@ export function TiersBlock({ t }) {
             gridTemplateColumns: `repeat(auto-fit, minmax(220px, 1fr))`,
             gap: 16,
           }}>
-            {levels.map(lvl => {
+            {levels.map((lvl, i) => {
               const tierColor = lvl.color || C.p;
               return (
-                <div key={lvl.id} style={{
+                <div key={lvl.id || lvl.name || i} style={{
                   padding: 28, borderRadius: 18,
                   background: '#fff', border: `1px solid ${C.border}`,
                   boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
@@ -308,20 +406,22 @@ export function TiersBlock({ t }) {
                     {t('marketplace.editor.tiers_commission', 'de commission')}
                   </div>
                   <div style={{ fontSize: 13, color: C.m, lineHeight: 1.5 }}>
-                    {formatThreshold(lvl)}
+                    {formatThreshold(lvl, threshold_type, revenueModel, t)}
                   </div>
                 </div>
               );
             })}
           </div>
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <a
-              href="/programme"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: C.m, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
-            >
-              <LinkIcon size={12} /> {t('marketplace.editor.tiers_edit', 'Modifier dans Programme → Niveaux')} →
-            </a>
-          </div>
+          {editable && (
+            <div style={{ textAlign: 'center', marginTop: 24 }}>
+              <a
+                href="/programme"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: C.m, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+              >
+                <LinkIcon size={12} /> {t('marketplace.editor.tiers_edit', 'Modifier dans Programme → Niveaux')} →
+              </a>
+            </div>
+          )}
         </>
       )}
     </section>
@@ -335,7 +435,7 @@ function newId() {
   return 'id_' + Math.random().toString(36).slice(2, 12);
 }
 
-export function ConditionsBlock({ page, onPatch, t }) {
+export function ConditionsBlock({ page, onPatch, t, editable = true }) {
   const items = Array.isArray(page.commission_blocks) ? page.commission_blocks : [];
   const updateItem = (id, patch) =>
     onPatch({ commission_blocks: items.map(it => it.id === id ? { ...it, ...patch } : it) });
@@ -349,6 +449,9 @@ export function ConditionsBlock({ page, onPatch, t }) {
       ],
     });
 
+  // Public page hides empty conditions section entirely.
+  if (!editable && items.length === 0) return null;
+
   const primary = items.find(it => it.is_primary) || items[0];
   const others = items.filter(it => it.id !== (primary && primary.id));
 
@@ -360,28 +463,30 @@ export function ConditionsBlock({ page, onPatch, t }) {
       />
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {primary && (
-          <div className="rb-card-hover-parent" style={{
+          <div className={editable ? 'rb-card-hover-parent' : ''} style={{
             padding: 56, borderRadius: 24, background: g(C.s, '#1e293b'),
             color: '#fff', textAlign: 'center', marginBottom: 16,
             position: 'relative', overflow: 'hidden',
           }}>
             <div style={{ position: 'absolute', top: -80, right: -80, width: 240, height: 240, borderRadius: '50%', background: `${C.p}18` }} />
-            <button
-              onClick={() => removeItem(primary.id)}
-              title="Supprimer"
-              className="rb-card-hover-only"
-              style={{
-                position: 'absolute', top: 12, right: 12, zIndex: 2,
-                width: 28, height: 28, borderRadius: 8,
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                opacity: 0, transition: 'opacity .15s',
-              }}
-            >
-              <Trash2 size={14} />
-            </button>
+            {editable && (
+              <button
+                onClick={() => removeItem(primary.id)}
+                title="Supprimer"
+                className="rb-card-hover-only"
+                style={{
+                  position: 'absolute', top: 12, right: 12, zIndex: 2,
+                  width: 28, height: 28, borderRadius: 8,
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: 0, transition: 'opacity .15s',
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, lineHeight: 1, letterSpacing: -3, background: g(C.pl, '#6ee7b7'), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 16 }}>
                 <EditableText
@@ -389,6 +494,7 @@ export function ConditionsBlock({ page, onPatch, t }) {
                   onChange={v => updateItem(primary.id, { metric: v })}
                   placeholder="0%"
                   style={{ display: 'inline-block', color: 'transparent' }}
+                  readOnly={!editable}
                 />
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>
@@ -397,6 +503,7 @@ export function ConditionsBlock({ page, onPatch, t }) {
                   onChange={v => updateItem(primary.id, { label: v })}
                   placeholder="Libellé"
                   style={{ color: '#fff' }}
+                  readOnly={!editable}
                 />
               </div>
               <div style={{ color: '#cbd5e1', fontSize: 17, lineHeight: 1.5, maxWidth: 620, margin: '0 auto' }}>
@@ -406,60 +513,67 @@ export function ConditionsBlock({ page, onPatch, t }) {
                   placeholder="Description…"
                   multiline
                   style={{ color: '#cbd5e1' }}
+                  readOnly={!editable}
                 />
               </div>
             </div>
           </div>
         )}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(auto-fit, minmax(220px, 1fr))`,
-          gap: 16,
-        }}>
-          {others.map(it => (
-            <div key={it.id} className="rb-card-hover-parent" style={{
-              padding: 32, borderRadius: 20, background: '#fff', border: `1px solid ${C.border}`,
-              boxShadow: '0 2px 10px rgba(0,0,0,0.04)', position: 'relative', textAlign: 'center',
-            }}>
+        {(others.length > 0 || editable) && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(auto-fit, minmax(220px, 1fr))`,
+            gap: 16,
+          }}>
+            {others.map(it => (
+              <div key={it.id} className={editable ? 'rb-card-hover-parent' : ''} style={{
+                padding: 32, borderRadius: 20, background: '#fff', border: `1px solid ${C.border}`,
+                boxShadow: '0 2px 10px rgba(0,0,0,0.04)', position: 'relative', textAlign: 'center',
+              }}>
+                {editable && (
+                  <button
+                    onClick={() => removeItem(it.id)}
+                    title="Supprimer"
+                    className="rb-card-hover-only"
+                    style={{
+                      position: 'absolute', top: 8, right: 8,
+                      width: 26, height: 26, borderRadius: 8,
+                      background: '#fff', border: `1px solid ${C.border}`,
+                      color: C.m, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      opacity: 0, transition: 'opacity .15s',
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+                <div style={{ fontSize: 36, fontWeight: 900, color: C.p, letterSpacing: -1, marginBottom: 8 }}>
+                  <EditableText value={it.metric} onChange={v => updateItem(it.id, { metric: v })} placeholder="0" readOnly={!editable} />
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.s, marginBottom: 4 }}>
+                  <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" readOnly={!editable} />
+                </div>
+                <div style={{ fontSize: 13, color: C.m, lineHeight: 1.55 }}>
+                  <EditableText value={it.description} onChange={v => updateItem(it.id, { description: v })} placeholder="Description…" multiline readOnly={!editable} />
+                </div>
+              </div>
+            ))}
+            {editable && (
               <button
-                onClick={() => removeItem(it.id)}
-                title="Supprimer"
-                className="rb-card-hover-only"
+                onClick={addItem}
                 style={{
-                  position: 'absolute', top: 8, right: 8,
-                  width: 26, height: 26, borderRadius: 8,
-                  background: '#fff', border: `1px solid ${C.border}`,
-                  color: C.m, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: 0, transition: 'opacity .15s',
+                  padding: 32, borderRadius: 20, background: 'transparent',
+                  border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
+                  fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  minHeight: 130,
                 }}
               >
-                <X size={14} />
+                <Plus size={16} /> {t('marketplace.editor.add_condition', 'Ajouter une condition')}
               </button>
-              <div style={{ fontSize: 36, fontWeight: 900, color: C.p, letterSpacing: -1, marginBottom: 8 }}>
-                <EditableText value={it.metric} onChange={v => updateItem(it.id, { metric: v })} placeholder="0" />
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.s, marginBottom: 4 }}>
-                <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" />
-              </div>
-              <div style={{ fontSize: 13, color: C.m, lineHeight: 1.55 }}>
-                <EditableText value={it.description} onChange={v => updateItem(it.id, { description: v })} placeholder="Description…" multiline />
-              </div>
-            </div>
-          ))}
-          <button
-            onClick={addItem}
-            style={{
-              padding: 32, borderRadius: 20, background: 'transparent',
-              border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              minHeight: 130,
-            }}
-          >
-            <Plus size={16} /> {t('marketplace.editor.add_condition', 'Ajouter une condition')}
-          </button>
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -467,7 +581,9 @@ export function ConditionsBlock({ page, onPatch, t }) {
 
 // ─── Block: Ideal Client ─────────────────────────────────────────────
 
-export function IdealClientBlock({ page, onPatch, t }) {
+export function IdealClientBlock({ page, onPatch, t, editable = true }) {
+  const tags = page.ideal_client_tags || [];
+  if (!editable && !page.ideal_client && tags.length === 0) return null;
   return (
     <section style={sectionCard}>
       <SectionHeader
@@ -480,18 +596,25 @@ export function IdealClientBlock({ page, onPatch, t }) {
           onChange={v => onPatch({ ideal_client: v })}
           placeholder="Décrivez le profil de client idéal pour votre programme…"
           multiline
-          style={{
+          style={editable ? {
             color: C.m, fontSize: 16, lineHeight: 1.75, textAlign: 'center',
             padding: 16, borderRadius: 12,
             border: `1px dashed ${C.border}`,
-            minHeight: 80, marginBottom: 20,
+            minHeight: 80, marginBottom: 20, display: 'block',
+          } : {
+            color: C.m, fontSize: 16, lineHeight: 1.75, textAlign: 'center',
+            display: 'block', marginBottom: 20,
           }}
+          readOnly={!editable}
         />
-        <TagEditor
-          tags={page.ideal_client_tags || []}
-          onChange={tags => onPatch({ ideal_client_tags: tags })}
-          addLabel={t('marketplace.editor.add_tag', 'Ajouter un critère')}
-        />
+        {(tags.length > 0 || editable) && (
+          <TagEditor
+            tags={tags}
+            onChange={ts => onPatch({ ideal_client_tags: ts })}
+            addLabel={t('marketplace.editor.add_tag', 'Ajouter un critère')}
+            readOnly={!editable}
+          />
+        )}
       </div>
     </section>
   );
@@ -499,8 +622,9 @@ export function IdealClientBlock({ page, onPatch, t }) {
 
 // ─── Block: Why Join ─────────────────────────────────────────────────
 
-export function WhyJoinBlock({ page, onPatch, t }) {
+export function WhyJoinBlock({ page, onPatch, t, editable = true }) {
   const items = Array.isArray(page.why_join) ? page.why_join : [];
+  if (!editable && items.length === 0) return null;
   const updateItem = (id, patch) =>
     onPatch({ why_join: items.map(it => it.id === id ? { ...it, ...patch } : it) });
   const removeItem = (id) =>
@@ -519,7 +643,7 @@ export function WhyJoinBlock({ page, onPatch, t }) {
         maxWidth: 1000, margin: '0 auto',
       }}>
         {items.map(it => (
-          <div key={it.id} className="rb-card-hover-parent" style={{
+          <div key={it.id} className={editable ? 'rb-card-hover-parent' : ''} style={{
             display: 'flex', alignItems: 'flex-start', gap: 14,
             padding: 20, borderRadius: 14,
             background: '#fff', border: `1px solid ${C.border}`,
@@ -532,34 +656,38 @@ export function WhyJoinBlock({ page, onPatch, t }) {
               fontWeight: 800, fontSize: 16, flexShrink: 0, marginTop: 2,
             }}>✓</div>
             <div style={{ flex: 1, color: C.s, fontSize: 15, lineHeight: 1.6, minWidth: 0 }}>
-              <EditableText value={it.text} onChange={v => updateItem(it.id, { text: v })} placeholder="Avantage…" multiline />
+              <EditableText value={it.text} onChange={v => updateItem(it.id, { text: v })} placeholder="Avantage…" multiline readOnly={!editable} />
             </div>
-            <button
-              onClick={() => removeItem(it.id)}
-              title="Supprimer"
-              className="rb-card-hover-only"
-              style={{
-                padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
-                color: C.m, cursor: 'pointer', display: 'flex',
-                opacity: 0, transition: 'opacity .15s',
-              }}
-            >
-              <X size={14} />
-            </button>
+            {editable && (
+              <button
+                onClick={() => removeItem(it.id)}
+                title="Supprimer"
+                className="rb-card-hover-only"
+                style={{
+                  padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
+                  color: C.m, cursor: 'pointer', display: 'flex',
+                  opacity: 0, transition: 'opacity .15s',
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         ))}
-        <button
-          onClick={addItem}
-          style={{
-            padding: 20, borderRadius: 14, background: 'transparent',
-            border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-            fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            minHeight: 70,
-          }}
-        >
-          <Plus size={14} /> {t('marketplace.editor.add_advantage', 'Ajouter un avantage')}
-        </button>
+        {editable && (
+          <button
+            onClick={addItem}
+            style={{
+              padding: 20, borderRadius: 14, background: 'transparent',
+              border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
+              fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              minHeight: 70,
+            }}
+          >
+            <Plus size={14} /> {t('marketplace.editor.add_advantage', 'Ajouter un avantage')}
+          </button>
+        )}
       </div>
     </section>
   );
@@ -686,9 +814,11 @@ function ReferenceModal({ initial, onClose, onSave }) {
   );
 }
 
-export function ReferencesBlock({ page, onPatch, t }) {
+export function ReferencesBlock({ page, onPatch, t, editable = true }) {
   const refs = Array.isArray(page.client_references) ? page.client_references : [];
   const [modal, setModal] = useState(null);
+
+  if (!editable && refs.length === 0) return null;
 
   const handleAdd = async ({ name, description, logo_url }) => {
     try {
@@ -723,34 +853,36 @@ export function ReferencesBlock({ page, onPatch, t }) {
         maxWidth: 1100, margin: '0 auto',
       }}>
         {refs.map(r => (
-          <div key={r.id} className="rb-card-hover-parent" style={{
+          <div key={r.id} className={editable ? 'rb-card-hover-parent' : ''} style={{
             padding: 24, borderRadius: 16, background: '#fff', border: `1px solid ${C.border}`,
             display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', textAlign: 'center',
             position: 'relative', boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
           }}>
-            <div className="rb-card-hover-only" style={{
-              position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6,
-              opacity: 0, transition: 'opacity .15s',
-            }}>
-              <button
-                onClick={() => setModal({ mode: 'edit', ref: r })}
-                title="Modifier"
-                style={{
-                  width: 26, height: 26, borderRadius: 8, background: '#fff',
-                  border: `1px solid ${C.border}`, color: C.s, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              ><Pencil size={12} /></button>
-              <button
-                onClick={() => handleDelete(r.id)}
-                title="Supprimer"
-                style={{
-                  width: 26, height: 26, borderRadius: 8, background: '#fef2f2',
-                  border: `1px solid #fecaca`, color: '#dc2626', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              ><Trash2 size={12} /></button>
-            </div>
+            {editable && (
+              <div className="rb-card-hover-only" style={{
+                position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6,
+                opacity: 0, transition: 'opacity .15s',
+              }}>
+                <button
+                  onClick={() => setModal({ mode: 'edit', ref: r })}
+                  title="Modifier"
+                  style={{
+                    width: 26, height: 26, borderRadius: 8, background: '#fff',
+                    border: `1px solid ${C.border}`, color: C.s, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                ><Pencil size={12} /></button>
+                <button
+                  onClick={() => handleDelete(r.id)}
+                  title="Supprimer"
+                  style={{
+                    width: 26, height: 26, borderRadius: 8, background: '#fef2f2',
+                    border: `1px solid #fecaca`, color: '#dc2626', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                ><Trash2 size={12} /></button>
+              </div>
+            )}
             <div style={{
               width: 64, height: 64, borderRadius: 14, background: C.bg,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -766,18 +898,20 @@ export function ReferencesBlock({ page, onPatch, t }) {
             {r.description && <p style={{ margin: 0, fontSize: 13, color: C.m, lineHeight: 1.5 }}>{r.description}</p>}
           </div>
         ))}
-        <button
-          onClick={() => setModal({ mode: 'add' })}
-          style={{
-            padding: 28, borderRadius: 16, background: 'transparent',
-            border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-            fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            minHeight: 160,
-          }}
-        >
-          <Plus size={16} /> {t('marketplace.editor.add_reference', 'Ajouter une référence')}
-        </button>
+        {editable && (
+          <button
+            onClick={() => setModal({ mode: 'add' })}
+            style={{
+              padding: 28, borderRadius: 16, background: 'transparent',
+              border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
+              fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              minHeight: 160,
+            }}
+          >
+            <Plus size={16} /> {t('marketplace.editor.add_reference', 'Ajouter une référence')}
+          </button>
+        )}
       </div>
       {modal && (
         <ReferenceModal
@@ -792,8 +926,9 @@ export function ReferencesBlock({ page, onPatch, t }) {
 
 // ─── Block: Additional Info ──────────────────────────────────────────
 
-export function AdditionalInfoBlock({ page, onPatch, t }) {
+export function AdditionalInfoBlock({ page, onPatch, t, editable = true }) {
   const items = Array.isArray(page.additional_info) ? page.additional_info : [];
+  if (!editable && items.length === 0) return null;
   const updateItem = (id, patch) =>
     onPatch({ additional_info: items.map(it => it.id === id ? { ...it, ...patch } : it) });
   const removeItem = (id) =>
@@ -809,44 +944,48 @@ export function AdditionalInfoBlock({ page, onPatch, t }) {
       />
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         {items.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', marginBottom: 14 }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', marginBottom: editable ? 14 : 0 }}>
             {items.map((it, i) => (
-              <div key={it.id} className="rb-card-hover-parent" style={{
-                display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: 16, alignItems: 'center',
+              <div key={it.id} className={editable ? 'rb-card-hover-parent' : ''} style={{
+                display: 'grid', gridTemplateColumns: editable ? '1fr 2fr auto' : '1fr 2fr', gap: 16, alignItems: 'center',
                 padding: '14px 20px',
                 borderTop: i === 0 ? 'none' : `1px solid ${C.border}`,
               }}>
                 <div style={{ fontWeight: 700, color: C.s, fontSize: 14 }}>
-                  <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" />
+                  <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" readOnly={!editable} />
                 </div>
                 <div style={{ color: C.m, fontSize: 14 }}>
-                  <EditableText value={it.value} onChange={v => updateItem(it.id, { value: v })} placeholder="Valeur" />
+                  <EditableText value={it.value} onChange={v => updateItem(it.id, { value: v })} placeholder="Valeur" readOnly={!editable} />
                 </div>
-                <button
-                  onClick={() => removeItem(it.id)}
-                  title="Supprimer"
-                  className="rb-card-hover-only"
-                  style={{
-                    padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
-                    color: C.m, cursor: 'pointer', display: 'flex',
-                    opacity: 0, transition: 'opacity .15s',
-                  }}
-                ><X size={14} /></button>
+                {editable && (
+                  <button
+                    onClick={() => removeItem(it.id)}
+                    title="Supprimer"
+                    className="rb-card-hover-only"
+                    style={{
+                      padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
+                      color: C.m, cursor: 'pointer', display: 'flex',
+                      opacity: 0, transition: 'opacity .15s',
+                    }}
+                  ><X size={14} /></button>
+                )}
               </div>
             ))}
           </div>
         )}
-        <button
-          onClick={addItem}
-          style={{
-            padding: '12px 20px', borderRadius: 12, background: 'transparent',
-            border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-            fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-          }}
-        >
-          <Plus size={14} /> {t('marketplace.editor.add_info', 'Ajouter une information')}
-        </button>
+        {editable && (
+          <button
+            onClick={addItem}
+            style={{
+              padding: '12px 20px', borderRadius: 12, background: 'transparent',
+              border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
+              fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <Plus size={14} /> {t('marketplace.editor.add_info', 'Ajouter une information')}
+          </button>
+        )}
       </div>
     </section>
   );
@@ -854,7 +993,8 @@ export function AdditionalInfoBlock({ page, onPatch, t }) {
 
 // ─── Block: About ────────────────────────────────────────────────────
 
-export function AboutBlock({ tenant, page, onPatch, t }) {
+export function AboutBlock({ tenant, page, onPatch, t, editable = true }) {
+  if (!editable && !page.page_description) return null;
   return (
     <section style={sectionBand}>
       <SectionHeader
@@ -867,21 +1007,24 @@ export function AboutBlock({ tenant, page, onPatch, t }) {
           onChange={v => onPatch({ page_description: v })}
           placeholder="Présentez votre activité, votre proposition de valeur, vos cibles privilégiées…"
           multiline
-          style={{
+          style={editable ? {
             color: C.m, fontSize: 16, lineHeight: 1.75,
             padding: 18, borderRadius: 12,
             border: `1px dashed ${C.border}`, minHeight: 160,
-            background: '#fff',
+            background: '#fff', display: 'block',
+          } : {
+            color: C.m, fontSize: 16, lineHeight: 1.75, display: 'block', textAlign: 'center',
           }}
+          readOnly={!editable}
         />
       </div>
     </section>
   );
 }
 
-// ─── Block: CTA (auto-generated, not editable) ───────────────────────
+// ─── Block: CTA ──────────────────────────────────────────────────────
 
-export function CtaBlock({ tenant, t }) {
+export function CtaBlock({ tenant, t, editable = true }) {
   return (
     <section style={{
       background: g(C.s, '#1e293b'),
@@ -896,23 +1039,38 @@ export function CtaBlock({ tenant, t }) {
         <p style={{ margin: '0 0 28px', fontSize: 17, color: '#cbd5e1', lineHeight: 1.6 }}>
           {t('marketplace.editor.cta_body', 'Postulez en quelques clics et démarrez à votre rythme.')}
         </p>
-        <span style={{
-          display: 'inline-block', padding: '15px 32px', borderRadius: 14,
-          background: g(C.p, C.pl), color: '#fff', textDecoration: 'none',
-          fontWeight: 700, fontSize: 16, boxShadow: `0 8px 30px ${C.p}40`,
-        }}>
-          {t('marketplace.public.apply_now', 'Postuler maintenant')} →
-        </span>
-        <p style={{ margin: '20px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
-          {t('marketplace.editor.cta_hint', 'Bloc généré automatiquement — non modifiable')}
-        </p>
+        {editable ? (
+          <span style={{
+            display: 'inline-block', padding: '15px 32px', borderRadius: 14,
+            background: g(C.p, C.pl), color: '#fff', textDecoration: 'none',
+            fontWeight: 700, fontSize: 16, boxShadow: `0 8px 30px ${C.p}40`,
+          }}>
+            {t('marketplace.public.apply_now', 'Postuler maintenant')} →
+          </span>
+        ) : (
+          <a
+            href={'/apply/' + tenant.slug}
+            style={{
+              display: 'inline-block', padding: '15px 32px', borderRadius: 14,
+              background: g(C.p, C.pl), color: '#fff', textDecoration: 'none',
+              fontWeight: 700, fontSize: 16, boxShadow: `0 8px 30px ${C.p}40`,
+            }}
+          >
+            {t('marketplace.public.apply_now', 'Postuler maintenant')} →
+          </a>
+        )}
+        {editable && (
+          <p style={{ margin: '20px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+            {t('marketplace.editor.cta_hint', 'Bloc généré automatiquement — non modifiable')}
+          </p>
+        )}
       </div>
     </section>
   );
 }
 
-// Block id → component map. Used by the editor and (later) the public
-// page renderer.
+// Block id → component map. Used by both the editor (with editable=true)
+// and the public page (with editable=false).
 export const BLOCK_COMPONENTS = {
   hero: HeroBlock,
   tiers: TiersBlock,
@@ -924,3 +1082,8 @@ export const BLOCK_COMPONENTS = {
   additional_info: AdditionalInfoBlock,
   cta: CtaBlock,
 };
+
+// Default block order — used by the public page when a tenant hasn't
+// reordered. NB: tiers comes right after hero per the user's spec,
+// before conditions.
+export const DEFAULT_BLOCKS = ['hero', 'tiers', 'conditions', 'about', 'ideal_client', 'why_join', 'references', 'additional_info', 'cta'];
