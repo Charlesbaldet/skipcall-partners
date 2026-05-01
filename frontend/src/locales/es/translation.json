@@ -2606,5 +2606,146 @@
     "hot": "Caliente",
     "warm": "Tibio",
     "cold": "Frío"
+  },
+  "integrations": {
+    "index": {
+      "label": "Integraciones",
+      "title": "Conecta tus herramientas",
+      "subtitle": "RefBoost se integra con tus CRM, herramientas de pago y autenticación para automatizar tu programa de socios.",
+      "seoTitle": "Integraciones RefBoost",
+      "seoDescription": "Conecta RefBoost a tus herramientas: Notion, HubSpot, Salesforce, Qonto, Google SSO.",
+      "cta_title": "¿Falta una integración?",
+      "cta_subtitle": "Nuestra API y nuestros webhooks permiten conectar prácticamente cualquier herramienta. Y si te falta una integración nativa, dínoslo."
+    },
+    "shared": {
+      "available": "Disponible",
+      "business_plan": "Plan Business",
+      "learn_more": "Saber más",
+      "soon_title": "Más integraciones en camino",
+      "soon_body": "Zapier, Make, Microsoft SSO… Sugiere la tuya desde el formulario de contacto.",
+      "breadcrumb": "Integraciones",
+      "hero_label": "Integración {{category}}",
+      "features_title": "Lo que puedes hacer",
+      "steps_title": "Cómo funciona",
+      "preview_title": "Vista previa",
+      "preview_placeholder": "Captura próximamente.",
+      "faq_title": "Preguntas frecuentes",
+      "cta_title": "¿Listo para conectar {{name}}?",
+      "cta_subtitle": "Crea tu cuenta RefBoost y activa la integración desde Settings → Integraciones en menos de 5 minutos.",
+      "cta_signup": "Empezar gratis",
+      "cross_links_title": "Otras integraciones",
+      "categories": { "crm": "CRM", "payments": "Pagos", "auth": "Autenticación" },
+      "filters": { "all": "Todas", "crm": "CRM", "payments": "Pagos", "auth": "Autenticación" }
+    },
+    "notion": {
+      "name": "Notion",
+      "shortDescription": "Sincroniza tu pipeline con tus bases de Notion. Mapeo bidireccional de estados y campos.",
+      "heroSubtitle": "Conecta tus bases de Notion a RefBoost para sincronizar tu pipeline de socios en tiempo real. Mapeo bidireccional de estados, campos y contactos.",
+      "features": [
+        { "title": "Sincronización bidireccional", "description": "Los referidos creados en RefBoost aparecen en Notion y viceversa, sin duplicados." },
+        { "title": "Mapeo de campos", "description": "Mapea tus propiedades de Notion a los campos de RefBoost (nombre, empresa, valor, estado, etc.)." },
+        { "title": "Mapeo de estados", "description": "Tus columnas de estado de Notion se alinean con las etapas del pipeline RefBoost." },
+        { "title": "Detección de duplicados", "description": "Sin riesgo de sobrescribir tus datos: detectamos los duplicados antes de cada escritura." }
+      ],
+      "steps": [
+        { "title": "Conecta Notion", "description": "Crea un token de integración interna de Notion y pégalo en RefBoost. Sin OAuth." },
+        { "title": "Configura el mapeo", "description": "Elige la base a sincronizar y mapea campos y estados en pocos clics." },
+        { "title": "Sincronizado", "description": "Push en tiempo real de los nuevos referidos, pull diario a las 21h para recuperar cambios hechos en Notion." }
+      ],
+      "faqs": [
+        { "q": "¿Hace falta una cuenta Notion de pago?", "a": "No, la integración funciona con una cuenta gratuita. Solo necesitas un token de integración interna (gratuito y se crea al instante)." },
+        { "q": "¿Se sobrescribirán mis datos de Notion?", "a": "No. RefBoost detecta los duplicados antes de cada escritura y propone fusionar en lugar de sobrescribir. Tú mantienes el control." },
+        { "q": "¿Con qué frecuencia se sincroniza?", "a": "Push en tiempo real para cualquier creación/edición en RefBoost. Pull completo una vez al día a las 21h para captar los cambios hechos directamente en Notion." },
+        { "q": "¿Puedo sincronizar varias bases de Notion?", "a": "Sí, el plan Business permite conectar varias bases (por ejemplo una de leads y otra de clientes)." }
+      ]
+    },
+    "hubspot": {
+      "name": "HubSpot",
+      "shortDescription": "Envía tus referidos a HubSpot Deals. Sincronización automática de contactos y deals.",
+      "heroSubtitle": "Conecta tu HubSpot CRM a RefBoost. Cada referido se convierte en un Deal de HubSpot, cada prospecto en un Contact, todo sincronizado en tiempo real.",
+      "features": [
+        { "title": "Sincronización de deals", "description": "Cada referido RefBoost se convierte en un Deal HubSpot en el pipeline que elijas." },
+        { "title": "Contactos automáticos", "description": "El prospecto aparece como Contact HubSpot con la información del socio en propiedades asociadas." },
+        { "title": "Estados mapeados", "description": "Tus etapas de Deal HubSpot se alinean con los estados RefBoost en ambos sentidos." },
+        { "title": "Detección de duplicados", "description": "Si el contacto ya existe en HubSpot, vinculamos el deal al contacto existente en lugar de crear uno nuevo." }
+      ],
+      "steps": [
+        { "title": "Conecta HubSpot", "description": "Haz clic en \"Conectar HubSpot\": OAuth seguro, sin claves API que copiar." },
+        { "title": "Configura el mapeo", "description": "Elige el pipeline HubSpot de destino y mapea las etapas a tus estados RefBoost." },
+        { "title": "Sincronización automática", "description": "Cada nuevo referido aparece al instante en HubSpot. Webhook bidireccional para las actualizaciones de estado." }
+      ],
+      "faqs": [
+        { "q": "¿Qué versión de HubSpot necesito?", "a": "HubSpot Starter o superior. La versión gratuita no da acceso a la API CRM necesaria para la integración." },
+        { "q": "¿Clave API u OAuth?", "a": "Solo OAuth, por seguridad. Sin claves API que manipular — la conexión se hace en dos clics y se revoca desde HubSpot cuando quieras." },
+        { "q": "¿Qué pasa con mis deals existentes?", "a": "Nada en HubSpot. Los nuevos referidos RefBoost crean nuevos deals; los contactos existentes se vinculan automáticamente." },
+        { "q": "¿Puedo pausar la sincronización sin desconectar HubSpot?", "a": "Sí, puedes pausar la integración desde Settings → Integraciones sin revocar los tokens." }
+      ]
+    },
+    "salesforce": {
+      "name": "Salesforce",
+      "shortDescription": "Conecta tus Opportunities de Salesforce. Importación/exportación de leads y estados en tiempo real.",
+      "heroSubtitle": "Conecta tu instancia de Salesforce a RefBoost. Sincronización de Opportunities, Contacts y Accounts con mapeo personalizado para objetos estándar y custom.",
+      "features": [
+        { "title": "Sincronización de Opportunities", "description": "Cada referido RefBoost se convierte en una Opportunity de Salesforce en la Stage que elijas." },
+        { "title": "Contacts y Accounts", "description": "El prospecto se crea como Contact vinculado a un Account, con asociación inteligente a Accounts existentes." },
+        { "title": "Estados de pipeline", "description": "Tus Stages de Salesforce se alinean con los estados RefBoost en ambos sentidos." },
+        { "title": "Custom objects", "description": "Mapea tus custom objects y campos de Salesforce a los datos RefBoost desde el editor de mapeo." }
+      ],
+      "steps": [
+        { "title": "Conecta Salesforce", "description": "OAuth con tu login Salesforce. Producción o Sandbox — RefBoost lo detecta automáticamente." },
+        { "title": "Mapea los objetos", "description": "Elige Opportunities o un custom object, mapea campos, record types y Stages." },
+        { "title": "Sincronización bidireccional", "description": "Push en tiempo real vía la API REST. Webhook Salesforce a RefBoost para actualizar las Stages." }
+      ],
+      "faqs": [
+        { "q": "¿Qué edición de Salesforce necesito?", "a": "Enterprise Edition o Professional con acceso API activado. Essentials y Group no incluyen la API REST." },
+        { "q": "¿Puedo usar custom objects?", "a": "Sí. El editor de mapeo permite elegir cualquier objeto (estándar o custom) como destino de sincronización." },
+        { "q": "¿Sandbox compatible?", "a": "Sí, puedes conectar primero una Sandbox para probar y luego pasar a Producción sin reconfigurar el mapeo." },
+        { "q": "¿Compatible con Salesforce Lightning y Classic?", "a": "Sí, la integración usa la API REST que funciona igual en ambas interfaces." }
+      ]
+    },
+    "qonto": {
+      "name": "Qonto",
+      "shortDescription": "Transferencias SEPA automatizadas. Paga a tus socios en un clic con validación SCA segura.",
+      "heroSubtitle": "Conecta tu cuenta pro Qonto a RefBoost y paga las comisiones de tus socios en un clic. Transferencias SEPA, validación SCA y comprobante de transferencia automatizado.",
+      "features": [
+        { "title": "Transferencias SEPA automatizadas", "description": "Un clic en \"Pagar\" lanza una transferencia SEPA desde tu cuenta Qonto, sin volver a teclear el IBAN." },
+        { "title": "Validación SCA segura", "description": "Conforme a PSD2: cada transferencia pasa por la autenticación reforzada en tu app Qonto antes de ejecutarse." },
+        { "title": "Pagos en lote", "description": "Selecciona hasta 400 comisiones y págalas todas en una sola acción." },
+        { "title": "Comprobante por email", "description": "El socio recibe un email automático con la referencia de la transferencia en cuanto Qonto la ejecuta." }
+      ],
+      "steps": [
+        { "title": "Conecta Qonto", "description": "OAuth oficial Qonto desde Settings → Integraciones. La conexión tarda 30 segundos." },
+        { "title": "Elige tu cuenta", "description": "Elige qué cuenta Qonto cargar (útil si tienes varias subcuentas)." },
+        { "title": "Paga en un clic", "description": "En cada comisión validada, el botón \"Pagar\" lanza la transferencia con validación SCA." }
+      ],
+      "faqs": [
+        { "q": "¿La validación SCA es obligatoria?", "a": "Sí, lo impone la directiva europea PSD2. RefBoost solo te recuerda validar en tu app Qonto, la operación en sí dura 5 segundos." },
+        { "q": "¿Cuántos pagos en lote son posibles?", "a": "Hasta 400 comisiones por lote. Por encima, el sistema los divide automáticamente en lotes sucesivos." },
+        { "q": "¿Hay comisiones RefBoost además de las de Qonto?", "a": "No, RefBoost no cobra ninguna comisión sobre las transferencias. Solo se aplican las comisiones SEPA habituales de tu cuenta Qonto (gratis dentro de la zona SEPA)." },
+        { "q": "¿Qué plan RefBoost necesito?", "a": "La integración Qonto está incluida en el plan Business. Los planes Starter y Pro ven la integración pero no pueden activarla." }
+      ]
+    },
+    "google-sso": {
+      "name": "Google SSO",
+      "shortDescription": "Conexión segura con Google para tu equipo y socios. Cero contraseñas que gestionar.",
+      "heroSubtitle": "Activado por defecto en todos los planes. Tus equipos y socios se conectan a RefBoost con su cuenta Google en un clic — cero contraseñas que gestionar, seguridad reforzada.",
+      "features": [
+        { "title": "Conexión sin contraseña", "description": "Un clic en \"Iniciar sesión con Google\" y el usuario está en su espacio RefBoost." },
+        { "title": "Multi-tenant", "description": "La misma cuenta Google puede acceder a varios espacios de socio si el usuario trabaja con varios programas." },
+        { "title": "Seguridad reforzada", "description": "Sin contraseña almacenada: las fugas de contraseñas dejan de ser un problema. 2FA heredado de Google." },
+        { "title": "Onboarding simplificado", "description": "Adiós a los olvidos de contraseña: un socio que se registra con Google puede volver para siempre, sin fricción." }
+      ],
+      "steps": [
+        { "title": "Activado por defecto", "description": "Sin configuración necesaria. El botón \"Iniciar sesión con Google\" aparece en todas las páginas de inicio de sesión RefBoost." },
+        { "title": "El socio hace clic", "description": "El socio elige \"Iniciar sesión con Google\" en la pantalla de login o registro." },
+        { "title": "Acceso instantáneo", "description": "El usuario llega a su espacio; las sesiones de Google y RefBoost se mantienen sincronizadas." }
+      ],
+      "faqs": [
+        { "q": "¿Es obligatorio Google SSO para mis usuarios?", "a": "No. La conexión email + contraseña sigue disponible. Los usuarios pueden elegir su método al registrarse." },
+        { "q": "¿Qué datos de Google se comparten con RefBoost?", "a": "Solo el nombre completo y la dirección de email. RefBoost no lee ni tus contactos, ni tus correos, ni tu Drive." },
+        { "q": "¿Pueden mis socios vincular su cuenta existente a Google?", "a": "Sí. Si un socio con cuenta email/contraseña inicia luego sesión con Google usando la misma dirección, los dos métodos se vinculan automáticamente." },
+        { "q": "¿Microsoft SSO u Okta están previstos?", "a": "Microsoft SSO está en la roadmap para 2026. Okta / SAML genérico están previstos para cuentas Enterprise — contáctanos si los necesitas." }
+      ]
+    }
   }
 }

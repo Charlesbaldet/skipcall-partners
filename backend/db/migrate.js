@@ -496,6 +496,30 @@ async function runMigrations() {
   await query(`CREATE INDEX IF NOT EXISTS idx_commissions_qonto_transfer ON commissions(qonto_transfer_id) WHERE qonto_transfer_id IS NOT NULL`);
   console.log('[payments] v22 Qonto integration tables ready');
 
+  // ─── v23: i18n content columns ───
+  // Per-language columns so marketplace listings (tenants), partner
+  // descriptions and blog articles can be served localized. The
+  // base column (short_description / title / content / excerpt /
+  // meta_description) stays the canonical FR copy and is the
+  // fallback whenever the target-language column is NULL/empty —
+  // see backend/middleware/i18n-lang.js + the localizedCol() helper
+  // in routes/blog.js. Idempotent ADD COLUMN IF NOT EXISTS.
+  // Mirrors backend/db/migrate_i18n_content.sql which can still be
+  // run by hand against an external Postgres if needed; running this
+  // block on Railway means new deploys self-heal.
+  for (const lang of ['en', 'es', 'de', 'it', 'nl', 'pt']) {
+    await query(`ALTER TABLE tenants     ADD COLUMN IF NOT EXISTS short_description_${lang} TEXT`);
+  }
+  await query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS description TEXT`);
+  for (const lang of ['en', 'es', 'de', 'it', 'nl', 'pt']) {
+    await query(`ALTER TABLE partners    ADD COLUMN IF NOT EXISTS description_${lang} TEXT`);
+    await query(`ALTER TABLE blog_posts  ADD COLUMN IF NOT EXISTS title_${lang} TEXT`);
+    await query(`ALTER TABLE blog_posts  ADD COLUMN IF NOT EXISTS content_${lang} TEXT`);
+    await query(`ALTER TABLE blog_posts  ADD COLUMN IF NOT EXISTS meta_description_${lang} TEXT`);
+    await query(`ALTER TABLE blog_posts  ADD COLUMN IF NOT EXISTS excerpt_${lang} TEXT`);
+  }
+  console.log('[i18n] v23 per-language content columns ready');
+
   console.log(' Migrations completed');
 
   } catch (err) {

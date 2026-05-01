@@ -1,7 +1,9 @@
 import { useParams, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import LandingLayout from '../../components/LandingLayout';
 import { INTEGRATIONS, getIntegration } from './integrationsData';
+import { ILLUSTRATION_BY_SLUG } from './IntegrationIllustrations.jsx';
 
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b' };
 const SITE = 'https://refboost.io';
@@ -18,7 +20,17 @@ function HeroLogo({ letter }) {
   );
 }
 
+// Helper: pull a translated array via returnObjects, with a safe
+// fallback to an empty array if the key is missing in the active
+// locale (avoids `.map of undefined` crashes during a partial
+// translation rollout).
+function tArr(t, key) {
+  const v = t(key, { returnObjects: true });
+  return Array.isArray(v) ? v : [];
+}
+
 export default function IntegrationDetailPage() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const integration = getIntegration(slug);
 
@@ -26,6 +38,9 @@ export default function IntegrationDetailPage() {
 
   const i = integration;
   const url = SITE + '/integrations/' + i.slug;
+  const tk = (k) => t(`integrations.${i.slug}.${k}`);
+  const Illustration = ILLUSTRATION_BY_SLUG[i.slug] || null;
+  const categoryLabel = t(`integrations.shared.categories.${i.category}`);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -60,14 +75,14 @@ export default function IntegrationDetailPage() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
-      {/* Breadcrumb */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px 0', fontSize: 13, color: C.m }}>
-        <a href="/integrations" style={{ color: C.m, textDecoration: 'none' }}>Intégrations</a>
+        <a href="/integrations" style={{ color: C.m, textDecoration: 'none' }}>
+          {t('integrations.shared.breadcrumb', 'Intégrations')}
+        </a>
         <span style={{ margin: '0 8px' }}>/</span>
-        <span style={{ color: C.s, fontWeight: 600 }}>{i.name}</span>
+        <span style={{ color: C.s, fontWeight: 600 }}>{tk('name')}</span>
       </div>
 
-      {/* Hero */}
       <div style={{
         background: 'linear-gradient(135deg, ' + C.s + ' 0%, #1e293b 100%)',
         padding: '60px 24px 64px', textAlign: 'center',
@@ -75,43 +90,42 @@ export default function IntegrationDetailPage() {
       }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <span style={{ display: 'inline-block', color: C.p, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
-            Intégration {i.categoryLabel}
+            {t('integrations.shared.hero_label', { category: categoryLabel, defaultValue: 'Intégration {{category}}' })}
           </span>
           <HeroLogo letter={i.logo.letter} />
           <h1 style={{ fontSize: 'clamp(28px,5vw,44px)', fontWeight: 900, color: '#fff', margin: '0 0 14px', lineHeight: 1.15 }}>
-            {i.name}
+            {tk('name')}
           </h1>
           <p style={{ color: '#94a3b8', fontSize: 17, margin: '0 auto 22px', lineHeight: 1.6, maxWidth: 620 }}>
-            {i.heroSubtitle}
+            {tk('heroSubtitle')}
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
-              Disponible
+              {t('integrations.shared.available')}
             </span>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: '#cbd5e1' }}>
-              {i.categoryLabel}
+              {categoryLabel}
             </span>
             {i.plan === 'business' && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(99,102,241,0.18)', color: '#a5b4fc' }}>
-                Plan Business
+                {t('integrations.shared.business_plan')}
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Features section */}
       <section style={{ padding: '64px 24px 32px', background: '#fff' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 800, color: C.s, margin: '0 0 32px', textAlign: 'center' }}>
-            Ce que vous pouvez faire
+            {t('integrations.shared.features_title', 'Ce que vous pouvez faire')}
           </h2>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             gap: 18,
           }}>
-            {i.features.map((f, idx) => (
+            {tArr(t, `integrations.${i.slug}.features`).map((f, idx) => (
               <div key={idx} style={{
                 padding: 22, borderRadius: 14,
                 background: '#f8fafc', border: '1px solid #e2e8f0',
@@ -131,15 +145,14 @@ export default function IntegrationDetailPage() {
         </div>
       </section>
 
-      {/* Steps section */}
       <section style={{ padding: '48px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 800, color: C.s, margin: '0 0 36px', textAlign: 'center' }}>
-            Comment ça marche
+            {t('integrations.shared.steps_title', 'Comment ça marche')}
           </h2>
           <div style={{ position: 'relative' }}>
-            {i.steps.map((step, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 18, marginBottom: idx === i.steps.length - 1 ? 0 : 24, position: 'relative' }}>
+            {tArr(t, `integrations.${i.slug}.steps`).map((step, idx, arr) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 18, marginBottom: idx === arr.length - 1 ? 0 : 24, position: 'relative' }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: '50%',
                   background: 'linear-gradient(135deg, ' + C.p + ', ' + C.pl + ')',
@@ -149,7 +162,7 @@ export default function IntegrationDetailPage() {
                 }}>
                   {idx + 1}
                 </div>
-                {idx !== i.steps.length - 1 && (
+                {idx !== arr.length - 1 && (
                   <div style={{
                     position: 'absolute', left: 19, top: 40,
                     width: 2, height: 'calc(100% - 24px)',
@@ -170,30 +183,32 @@ export default function IntegrationDetailPage() {
         </div>
       </section>
 
-      {/* Preview placeholder */}
       <section style={{ padding: '48px 24px', background: '#fafbfc' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 800, color: C.s, margin: '0 0 24px', textAlign: 'center' }}>
-            Aperçu
+            {t('integrations.shared.preview_title', 'Aperçu')}
           </h2>
           <div style={{
             borderRadius: 16, overflow: 'hidden',
             background: '#fff', border: '1px solid #e2e8f0',
-            padding: 80, textAlign: 'center', color: C.m, fontSize: 14,
+            padding: 24,
           }}>
-            Capture d'écran à venir.
+            {Illustration ? <Illustration height={300} /> : (
+              <div style={{ padding: 60, textAlign: 'center', color: C.m, fontSize: 14 }}>
+                {t('integrations.shared.preview_placeholder', "Capture d'écran à venir.")}
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
       <section style={{ padding: '48px 24px 64px', background: '#fafbfc' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <h2 style={{ fontSize: 28, fontWeight: 800, color: C.s, margin: '0 0 28px', textAlign: 'center' }}>
-            Questions fréquentes
+            {t('integrations.shared.faq_title', 'Questions fréquentes')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {i.faqs.map((faq, idx) => (
+            {tArr(t, `integrations.${i.slug}.faqs`).map((faq, idx) => (
               <details key={idx} style={{
                 background: '#fff', borderRadius: 12,
                 border: '1px solid #e2e8f0', padding: '14px 18px',
@@ -215,7 +230,6 @@ export default function IntegrationDetailPage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section style={{
         padding: '56px 24px',
         background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
@@ -223,10 +237,10 @@ export default function IntegrationDetailPage() {
       }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <h2 style={{ fontSize: 26, fontWeight: 800, color: C.s, margin: '0 0 12px' }}>
-            Prêt à connecter {i.name} ?
+            {t('integrations.shared.cta_title', { name: tk('name'), defaultValue: 'Prêt à connecter {{name}} ?' })}
           </h2>
           <p style={{ color: C.m, fontSize: 15, margin: '0 0 22px', lineHeight: 1.55 }}>
-            Créez votre compte RefBoost et activez l'intégration depuis Settings → Intégrations en moins de 5 minutes.
+            {t('integrations.shared.cta_subtitle', "Créez votre compte RefBoost et activez l'intégration depuis Settings → Intégrations en moins de 5 minutes.")}
           </p>
           <a
             href="/signup"
@@ -236,16 +250,15 @@ export default function IntegrationDetailPage() {
               fontWeight: 700, fontSize: 14,
             }}
           >
-            Commencer gratuitement →
+            {t('integrations.shared.cta_signup', 'Commencer gratuitement')} →
           </a>
         </div>
       </section>
 
-      {/* Cross-links */}
       <section style={{ padding: '56px 24px 80px', background: '#fafbfc' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: C.s, margin: '0 0 24px', textAlign: 'center' }}>
-            Autres intégrations
+            {t('integrations.shared.cross_links_title', 'Autres intégrations')}
           </h2>
           <div style={{
             display: 'grid',
@@ -273,8 +286,8 @@ export default function IntegrationDetailPage() {
                   fontWeight: 800, fontSize: 18, flexShrink: 0,
                 }}>{o.logo.letter}</div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: C.s }}>{o.name}</div>
-                  <div style={{ fontSize: 12, color: C.m }}>{o.categoryLabel}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: C.s }}>{t(`integrations.${o.slug}.name`)}</div>
+                  <div style={{ fontSize: 12, color: C.m }}>{t(`integrations.shared.categories.${o.category}`)}</div>
                 </div>
               </a>
             ))}
