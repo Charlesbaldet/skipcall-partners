@@ -1,5 +1,11 @@
 // Email notification service using Resend API
-// Set RESEND_API_KEY env variable on Railway to enable
+// Set RESEND_API_KEY + RESEND_FROM_EMAIL env variables on Railway.
+
+// Single source of truth for the From: header — must match a Resend
+// verified domain. Falls back to RefBoost's own verified address so
+// a missing env var doesn't silently send from skipcall.io (which
+// isn't verified and Resend hard-rejects with 403).
+const FROM_ADDRESS = process.env.RESEND_FROM_EMAIL || 'RefBoost <notifications@refboost.io>';
 
 async function sendEmail(to, subject, html) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -13,7 +19,7 @@ async function sendEmail(to, subject, html) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM || 'Skipcall <notifications@skipcall.io>',
+        from: FROM_ADDRESS,
         to: [to],
         subject,
         html,
