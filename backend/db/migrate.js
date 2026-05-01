@@ -520,6 +520,41 @@ async function runMigrations() {
   }
   console.log('[i18n] v23 per-language content columns ready');
 
+  // ─── v24: marketplace_settings (rich page content per tenant) ───
+  // One row per tenant carrying the WYSIWYG marketplace page content:
+  // hero copy, ideal-client tags, why-join bullets, condition cards,
+  // client references, additional info, plus the block ordering /
+  // visibility array. Existing tenant-level marketplace fields
+  // (sector, website, icp, short_description, marketplace_visible)
+  // stay on `tenants` so the /marketplace listing endpoint keeps
+  // working — this table only owns the rich page content.
+  await query(`
+    CREATE TABLE IF NOT EXISTS marketplace_settings (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      page_headline TEXT,
+      page_description TEXT,
+      ideal_client TEXT,
+      ideal_client_tags TEXT[] DEFAULT '{}',
+      why_join JSONB DEFAULT '[]',
+      commission_blocks JSONB DEFAULT '[]',
+      client_references JSONB DEFAULT '[]',
+      additional_info JSONB DEFAULT '[]',
+      page_blocks JSONB DEFAULT '["hero","tiers","conditions","about","ideal_client","why_join","references","additional_info","cta"]',
+      page_description_i18n JSONB DEFAULT '{}',
+      ideal_client_i18n JSONB DEFAULT '{}',
+      why_join_i18n JSONB DEFAULT '{}',
+      commission_blocks_i18n JSONB DEFAULT '{}',
+      client_references_i18n JSONB DEFAULT '{}',
+      additional_info_i18n JSONB DEFAULT '{}',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(tenant_id)
+    )
+  `);
+  await query(`CREATE INDEX IF NOT EXISTS idx_marketplace_settings_tenant ON marketplace_settings(tenant_id)`);
+  console.log('[marketplace] v24 page-content table ready');
+
   console.log(' Migrations completed');
 
   } catch (err) {
