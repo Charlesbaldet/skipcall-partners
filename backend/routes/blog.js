@@ -240,4 +240,104 @@ router.delete('/admin/posts/:id', authenticate, requireSuperAdmin, async (req, r
   }
 });
 
+// ─── Translation runner (fire-and-forget) ────────────────────────────
+// POST /api/blog/admin/translate-blog kicks off the same translation
+// flow the CLI script runs (FR → EN/ES/DE/IT/NL/PT). Returns 202
+// immediately; progress lands in Railway logs and via the status
+// endpoint below. Concurrency is gated by `_runningJob`.
+//
+// Why fire-and-forget: 26 posts × 6 langs × 4 fields ≈ 624 Anthropic
+// calls, throttled to one every 13s ≈ ~2h wall time. That's longer
+// than any reasonable HTTP timeout, so the request returns
+// immediately and the work continues in the Node process.
+const translateService = require('../services/translateContentService');
+
+let _runningJob = null;
+
+router.post('/admin/translate-blog', authenticate, requireSuperAdmin, async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'anthropic_key_missing', message: 'ANTHROPIC_API_KEY is not set on the server.' });
+  }
+  if (_runningJob) {
+    return res.status(409).json({
+      error: 'already_running',
+      startedAt: _runningJob.startedAt,
+      message: 'A translation job is already in progress. Check status at GET /api/blog/admin/translate-blog/status.',
+    });
+  }
+
+  // Accepts ?scope=blog (default) | tenants | partners | all so the
+  // admin can re-run a single section without redoing the others.
+  const scope = (req.query.scope || 'blog').toLowerCase();
+  const dryRun = req.query.dryRun === '1' || req.query.dry_run === '1';
+
+  _runningJob = {
+    startedAt: new Date().toISOString(),
+    scope,
+    dryRun,
+    progress: { table: null, done: 0, skipped: 0, failed: 0 },
+    finishedAt: null,
+    error: null,
+  };
+
+  // Kick off in the background. setImmediate so the 202 response goes
+  // out before we start hammering the Anthropic API.
+  setImmediate(async () => {
+    const log = (msg) => console.log(`[translate-blog] ${msg}`);
+    const onProgress = (p) => { _runningJob.progress = { ...p }; };
+    try {
+      log(`starting (scope=${scope}${dryRun ? ', dry-run' : ''})`);
+      if (scope === 'tenants' || scope === 'all') {
+        await translateService.translateTenants({ dryRun, log, onProgress });
+      }
+      if (scope === 'partners' || scope === 'all') {
+        await translateService.translatePartners({ dryRun, log, onProgress });
+      }
+      if (scope === 'blog' || scope === 'all') {
+        await translateService.translateBlogPosts({ dryRun, log, onProgress });
+      }
+      _runningJob.finishedAt = new Date().toISOString();
+      log(`done — ${JSON.stringify(_runningJob.progress)}`);
+    } catch (err) {
+      _runningJob.error = err.message;
+      _runningJob.finishedAt = new Date().toISOString();
+      log(`failed: ${err.message}`);
+    } finally {
+      // Keep the last job descriptor around so /status keeps reporting
+      // after the run finishes; cleared next time someone POSTs.
+      const finished = _runningJob;
+      _runningJob = null;
+      // Park the last-finished job on the module so /status surfaces it.
+      lastJob = finished;
+    }
+  });
+
+  res.status(202).json({
+    ok: true,
+    message: 'Translation started in the background. Watch Railway logs and poll /api/blog/admin/translate-blog/status.',
+    startedAt: _runningJob.startedAt,
+    scope,
+    dryRun,
+  });
+});
+
+let lastJob = null;
+
+// GET /api/blog/admin/translate-blog/status
+// Returns the running job (if any) + last-finished job, and a count
+// of (post × lang × field) cells still missing translations so the
+// admin sees genuine remaining work, not just job-runner state.
+router.get('/admin/translate-blog/status', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const progress = await translateService.blogPostsProgress();
+    res.json({
+      running: _runningJob,
+      lastJob,
+      blog_progress: progress,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
