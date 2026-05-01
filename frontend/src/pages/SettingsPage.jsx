@@ -1066,6 +1066,8 @@ function QontoSection() {
 
   const connected = !!status?.connected;
   const configured = !!status?.configured;
+  const plan = status?.plan || 'starter';
+  const planAllowed = plan === 'business' || plan === 'enterprise';
 
   return (
     <div>
@@ -1076,27 +1078,59 @@ function QontoSection() {
       {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{err}</div>}
       {successMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{successMsg}</div>}
 
-      <div style={{ padding: 18, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+      <div style={{
+        padding: 18, borderRadius: 12, border: '1px solid #e2e8f0',
+        background: planAllowed ? '#fff' : '#f8fafc',
+        opacity: planAllowed ? 1 : 0.85,
+        position: 'relative',
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff5d215', color: '#d4a015', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800 }}>Q</div>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{t('qonto.title', 'Qonto')}</div>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: planAllowed ? '#fff5d215' : '#e2e8f0',
+              color: planAllowed ? '#d4a015' : '#94a3b8',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14, fontWeight: 800,
+            }}>Q</div>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {t('qonto.title', 'Qonto')}
+              {!planAllowed && <Lock size={13} color="#94a3b8" aria-hidden="true" />}
+            </div>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: connected ? '#f0fdf4' : '#f1f5f9', color: connected ? '#059669' : '#64748b' }}>
-            {connected ? t('crm.connected') : t('crm.not_connected')}
-          </span>
+          {planAllowed ? (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: connected ? '#f0fdf4' : '#f1f5f9', color: connected ? '#059669' : '#64748b' }}>
+              {connected ? t('crm.connected') : t('crm.not_connected')}
+            </span>
+          ) : (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: '#eef2ff', color: '#4338ca' }}>
+              {t('pricing.business', 'Business')}
+            </span>
+          )}
         </div>
         <p style={{ margin: 0, color: '#64748b', fontSize: 12, lineHeight: 1.55, marginBottom: 12 }}>
           {t('qonto.description', 'Connectez votre compte Qonto pour payer les commissions automatiquement.')}
         </p>
 
-        {!configured && (
+        {!planAllowed ? (
+          <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', color: '#4338ca', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
+            {t('qonto.upgrade_required', 'Disponible avec le plan Business.')}
+          </div>
+        ) : !configured ? (
           <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 10 }}>
             {t('qonto.not_configured', 'QONTO_CLIENT_ID non configuré côté serveur.')}
           </div>
-        )}
+        ) : null}
 
-        {connected ? (
+        {!planAllowed ? (
+          <a href="/billing" style={{
+            ...btnPrimary,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            textDecoration: 'none',
+          }}>
+            {t('qonto.upgrade_button', 'Passer au plan Business')} →
+          </a>
+        ) : connected ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {status.organization_slug && (
               <div style={{ fontSize: 12, color: '#64748b' }}>

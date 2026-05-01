@@ -46,10 +46,31 @@ function verifyState(state) {
   catch { return null; }
 }
 
+// ─── Plan gate ───────────────────────────────────────────────────────
+// Qonto banking is a Business-plan feature. Mirrors crm.js
+// requireBusiness: 403 plan_upgrade_required for everyone else.
+// Intentionally NOT applied to /status (frontend needs to render the
+// locked card with the upgrade prompt) or /callback (unauthenticated
+// OAuth bounce).
+async function requireBusiness(req, res, next) {
+  if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+  try {
+    const { rows } = await query('SELECT plan FROM tenants WHERE id = $1', [req.tenantId]);
+    const plan = rows[0]?.plan || 'starter';
+    if (plan !== 'business') {
+      return res.status(403).json({ error: 'plan_upgrade_required', currentPlan: plan, requiredPlan: 'business' });
+    }
+    next();
+  } catch (err) {
+    console.error('[qonto.requireBusiness] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+}
+
 // ─── GET /api/integrations/qonto/connect ─────────────────────────────
 // Returns the URL for the admin's browser to redirect to. Carries the
 // tenantId in `state` so /callback knows who to bind tokens to.
-router.get('/connect', authenticate, tenantScope, authorize('admin'), (req, res) => {
+router.get('/connect', authenticate, tenantScope, authorize('admin'), requireBusiness, (req, res) => {
   if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
   if (!process.env.QONTO_CLIENT_ID) {
     return res.status(500).json({ error: 'qonto_not_configured' });
@@ -126,19 +147,26 @@ router.get('/callback', async (req, res) => {
 // ─── GET /api/integrations/qonto/status ──────────────────────────────
 router.get('/status', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
-    const { rows } = await query(
-      `SELECT is_active, organization_slug, bank_account_id, bank_account_iban,
-              bank_account_label, connected_at,
-              (refresh_token IS NOT NULL) AS has_refresh_token
-         FROM payment_integrations
-        WHERE tenant_id = $1 AND provider = 'qonto'`,
-      [req.tenantId]
-    );
-    const integ = rows[0];
+    const [integRows, planRows] = await Promise.all([
+      query(
+        `SELECT is_active, organization_slug, bank_account_id, bank_account_iban,
+                bank_account_label, connected_at,
+                (refresh_token IS NOT NULL) AS has_refresh_token
+           FROM payment_integrations
+          WHERE tenant_id = $1 AND provider = 'qonto'`,
+        [req.tenantId]
+      ),
+      query('SELECT plan FROM tenants WHERE id = $1', [req.tenantId]),
+    ]);
+    const integ = integRows.rows[0];
+    const plan = planRows.rows[0]?.plan || 'starter';
+    // Surface plan so the UI can render the locked card + upgrade
+    // prompt without a second round-trip to /billing.
     if (!integ) {
       return res.json({
         connected: false,
         configured: !!process.env.QONTO_CLIENT_ID,
+        plan,
       });
     }
     res.json({
@@ -149,6 +177,7 @@ router.get('/status', authenticate, tenantScope, authorize('admin'), async (req,
       bank_account_iban: integ.bank_account_iban,
       bank_account_label: integ.bank_account_label,
       connected_at: integ.connected_at,
+      plan,
     });
   } catch (err) {
     console.error('[qonto.status] error:', err);

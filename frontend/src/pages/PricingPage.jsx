@@ -41,7 +41,7 @@ const PLANS = [
     cta: 'cta_business',
     href: '/signup?plan=business',
     variant: 'outline',
-    features: ['feat_everything_pro', 'feat_api', 'feat_branding', 'feat_dedicated_support', 'feat_crm_soon', 'feat_unlimited_programs'],
+    features: ['feat_everything_pro', 'feat_api', 'feat_branding', 'feat_dedicated_support', 'feat_crm', 'feat_qonto', 'feat_unlimited_programs'],
   },
 ];
 
@@ -81,7 +81,8 @@ const TABLE = [
   ]},
   { cat: 'cat_integrations', rows: [
     { label: 'row_stripe', values: { starter: true, pro: true, business: true } },
-    { label: 'row_crm', values: { starter: false, pro: true, business: true } },
+    { label: 'row_crm', values: { starter: false, pro: false, business: true } },
+    { label: 'row_qonto', values: { starter: false, pro: false, business: true } },
     { label: 'row_webhooks', values: { starter: false, pro: false, business: true } },
   ]},
   { cat: 'cat_support', rows: [

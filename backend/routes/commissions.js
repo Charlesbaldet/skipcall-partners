@@ -559,6 +559,29 @@ router.get('/:id/invoice', async (req, res) => {
 // ─── Qonto payment helpers ─────────────────────────────────────────
 // Pulled into their own block so the route handlers stay readable.
 const qonto = require('../services/qontoService');
+
+// ─── Plan gate (Qonto pay routes) ──────────────────────────────────
+// Qonto banking is a Business-plan feature — mirrors crm.js +
+// routes/qonto.js. /pay-qonto + /pay-bulk reject anyone below
+// Business with 403 plan_upgrade_required. The other Qonto-flavoured
+// commission routes (/poll-qonto, /:id/confirm-sca, /:id/reset-payment)
+// are intentionally NOT gated: they're recovery actions on rows that
+// were already initiated under the right plan, and we don't want a
+// downgraded tenant to be unable to clean up an in-flight transfer.
+async function requireBusinessPlan(req, res, next) {
+  if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+  try {
+    const { rows } = await query('SELECT plan FROM tenants WHERE id = $1', [req.tenantId]);
+    const plan = rows[0]?.plan || 'starter';
+    if (plan !== 'business') {
+      return res.status(403).json({ error: 'plan_upgrade_required', currentPlan: plan, requiredPlan: 'business' });
+    }
+    next();
+  } catch (err) {
+    console.error('[commissions.requireBusinessPlan] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+}
 const emailTemplates = require('../utils/emailTemplates');
 
 async function loadPaymentIntegration(tenantId) {
@@ -636,7 +659,7 @@ async function loadCommissionForPayment(commissionId, tenantId) {
 }
 
 // ─── POST /commissions/:id/pay-qonto ───────────────────────────────
-router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
+router.post('/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (req, res) => {
   try {
     if (!req.tenantId && !req.skipTenantFilter) return res.status(400).json({ error: 'Tenant introuvable' });
 
@@ -864,7 +887,7 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
 // path (we hit a clean 428 SCA challenge there). Same per-commission
 // state writes as /pay-qonto, just batched. Returns the per-commission
 // outcomes so the UI can render success / failure / skipped cleanly.
-router.post('/pay-bulk', authorize('admin'), async (req, res) => {
+router.post('/pay-bulk', authorize('admin'), requireBusinessPlan, async (req, res) => {
   try {
     const ids = Array.isArray(req.body?.commission_ids) ? req.body.commission_ids : [];
     if (!ids.length) return res.status(400).json({ error: 'commission_ids requis' });
