@@ -2077,6 +2077,7 @@
     "toast_sca_initiated": "Transfer approved — Qonto is processing it.",
     "toast_sca_expired": "SCA approval window expired (15 min). Please re-run the payment.",
     "toast_sca_still_pending": "The transfer is still waiting for your approval in Qonto.",
+    "toast_sca_not_found": "Approval did not go through. Click Pay to start the transfer again.",
     "toast_auto_poll_paid": "Transfer confirmed!",
     "toast_auto_poll_progress": "Qonto status updated.",
     "confirm_title": "Confirm payment",

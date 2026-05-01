@@ -585,6 +585,7 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     if (!c.iban) return res.status(400).json({ error: 'partner_iban_missing' });
     const amount = parseFloat(c.amount) || 0;
     if (amount <= 0) return res.status(400).json({ error: 'amount_zero' });
+    console.log(`[pay-qonto] Starting payment for commission ${c.id} (amount: ${amount}€)`);
 
     // Upload the partner's invoice to Qonto so the transfer carries it
     // as an attachment. Best-effort: if the upload fails (403 missing
@@ -632,6 +633,7 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     // BEFORE the API call — we want the key on disk even if the
     // process crashes mid-request.
     let idempotencyKey = c.qonto_idempotency_key;
+    const isFreshKey = !idempotencyKey;
     if (!idempotencyKey) {
       idempotencyKey = qonto.newIdempotencyKey();
       await query(
@@ -639,6 +641,8 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
         [c.id, idempotencyKey]
       );
     }
+    console.log(`[pay-qonto] Sending to Qonto with idempotency key ${idempotencyKey.slice(0, 8)}…${isFreshKey ? ' (fresh)' : ' (reused)'}`);
+
 
     const result = await qonto.createSingleTransfer(req.tenantId, {
       commissionId: c.id,
@@ -659,7 +663,7 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
 
     const transfer = result.transfer || {};
     if (result.requires_sca) {
-      console.log(`[pay-qonto] SCA required for commission ${c.id}`, {
+      console.log(`[pay-qonto] Got 428 SCA required for commission ${c.id} — sca_token saved, waiting for user approval`, {
         has_sca_token: !!result.sca_session_token,
         has_request_body: !!result.request_body,
         has_idempotency_key: !!result.idempotency_key,
@@ -1173,8 +1177,14 @@ async function reconcileQontoTransfers(tenantId) {
             [c.id, transfer.id || null]
           );
           updates.push({ commission_id: c.id, transfer_id: transfer.id, status: 'initiated_after_sca' });
-        } else if (result.expired) {
-          // SCA token aged out (15 min). Reset for manual retry.
+        } else if (result.expired || result.not_found) {
+          // 412 (token aged out, 15 min) or 422 (Qonto can't find
+          // the SCA session anymore — usually means the admin
+          // rejected on their phone or the session was invalidated
+          // server-side). In both cases retrying just keeps
+          // failing; full reset to pending_validation so the admin
+          // can hit Payer from a clean slate.
+          console.log(`[qonto.reconcile] SCA session ${result.expired ? 'expired (412)' : 'invalid (422)'} for commission ${c.id}, resetting`);
           await query(
             `UPDATE commissions
                 SET qonto_sca_session_token = NULL,
@@ -1187,7 +1197,7 @@ async function reconcileQontoTransfers(tenantId) {
               WHERE id = $1`,
             [c.id]
           );
-          updates.push({ commission_id: c.id, status: 'sca_token_expired' });
+          updates.push({ commission_id: c.id, status: result.expired ? 'sca_token_expired' : 'sca_session_not_found' });
         } else {
           // Still 428 — admin hasn't approved on their phone yet.
           // Refresh the SCA token if Qonto rotated it.
@@ -1230,7 +1240,7 @@ router.post('/poll-qonto', authorize('admin'), async (req, res) => {
 // new header." We persist the exact original body in
 // qonto_request_body to satisfy that requirement.
 router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
-  console.log(`[confirm-sca] Starting for commission ${req.params.id}`);
+  console.log(`[confirm-sca] User clicked "J'ai déjà approuvé" for commission ${req.params.id}`);
   try {
     let where = 'id = $1';
     const params = [req.params.id];
@@ -1264,6 +1274,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       return res.status(400).json({ error: 'no_pending_sca', message: 'Aucun virement en attente de validation SCA pour cette commission.' });
     }
 
+    console.log(`[confirm-sca] Replaying with sca_token ${String(c.qonto_sca_session_token).slice(0, 8)}… and idempotency key ${String(c.qonto_idempotency_key).slice(0, 8)}…`);
     const result = await qonto.replayTransfer(c.tenant_id, {
       body: c.qonto_request_body,
       idempotencyKey: c.qonto_idempotency_key,
@@ -1309,6 +1320,31 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
         ok: true,
         transfer_id: transfer.id || null,
         status: transfer.status || 'processing',
+      });
+    }
+
+    if (result.not_found) {
+      console.log(`[confirm-sca] SCA session not found on Qonto (422) for ${c.id} — resetting for fresh retry`);
+      // Qonto rejected the SCA — usually the admin tapped "un
+      // problème est survenu" on their phone, or the session got
+      // invalidated server-side. Wipe everything so the next Payer
+      // click runs a clean POST + a fresh challenge.
+      await query(
+        `UPDATE commissions
+            SET qonto_sca_session_token = NULL,
+                qonto_request_body = NULL,
+                qonto_idempotency_key = NULL,
+                payment_initiated_at = NULL,
+                qonto_retry_count = 0,
+                payment_error = NULL,
+                status = 'pending_validation'
+          WHERE id = $1`,
+        [c.id]
+      );
+      return res.json({
+        ok: false,
+        not_found: true,
+        message: 'La validation SCA a échoué ou a expiré côté Qonto. Cliquez sur Payer pour relancer le virement.',
       });
     }
 

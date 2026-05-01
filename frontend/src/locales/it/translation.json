@@ -2077,6 +2077,7 @@
     "toast_sca_initiated": "Bonifico convalidato — Qonto sta elaborando.",
     "toast_sca_expired": "Il termine di convalida SCA è scaduto (15 min). Riavvia il pagamento.",
     "toast_sca_still_pending": "Il bonifico è ancora in attesa della tua convalida su Qonto.",
+    "toast_sca_not_found": "La convalida non è andata a buon fine. Clicca su Paga per riavviare il bonifico.",
     "toast_auto_poll_paid": "Bonifico confermato!",
     "toast_auto_poll_progress": "Stato Qonto aggiornato.",
     "confirm_title": "Conferma il pagamento",

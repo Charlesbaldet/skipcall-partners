@@ -491,6 +491,12 @@ export default function CommissionsPage() {
         showToast(t('qonto.toast_sca_initiated', 'Virement validé — Qonto traite la demande.'), 'success');
       } else if (r.expired) {
         showToast(t('qonto.toast_sca_expired', 'Le délai de validation SCA a expiré (15 min). Veuillez relancer le paiement.'), 'error');
+      } else if (r.not_found) {
+        // Qonto rejected the SCA approval (admin tapped "un
+        // problème est survenu" on their phone, or the session was
+        // invalidated server-side). Backend already reset the row
+        // to pending_validation; reload pulls the Payer button back.
+        showToast(t('qonto.toast_sca_not_found', 'La validation n\'a pas abouti. Cliquez sur Payer pour relancer le virement.'), 'warning');
       } else if (r.sca_still_pending) {
         showToast(t('qonto.toast_sca_still_pending', 'Le virement attend toujours votre validation dans Qonto.'), 'info');
       } else {
@@ -1008,20 +1014,28 @@ export default function CommissionsPage() {
         />
       )}
 
-      {toast && (
-        <div role="status" style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 2000,
-          padding: '14px 18px', borderRadius: 12,
-          background: toast.type === 'error' ? '#fef2f2' : toast.type === 'info' ? '#f0f9ff' : '#f0fdf4',
-          color:      toast.type === 'error' ? '#b91c1c' : toast.type === 'info' ? '#075985' : '#166534',
-          border: `1px solid ${toast.type === 'error' ? '#fecaca' : toast.type === 'info' ? '#bae6fd' : '#bbf7d0'}`,
-          fontSize: 13, fontWeight: 600,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          maxWidth: 420,
-        }}>
-          {toast.text}
-        </div>
-      )}
+      {toast && (() => {
+        const palette = toast.type === 'error'
+          ? { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' }
+          : toast.type === 'info'
+            ? { bg: '#f0f9ff', color: '#075985', border: '#bae6fd' }
+            : toast.type === 'warning'
+              ? { bg: '#fffbeb', color: '#92400e', border: '#fde68a' }
+              : { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' };
+        return (
+          <div role="status" style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 2000,
+            padding: '14px 18px', borderRadius: 12,
+            background: palette.bg, color: palette.color,
+            border: `1px solid ${palette.border}`,
+            fontSize: 13, fontWeight: 600,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+            maxWidth: 420,
+          }}>
+            {toast.text}
+          </div>
+        );
+      })()}
     </div>
   );
 }

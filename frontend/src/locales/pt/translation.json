@@ -2077,6 +2077,7 @@
     "toast_sca_initiated": "Transferência validada — O Qonto está a processar.",
     "toast_sca_expired": "Prazo de validação SCA expirou (15 min). Reinicie o pagamento.",
     "toast_sca_still_pending": "A transferência ainda aguarda a tua aprovação no Qonto.",
+    "toast_sca_not_found": "A aprovação não foi concluída. Clica em Pagar para reiniciar a transferência.",
     "toast_auto_poll_paid": "Transferência confirmada!",
     "toast_auto_poll_progress": "Estado Qonto atualizado.",
     "confirm_title": "Confirmar o pagamento",

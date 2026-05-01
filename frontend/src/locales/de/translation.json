@@ -2077,6 +2077,7 @@
     "toast_sca_initiated": "Überweisung bestätigt — Qonto verarbeitet sie.",
     "toast_sca_expired": "SCA-Bestätigungszeitraum abgelaufen (15 Min). Bitte Zahlung neu starten.",
     "toast_sca_still_pending": "Die Überweisung wartet noch auf deine Bestätigung in Qonto.",
+    "toast_sca_not_found": "Die Bestätigung ist fehlgeschlagen. Klicke auf Bezahlen, um die Überweisung neu zu starten.",
     "toast_auto_poll_paid": "Überweisung bestätigt!",
     "toast_auto_poll_progress": "Qonto-Status aktualisiert.",
     "confirm_title": "Zahlung bestätigen",

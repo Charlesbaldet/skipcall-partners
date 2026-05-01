@@ -377,6 +377,11 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken 
     };
   } catch (err) {
     if (err.status === 412) return { ok: false, expired: true };
+    // 422 "Not found" / "session invalid" — Qonto either lost the
+    // SCA session or the admin's approval got rejected on their
+    // phone ("un problème est survenu"). Surface as not_found so
+    // the caller can reset the row instead of crashing.
+    if (err.status === 422) return { ok: false, not_found: true };
     // Still pending — admin hasn't approved yet. Treat like the
     // initial 428 so the caller can leave the row alone.
     const sca = parseScaChallenge(err);

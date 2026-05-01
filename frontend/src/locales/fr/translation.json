@@ -2077,6 +2077,7 @@
     "toast_sca_initiated": "Virement validé — Qonto traite la demande.",
     "toast_sca_expired": "Le délai de validation SCA a expiré (15 min). Veuillez relancer le paiement.",
     "toast_sca_still_pending": "Le virement attend toujours votre validation dans Qonto.",
+    "toast_sca_not_found": "La validation n'a pas abouti. Cliquez sur Payer pour relancer le virement.",
     "toast_auto_poll_paid": "Virement confirmé !",
     "toast_auto_poll_progress": "Statut Qonto mis à jour.",
     "confirm_title": "Confirmer le paiement",
