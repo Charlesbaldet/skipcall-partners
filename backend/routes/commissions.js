@@ -582,6 +582,26 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     if (c.status !== 'pending_validation') {
       return res.status(409).json({ error: 'commission_not_payable', status: c.status });
     }
+    // Refuse to start a SECOND transfer when one is already in
+    // flight — without this guard, a Pay click on a row that has
+    // qonto_transfer_id (initiated successfully) or
+    // qonto_sca_session_token (waiting on SCA approval) would mint
+    // a fresh idempotency key and create a duplicate transfer. The
+    // SCA-pending state has its own action ("J'ai déjà approuvé")
+    // routing through /confirm-sca.
+    if (c.qonto_transfer_id) {
+      return res.status(409).json({
+        error: 'transfer_already_initiated',
+        transfer_id: c.qonto_transfer_id,
+        message: 'Un virement est déjà en cours pour cette commission.',
+      });
+    }
+    if (c.qonto_sca_session_token) {
+      return res.status(409).json({
+        error: 'sca_pending',
+        message: 'Validez la SCA dans Qonto puis cliquez sur "J\'ai déjà approuvé".',
+      });
+    }
     if (!c.iban) return res.status(400).json({ error: 'partner_iban_missing' });
     const amount = parseFloat(c.amount) || 0;
     if (amount <= 0) return res.status(400).json({ error: 'amount_zero' });
@@ -632,16 +652,18 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     // of double-paying). Otherwise generate one and persist it
     // BEFORE the API call — we want the key on disk even if the
     // process crashes mid-request.
-    let idempotencyKey = c.qonto_idempotency_key;
-    const isFreshKey = !idempotencyKey;
-    if (!idempotencyKey) {
-      idempotencyKey = qonto.newIdempotencyKey();
-      await query(
-        'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
-        [c.id, idempotencyKey]
-      );
-    }
-    console.log(`[pay-qonto] Sending to Qonto with idempotency key ${idempotencyKey.slice(0, 8)}…${isFreshKey ? ' (fresh)' : ' (reused)'}`);
+    // Initial attempt = always a fresh idempotency key. The in-flight
+    // guards above ensure we only reach this block on a clean row
+    // (no transfer_id, no sca token), so reusing a stale key from a
+    // prior aborted attempt would never be the right move. The
+    // /confirm-sca and reconcile.sca paths reuse the saved key
+    // because that's what Qonto's replay protocol requires.
+    const idempotencyKey = qonto.newIdempotencyKey();
+    await query(
+      'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
+      [c.id, idempotencyKey]
+    );
+    console.log(`[pay-qonto] Sending to Qonto with idempotency key ${idempotencyKey.slice(0, 8)}… (fresh)`);
 
 
     const result = await qonto.createSingleTransfer(req.tenantId, {
@@ -736,19 +758,24 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
   if (c.status !== 'pending_validation') {
     return { ok: false, code: 'commission_not_payable' };
   }
+  // Same in-flight guards as /pay-qonto: never start a second
+  // transfer when one is already pending on Qonto's side. Bulk
+  // skips these rows in the response (they show up under failed/
+  // skipped) instead of double-paying.
+  if (c.qonto_transfer_id) return { ok: false, code: 'transfer_already_initiated' };
+  if (c.qonto_sca_session_token) return { ok: false, code: 'sca_pending' };
   if (!c.iban) return { ok: false, code: 'partner_iban_missing' };
   const amount = parseFloat(c.amount) || 0;
   if (amount <= 0) return { ok: false, code: 'amount_zero' };
 
-  // Reuse a stored idempotency key on retry; mint + persist if absent.
-  let idempotencyKey = c.qonto_idempotency_key;
-  if (!idempotencyKey) {
-    idempotencyKey = qonto.newIdempotencyKey();
-    await query(
-      'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
-      [c.id, idempotencyKey]
-    );
-  }
+  // Initial attempt = fresh idempotency key. Replay paths
+  // (/confirm-sca, reconcileQontoTransfers SCA branch) read the
+  // stored key + saved body — they're handled elsewhere.
+  const idempotencyKey = qonto.newIdempotencyKey();
+  await query(
+    'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
+    [c.id, idempotencyKey]
+  );
 
   let beneficiary = null;
   try { beneficiary = await qonto.findBeneficiaryByIban(tenantId, c.iban); }
@@ -766,21 +793,26 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
       beneficiaryId: beneficiary?.id || null,
       attachmentIds: [], // attachments deliberately omitted for now
       idempotencyKey,
-      scaSessionToken: c.qonto_sca_session_token || undefined,
+      // No SCA token on initial attempt — guard above ensures we
+      // only reach this on a clean row. Replay path lives elsewhere.
     });
     const transfer = result.transfer || {};
+    // Persist the SCA scratch state when 428 came back so the
+    // /confirm-sca replay can find an exact-byte body to re-POST.
     await query(
       `UPDATE commissions
           SET qonto_transfer_id = $2,
               qonto_sca_session_token = $3,
+              qonto_request_body = $4,
               payment_initiated_at = NOW(),
-              payment_reference = $4,
+              payment_reference = $5,
               payment_error = NULL
         WHERE id = $1`,
       [
         c.id,
         transfer.id || null,
-        result.requires_sca ? (result.sca_session_token || c.qonto_sca_session_token || null) : null,
+        result.requires_sca ? (result.sca_session_token || null) : null,
+        result.requires_sca ? JSON.stringify(result.request_body || null) : null,
         result.reference,
       ]
     );

@@ -362,28 +362,38 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken 
   if (!body || !idempotencyKey || !scaSessionToken) {
     throw new Error('replay_missing_args');
   }
+  // The body must be sent byte-identical to the original POST so
+  // Qonto's hash matches. Tolerate both shapes the column might
+  // arrive in:
+  //   * JS object (JSONB column read → node-postgres returns parsed)
+  //   * pre-serialized JSON string (legacy callers / TEXT column)
+  // Stringifying an already-stringified value would double-encode
+  // ("\"{\\\"transfer\\\":…}\"") and Qonto would reject the body.
+  const bodyString = typeof body === 'string' ? body : JSON.stringify(body);
   try {
     const data = await api(tenantId, '/sepa/transfers', {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'X-Qonto-Idempotency-Key': idempotencyKey,
         'X-Qonto-Sca-Session-Token': scaSessionToken,
       },
-      body: JSON.stringify(body),
+      body: bodyString,
     });
     return {
       ok: true,
       transfer: data?.transfer || data,
     };
   } catch (err) {
+    // 412 Precondition Failed — SCA session aged out (15 min limit).
     if (err.status === 412) return { ok: false, expired: true };
-    // 422 "Not found" / "session invalid" — Qonto either lost the
-    // SCA session or the admin's approval got rejected on their
-    // phone ("un problème est survenu"). Surface as not_found so
-    // the caller can reset the row instead of crashing.
+    // 422 Unprocessable — Qonto either lost the SCA session or the
+    // admin's approval got rejected on their phone ("un problème
+    // est survenu"). Surface as not_found so the caller can reset
+    // the row instead of crashing on the generic throw.
     if (err.status === 422) return { ok: false, not_found: true };
-    // Still pending — admin hasn't approved yet. Treat like the
-    // initial 428 so the caller can leave the row alone.
+    // 428 Precondition Required — admin hasn't approved on their
+    // phone yet. Refresh the SCA token in case Qonto rotated it.
     const sca = parseScaChallenge(err);
     if (sca) return { ok: false, sca_still_pending: true, sca_session_token: sca.sca_session_token };
     throw err;
@@ -436,7 +446,10 @@ async function createBulkTransfer(tenantId, {
 
   const key = idempotencyKey || newIdempotencyKey();
   const headers = { 'X-Qonto-Idempotency-Key': key };
-  if (scaSessionToken) headers['X-Qonto-SCA-Session-Token'] = scaSessionToken;
+  // Qonto's documented header is X-Qonto-Sca-Session-Token (title
+  // case). HTTP makes header names case-insensitive in theory but
+  // some intermediaries are picky — match the docs verbatim.
+  if (scaSessionToken) headers['X-Qonto-Sca-Session-Token'] = scaSessionToken;
 
   console.log('[qonto.bulk] Request body:', JSON.stringify(body, null, 2));
 
