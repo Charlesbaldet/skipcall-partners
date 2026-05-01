@@ -380,7 +380,11 @@ async function createSingleTransfer(tenantId, {
 //     vop_proof_token }                                    — still 428 (admin hasn't approved yet)
 //   throws otherwise
 async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken, vopToken }) {
-  if (!body || !idempotencyKey || !scaSessionToken) {
+  // body + idempotencyKey are mandatory. scaSessionToken is optional —
+  // /confirm-sca tolerates a null token (typical after a partial reset
+  // by the reconcile worker on 412/422) and posts without the header
+  // so Qonto either reuses the saved approval or returns a fresh 428.
+  if (!body || !idempotencyKey) {
     throw new Error('replay_missing_args');
   }
   // Normalize to a JS object first, then stringify once. Tolerates
@@ -402,8 +406,10 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken,
   const headers = {
     'Content-Type': 'application/json',
     'X-Qonto-Idempotency-Key': idempotencyKey,
-    'X-Qonto-Sca-Session-Token': scaSessionToken,
   };
+  if (scaSessionToken) {
+    headers['X-Qonto-Sca-Session-Token'] = scaSessionToken;
+  }
   // Newer Qonto API versions require the VOP (Verification of Payee)
   // proof token in this header on the replay; without it the replay
   // 401s with vop_proof_token_missing (handled below). The token is

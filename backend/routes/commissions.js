@@ -1163,27 +1163,26 @@ async function reconcileQontoTransfers(tenantId) {
           );
           updates.push({ commission_id: c.id, transfer_id: transfer.id, status: 'initiated_after_sca' });
         } else if (result.expired || result.not_found) {
-          // 412 (token aged out, 15 min) or 422 (Qonto can't find
-          // the SCA session anymore — usually means the admin
-          // rejected on their phone or the session was invalidated
-          // server-side). In both cases retrying just keeps
-          // failing; full reset to pending_validation so the admin
-          // can hit Payer from a clean slate.
-          console.log(`[qonto.reconcile] SCA session ${result.expired ? 'expired (412)' : 'invalid (422)'} for commission ${c.id}, resetting`);
+          // Partial reset: clear only the expired SCA + VOP tokens.
+          // We KEEP qonto_request_body + qonto_idempotency_key + the
+          // pending_validation status + payment_initiated_at so that
+          // /confirm-sca ("J'ai déjà approuvé") can still attempt a
+          // header-less replay with the saved body — Qonto either
+          // honours an already-approved challenge or answers with a
+          // fresh 428 we re-save.
+          console.log(`[qonto.reconcile] SCA session ${result.expired ? 'expired (412)' : 'invalid (422/401)'} for commission ${c.id}, partial reset`);
           await query(
             `UPDATE commissions
                 SET qonto_sca_session_token = NULL,
                     qonto_vop_proof_token = NULL,
-                    qonto_request_body = NULL,
-                    qonto_idempotency_key = NULL,
-                    payment_initiated_at = NULL,
-                    qonto_retry_count = 0,
-                    status = 'pending_validation',
                     payment_error = NULL
               WHERE id = $1`,
             [c.id]
           );
-          updates.push({ commission_id: c.id, status: result.expired ? 'sca_token_expired' : 'sca_session_not_found' });
+          updates.push({
+            commission_id: c.id,
+            status: result.expired ? 'sca_token_expired' : 'sca_session_not_found',
+          });
         } else {
           // Still 428 — admin hasn't approved on their phone yet.
           // Refresh SCA + VOP tokens if Qonto rotated either.
@@ -1263,12 +1262,20 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       has_idempotency_key: !!c.qonto_idempotency_key,
       payment_initiated_at: c.payment_initiated_at,
     });
-    if (!c.qonto_sca_session_token || !c.qonto_request_body || !c.qonto_idempotency_key) {
+    if (!c.qonto_request_body || !c.qonto_idempotency_key) {
       console.log(`[confirm-sca] Missing SCA data for ${c.id} — cannot replay`);
       return res.status(400).json({ error: 'no_pending_sca', message: 'Aucun virement en attente de validation SCA pour cette commission.' });
     }
+    // sca_session_token may be null after a partial reset by the
+    // reconcile worker (412/422). The user clicked "J'ai déjà
+    // approuvé", so we attempt the replay anyway — Qonto either
+    // honours the still-valid approval or answers with a fresh 428
+    // we re-save below.
+    if (!c.qonto_sca_session_token) {
+      console.log(`[confirm-sca] sca_session_token is missing but user clicked "J'ai déjà approuvé" — attempting replay anyway`);
+    }
 
-    console.log(`[confirm-sca] Replaying with sca_token ${String(c.qonto_sca_session_token).slice(0, 8)}…`);
+    console.log(`[confirm-sca] Replaying with sca_token ${c.qonto_sca_session_token ? String(c.qonto_sca_session_token).slice(0, 8) + '…' : '(none)'}`);
 
     const result = await qonto.replayTransfer(c.tenant_id, {
       body: c.qonto_request_body,           // replayTransfer gère string ou objet
