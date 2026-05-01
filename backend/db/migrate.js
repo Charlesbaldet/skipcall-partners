@@ -559,6 +559,50 @@ async function runMigrations() {
   await query(`ALTER TABLE marketplace_settings ADD COLUMN IF NOT EXISTS ideal_client_tags_i18n JSONB DEFAULT '{}'`);
   console.log('[marketplace] v24 page-content table ready');
 
+  // v26: notification_preferences — promoted from a manual SQL file
+  // (backend/db/migrate_notification_prefs.sql) into the auto-migrate
+  // flow so new event types ship with every deploy. The table is
+  // idempotent; the INSERT … ON CONFLICT pattern lets us seed new
+  // events for existing tenants without disturbing prior toggles.
+  await query(`CREATE TABLE IF NOT EXISTS notification_preferences (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id  UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    event_type VARCHAR(50) NOT NULL,
+    in_app BOOLEAN NOT NULL DEFAULT TRUE,
+    email  BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE(tenant_id, event_type)
+  )`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_notification_prefs_tenant ON notification_preferences(tenant_id)`);
+  // Seed defaults for every (tenant × event). Existing rows are kept
+  // verbatim thanks to ON CONFLICT DO NOTHING; only the new event
+  // types land. New event types in this list:
+  //   commission_approved, payment_completed, payment_failed,
+  //   invoice_submitted, commission_deleted, marketplace_application,
+  //   tier_change.
+  await query(`
+    INSERT INTO notification_preferences (tenant_id, event_type, in_app, email)
+    SELECT t.id, ev.event_type, TRUE, ev.email_default
+      FROM tenants t
+      CROSS JOIN (VALUES
+        ('new_referral',           TRUE),
+        ('new_application',        TRUE),
+        ('referral_update',        TRUE),
+        ('commission',             TRUE),
+        ('news',                   FALSE),
+        ('deal_won',               TRUE),
+        ('access_revoked',         TRUE),
+        ('commission_approved',    TRUE),
+        ('payment_completed',      TRUE),
+        ('payment_failed',         TRUE),
+        ('invoice_submitted',      TRUE),
+        ('commission_deleted',     TRUE),
+        ('marketplace_application',TRUE),
+        ('tier_change',            TRUE)
+      ) AS ev(event_type, email_default)
+    ON CONFLICT (tenant_id, event_type) DO NOTHING
+  `);
+  console.log('[notifications] v26 prefs table + new event types seeded');
+
   console.log(' Migrations completed');
 
   } catch (err) {

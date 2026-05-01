@@ -1855,6 +1855,18 @@ function ProgramTab() {
   );
 }
 
+// Notification preferences grouped by domain. Each event_type lives
+// in exactly one group; anything not enumerated falls into 'other'.
+// Order inside each group reflects the natural lifecycle (status
+// change before payment outcome before deletion).
+const NOTIFICATION_GROUPS = [
+  { id: 'pipeline',       events: ['new_referral', 'deal_won', 'referral_update'] },
+  { id: 'commissions',    events: ['commission_approved', 'commission', 'invoice_submitted', 'payment_completed', 'payment_failed', 'commission_deleted'] },
+  { id: 'partners',       events: ['new_application', 'access_revoked', 'tier_change'] },
+  { id: 'marketplace',    events: ['marketplace_application'] },
+  { id: 'communication',  events: ['news'] },
+];
+
 function NotificationsTab() {
   const { t } = useTranslation();
   const [prefs, setPrefs] = useState([]);
@@ -1900,16 +1912,24 @@ function NotificationsTab() {
       <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>{t('notifications.preferences')}</h2>
       <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('notifications.preferences_desc')}</p>
 
-      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          <div>{t('notifications.event')}</div>
-          <div style={{ textAlign: 'center' }}>{t('notifications.in_app')}</div>
-          <div style={{ textAlign: 'center' }}>{t('notifications.email')}</div>
-          <div style={{ textAlign: 'center' }}>Aperçu</div>
-        </div>
-        {prefs.map(p => (
+      {(() => {
+        // Index prefs by event_type so the group lookups are O(1).
+        // Anything the backend returned that isn't in any GROUPS
+        // bucket falls into the "other" group at the bottom — keeps
+        // newly-added events visible even if we forgot to register
+        // them in NOTIFICATION_GROUPS.
+        const byEvent = new Map(prefs.map(p => [p.event_type, p]));
+        const grouped = NOTIFICATION_GROUPS.map(g => ({
+          id: g.id,
+          rows: g.events.map(e => byEvent.get(e)).filter(Boolean),
+        })).filter(g => g.rows.length > 0);
+        const claimed = new Set(NOTIFICATION_GROUPS.flatMap(g => g.events));
+        const orphans = prefs.filter(p => !claimed.has(p.event_type));
+        if (orphans.length) grouped.push({ id: 'other', rows: orphans });
+
+        const renderRow = (p) => (
           <div key={p.event_type} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
-            <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>{t('notifications.event_' + p.event_type)}</div>
+            <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>{t('notifications.event_' + p.event_type, p.event_type)}</div>
             <div style={{ textAlign: 'center' }}>
               <button onClick={() => toggle(p.event_type, 'in_app')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.in_app ? '#059669' : '#cbd5e1' }}>
                 {p.in_app ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
@@ -1929,12 +1949,32 @@ function NotificationsTab() {
                   color: '#475569', fontWeight: 600, fontSize: 12, cursor: 'pointer',
                 }}
               >
-                Aperçu
+                {t('notifications.preview', 'Aperçu')}
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        );
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {grouped.map((g, gi) => (
+              <div key={g.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  <div>{t('notifications.group_' + g.id, g.id)}</div>
+                  {gi === 0 ? (
+                    <>
+                      <div style={{ textAlign: 'center' }}>{t('notifications.in_app')}</div>
+                      <div style={{ textAlign: 'center' }}>{t('notifications.email')}</div>
+                      <div style={{ textAlign: 'center' }}>{t('notifications.preview', 'Aperçu')}</div>
+                    </>
+                  ) : <><div /><div /><div /></>}
+                </div>
+                {g.rows.map(renderRow)}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {preview && (
         <EmailPreviewModal preview={preview} onClose={() => setPreview(null)} />

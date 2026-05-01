@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, Users, DollarSign, Newspaper, ChevronRight, Compass } from 'lucide-react';
+import { Search, FileText, Users, DollarSign, Newspaper, ChevronRight, Compass, Store } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 
@@ -18,7 +18,8 @@ const NAVIGATION_ITEMS = [
   { title: 'Messagerie',  subtitle: 'Conversations',                  url: '/messaging',    keywords: ['messagerie', 'messages', 'chat', 'conversations'],       roles: ['admin', 'commercial', 'superadmin', 'partner'] },
   { title: 'Actualités',  subtitle: 'News et mises à jour',           url: '/news',         keywords: ['actualités', 'news', 'updates', 'publications'],         roles: ['admin', 'commercial', 'superadmin'] },
   { title: 'Programme',   subtitle: 'Configuration du programme',     url: '/programme',    keywords: ['programme', 'program', 'configuration', 'niveaux', 'levels'], roles: ['admin', 'commercial', 'superadmin'] },
-  { title: 'Facturation', subtitle: 'Plans et abonnements',           url: '/billing',      keywords: ['facturation', 'billing', 'abonnement', 'plan', 'tarifs', 'prix', 'stripe'], roles: ['admin', 'superadmin'] },
+  { title: 'Marketplace (admin)', subtitle: 'Éditeur de la page publique', url: '/marketplace-admin', keywords: ['marketplace', 'éditeur', 'editor', 'page publique', 'card', 'carte'], roles: ['admin', 'superadmin'] },
+  { title: 'Facturation', subtitle: 'Paramètres → Facturation',        url: '/settings?tab=billing', keywords: ['facturation', 'billing', 'abonnement', 'plan', 'tarifs', 'prix', 'stripe'], roles: ['admin', 'superadmin'] },
   { title: 'Notifications', subtitle: 'Centre de notifications',      url: '/notifications', keywords: ['notifications', 'alertes'],                              roles: ['admin', 'commercial', 'superadmin', 'partner'] },
 
   // ─── Partner pages ───
@@ -43,6 +44,7 @@ const CATEGORIES = [
   { key: 'referrals',   icon: FileText,   color: '#3B82F6' },
   { key: 'partners',    icon: Users,      color: '#059669' },
   { key: 'commissions', icon: DollarSign, color: '#F59E0B' },
+  { key: 'marketplace', icon: Store,      color: '#10B981' },
   { key: 'news',        icon: Newspaper,  color: '#8B5CF6' },
 ];
 

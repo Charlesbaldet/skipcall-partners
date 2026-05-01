@@ -329,6 +329,59 @@ function invoice({ recipientName, amount, currency, dateLabel, invoicePdfUrl, te
   });
 }
 
+// Admin email when a partner uploads an invoice for an awaiting
+// commission. Drives the admin into the commissions board so they can
+// validate the file and trigger the Qonto payout.
+function invoiceSubmitted({ partnerName, prospectName, dealName, amount, currency, dashboardUrl } = {}) {
+  const amt = fmtMoney(amount, currency);
+  const dealLabel = dealName || prospectName || '';
+  return renderEmail({
+    subject: `Facture reçue${dealLabel ? ' — ' + dealLabel : ''} — ${amt}`,
+    heading: 'Facture partenaire reçue',
+    bodyHtml: `
+      <p>📎 <strong>${partnerName || 'Un partenaire'}</strong> a soumis une facture pour la commission de <strong>${amt}</strong>${dealLabel ? ` (deal : <strong>${dealLabel}</strong>)` : ''}.</p>
+      <p>Vérifiez la facture et validez le paiement depuis le pipeline commissions.</p>`,
+    ctaUrl: dashboardUrl || `${FRONTEND}/commissions`,
+    ctaLabel: 'Ouvrir les commissions',
+  });
+}
+
+// Admin confirmation that a Qonto transfer has settled. Mirrors what
+// the partner gets via commissionPaymentSent but framed for the admin
+// (who initiated the transfer).
+function paymentSentAdmin({ partnerName, amount, currency, dealName, transferReference, transferDateLabel, dashboardUrl } = {}) {
+  const amt = fmtMoney(amount, currency);
+  return renderEmail({
+    subject: `Virement confirmé — ${amt} → ${partnerName || ''}`,
+    heading: 'Virement Qonto confirmé',
+    bodyHtml: `
+      <p>Le virement de <strong>${amt}</strong> vers <strong>${partnerName || ''}</strong>${dealName ? ` pour le deal <strong>${dealName}</strong>` : ''} a été confirmé par Qonto.</p>
+      <div class="highlight">
+        <div style="margin-bottom:6px"><strong>Référence du virement :</strong> ${transferReference || '—'}</div>
+        <div><strong>Date :</strong> ${transferDateLabel || new Date().toLocaleDateString('fr-FR')}</div>
+      </div>`,
+    ctaUrl: dashboardUrl || `${FRONTEND}/commissions`,
+    ctaLabel: 'Voir les commissions',
+  });
+}
+
+// Admin alert when a Qonto transfer fails (declined, error). The
+// commission row is reset to pending_validation server-side so the
+// admin can retry; the email tells them why.
+function qontoTransferFailed({ partnerName, amount, currency, dealName, errorMessage, dashboardUrl } = {}) {
+  const amt = fmtMoney(amount, currency);
+  return renderEmail({
+    subject: `⚠️ Virement Qonto échoué — ${amt} → ${partnerName || ''}`,
+    heading: 'Virement Qonto échoué',
+    bodyHtml: `
+      <p>Le virement de <strong>${amt}</strong> vers <strong>${partnerName || ''}</strong>${dealName ? ` pour le deal <strong>${dealName}</strong>` : ''} a échoué.</p>
+      ${errorMessage ? `<div class="highlight"><strong>Raison :</strong><br/>${errorMessage}</div>` : ''}
+      <p>La commission est repassée en <em>pending_validation</em>. Rendez-vous dans le pipeline commissions pour réessayer.</p>`,
+    ctaUrl: dashboardUrl || `${FRONTEND}/commissions`,
+    ctaLabel: 'Réessayer le virement',
+  });
+}
+
 // Sample payloads for the preview modal. Keys match TEMPLATES below.
 const PREVIEW_SAMPLES = {
   welcome: { name: 'Alex', tenantName: 'Acme Partenaires' },
@@ -346,6 +399,9 @@ const PREVIEW_SAMPLES = {
   newApplicationToAdmin: { applicantName: 'Camille Leroy', applicantCompany: 'Leroy Conseil' },
   applicationApproved: { applicantName: 'Camille Leroy', tenantName: 'Acme Partenaires' },
   invoice: { recipientName: 'Charles', amount: 29, currency: '€', dateLabel: '20 avril 2026', tenantName: 'Acme Partenaires' },
+  invoiceSubmitted: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', dealName: 'Dupont SARL', amount: 1250, currency: '€' },
+  paymentSentAdmin: { partnerName: 'Partner Pro', amount: 1250, currency: '€', dealName: 'Dupont SARL', transferReference: 'REFBOOSTCOMABCDEF123456', transferDateLabel: '30 avril 2026' },
+  qontoTransferFailed: { partnerName: 'Partner Pro', amount: 1250, currency: '€', dealName: 'Dupont SARL', errorMessage: 'Solde insuffisant sur le compte Qonto.' },
 };
 
 const TEMPLATES = {
@@ -364,6 +420,9 @@ const TEMPLATES = {
   newApplicationToAdmin,
   applicationApproved,
   invoice,
+  invoiceSubmitted,
+  paymentSentAdmin,
+  qontoTransferFailed,
 };
 
 function previewEmail(key, payload) {

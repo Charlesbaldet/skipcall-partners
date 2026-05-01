@@ -301,7 +301,7 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
         const users = await partnerUsers(existing.partner_id);
         const amountLabel = fmtMoney(existing.amount);
         for (const u of users) {
-          notify.createNotification(u.id, 'commission', {
+          notify.createNotification(u.id, 'commission_approved', {
             title: `Commission approuvée — ${amountLabel}`,
             message: `Pour ${existing.prospect_name || 'votre lead'} — merci de déposer votre facture.`,
             link: '/partner/payments',
@@ -410,7 +410,7 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
         const dealLabel = ctx?.prospect_company || ctx?.prospect_name || existing.prospect_name || '';
         const amount = parseFloat(existing.amount) || 0;
         for (const u of users) {
-          notify.createNotification(u.id, 'commission', {
+          notify.createNotification(u.id, 'commission_deleted', {
             title: `Commission annulée — ${fmtMoney(amount)}`,
             message: reason || `La commission pour ${dealLabel || 'votre deal'} a été annulée.`,
             link: '/partner/payments',
@@ -482,6 +482,40 @@ router.post('/:id/upload-invoice', async (req, res) => {
         WHERE id = $1 RETURNING id, status, invoice_uploaded_at`,
       [req.params.id, data_url, safeName]
     );
+
+    // Tell the admin a partner just submitted an invoice — both
+    // in-app and via email. Fire-and-forget so the invoice upload
+    // response isn't blocked on Resend.
+    (async () => {
+      try {
+        const { rows: [ctx] } = await query(
+          `SELECT c.tenant_id, c.amount, p.name AS partner_name,
+                  r.prospect_name, r.prospect_company
+             FROM commissions c
+             JOIN partners p ON p.id = c.partner_id
+             JOIN referrals r ON r.id = c.referral_id
+            WHERE c.id = $1 LIMIT 1`,
+          [req.params.id]
+        );
+        if (!ctx) return;
+        const dealLabel = ctx.prospect_company || ctx.prospect_name || '';
+        notify.fanoutAdminNotification(ctx.tenant_id, 'invoice_submitted', {
+          title: `Facture reçue — ${ctx.partner_name}`,
+          message: `Commission ${fmtMoney(ctx.amount)}${dealLabel ? ' — ' + dealLabel : ''} : facture à valider.`,
+          link: '/commissions',
+        }).catch(() => {});
+        const recipients = await notify.adminEmails(ctx.tenant_id);
+        const tpl = require('../utils/emailTemplates').invoiceSubmitted({
+          partnerName: ctx.partner_name,
+          prospectName: ctx.prospect_name,
+          dealName: dealLabel,
+          amount: ctx.amount,
+        });
+        for (const r of recipients) sendEmail(r.email, tpl.subject, tpl.html).catch(() => {});
+      } catch (e) {
+        console.error('[upload-invoice] notify error:', e.message);
+      }
+    })();
 
     res.json({ commission: updated });
   } catch (err) {
@@ -968,7 +1002,7 @@ router.post('/pay-bulk', authorize('admin'), requireBusinessPlan, async (req, re
 async function reconcileQontoTransfers(tenantId) {
   const { rows } = await query(
     `SELECT c.id, c.qonto_transfer_id, c.amount, c.payment_reference,
-            c.tenant_id,
+            c.tenant_id, c.partner_id,
             p.email AS partner_email, p.name AS partner_name, p.iban,
             r.prospect_name, r.prospect_company,
             t.name AS tenant_name
@@ -1007,6 +1041,8 @@ async function reconcileQontoTransfers(tenantId) {
         try {
           const ibanLast4 = (c.iban || '').replace(/\s+/g, '').slice(-4);
           const dealLabel = c.prospect_company || c.prospect_name || '';
+          const dateLabel = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+          // Partner-facing email (existing template).
           const tpl = emailTemplates.commissionPaymentSent({
             partnerName: c.partner_name,
             amount: c.amount,
@@ -1014,12 +1050,39 @@ async function reconcileQontoTransfers(tenantId) {
             tenantName: c.tenant_name,
             dealName: dealLabel,
             transferReference: c.payment_reference,
-            transferDateLabel: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+            transferDateLabel: dateLabel,
             ibanLast4,
           });
           if (c.partner_email && tpl) {
             await sendEmail(c.partner_email, tpl.subject, tpl.html);
           }
+          // In-app + email fan-out for the new payment_completed event.
+          // Partners see "your payment was sent"; admins see the
+          // confirmation receipt.
+          const partners = await partnerUsers(c.partner_id);
+          for (const u of partners) {
+            notify.createNotification(u.id, 'payment_completed', {
+              title: `Paiement effectué — ${fmtMoney(c.amount)}`,
+              message: `Référence ${c.payment_reference || '—'}. Vous le recevrez sous 1-2 jours ouvrés.`,
+              link: '/partner/payments',
+              tenantId: c.tenant_id,
+            }).catch(() => {});
+          }
+          notify.fanoutAdminNotification(c.tenant_id, 'payment_completed', {
+            title: `Virement confirmé — ${c.partner_name}`,
+            message: `${fmtMoney(c.amount)} · réf. ${c.payment_reference || '—'}`,
+            link: '/commissions',
+          }).catch(() => {});
+          const adminEmailTpl = emailTemplates.paymentSentAdmin({
+            partnerName: c.partner_name,
+            amount: c.amount,
+            currency: '€',
+            dealName: dealLabel,
+            transferReference: c.payment_reference,
+            transferDateLabel: dateLabel,
+          });
+          const admins = await notify.adminEmails(c.tenant_id);
+          for (const a of admins) sendEmail(a.email, adminEmailTpl.subject, adminEmailTpl.html).catch(() => {});
         } catch (e) {
           console.warn('[qonto.reconcile] email failed for', c.id, ':', e.message);
         }
@@ -1046,6 +1109,27 @@ async function reconcileQontoTransfers(tenantId) {
             WHERE id = $1`,
           [c.id, String(reason).slice(0, 500)]
         );
+        // Page the admin: a transfer they initiated didn't go
+        // through. In-app + email so they retry promptly. Best-effort.
+        try {
+          const dealLabel = c.prospect_company || c.prospect_name || '';
+          notify.fanoutAdminNotification(c.tenant_id, 'payment_failed', {
+            title: `⚠️ Virement échoué — ${c.partner_name}`,
+            message: `${fmtMoney(c.amount)} : ${String(reason).slice(0, 120)}`,
+            link: '/commissions',
+          }).catch(() => {});
+          const failTpl = emailTemplates.qontoTransferFailed({
+            partnerName: c.partner_name,
+            amount: c.amount,
+            currency: '€',
+            dealName: dealLabel,
+            errorMessage: String(reason),
+          });
+          const admins = await notify.adminEmails(c.tenant_id);
+          for (const a of admins) sendEmail(a.email, failTpl.subject, failTpl.html).catch(() => {});
+        } catch (e) {
+          console.warn('[qonto.reconcile] failure-notify failed for', c.id, ':', e.message);
+        }
         updates.push({ commission_id: c.id, transfer_id: c.qonto_transfer_id, status, reason });
       } else {
         // pending / processing — leave as-is.

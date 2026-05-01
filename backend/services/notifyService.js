@@ -23,6 +23,14 @@ const KNOWN_EVENTS = new Set([
   'news',
   'deal_won',
   'access_revoked',
+  // v26: granular commission lifecycle + payment outcomes + marketplace.
+  'commission_approved',
+  'commission_deleted',
+  'invoice_submitted',
+  'payment_completed',
+  'payment_failed',
+  'marketplace_application',
+  'tier_change',
 ]);
 
 // Cache a tenant's preferences in memory for a few seconds to avoid

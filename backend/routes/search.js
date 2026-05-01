@@ -20,8 +20,9 @@ const PER_CATEGORY = 5;
 router.get('/', authenticate, tenantScope, async (req, res) => {
   try {
     const q = (req.query.q || '').trim();
-    if (!q) return res.json({ results: { referrals: [], partners: [], commissions: [], news: [] }, total: 0 });
-    if (q.length < 2) return res.json({ results: { referrals: [], partners: [], commissions: [], news: [] }, total: 0 });
+    const empty = { referrals: [], partners: [], commissions: [], news: [], marketplace: [] };
+    if (!q) return res.json({ results: empty, total: 0 });
+    if (q.length < 2) return res.json({ results: empty, total: 0 });
     if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
 
     const like = '%' + q.replace(/[%_]/g, ch => '\\' + ch) + '%';
@@ -109,11 +110,34 @@ router.get('/', authenticate, tenantScope, async (req, res) => {
        ORDER BY published_at DESC NULLS LAST, created_at DESC
        LIMIT $3`;
 
-    const [referralsRes, partnersRes, commissionsRes, newsRes] = await Promise.all([
+    // ─── Marketplace programs ────────────────────────────────────
+    // Public-listing search across the marketplace. Visible to admin
+    // and partner alike — partners may want to find another tenant's
+    // program in their search dropdown. We join tenants → settings so
+    // unconfigured rows (no marketplace_settings yet) still surface
+    // by company name + sector.
+    const marketplaceSql = `
+      SELECT t.id, t.name AS company_name, t.slug, t.sector,
+             COALESCE(t.short_description, ms.page_description) AS short_description
+        FROM tenants t
+   LEFT JOIN marketplace_settings ms ON ms.tenant_id = t.id
+       WHERE t.marketplace_visible = TRUE
+         AND (
+              t.name ILIKE $2
+           OR COALESCE(t.short_description, '') ILIKE $2
+           OR COALESCE(t.sector, '')            ILIKE $2
+           OR COALESCE(ms.page_description, '') ILIKE $2
+           OR COALESCE(ms.ideal_client, '')     ILIKE $2
+         )
+       ORDER BY t.created_at DESC
+       LIMIT $3`;
+
+    const [referralsRes, partnersRes, commissionsRes, newsRes, marketplaceRes] = await Promise.all([
       query(referralsSql, referralsParams).catch(e => { console.error('[search.referrals]', e.message); return { rows: [] }; }),
       partnersPromise.catch(e => { console.error('[search.partners]', e.message); return { rows: [] }; }),
       query(commissionsSql, commissionsParams).catch(e => { console.error('[search.commissions]', e.message); return { rows: [] }; }),
       query(newsSql, [tenantId, like, PER_CATEGORY]).catch(e => { console.error('[search.news]', e.message); return { rows: [] }; }),
+      query(marketplaceSql, [tenantId, like, PER_CATEGORY]).catch(e => { console.error('[search.marketplace]', e.message); return { rows: [] }; }),
     ]);
 
     const fmtMoney = (n) => {
@@ -151,10 +175,17 @@ router.get('/', authenticate, tenantScope, async (req, res) => {
       status: n.is_draft ? 'draft' : 'published',
       url: isPartner ? '/partner/news' : '/news',
     }));
+    const marketplace = (marketplaceRes.rows || []).map(m => ({
+      id: m.id,
+      title: m.company_name,
+      subtitle: m.short_description || m.sector || '',
+      status: m.sector || '',
+      url: '/marketplace/' + m.slug,
+    }));
 
-    const total = referrals.length + partners.length + commissions.length + news.length;
+    const total = referrals.length + partners.length + commissions.length + news.length + marketplace.length;
     res.json({
-      results: { referrals, partners, commissions, news },
+      results: { referrals, partners, commissions, news, marketplace },
       total,
     });
   } catch (err) {
