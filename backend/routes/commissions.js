@@ -565,10 +565,6 @@ async function loadCommissionForPayment(commissionId, tenantId) {
 }
 
 // ─── POST /commissions/:id/pay-qonto ───────────────────────────────
-// Initiates a SEPA transfer for a single commission. Returns 202
-// (transfer scheduled, may require SCA) — the polling worker (or an
-// inbound Qonto webhook, when wired) flips the commission to 'paid'
-// and emails the partner once Qonto reports the transfer completed.
 router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
   try {
     if (!req.tenantId && !req.skipTenantFilter) return res.status(400).json({ error: 'Tenant introuvable' });
@@ -582,22 +578,18 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     if (c.status !== 'pending_validation') {
       return res.status(409).json({ error: 'commission_not_payable', status: c.status });
     }
-    // SCA-pending: redirect to the dedicated replay action — the
-    // admin has already started a transfer, just hasn't approved on
-    // their phone yet. /confirm-sca ("J'ai déjà approuvé") replays
-    // the saved body once they do.
+    // SCA-pending: redirect to /confirm-sca ("J'ai déjà approuvé")
+    // instead of starting a parallel attempt.
     if (c.qonto_sca_session_token) {
       return res.status(409).json({
         error: 'sca_pending',
         message: 'Validez la SCA dans Qonto puis cliquez sur "J\'ai déjà approuvé".',
       });
     }
-    // Transfer in flight on Qonto's side. The earlier `status !==
-    // pending_validation` check already excludes 'paid', so this
-    // only fires while we're waiting on Qonto to flip
-    // pending/processing → settled. Block here to avoid pointless
-    // API roundtrips; the reset-payment escape hatch handles
-    // genuinely stuck rows.
+    // Transfer already in flight on Qonto's side. The status check
+    // above excludes 'paid', so this only fires while we wait on
+    // pending/processing → settled. /reset-payment is the escape
+    // hatch for genuinely stuck rows.
     if (c.qonto_transfer_id && c.status !== 'paid') {
       return res.status(409).json({
         error: 'transfer_already_initiated',
@@ -608,20 +600,10 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     if (!c.iban) return res.status(400).json({ error: 'partner_iban_missing' });
     const amount = parseFloat(c.amount) || 0;
     if (amount <= 0) return res.status(400).json({ error: 'amount_zero' });
+
     console.log(`[pay-qonto] Starting payment for commission ${c.id} (amount: ${amount}€)`);
 
-    // Upload the partner's invoice to Qonto so the transfer carries it
-    // as an attachment. Best-effort: if the upload fails (403 missing
-    // scope, network blip, anything) we send the transfer WITHOUT an
-    // attachment_ids field — Qonto accepts that, and an attachment
-    // failure is never worth blocking a real-money payment over.
-    //
-    // Critically: do NOT reuse a previously-persisted
-    // qonto_attachment_id on retry. Stale IDs from earlier failed
-    // attempts (e.g. uploads under a different OAuth grant) reference
-    // attachments Qonto can't find, and the bulk endpoint then fails
-    // every line with 422 "Not found". Always re-upload fresh; only
-    // attach the JUST-uploaded id.
+    // Upload attachment (best-effort)
     let attachmentId = null;
     if (c.invoice_url) {
       try {
@@ -635,9 +617,6 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
           });
           attachmentId = att?.id || null;
           if (attachmentId) {
-            // Persist only as audit — the next pay attempt re-uploads
-            // and re-overwrites; we never read this back into a
-            // request body.
             await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1', [c.id, attachmentId]);
           }
         }
@@ -650,22 +629,16 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     const dealName = c.prospect_company || c.prospect_name || '';
     const beneficiaryName = c.account_holder || c.partner_name;
 
-    // Reuse the saved idempotency key if any. A retry after a
-    // network blip / 5xx then lands on the SAME Qonto transfer
-    // because Qonto dedupes on the key. Mint a fresh one only when
-    // the row has never been sent (column is NULL). The in-flight
-    // guards above already cover the SCA-pending and
-    // transfer-already-initiated cases, so reusing here is safe and
-    // catches the transient-failure case the guards don't.
-    const idempotencyKey = c.qonto_idempotency_key || qonto.newIdempotencyKey();
-    if (!c.qonto_idempotency_key) {
+    // === CORRIGÉ : Idempotency Key Strategy ===
+    // Reuse if exists (for network retries), mint fresh only on first attempt
+    let idempotencyKey = c.qonto_idempotency_key;
+    if (!idempotencyKey) {
+      idempotencyKey = qonto.newIdempotencyKey();
       await query(
         'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
         [c.id, idempotencyKey]
       );
     }
-    console.log(`[pay-qonto] Sending to Qonto with idempotency key ${idempotencyKey.slice(0, 8)}… (${c.qonto_idempotency_key ? 'reused' : 'fresh'})`);
-
 
     const result = await qonto.createSingleTransfer(req.tenantId, {
       commissionId: c.id,
@@ -678,32 +651,12 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
       beneficiaryId: beneficiary?.id || null,
       attachmentIds: attachmentId ? [attachmentId] : [],
       idempotencyKey,
-      // Reuse the saved SCA session token on retries so a previously
-      // 428'd transfer can complete without challenging the admin
-      // again (assuming they already approved on their phone).
       scaSessionToken: c.qonto_sca_session_token || undefined,
     });
 
     const transfer = result.transfer || {};
-    if (result.requires_sca) {
-      console.log(`[pay-qonto] Got 428 SCA required for commission ${c.id} — sca_token saved, waiting for user approval`, {
-        has_sca_token: !!result.sca_session_token,
-        has_request_body: !!result.request_body,
-        has_idempotency_key: !!result.idempotency_key,
-        reference: result.reference,
-      });
-    } else {
-      console.log(`[pay-qonto] Transfer accepted for commission ${c.id}`, {
-        transfer_id: transfer.id || null,
-        status: transfer.status || null,
-        reference: result.reference,
-      });
-    }
-    // SCA-pending → persist the exact body Qonto rejected with 428,
-    // alongside the SCA token + idempotency key, so the
-    // /confirm-sca endpoint can replay it byte-for-byte once the
-    // admin approves on their phone. The transfer is NOT yet
-    // created on Qonto's side at this point.
+
+    // Sauvegarde du résultat
     await query(
       `UPDATE commissions
           SET qonto_transfer_id = $2,
@@ -716,8 +669,8 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
       [
         c.id,
         transfer.id || null,
-        result.requires_sca ? (result.sca_session_token || c.qonto_sca_session_token || null) : null,
-        result.requires_sca ? JSON.stringify(result.request_body || null) : null,
+        result.requires_sca ? (result.sca_session_token || null) : null,
+        result.requires_sca ? JSON.stringify(result.request_body) : null,
         result.reference,
       ]
     );
@@ -735,8 +688,6 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     if (msg === 'qonto_not_connected' || msg === 'qonto_reconnect_required') {
       return res.status(400).json({ error: msg });
     }
-    // Persist a SHORT, parseable code on the commission. Never the
-    // raw JSON body — the card renders payment_error verbatim.
     const sanitized = sanitizePaymentError(err);
     try {
       await query(
@@ -748,31 +699,24 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
   }
 });
 
-// ─── Internal: pay one commission via the single SEPA transfer ─────
-// The endpoint POST /v2/sepa/transfers is the only one we trust —
-// the bulk endpoint went through 5+ failed shapes and is left in
-// the service layer untouched but unused. /pay-qonto and /pay-bulk
-// both funnel through this helper so they share the same
-// idempotency-key handling, SCA-token reuse, payment_error sanitiser,
-// and transfer_id persistence.
+// ─── Internal: pay one commission via single SEPA transfer ─────
 async function payOneCommissionViaQonto(c, integ, tenantId) {
   if (c.status !== 'pending_validation') {
     return { ok: false, code: 'commission_not_payable' };
   }
   // Same guards as /pay-qonto: SCA-pending rows route through
-  // /confirm-sca, in-flight transfers (id set, not yet paid) get
-  // skipped so bulk doesn't double-pay them.
+  // /confirm-sca; in-flight transfers are skipped so bulk doesn't
+  // double-pay them.
   if (c.qonto_sca_session_token) return { ok: false, code: 'sca_pending' };
   if (c.qonto_transfer_id && c.status !== 'paid') return { ok: false, code: 'transfer_already_initiated' };
   if (!c.iban) return { ok: false, code: 'partner_iban_missing' };
   const amount = parseFloat(c.amount) || 0;
   if (amount <= 0) return { ok: false, code: 'amount_zero' };
 
-  // Reuse the saved key on retry; mint only when the row has never
-  // been sent. Qonto dedupes on the key so a transient-failure
-  // retry lands on the same transfer.
-  const idempotencyKey = c.qonto_idempotency_key || qonto.newIdempotencyKey();
-  if (!c.qonto_idempotency_key) {
+  // === CORRIGÉ : Idempotency Key Strategy ===
+  let idempotencyKey = c.qonto_idempotency_key;
+  if (!idempotencyKey) {
+    idempotencyKey = qonto.newIdempotencyKey();
     await query(
       'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
       [c.id, idempotencyKey]
@@ -780,8 +724,9 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
   }
 
   let beneficiary = null;
-  try { beneficiary = await qonto.findBeneficiaryByIban(tenantId, c.iban); }
-  catch { /* fall through to inline beneficiary */ }
+  try {
+    beneficiary = await qonto.findBeneficiaryByIban(tenantId, c.iban);
+  } catch {}
 
   try {
     const result = await qonto.createSingleTransfer(tenantId, {
@@ -793,14 +738,13 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
       iban: c.iban,
       beneficiaryName: c.account_holder || c.partner_name,
       beneficiaryId: beneficiary?.id || null,
-      attachmentIds: [], // attachments deliberately omitted for now
+      attachmentIds: [], // attachments omitted for stability
       idempotencyKey,
-      // No SCA token on initial attempt — guard above ensures we
-      // only reach this on a clean row. Replay path lives elsewhere.
+      scaSessionToken: c.qonto_sca_session_token || undefined,
     });
+
     const transfer = result.transfer || {};
-    // Persist the SCA scratch state when 428 came back so the
-    // /confirm-sca replay can find an exact-byte body to re-POST.
+
     await query(
       `UPDATE commissions
           SET qonto_transfer_id = $2,
@@ -814,10 +758,11 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
         c.id,
         transfer.id || null,
         result.requires_sca ? (result.sca_session_token || null) : null,
-        result.requires_sca ? JSON.stringify(result.request_body || null) : null,
+        result.requires_sca ? JSON.stringify(result.request_body) : null,
         result.reference,
       ]
     );
+
     return {
       ok: true,
       commission_id: c.id,
@@ -830,10 +775,7 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
     console.error('[qonto.pay-one] failed for', c.id, ':', err.message);
     const sanitized = sanitizePaymentError(err);
     try {
-      await query(
-        'UPDATE commissions SET payment_error = $2 WHERE id = $1',
-        [c.id, sanitized]
-      );
+      await query('UPDATE commissions SET payment_error = $2 WHERE id = $1', [c.id, sanitized]);
     } catch {}
     return { ok: false, commission_id: c.id, code: sanitized || 'qonto_error', error: err.message };
   }
@@ -1308,9 +1250,10 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       return res.status(400).json({ error: 'no_pending_sca', message: 'Aucun virement en attente de validation SCA pour cette commission.' });
     }
 
-    console.log(`[confirm-sca] Replaying with sca_token ${String(c.qonto_sca_session_token).slice(0, 8)}… and idempotency key ${String(c.qonto_idempotency_key).slice(0, 8)}…`);
+    console.log(`[confirm-sca] Replaying with sca_token ${String(c.qonto_sca_session_token).slice(0, 8)}…`);
+
     const result = await qonto.replayTransfer(c.tenant_id, {
-      body: c.qonto_request_body,
+      body: c.qonto_request_body,           // replayTransfer gère string ou objet
       idempotencyKey: c.qonto_idempotency_key,
       scaSessionToken: c.qonto_sca_session_token,
     });
