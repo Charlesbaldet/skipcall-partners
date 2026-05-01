@@ -1332,39 +1332,12 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       });
     }
 
-    if (result.not_found || result.expired) {
-      // 412 (token aged out, 15 min) / 422 (Qonto lost the session
-      // or admin tapped "un problème est survenu") / 401
-      // (vop_proof_token_missing) all funnel here. Full reset so
-      // the next Pay click runs a clean POST + a fresh challenge.
-      // Both outcomes surface to the frontend as needs_restart, so
-      // the user sees one consistent "click Payer" instruction
-      // regardless of which error code fired underneath.
-      console.log(`[confirm-sca] ${result.expired ? 'SCA token expired (412)' : 'SCA session not found (422/401)'} for ${c.id} — full reset`);
-      await query(
-        `UPDATE commissions
-            SET qonto_sca_session_token = NULL,
-                qonto_vop_proof_token = NULL,
-                qonto_request_body = NULL,
-                qonto_idempotency_key = NULL,
-                payment_initiated_at = NULL,
-                qonto_retry_count = 0,
-                payment_error = NULL,
-                status = 'pending_validation'
-          WHERE id = $1`,
-        [c.id]
-      );
-      return res.json({
-        ok: false,
-        needs_restart: true,
-        message: 'La validation SCA a expiré ou n\'a pas abouti. Veuillez cliquer sur "Payer" pour relancer le virement.',
-      });
-    }
-
+    // Legit "still waiting on the admin's phone" — preserved as a
+    // distinct UX state. Qonto returned 428 sca_required, the
+    // approval just hasn't landed yet. Refresh rotated tokens so a
+    // future call uses Qonto's latest values.
     if (result.sca_still_pending) {
       console.log(`[confirm-sca] SCA still pending for ${c.id} — admin hasn't approved on phone yet`);
-      // Admin hasn't approved on their phone yet. Refresh the SCA +
-      // VOP tokens in case Qonto rotated either of them.
       const newSca = result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token
         ? result.sca_session_token : null;
       const newVop = result.vop_proof_token && result.vop_proof_token !== c.qonto_vop_proof_token
@@ -1385,7 +1358,29 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       });
     }
 
-    return res.status(500).json({ ok: false, error: 'unknown_replay_error' });
+    // Catch-all for any other failure: 412 (token aged out, 15 min) /
+    // 422 (Qonto lost the session or admin tapped "un problème est
+    // survenu") / 401 vop_proof_token_missing / any unknown shape.
+    // All require the admin to start over from a clean slate.
+    console.log(`[confirm-sca] Replay failed for ${c.id} (${result.expired ? '412' : result.not_found ? '422/401' : 'unknown'}) — full reset, asking user to restart`);
+    await query(
+      `UPDATE commissions
+          SET qonto_sca_session_token = NULL,
+              qonto_vop_proof_token = NULL,
+              qonto_request_body = NULL,
+              qonto_idempotency_key = NULL,
+              payment_initiated_at = NULL,
+              qonto_retry_count = 0,
+              payment_error = NULL,
+              status = 'pending_validation'
+        WHERE id = $1`,
+      [c.id]
+    );
+    return res.json({
+      ok: false,
+      needs_restart: true,
+      message: 'La validation SCA a expiré ou n\'a pas abouti. Veuillez cliquer sur "Payer" pour relancer le virement avec un nouveau challenge.',
+    });
   } catch (err) {
     console.error('[commissions.confirm-sca] error:', err);
     const sanitized = sanitizePaymentError(err);
