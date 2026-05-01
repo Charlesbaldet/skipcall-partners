@@ -276,6 +276,81 @@ export default async function middleware(request) {
   html = upsertMeta(html, 'name="twitter:title"', `<meta name="twitter:title" content="${title}" />`);
   html = upsertMeta(html, 'name="twitter:description"', `<meta name="twitter:description" content="${description}" />`);
 
+  // /integrations* and other static routes → inject a brief noscript
+  // intro block so the static HTML carries real content for crawlers.
+  // Same rationale as the /blog noscript: Googlebot's JS budget is
+  // limited on new/low-authority paths and the SPA shell with empty
+  // <div id="root"> got these URLs parked in "Discovered — currently
+  // not indexed". Hardcoded here (not imported from the SPA bundle)
+  // because Vercel Edge bundles middleware separately and we don't
+  // want to drag the React app's data files into the edge runtime.
+  const STATIC_BODIES = {
+    '/integrations':
+      '<h1>Connectez vos outils</h1>' +
+      '<p>RefBoost s\'intègre avec vos CRM, outils de paiement et d\'authentification pour automatiser votre programme partenaires.</p>' +
+      '<h2>Intégrations disponibles</h2>' +
+      '<ul>' +
+      '<li><a href="' + SITE + '/integrations/notion">Notion — Synchronisez votre pipeline avec vos bases Notion (CRM)</a></li>' +
+      '<li><a href="' + SITE + '/integrations/hubspot">HubSpot — Poussez vos referrals vers HubSpot Deals (CRM)</a></li>' +
+      '<li><a href="' + SITE + '/integrations/salesforce">Salesforce — Connectez vos Opportunities Salesforce (CRM)</a></li>' +
+      '<li><a href="' + SITE + '/integrations/qonto">Qonto — Virements SEPA automatisés (Paiements)</a></li>' +
+      '<li><a href="' + SITE + '/integrations/google-sso">Google SSO — Connexion sans mot de passe (Authentification)</a></li>' +
+      '</ul>',
+    '/integrations/notion':
+      '<h1>Intégration Notion</h1>' +
+      '<p>Connectez vos bases Notion à RefBoost pour synchroniser votre pipeline partenaires en temps réel. Mapping bidirectionnel des statuts, des champs et des contacts.</p>' +
+      '<h2>Ce que vous pouvez faire</h2>' +
+      '<ul><li>Sync bidirectionnelle des referrals entre RefBoost et Notion sans duplication.</li>' +
+      '<li>Mapping personnalisé des propriétés Notion aux champs RefBoost.</li>' +
+      '<li>Mapping des colonnes de statut Notion avec les étapes du pipeline RefBoost.</li>' +
+      '<li>Détection des doublons avant chaque écriture, vos données sont protégées.</li></ul>' +
+      '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
+    '/integrations/hubspot':
+      '<h1>Intégration HubSpot</h1>' +
+      '<p>Connectez votre HubSpot CRM à RefBoost. Chaque referral devient un Deal HubSpot, chaque prospect un Contact, le tout synchronisé en temps réel via OAuth.</p>' +
+      '<h2>Ce que vous pouvez faire</h2>' +
+      '<ul><li>Sync des deals HubSpot dans le pipeline de votre choix.</li>' +
+      '<li>Création automatique des Contacts HubSpot avec les infos partenaire associées.</li>' +
+      '<li>Mapping des étapes de Deal HubSpot avec les statuts RefBoost.</li>' +
+      '<li>Liens automatiques aux contacts existants pour éviter les doublons.</li></ul>' +
+      '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
+    '/integrations/salesforce':
+      '<h1>Intégration Salesforce</h1>' +
+      '<p>Connectez votre instance Salesforce à RefBoost. Synchronisation des Opportunities, Contacts et Accounts avec mapping personnalisé des objets standards et custom.</p>' +
+      '<h2>Ce que vous pouvez faire</h2>' +
+      '<ul><li>Chaque referral RefBoost devient une Opportunity Salesforce.</li>' +
+      '<li>Création automatique des Contacts liés aux Accounts existants.</li>' +
+      '<li>Mapping des Stages Salesforce avec les statuts RefBoost.</li>' +
+      '<li>Support des custom objects et fields via l\'éditeur de mapping.</li></ul>' +
+      '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
+    '/integrations/qonto':
+      '<h1>Intégration Qonto</h1>' +
+      '<p>Connectez votre compte pro Qonto à RefBoost et payez les commissions de vos partenaires en un clic. Virements SEPA, validation SCA conforme DSP2 et preuve de virement automatisée.</p>' +
+      '<h2>Ce que vous pouvez faire</h2>' +
+      '<ul><li>Virements SEPA automatisés depuis votre compte Qonto, sans ressaisie d\'IBAN.</li>' +
+      '<li>Validation SCA sécurisée conforme DSP2 sur votre app Qonto.</li>' +
+      '<li>Paiements groupés jusqu\'à 400 commissions en une action.</li>' +
+      '<li>Email de preuve de virement envoyé automatiquement au partenaire.</li></ul>' +
+      '<p>Disponible avec le plan Business. <a href="' + SITE + '/pricing">Voir les tarifs</a> · <a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
+    '/integrations/google-sso':
+      '<h1>Google SSO</h1>' +
+      '<p>Activé par défaut sur tous les plans. Vos équipes et vos partenaires se connectent à RefBoost via leur compte Google en un clic — zéro mot de passe à gérer, sécurité renforcée.</p>' +
+      '<h2>Ce que vous pouvez faire</h2>' +
+      '<ul><li>Connexion en un clic via le compte Google de l\'utilisateur.</li>' +
+      '<li>Multi-tenant : un même compte Google peut accéder à plusieurs espaces partenaires.</li>' +
+      '<li>Sécurité renforcée : pas de mot de passe stocké, 2FA hérité de Google.</li>' +
+      '<li>Onboarding simplifié, fini les mots de passe oubliés.</li></ul>' +
+      '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
+  };
+  if (STATIC_BODIES[path]) {
+    const block = STATIC_BODIES[path];
+    if (/<noscript>[\s\S]*?<\/noscript>/.test(html)) {
+      html = html.replace(/<\/noscript>/, block + '</noscript>');
+    } else {
+      html = html.replace('</body>', `<noscript>${block}</noscript>\n  </body>`);
+    }
+  }
+
   // /integrations* → inject hreflang + WebPage JSON-LD server-side so
   // crawlers without JS (Ahrefs, link previewers) see the language
   // signals and structured data. The Helmet tags rendered client-side
@@ -344,6 +419,30 @@ export default async function middleware(request) {
     };
     const ld = `<script type="application/ld+json">${JSON.stringify(articleLd).replace(/</g, '\\u003c')}</script>`;
     html = html.replace('</head>', '    ' + ld + '\n  </head>');
+
+    // Inject the article body inside a <noscript> so crawlers that
+    // don't run JS (and Googlebot when its JS budget gets cut) still
+    // see real content on /blog/:slug. Without this, every article
+    // page returned the empty SPA shell and Google parked them in
+    // "Discovered — currently not indexed" forever. JS-running
+    // visitors never see this — React mounts into <div id="root">
+    // which sits outside the noscript.
+    const articleBody = String(articlePost.content || '');
+    const authorLine = esc(articlePost.author || 'RefBoost');
+    const dateRaw = articlePost.published_at || articlePost.created_at || '';
+    const dateLabel = dateRaw ? esc(String(dateRaw).slice(0, 10)) : '';
+    const articleBlock =
+      `<article>` +
+      `<h1>${esc(articlePost.title || '')}</h1>` +
+      (dateLabel ? `<p><em>${authorLine} · ${dateLabel}</em></p>` : `<p><em>${authorLine}</em></p>`) +
+      articleBody +
+      `<p><a href="${SITE}/blog">← Tous les articles</a></p>` +
+      `</article>`;
+    if (/<noscript>[\s\S]*?<\/noscript>/.test(html)) {
+      html = html.replace(/<\/noscript>/, articleBlock + '</noscript>');
+    } else {
+      html = html.replace('</body>', `<noscript>${articleBlock}</noscript>\n  </body>`);
+    }
   }
 
   // /blog → noscript index of every article so non-JS crawlers see
