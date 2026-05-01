@@ -176,6 +176,7 @@ class ApiClient {
   payCommissionsBulk(ids) { return this.request('/commissions/pay-bulk', { method: 'POST', body: JSON.stringify({ commission_ids: ids }) }); }
   pollQontoTransfers() { return this.request('/commissions/poll-qonto', { method: 'POST' }); }
   resetCommissionPayment(id) { return this.request(`/commissions/${id}/reset-payment`, { method: 'POST' }); }
+  confirmCommissionSca(id) { return this.request(`/commissions/${id}/confirm-sca`, { method: 'POST' }); }
 
   // Referrals
   getReferrals(params = {}) { const qs = new URLSearchParams(params).toString(); return this.request(`/referrals?${qs}`); }

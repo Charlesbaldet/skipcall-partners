@@ -476,6 +476,33 @@ export default function CommissionsPage() {
     setRefreshingPolls(false);
   };
 
+  // SCA confirmation — replays the saved transfer body with the
+  // X-Qonto-Sca-Session-Token header. Triggered by the "J'ai déjà
+  // approuvé" button on a SCA-pending card.
+  const [confirmingScaId, setConfirmingScaId] = useState(null);
+  const handleConfirmSca = async (commissionId) => {
+    setConfirmingScaId(commissionId);
+    try {
+      const r = await api.confirmCommissionSca(commissionId);
+      await reload();
+      if (r.ok && r.status === 'paid') {
+        showToast(t('qonto.toast_sca_paid', 'Virement confirmé — Payé ✅'), 'success');
+      } else if (r.ok) {
+        showToast(t('qonto.toast_sca_initiated', 'Virement validé — Qonto traite la demande.'), 'success');
+      } else if (r.expired) {
+        showToast(t('qonto.toast_sca_expired', 'Le délai de validation SCA a expiré (15 min). Veuillez relancer le paiement.'), 'error');
+      } else if (r.sca_still_pending) {
+        showToast(t('qonto.toast_sca_still_pending', 'Le virement attend toujours votre validation dans Qonto.'), 'info');
+      } else {
+        showToast(r.message || t('qonto.error_generic', 'Une erreur est survenue. Veuillez réessayer.'), 'error');
+      }
+    } catch (err) {
+      const code = err?.data?.error || err?.message;
+      showToast(qontoErrorLabel(t, code, err?.message) || err.message || 'Error', 'error');
+    }
+    setConfirmingScaId(null);
+  };
+
   // Wipes the Qonto-side state on a single commission and re-arms
   // it for another Pay attempt. Bound to the "Réessayer le paiement"
   // button on the error banner; the next click on Payer mints a
@@ -800,9 +827,9 @@ export default function CommissionsPage() {
                             </button>
                           )}
                           {scaPending ? (
-                            <button onClick={() => handleRefreshPolls({ from: 'sca_confirmation' })} disabled={refreshingPolls}
-                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #fde68a', color: '#92400e', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: refreshingPolls ? 0.7 : 1 }}>
-                              <CheckCircle size={12} className={refreshingPolls ? 'rb-spin' : ''} /> {refreshingPolls ? t('qonto.refreshing_status', 'Vérification…') : t('qonto.already_approved', 'J\'ai déjà approuvé')}
+                            <button onClick={() => handleConfirmSca(c.id)} disabled={confirmingScaId === c.id}
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #fde68a', color: '#92400e', fontWeight: 700, fontSize: 12, cursor: confirmingScaId === c.id ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: confirmingScaId === c.id ? 0.7 : 1 }}>
+                              <CheckCircle size={12} className={confirmingScaId === c.id ? 'rb-spin' : ''} /> {confirmingScaId === c.id ? t('qonto.refreshing_status', 'Vérification…') : t('qonto.already_approved', 'J\'ai déjà approuvé')}
                             </button>
                           ) : isInitiated ? (
                             <div style={{ padding: '7px 10px', borderRadius: 8, background: '#eef2ff', color: '#4338ca', fontSize: 11, textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>

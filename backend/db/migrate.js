@@ -408,6 +408,13 @@ async function runMigrations() {
   // key + X-Qonto-SCA-Session-Token header) until Qonto either
   // accepts the transfer (admin approved) or hard-fails it.
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_sca_session_token TEXT`);
+  // Stores the EXACT POST body Qonto rejected with 428 sca_required.
+  // The replay flow re-POSTs this verbatim with the
+  // X-Qonto-Sca-Session-Token header after the admin approves on
+  // their phone. Per Qonto docs, the replay must be byte-identical
+  // to the original — anything reconstructed from current row state
+  // could drift (different beneficiary lookup result, etc.).
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_request_body JSONB`);
   // One-off cleanup: previous releases stored the raw 428 JSON body
   // in payment_error, which then rendered verbatim on the card. SCA
   // is not an error — clear those rows so the new card UI can pick

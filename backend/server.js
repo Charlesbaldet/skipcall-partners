@@ -205,6 +205,7 @@ app.listen(PORT, () => {
                payment_completed_at = NULL,
                qonto_sca_session_token = NULL,
                qonto_idempotency_key = NULL,
+               qonto_request_body = NULL,
                qonto_retry_count = 0
          WHERE status <> 'paid'
            AND payment_error IS NOT NULL

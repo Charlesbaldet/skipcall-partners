@@ -307,27 +307,36 @@ async function createSingleTransfer(tenantId, {
   // When we already have an SCA session token (admin approved or we're
   // retrying after a prior 428), forward it so Qonto skips the
   // challenge and returns the actual transfer.
-  if (scaSessionToken) headers['X-Qonto-SCA-Session-Token'] = scaSessionToken;
+  if (scaSessionToken) headers['X-Qonto-Sca-Session-Token'] = scaSessionToken;
+
+  // Capture the exact body we send so the caller can persist it for
+  // a verbatim SCA replay later. Qonto's docs require the replay to
+  // be byte-identical to the original — anything reconstructed from
+  // current row state on retry could drift.
+  const requestBody = { transfer };
 
   let data;
   try {
     data = await api(tenantId, '/sepa/transfers', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ transfer }),
+      body: JSON.stringify(requestBody),
     });
   } catch (err) {
     const sca = parseScaChallenge(err);
     if (sca) {
       // 428 sca_required is the EXPECTED branch when the beneficiary
-      // isn't trusted yet — Qonto created the challenge, the admin
-      // must approve it on their phone. Surface as a non-error.
+      // isn't trusted yet — Qonto did NOT create the transfer, it
+      // created an SCA challenge. The admin approves on their phone,
+      // then we replay this exact body with the X-Qonto-Sca-Session-Token
+      // header to actually create the transfer.
       return {
         transfer: sca.transfer || (sca.transfer_id ? { id: sca.transfer_id } : null),
         requires_sca: true,
         sca_session_token: sca.sca_session_token,
         reference,
         idempotency_key: key,
+        request_body: requestBody,
       };
     }
     throw err;
@@ -338,7 +347,42 @@ async function createSingleTransfer(tenantId, {
     requires_sca: !!(data?.transfer?.requires_sca || data?.requires_sca),
     reference,
     idempotency_key: key,
+    request_body: requestBody,
   };
+}
+
+// Replay a previously-saved transfer body with the SCA session
+// token header. Used after the admin approves the SCA on their
+// Qonto app. Returns:
+//   { ok: true, transfer }   — Qonto accepted, transfer created
+//   { ok: false, expired }   — 412, SCA token aged out (15 min)
+//   { ok: false, sca_still_pending } — still 428 (admin hasn't approved yet)
+//   throws otherwise
+async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken }) {
+  if (!body || !idempotencyKey || !scaSessionToken) {
+    throw new Error('replay_missing_args');
+  }
+  try {
+    const data = await api(tenantId, '/sepa/transfers', {
+      method: 'POST',
+      headers: {
+        'X-Qonto-Idempotency-Key': idempotencyKey,
+        'X-Qonto-Sca-Session-Token': scaSessionToken,
+      },
+      body: JSON.stringify(body),
+    });
+    return {
+      ok: true,
+      transfer: data?.transfer || data,
+    };
+  } catch (err) {
+    if (err.status === 412) return { ok: false, expired: true };
+    // Still pending — admin hasn't approved yet. Treat like the
+    // initial 428 so the caller can leave the row alone.
+    const sca = parseScaChallenge(err);
+    if (sca) return { ok: false, sca_still_pending: true, sca_session_token: sca.sca_session_token };
+    throw err;
+  }
 }
 
 async function createBulkTransfer(tenantId, {
@@ -459,6 +503,7 @@ module.exports = {
   uploadAttachment,
   createSingleTransfer,
   createBulkTransfer,
+  replayTransfer,
   getTransfer,
   listRecentTransfers,
   buildReference,
