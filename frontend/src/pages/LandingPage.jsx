@@ -385,18 +385,18 @@ export default function LandingPage() {
           </div>
           <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:mobile?16:28,marginBottom:28}}>
             {[
-              { name: 'Notion',     letter: 'N', color: '#000000', bg: '#f1f5f9', href: '/integrations/notion' },
-              { name: 'HubSpot',    letter: 'H', color: '#ff7a59', bg: '#fff5f1', href: '/integrations/hubspot' },
-              { name: 'Salesforce', letter: 'S', color: '#00a1e0', bg: '#e6f6fc', href: '/integrations/salesforce' },
-              { name: 'Qonto',      letter: 'Q', color: '#d4a015', bg: '#fff8e1', href: '/integrations/qonto' },
-              { name: 'Google',     letter: 'G', color: '#4285f4', bg: '#e8f0fe', href: '/integrations/google-sso' },
+              { name: 'Notion',     src: '/images/integrations/notion-logo.png',     href: '/integrations/notion' },
+              { name: 'HubSpot',    src: '/images/integrations/hubspot-logo.svg',    href: '/integrations/hubspot' },
+              { name: 'Salesforce', src: '/images/integrations/salesforce-logo.svg', href: '/integrations/salesforce' },
+              { name: 'Qonto',      src: '/images/integrations/qonto-logo.svg',      href: '/integrations/qonto' },
+              { name: 'Google',     src: '/images/integrations/google-logo.svg',     href: '/integrations/google-sso' },
             ].map(item=>(
               <a key={item.href} href={item.href}
                  style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,textDecoration:'none',padding:8,borderRadius:12,transition:'transform .15s'}}
                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';}}
                  onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
-                <div style={{width:60,height:60,borderRadius:14,background:item.bg,color:item.color,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:26,boxShadow:'0 4px 14px rgba(15,23,42,0.06)'}}>
-                  {item.letter}
+                <div style={{width:60,height:60,borderRadius:14,background:'#fff',border:'1px solid #e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',padding:10,boxShadow:'0 4px 14px rgba(15,23,42,0.06)'}}>
+                  <img src={item.src} alt={item.name} width={40} height={40} style={{width:'100%',height:'100%',objectFit:'contain'}} />
                 </div>
                 <span style={{fontSize:13,fontWeight:600,color:C.s}}>{item.name}</span>
               </a>

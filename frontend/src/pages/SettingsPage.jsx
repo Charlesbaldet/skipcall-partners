@@ -1088,11 +1088,12 @@ function QontoSection() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
-              background: planAllowed ? '#fff5d215' : '#e2e8f0',
-              color: planAllowed ? '#d4a015' : '#94a3b8',
+              background: '#fff', border: '1px solid #e2e8f0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, fontWeight: 800,
-            }}>Q</div>
+              padding: 4, opacity: planAllowed ? 1 : 0.55,
+            }}>
+              <img src="/images/integrations/qonto-logo.svg" alt="Qonto" width={20} height={20} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
             <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
               {t('qonto.title', 'Qonto')}
               {!planAllowed && <Lock size={13} color="#94a3b8" aria-hidden="true" />}

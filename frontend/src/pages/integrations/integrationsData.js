@@ -10,7 +10,7 @@ export const INTEGRATIONS = [
     category: 'crm',
     available: true,
     plan: null,
-    logoSrc: '/images/integrations/notion-logo.svg',
+    logoSrc: '/images/integrations/notion-logo.png',
     seoTitle: 'Intégration Notion — RefBoost',
     seoDescription: "Synchronisez votre pipeline RefBoost avec Notion. Mapping bidirectionnel des statuts, contacts et entreprises avec détection de doublons.",
     crossLinks: ['hubspot', 'salesforce', 'qonto'],
