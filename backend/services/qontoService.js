@@ -362,14 +362,23 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken 
   if (!body || !idempotencyKey || !scaSessionToken) {
     throw new Error('replay_missing_args');
   }
-  // The body must be sent byte-identical to the original POST so
-  // Qonto's hash matches. Tolerate both shapes the column might
-  // arrive in:
-  //   * JS object (JSONB column read → node-postgres returns parsed)
+  // Normalize to a JS object first, then stringify once. Tolerates
+  // both column shapes:
+  //   * JS object (JSONB → node-postgres parses on read)
   //   * pre-serialized JSON string (legacy callers / TEXT column)
-  // Stringifying an already-stringified value would double-encode
-  // ("\"{\\\"transfer\\\":…}\"") and Qonto would reject the body.
-  const bodyString = typeof body === 'string' ? body : JSON.stringify(body);
+  // Going through parse → stringify guarantees a canonical
+  // serialization regardless of how the row was written, and avoids
+  // the double-encoding hazard of stringifying a string.
+  let requestBody;
+  try {
+    requestBody = typeof body === 'string' ? JSON.parse(body) : body;
+  } catch (e) {
+    throw new Error('replay_body_invalid_json');
+  }
+  if (!requestBody || typeof requestBody !== 'object') {
+    throw new Error('replay_body_not_object');
+  }
+  const bodyString = JSON.stringify(requestBody);
   try {
     const data = await api(tenantId, '/sepa/transfers', {
       method: 'POST',

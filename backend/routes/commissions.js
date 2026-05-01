@@ -582,24 +582,27 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     if (c.status !== 'pending_validation') {
       return res.status(409).json({ error: 'commission_not_payable', status: c.status });
     }
-    // Refuse to start a SECOND transfer when one is already in
-    // flight — without this guard, a Pay click on a row that has
-    // qonto_transfer_id (initiated successfully) or
-    // qonto_sca_session_token (waiting on SCA approval) would mint
-    // a fresh idempotency key and create a duplicate transfer. The
-    // SCA-pending state has its own action ("J'ai déjà approuvé")
-    // routing through /confirm-sca.
-    if (c.qonto_transfer_id) {
-      return res.status(409).json({
-        error: 'transfer_already_initiated',
-        transfer_id: c.qonto_transfer_id,
-        message: 'Un virement est déjà en cours pour cette commission.',
-      });
-    }
+    // SCA-pending: redirect to the dedicated replay action — the
+    // admin has already started a transfer, just hasn't approved on
+    // their phone yet. /confirm-sca ("J'ai déjà approuvé") replays
+    // the saved body once they do.
     if (c.qonto_sca_session_token) {
       return res.status(409).json({
         error: 'sca_pending',
         message: 'Validez la SCA dans Qonto puis cliquez sur "J\'ai déjà approuvé".',
+      });
+    }
+    // Transfer in flight on Qonto's side. The earlier `status !==
+    // pending_validation` check already excludes 'paid', so this
+    // only fires while we're waiting on Qonto to flip
+    // pending/processing → settled. Block here to avoid pointless
+    // API roundtrips; the reset-payment escape hatch handles
+    // genuinely stuck rows.
+    if (c.qonto_transfer_id && c.status !== 'paid') {
+      return res.status(409).json({
+        error: 'transfer_already_initiated',
+        transfer_id: c.qonto_transfer_id,
+        message: 'Un virement est déjà en cours pour cette commission.',
       });
     }
     if (!c.iban) return res.status(400).json({ error: 'partner_iban_missing' });
@@ -647,23 +650,21 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     const dealName = c.prospect_company || c.prospect_name || '';
     const beneficiaryName = c.account_holder || c.partner_name;
 
-    // Reuse the previously-stored idempotency key if any (so a retry
-    // after a network blip lands on the SAME Qonto transfer instead
-    // of double-paying). Otherwise generate one and persist it
-    // BEFORE the API call — we want the key on disk even if the
-    // process crashes mid-request.
-    // Initial attempt = always a fresh idempotency key. The in-flight
-    // guards above ensure we only reach this block on a clean row
-    // (no transfer_id, no sca token), so reusing a stale key from a
-    // prior aborted attempt would never be the right move. The
-    // /confirm-sca and reconcile.sca paths reuse the saved key
-    // because that's what Qonto's replay protocol requires.
-    const idempotencyKey = qonto.newIdempotencyKey();
-    await query(
-      'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
-      [c.id, idempotencyKey]
-    );
-    console.log(`[pay-qonto] Sending to Qonto with idempotency key ${idempotencyKey.slice(0, 8)}… (fresh)`);
+    // Reuse the saved idempotency key if any. A retry after a
+    // network blip / 5xx then lands on the SAME Qonto transfer
+    // because Qonto dedupes on the key. Mint a fresh one only when
+    // the row has never been sent (column is NULL). The in-flight
+    // guards above already cover the SCA-pending and
+    // transfer-already-initiated cases, so reusing here is safe and
+    // catches the transient-failure case the guards don't.
+    const idempotencyKey = c.qonto_idempotency_key || qonto.newIdempotencyKey();
+    if (!c.qonto_idempotency_key) {
+      await query(
+        'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
+        [c.id, idempotencyKey]
+      );
+    }
+    console.log(`[pay-qonto] Sending to Qonto with idempotency key ${idempotencyKey.slice(0, 8)}… (${c.qonto_idempotency_key ? 'reused' : 'fresh'})`);
 
 
     const result = await qonto.createSingleTransfer(req.tenantId, {
@@ -758,24 +759,25 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
   if (c.status !== 'pending_validation') {
     return { ok: false, code: 'commission_not_payable' };
   }
-  // Same in-flight guards as /pay-qonto: never start a second
-  // transfer when one is already pending on Qonto's side. Bulk
-  // skips these rows in the response (they show up under failed/
-  // skipped) instead of double-paying.
-  if (c.qonto_transfer_id) return { ok: false, code: 'transfer_already_initiated' };
+  // Same guards as /pay-qonto: SCA-pending rows route through
+  // /confirm-sca, in-flight transfers (id set, not yet paid) get
+  // skipped so bulk doesn't double-pay them.
   if (c.qonto_sca_session_token) return { ok: false, code: 'sca_pending' };
+  if (c.qonto_transfer_id && c.status !== 'paid') return { ok: false, code: 'transfer_already_initiated' };
   if (!c.iban) return { ok: false, code: 'partner_iban_missing' };
   const amount = parseFloat(c.amount) || 0;
   if (amount <= 0) return { ok: false, code: 'amount_zero' };
 
-  // Initial attempt = fresh idempotency key. Replay paths
-  // (/confirm-sca, reconcileQontoTransfers SCA branch) read the
-  // stored key + saved body — they're handled elsewhere.
-  const idempotencyKey = qonto.newIdempotencyKey();
-  await query(
-    'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
-    [c.id, idempotencyKey]
-  );
+  // Reuse the saved key on retry; mint only when the row has never
+  // been sent. Qonto dedupes on the key so a transient-failure
+  // retry lands on the same transfer.
+  const idempotencyKey = c.qonto_idempotency_key || qonto.newIdempotencyKey();
+  if (!c.qonto_idempotency_key) {
+    await query(
+      'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
+      [c.id, idempotencyKey]
+    );
+  }
 
   let beneficiary = null;
   try { beneficiary = await qonto.findBeneficiaryByIban(tenantId, c.iban); }
