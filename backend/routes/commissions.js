@@ -743,38 +743,14 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
     }
     if (!eligible.length) return res.status(400).json({ error: 'no_eligible_commissions', skipped });
 
-    // Upload fresh attachments + look up beneficiaries in parallel
-    // batches of 5 so we don't hammer Qonto. Critically: don't trust
-    // any pre-existing qonto_attachment_id on the row — a stale id
-    // from an earlier failed attempt makes the bulk endpoint reject
-    // every line with 422 "Not found". Each c.fresh_attachment_id
-    // gets reset here and only set when this attempt's upload
-    // succeeds; the per-line transfer body uses fresh_attachment_id,
-    // never the persisted column.
+    // Look up beneficiaries in parallel batches of 5. Attachment
+    // upload was removed from this path until the basic transfer
+    // flow is stable — stale ids were poisoning every retry with
+    // 422 "Not found", and a missing invoice attachment is never
+    // worth blocking a real-money payment.
     const beneficiaries = new Map();
-    for (const c of eligible) c.fresh_attachment_id = null;
     for (let i = 0; i < eligible.length; i += 5) {
       const slice = eligible.slice(i, i + 5);
-      await Promise.all(slice.map(async (c) => {
-        if (!c.invoice_url) return;
-        try {
-          const decoded = dataUrlToBuffer(c.invoice_url);
-          if (!decoded) return;
-          const att = await qonto.uploadAttachment(req.tenantId, {
-            buffer: decoded.buffer,
-            contentType: decoded.contentType,
-            filename: c.invoice_filename || `invoice-${c.id}.pdf`,
-            idempotencyKey: qonto.newIdempotencyKey(),
-          });
-          if (att?.id) {
-            c.fresh_attachment_id = att.id;
-            // Persist as audit only.
-            await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1', [c.id, att.id]);
-          }
-        } catch (e) {
-          console.warn('[qonto.bulk] attachment upload failed for', c.id, ', continuing without:', e.message);
-        }
-      }));
       await Promise.all(slice.map(async (c) => {
         try {
           const b = await qonto.findBeneficiaryByIban(req.tenantId, c.iban);
@@ -791,10 +767,9 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
       beneficiaryId: beneficiaries.get(c.id) || null,
       partnerName: c.partner_name,
       dealName: c.prospect_company || c.prospect_name || '',
-      // Only attach the FRESH upload from this request flow.
-      // Persisted qonto_attachment_id is intentionally ignored —
-      // it might point at an attachment Qonto already lost track of.
-      attachmentIds: c.fresh_attachment_id ? [c.fresh_attachment_id] : [],
+      // Attachments deliberately omitted — see the upload-block
+      // comment above.
+      attachmentIds: [],
     }));
 
     // Bulk idempotency key: reuse the previously-stored key only when
@@ -992,10 +967,12 @@ async function reconcileQontoTransfers(tenantId) {
   //      token. If the admin has approved on their phone, Qonto
   //      returns the created transfer; otherwise it answers 428
   //      again and we leave the row alone.
+  const MAX_SCA_RETRIES = 3;
   const { rows: orphanRows } = await query(
     `SELECT c.id, c.tenant_id, c.amount, c.payment_reference,
             c.qonto_idempotency_key, c.qonto_sca_session_token,
             c.qonto_attachment_id,
+            COALESCE(c.qonto_retry_count, 0) AS qonto_retry_count,
             p.id AS partner_id, p.name AS partner_name,
             p.iban, p.account_holder,
             r.prospect_name, r.prospect_company,
@@ -1063,12 +1040,36 @@ async function reconcileQontoTransfers(tenantId) {
         continue;
       }
 
-      // (b) Still no match — try the SCA replay if we have a session token.
+      // (b) Still no match — try the SCA replay if we have a session
+      // token AND we haven't burned through the retry budget yet.
       if (!c.qonto_sca_session_token) {
         updates.push({ commission_id: c.id, status: 'orphan_no_match' });
         continue;
       }
+      if ((c.qonto_retry_count || 0) >= MAX_SCA_RETRIES) {
+        // Hammered Qonto enough — Qonto clearly never created the
+        // transfer. Reset the row so the admin can either retry by
+        // hand from a clean state or abandon the payment.
+        await query(
+          `UPDATE commissions
+              SET payment_initiated_at = NULL,
+                  qonto_sca_session_token = NULL,
+                  qonto_idempotency_key = NULL,
+                  qonto_retry_count = 0,
+                  payment_error = $2
+            WHERE id = $1`,
+          [c.id, 'sca_replay_max_retries_exceeded']
+        );
+        updates.push({ commission_id: c.id, status: 'sca_max_retries_exceeded' });
+        continue;
+      }
       try {
+        // Increment BEFORE the call — if the worker crashes mid-
+        // request the next sweep still sees one fewer retry slot.
+        await query(
+          'UPDATE commissions SET qonto_retry_count = COALESCE(qonto_retry_count, 0) + 1 WHERE id = $1',
+          [c.id]
+        );
         const result = await qonto.createSingleTransfer(tid, {
           commissionId: c.id,
           bankAccountId: c.bank_account_id,
@@ -1078,20 +1079,18 @@ async function reconcileQontoTransfers(tenantId) {
           iban: c.iban,
           beneficiaryName: c.account_holder || c.partner_name,
           beneficiaryId: null,
-          // SCA replay path: don't attach anything. The previous
-          // attempt's persisted qonto_attachment_id may be stale,
-          // and a missed attachment is never worth blocking the
-          // retry. Qonto is fine without one.
           attachmentIds: [],
           idempotencyKey: c.qonto_idempotency_key,
           scaSessionToken: c.qonto_sca_session_token,
         });
         const transfer = result.transfer || {};
         if (transfer.id) {
+          // Got a transfer id — clear retry budget too.
           await query(
             `UPDATE commissions
                 SET qonto_transfer_id = $2,
                     qonto_sca_session_token = $3,
+                    qonto_retry_count = 0,
                     payment_error = NULL
               WHERE id = $1`,
             [c.id, transfer.id, result.requires_sca ? c.qonto_sca_session_token : null]

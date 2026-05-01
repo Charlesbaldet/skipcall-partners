@@ -421,6 +421,27 @@ async function runMigrations() {
   // them on every commission that hasn't actually been paid yet —
   // pay attempts will re-upload fresh.
   await query(`UPDATE commissions SET qonto_attachment_id = NULL WHERE qonto_attachment_id IS NOT NULL AND status <> 'paid'`).catch(() => {});
+
+  // Bound the SCA-replay loop. Without a counter the polling worker
+  // hammers Qonto forever on commissions Qonto never actually
+  // created (typically a 422 on the first POST that we mistook for
+  // an SCA challenge). After 3 failed retries we reset the row to
+  // pending_validation so the admin can either retry by hand or
+  // abandon the payment.
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_retry_count INTEGER DEFAULT 0`);
+  // One-shot cleanup of stuck rows: any commission carrying
+  // payment_initiated_at but no qonto_transfer_id has nothing in
+  // Qonto's hands — let the admin start over.
+  await query(`
+    UPDATE commissions
+       SET payment_initiated_at = NULL,
+           qonto_sca_session_token = NULL,
+           qonto_idempotency_key = NULL,
+           qonto_retry_count = 0
+     WHERE payment_initiated_at IS NOT NULL
+       AND qonto_transfer_id IS NULL
+       AND status <> 'paid'
+  `).catch(() => {});
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_initiated_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_reference TEXT`);

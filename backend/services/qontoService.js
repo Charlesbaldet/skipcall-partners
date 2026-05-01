@@ -373,7 +373,10 @@ async function createBulkTransfer(tenantId, {
     };
     if (t.beneficiaryId) item.beneficiary_id = t.beneficiaryId;
     else item.beneficiary = { iban: t.iban.replace(/\s+/g, '').toUpperCase(), name: t.beneficiaryName };
-    if (t.attachmentIds && t.attachmentIds.length) item.attachment_ids = t.attachmentIds;
+    // attachment_ids intentionally omitted: stale ids from earlier
+    // failed flows have been making the bulk endpoint 422 every line
+    // with "Not found". Once the basic transfer flow is stable in
+    // production we can wire fresh per-request uploads back in.
     return item;
   });
 
