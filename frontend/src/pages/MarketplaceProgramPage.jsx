@@ -11,6 +11,40 @@ import { BLOCK_COMPONENTS, DEFAULT_BLOCKS } from './marketplaceBlocks/Marketplac
 // hero, same tier cards, same conditions, same references — by
 // reusing BLOCK_COMPONENTS with `editable={false}`. The editor and
 // public page therefore can never visually drift.
+//
+// ─── SEO checklist for marketplace detail pages ───────────────────
+// Whenever you touch this file or the rendering pipeline, walk the
+// list. Missing any one of these has historically dropped the page
+// out of the index or tripped Ahrefs' orphan-page audit.
+//
+//   1. /marketplace listing cards link here via real <a href>
+//      (not <button onClick={navigate}>). Confirmed in
+//      MarketplacePage.jsx — the company name AND the green "En
+//      savoir plus" CTA both render as anchor tags.
+//   2. This page links OUT to other programs via the "Programmes
+//      similaires" SimilarSection at the bottom. Real <a href>
+//      again — gives crawlers a graph instead of leaf nodes.
+//   3. Edge middleware on /marketplace renders a <noscript> list of
+//      every published program with <a href="/marketplace/:slug">
+//      so non-JS crawlers (Ahrefs is one) discover detail pages.
+//      Without that block these pages were "Orphan page (no
+//      incoming internal links)" even though the SPA renders the
+//      cards perfectly.
+//   4. Every detail page is in /sitemap.xml at exactly the same URL
+//      shape as the internal links (/marketplace/{slug}, no
+//      trailing slash, no query string). A mismatch is silent and
+//      lethal for indexing.
+//   5. Edge middleware injects WebPage JSON-LD + the noscript hero/
+//      conditions/references body for crawlers — the static SPA
+//      shell would otherwise have an empty <div id="root">.
+//   6. Exactly one <h1> per page (the hero h1). The noscript body
+//      uses <h2> for sub-section headings — having two h1s tripped
+//      Ahrefs' "Multiple H1 tags" audit twice already.
+//   7. <link rel="canonical"> + ONE <link rel="alternate"
+//      hrefLang="x-default"> only. Per-locale hreflang tags
+//      pointing at the same URL trigger Ahrefs' "page referenced
+//      for more than one language" warning.
+// ──────────────────────────────────────────────────────────────────
 
 const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
 const SITE = 'https://refboost.io';

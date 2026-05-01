@@ -229,6 +229,7 @@ export default async function middleware(request) {
   let articlePost = null;
   let blogIndexPosts = null;
   let marketplaceProgram = null;
+  let marketplaceIndexPartners = null;
 
   if (path.startsWith('/blog/') && path !== '/blog/' && path !== '/blog') {
     try {
@@ -283,6 +284,21 @@ export default async function middleware(request) {
       if (apiRes.ok) {
         const data = await apiRes.json().catch(() => null);
         if (data && Array.isArray(data.posts)) blogIndexPosts = data.posts;
+      }
+    } catch { /* silent */ }
+  } else if (path === '/marketplace') {
+    // Same crawler-discovery rationale as /blog above. Without this
+    // block, /marketplace ships the empty SPA shell and Ahrefs sees
+    // zero outbound links to /marketplace/:slug — every detail page
+    // gets flagged "Orphan page (has no incoming internal links)".
+    // The XML sitemap already lists them, but Ahrefs (and Google's
+    // PageRank graph) needs an actual <a href> trail too.
+    try {
+      const apiUrl = new URL('/api/marketplace/', url.origin).toString();
+      const apiRes = await fetch(apiUrl, { cf: { cacheTtl: 300 } });
+      if (apiRes.ok) {
+        const data = await apiRes.json().catch(() => null);
+        if (data && Array.isArray(data.partners)) marketplaceIndexPartners = data.partners;
       }
     } catch { /* silent */ }
   }
@@ -548,6 +564,31 @@ export default async function middleware(request) {
     const block = `<nav aria-label="Liste des articles de blog"><h2>Articles publiés</h2><ul>${items}</ul></nav>`;
     // Insert just inside the existing <noscript> so there's only ever
     // one such block even on repeated middleware runs.
+    if (/<noscript>[\s\S]*?<\/noscript>/.test(html)) {
+      html = html.replace(/<\/noscript>/, block + '</noscript>');
+    } else {
+      html = html.replace('</body>', `<noscript>${block}</noscript>\n  </body>`);
+    }
+  }
+
+  // /marketplace → same crawler-discovery pattern as /blog. Renders
+  // every published program as a bare <a href> inside <noscript> so
+  // each /marketplace/:slug page has at least one inbound internal
+  // link visible to non-JS crawlers (Ahrefs in particular doesn't
+  // execute JS, so the React-rendered cards on the SPA side don't
+  // count). Tiny payload — slug + name + sector + truncated short
+  // description per row.
+  if (marketplaceIndexPartners && marketplaceIndexPartners.length) {
+    const items = marketplaceIndexPartners.map(p => {
+      const href = SITE + '/marketplace/' + encodeURIComponent(p.slug);
+      const name = esc(p.name || p.slug);
+      const sector = p.sector ? ' — ' + esc(p.sector) : '';
+      const desc = p.short_description
+        ? ' — ' + esc(String(p.short_description).slice(0, 140))
+        : '';
+      return `<li><a href="${href}">${name}</a>${sector}${desc}</li>`;
+    }).join('');
+    const block = `<nav aria-label="Programmes partenaires sur la marketplace RefBoost"><h2>Programmes partenaires</h2><ul>${items}</ul></nav>`;
     if (/<noscript>[\s\S]*?<\/noscript>/.test(html)) {
       html = html.replace(/<\/noscript>/, block + '</noscript>');
     } else {
