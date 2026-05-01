@@ -1332,12 +1332,15 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       });
     }
 
-    if (result.not_found) {
-      console.log(`[confirm-sca] SCA session not found on Qonto (422) for ${c.id} — resetting for fresh retry`);
-      // Qonto rejected the SCA — usually the admin tapped "un
-      // problème est survenu" on their phone, or the session got
-      // invalidated server-side. Wipe everything so the next Payer
-      // click runs a clean POST + a fresh challenge.
+    if (result.not_found || result.expired) {
+      // 412 (token aged out, 15 min) / 422 (Qonto lost the session
+      // or admin tapped "un problème est survenu") / 401
+      // (vop_proof_token_missing) all funnel here. Full reset so
+      // the next Pay click runs a clean POST + a fresh challenge.
+      // Both outcomes surface to the frontend as needs_restart, so
+      // the user sees one consistent "click Payer" instruction
+      // regardless of which error code fired underneath.
+      console.log(`[confirm-sca] ${result.expired ? 'SCA token expired (412)' : 'SCA session not found (422/401)'} for ${c.id} — full reset`);
       await query(
         `UPDATE commissions
             SET qonto_sca_session_token = NULL,
@@ -1353,33 +1356,8 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       );
       return res.json({
         ok: false,
-        not_found: true,
-        message: 'La validation SCA a échoué ou a expiré côté Qonto. Cliquez sur Payer pour relancer le virement.',
-      });
-    }
-
-    if (result.expired) {
-      console.log(`[confirm-sca] SCA token expired (412) for ${c.id} — resetting for fresh retry`);
-      // Token aged out (15 min). Reset SCA-side state so the admin
-      // can hit Pay again from a clean slate; keep payment_reference
-      // for audit but null everything Qonto would refuse to replay.
-      await query(
-        `UPDATE commissions
-            SET qonto_sca_session_token = NULL,
-                qonto_vop_proof_token = NULL,
-                qonto_request_body = NULL,
-                qonto_idempotency_key = NULL,
-                payment_initiated_at = NULL,
-                qonto_retry_count = 0,
-                payment_error = NULL,
-                status = 'pending_validation'
-          WHERE id = $1`,
-        [c.id]
-      );
-      return res.json({
-        ok: false,
-        expired: true,
-        message: 'Le délai de validation SCA a expiré (15 min). Veuillez relancer le paiement.',
+        needs_restart: true,
+        message: 'La validation SCA a expiré ou n\'a pas abouti. Veuillez cliquer sur "Payer" pour relancer le virement.',
       });
     }
 
