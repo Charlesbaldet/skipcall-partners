@@ -1143,7 +1143,7 @@ async function reconcileQontoTransfers(tenantId) {
           body: c.qonto_request_body,
           idempotencyKey: c.qonto_idempotency_key,
           scaSessionToken: c.qonto_sca_session_token,
-          vopProofToken: c.qonto_vop_proof_token || undefined,
+          vopToken: c.qonto_vop_proof_token || undefined,
         });
         if (result.ok) {
           const transfer = result.transfer || {};
@@ -1274,7 +1274,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       body: c.qonto_request_body,           // replayTransfer gère string ou objet
       idempotencyKey: c.qonto_idempotency_key,
       scaSessionToken: c.qonto_sca_session_token,
-      vopProofToken: c.qonto_vop_proof_token || undefined,
+      vopToken: c.qonto_vop_proof_token || undefined,
     });
     console.log(`[confirm-sca] Replay result for ${c.id}:`, {
       ok: !!result.ok,

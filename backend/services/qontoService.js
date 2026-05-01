@@ -364,14 +364,22 @@ async function createSingleTransfer(tenantId, {
   };
 }
 
-// Replay a previously-saved transfer body with the SCA session
-// token header. Used after the admin approves the SCA on their
-// Qonto app. Returns:
-//   { ok: true, transfer }   — Qonto accepted, transfer created
-//   { ok: false, expired }   — 412, SCA token aged out (15 min)
-//   { ok: false, sca_still_pending } — still 428 (admin hasn't approved yet)
+// Replay a previously-saved transfer body after the admin approves
+// the SCA challenge on their Qonto mobile app. The replay must
+// re-POST the original body byte-identically with the saved
+// idempotency key + the X-Qonto-Sca-Session-Token header. On newer
+// Qonto API versions, the VOP-Proof-Token header is also required
+// (delivered alongside the SCA challenge in the initial 428).
+//
+// Returns:
+//   { ok: true, transfer }                                 — Qonto accepted, transfer created
+//   { ok: false, expired }                                 — 412, SCA token aged out (15 min)
+//   { ok: false, not_found }                               — 422 (session lost / admin rejected)
+//                                                            or 401 vop_proof_token_missing
+//   { ok: false, sca_still_pending, sca_session_token,
+//     vop_proof_token }                                    — still 428 (admin hasn't approved yet)
 //   throws otherwise
-async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken, vopProofToken }) {
+async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken, vopToken }) {
   if (!body || !idempotencyKey || !scaSessionToken) {
     throw new Error('replay_missing_args');
   }
@@ -398,10 +406,13 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken,
   };
   // Newer Qonto API versions require the VOP (Verification of Payee)
   // proof token in this header on the replay; without it the replay
-  // 422s. The token is delivered alongside the SCA challenge in the
-  // initial 428 response.
-  if (vopProofToken) {
-    headers['VOP-Proof-Token'] = vopProofToken;
+  // 401s with vop_proof_token_missing (handled below). The token is
+  // delivered alongside the SCA challenge in the initial 428 response.
+  if (vopToken) {
+    headers['VOP-Proof-Token'] = vopToken;
+    console.log('[qonto.replayTransfer] forwarding VOP-Proof-Token on replay');
+  } else {
+    console.warn('[qonto.replayTransfer] no VOP-Proof-Token available — replay will likely 401 on tenants on the new Qonto API');
   }
   try {
     const data = await api(tenantId, '/sepa/transfers', {
