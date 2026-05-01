@@ -487,10 +487,11 @@ function IntegrationsTab() {
     <div>
       <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>{t('settings.tab_integrations')}</h3>
 
-      {/* CRM integrations (HubSpot / Salesforce / Webhook). Lives in
-          its own component so the existing Open API block below stays
-          unchanged. */}
-      <CrmIntegrations />
+      {/* Unified integrations panel — filter pills (All / CRM /
+          Payments / Auth / Webhooks / History) over a row-card list
+          mirroring the spec layout. WebhooksSection and the sync log
+          are surfaced via the Webhooks/History filters. */}
+      <IntegrationsPanel />
       <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}><Key size={16} color="#6366f1" /><h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Open API</h4></div>
@@ -539,59 +540,91 @@ function IntegrationsTab() {
   );
 }
 
-// ═══ CRM INTEGRATIONS (HubSpot / Salesforce / Webhook) ═══
+// ═══ INTEGRATIONS — unified panel ═══════════════════════════════════
 //
-// Business-plan only — the GET /crm/integrations endpoint also
-// returns the tenant plan so we can render the upgrade prompt without
-// a second round-trip.
-function CrmIntegrations() {
+// Filter pills (All / CRM / Payments / Auth / Webhooks / History) over
+// a single row-card list. The list is driven by an array so adding a
+// new integration = adding a row, not a new component. CRM + Qonto
+// state lives here together so the panel can decide which cards to
+// show without a second round-trip. The legacy CrmIntegrations +
+// QontoSection were merged into this one function.
+function IntegrationsPanel() {
   const { t } = useTranslation();
+
+  // CRM
   const [data, setData] = useState({ integrations: [], plan: 'starter' });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [testMsg, setTestMsg] = useState('');
   const [err, setErr] = useState('');
-  const [mappingFor, setMappingFor] = useState(null); // integration object
+  const [mappingFor, setMappingFor] = useState(null); // CrmMappingModal target
   const [syncLog, setSyncLog] = useState([]);
   const [notion, setNotion] = useState(null);
   const [showNotionConnect, setShowNotionConnect] = useState(false);
   const [showNotionMappings, setShowNotionMappings] = useState(false);
-  // Transient status banner for Notion sync / disconnect actions.
-  // Shape: { tone: 'success' | 'error', text: string } | null.
   const [notionMsg, setNotionMsg] = useState(null);
+
+  // Qonto (merged from the deleted QontoSection)
+  const [qontoStatus, setQontoStatus] = useState(null);
+  const [qontoAccounts, setQontoAccounts] = useState([]);
+  const [qontoPickerOpen, setQontoPickerOpen] = useState(false);
+  const [qontoMsg, setQontoMsg] = useState('');
+
+  // Filter pill + per-row expansion
+  const [filter, setFilter] = useState('all');
+  const [expandedId, setExpandedId] = useState(null);
+
+  const stopEv = (e) => { if (e && typeof e.stopPropagation === 'function') { e.stopPropagation(); e.preventDefault(); } };
 
   const load = async () => {
     setLoading(true);
     try {
       const d = await api.getCrmIntegrations();
       setData(d);
-      const wh = (d.integrations || []).find(i => i.provider === 'webhook');
-      if (wh && wh.webhook_url) setWebhookUrl(wh.webhook_url);
       const log = await api.getCrmSyncLog().catch(() => ({ log: [] }));
       setSyncLog(log.log || []);
       const n = await api.getNotionStatus().catch(() => null);
       setNotion(n);
+      const q = await api.getQontoStatus().catch(() => null);
+      setQontoStatus(q);
     } catch (e) {
       setErr(e.message);
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
-  const isBusiness = data.plan === 'business';
+  // Qonto OAuth callback handler — kept verbatim from the old
+  // QontoSection so the ?qonto=connected/error redirect still
+  // surfaces inline.
+  useEffect(() => {
+    const u = new URL(window.location.href);
+    const flag = u.searchParams.get('qonto');
+    if (flag === 'connected') {
+      setQontoMsg(t('qonto.connected_ok', 'Qonto connecté.'));
+      setTimeout(() => setQontoMsg(''), 5000);
+    } else if (flag === 'error') {
+      setErr(t('qonto.connect_error', 'Connexion Qonto échouée.'));
+    }
+    if (flag) {
+      u.searchParams.delete('qonto');
+      const cleanUrl = u.pathname + (u.searchParams.toString() ? '?' + u.searchParams.toString() : '');
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, [t]);
+
+  // Esc closes Qonto account picker
+  useEffect(() => {
+    if (!qontoPickerOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setQontoPickerOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [qontoPickerOpen]);
+
+  const isBusiness = data.plan === 'business' || data.plan === 'enterprise';
   const byProvider = (p) => (data.integrations || []).find(i => i.provider === p);
 
-  // All CRM click handlers accept the event and call stopPropagation +
-  // preventDefault. The handlers run from inside the SettingsPage
-  // modal (which has a backdrop onClick={handleClose}) — we don't
-  // want a bubbled click to both run the handler AND close the modal,
-  // and we don't want ANY handler to trigger the OAuth redirect
-  // except the explicit Connect buttons.
-  const stopEv = (e) => { if (e && typeof e.stopPropagation === 'function') { e.stopPropagation(); e.preventDefault(); } };
-
+  // ─── Connect / disconnect handlers ────────────────────────────────
   const connectHubspot = async (e) => {
-    stopEv(e);
-    setBusy(true); setErr('');
+    stopEv(e); setBusy(true); setErr('');
     try {
       const { url } = await api.getHubspotAuthUrl();
       if (url) window.location.href = url;
@@ -601,13 +634,13 @@ function CrmIntegrations() {
     } finally { setBusy(false); }
   };
   const disconnectHubspot = async (e) => {
-    stopEv(e);
-    setBusy(true); try { await api.disconnectHubspot(); load(); } catch (e) { setErr(e.message); } setBusy(false);
+    stopEv(e); setBusy(true);
+    try { await api.disconnectHubspot(); load(); } catch (e) { setErr(e.message); }
+    setBusy(false);
   };
 
   const connectSalesforce = async (e) => {
-    stopEv(e);
-    setBusy(true); setErr('');
+    stopEv(e); setBusy(true); setErr('');
     try {
       const { url } = await api.getSalesforceAuthUrl();
       if (url) window.location.href = url;
@@ -617,330 +650,44 @@ function CrmIntegrations() {
     } finally { setBusy(false); }
   };
   const disconnectSalesforce = async (e) => {
-    stopEv(e);
-    setBusy(true); try { await api.disconnectSalesforce(); load(); } catch (e) { setErr(e.message); } setBusy(false);
+    stopEv(e); setBusy(true);
+    try { await api.disconnectSalesforce(); load(); } catch (e) { setErr(e.message); }
+    setBusy(false);
   };
 
-  const saveWebhook = async (e) => {
-    stopEv(e);
-    setBusy(true); setErr('');
+  const syncNotion = async (e) => {
+    stopEv(e); setBusy(true); setNotionMsg(null);
     try {
-      await api.createCrmIntegration({ provider: 'webhook', webhook_url: webhookUrl });
+      const r = await api.syncAllNotion();
+      if (!r.ok) throw new Error(r.error || 'sync_failed');
       load();
-    } catch (e) {
-      if (e?.data?.error === 'plan_upgrade_required') setErr(t('crm.upgrade_required_body'));
-      else setErr(e.message);
+      setNotionMsg({ tone: 'success', text: t('notion.sync_ok_push', { pushed: r.pushed ?? 0, total: r.total ?? 0, pulled: r.pulled ?? 0 }) });
+      setTimeout(() => setNotionMsg(null), 6000);
+    } catch (err) {
+      setNotionMsg({ tone: 'error', text: err.message || t('notion.sync_failed') });
     } finally { setBusy(false); }
   };
-  const testWebhook = async (e) => {
-    stopEv(e);
-    const wh = byProvider('webhook');
-    if (!wh) return;
-    setTestMsg('…');
+  const disconnectNotion = async (e) => {
+    stopEv(e); setBusy(true); setNotionMsg(null);
     try {
-      const r = await api.testCrmWebhook(wh.id);
-      setTestMsg(r.ok ? t('crm.test_ok') : t('crm.test_failed'));
-    } catch (e) {
-      setTestMsg(t('crm.test_failed'));
-    }
-    setTimeout(() => setTestMsg(''), 4000);
-  };
-  const removeIntegration = async (ev, id) => {
-    stopEv(ev);
-    setBusy(true);
-    try { await api.deleteCrmIntegration(id); load(); }
-    catch (e) { setErr(e.message); }
-    finally { setBusy(false); }
+      await api.disconnectNotion();
+      load();
+      setNotionMsg({ tone: 'success', text: t('notion.disconnect_ok') });
+      setTimeout(() => setNotionMsg(null), 4000);
+    } catch (err) {
+      setNotionMsg({ tone: 'error', text: err.message });
+    } finally { setBusy(false); }
   };
 
-  if (loading) return <div style={{ color: '#94a3b8', padding: 16 }}>{t('settings.loading')}</div>;
-
-  // Upgrade prompt when not on Business.
-  if (!isBusiness) {
-    return (
-      <div style={{ padding: 24, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 14, marginBottom: 24 }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>
-          {t('crm.upgrade_required_title')}
-        </div>
-        <p style={{ color: '#92400e', fontSize: 14, lineHeight: 1.55, margin: '0 0 16px' }}>
-          {t('crm.upgrade_required_body')}
-        </p>
-        <a href="/billing" style={{ display: 'inline-block', padding: '10px 18px', borderRadius: 10, background: '#059669', color: '#fff', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
-          {t('crm.upgrade_cta')} →
-        </a>
-      </div>
-    );
-  }
-
-  const hubspot = byProvider('hubspot');
-  const salesforce = byProvider('salesforce');
-  const webhook = byProvider('webhook');
-
-  const Card = ({ title, desc, color, children, status }) => (
-    <div style={{ padding: 18, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: color + '15', color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800 }}>
-            {title[0]}
-          </div>
-          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{title}</div>
-        </div>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: status ? '#f0fdf4' : '#f1f5f9', color: status ? '#059669' : '#64748b' }}>
-          {status ? t('crm.connected') : t('crm.not_connected')}
-        </span>
-      </div>
-      <p style={{ margin: 0, color: '#64748b', fontSize: 12, lineHeight: 1.55 }}>{desc}</p>
-      <div style={{ marginTop: 'auto' }}>{children}</div>
-    </div>
-  );
-
-  return (
-    <div>
-      <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Plug size={16} color="#6366f1"/> {t('crm.integrations')}
-      </h4>
-      {err && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{err}</div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 18 }}>
-        <Card title={t('crm.hubspot')} desc={t('crm.hubspot_desc')} color="#ff7a59" status={hubspot?.is_active}>
-          {hubspot?.is_active ? (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button type="button" onClick={(e) => { stopEv(e); setMappingFor(hubspot); }} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
-              <button type="button" onClick={disconnectHubspot} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
-            </div>
-          ) : (
-            <button type="button" onClick={connectHubspot} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
-          )}
-        </Card>
-        <Card title={t('notion.title')} desc={t('notion.description')} color="#111827" status={!!notion?.connected}>
-          {notion?.connected ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {notion.databaseName && (
-                <div style={{ fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{notion.databaseName}</div>
-              )}
-              <div style={{ fontSize: 11, color: '#64748b' }}>
-                {notion.lastPullAt
-                  ? t('notion.last_sync_at', { at: new Date(notion.lastPullAt).toLocaleString() })
-                  : t('notion.last_sync_none')}
-              </div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                {t('notion.nightly_schedule', { time: notion.nightlyScheduleParis || '21:00' })}
-              </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <button type="button" onClick={(e) => { stopEv(e); setShowNotionMappings(true); }} disabled={busy} style={btnSecondary}>{t('notion.configure_mappings')}</button>
-                <button type="button" onClick={async (e) => {
-                  stopEv(e); setBusy(true); setNotionMsg(null);
-                  try {
-                    // One server-side round-trip: /sync-all runs push
-                    // then pull sequentially and returns merged stats.
-                    // The nightly worker handles the recurring delta;
-                    // this button covers the admin "do it now" case.
-                    const r = await api.syncAllNotion();
-                    if (!r.ok) throw new Error(r.error || 'sync_failed');
-                    load();
-                    setNotionMsg({ tone: 'success', text: t('notion.sync_ok_push', {
-                      pushed: r.pushed ?? 0,
-                      total: r.total ?? 0,
-                      pulled: r.pulled ?? 0,
-                    }) });
-                    setTimeout(() => setNotionMsg(null), 6000);
-                  } catch (err) {
-                    setNotionMsg({ tone: 'error', text: err.message || t('notion.sync_failed') });
-                  } finally { setBusy(false); }
-                }} disabled={busy} style={btnSecondary}>{t('notion.sync_now')}</button>
-                <button type="button" onClick={async (e) => {
-                  stopEv(e); setBusy(true); setNotionMsg(null);
-                  try {
-                    await api.disconnectNotion();
-                    load();
-                    setNotionMsg({ tone: 'success', text: t('notion.disconnect_ok') });
-                    setTimeout(() => setNotionMsg(null), 4000);
-                  } catch (err) {
-                    setNotionMsg({ tone: 'error', text: err.message });
-                  } finally { setBusy(false); }
-                }} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('notion.disconnect')}</button>
-              </div>
-              {notionMsg && (
-                <div style={{
-                  marginTop: 8,
-                  padding: '7px 10px',
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  background: notionMsg.tone === 'success' ? '#ecfdf5' : '#fef2f2',
-                  border: notionMsg.tone === 'success' ? '1px solid #6ee7b7' : '1px solid #fecaca',
-                  color: notionMsg.tone === 'success' ? '#047857' : '#b91c1c',
-                }}>{notionMsg.text}</div>
-              )}
-            </div>
-          ) : (
-            <button type="button" onClick={(e) => { stopEv(e); setShowNotionConnect(true); }} disabled={busy} style={btnPrimary}>{t('notion.connect')}</button>
-          )}
-        </Card>
-        <Card title={t('crm.salesforce')} desc={t('crm.salesforce_desc')} color="#00a1e0" status={salesforce?.is_active}>
-          {salesforce?.is_active ? (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button type="button" onClick={(e) => { stopEv(e); setMappingFor(salesforce); }} disabled={busy} style={btnSecondary}>{t('crm.configure')}</button>
-              <button type="button" onClick={disconnectSalesforce} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>
-            </div>
-          ) : (
-            <button type="button" onClick={connectSalesforce} disabled={busy} style={btnPrimary}>{t('crm.connect')}</button>
-          )}
-        </Card>
-        <Card title={t('crm.webhook')} desc={t('crm.webhook_desc')} color="#6366f1" status={webhook?.is_active}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <input
-              value={webhookUrl}
-              onChange={e => setWebhookUrl(e.target.value)}
-              placeholder={t('crm.webhook_url_ph')}
-              style={{ padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
-            />
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button type="button" onClick={saveWebhook} disabled={busy || !webhookUrl} style={btnPrimary}>{t('crm.save_webhook')}</button>
-              {webhook && <button type="button" onClick={testWebhook} disabled={busy} style={btnSecondary}>{t('crm.test_webhook')}</button>}
-              {webhook && <button type="button" onClick={(e) => removeIntegration(e, webhook.id)} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('crm.disconnect')}</button>}
-            </div>
-            {testMsg && <div style={{ fontSize: 11, color: testMsg.startsWith('✓') ? '#059669' : '#b91c1c', fontWeight: 600 }}>{testMsg}</div>}
-          </div>
-        </Card>
-      </div>
-
-      {mappingFor && (
-        <CrmMappingModal integration={mappingFor} onClose={() => { setMappingFor(null); load(); }}/>
-      )}
-
-      {showNotionConnect && (
-        <NotionConnectModal
-          onClose={() => setShowNotionConnect(false)}
-          onConnected={() => {
-            // After a successful /connect, close the connect modal
-            // and immediately hand off to the mapping modal so the
-            // admin can finish wiring field + status mappings without
-            // hunting for the "Configurer" button a second time.
-            setShowNotionConnect(false);
-            load();
-            setShowNotionMappings(true);
-          }}
-        />
-      )}
-
-      {showNotionMappings && (
-        <NotionMappingModal
-          onClose={() => { setShowNotionMappings(false); load(); }}
-        />
-      )}
-
-      {/* Sync log */}
-      <h5 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '20px 0 10px' }}>{t('crm.sync_log')}</h5>
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 4 }}>
-        {syncLog.length === 0
-          ? <div style={{ color: '#94a3b8', fontSize: 12, padding: 14, textAlign: 'center' }}>{t('crm.no_sync_yet')}</div>
-          : (
-            <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-              {syncLog.map(row => (
-                <div key={row.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '8px 12px', fontSize: 12, borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', overflow: 'hidden', minWidth: 0 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: row.status === 'success' ? '#f0fdf4' : '#fef2f2', color: row.status === 'success' ? '#059669' : '#b91c1c', textTransform: 'uppercase' }}>
-                      {row.action}
-                    </span>
-                    <span style={{ color: '#0f172a', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.prospect_name || '—'}</span>
-                    <span style={{ color: '#94a3b8' }}>· {row.provider}</span>
-                  </div>
-                  <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{fmtDate(row.created_at)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-      </div>
-
-      {/* Qonto banking integration — pays partner commissions
-          automatically. Sits next to the CRM cards but in its own
-          component so the connect/select-account flow doesn't tangle
-          with CRM state. */}
-      <div style={{ height: 1, background: '#e2e8f0', margin: '24px 0' }} />
-      <QontoSection />
-
-      {/* Outgoing webhooks — shares the Intégrations tab with the CRM
-          block above. Lives on its own component so we can keep
-          SettingsPage lean. */}
-      <WebhooksSection />
-    </div>
-  );
-}
-
-// ═══ QONTO BANKING (Intégrations) ═══
-function QontoSection() {
-  const { t } = useTranslation();
-  const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [accounts, setAccounts] = useState([]);
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  // Close the picker on Escape — the modal's own backdrop click
-  // already calls setPickerOpen(false), so this just covers the
-  // keyboard path.
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const onKey = (e) => { if (e.key === 'Escape') setPickerOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [pickerOpen]);
-  const [err, setErr] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const s = await api.getQontoStatus();
-      setStatus(s);
-    } catch (e) {
-      setErr(e.message);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
-
-  // Pick up the OAuth callback redirect ?qonto=connected|error and
-  // surface it inline so the admin sees the result without bouncing
-  // through a full page reload.
-  useEffect(() => {
-    const u = new URL(window.location.href);
-    const flag = u.searchParams.get('qonto');
-    if (flag === 'connected') {
-      setSuccessMsg(t('qonto.connected_ok', 'Qonto connecté.'));
-      setTimeout(() => setSuccessMsg(''), 5000);
-    } else if (flag === 'error') {
-      setErr(t('qonto.connect_error', 'Connexion Qonto échouée.'));
-    }
-    if (flag) {
-      // Strip the OAuth callback flag from the URL so a refresh
-      // doesn't re-toast "Qonto connecté" forever, and so any
-      // accidental back-navigation doesn't try to re-traverse the
-      // callback URL with a now-consumed code/state.
-      u.searchParams.delete('qonto');
-      // pathname + remaining querystring only — drop any hash that
-      // might have been left over from upstream redirects.
-      const cleanUrl = u.pathname + (u.searchParams.toString() ? '?' + u.searchParams.toString() : '');
-      window.history.replaceState({}, '', cleanUrl);
-    }
-  }, [t]);
-
-  const connect = async () => {
+  const connectQonto = async () => {
     setBusy(true); setErr('');
     try {
       const { url } = await api.getQontoConnectUrl();
       if (url) window.location.href = url;
-    } catch (e) {
-      setErr(e.message);
-    }
+    } catch (e) { setErr(e.message); }
     setBusy(false);
   };
-
-  const disconnect = async () => {
+  const disconnectQonto = async () => {
     const ok = await showConfirm({
       title: t('qonto.disconnect_title', 'Déconnecter Qonto'),
       message: t('qonto.disconnect_confirm', 'Êtes-vous sûr de vouloir déconnecter Qonto ?'),
@@ -953,135 +700,249 @@ function QontoSection() {
     catch (e) { setErr(e.message); }
     setBusy(false);
   };
-
-  const openPicker = async () => {
+  const openQontoPicker = async () => {
     setBusy(true); setErr('');
     try {
-      const data = await api.getQontoBankAccounts();
-      setAccounts(data?.bank_accounts || []);
-      setPickerOpen(true);
+      const d = await api.getQontoBankAccounts();
+      setQontoAccounts(d?.bank_accounts || []);
+      setQontoPickerOpen(true);
     } catch (e) { setErr(e.message); }
     setBusy(false);
   };
-
-  const pickAccount = async (acc) => {
+  const pickQontoAccount = async (acc) => {
     setBusy(true); setErr('');
     try {
       await api.selectQontoBankAccount({ bank_account_id: acc.id, iban: acc.iban, label: acc.label });
-      setPickerOpen(false);
+      setQontoPickerOpen(false);
       await load();
-      setSuccessMsg(t('qonto.account_selected', 'Compte sélectionné.'));
-      setTimeout(() => setSuccessMsg(''), 4000);
+      setQontoMsg(t('qonto.account_selected', 'Compte sélectionné.'));
+      setTimeout(() => setQontoMsg(''), 4000);
     } catch (e) { setErr(e.message); }
     setBusy(false);
   };
 
+  // ─── Build the integration list ───────────────────────────────────
+  const hubspot = byProvider('hubspot');
+  const salesforce = byProvider('salesforce');
+  const qontoConnected = !!qontoStatus?.connected;
+  const qontoConfigured = !!qontoStatus?.configured;
+  const qontoPlanAllowed = (qontoStatus?.plan === 'business' || qontoStatus?.plan === 'enterprise');
+
+  const fmt = (iso) => iso ? new Date(iso).toLocaleString() : '—';
+
+  const integrations = [
+    {
+      id: 'notion',
+      category: 'crm',
+      name: t('notion.title', 'Notion'),
+      description: t('notion.description'),
+      letter: 'N',
+      color: '#111827',
+      logo: '/images/integrations/notion-logo.png',
+      connected: !!notion?.connected,
+      meta: notion?.connected
+        ? t('settings.integrations.meta_notion', {
+            last: notion.lastPullAt ? fmt(notion.lastPullAt) : '—',
+            time: notion.nightlyScheduleParis || '21:00',
+            defaultValue: 'Dernière sync : {{last}} — Sync auto : {{time}}',
+          })
+        : null,
+      planRequired: !isBusiness,
+    },
+    {
+      id: 'hubspot',
+      category: 'crm',
+      name: t('crm.hubspot', 'HubSpot'),
+      description: t('crm.hubspot_desc'),
+      letter: 'H',
+      color: '#ff7a59',
+      logo: '/images/integrations/hubspot-logo.svg',
+      connected: !!hubspot?.is_active,
+      meta: hubspot?.is_active && hubspot?.updated_at
+        ? t('settings.integrations.meta_connected_at', { at: fmt(hubspot.updated_at), defaultValue: 'Connecté · {{at}}' })
+        : null,
+      planRequired: !isBusiness,
+    },
+    {
+      id: 'salesforce',
+      category: 'crm',
+      name: t('crm.salesforce', 'Salesforce'),
+      description: t('crm.salesforce_desc'),
+      letter: 'S',
+      color: '#00a1e0',
+      logo: '/images/integrations/salesforce-logo.svg',
+      connected: !!salesforce?.is_active,
+      meta: salesforce?.is_active && salesforce?.updated_at
+        ? t('settings.integrations.meta_connected_at', { at: fmt(salesforce.updated_at), defaultValue: 'Connecté · {{at}}' })
+        : null,
+      planRequired: !isBusiness,
+    },
+    {
+      id: 'qonto',
+      category: 'payments',
+      name: t('qonto.title', 'Qonto'),
+      description: t('qonto.description', 'Connectez votre compte Qonto pour payer les commissions automatiquement.'),
+      letter: 'Q',
+      color: '#5b50ec',
+      logo: '/images/integrations/qonto-logo.svg',
+      connected: qontoConnected,
+      meta: qontoConnected
+        ? t('settings.integrations.meta_qonto', {
+            org: qontoStatus?.organization_slug || '—',
+            account: qontoStatus?.bank_account_label || qontoStatus?.bank_account_iban || '—',
+            defaultValue: 'Organisation : {{org}} — Compte : {{account}}',
+          })
+        : null,
+      planRequired: !qontoPlanAllowed,
+      configured: qontoConfigured,
+    },
+    {
+      id: 'google-sso',
+      category: 'auth',
+      name: t('settings.integrations.google_sso', 'Google SSO'),
+      description: t('settings.integrations.google_sso_desc', 'Authentification single sign-on avec un compte Google.'),
+      letter: 'G',
+      color: '#4285f4',
+      logo: '/images/integrations/google-logo.svg',
+      ssoActive: true, // platform-level — always available, no per-tenant config
+    },
+  ];
+
+  // ─── Click handlers per integration ───────────────────────────────
+  const handleConnect = (id) => {
+    if (id === 'notion') setShowNotionConnect(true);
+    else if (id === 'hubspot') connectHubspot();
+    else if (id === 'salesforce') connectSalesforce();
+    else if (id === 'qonto') connectQonto();
+  };
+  const handleConfigure = (id) => {
+    // Toggle inline expansion for providers that show their config
+    // panel inline; open a modal for those that don't.
+    if (id === 'notion') {
+      setShowNotionMappings(true);
+    } else if (id === 'hubspot') {
+      setMappingFor(hubspot);
+    } else if (id === 'salesforce') {
+      setMappingFor(salesforce);
+    } else if (id === 'qonto') {
+      setExpandedId(prev => prev === 'qonto' ? null : 'qonto');
+    }
+  };
+  const handleUpgrade = () => { window.location.href = '/billing'; };
+
   if (loading) return <div style={{ color: '#94a3b8', padding: 16 }}>{t('settings.loading')}</div>;
 
-  const connected = !!status?.connected;
-  const configured = !!status?.configured;
-  const plan = status?.plan || 'starter';
-  const planAllowed = plan === 'business' || plan === 'enterprise';
+  // ─── Filter pills ──────────────────────────────────────────────────
+  const FILTERS = [
+    { id: 'all',      label: t('settings.integrations.filter_all', 'Toutes') },
+    { id: 'crm',      label: t('settings.integrations.filter_crm', 'CRM') },
+    { id: 'payments', label: t('settings.integrations.filter_payments', 'Paiements') },
+    { id: 'auth',     label: t('settings.integrations.filter_auth', 'Auth') },
+    { id: 'webhooks', label: t('settings.integrations.filter_webhooks', 'Webhooks') },
+    { id: 'history',  label: t('settings.integrations.filter_history', 'Historique') },
+  ];
+
+  // For all/crm/payments/auth we render the card list. Webhooks and
+  // History delegate to the existing components so we don't duplicate
+  // their already-tested behaviour.
+  const showCards = ['all', 'crm', 'payments', 'auth'].includes(filter);
+  const visibleIntegrations = filter === 'all'
+    ? integrations
+    : integrations.filter(i => i.category === filter);
 
   return (
     <div>
       <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Banknote size={16} color="#6366f1" /> {t('qonto.section_title', 'Paiements automatisés')}
+        <Plug size={16} color="#6366f1"/> {t('crm.integrations', 'Intégrations')}
       </h4>
 
-      {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{err}</div>}
-      {successMsg && <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 12 }}>{successMsg}</div>}
+      {err && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{err}</div>
+      )}
+      {qontoMsg && (
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{qontoMsg}</div>
+      )}
 
-      <div style={{
-        padding: 18, borderRadius: 12, border: '1px solid #e2e8f0',
-        background: planAllowed ? '#fff' : '#f8fafc',
-        opacity: planAllowed ? 1 : 0.85,
-        position: 'relative',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: '#fff', border: '1px solid #e2e8f0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 4, opacity: planAllowed ? 1 : 0.55,
-            }}>
-              <img src="/images/integrations/qonto-logo.svg" alt="Qonto" width={20} height={20} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-              {t('qonto.title', 'Qonto')}
-              {!planAllowed && <Lock size={13} color="#94a3b8" aria-hidden="true" />}
-            </div>
-          </div>
-          {planAllowed ? (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: connected ? '#f0fdf4' : '#f1f5f9', color: connected ? '#059669' : '#64748b' }}>
-              {connected ? t('crm.connected') : t('crm.not_connected')}
-            </span>
-          ) : (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: '#eef2ff', color: '#4338ca' }}>
-              {t('pricing.business', 'Business')}
-            </span>
-          )}
-        </div>
-        <p style={{ margin: 0, color: '#64748b', fontSize: 12, lineHeight: 1.55, marginBottom: 12 }}>
-          {t('qonto.description', 'Connectez votre compte Qonto pour payer les commissions automatiquement.')}
-        </p>
-
-        {!planAllowed ? (
-          <div style={{ background: '#eef2ff', border: '1px solid #c7d2fe', color: '#4338ca', padding: '10px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
-            {t('qonto.upgrade_required', 'Disponible avec le plan Business.')}
-          </div>
-        ) : !configured ? (
-          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 10 }}>
-            {t('qonto.not_configured', 'QONTO_CLIENT_ID non configuré côté serveur.')}
-          </div>
-        ) : null}
-
-        {!planAllowed ? (
-          <a href="/billing" style={{
-            ...btnPrimary,
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            textDecoration: 'none',
-          }}>
-            {t('qonto.upgrade_button', 'Passer au plan Business')} →
-          </a>
-        ) : connected ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {status.organization_slug && (
-              <div style={{ fontSize: 12, color: '#64748b' }}>
-                {t('qonto.organization', 'Organisation')} : <strong style={{ color: '#0f172a' }}>{status.organization_slug}</strong>
-              </div>
-            )}
-            <div style={{ fontSize: 12, color: '#64748b' }}>
-              {t('qonto.debit_account', 'Compte à débiter')} :{' '}
-              {status.bank_account_iban ? (
-                <strong style={{ color: '#0f172a', fontFamily: 'monospace' }}>
-                  {status.bank_account_label || status.bank_account_iban}
-                </strong>
-              ) : (
-                <em style={{ color: '#dc2626' }}>{t('qonto.no_account_selected', 'Aucun compte sélectionné')}</em>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button type="button" onClick={openPicker} disabled={busy} style={btnSecondary}>
-                {t('qonto.choose_account', 'Choisir le compte à débiter')}
-              </button>
-              <button type="button" onClick={disconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
-                {t('crm.disconnect')}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" onClick={connect} disabled={busy || !configured} style={btnPrimary}>
-            {t('crm.connect')}
-          </button>
-        )}
+      {/* Filter pills */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+        {FILTERS.map(f => {
+          const active = filter === f.id;
+          return (
+            <button
+              key={f.id}
+              onClick={() => { setFilter(f.id); setExpandedId(null); }}
+              style={{
+                padding: '6px 14px', borderRadius: 999,
+                fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+                cursor: 'pointer', transition: 'all .15s',
+                border: '1.5px solid ' + (active ? '#0f172a' : '#e5e7eb'),
+                background: active ? '#0f172a' : '#fff',
+                color: active ? '#fff' : '#475569',
+              }}
+            >
+              {f.label}
+            </button>
+          );
+        })}
       </div>
 
-      {pickerOpen && (
+      {showCards && (
+        <div>
+          {visibleIntegrations.map(integration => (
+            <IntegrationRow
+              key={integration.id}
+              integration={integration}
+              t={t}
+              busy={busy}
+              expanded={expandedId === integration.id}
+              onConnect={() => handleConnect(integration.id)}
+              onConfigure={() => handleConfigure(integration.id)}
+              onUpgrade={handleUpgrade}
+              onDisconnect={
+                integration.id === 'hubspot' ? disconnectHubspot
+                : integration.id === 'salesforce' ? disconnectSalesforce
+                : integration.id === 'notion' ? disconnectNotion
+                : integration.id === 'qonto' ? disconnectQonto
+                : null
+              }
+              onSync={integration.id === 'notion' ? syncNotion : null}
+              notionMsg={integration.id === 'notion' ? notionMsg : null}
+              qontoStatus={integration.id === 'qonto' ? qontoStatus : null}
+              onQontoOpenPicker={integration.id === 'qonto' ? openQontoPicker : null}
+            />
+          ))}
+        </div>
+      )}
+
+      {filter === 'webhooks' && <WebhooksSection />}
+
+      {filter === 'history' && <SyncHistoryPanel log={syncLog} t={t} />}
+
+      {/* Modals — kept identical to the old IntegrationsTab */}
+      {mappingFor && (
+        <CrmMappingModal integration={mappingFor} onClose={() => { setMappingFor(null); load(); }}/>
+      )}
+      {showNotionConnect && (
+        <NotionConnectModal
+          onClose={() => setShowNotionConnect(false)}
+          onConnected={() => {
+            setShowNotionConnect(false);
+            load();
+            setShowNotionMappings(true);
+          }}
+        />
+      )}
+      {showNotionMappings && (
+        <NotionMappingModal
+          onClose={() => { setShowNotionMappings(false); load(); }}
+        />
+      )}
+
+      {/* Qonto account picker modal */}
+      {qontoPickerOpen && (
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => setPickerOpen(false)}
+          onClick={() => setQontoPickerOpen(false)}
         >
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)' }} />
           <div
@@ -1092,14 +953,14 @@ function QontoSection() {
               {t('qonto.choose_account', 'Choisir le compte à débiter')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
-              {accounts.length === 0 && (
+              {qontoAccounts.length === 0 && (
                 <div style={{ color: '#94a3b8', fontSize: 13, padding: 12 }}>{t('qonto.no_accounts', 'Aucun compte trouvé.')}</div>
               )}
-              {accounts.map(acc => (
+              {qontoAccounts.map(acc => (
                 <button
                   key={acc.id}
                   type="button"
-                  onClick={() => pickAccount(acc)}
+                  onClick={() => pickQontoAccount(acc)}
                   disabled={busy}
                   style={{
                     textAlign: 'left', padding: '12px 14px', borderRadius: 10,
@@ -1115,11 +976,184 @@ function QontoSection() {
               ))}
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
-              <button onClick={() => setPickerOpen(false)} style={btnSecondary}>{t('common.close', 'Fermer')}</button>
+              <button onClick={() => setQontoPickerOpen(false)} style={btnSecondary}>{t('common.close', 'Fermer')}</button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Single integration row ─────────────────────────────────────────
+// Kept as a separate component so the filtered list maps cleanly; the
+// row owns its own hover state only — all real state lives on
+// IntegrationsTab.
+function IntegrationRow({ integration, t, busy, expanded, onConnect, onConfigure, onDisconnect, onUpgrade, onSync, notionMsg, qontoStatus, onQontoOpenPicker }) {
+  const [hover, setHover] = useState(false);
+  const { name, description, meta, color, letter, logo, connected, ssoActive, planRequired, configured } = integration;
+
+  // Status badge styles (Connecté green, Actif blue, Non connecté grey)
+  const badge = ssoActive
+    ? { bg: '#eff6ff', fg: '#1d4ed8', label: t('settings.integrations.active', 'Actif') }
+    : connected
+      ? { bg: '#f0fdf4', fg: '#15803d', label: t('settings.integrations.connected', 'Connecté') }
+      : { bg: '#f3f4f6', fg: '#6b7280', label: t('settings.integrations.not_connected', 'Non connecté') };
+
+  return (
+    <div style={{
+      border: '1px solid ' + (hover ? '#d1d5db' : '#e5e7eb'),
+      borderRadius: 12, marginBottom: 8, transition: 'border-color .15s',
+      background: '#fff', overflow: 'hidden',
+    }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: 14, gap: 12,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
+          {/* Avatar — logo when available, coloured letter as fallback */}
+          <div style={{
+            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+            background: logo ? '#fff' : color,
+            border: logo ? '1px solid #e5e7eb' : 'none',
+            color: '#fff', fontSize: 14, fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: logo ? 4 : 0, overflow: 'hidden',
+          }}>
+            {logo ? (
+              <img src={logo} alt={name} style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.style.background = color; e.currentTarget.parentElement.innerHTML = letter; }}
+              />
+            ) : letter}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{name}</div>
+            <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>{description}</div>
+            {meta && (
+              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, fontStyle: 'italic' }}>{meta}</div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <span style={{
+            fontSize: 11, padding: '3px 10px', borderRadius: 999,
+            background: badge.bg, color: badge.fg, fontWeight: 500,
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}>
+            {planRequired && <Lock size={10} />}
+            {planRequired ? t('pricing.business', 'Plan Business') : badge.label}
+          </span>
+
+          {/* Buttons — Google SSO has none */}
+          {ssoActive ? null : planRequired ? (
+            <button onClick={onUpgrade} disabled={busy} style={{
+              fontSize: 12, padding: '6px 12px', borderRadius: 8,
+              background: '#0f172a', color: '#fff', border: 'none',
+              cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
+            }}>
+              {t('crm.upgrade_cta', 'Passer au Business')} →
+            </button>
+          ) : connected ? (
+            <button onClick={onConfigure} disabled={busy} style={{
+              fontSize: 12, padding: '6px 12px', borderRadius: 8,
+              border: '1px solid #e5e7eb', background: '#fff', color: '#0f172a',
+              cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
+            }}>
+              {t('settings.integrations.configure', 'Configurer')}
+            </button>
+          ) : (
+            <button onClick={onConnect} disabled={busy || (integration.id === 'qonto' && configured === false)} style={{
+              fontSize: 12, padding: '6px 12px', borderRadius: 8,
+              background: '#059669', color: '#fff', border: 'none',
+              cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
+              opacity: (busy || (integration.id === 'qonto' && configured === false)) ? 0.6 : 1,
+            }}>
+              {t('settings.integrations.connect', 'Connecter')}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Inline expansion — Qonto's account picker / disconnect, plus
+          Notion's sync now / disconnect actions while connected. */}
+      {expanded && integration.id === 'qonto' && qontoStatus?.connected && (
+        <div style={{ borderTop: '1px solid #e5e7eb', padding: 14, background: '#f9fafb' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <button type="button" onClick={onQontoOpenPicker} disabled={busy} style={btnSecondary}>
+              {t('qonto.choose_account', 'Choisir le compte à débiter')}
+            </button>
+            <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+              {t('crm.disconnect', 'Déconnecter')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Notion: when connected, surface "Sync now" + "Disconnect" as
+          a small actions row right under the card so admins don't
+          need to open the mappings modal just to trigger a sync. */}
+      {connected && integration.id === 'notion' && (
+        <div style={{ borderTop: '1px solid #e5e7eb', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" onClick={onSync} disabled={busy} style={btnSecondary}>{t('notion.sync_now', 'Synchroniser maintenant')}</button>
+          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('notion.disconnect', 'Déconnecter')}</button>
+          {notionMsg && (
+            <div style={{
+              padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+              background: notionMsg.tone === 'success' ? '#ecfdf5' : '#fef2f2',
+              border: notionMsg.tone === 'success' ? '1px solid #6ee7b7' : '1px solid #fecaca',
+              color: notionMsg.tone === 'success' ? '#047857' : '#b91c1c',
+            }}>{notionMsg.text}</div>
+          )}
+        </div>
+      )}
+
+      {/* HubSpot / Salesforce: when connected, surface the disconnect
+          shortcut. Configure goes through the modal. */}
+      {connected && (integration.id === 'hubspot' || integration.id === 'salesforce') && (
+        <div style={{ borderTop: '1px solid #e5e7eb', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+            {t('crm.disconnect', 'Déconnecter')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Sync history panel (filter='history') ──────────────────────────
+function SyncHistoryPanel({ log, t }) {
+  if (!log || log.length === 0) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+        {t('crm.no_sync_yet', 'Aucune synchronisation pour l\'instant.')}
+      </div>
+    );
+  }
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+      {log.map((row, i) => (
+        <div key={row.id} style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+          padding: '10px 14px', fontSize: 13,
+          borderTop: i === 0 ? 'none' : '1px solid #f1f5f9',
+        }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', overflow: 'hidden', minWidth: 0 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
+              background: row.status === 'success' ? '#f0fdf4' : '#fef2f2',
+              color: row.status === 'success' ? '#059669' : '#b91c1c',
+              textTransform: 'uppercase',
+            }}>{row.action}</span>
+            <span style={{ color: '#0f172a', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.prospect_name || '—'}</span>
+            <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>· {row.provider}</span>
+          </div>
+          <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{fmtDate(row.created_at)}</span>
+        </div>
+      ))}
     </div>
   );
 }
