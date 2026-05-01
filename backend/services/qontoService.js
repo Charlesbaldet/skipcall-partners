@@ -360,6 +360,12 @@ async function createBulkTransfer(tenantId, {
   // "/bulk_transfers") explicitly tell us they live at the root.
   const items = transfers.map(t => {
     const item = {
+      // Each line MUST carry a client_transfer_id (unique string we
+      // generate) — Qonto's bulk response uses it to report which
+      // lines succeeded/failed. Reuse the commission UUID since
+      // it's already unique per row across the tenant; fall back to
+      // a fresh uuid if the caller forgot.
+      client_transfer_id: String(t.commissionId || newIdempotencyKey()),
       reference: buildReference(t.commissionId),
       note: `Commission partenaire — ${t.partnerName || ''}${t.dealName ? ' — ' + t.dealName : ''}`.slice(0, 140),
       currency: 'EUR',

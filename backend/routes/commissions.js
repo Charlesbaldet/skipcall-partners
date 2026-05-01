@@ -809,9 +809,17 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
     const created = result.transfers || [];
     const outcomes = [];
     const scaToken = result.requires_sca ? (result.sca_session_token || reusedScaToken || null) : null;
+    // Prefer matching Qonto's response items back to our commissions
+    // by client_transfer_id (the commission UUID we sent). Fall back
+    // to positional matching when the response shape doesn't carry it.
+    const byClientId = new Map();
+    for (const tr of created) {
+      const cid = tr?.client_transfer_id || tr?.transfer?.client_transfer_id;
+      if (cid) byClientId.set(String(cid), tr);
+    }
     for (let i = 0; i < eligible.length; i++) {
       const c = eligible[i];
-      const t = created[i] || {};
+      const t = byClientId.get(String(c.id)) || created[i] || {};
       const reference = qonto.buildReference(c.id);
       // SCA-pending bulk: same row state as a single SCA-pending
       // transfer — initiated at + sca token persisted, no
