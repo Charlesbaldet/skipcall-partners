@@ -1036,14 +1036,67 @@ async function reconcileQontoTransfers(tenantId) {
       }
 
       if (match && match.id) {
+        // Adopt the transfer id we found — and if Qonto already
+        // reports the transfer as settled, finalize the commission
+        // in the same pass (status='paid' + proof-of-payment email).
+        // Without this, a 428 SCA flow that's already been approved
+        // by the time the next poll runs would otherwise need a
+        // SECOND reconcile tick before flipping to Payé.
         await query(
           `UPDATE commissions
               SET qonto_transfer_id = $2,
-                  qonto_sca_session_token = NULL
+                  qonto_sca_session_token = NULL,
+                  payment_error = NULL
             WHERE id = $1`,
           [c.id, match.id]
         );
-        updates.push({ commission_id: c.id, transfer_id: match.id, status: 'matched_by_reference', reference: ourRef });
+        if (match.status === 'settled' || match.status === 'completed') {
+          await query(
+            `UPDATE commissions
+                SET status = 'paid',
+                    paid_at = COALESCE(paid_at, NOW()),
+                    payment_completed_at = NOW(),
+                    payment_error = NULL
+              WHERE id = $1`,
+            [c.id]
+          );
+          // Best-effort proof-of-payment email — same template path
+          // as the regular settled branch above.
+          try {
+            const { rows: extra } = await query(
+              `SELECT p.email AS partner_email, p.name AS partner_name, p.iban,
+                      r.prospect_name, r.prospect_company,
+                      t.name AS tenant_name
+                 FROM commissions c
+                 JOIN partners p ON p.id = c.partner_id
+                 JOIN referrals r ON r.id = c.referral_id
+                 JOIN tenants t ON t.id = c.tenant_id
+                WHERE c.id = $1 LIMIT 1`,
+              [c.id]
+            );
+            const x = extra[0];
+            if (x && x.partner_email) {
+              const ibanLast4 = (x.iban || '').replace(/\s+/g, '').slice(-4);
+              const dealLabel = x.prospect_company || x.prospect_name || '';
+              const tpl = emailTemplates.commissionPaymentSent({
+                partnerName: x.partner_name,
+                amount: c.amount,
+                currency: '€',
+                tenantName: x.tenant_name,
+                dealName: dealLabel,
+                transferReference: c.payment_reference,
+                transferDateLabel: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                ibanLast4,
+              });
+              if (tpl) await sendEmail(x.partner_email, tpl.subject, tpl.html);
+            }
+          } catch (e) {
+            console.warn('[qonto.reconcile.match] email failed for', c.id, ':', e.message);
+          }
+          updates.push({ commission_id: c.id, transfer_id: match.id, status: 'paid', reference: ourRef });
+        } else {
+          updates.push({ commission_id: c.id, transfer_id: match.id, status: 'matched_by_reference', reference: ourRef });
+        }
         continue;
       }
 

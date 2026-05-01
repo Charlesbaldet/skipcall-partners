@@ -460,6 +460,21 @@ async function runMigrations() {
      WHERE status <> 'paid'
        AND payment_error IS NOT NULL
   `).catch(() => {});
+
+  // Belt-and-suspenders: same cleanup for sca_replay_max_retries_exceeded
+  // even when the broader sweep above missed a row (e.g. it was added
+  // after the prior migration ran). Bound the next reconcile tick by
+  // re-arming the retry budget too.
+  await query(`
+    UPDATE commissions
+       SET payment_error = NULL,
+           qonto_retry_count = 0,
+           payment_initiated_at = NULL,
+           qonto_sca_session_token = NULL,
+           qonto_idempotency_key = NULL,
+           qonto_transfer_id = NULL
+     WHERE payment_error = 'sca_replay_max_retries_exceeded'
+  `).catch(() => {});
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_initiated_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_reference TEXT`);

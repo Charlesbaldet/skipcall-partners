@@ -386,7 +386,13 @@ export default function CommissionsPage() {
     else executeBulkPay(m.commissions);
   };
 
-  const handleRefreshPolls = async () => {
+  const handleRefreshPolls = async (opts = {}) => {
+    // `from = 'sca_confirmation'` flags a poll triggered by the
+    // "J'ai déjà approuvé" button on a SCA-pending card. The empty-
+    // state toast then says "Le virement est en cours de traitement
+    // par Qonto…" instead of the generic "Aucun changement"
+    // sent by the toolbar Actualiser button.
+    const from = opts.from || 'manual';
     setRefreshingPolls(true);
     try {
       const r = await api.pollQontoTransfers();
@@ -408,8 +414,10 @@ export default function CommissionsPage() {
         showToast(t('qonto.toast_adopted', { count: adopted.length, defaultValue: '{{count}} virement(s) retrouvé(s) — Qonto traite la demande.' }), 'success');
       } else if (declined.length > 0) {
         showToast(t('qonto.toast_declined', { count: declined.length, defaultValue: '{{count}} virement(s) refusé(s) par Qonto.' }), 'error');
+      } else if (from === 'sca_confirmation') {
+        showToast(t('qonto.toast_sca_confirmed_no_match', 'Le virement est en cours de traitement par Qonto. Le statut sera mis à jour automatiquement.'), 'info');
       } else {
-        showToast(t('qonto.toast_no_change', 'Aucun changement détecté. Le virement est peut-être encore en cours de traitement par Qonto.'), 'info');
+        showToast(t('qonto.toast_no_change', 'Aucun changement détecté. Vérifiez directement sur app.qonto.com.'), 'info');
       }
     }
     catch (err) {
@@ -703,9 +711,9 @@ export default function CommissionsPage() {
                             </button>
                           )}
                           {scaPending ? (
-                            <button onClick={handleRefreshPolls} disabled={refreshingPolls}
+                            <button onClick={() => handleRefreshPolls({ from: 'sca_confirmation' })} disabled={refreshingPolls}
                               style={{ width: '100%', padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #fde68a', color: '#92400e', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: refreshingPolls ? 0.7 : 1 }}>
-                              <RefreshCw size={12} className={refreshingPolls ? 'rb-spin' : ''} /> {t('qonto.check_status', 'Vérifier le statut')}
+                              <CheckCircle size={12} className={refreshingPolls ? 'rb-spin' : ''} /> {refreshingPolls ? t('qonto.refreshing_status', 'Vérification…') : t('qonto.already_approved', 'J\'ai déjà approuvé')}
                             </button>
                           ) : isInitiated ? (
                             <div style={{ padding: '7px 10px', borderRadius: 8, background: '#eef2ff', color: '#4338ca', fontSize: 11, textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>

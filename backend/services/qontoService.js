@@ -432,21 +432,19 @@ async function getTransfer(tenantId, transferId) {
   return data?.transfer || data;
 }
 
-// Recent SEPA transfers, optionally filtered by status. Used as the
-// fallback when a 428 didn't carry a transfer_id but Qonto did
-// actually create the transfer behind the scenes — we then match by
-// reference / amount.
+// Recent SEPA transfers — used as the fallback when a 428 didn't
+// carry a transfer_id but Qonto did actually create the transfer
+// behind the scenes. We then match by reference / amount client-
+// side.
 //
-// Qonto's enum is { pending, processing, settled, declined,
-// canceled }. We previously asked for 'completed' which 400s the
-// request — 'settled' is the canonical "money sent" terminal state.
-async function listRecentTransfers(tenantId, { statuses, perPage = 50 } = {}) {
-  const params = new URLSearchParams();
-  for (const s of (statuses || ['pending', 'processing', 'settled', 'declined', 'canceled'])) {
-    params.append('status[]', s);
-  }
-  params.set('per_page', String(perPage));
-  const data = await api(tenantId, `/sepa/transfers?${params.toString()}`);
+// IMPORTANT: don't pass any status filter. Earlier attempts with
+// status[]=completed (which Qonto rejects) and even with the
+// canonical { pending, processing, settled, declined, canceled }
+// returned the empty list for SCA-pending transfers. The unfiltered
+// call returns everything reliably; we filter post-fetch in the
+// caller.
+async function listRecentTransfers(tenantId, { perPage = 100 } = {}) {
+  const data = await api(tenantId, `/sepa/transfers?per_page=${perPage}`);
   return data?.transfers || data || [];
 }
 
