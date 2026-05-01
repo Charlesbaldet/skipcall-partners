@@ -221,8 +221,10 @@ export default function SettingsPage() {
             )}
             {tab === 'public-marketplace' && isAdmin && (
               <>
-                <MarketplaceTab />
-                <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+                {/* MarketplaceTab moved to its own page at /marketplace-admin
+                    (sidebar → Marketplace). The settings tab now hosts only
+                    the public link + tracking-feature toggles, which aren't
+                    marketplace-specific. */}
                 <PublicLinkTab />
                 <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
                 <TrackingFeaturesTab />

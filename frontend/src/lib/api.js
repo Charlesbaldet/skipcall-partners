@@ -305,6 +305,35 @@ class ApiClient {
   updateMarketplaceSettings(data) {
     return this.request('/marketplace/settings', { method: 'PATCH', body: JSON.stringify(data) });
   }
+  // Marketplace WYSIWYG editor (admin) + public detail page.
+  getMarketplacePage() { return this.request('/marketplace/page'); }
+  updateMarketplacePage(payload) {
+    return this.request('/marketplace/page', { method: 'PUT', body: JSON.stringify(payload) });
+  }
+  reorderMarketplaceBlocks(blocks) {
+    return this.request('/marketplace/page/reorder', { method: 'POST', body: JSON.stringify({ blocks }) });
+  }
+  uploadMarketplaceReference({ name, description, dataUrl }) {
+    return this.request('/marketplace/references/upload', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, data_url: dataUrl }),
+    });
+  }
+  deleteMarketplaceReference(id) {
+    return this.request('/marketplace/references/' + id, { method: 'DELETE' });
+  }
+  translateMarketplacePage() {
+    return this.request('/marketplace/page/translate', { method: 'POST' });
+  }
+  getMarketplaceTranslateStatus() {
+    return this.request('/marketplace/page/translate/status');
+  }
+  getMarketplaceProgram(slug) {
+    return this.request('/marketplace/programs/' + encodeURIComponent(slug));
+  }
+  getMarketplaceProgramSimilar(slug) {
+    return this.request('/marketplace/programs/' + encodeURIComponent(slug) + '/similar');
+  }
 
   // News (admin)
   getNews() { return this.request('/news'); }

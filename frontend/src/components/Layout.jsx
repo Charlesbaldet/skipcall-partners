@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -60,6 +60,7 @@ export default function Layout({ children }) {
 
     { section: t('layout.section.gestion') },
     { to: '/programme', icon: Trophy, label: t('layout.nav.programme') },
+    { to: '/marketplace-admin', icon: Store, label: t('layout.nav.marketplace', 'Marketplace'), adminOnly: true },
     { to: '/billing', icon: CreditCard, label: t('layout.nav.billing'), adminOnly: true },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
 
