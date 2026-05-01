@@ -661,15 +661,17 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
       `UPDATE commissions
           SET qonto_transfer_id = $2,
               qonto_sca_session_token = $3,
-              qonto_request_body = $4,
+              qonto_vop_proof_token = $4,
+              qonto_request_body = $5,
               payment_initiated_at = NOW(),
-              payment_reference = $5,
+              payment_reference = $6,
               payment_error = NULL
         WHERE id = $1`,
       [
         c.id,
         transfer.id || null,
         result.requires_sca ? (result.sca_session_token || null) : null,
+        result.requires_sca ? (result.vop_proof_token || null) : null,
         result.requires_sca ? JSON.stringify(result.request_body) : null,
         result.reference,
       ]
@@ -749,15 +751,17 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
       `UPDATE commissions
           SET qonto_transfer_id = $2,
               qonto_sca_session_token = $3,
-              qonto_request_body = $4,
+              qonto_vop_proof_token = $4,
+              qonto_request_body = $5,
               payment_initiated_at = NOW(),
-              payment_reference = $5,
+              payment_reference = $6,
               payment_error = NULL
         WHERE id = $1`,
       [
         c.id,
         transfer.id || null,
         result.requires_sca ? (result.sca_session_token || null) : null,
+        result.requires_sca ? (result.vop_proof_token || null) : null,
         result.requires_sca ? JSON.stringify(result.request_body) : null,
         result.reference,
       ]
@@ -976,6 +980,7 @@ async function reconcileQontoTransfers(tenantId) {
   const { rows: orphanRows } = await query(
     `SELECT c.id, c.tenant_id, c.amount, c.payment_reference,
             c.qonto_idempotency_key, c.qonto_sca_session_token,
+            c.qonto_vop_proof_token,
             c.qonto_request_body,
             c.qonto_attachment_id,
             COALESCE(c.qonto_retry_count, 0) AS qonto_retry_count,
@@ -1045,6 +1050,7 @@ async function reconcileQontoTransfers(tenantId) {
           `UPDATE commissions
               SET qonto_transfer_id = $2,
                   qonto_sca_session_token = NULL,
+                  qonto_vop_proof_token = NULL,
                   payment_error = NULL
             WHERE id = $1`,
           [c.id, match.id]
@@ -1115,6 +1121,7 @@ async function reconcileQontoTransfers(tenantId) {
           `UPDATE commissions
               SET payment_initiated_at = NULL,
                   qonto_sca_session_token = NULL,
+                  qonto_vop_proof_token = NULL,
                   qonto_request_body = NULL,
                   qonto_idempotency_key = NULL,
                   qonto_retry_count = 0,
@@ -1136,16 +1143,18 @@ async function reconcileQontoTransfers(tenantId) {
           body: c.qonto_request_body,
           idempotencyKey: c.qonto_idempotency_key,
           scaSessionToken: c.qonto_sca_session_token,
+          vopProofToken: c.qonto_vop_proof_token || undefined,
         });
         if (result.ok) {
           const transfer = result.transfer || {};
-          // Transfer actually created on Qonto's side — clear SCA
-          // scratch fields, drop retry budget back to 0, let the
+          // Transfer actually created on Qonto's side — clear SCA +
+          // VOP scratch fields, drop retry budget back to 0, let the
           // next reconcile tick promote 'settled' → 'paid'.
           await query(
             `UPDATE commissions
                 SET qonto_transfer_id = $2,
                     qonto_sca_session_token = NULL,
+                    qonto_vop_proof_token = NULL,
                     qonto_request_body = NULL,
                     qonto_retry_count = 0,
                     payment_error = NULL
@@ -1164,6 +1173,7 @@ async function reconcileQontoTransfers(tenantId) {
           await query(
             `UPDATE commissions
                 SET qonto_sca_session_token = NULL,
+                    qonto_vop_proof_token = NULL,
                     qonto_request_body = NULL,
                     qonto_idempotency_key = NULL,
                     payment_initiated_at = NULL,
@@ -1176,11 +1186,18 @@ async function reconcileQontoTransfers(tenantId) {
           updates.push({ commission_id: c.id, status: result.expired ? 'sca_token_expired' : 'sca_session_not_found' });
         } else {
           // Still 428 — admin hasn't approved on their phone yet.
-          // Refresh the SCA token if Qonto rotated it.
-          if (result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token) {
+          // Refresh SCA + VOP tokens if Qonto rotated either.
+          const newSca = result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token
+            ? result.sca_session_token : null;
+          const newVop = result.vop_proof_token && result.vop_proof_token !== c.qonto_vop_proof_token
+            ? result.vop_proof_token : null;
+          if (newSca || newVop) {
             await query(
-              'UPDATE commissions SET qonto_sca_session_token = $2 WHERE id = $1',
-              [c.id, result.sca_session_token]
+              `UPDATE commissions
+                  SET qonto_sca_session_token = COALESCE($2, qonto_sca_session_token),
+                      qonto_vop_proof_token = COALESCE($3, qonto_vop_proof_token)
+                WHERE id = $1`,
+              [c.id, newSca, newVop]
             );
           }
           updates.push({ commission_id: c.id, status: 'sca_pending' });
@@ -1228,7 +1245,8 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
     const { rows } = await query(
       `SELECT id, tenant_id, status, partner_id, amount, payment_reference,
               qonto_request_body, qonto_idempotency_key,
-              qonto_sca_session_token, payment_initiated_at
+              qonto_sca_session_token, qonto_vop_proof_token,
+              payment_initiated_at
          FROM commissions
         WHERE ${where} LIMIT 1`,
       params
@@ -1256,6 +1274,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       body: c.qonto_request_body,           // replayTransfer gère string ou objet
       idempotencyKey: c.qonto_idempotency_key,
       scaSessionToken: c.qonto_sca_session_token,
+      vopProofToken: c.qonto_vop_proof_token || undefined,
     });
     console.log(`[confirm-sca] Replay result for ${c.id}:`, {
       ok: !!result.ok,
@@ -1275,6 +1294,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
         `UPDATE commissions
             SET qonto_transfer_id = $2,
                 qonto_sca_session_token = NULL,
+                qonto_vop_proof_token = NULL,
                 qonto_request_body = NULL,
                 qonto_retry_count = 0,
                 payment_error = NULL
@@ -1309,6 +1329,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       await query(
         `UPDATE commissions
             SET qonto_sca_session_token = NULL,
+                qonto_vop_proof_token = NULL,
                 qonto_request_body = NULL,
                 qonto_idempotency_key = NULL,
                 payment_initiated_at = NULL,
@@ -1333,6 +1354,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       await query(
         `UPDATE commissions
             SET qonto_sca_session_token = NULL,
+                qonto_vop_proof_token = NULL,
                 qonto_request_body = NULL,
                 qonto_idempotency_key = NULL,
                 payment_initiated_at = NULL,
@@ -1351,12 +1373,19 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
 
     if (result.sca_still_pending) {
       console.log(`[confirm-sca] SCA still pending for ${c.id} — admin hasn't approved on phone yet`);
-      // Admin hasn't approved on their phone yet. Refresh the SCA
-      // token in case Qonto rotated it.
-      if (result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token) {
+      // Admin hasn't approved on their phone yet. Refresh the SCA +
+      // VOP tokens in case Qonto rotated either of them.
+      const newSca = result.sca_session_token && result.sca_session_token !== c.qonto_sca_session_token
+        ? result.sca_session_token : null;
+      const newVop = result.vop_proof_token && result.vop_proof_token !== c.qonto_vop_proof_token
+        ? result.vop_proof_token : null;
+      if (newSca || newVop) {
         await query(
-          'UPDATE commissions SET qonto_sca_session_token = $2 WHERE id = $1',
-          [c.id, result.sca_session_token]
+          `UPDATE commissions
+              SET qonto_sca_session_token = COALESCE($2, qonto_sca_session_token),
+                  qonto_vop_proof_token = COALESCE($3, qonto_vop_proof_token)
+            WHERE id = $1`,
+          [c.id, newSca, newVop]
         );
       }
       return res.json({
@@ -1405,6 +1434,7 @@ router.post('/:id/reset-payment', authorize('admin'), async (req, res) => {
               payment_initiated_at = NULL,
               payment_completed_at = NULL,
               qonto_sca_session_token = NULL,
+              qonto_vop_proof_token = NULL,
               qonto_idempotency_key = NULL,
               qonto_retry_count = 0,
               status = 'pending_validation'

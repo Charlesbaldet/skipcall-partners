@@ -232,12 +232,12 @@ function buildReference(commissionId) {
   return `REFBOOSTCOM${short}`.slice(0, 35);
 }
 
-// Decode a 428 sca_required body. Returns null if the response isn't
-// actually an SCA challenge so the caller can rethrow. Some Qonto
-// 428 responses ship the (already-created) transfer alongside the
-// challenge — when that's the case we forward the transfer id so the
-// caller can persist it and the polling worker can fetch its status
-// without having to re-POST.
+// Decode a 428 sca_required body + extract VOP proof token if present.
+// Returns null when the response isn't actually an SCA challenge so the
+// caller can rethrow. Some Qonto 428 responses ship the
+// (already-created) transfer alongside the challenge — when that's the
+// case we forward the transfer id so the caller can persist it and the
+// polling worker can fetch its status without having to re-POST.
 function parseScaChallenge(err) {
   if (!err || err.status !== 428) return null;
   try {
@@ -245,6 +245,9 @@ function parseScaChallenge(err) {
     if (body && body.code === 'sca_required' && body.sca_session_token) {
       return {
         sca_session_token: body.sca_session_token,
+        // Newer Qonto API versions require this token in the
+        // VOP-Proof-Token header on the SCA replay POST.
+        vop_proof_token: body.vop_proof_token || null,
         sca_recovery_token: body.sca_recovery_token || null,
         action_type: body.action_type || null,
         // Best-effort id extraction — Qonto's 428 shape isn't fully
@@ -253,7 +256,9 @@ function parseScaChallenge(err) {
         transfer: body.transfer || null,
       };
     }
-  } catch { /* unparseable → not an SCA challenge */ }
+  } catch (e) {
+    console.warn('[qonto.parseScaChallenge] failed to parse 428 body:', e.message);
+  }
   return null;
 }
 
@@ -334,6 +339,7 @@ async function createSingleTransfer(tenantId, {
         transfer: sca.transfer || (sca.transfer_id ? { id: sca.transfer_id } : null),
         requires_sca: true,
         sca_session_token: sca.sca_session_token,
+        vop_proof_token: sca.vop_proof_token,
         reference,
         idempotency_key: key,
         request_body: requestBody,
@@ -358,7 +364,7 @@ async function createSingleTransfer(tenantId, {
 //   { ok: false, expired }   — 412, SCA token aged out (15 min)
 //   { ok: false, sca_still_pending } — still 428 (admin hasn't approved yet)
 //   throws otherwise
-async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken }) {
+async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken, vopProofToken }) {
   if (!body || !idempotencyKey || !scaSessionToken) {
     throw new Error('replay_missing_args');
   }
@@ -378,16 +384,23 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken 
   if (!requestBody || typeof requestBody !== 'object') {
     throw new Error('replay_body_not_object');
   }
-  const bodyString = JSON.stringify(requestBody);
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Qonto-Idempotency-Key': idempotencyKey,
+    'X-Qonto-Sca-Session-Token': scaSessionToken,
+  };
+  // Newer Qonto API versions require the VOP (Verification of Payee)
+  // proof token in this header on the replay; without it the replay
+  // 422s. The token is delivered alongside the SCA challenge in the
+  // initial 428 response.
+  if (vopProofToken) {
+    headers['VOP-Proof-Token'] = vopProofToken;
+  }
   try {
     const data = await api(tenantId, '/sepa/transfers', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Qonto-Idempotency-Key': idempotencyKey,
-        'X-Qonto-Sca-Session-Token': scaSessionToken,
-      },
-      body: bodyString,
+      headers,
+      body: JSON.stringify(requestBody),
     });
     return {
       ok: true,
@@ -402,9 +415,16 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken 
     // the row instead of crashing on the generic throw.
     if (err.status === 422) return { ok: false, not_found: true };
     // 428 Precondition Required — admin hasn't approved on their
-    // phone yet. Refresh the SCA token in case Qonto rotated it.
+    // phone yet. Refresh the SCA + VOP tokens in case Qonto rotated.
     const sca = parseScaChallenge(err);
-    if (sca) return { ok: false, sca_still_pending: true, sca_session_token: sca.sca_session_token };
+    if (sca) {
+      return {
+        ok: false,
+        sca_still_pending: true,
+        sca_session_token: sca.sca_session_token,
+        vop_proof_token: sca.vop_proof_token,
+      };
+    }
     throw err;
   }
 }

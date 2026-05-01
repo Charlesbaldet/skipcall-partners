@@ -436,6 +436,13 @@ async function runMigrations() {
   // pending_validation so the admin can either retry by hand or
   // abandon the payment.
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_retry_count INTEGER DEFAULT 0`);
+  // Qonto's VOP (Verification of Payee) proof token, returned alongside
+  // the SCA challenge on a 428. Newer Qonto API versions require this
+  // token in the VOP-Proof-Token header on the SCA replay POST — without
+  // it the replay 422s. We persist it next to qonto_sca_session_token
+  // so the replay paths (/confirm-sca + reconcile orphan branch) can
+  // forward it.
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS qonto_vop_proof_token TEXT`);
   // One-shot cleanup of stuck rows: any commission carrying
   // payment_initiated_at but no qonto_transfer_id has nothing in
   // Qonto's hands — let the admin start over.
