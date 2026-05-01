@@ -587,10 +587,19 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
     if (amount <= 0) return res.status(400).json({ error: 'amount_zero' });
 
     // Upload the partner's invoice to Qonto so the transfer carries it
-    // as an attachment. Best-effort — if upload fails we still send
-    // the transfer (Qonto allows transfers without attachments).
-    let attachmentId = c.qonto_attachment_id;
-    if (!attachmentId && c.invoice_url) {
+    // as an attachment. Best-effort: if the upload fails (403 missing
+    // scope, network blip, anything) we send the transfer WITHOUT an
+    // attachment_ids field — Qonto accepts that, and an attachment
+    // failure is never worth blocking a real-money payment over.
+    //
+    // Critically: do NOT reuse a previously-persisted
+    // qonto_attachment_id on retry. Stale IDs from earlier failed
+    // attempts (e.g. uploads under a different OAuth grant) reference
+    // attachments Qonto can't find, and the bulk endpoint then fails
+    // every line with 422 "Not found". Always re-upload fresh; only
+    // attach the JUST-uploaded id.
+    let attachmentId = null;
+    if (c.invoice_url) {
       try {
         const decoded = dataUrlToBuffer(c.invoice_url);
         if (decoded) {
@@ -602,11 +611,14 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
           });
           attachmentId = att?.id || null;
           if (attachmentId) {
+            // Persist only as audit — the next pay attempt re-uploads
+            // and re-overwrites; we never read this back into a
+            // request body.
             await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1', [c.id, attachmentId]);
           }
         }
       } catch (e) {
-        console.warn('[qonto.pay] attachment upload skipped:', e.message);
+        console.warn('[qonto.pay] attachment upload failed, continuing without:', e.message);
       }
     }
 
@@ -731,13 +743,19 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
     }
     if (!eligible.length) return res.status(400).json({ error: 'no_eligible_commissions', skipped });
 
-    // Upload missing attachments + look up beneficiaries in parallel
-    // batches of 5 so we don't hammer Qonto.
+    // Upload fresh attachments + look up beneficiaries in parallel
+    // batches of 5 so we don't hammer Qonto. Critically: don't trust
+    // any pre-existing qonto_attachment_id on the row — a stale id
+    // from an earlier failed attempt makes the bulk endpoint reject
+    // every line with 422 "Not found". Each c.fresh_attachment_id
+    // gets reset here and only set when this attempt's upload
+    // succeeds; the per-line transfer body uses fresh_attachment_id,
+    // never the persisted column.
     const beneficiaries = new Map();
+    for (const c of eligible) c.fresh_attachment_id = null;
     for (let i = 0; i < eligible.length; i += 5) {
       const slice = eligible.slice(i, i + 5);
       await Promise.all(slice.map(async (c) => {
-        if (c.qonto_attachment_id) return;
         if (!c.invoice_url) return;
         try {
           const decoded = dataUrlToBuffer(c.invoice_url);
@@ -749,11 +767,12 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
             idempotencyKey: qonto.newIdempotencyKey(),
           });
           if (att?.id) {
-            c.qonto_attachment_id = att.id;
+            c.fresh_attachment_id = att.id;
+            // Persist as audit only.
             await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1', [c.id, att.id]);
           }
         } catch (e) {
-          console.warn('[qonto.bulk] attachment upload skipped for', c.id, ':', e.message);
+          console.warn('[qonto.bulk] attachment upload failed for', c.id, ', continuing without:', e.message);
         }
       }));
       await Promise.all(slice.map(async (c) => {
@@ -772,7 +791,10 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
       beneficiaryId: beneficiaries.get(c.id) || null,
       partnerName: c.partner_name,
       dealName: c.prospect_company || c.prospect_name || '',
-      attachmentIds: c.qonto_attachment_id ? [c.qonto_attachment_id] : [],
+      // Only attach the FRESH upload from this request flow.
+      // Persisted qonto_attachment_id is intentionally ignored —
+      // it might point at an attachment Qonto already lost track of.
+      attachmentIds: c.fresh_attachment_id ? [c.fresh_attachment_id] : [],
     }));
 
     // Bulk idempotency key: reuse the previously-stored key only when
@@ -1056,7 +1078,11 @@ async function reconcileQontoTransfers(tenantId) {
           iban: c.iban,
           beneficiaryName: c.account_holder || c.partner_name,
           beneficiaryId: null,
-          attachmentIds: c.qonto_attachment_id ? [c.qonto_attachment_id] : [],
+          // SCA replay path: don't attach anything. The previous
+          // attempt's persisted qonto_attachment_id may be stale,
+          // and a missed attachment is never worth blocking the
+          // retry. Qonto is fine without one.
+          attachmentIds: [],
           idempotencyKey: c.qonto_idempotency_key,
           scaSessionToken: c.qonto_sca_session_token,
         });

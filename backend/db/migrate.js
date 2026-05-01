@@ -413,6 +413,14 @@ async function runMigrations() {
   // is not an error — clear those rows so the new card UI can pick
   // them up as "SCA en attente" instead of red.
   await query(`UPDATE commissions SET payment_error = NULL WHERE payment_error ILIKE '%sca_required%'`).catch(() => {});
+  // Same cleanup for stale qonto_attachment_id values left behind
+  // by earlier flows where the attachment was uploaded under a
+  // different OAuth grant or before attachment.write scope was
+  // restored. Those IDs no longer resolve on Qonto's side, so a
+  // bulk transfer that references them 422s on every line. We null
+  // them on every commission that hasn't actually been paid yet —
+  // pay attempts will re-upload fresh.
+  await query(`UPDATE commissions SET qonto_attachment_id = NULL WHERE qonto_attachment_id IS NOT NULL AND status <> 'paid'`).catch(() => {});
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_initiated_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_reference TEXT`);
