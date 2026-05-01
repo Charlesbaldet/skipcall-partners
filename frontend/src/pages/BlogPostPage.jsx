@@ -21,16 +21,23 @@ export default function BlogPostPage() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [related, setRelated] = useState([]);
 
   useEffect(() => {
     setLoading(true);
     setNotFound(false);
+    setRelated([]);
     api.request('/blog/posts/' + slug)
       .then(d => setPost(d.post))
       .catch(err => {
         if (err?.status === 404 || err?.message?.includes('404')) setNotFound(true);
       })
       .finally(() => setLoading(false));
+    // Fetch related posts in parallel; failures are silent because the
+    // article still renders fine without the related-articles block.
+    api.request('/blog/posts/' + slug + '/related')
+      .then(d => setRelated(d.posts || []))
+      .catch(() => { /* keep related empty on error */ });
   }, [slug]);
 
   if (loading) return (
@@ -169,6 +176,66 @@ export default function BlogPostPage() {
               ))}
             </div>
           </footer>
+        )}
+
+        {/* Articles similaires — gives every post 3 dofollow inbound
+            links from its category neighbours, addressing Ahrefs'
+            "page has only one dofollow incoming internal link"
+            warning on long-tail blog posts. */}
+        {related.length > 0 && (
+          <section style={{ marginTop: 64, paddingTop: 32, borderTop: '1px solid #e2e8f0' }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 800, color: C.s }}>
+              {t('blog.related_title', 'Articles similaires')}
+            </h2>
+            <p style={{ margin: '0 0 24px', color: C.m, fontSize: 14 }}>
+              {t('blog.related_subtitle', 'Pour aller plus loin sur le sujet')}
+            </p>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${Math.min(related.length, 3)}, 1fr)`,
+              gap: 16,
+            }}>
+              {related.map(r => (
+                <Link
+                  key={r.slug}
+                  to={'/blog/' + r.slug}
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 10,
+                    padding: 18, borderRadius: 14,
+                    background: '#fff', border: '1px solid #e2e8f0',
+                    textDecoration: 'none', color: 'inherit',
+                    transition: 'transform .2s, box-shadow .2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(5,150,105,0.10)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+                >
+                  {r.cover_image_url && (
+                    <img
+                      src={r.cover_image_url}
+                      alt={r.title}
+                      style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }}
+                    />
+                  )}
+                  {r.category && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      {translateCat(r.category)}
+                    </span>
+                  )}
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.s, lineHeight: 1.35 }}>
+                    {r.title}
+                  </h3>
+                  {r.excerpt && (
+                    <p style={{ margin: 0, fontSize: 13, color: C.m, lineHeight: 1.55 }}>
+                      {String(r.excerpt).slice(0, 120)}{String(r.excerpt).length > 120 ? '…' : ''}
+                    </p>
+                  )}
+                  <span style={{ marginTop: 'auto', color: C.p, fontSize: 13, fontWeight: 700 }}>
+                    {t('blog.read_article', "Lire l'article")} →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Retour */}

@@ -115,6 +115,57 @@ router.get('/posts/:slug', async (req, res) => {
   }
 });
 
+// GET /api/blog/posts/:slug/related — 3 related published posts.
+// First preference: same category, most recent. Falls back to the
+// most recent posts overall when the category branch has fewer than
+// 3 results, so every article gets a populated related-block.
+// Powers the "Articles similaires" section at the bottom of each
+// blog post; addresses Ahrefs' "page has only one dofollow incoming
+// internal link" warning by giving every post 3 inbound links from
+// its category neighbours.
+router.get('/posts/:slug/related', async (req, res) => {
+  try {
+    const lang = resolveLang(req);
+    res.vary('Accept-Language');
+    const { rows: cur } = await query(
+      'SELECT category FROM blog_posts WHERE slug = $1 AND published = true LIMIT 1',
+      [req.params.slug]
+    );
+    const cat = cur[0]?.category || null;
+
+    const titleCol = localizedCol('title', lang);
+    const excerptCol = localizedCol('excerpt', lang);
+    const select = `id, slug, ${titleCol} AS title, ${excerptCol} AS excerpt,
+                    category, cover_image_url, published_at, reading_time_minutes`;
+
+    let rows = [];
+    if (cat) {
+      const r = await query(
+        `SELECT ${select} FROM blog_posts
+          WHERE published = true AND slug <> $1 AND category = $2
+          ORDER BY published_at DESC LIMIT 3`,
+        [req.params.slug, cat]
+      );
+      rows = r.rows;
+    }
+    if (rows.length < 3) {
+      const have = new Set([req.params.slug, ...rows.map(r => r.slug)]);
+      const need = 3 - rows.length;
+      const r2 = await query(
+        `SELECT ${select} FROM blog_posts
+          WHERE published = true AND slug <> ALL($1::text[])
+          ORDER BY published_at DESC LIMIT $2`,
+        [Array.from(have), need]
+      );
+      rows = [...rows, ...r2.rows];
+    }
+    res.json({ posts: rows });
+  } catch (err) {
+    console.error('[blog.related]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // GET /api/blog/sitemap — données pour sitemap XML
 router.get('/sitemap', async (req, res) => {
   try {
