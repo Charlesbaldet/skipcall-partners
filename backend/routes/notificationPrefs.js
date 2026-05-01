@@ -10,19 +10,36 @@ router.use(tenantScope);
 
 // Map Settings event_types → email template keys. Used by the
 // "Preview" button in Settings → Notifications et emails so admins
-// can see what partners will actually receive.
+// can see what partners will actually receive. Every event in
+// KNOWN_EVENTS should resolve to a template (or to a graceful
+// "preview unavailable" message via templates that explicitly opt
+// out by mapping to null).
 const EVENT_TO_TEMPLATE = {
+  // Legacy v1 events
   new_referral: 'newReferralToAdmin',
   new_application: 'newApplicationToAdmin',
   referral_update: 'referralStatusChange',
   commission: 'commissionApproved',
   deal_won: 'commissionToApprove',
-  news: null, // no dedicated template in the new catalog
-  access_revoked: null,
+  news: 'newsPublished',
+  access_revoked: 'accessRevoked',
+  // v26 granular events — reuse existing templates where the
+  // semantics match the partner-facing email already in the
+  // catalog.
+  commission_approved: 'commissionApproved',
+  commission_deleted: 'commissionCancelled',
+  invoice_submitted: 'invoiceSubmitted',
+  payment_completed: 'commissionPaymentSent',
+  payment_failed: 'qontoTransferFailed',
+  marketplace_application: 'newApplicationToAdmin',
+  tier_change: 'tierChange',
 };
 
-// GET /api/settings/notification-preferences — admins read their tenant's prefs.
-router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
+// GET /api/settings/notification-preferences — admin/sales read
+// their tenant's prefs. Commercials work the same tenant as the
+// admin and need to control which notifications page them; their
+// preferences UI shares the same per-tenant rows as the admin.
+router.get('/', authorize('admin', 'commercial', 'superadmin'), async (req, res) => {
   try {
     if (!req.tenantId) return res.json({ preferences: [] });
     const { rows } = await query(
@@ -45,9 +62,10 @@ router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
   }
 });
 
-// PUT /api/settings/notification-preferences — admin updates prefs.
+// PUT /api/settings/notification-preferences — admin/sales updates
+// prefs. Per-tenant table — both roles edit the same rows.
 // Body: { preferences: [{ event_type, in_app, email }, …] }
-router.put('/', authorize('admin', 'superadmin'), async (req, res) => {
+router.put('/', authorize('admin', 'commercial', 'superadmin'), async (req, res) => {
   try {
     if (!req.tenantId) return res.status(400).json({ error: 'no tenant' });
     const input = Array.isArray(req.body?.preferences) ? req.body.preferences : [];
@@ -74,14 +92,16 @@ router.put('/', authorize('admin', 'superadmin'), async (req, res) => {
 // (mapped via EVENT_TO_TEMPLATE) or a direct template key. Returns
 // `{ subject, html }`. Admin-only — same surface as the prefs
 // endpoints above.
-router.get('/preview/:key', authorize('admin', 'superadmin'), (req, res) => {
+router.get('/preview/:key', authorize('admin', 'commercial', 'superadmin'), (req, res) => {
   const raw = req.params.key;
   const templateKey = TEMPLATES[raw] ? raw : EVENT_TO_TEMPLATE[raw];
   if (!templateKey) {
-    return res.status(404).json({ error: 'No preview available for this event.' });
+    // Graceful "no preview" — the FE renders this string so the
+    // admin sees an explanation instead of a hard error.
+    return res.status(404).json({ error: 'preview_unavailable', message: 'Aperçu bientôt disponible pour cet événement.' });
   }
   const rendered = previewEmail(templateKey);
-  if (!rendered) return res.status(404).json({ error: 'Template not found' });
+  if (!rendered) return res.status(404).json({ error: 'preview_unavailable', message: 'Aperçu bientôt disponible pour cet événement.' });
   res.json({ subject: rendered.subject, html: rendered.html });
 });
 

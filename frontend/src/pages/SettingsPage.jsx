@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const isAdmin = user?.role === 'admin';
   const isPartner = user?.role === 'partner';
   const isSuperadmin = user?.role === 'superadmin';
+  const isCommercial = user?.role === 'commercial';
   const [searchParams] = useSearchParams();
   // Map legacy tab IDs (deep-links, bookmarks, old emails) to the new
   // grouped tab IDs so existing URLs keep working.
@@ -72,6 +73,14 @@ export default function SettingsPage() {
       { id: 'bank', icon: Banknote, label: t('settings.tab_bank_info', 'Informations bancaires') },
       { section: t('layout.section.preferences') },
       { id: 'partner-notifications', icon: Bell, label: t('partner_notifications.tab', 'Notifications') },
+    ] : []),
+    // Sales (commercial) gets the same notifications panel as
+    // admin, scoped server-side to the per-tenant table they share
+    // with the admin. Visible event list is filtered to the
+    // pipeline + commission + partner-application + news subset.
+    ...(isCommercial ? [
+      { section: t('layout.section.preferences') },
+      { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
     ] : []),
   ];
 
@@ -121,7 +130,7 @@ export default function SettingsPage() {
             {tab === 'profile' && <AccountTab user={user} />}
             {tab === 'team' && isSuperadmin && <SuperAdminsTab />}
             {tab === 'team' && isAdmin && <MembersTab />}
-            {tab === 'notifications' && isAdmin && <NotificationsTab />}
+            {tab === 'notifications' && (isAdmin || isCommercial) && <NotificationsTab forCommercial={isCommercial} />}
             {tab === 'partner-notifications' && isPartner && <PartnerNotificationsTab />}
             {tab === 'bank' && isPartner && <PartnerBankInfoTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
@@ -1867,7 +1876,19 @@ const NOTIFICATION_GROUPS = [
   { id: 'communication',  events: ['news'] },
 ];
 
-function NotificationsTab() {
+// Subset of events surfaced to commercial / sales users. Admin-only
+// outcomes (payment_failed, marketplace_application, invoice_submitted,
+// commission_deleted, access_revoked, tier_change) are intentionally
+// hidden — sales doesn't need to manage transfer failures or partner
+// lifecycle from this panel.
+const COMMERCIAL_EVENTS = new Set([
+  'new_referral', 'referral_update', 'deal_won',
+  'commission_approved', 'commission', 'payment_completed',
+  'new_application',
+  'news',
+]);
+
+function NotificationsTab({ forCommercial = false } = {}) {
   const { t } = useTranslation();
   const [prefs, setPrefs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1888,7 +1909,11 @@ function NotificationsTab() {
       const { subject, html } = await api.previewEmailTemplate(event_type);
       setPreview({ loading: false, event_type, subject, html });
     } catch (err) {
-      setPreview({ loading: false, event_type, error: err.message || 'Aperçu indisponible' });
+      // Backend returns { error: 'preview_unavailable', message: '…' }
+      // for events without a template. Surface the friendlier message
+      // instead of the bare error code.
+      const friendly = err?.data?.message || err.message || 'Aperçu indisponible';
+      setPreview({ loading: false, event_type, error: friendly });
     }
   };
 
@@ -1917,14 +1942,19 @@ function NotificationsTab() {
         // Anything the backend returned that isn't in any GROUPS
         // bucket falls into the "other" group at the bottom — keeps
         // newly-added events visible even if we forgot to register
-        // them in NOTIFICATION_GROUPS.
-        const byEvent = new Map(prefs.map(p => [p.event_type, p]));
+        // them in NOTIFICATION_GROUPS. Commercial users see a
+        // subset (COMMERCIAL_EVENTS) so admin-only outcomes don't
+        // clutter the sales preferences screen.
+        const visiblePrefs = forCommercial
+          ? prefs.filter(p => COMMERCIAL_EVENTS.has(p.event_type))
+          : prefs;
+        const byEvent = new Map(visiblePrefs.map(p => [p.event_type, p]));
         const grouped = NOTIFICATION_GROUPS.map(g => ({
           id: g.id,
           rows: g.events.map(e => byEvent.get(e)).filter(Boolean),
         })).filter(g => g.rows.length > 0);
         const claimed = new Set(NOTIFICATION_GROUPS.flatMap(g => g.events));
-        const orphans = prefs.filter(p => !claimed.has(p.event_type));
+        const orphans = visiblePrefs.filter(p => !claimed.has(p.event_type));
         if (orphans.length) grouped.push({ id: 'other', rows: orphans });
 
         const renderRow = (p) => (
@@ -1987,7 +2017,7 @@ function NotificationsTab() {
           fontWeight: 600, fontSize: 14, cursor: 'pointer',
           opacity: saving ? 0.7 : 1,
         }}>{saving ? t('common.saving') : t('common.save')}</button>
-        {savedAt && Date.now() - savedAt < 3000 && (
+        {savedAt > 0 && Date.now() - savedAt < 3000 && (
           <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
             <CheckCircle size={14} /> {t('common.saved')}
           </span>
@@ -2771,7 +2801,7 @@ function PartnerNotificationsTab() {
           background: 'var(--rb-primary, #059669)', color: '#fff',
           fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1,
         }}>{saving ? t('common.saving', 'Enregistrement…') : t('common.save', 'Enregistrer')}</button>
-        {savedAt && Date.now() - savedAt < 3000 && (
+        {savedAt > 0 && Date.now() - savedAt < 3000 && (
           <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
             <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
           </span>
@@ -2939,7 +2969,7 @@ function PartnerBankInfoTab() {
                 {t('common.cancel', 'Annuler')}
               </button>
             )}
-            {savedAt && Date.now() - savedAt < 3000 && (
+            {savedAt > 0 && Date.now() - savedAt < 3000 && (
               <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
               </span>

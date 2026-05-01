@@ -382,6 +382,60 @@ function qontoTransferFailed({ partnerName, amount, currency, dealName, errorMes
   });
 }
 
+// Generic news-publication digest. The actual delivery wires up
+// the post title + excerpt + link; the preview just substitutes
+// the sample payload.
+function newsPublished({ tenantName, postTitle, postExcerpt, postUrl } = {}) {
+  return renderEmail({
+    subject: `📰 Nouvelle publication${tenantName ? ' — ' + tenantName : ''}`,
+    heading: 'Nouvelle actualité',
+    bodyHtml: `
+      <p>${tenantName || 'Votre programme'} vient de publier une nouvelle actualité.</p>
+      ${postTitle ? `<div class="highlight"><strong>${postTitle}</strong>${postExcerpt ? `<br/>${postExcerpt}` : ''}</div>` : ''}`,
+    ctaUrl: postUrl || `${FRONTEND}/news`,
+    ctaLabel: 'Lire la publication',
+  });
+}
+
+// Sent to a partner whose access has been revoked by the program
+// admin (manual deactivation OR end-of-program). Kept friendly so
+// the partner doesn't feel cut off.
+function accessRevoked({ partnerName, tenantName, dashboardUrl } = {}) {
+  return renderEmail({
+    subject: `Votre accès au programme ${tenantName || ''} a été révoqué`,
+    heading: 'Accès partenaire révoqué',
+    bodyHtml: `
+      <p>Bonjour ${partnerName || ''},</p>
+      <p>Votre accès au programme partenaires${tenantName ? ` <strong>${tenantName}</strong>` : ''} a été désactivé par l'administrateur.</p>
+      <p>Vos commissions déjà validées restent dues. Pour toute question, contactez votre gestionnaire de programme.</p>`,
+    ctaUrl: dashboardUrl || `${FRONTEND}/`,
+    ctaLabel: 'Retour à RefBoost',
+  });
+}
+
+// Tier promotion (or demotion) email. Today the tenant_levels
+// system computes tier on-the-fly so this template is sent only
+// from manual-trigger flows; once partners.current_tier lands
+// (queued follow-up), the recompute hook will fire it
+// automatically.
+function tierChange({ partnerName, oldTier, newTier, tenantName, dashboardUrl } = {}) {
+  const promoted = oldTier && newTier && newTier !== oldTier;
+  return renderEmail({
+    subject: promoted
+      ? `🎉 Niveau ${newTier} débloqué !`
+      : `Changement de niveau — ${newTier || ''}`,
+    heading: promoted ? `Bienvenue au niveau ${newTier} !` : 'Changement de niveau',
+    bodyHtml: `
+      <p>Bonjour ${partnerName || ''},</p>
+      <p>Vous êtes désormais <strong>${newTier || '—'}</strong> du programme${tenantName ? ` <strong>${tenantName}</strong>` : ''}${oldTier ? ` (avant : ${oldTier})` : ''}.</p>
+      <div class="highlight">
+        Votre nouveau taux de commission s'applique à toutes les nouvelles recommandations.
+      </div>`,
+    ctaUrl: dashboardUrl || `${FRONTEND}/partner/payments`,
+    ctaLabel: 'Voir mon niveau',
+  });
+}
+
 // Sample payloads for the preview modal. Keys match TEMPLATES below.
 const PREVIEW_SAMPLES = {
   welcome: { name: 'Alex', tenantName: 'Acme Partenaires' },
@@ -402,6 +456,9 @@ const PREVIEW_SAMPLES = {
   invoiceSubmitted: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', dealName: 'Dupont SARL', amount: 1250, currency: '€' },
   paymentSentAdmin: { partnerName: 'Partner Pro', amount: 1250, currency: '€', dealName: 'Dupont SARL', transferReference: 'REFBOOSTCOMABCDEF123456', transferDateLabel: '30 avril 2026' },
   qontoTransferFailed: { partnerName: 'Partner Pro', amount: 1250, currency: '€', dealName: 'Dupont SARL', errorMessage: 'Solde insuffisant sur le compte Qonto.' },
+  newsPublished: { tenantName: 'Acme Partenaires', postTitle: 'Nouveau kit commercial', postExcerpt: 'Téléchargez le pack 2026 et lancez vos campagnes Q2.' },
+  accessRevoked: { partnerName: 'Partner Pro', tenantName: 'Acme Partenaires' },
+  tierChange: { partnerName: 'Partner Pro', oldTier: 'Silver', newTier: 'Gold', tenantName: 'Acme Partenaires' },
 };
 
 const TEMPLATES = {
@@ -423,6 +480,9 @@ const TEMPLATES = {
   invoiceSubmitted,
   paymentSentAdmin,
   qontoTransferFailed,
+  newsPublished,
+  accessRevoked,
+  tierChange,
 };
 
 function previewEmail(key, payload) {
