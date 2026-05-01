@@ -442,6 +442,24 @@ async function runMigrations() {
        AND qonto_transfer_id IS NULL
        AND status <> 'paid'
   `).catch(() => {});
+
+  // Broader cleanup for the bulk-endpoint failures from the previous
+  // releases: any non-paid commission that's carrying a payment_error
+  // gets fully reset (attachment id, error, initiated-at, transfer
+  // id) so the admin can hit Pay again on a clean slate.
+  await query(`
+    UPDATE commissions
+       SET qonto_attachment_id = NULL,
+           payment_error = NULL,
+           payment_initiated_at = NULL,
+           qonto_transfer_id = NULL,
+           qonto_sca_session_token = NULL,
+           qonto_idempotency_key = NULL,
+           qonto_retry_count = 0,
+           status = 'pending_validation'
+     WHERE status <> 'paid'
+       AND payment_error IS NOT NULL
+  `).catch(() => {});
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_initiated_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ`);
   await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS payment_reference TEXT`);

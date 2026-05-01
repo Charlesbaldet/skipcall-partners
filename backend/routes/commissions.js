@@ -703,11 +703,94 @@ router.post('/:id/pay-qonto', authorize('admin'), async (req, res) => {
   }
 });
 
+// ─── Internal: pay one commission via the single SEPA transfer ─────
+// The endpoint POST /v2/sepa/transfers is the only one we trust —
+// the bulk endpoint went through 5+ failed shapes and is left in
+// the service layer untouched but unused. /pay-qonto and /pay-bulk
+// both funnel through this helper so they share the same
+// idempotency-key handling, SCA-token reuse, payment_error sanitiser,
+// and transfer_id persistence.
+async function payOneCommissionViaQonto(c, integ, tenantId) {
+  if (c.status !== 'pending_validation') {
+    return { ok: false, code: 'commission_not_payable' };
+  }
+  if (!c.iban) return { ok: false, code: 'partner_iban_missing' };
+  const amount = parseFloat(c.amount) || 0;
+  if (amount <= 0) return { ok: false, code: 'amount_zero' };
+
+  // Reuse a stored idempotency key on retry; mint + persist if absent.
+  let idempotencyKey = c.qonto_idempotency_key;
+  if (!idempotencyKey) {
+    idempotencyKey = qonto.newIdempotencyKey();
+    await query(
+      'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
+      [c.id, idempotencyKey]
+    );
+  }
+
+  let beneficiary = null;
+  try { beneficiary = await qonto.findBeneficiaryByIban(tenantId, c.iban); }
+  catch { /* fall through to inline beneficiary */ }
+
+  try {
+    const result = await qonto.createSingleTransfer(tenantId, {
+      commissionId: c.id,
+      bankAccountId: integ.bank_account_id,
+      amount,
+      partnerName: c.partner_name,
+      dealName: c.prospect_company || c.prospect_name || '',
+      iban: c.iban,
+      beneficiaryName: c.account_holder || c.partner_name,
+      beneficiaryId: beneficiary?.id || null,
+      attachmentIds: [], // attachments deliberately omitted for now
+      idempotencyKey,
+      scaSessionToken: c.qonto_sca_session_token || undefined,
+    });
+    const transfer = result.transfer || {};
+    await query(
+      `UPDATE commissions
+          SET qonto_transfer_id = $2,
+              qonto_sca_session_token = $3,
+              payment_initiated_at = NOW(),
+              payment_reference = $4,
+              payment_error = NULL
+        WHERE id = $1`,
+      [
+        c.id,
+        transfer.id || null,
+        result.requires_sca ? (result.sca_session_token || c.qonto_sca_session_token || null) : null,
+        result.reference,
+      ]
+    );
+    return {
+      ok: true,
+      commission_id: c.id,
+      transfer_id: transfer.id || null,
+      reference: result.reference,
+      requires_sca: !!result.requires_sca,
+      status: transfer.status || (result.requires_sca ? 'sca_pending' : 'pending'),
+    };
+  } catch (err) {
+    console.error('[qonto.pay-one] failed for', c.id, ':', err.message);
+    const sanitized = sanitizePaymentError(err);
+    try {
+      await query(
+        'UPDATE commissions SET payment_error = $2 WHERE id = $1',
+        [c.id, sanitized]
+      );
+    } catch {}
+    return { ok: false, commission_id: c.id, code: sanitized || 'qonto_error', error: err.message };
+  }
+}
+
 // ─── POST /commissions/pay-bulk ────────────────────────────────────
 // Body: { commission_ids: [uuid, ...] }
-// Triggers a single Qonto bulk SEPA transfer covering up to 400 rows.
-// All selected commissions must be in pending_validation and have an
-// IBAN. Returns the per-commission outcomes.
+// Loops sequentially over the selected commissions and pays each via
+// the single-transfer endpoint. Qonto's bulk endpoint kept failing
+// across multiple shapes; the single endpoint is the confirmed-working
+// path (we hit a clean 428 SCA challenge there). Same per-commission
+// state writes as /pay-qonto, just batched. Returns the per-commission
+// outcomes so the UI can render success / failure / skipped cleanly.
 router.post('/pay-bulk', authorize('admin'), async (req, res) => {
   try {
     const ids = Array.isArray(req.body?.commission_ids) ? req.body.commission_ids : [];
@@ -720,7 +803,7 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
 
     const placeholders = ids.map((_, i) => `$${i + 2}`).join(',');
     const { rows: list } = await query(
-      `SELECT c.id, c.amount, c.status, c.invoice_url, c.invoice_filename, c.qonto_attachment_id,
+      `SELECT c.id, c.amount, c.status, c.invoice_url, c.invoice_filename,
               c.qonto_idempotency_key, c.qonto_sca_session_token,
               p.id AS partner_id, p.name AS partner_name,
               p.iban, p.account_holder,
@@ -732,118 +815,42 @@ router.post('/pay-bulk', authorize('admin'), async (req, res) => {
       [req.tenantId, ...ids]
     );
 
-    const eligible = [];
+    const success = [];
+    const failed = [];
     const skipped = [];
+    let anyRequiresSca = false;
     for (const c of list) {
       if (c.status !== 'pending_validation') { skipped.push({ id: c.id, reason: 'not_payable' }); continue; }
       if (!c.iban) { skipped.push({ id: c.id, reason: 'partner_iban_missing' }); continue; }
       const amt = parseFloat(c.amount) || 0;
       if (amt <= 0) { skipped.push({ id: c.id, reason: 'amount_zero' }); continue; }
-      eligible.push(c);
-    }
-    if (!eligible.length) return res.status(400).json({ error: 'no_eligible_commissions', skipped });
 
-    // Look up beneficiaries in parallel batches of 5. Attachment
-    // upload was removed from this path until the basic transfer
-    // flow is stable — stale ids were poisoning every retry with
-    // 422 "Not found", and a missing invoice attachment is never
-    // worth blocking a real-money payment.
-    const beneficiaries = new Map();
-    for (let i = 0; i < eligible.length; i += 5) {
-      const slice = eligible.slice(i, i + 5);
-      await Promise.all(slice.map(async (c) => {
-        try {
-          const b = await qonto.findBeneficiaryByIban(req.tenantId, c.iban);
-          if (b) beneficiaries.set(c.id, b.id);
-        } catch {}
-      }));
-    }
-
-    const transfers = eligible.map(c => ({
-      commissionId: c.id,
-      amount: parseFloat(c.amount),
-      iban: c.iban,
-      beneficiaryName: c.account_holder || c.partner_name,
-      beneficiaryId: beneficiaries.get(c.id) || null,
-      partnerName: c.partner_name,
-      dealName: c.prospect_company || c.prospect_name || '',
-      // Attachments deliberately omitted — see the upload-block
-      // comment above.
-      attachmentIds: [],
-    }));
-
-    // Bulk idempotency key: reuse the previously-stored key only when
-    // every commission in the batch already shares the SAME key (i.e.
-    // we're retrying the exact same batch). Otherwise mint a fresh
-    // key and stamp it on all eligible rows BEFORE the API call so a
-    // crashed retry hits the same Qonto bulk_transfer.
-    const existingKeys = new Set(eligible.map(c => c.qonto_idempotency_key).filter(Boolean));
-    const bulkKey = (existingKeys.size === 1 && existingKeys.values().next().value)
-      ? existingKeys.values().next().value
-      : qonto.newIdempotencyKey();
-    if (existingKeys.size !== 1 || existingKeys.values().next().value !== bulkKey) {
-      const phs = eligible.map((_, i) => `$${i + 2}`).join(',');
-      await query(
-        `UPDATE commissions SET qonto_idempotency_key = $1 WHERE id IN (${phs})`,
-        [bulkKey, ...eligible.map(c => c.id)]
-      );
-    }
-
-    // If every row in the batch already shares the same SCA session
-    // token, reuse it on the retry. Otherwise we'll learn one from
-    // the 428 response below.
-    const existingScaTokens = new Set(eligible.map(c => c.qonto_sca_session_token).filter(Boolean));
-    const reusedScaToken = existingScaTokens.size === 1 ? existingScaTokens.values().next().value : null;
-
-    const result = await qonto.createBulkTransfer(req.tenantId, {
-      bankAccountId: integ.bank_account_id,
-      transfers,
-      idempotencyKey: bulkKey,
-      scaSessionToken: reusedScaToken || undefined,
-    });
-
-    // Map the returned transfer ids back to our commissions positionally.
-    const created = result.transfers || [];
-    const outcomes = [];
-    const scaToken = result.requires_sca ? (result.sca_session_token || reusedScaToken || null) : null;
-    // Prefer matching Qonto's response items back to our commissions
-    // by client_transfer_id (the commission UUID we sent). Fall back
-    // to positional matching when the response shape doesn't carry it.
-    const byClientId = new Map();
-    for (const tr of created) {
-      const cid = tr?.client_transfer_id || tr?.transfer?.client_transfer_id;
-      if (cid) byClientId.set(String(cid), tr);
-    }
-    for (let i = 0; i < eligible.length; i++) {
-      const c = eligible[i];
-      const t = byClientId.get(String(c.id)) || created[i] || {};
-      const reference = qonto.buildReference(c.id);
-      // SCA-pending bulk: same row state as a single SCA-pending
-      // transfer — initiated at + sca token persisted, no
-      // payment_error set.
-      await query(
-        `UPDATE commissions
-            SET qonto_transfer_id = $2,
-                qonto_sca_session_token = $3,
-                payment_initiated_at = NOW(),
-                payment_reference = $4,
-                payment_error = NULL
-          WHERE id = $1`,
-        [c.id, t.id || null, scaToken, reference]
-      );
-      outcomes.push({
-        commission_id: c.id,
-        transfer_id: t.id || null,
-        status: t.status || (result.requires_sca ? 'sca_pending' : 'pending'),
-        reference,
-      });
+      const r = await payOneCommissionViaQonto(c, integ, req.tenantId);
+      if (r.ok) {
+        if (r.requires_sca) anyRequiresSca = true;
+        success.push({
+          commission_id: c.id,
+          transfer_id: r.transfer_id,
+          reference: r.reference,
+          status: r.status,
+        });
+      } else {
+        failed.push({ commission_id: c.id, code: r.code, error: r.error });
+      }
     }
 
     res.status(202).json({
       ok: true,
-      bulk_id: result.bulk_id,
-      requires_sca: result.requires_sca,
-      transfers: outcomes,
+      requires_sca: anyRequiresSca,
+      // Mirror the original /pay-bulk shape so the frontend modal
+      // doesn't have to branch — `transfers` is the success+failed
+      // composite the UI iterates over.
+      transfers: [
+        ...success,
+        ...failed.map(f => ({ commission_id: f.commission_id, transfer_id: null, error: f.code })),
+      ],
+      success,
+      failed,
       skipped,
     });
   } catch (err) {
