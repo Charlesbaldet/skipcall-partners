@@ -115,8 +115,12 @@ export default function MarketplaceEditorPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Internal: PUT the accumulated diff. Returns true if a request
+  // actually went out, false if nothing was dirty. Silent on the
+  // empty-diff path because the debounce calls this every 2s and we
+  // don't want to spam toasts when nothing changed.
   const flush = async () => {
-    if (!dirtyRef.current) return;
+    if (!dirtyRef.current) return false;
     const payload = dirtyRef.current;
     dirtyRef.current = null;
     setSaving(true);
@@ -124,11 +128,39 @@ export default function MarketplaceEditorPage() {
       const r = await api.updateMarketplacePage(payload);
       setTenant(r.tenant); setPage(r.page);
       showToast(t('marketplace.editor.saved', 'Sauvegardé') + ' ✓', 'success', 1800);
+      return true;
     } catch (err) {
       showToast(err.message || 'Erreur sauvegarde', 'error');
       dirtyRef.current = { ...payload, ...(dirtyRef.current || {}) };
+      return false;
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
+  };
+
+  // Explicit Save-button handler. Two fixes vs the old direct
+  // onClick={flush}:
+  //  1. Blur the active element first so an in-progress
+  //     contenteditable edit (which commits via onBlur → onPatch)
+  //     populates dirtyRef BEFORE we check it. Without this, a
+  //     click on Save while still typing would race the blur and
+  //     skip the field's latest value.
+  //  2. Always show feedback. The 2s debounce often saved
+  //     already, leaving dirtyRef empty by the time the user
+  //     clicks the button — the old code returned silently and
+  //     looked like the button was broken.
+  const handleSaveClick = async () => {
+    const ae = typeof document !== 'undefined' ? document.activeElement : null;
+    if (ae && typeof ae.blur === 'function') ae.blur();
+    // One frame for blur → onChange → onPatch → setState/dirtyRef.
+    await new Promise(r => setTimeout(r, 50));
+    if (debounceRef.current) { clearTimeout(debounceRef.current); debounceRef.current = null; }
+    const sentRequest = await flush();
+    if (!sentRequest) {
+      // Nothing was dirty — debounce already flushed everything.
+      // Still confirm to the user that their state is saved.
+      showToast(t('marketplace.editor.saved', 'Sauvegardé') + ' ✓', 'success', 1500);
+    }
   };
 
   const onPatch = (patch) => {
@@ -326,7 +358,7 @@ export default function MarketplaceEditorPage() {
             <ExternalLink size={12} />
           </button>
           <button
-            onClick={flush}
+            onClick={handleSaveClick}
             disabled={saving}
             style={{
               padding: '8px 14px', borderRadius: 10,
