@@ -216,7 +216,7 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
-            {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+            {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} style={{color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,cursor:'pointer',transition:'color .2s'}} onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>
                 {t(key)}
               </a>
@@ -248,7 +248,7 @@ export default function LandingPage() {
               ))}
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:2,marginTop:16}}>
-              {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+              {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
                 <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:'#0f172a',textDecoration:'none'}}>{t(key)}</a>
               ))}
             </div>
@@ -369,6 +369,43 @@ export default function LandingPage() {
           </div>
           <div style={{textAlign:'center',marginTop:32}}>
             <a href="/cas-dusage" style={{display:'inline-flex',alignItems:'center',gap:6,color:C.p,fontSize:15,fontWeight:700,textDecoration:'none'}}>{t('useCases.related.seeAll')} →</a>
+          </div>
+        </div>
+      </section>
+
+      {/* --- INTEGRATIONS --- */}
+      <section style={{...s.section,background:'#fafbfc'}}>
+        <div style={{maxWidth:1100,margin:'0 auto'}}>
+          <div style={s.center}>
+            <div style={s.label}>{t('landing.integrations.label','Intégrations')}</div>
+            <h2 style={s.h2}>{t('landing.integrations.title','Connecté à vos outils')}</h2>
+            <p style={{color:C.m,fontSize:16,maxWidth:560,margin:'12px auto 32px',lineHeight:1.6}}>
+              {t('landing.integrations.subtitle',"RefBoost s'intègre nativement avec vos CRM et outils de paiement.")}
+            </p>
+          </div>
+          <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:mobile?16:28,marginBottom:28}}>
+            {[
+              { name: 'Notion',     letter: 'N', color: '#000000', bg: '#f1f5f9', href: '/integrations/notion' },
+              { name: 'HubSpot',    letter: 'H', color: '#ff7a59', bg: '#fff5f1', href: '/integrations/hubspot' },
+              { name: 'Salesforce', letter: 'S', color: '#00a1e0', bg: '#e6f6fc', href: '/integrations/salesforce' },
+              { name: 'Qonto',      letter: 'Q', color: '#d4a015', bg: '#fff8e1', href: '/integrations/qonto' },
+              { name: 'Google',     letter: 'G', color: '#4285f4', bg: '#e8f0fe', href: '/integrations/google-sso' },
+            ].map(item=>(
+              <a key={item.href} href={item.href}
+                 style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,textDecoration:'none',padding:8,borderRadius:12,transition:'transform .15s'}}
+                 onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';}}
+                 onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
+                <div style={{width:60,height:60,borderRadius:14,background:item.bg,color:item.color,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:26,boxShadow:'0 4px 14px rgba(15,23,42,0.06)'}}>
+                  {item.letter}
+                </div>
+                <span style={{fontSize:13,fontWeight:600,color:C.s}}>{item.name}</span>
+              </a>
+            ))}
+          </div>
+          <div style={{textAlign:'center'}}>
+            <a href="/integrations" style={{display:'inline-flex',alignItems:'center',gap:6,color:C.p,fontSize:15,fontWeight:700,textDecoration:'none'}}>
+              {t('landing.integrations.seeAll','Voir toutes les intégrations')} →
+            </a>
           </div>
         </div>
       </section>

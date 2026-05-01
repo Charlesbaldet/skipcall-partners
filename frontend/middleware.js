@@ -32,6 +32,8 @@ export const config = {
     '/login',
     '/fonctionnalites/:path*',
     '/cas-dusage/:path*',
+    '/integrations',
+    '/integrations/:path*',
   ],
 };
 
@@ -125,6 +127,30 @@ function resolveMeta(path) {
   if (path === '/cas-dusage/agence-marketing') return {
     title: 'Gestion programme partenaire multi-client — RefBoost',
     description: "Gérez les programmes partenaires de tous vos clients depuis une seule plateforme. Multi-tenant, marque blanche, reporting ROI par client inclus.",
+  };
+  if (path === '/integrations') return {
+    title: 'Intégrations — RefBoost',
+    description: "Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Google SSO. Synchronisez votre pipeline et automatisez les paiements partenaires.",
+  };
+  if (path === '/integrations/notion') return {
+    title: 'Intégration Notion — RefBoost',
+    description: "Synchronisez votre pipeline RefBoost avec Notion. Mapping bidirectionnel des statuts, contacts et entreprises avec détection de doublons.",
+  };
+  if (path === '/integrations/hubspot') return {
+    title: 'Intégration HubSpot — RefBoost',
+    description: "Connectez HubSpot CRM à RefBoost. Synchronisez automatiquement vos referrals, contacts et deals avec HubSpot via OAuth sécurisé.",
+  };
+  if (path === '/integrations/salesforce') return {
+    title: 'Intégration Salesforce — RefBoost',
+    description: "Connectez Salesforce à RefBoost. Synchronisez Opportunities, Contacts et Accounts avec mapping personnalisé des objets standards et custom.",
+  };
+  if (path === '/integrations/qonto') return {
+    title: 'Intégration Qonto — RefBoost',
+    description: "Automatisez le paiement de vos commissions partenaires via Qonto. Virements SEPA en un clic avec validation SCA sécurisée et preuve par email.",
+  };
+  if (path === '/integrations/google-sso') return {
+    title: 'Google SSO — RefBoost',
+    description: "Permettez à vos équipes et partenaires de se connecter à RefBoost via Google SSO. Connexion sécurisée sans mot de passe, multi-tenant.",
   };
   return {
     title: 'RefBoost — Gestion de programme partenaires B2B',
@@ -249,6 +275,30 @@ export default async function middleware(request) {
   html = upsertMeta(html, 'property="og:description"', `<meta property="og:description" content="${description}" />`);
   html = upsertMeta(html, 'name="twitter:title"', `<meta name="twitter:title" content="${title}" />`);
   html = upsertMeta(html, 'name="twitter:description"', `<meta name="twitter:description" content="${description}" />`);
+
+  // /integrations* → inject hreflang + WebPage JSON-LD server-side so
+  // crawlers without JS (Ahrefs, link previewers) see the language
+  // signals and structured data. The Helmet tags rendered client-side
+  // never make it into the static HTML on this Vite SPA, so this is
+  // the only place the meta is actually crawlable.
+  if (path === '/integrations' || path.startsWith('/integrations/')) {
+    const langs = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
+    const altLinks = langs
+      .map(l => `<link rel="alternate" hrefLang="${l}" href="${esc(canonical)}" />`)
+      .join('\n    ');
+    const xDefault = `<link rel="alternate" hrefLang="x-default" href="${esc(canonical)}" />`;
+    html = html.replace('</head>', '    ' + altLinks + '\n    ' + xDefault + '\n  </head>');
+
+    const webpageLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: meta.title,
+      description: meta.description,
+      url: canonical,
+    };
+    const ldScript = `<script type="application/ld+json">${JSON.stringify(webpageLd).replace(/</g, '\\u003c')}</script>`;
+    html = html.replace('</head>', '    ' + ldScript + '\n  </head>');
+  }
 
   // /blog/:slug → Article JSON-LD with a guaranteed image (falls back
   // to the site OG image so Google's structured-data validator stops

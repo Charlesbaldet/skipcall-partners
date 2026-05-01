@@ -114,7 +114,7 @@ export function LandingNav() {
                 </div>
               )}
             </div>
-            {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+            {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
                 onMouseEnter={e=>e.target.style.color=C.p}
                 onMouseLeave={e=>e.target.style.color=C.m}>
@@ -157,7 +157,7 @@ export function LandingNav() {
             ))}
           </div>
           <div style={{ display:'flex',flexDirection:'column',gap:4,marginTop:16 }}>
-            {[['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+            {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>
                 {t(key)}
               </a>
@@ -194,6 +194,14 @@ export function LandingFooter() {
     { label: t('useCases.nav.agence'),       href: '/cas-dusage/agence-marketing' },
   ];
 
+  const INTEGRATIONS_LINKS = [
+    { label: 'Notion',     href: '/integrations/notion' },
+    { label: 'HubSpot',    href: '/integrations/hubspot' },
+    { label: 'Salesforce', href: '/integrations/salesforce' },
+    { label: 'Qonto',      href: '/integrations/qonto' },
+    { label: 'Google SSO', href: '/integrations/google-sso' },
+  ];
+
   return (
     <footer style={{ padding:mobile?'40px 20px 28px':'48px 48px 32px', background:C.s }}>
       <div style={{ maxWidth:1100, margin:'0 auto' }}>
@@ -210,6 +218,10 @@ export function LandingFooter() {
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.useCases')}</div>
               {USE_CASES.map(u=><a key={u.href} href={u.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{u.label}</a>)}
+            </div>
+            <div>
+              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.integrations', 'Intégrations')}</div>
+              {INTEGRATIONS_LINKS.map(i=><a key={i.href} href={i.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{i.label}</a>)}
             </div>
             <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.resources')}</div>

@@ -43,6 +43,8 @@ import UseCaseDistributionPage from './pages/usecases/UseCaseDistributionPage';
 import UseCaseMarketplacePage from './pages/usecases/UseCaseMarketplacePage';
 import UseCaseAgencePage from './pages/usecases/UseCaseAgencePage';
 import UseCasesIndexPage from './pages/usecases/UseCasesIndexPage';
+import IntegrationsIndexPage from './pages/integrations/IntegrationsIndexPage';
+import IntegrationDetailPage from './pages/integrations/IntegrationDetailPage';
 import NewsPage from './pages/NewsPage.jsx';
 import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
@@ -146,6 +148,8 @@ function AppRoutes() {
           <Route path="/cas-dusage/reseau-distribution" element={<UseCaseDistributionPage />} />
           <Route path="/cas-dusage/marketplace-plateforme" element={<UseCaseMarketplacePage />} />
           <Route path="/cas-dusage/agence-marketing" element={<UseCaseAgencePage />} />
+          <Route path="/integrations" element={<IntegrationsIndexPage />} />
+          <Route path="/integrations/:slug" element={<IntegrationDetailPage />} />
           </Routes>
     </>
   );
