@@ -1266,16 +1266,21 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
       console.log(`[confirm-sca] Missing SCA data for ${c.id} — cannot replay`);
       return res.status(400).json({ error: 'no_pending_sca', message: 'Aucun virement en attente de validation SCA pour cette commission.' });
     }
-    // sca_session_token may be null after a partial reset by the
-    // reconcile worker (412/422). The user clicked "J'ai déjà
-    // approuvé", so we attempt the replay anyway — Qonto either
-    // honours the still-valid approval or answers with a fresh 428
-    // we re-save below.
+    // No sca_session_token typically means the reconcile worker did
+    // a partial reset after a 412 (token aged out). Replaying without
+    // an SCA header risks creating an inconsistent state on Qonto's
+    // side — safer to ask the admin to click Payer again, which will
+    // mint a fresh challenge.
     if (!c.qonto_sca_session_token) {
-      console.log(`[confirm-sca] sca_session_token is missing but user clicked "J'ai déjà approuvé" — attempting replay anyway`);
+      console.log(`[confirm-sca] No sca_session_token available for ${c.id} — asking user to restart payment`);
+      return res.json({
+        ok: false,
+        needs_restart: true,
+        message: 'La validation SCA a expiré. Veuillez cliquer sur "Payer" pour relancer le virement.',
+      });
     }
 
-    console.log(`[confirm-sca] Replaying with sca_token ${c.qonto_sca_session_token ? String(c.qonto_sca_session_token).slice(0, 8) + '…' : '(none)'}`);
+    console.log(`[confirm-sca] Replaying with sca_token ${String(c.qonto_sca_session_token).slice(0, 8)}…`);
 
     const result = await qonto.replayTransfer(c.tenant_id, {
       body: c.qonto_request_body,           // replayTransfer gère string ou objet
