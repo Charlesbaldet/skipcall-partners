@@ -1,10 +1,11 @@
 // All block components for the marketplace WYSIWYG editor live here.
 // Each block takes { tenant, page, onPatch, t } and renders an
-// editable section. Editing primitives (EditableText,
-// EditableTextarea, TagEditor) are shared across blocks.
+// editable section that visually mirrors its public counterpart in
+// MarketplaceProgramPage.jsx. Editing primitives (EditableText,
+// TagEditor) are shared across blocks.
 
 import { useEffect, useRef, useState } from 'react';
-import { Link as LinkIcon, Pencil, X, Plus, Eye, EyeOff, Trash2, Upload } from 'lucide-react';
+import { Link as LinkIcon, Pencil, X, Plus, Trash2, Upload, Award } from 'lucide-react';
 import api from '../../lib/api';
 import { showToast } from '../../components/Dialogs.jsx';
 
@@ -43,24 +44,24 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false }
     setDraft(''); setAdding(false);
   };
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
       {(tags || []).map((tg, i) => (
         <span key={i} style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          fontSize: 12, fontWeight: 600,
-          padding: '4px 4px 4px 10px', borderRadius: 999,
-          background: dark ? 'rgba(255,255,255,0.08)' : '#fff',
-          border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : C.border}`,
-          color: dark ? '#cbd5e1' : C.s,
+          fontSize: 13, fontWeight: 600,
+          padding: '6px 6px 6px 14px', borderRadius: 999,
+          background: dark ? 'rgba(255,255,255,0.08)' : '#f0fdf4',
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : '#bbf7d0'}`,
+          color: dark ? '#cbd5e1' : '#059669',
         }}>
           {tg}
           <button
             onClick={() => onChange(tags.filter((_, j) => j !== i))}
             aria-label={`Retirer ${tg}`}
             style={{
-              background: dark ? 'rgba(255,255,255,0.1)' : '#f1f5f9',
+              background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(5,150,105,0.12)',
               border: 'none', borderRadius: '50%', width: 18, height: 18,
-              cursor: 'pointer', color: dark ? '#cbd5e1' : C.m,
+              cursor: 'pointer', color: dark ? '#cbd5e1' : '#059669',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, lineHeight: 1,
             }}
@@ -79,17 +80,17 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false }
           }}
           placeholder="…"
           style={{
-            fontSize: 12, padding: '4px 10px', borderRadius: 999,
+            fontSize: 13, padding: '6px 14px', borderRadius: 999,
             border: `1.5px solid ${C.p}`, outline: 'none',
-            width: 120, fontFamily: 'inherit',
+            width: 140, fontFamily: 'inherit',
           }}
         />
       ) : (
         <button
           onClick={() => setAdding(true)}
           style={{
-            fontSize: 12, fontWeight: 600,
-            padding: '4px 10px', borderRadius: 999,
+            fontSize: 13, fontWeight: 600,
+            padding: '6px 14px', borderRadius: 999,
             background: 'transparent', border: `1px dashed ${dark ? 'rgba(255,255,255,0.25)' : C.border}`,
             color: dark ? '#94a3b8' : C.m, cursor: 'pointer',
           }}
@@ -99,98 +100,230 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false }
   );
 }
 
-// ─── Section header (label + title) ──────────────────────────────────
+// ─── Section header (label + title), matches public page ─────────────
 
 function SectionHeader({ label, title }) {
   return (
-    <div style={{ textAlign: 'center', marginBottom: 28 }}>
+    <div style={{ textAlign: 'center', marginBottom: 32 }}>
       {label && (
         <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>
           {label}
         </p>
       )}
       {title && (
-        <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: C.s, letterSpacing: -1 }}>{title}</h2>
+        <h2 style={{ margin: 0, fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 800, color: C.s, letterSpacing: -0.5 }}>{title}</h2>
       )}
     </div>
   );
 }
 
-const sectionShell = {
-  background: '#fff', padding: 48, borderRadius: 20,
+// Used for sections that paint on a white card with a subtle border.
+const sectionCard = {
+  background: '#fff', padding: '64px 32px', borderRadius: 20,
+  border: `1px solid ${C.border}`,
+};
+
+// Sections that should look like a full-bleed band on the public page —
+// in the editor we render them as a card with the same internal layout.
+const sectionBand = {
+  background: C.bg, padding: '56px 32px', borderRadius: 20,
   border: `1px solid ${C.border}`,
 };
 
 // ─── Block: Hero ─────────────────────────────────────────────────────
 
+function LogoEditor({ tenant, onPatch }) {
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return showToast('Choisissez une image', 'error');
+    if (file.size > 500 * 1024) return showToast('Logo trop volumineux (500 KB max)', 'error');
+    const reader = new FileReader();
+    reader.onload = (ev) => onPatch({ logo_url: ev.target.result });
+    reader.onerror = () => showToast('Lecture du fichier échouée', 'error');
+    reader.readAsDataURL(file);
+  };
+  return (
+    <label style={{
+      width: 84, height: 84, borderRadius: 20, background: '#fff',
+      margin: '0 auto 24px', position: 'relative', cursor: 'pointer',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 14,
+      boxShadow: '0 12px 32px rgba(0,0,0,0.25)',
+    }}>
+      {tenant.logo_url ? (
+        <img src={tenant.logo_url} alt={tenant.company_name || ''} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      ) : (
+        <span style={{ color: C.m, fontWeight: 800, fontSize: 32 }}>
+          {(tenant.company_name || '?').charAt(0).toUpperCase()}
+        </span>
+      )}
+      <input type="file" accept="image/*" onChange={handleFile}
+        style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+      <span style={{
+        position: 'absolute', bottom: -8, right: -8,
+        width: 30, height: 30, borderRadius: '50%',
+        background: C.p, color: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 12px rgba(5,150,105,0.4)',
+        border: '2px solid #fff', pointerEvents: 'none',
+      }}>
+        <Pencil size={13} />
+      </span>
+    </label>
+  );
+}
+
 export function HeroBlock({ tenant, onPatch, t }) {
-  const heroLabel = t('marketplace.public.partner_program', 'Programme partenaire');
   return (
     <section style={{
       background: g(C.s, '#1e293b'),
-      padding: '64px 32px', textAlign: 'center', borderRadius: 20,
+      padding: '80px 32px 64px', textAlign: 'center', borderRadius: 20,
     }}>
-      <div style={{ maxWidth: 720, margin: '0 auto' }}>
-        <span style={{ display: 'inline-block', color: C.pl, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
-          {heroLabel}
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+        <span style={{ display: 'inline-block', color: C.pl, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>
+          {t('marketplace.public.partner_program', 'Programme partenaire')}
         </span>
-        {tenant.logo_url && (
-          <div style={{
-            width: 72, height: 72, borderRadius: 18, background: '#fff',
-            margin: '0 auto 20px', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', padding: 12,
-            boxShadow: '0 12px 32px rgba(0,0,0,0.25)',
-          }}>
-            <img src={tenant.logo_url} alt={tenant.company_name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          </div>
-        )}
-        <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(28px,5vw,44px)', fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>
-          {tenant.company_name}
+
+        <LogoEditor tenant={tenant} onPatch={onPatch} />
+
+        <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -1 }}>
+          <EditableText
+            value={tenant.company_name}
+            onChange={v => onPatch({ company_name: v })}
+            placeholder={t('marketplace.editor.company_name_ph', 'Nom de votre entreprise')}
+            style={{ color: '#fff' }}
+          />
         </h1>
-        <div style={{ color: '#cbd5e1', fontSize: 17, margin: '0 auto 22px', lineHeight: 1.6, maxWidth: 620 }}>
+
+        <div style={{ margin: '0 auto 28px', fontSize: 17, color: '#cbd5e1', lineHeight: 1.6, maxWidth: 640 }}>
           <EditableText
             value={tenant.short_description}
             onChange={v => onPatch({ short_description: v })}
-            placeholder="Décrivez votre programme partenaires en une ligne…"
+            placeholder={t('marketplace.editor.short_desc_ph', 'Décrivez votre programme partenaires en une ligne…')}
             multiline
             style={{ color: '#cbd5e1' }}
           />
         </div>
-        {tenant.sector && (
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {tenant.sector && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(16,185,129,0.15)', color: '#34d399' }}>
               {tenant.sector}
             </span>
-          </div>
-        )}
+          )}
+          {tenant.icp && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: '#cbd5e1' }}>
+              {tenant.icp}
+            </span>
+          )}
+          {!tenant.sector && !tenant.icp && (
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+              {t('marketplace.editor.badges_hint', 'Ajoutez secteur et ICP dans Paramètres pour afficher des badges')}
+            </span>
+          )}
+        </div>
       </div>
     </section>
   );
 }
 
-// ─── Block: Tiers (read-only, link to Programme) ─────────────────────
+// ─── Block: Tiers (read-only, fetches real tenant_levels) ────────────
 
 export function TiersBlock({ t }) {
+  const [data, setData] = useState({ levels: [], threshold_type: 'deals', loading: true });
+  useEffect(() => {
+    api.getTenantLevels()
+      .then(d => setData({ levels: d.levels || [], threshold_type: d.threshold_type || 'deals', loading: false }))
+      .catch(() => setData({ levels: [], threshold_type: 'deals', loading: false }));
+  }, []);
+
+  const { levels, threshold_type, loading } = data;
+  const formatThreshold = (lvl) => {
+    if (!lvl.min_threshold || Number(lvl.min_threshold) === 0) return t('marketplace.editor.tiers_starting', 'Niveau de départ');
+    if (threshold_type === 'volume') {
+      return t('marketplace.editor.tiers_volume', 'À partir de {{n}} € de CA', { n: Number(lvl.min_threshold).toLocaleString('fr-FR') });
+    }
+    return t('marketplace.editor.tiers_deals', 'À partir de {{n}} ventes', { n: Number(lvl.min_threshold) });
+  };
+
   return (
-    <section style={sectionShell}>
+    <section style={sectionCard}>
       <SectionHeader
         label={t('marketplace.public.tiers_title', 'Niveaux partenaires')}
-        title="Niveaux partenaires"
+        title={t('marketplace.editor.tiers_heading', 'Récompensez vos meilleurs partenaires')}
       />
-      <div style={{
-        textAlign: 'center', padding: 24,
-        background: C.bg, border: `1px dashed ${C.border}`, borderRadius: 14,
-      }}>
-        <p style={{ margin: '0 0 10px', color: C.m, fontSize: 14 }}>
-          {t('marketplace.editor.tiers_note', 'Configuré dans Programme → Niveaux')}
-        </p>
-        <a
-          href="/programme"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: C.p, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
-        >
-          <LinkIcon size={14} /> Configurer →
-        </a>
-      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', color: C.m, fontSize: 14, padding: 24 }}>Chargement…</div>
+      ) : levels.length === 0 ? (
+        <div style={{
+          textAlign: 'center', padding: 32,
+          background: C.bg, border: `1px dashed ${C.border}`, borderRadius: 14,
+        }}>
+          <Award size={28} color={C.m} style={{ marginBottom: 10 }} />
+          <p style={{ margin: '0 0 12px', color: C.s, fontWeight: 600, fontSize: 15 }}>
+            {t('marketplace.editor.tiers_empty_title', 'Aucun niveau configuré')}
+          </p>
+          <a
+            href="/programme"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: C.p, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}
+          >
+            <LinkIcon size={14} /> {t('marketplace.editor.tiers_configure', 'Configurer dans Programme → Niveaux')} →
+          </a>
+        </div>
+      ) : (
+        <>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(auto-fit, minmax(220px, 1fr))`,
+            gap: 16,
+          }}>
+            {levels.map(lvl => {
+              const tierColor = lvl.color || C.p;
+              return (
+                <div key={lvl.id} style={{
+                  padding: 28, borderRadius: 18,
+                  background: '#fff', border: `1px solid ${C.border}`,
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+                  textAlign: 'center', position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0,
+                    height: 4, background: tierColor,
+                  }} />
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 12px', borderRadius: 999,
+                    background: tierColor + '22', color: tierColor,
+                    fontSize: 12, fontWeight: 800, letterSpacing: 1,
+                    textTransform: 'uppercase', marginBottom: 14, marginTop: 4,
+                  }}>
+                    {lvl.icon ? `${lvl.icon} ` : ''}{lvl.name}
+                  </span>
+                  <div style={{ fontSize: 36, fontWeight: 900, color: C.s, letterSpacing: -1, marginBottom: 6 }}>
+                    {Number(lvl.commission_rate)}%
+                  </div>
+                  <div style={{ fontSize: 13, color: C.m, marginBottom: 10, fontWeight: 600 }}>
+                    {t('marketplace.editor.tiers_commission', 'de commission')}
+                  </div>
+                  <div style={{ fontSize: 13, color: C.m, lineHeight: 1.5 }}>
+                    {formatThreshold(lvl)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <a
+              href="/programme"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: C.m, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+            >
+              <LinkIcon size={12} /> {t('marketplace.editor.tiers_edit', 'Modifier dans Programme → Niveaux')} →
+            </a>
+          </div>
+        </>
+      )}
     </section>
   );
 }
@@ -220,91 +353,113 @@ export function ConditionsBlock({ page, onPatch, t }) {
   const others = items.filter(it => it.id !== (primary && primary.id));
 
   return (
-    <section style={sectionShell}>
+    <section style={sectionCard}>
       <SectionHeader
         label={t('marketplace.public.conditions_title', 'Conditions du programme')}
-        title="Conditions du programme"
+        title={t('marketplace.editor.conditions_heading', 'Une rémunération transparente')}
       />
-      {primary && (
-        <div style={{
-          padding: 40, borderRadius: 24, background: g(C.s, '#1e293b'),
-          color: '#fff', textAlign: 'center', marginBottom: 16,
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{ position: 'absolute', top: -80, right: -80, width: 240, height: 240, borderRadius: '50%', background: `${C.p}18` }} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 1, letterSpacing: -2, background: g(C.pl, '#6ee7b7'), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 12 }}>
-              <EditableText
-                value={primary.metric}
-                onChange={v => updateItem(primary.id, { metric: v })}
-                placeholder="0%"
-                style={{ display: 'inline-block', color: 'transparent' }}
-              />
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-              <EditableText
-                value={primary.label}
-                onChange={v => updateItem(primary.id, { label: v })}
-                placeholder="Libellé"
-                style={{ color: '#fff' }}
-              />
-            </div>
-            <div style={{ color: '#cbd5e1', fontSize: 15, lineHeight: 1.5, maxWidth: 560, margin: '0 auto' }}>
-              <EditableText
-                value={primary.description}
-                onChange={v => updateItem(primary.id, { description: v })}
-                placeholder="Description…"
-                multiline
-                style={{ color: '#cbd5e1' }}
-              />
-            </div>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {primary && (
+          <div className="rb-card-hover-parent" style={{
+            padding: 56, borderRadius: 24, background: g(C.s, '#1e293b'),
+            color: '#fff', textAlign: 'center', marginBottom: 16,
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: -80, right: -80, width: 240, height: 240, borderRadius: '50%', background: `${C.p}18` }} />
             <button
               onClick={() => removeItem(primary.id)}
               title="Supprimer"
-              style={{ position: 'absolute', top: -28, right: -28, padding: 6, borderRadius: 8, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', cursor: 'pointer', display: 'flex' }}
+              className="rb-card-hover-only"
+              style={{
+                position: 'absolute', top: 12, right: 12, zIndex: 2,
+                width: 28, height: 28, borderRadius: 8,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: 0, transition: 'opacity .15s',
+              }}
             >
               <Trash2 size={14} />
             </button>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, lineHeight: 1, letterSpacing: -3, background: g(C.pl, '#6ee7b7'), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 16 }}>
+                <EditableText
+                  value={primary.metric}
+                  onChange={v => updateItem(primary.id, { metric: v })}
+                  placeholder="0%"
+                  style={{ display: 'inline-block', color: 'transparent' }}
+                />
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>
+                <EditableText
+                  value={primary.label}
+                  onChange={v => updateItem(primary.id, { label: v })}
+                  placeholder="Libellé"
+                  style={{ color: '#fff' }}
+                />
+              </div>
+              <div style={{ color: '#cbd5e1', fontSize: 17, lineHeight: 1.5, maxWidth: 620, margin: '0 auto' }}>
+                <EditableText
+                  value={primary.description}
+                  onChange={v => updateItem(primary.id, { description: v })}
+                  placeholder="Description…"
+                  multiline
+                  style={{ color: '#cbd5e1' }}
+                />
+              </div>
+            </div>
           </div>
+        )}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(auto-fit, minmax(220px, 1fr))`,
+          gap: 16,
+        }}>
+          {others.map(it => (
+            <div key={it.id} className="rb-card-hover-parent" style={{
+              padding: 32, borderRadius: 20, background: '#fff', border: `1px solid ${C.border}`,
+              boxShadow: '0 2px 10px rgba(0,0,0,0.04)', position: 'relative', textAlign: 'center',
+            }}>
+              <button
+                onClick={() => removeItem(it.id)}
+                title="Supprimer"
+                className="rb-card-hover-only"
+                style={{
+                  position: 'absolute', top: 8, right: 8,
+                  width: 26, height: 26, borderRadius: 8,
+                  background: '#fff', border: `1px solid ${C.border}`,
+                  color: C.m, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: 0, transition: 'opacity .15s',
+                }}
+              >
+                <X size={14} />
+              </button>
+              <div style={{ fontSize: 36, fontWeight: 900, color: C.p, letterSpacing: -1, marginBottom: 8 }}>
+                <EditableText value={it.metric} onChange={v => updateItem(it.id, { metric: v })} placeholder="0" />
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.s, marginBottom: 4 }}>
+                <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" />
+              </div>
+              <div style={{ fontSize: 13, color: C.m, lineHeight: 1.55 }}>
+                <EditableText value={it.description} onChange={v => updateItem(it.id, { description: v })} placeholder="Description…" multiline />
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={addItem}
+            style={{
+              padding: 32, borderRadius: 20, background: 'transparent',
+              border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              minHeight: 130,
+            }}
+          >
+            <Plus size={16} /> {t('marketplace.editor.add_condition', 'Ajouter une condition')}
+          </button>
         </div>
-      )}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${Math.min(others.length + 1, 3)},1fr)`,
-        gap: 16,
-      }}>
-        {others.map(it => (
-          <div key={it.id} style={{ padding: 28, borderRadius: 16, background: '#fff', border: `1px solid ${C.border}`, position: 'relative', textAlign: 'center' }}>
-            <div style={{ fontSize: 36, fontWeight: 900, color: C.p, letterSpacing: -1, marginBottom: 8 }}>
-              <EditableText value={it.metric} onChange={v => updateItem(it.id, { metric: v })} placeholder="0" />
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.s, marginBottom: 4 }}>
-              <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" />
-            </div>
-            <div style={{ fontSize: 13, color: C.m, lineHeight: 1.55 }}>
-              <EditableText value={it.description} onChange={v => updateItem(it.id, { description: v })} placeholder="Description…" multiline />
-            </div>
-            <button
-              onClick={() => removeItem(it.id)}
-              title="Supprimer"
-              style={{ position: 'absolute', top: 8, right: 8, padding: 4, borderRadius: 6, background: '#fff', border: `1px solid ${C.border}`, color: C.m, cursor: 'pointer', display: 'flex' }}
-            >
-              <X size={12} />
-            </button>
-          </div>
-        ))}
-        <button
-          onClick={addItem}
-          style={{
-            padding: 28, borderRadius: 16, background: 'transparent',
-            border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-            fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            minHeight: 100,
-          }}
-        >
-          <Plus size={16} /> {t('marketplace.editor.add_condition', 'Ajouter une condition')}
-        </button>
       </div>
     </section>
   );
@@ -314,10 +469,10 @@ export function ConditionsBlock({ page, onPatch, t }) {
 
 export function IdealClientBlock({ page, onPatch, t }) {
   return (
-    <section style={sectionShell}>
+    <section style={sectionCard}>
       <SectionHeader
         label={t('marketplace.public.ideal_client', 'Client idéal')}
-        title="Client idéal"
+        title={t('marketplace.editor.ideal_client_heading', 'Le profil parfait à recommander')}
       />
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <EditableText
@@ -326,16 +481,16 @@ export function IdealClientBlock({ page, onPatch, t }) {
           placeholder="Décrivez le profil de client idéal pour votre programme…"
           multiline
           style={{
-            color: C.m, fontSize: 15, lineHeight: 1.7,
-            padding: 12, borderRadius: 10,
+            color: C.m, fontSize: 16, lineHeight: 1.75, textAlign: 'center',
+            padding: 16, borderRadius: 12,
             border: `1px dashed ${C.border}`,
-            minHeight: 80, marginBottom: 16,
+            minHeight: 80, marginBottom: 20,
           }}
         />
         <TagEditor
           tags={page.ideal_client_tags || []}
           onChange={tags => onPatch({ ideal_client_tags: tags })}
-          addLabel={t('marketplace.editor.add_tag', 'Ajouter')}
+          addLabel={t('marketplace.editor.add_tag', 'Ajouter un critère')}
         />
       </div>
     </section>
@@ -354,35 +509,40 @@ export function WhyJoinBlock({ page, onPatch, t }) {
     onPatch({ why_join: [...items, { id: newId(), text: 'Nouvel avantage…' }] });
 
   return (
-    <section style={sectionShell}>
+    <section style={sectionBand}>
       <SectionHeader
         label={t('marketplace.public.why_join', 'Pourquoi devenir partenaire')}
-        title="Pourquoi devenir partenaire"
+        title={t('marketplace.editor.why_join_heading', 'Les avantages du programme')}
       />
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14,
-        maxWidth: 800, margin: '0 auto',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16,
+        maxWidth: 1000, margin: '0 auto',
       }}>
         {items.map(it => (
-          <div key={it.id} style={{
-            display: 'flex', alignItems: 'flex-start', gap: 12,
-            padding: 14, borderRadius: 12,
-            background: C.bg, border: `1px solid ${C.border}`,
+          <div key={it.id} className="rb-card-hover-parent" style={{
+            display: 'flex', alignItems: 'flex-start', gap: 14,
+            padding: 20, borderRadius: 14,
+            background: '#fff', border: `1px solid ${C.border}`,
             position: 'relative',
           }}>
             <div style={{
-              width: 24, height: 24, borderRadius: '50%',
+              width: 28, height: 28, borderRadius: '50%',
               background: `${C.p}15`, color: C.p,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: 14, flexShrink: 0, marginTop: 2,
+              fontWeight: 800, fontSize: 16, flexShrink: 0, marginTop: 2,
             }}>✓</div>
-            <div style={{ flex: 1, color: C.s, fontSize: 14, lineHeight: 1.5 }}>
+            <div style={{ flex: 1, color: C.s, fontSize: 15, lineHeight: 1.6, minWidth: 0 }}>
               <EditableText value={it.text} onChange={v => updateItem(it.id, { text: v })} placeholder="Avantage…" multiline />
             </div>
             <button
               onClick={() => removeItem(it.id)}
               title="Supprimer"
-              style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', color: C.m, cursor: 'pointer', display: 'flex' }}
+              className="rb-card-hover-only"
+              style={{
+                padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
+                color: C.m, cursor: 'pointer', display: 'flex',
+                opacity: 0, transition: 'opacity .15s',
+              }}
             >
               <X size={14} />
             </button>
@@ -391,10 +551,11 @@ export function WhyJoinBlock({ page, onPatch, t }) {
         <button
           onClick={addItem}
           style={{
-            padding: 14, borderRadius: 12, background: 'transparent',
+            padding: 20, borderRadius: 14, background: 'transparent',
             border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-            fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            minHeight: 70,
           }}
         >
           <Plus size={14} /> {t('marketplace.editor.add_advantage', 'Ajouter un avantage')}
@@ -527,7 +688,7 @@ function ReferenceModal({ initial, onClose, onSave }) {
 
 export function ReferencesBlock({ page, onPatch, t }) {
   const refs = Array.isArray(page.client_references) ? page.client_references : [];
-  const [modal, setModal] = useState(null); // null | { mode: 'add' } | { mode: 'edit', ref }
+  const [modal, setModal] = useState(null);
 
   const handleAdd = async ({ name, description, logo_url }) => {
     try {
@@ -552,55 +713,67 @@ export function ReferencesBlock({ page, onPatch, t }) {
   };
 
   return (
-    <section style={sectionShell}>
+    <section style={sectionCard}>
       <SectionHeader
         label={t('marketplace.public.references', 'Ils nous font confiance')}
-        title="Références clients"
+        title={t('marketplace.editor.references_heading', 'Références clients')}
       />
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18,
+        maxWidth: 1100, margin: '0 auto',
       }}>
         {refs.map(r => (
-          <div key={r.id} style={{
-            padding: 20, borderRadius: 14, background: '#fff', border: `1px solid ${C.border}`,
+          <div key={r.id} className="rb-card-hover-parent" style={{
+            padding: 24, borderRadius: 16, background: '#fff', border: `1px solid ${C.border}`,
             display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', textAlign: 'center',
-            position: 'relative',
+            position: 'relative', boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
           }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: 12, background: C.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 8, overflow: 'hidden',
+            <div className="rb-card-hover-only" style={{
+              position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6,
+              opacity: 0, transition: 'opacity .15s',
             }}>
-              {r.logo_url ? (
-                <img src={r.logo_url} alt={r.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-              ) : (
-                <span style={{ color: C.m, fontWeight: 800, fontSize: 20 }}>{(r.name || '?').charAt(0).toUpperCase()}</span>
-              )}
-            </div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: C.s }}>{r.name}</div>
-            {r.description && <div style={{ fontSize: 12, color: C.m, lineHeight: 1.5 }}>{r.description}</div>}
-            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
               <button
                 onClick={() => setModal({ mode: 'edit', ref: r })}
                 title="Modifier"
-                style={{ padding: 5, borderRadius: 6, background: '#f1f5f9', border: 'none', color: C.s, cursor: 'pointer', display: 'flex' }}
+                style={{
+                  width: 26, height: 26, borderRadius: 8, background: '#fff',
+                  border: `1px solid ${C.border}`, color: C.s, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
               ><Pencil size={12} /></button>
               <button
                 onClick={() => handleDelete(r.id)}
                 title="Supprimer"
-                style={{ padding: 5, borderRadius: 6, background: '#fef2f2', border: 'none', color: '#dc2626', cursor: 'pointer', display: 'flex' }}
+                style={{
+                  width: 26, height: 26, borderRadius: 8, background: '#fef2f2',
+                  border: `1px solid #fecaca`, color: '#dc2626', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
               ><Trash2 size={12} /></button>
             </div>
+            <div style={{
+              width: 64, height: 64, borderRadius: 14, background: C.bg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 10, overflow: 'hidden',
+            }}>
+              {r.logo_url ? (
+                <img src={r.logo_url} alt={r.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              ) : (
+                <span style={{ color: C.m, fontWeight: 800, fontSize: 22 }}>{(r.name || '?').charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: C.s }}>{r.name}</div>
+            {r.description && <p style={{ margin: 0, fontSize: 13, color: C.m, lineHeight: 1.5 }}>{r.description}</p>}
           </div>
         ))}
         <button
           onClick={() => setModal({ mode: 'add' })}
           style={{
-            padding: 28, borderRadius: 14, background: 'transparent',
+            padding: 28, borderRadius: 16, background: 'transparent',
             border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-            fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+            fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            minHeight: 140,
+            minHeight: 160,
           }}
         >
           <Plus size={16} /> {t('marketplace.editor.add_reference', 'Ajouter une référence')}
@@ -629,22 +802,19 @@ export function AdditionalInfoBlock({ page, onPatch, t }) {
     onPatch({ additional_info: [...items, { id: newId(), label: 'Libellé', value: 'Valeur' }] });
 
   return (
-    <section style={sectionShell}>
+    <section style={sectionBand}>
       <SectionHeader
         label={t('marketplace.public.additional_info', 'Informations complémentaires')}
-        title="Informations complémentaires"
+        title={t('marketplace.editor.additional_info_heading', 'Tout ce qu\'il faut savoir')}
       />
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
-        {items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 16, color: C.m, fontSize: 13 }}>
-            Aucune information pour le moment.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
-            {items.map(it => (
-              <div key={it.id} style={{
-                display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: 12, alignItems: 'center',
-                padding: 14, borderRadius: 10, background: C.bg, border: `1px solid ${C.border}`,
+        {items.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', marginBottom: 14 }}>
+            {items.map((it, i) => (
+              <div key={it.id} className="rb-card-hover-parent" style={{
+                display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: 16, alignItems: 'center',
+                padding: '14px 20px',
+                borderTop: i === 0 ? 'none' : `1px solid ${C.border}`,
               }}>
                 <div style={{ fontWeight: 700, color: C.s, fontSize: 14 }}>
                   <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" />
@@ -655,7 +825,12 @@ export function AdditionalInfoBlock({ page, onPatch, t }) {
                 <button
                   onClick={() => removeItem(it.id)}
                   title="Supprimer"
-                  style={{ padding: 4, borderRadius: 6, background: 'transparent', border: 'none', color: C.m, cursor: 'pointer', display: 'flex' }}
+                  className="rb-card-hover-only"
+                  style={{
+                    padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
+                    color: C.m, cursor: 'pointer', display: 'flex',
+                    opacity: 0, transition: 'opacity .15s',
+                  }}
                 ><X size={14} /></button>
               </div>
             ))}
@@ -664,10 +839,10 @@ export function AdditionalInfoBlock({ page, onPatch, t }) {
         <button
           onClick={addItem}
           style={{
-            padding: '10px 16px', borderRadius: 10, background: 'transparent',
+            padding: '12px 20px', borderRadius: 12, background: 'transparent',
             border: `2px dashed ${C.border}`, color: C.m, cursor: 'pointer',
-            fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 6,
+            fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 8,
           }}
         >
           <Plus size={14} /> {t('marketplace.editor.add_info', 'Ajouter une information')}
@@ -681,21 +856,22 @@ export function AdditionalInfoBlock({ page, onPatch, t }) {
 
 export function AboutBlock({ tenant, page, onPatch, t }) {
   return (
-    <section style={sectionShell}>
+    <section style={sectionBand}>
       <SectionHeader
         label={t('marketplace.public.about_title', 'À propos')}
         title={t('marketplace.public.discover', { company: tenant.company_name, defaultValue: 'Découvrez {{company}}' })}
       />
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
         <EditableText
           value={page.page_description}
           onChange={v => onPatch({ page_description: v })}
           placeholder="Présentez votre activité, votre proposition de valeur, vos cibles privilégiées…"
           multiline
           style={{
-            color: C.m, fontSize: 15, lineHeight: 1.7,
-            padding: 12, borderRadius: 10,
-            border: `1px dashed ${C.border}`, minHeight: 140,
+            color: C.m, fontSize: 16, lineHeight: 1.75,
+            padding: 18, borderRadius: 12,
+            border: `1px dashed ${C.border}`, minHeight: 160,
+            background: '#fff',
           }}
         />
       </div>
@@ -708,22 +884,29 @@ export function AboutBlock({ tenant, page, onPatch, t }) {
 export function CtaBlock({ tenant, t }) {
   return (
     <section style={{
-      background: g('#ecfdf5', '#d1fae5'),
-      padding: 48, borderRadius: 20, textAlign: 'center',
-      border: `1px solid #a7f3d0`,
+      background: g(C.s, '#1e293b'),
+      padding: '72px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden',
+      borderRadius: 20,
     }}>
-      <h2 style={{ margin: '0 0 12px', fontSize: 24, fontWeight: 800, color: C.s }}>
-        Rejoindre le programme {tenant.company_name}
-      </h2>
-      <p style={{ margin: '0 0 20px', color: C.m, fontSize: 15, lineHeight: 1.55 }}>
-        Postulez en quelques clics et démarrez à votre rythme.
-      </p>
-      <span style={{
-        display: 'inline-block', padding: '12px 28px', borderRadius: 12,
-        background: C.s, color: '#fff', fontWeight: 700, fontSize: 14,
-      }}>
-        {t('marketplace.public.apply_now', 'Postuler maintenant')} →
-      </span>
+      <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: `${C.p}10` }} />
+      <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto', zIndex: 1 }}>
+        <h2 style={{ margin: '0 0 16px', fontSize: 'clamp(26px,4vw,36px)', fontWeight: 800, color: '#fff', letterSpacing: -1 }}>
+          {t('marketplace.editor.cta_title', { company: tenant.company_name, defaultValue: 'Rejoindre le programme {{company}}' })}
+        </h2>
+        <p style={{ margin: '0 0 28px', fontSize: 17, color: '#cbd5e1', lineHeight: 1.6 }}>
+          {t('marketplace.editor.cta_body', 'Postulez en quelques clics et démarrez à votre rythme.')}
+        </p>
+        <span style={{
+          display: 'inline-block', padding: '15px 32px', borderRadius: 14,
+          background: g(C.p, C.pl), color: '#fff', textDecoration: 'none',
+          fontWeight: 700, fontSize: 16, boxShadow: `0 8px 30px ${C.p}40`,
+        }}>
+          {t('marketplace.public.apply_now', 'Postuler maintenant')} →
+        </span>
+        <p style={{ margin: '20px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+          {t('marketplace.editor.cta_hint', 'Bloc généré automatiquement — non modifiable')}
+        </p>
+      </div>
     </section>
   );
 }

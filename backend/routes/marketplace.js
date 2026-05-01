@@ -148,6 +148,8 @@ router.put('/page', authenticate, requireAdmin, async (req, res) => {
       tenantParams.push(value);
     };
     tenantField('marketplace_visible', typeof b.marketplace_visible === 'boolean' ? b.marketplace_visible : undefined);
+    tenantField('name', b.company_name);
+    tenantField('logo_url', b.logo_url);
     tenantField('sector', b.sector);
     tenantField('website', b.website);
     tenantField('icp', b.icp);

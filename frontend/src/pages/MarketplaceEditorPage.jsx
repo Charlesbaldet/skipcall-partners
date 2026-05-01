@@ -164,9 +164,8 @@ export default function MarketplaceEditorPage() {
   };
 
   const onPatch = (patch) => {
-    if (patch.short_description !== undefined || patch.sector !== undefined ||
-        patch.website !== undefined || patch.icp !== undefined ||
-        patch.marketplace_visible !== undefined) {
+    const tenantKeys = ['short_description', 'sector', 'website', 'icp', 'marketplace_visible', 'company_name', 'logo_url'];
+    if (tenantKeys.some(k => patch[k] !== undefined)) {
       setTenant(prev => prev ? { ...prev, ...patch } : prev);
     }
     const pageKeys = ['page_headline', 'page_description', 'ideal_client', 'ideal_client_tags',
@@ -323,6 +322,16 @@ export default function MarketplaceEditorPage() {
 
   return (
     <div style={{ background: C.bg, minHeight: 'calc(100vh - 80px)', paddingBottom: 64 }}>
+      {/* Hover-reveal: delete / edit buttons inside a card stay
+          invisible until the user hovers the card. Cheaper than
+          tracking hover state per-card in React. */}
+      <style>{`
+        .rb-card-hover-parent:hover .rb-card-hover-only,
+        .rb-card-hover-parent:focus-within .rb-card-hover-only { opacity: 1 !important; }
+        [contenteditable][data-placeholder]:empty::before {
+          content: attr(data-placeholder); color: rgba(100,116,139,0.6); pointer-events: none;
+        }
+      `}</style>
       {/* Sticky top bar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 50,
@@ -386,7 +395,7 @@ export default function MarketplaceEditorPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 980, margin: '0 auto', padding: '24px 24px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 24px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Visible blocks in their saved order */}
         {visibleBlocks.map(id => renderBlock(id, true))}
         {/* Hidden blocks at the bottom (default order) */}
