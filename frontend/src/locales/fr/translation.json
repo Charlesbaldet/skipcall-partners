@@ -2460,16 +2460,31 @@
     "last_sync_none": "Dernière sync : jamais",
     "nightly_schedule": "Sync automatique : tous les soirs à {{time}} (Paris)"
   },
+  "partner": {
+    "submit_referral": "Soumettre un referral",
+    "submit_referral_title": "Nouveau referral",
+    "referral_submitted": "Referral soumis avec succès",
+    "search_placeholder": "Rechercher referrals, commissions…"
+  },
   "partner_notifications": {
     "tab": "Notifications",
     "title": "Notifications",
     "subtitle": "Choisissez les emails que vous souhaitez recevoir. Les notifications dans l'application restent toujours actives.",
-    "referral_status": "Nouveau statut de mon referral",
-    "referral_won": "Referral gagné / commission déclenchée",
+    "referral_status": "Changement de statut d'un referral",
+    "referral_won": "Deal gagné",
     "commission_update": "Commission approuvée / payée",
+    "commission_new": "Nouvelle commission disponible",
+    "commission_approved": "Commission approuvée",
+    "payment_completed": "Paiement effectué",
+    "commission_deleted": "Commission supprimée",
     "new_message": "Nouveau message",
-    "news": "Actualité publiée",
-    "tier_change": "Changement de niveau"
+    "news": "Nouvelle actualité publiée",
+    "tier_change": "Changement de niveau partenaire",
+    "access_revoked": "Accès révoqué",
+    "group_mes_referrals": "Mes referrals",
+    "group_commissions": "Commissions",
+    "group_mon_compte": "Mon compte",
+    "group_communication": "Communication"
   },
   "useCases": {
     "breadcrumb": {

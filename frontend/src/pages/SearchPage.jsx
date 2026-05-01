@@ -24,7 +24,10 @@ const NAVIGATION_ITEMS = [
 
   // ─── Partner pages ───
   { title: 'Dashboard',         subtitle: 'Mes referrals',             url: '/partner/referrals', keywords: ['dashboard', 'mes referrals', 'pipeline', 'mes leads'], roles: ['partner'] },
-  { title: 'Soumettre un lead', subtitle: 'Nouveau referral',          url: '/partner/submit',    keywords: ['soumettre', 'nouveau', 'lead', 'referral', 'ajouter'], roles: ['partner'] },
+  // /partner/submit still resolves to a modal-aware redirect, so the
+  // search entry deep-links into the new modal flow instead of a
+  // standalone page.
+  { title: 'Soumettre un lead', subtitle: 'Nouveau referral',          url: '/partner/referrals?submit=1', keywords: ['soumettre', 'nouveau', 'lead', 'referral', 'ajouter'], roles: ['partner'] },
   { title: 'Mes paiements',     subtitle: 'Mes commissions',           url: '/partner/payments',  keywords: ['paiements', 'commissions', 'payments', 'argent'],      roles: ['partner'] },
   { title: 'Actualités',        subtitle: 'News du programme',         url: '/partner/news',      keywords: ['actualités', 'news', 'mises à jour'],                  roles: ['partner'] },
   { title: 'Marketplace',       subtitle: "Découvrir d'autres programmes", url: '/marketplace',   keywords: ['marketplace', 'programmes', 'découvrir', 'explorer'],  roles: ['partner'] },

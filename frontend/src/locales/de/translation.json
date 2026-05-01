@@ -2460,16 +2460,31 @@
     "last_sync_none": "Letzte Synchronisation: nie",
     "nightly_schedule": "Automatische Synchronisation: jeden Abend um {{time}} (Paris)"
   },
+  "partner": {
+    "submit_referral": "Referral einreichen",
+    "submit_referral_title": "Neuer Referral",
+    "referral_submitted": "Referral erfolgreich eingereicht",
+    "search_placeholder": "Referrals, Provisionen suchen…"
+  },
   "partner_notifications": {
     "tab": "Benachrichtigungen",
     "title": "Benachrichtigungen",
     "subtitle": "Wähle, welche E-Mails du erhalten möchtest. In-App-Benachrichtigungen bleiben immer aktiv.",
-    "referral_status": "Status meines Referrals geändert",
-    "referral_won": "Referral gewonnen / Provision erstellt",
+    "referral_status": "Statusänderung eines Referrals",
+    "referral_won": "Deal gewonnen",
     "commission_update": "Provision genehmigt / bezahlt",
+    "commission_new": "Neue Provision verfügbar",
+    "commission_approved": "Provision genehmigt",
+    "payment_completed": "Zahlung ausgeführt",
+    "commission_deleted": "Provision gelöscht",
     "new_message": "Neue Nachricht",
-    "news": "News veröffentlicht",
-    "tier_change": "Stufenwechsel"
+    "news": "Neue News veröffentlicht",
+    "tier_change": "Partner-Stufenwechsel",
+    "access_revoked": "Zugang widerrufen",
+    "group_mes_referrals": "Meine Referrals",
+    "group_commissions": "Provisionen",
+    "group_mon_compte": "Mein Konto",
+    "group_communication": "Kommunikation"
   },
   "useCases": {
     "breadcrumb": {

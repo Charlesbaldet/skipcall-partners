@@ -14,7 +14,15 @@ const TEMPERATURES = [
 ];
 const tempByKey = Object.fromEntries(TEMPERATURES.map(t => [t.key, t]));
 
-export default function PartnerSubmitPage() {
+// `onSubmitted` is the modal-mode hook. When provided, the form
+// fires it on a successful POST instead of rendering the inline
+// "Recommandation envoyée" success card — the modal owner closes
+// the dialog, fires its own toast, and refreshes the referrals
+// list. Standalone-page mode (no callback) keeps the current
+// confirmation card so the existing /partner/submit deep-link
+// still works for any old emails / bookmarks that hit the route
+// directly.
+export default function PartnerSubmitPage({ onSubmitted } = {}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -50,7 +58,14 @@ export default function PartnerSubmitPage() {
         ...form,
         partner_id: user.partnerId || user.partner_id,
       });
-      setSubmitted(true);
+      // Modal mode: hand off to the parent (close dialog + toast +
+      // refetch). Standalone mode: fall through to the inline
+      // success card.
+      if (typeof onSubmitted === 'function') {
+        onSubmitted();
+      } else {
+        setSubmitted(true);
+      }
     } catch (err) {
       setError(err.message || 'Erreur lors de la soumission');
     }
@@ -78,12 +93,21 @@ export default function PartnerSubmitPage() {
     );
   }
 
+  // In modal mode the dialog header already shows the title, so
+  // suppress the page-level h1 to avoid a duplicate <h1> + a wasted
+  // 60px of vertical space inside the dialog.
+  const inModal = typeof onSubmitted === 'function';
+
   return (
     <div className="fade-in" style={{ maxWidth: 640, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Nouvelle recommandation</h1>
-      <p style={{ color: '#64748b', marginBottom: 32 }}>
-        {tenantName ? `Recommandez un prospect à l'équipe ${tenantName}` : 'Recommandez un prospect'}
-      </p>
+      {!inModal && (
+        <>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Nouvelle recommandation</h1>
+          <p style={{ color: '#64748b', marginBottom: 32 }}>
+            {tenantName ? `Recommandez un prospect à l'équipe ${tenantName}` : 'Recommandez un prospect'}
+          </p>
+        </>
+      )}
 
       {/* Progress */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 36 }}>

@@ -2460,16 +2460,31 @@
     "last_sync_none": "Última sincronización: nunca",
     "nightly_schedule": "Sincronización automática: cada noche a las {{time}} (París)"
   },
+  "partner": {
+    "submit_referral": "Enviar un referido",
+    "submit_referral_title": "Nuevo referido",
+    "referral_submitted": "Referido enviado correctamente",
+    "search_placeholder": "Buscar referidos, comisiones…"
+  },
   "partner_notifications": {
     "tab": "Notificaciones",
     "title": "Notificaciones",
     "subtitle": "Elige qué emails quieres recibir. Las notificaciones en la app siempre están activas.",
-    "referral_status": "Nuevo estado de mi referido",
-    "referral_won": "Referido ganado / comisión creada",
+    "referral_status": "Cambio de estado de un referido",
+    "referral_won": "Trato ganado",
     "commission_update": "Comisión aprobada / pagada",
+    "commission_new": "Nueva comisión disponible",
+    "commission_approved": "Comisión aprobada",
+    "payment_completed": "Pago realizado",
+    "commission_deleted": "Comisión eliminada",
     "new_message": "Nuevo mensaje",
-    "news": "Noticia publicada",
-    "tier_change": "Cambio de nivel"
+    "news": "Nueva noticia publicada",
+    "tier_change": "Cambio de nivel de socio",
+    "access_revoked": "Acceso revocado",
+    "group_mes_referrals": "Mis referidos",
+    "group_commissions": "Comisiones",
+    "group_mon_compte": "Mi cuenta",
+    "group_communication": "Comunicación"
   },
   "useCases": {
     "breadcrumb": {

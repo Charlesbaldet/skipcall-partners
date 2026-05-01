@@ -2460,16 +2460,31 @@
     "last_sync_none": "Laatste synchronisatie: nooit",
     "nightly_schedule": "Automatische synchronisatie: elke avond om {{time}} (Parijs)"
   },
+  "partner": {
+    "submit_referral": "Een referral indienen",
+    "submit_referral_title": "Nieuwe referral",
+    "referral_submitted": "Referral succesvol ingediend",
+    "search_placeholder": "Zoek referrals, commissies…"
+  },
   "partner_notifications": {
     "tab": "Meldingen",
     "title": "Meldingen",
     "subtitle": "Kies welke e-mails je wilt ontvangen. In-app-meldingen blijven altijd actief.",
-    "referral_status": "Nieuwe status van mijn referral",
-    "referral_won": "Referral gewonnen / commissie aangemaakt",
+    "referral_status": "Statuswijziging van een referral",
+    "referral_won": "Deal gewonnen",
     "commission_update": "Commissie goedgekeurd / betaald",
+    "commission_new": "Nieuwe commissie beschikbaar",
+    "commission_approved": "Commissie goedgekeurd",
+    "payment_completed": "Betaling voltooid",
+    "commission_deleted": "Commissie verwijderd",
     "new_message": "Nieuw bericht",
-    "news": "Nieuws gepubliceerd",
-    "tier_change": "Niveauwijziging"
+    "news": "Nieuw nieuws gepubliceerd",
+    "tier_change": "Wijziging partnerniveau",
+    "access_revoked": "Toegang ingetrokken",
+    "group_mes_referrals": "Mijn referrals",
+    "group_commissions": "Commissies",
+    "group_mon_compte": "Mijn account",
+    "group_communication": "Communicatie"
   },
   "useCases": {
     "breadcrumb": {

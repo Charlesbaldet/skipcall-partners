@@ -3,8 +3,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
-import { DollarSign, Trash2, LayoutGrid, List, ChevronRight, X, Lock, GripVertical } from 'lucide-react';
+import { DollarSign, Trash2, LayoutGrid, List, ChevronRight, X, Lock, GripVertical, Plus } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import PartnerSubmitPage from './PartnerSubmitPage.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
 
@@ -19,6 +20,9 @@ export default function PartnerMyReferrals() {
   const [stages, setStages] = useState([]);
   const [draggedId, setDraggedId] = useState(null);
   const [toast, setToast] = useState(null);
+  // Submit modal — opened by the header button OR by ?submit=1 in
+  // the URL (the legacy /partner/submit route now redirects here).
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   const load = async () => {
     try {
@@ -47,6 +51,20 @@ export default function PartnerMyReferrals() {
       .catch(() => {});
     const next = new URLSearchParams(searchParams);
     next.delete('open');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  // Legacy /partner/submit deep-link: redirect lands us here with
+  // ?submit=1, open the submit modal, strip the param so a refresh
+  // doesn't reopen it.
+  const submitFlagSeen = useRef(false);
+  useEffect(() => {
+    if (submitFlagSeen.current) return;
+    if (searchParams.get('submit') !== '1') return;
+    submitFlagSeen.current = true;
+    setShowSubmitModal(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete('submit');
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
@@ -118,21 +136,38 @@ export default function PartnerMyReferrals() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteId(null)}
       />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerReferrals.title')}</h1>
           <p style={{ color: '#64748b' }}>{t('partnerReferrals.subtitle')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-          <button onClick={() => setViewMode('kanban')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><LayoutGrid size={14} /> {t('partnerReferrals.view_kanban')}</button>
-          <button onClick={() => setViewMode('table')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><List size={14} /> {t('partnerReferrals.view_table')}</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
+            <button onClick={() => setViewMode('kanban')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><LayoutGrid size={14} /> {t('partnerReferrals.view_kanban')}</button>
+            <button onClick={() => setViewMode('table')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><List size={14} /> {t('partnerReferrals.view_table')}</button>
+          </div>
+          <button
+            onClick={() => setShowSubmitModal(true)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '10px 16px', borderRadius: 10,
+              background: '#059669', color: '#fff', border: 'none',
+              fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            }}
+          >
+            <Plus size={14} /> {t('partner.submit_referral', 'Soumettre un referral')}
+          </button>
         </div>
       </div>
 
       {referrals.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
           <p style={{ color: '#94a3b8', marginBottom: 16 }}>{t('partnerReferrals.empty_message')}</p>
-          <a href="/partner/submit" style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{t('partnerReferrals.empty_cta')}</a>
+          <button
+            onClick={() => setShowSubmitModal(true)}
+            style={{ background: 'transparent', border: 'none', color: 'var(--rb-primary, #059669)', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', fontSize: 14 }}
+          >{t('partnerReferrals.empty_cta')}</button>
         </div>
       ) : viewMode === 'kanban' ? (
         <KanbanView
@@ -151,9 +186,9 @@ export default function PartnerMyReferrals() {
         <div style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 2000,
           padding: '14px 18px', borderRadius: 12,
-          background: toast.type === 'error' ? '#fef2f2' : '#fffbeb',
-          color: toast.type === 'error' ? '#dc2626' : '#92400e',
-          border: `1px solid ${toast.type === 'error' ? '#fecaca' : '#fcd34d'}`,
+          background: toast.type === 'error' ? '#fef2f2' : toast.type === 'success' ? '#ecfdf5' : '#fffbeb',
+          color: toast.type === 'error' ? '#dc2626' : toast.type === 'success' ? '#047857' : '#92400e',
+          border: `1px solid ${toast.type === 'error' ? '#fecaca' : toast.type === 'success' ? '#a7f3d0' : '#fcd34d'}`,
           fontSize: 13, fontWeight: 600,
           boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
           maxWidth: 360,
@@ -171,6 +206,74 @@ export default function PartnerMyReferrals() {
         />
       )}
 
+      {showSubmitModal && (
+        <SubmitReferralModal
+          onClose={() => setShowSubmitModal(false)}
+          onSubmitted={() => {
+            setShowSubmitModal(false);
+            showToast(t('partner.referral_submitted', 'Referral soumis avec succès'), 'success');
+            load(); // Refresh the kanban with the new card.
+          }}
+          t={t}
+        />
+      )}
+
+    </div>
+  );
+}
+
+// Branded modal that wraps PartnerSubmitPage. Closing the modal
+// (backdrop, Escape, X) discards in-progress fields — the partner's
+// next session starts fresh, which mirrors how the admin's modals
+// behave throughout the app.
+function SubmitReferralModal({ onClose, onSubmitted, t }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    // Lock the body scroll while the modal is open so the page
+    // behind doesn't scroll under the dialog.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        padding: '64px 16px 32px', overflowY: 'auto',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'relative', background: '#fff', borderRadius: 16,
+          width: '100%', maxWidth: 720, padding: '28px 32px 32px',
+          boxShadow: '0 25px 80px rgba(15,23,42,0.25)',
+        }}
+      >
+        <button
+          onClick={onClose}
+          aria-label={t('common.close', 'Fermer')}
+          style={{
+            position: 'absolute', top: 16, right: 16,
+            width: 32, height: 32, borderRadius: 8,
+            background: '#f1f5f9', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <X size={16} color="#475569" />
+        </button>
+        <h2 style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: -0.3 }}>
+          {t('partner.submit_referral_title', 'Nouveau referral')}
+        </h2>
+        <PartnerSubmitPage onSubmitted={onSubmitted} />
+      </div>
     </div>
   );
 }

@@ -74,7 +74,11 @@ export default function Layout({ children }) {
     { to: '/partner/dashboard', icon: LayoutDashboard, label: t('layout.nav.dashboard') },
 
     { section: t('layout.section.pipeline') },
-    { to: '/partner/submit', icon: Send, label: t('layout.nav.submit') },
+    // "Soumettre un referral" moved into a modal opened from the
+    // Mes Referrals page header (sidebar entry removed). The
+    // /partner/submit route still resolves — it redirects to
+    // /partner/referrals?submit=1 so old emails / bookmarks open
+    // the modal directly.
     { to: '/partner/referrals', icon: FileText, label: t('layout.nav.my_referrals'), notifyKeys: ['referral_update'] },
     { to: '/partner/payments', icon: DollarSign, label: t('layout.nav.my_payments'), notifyKeys: ['commission'] },
 

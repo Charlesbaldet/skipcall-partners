@@ -14,7 +14,8 @@ import CommissionsPage from './pages/CommissionsPage.jsx';
 import PartnersPage from './pages/PartnersPage.jsx';
 import PartnerMyReferrals from './pages/PartnerMyReferrals.jsx';
 import PartnerDashboardPage from './pages/PartnerDashboardPage.jsx';
-import PartnerSubmitPage from './pages/PartnerSubmitPage.jsx';
+// PartnerSubmitPage is rendered inside the SubmitReferralModal
+// on /partner/referrals — no top-level route imports it.
 import PartnerPaymentsPage from './pages/PartnerPaymentsPage.jsx';
 import MessagingPage from './pages/MessagingPage.jsx';
 import LandingPage from './pages/LandingPage.jsx';
@@ -159,7 +160,11 @@ function AppRoutes() {
       {/* Partner */}
       <Route path="/partner/dashboard" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerDashboardPage /></Layout></ProtectedRoute>} />
       <Route path="/partner/referrals" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerMyReferrals /></Layout></ProtectedRoute>} />
-      <Route path="/partner/submit" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerSubmitPage /></Layout></ProtectedRoute>} />
+      {/* Legacy /partner/submit route kept as a redirect to the
+          referrals page with ?submit=1 — the form now lives in a
+          modal opened from the Mes Referrals header. Old emails,
+          deep links, and bookmarks still resolve. */}
+      <Route path="/partner/submit" element={<Navigate to="/partner/referrals?submit=1" replace />} />
       <Route path="/partner/payments" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerPaymentsPage /></Layout></ProtectedRoute>} />
       <Route path="/partner/news" element={<ProtectedRoute allowedRoles={['partner']}><Layout><PartnerNewsPage /></Layout></ProtectedRoute>} />
               <Route path="/fonctionnalites/pipeline" element={<FeaturePipelinePage />} />

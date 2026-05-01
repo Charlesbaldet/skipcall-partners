@@ -6,14 +6,30 @@ const router = express.Router();
 router.use(authenticate);
 router.use(tenantScope);
 
-// Six email toggles (in-app is always on per spec).
+// Per-event email toggles for partners. In-app delivery is always
+// on (no per-partner in-app gating today — the call sites use
+// notify.fanoutPartnerNotification which only checks the tenant's
+// notification_preferences). The full set below mirrors the v26
+// admin-side event list, scoped to events that touch a partner:
+//   - email_referral_status / email_referral_won  → MES REFERRALS
+//   - email_commission_new / email_commission_approved /
+//     email_payment_completed / email_commission_deleted /
+//     email_commission_update (legacy catch-all kept for back-compat)
+//                                                  → COMMISSIONS
+//   - email_tier_change / email_access_revoked    → MON COMPTE
+//   - email_news / email_new_message              → COMMUNICATION
 const DEFAULTS = {
   email_referral_status: true,
   email_referral_won: true,
-  email_commission_update: true,
+  email_commission_new: true,
+  email_commission_approved: true,
+  email_payment_completed: true,
+  email_commission_deleted: true,
+  email_commission_update: true, // legacy, still consulted when the granular keys aren't set
   email_new_message: true,
   email_news: false,
   email_tier_change: true,
+  email_access_revoked: true,
 };
 const KEYS = Object.keys(DEFAULTS);
 

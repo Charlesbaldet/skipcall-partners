@@ -2460,16 +2460,31 @@
     "last_sync_none": "Ultima sincronizzazione: mai",
     "nightly_schedule": "Sincronizzazione automatica: ogni sera alle {{time}} (Parigi)"
   },
+  "partner": {
+    "submit_referral": "Invia un referral",
+    "submit_referral_title": "Nuovo referral",
+    "referral_submitted": "Referral inviato con successo",
+    "search_placeholder": "Cerca referral, commissioni…"
+  },
   "partner_notifications": {
     "tab": "Notifiche",
     "title": "Notifiche",
     "subtitle": "Scegli quali email vuoi ricevere. Le notifiche in-app restano sempre attive.",
-    "referral_status": "Nuovo stato del referral",
-    "referral_won": "Referral vinto / commissione creata",
+    "referral_status": "Cambio di stato di un referral",
+    "referral_won": "Trattativa vinta",
     "commission_update": "Commissione approvata / pagata",
+    "commission_new": "Nuova commissione disponibile",
+    "commission_approved": "Commissione approvata",
+    "payment_completed": "Pagamento effettuato",
+    "commission_deleted": "Commissione eliminata",
     "new_message": "Nuovo messaggio",
-    "news": "Notizia pubblicata",
-    "tier_change": "Cambio di livello"
+    "news": "Nuova notizia pubblicata",
+    "tier_change": "Cambio di livello partner",
+    "access_revoked": "Accesso revocato",
+    "group_mes_referrals": "I miei referral",
+    "group_commissions": "Commissioni",
+    "group_mon_compte": "Il mio account",
+    "group_communication": "Comunicazione"
   },
   "useCases": {
     "breadcrumb": {

@@ -2670,16 +2670,46 @@ function NotionMappingModal({ onClose }) {
 // Six email toggles; in-app delivery is always on per product spec
 // so the UI only exposes the email column. Writes straight to
 // partners.notification_preferences.
+// Per-event partner email toggles, grouped by domain so the
+// preferences card mirrors the v26 admin layout. In-app delivery
+// stays always-on for partners (no per-partner in-app gating in
+// the backend yet — see partnerNotificationPrefs.js for the
+// per-key set we persist).
+const PARTNER_NOTIF_GROUPS = [
+  {
+    id: 'mes_referrals',
+    keys: [
+      { key: 'email_referral_status', label: 'partner_notifications.referral_status', defaultLabel: "Changement de statut d'un referral" },
+      { key: 'email_referral_won',    label: 'partner_notifications.referral_won',    defaultLabel: 'Deal gagné' },
+    ],
+  },
+  {
+    id: 'commissions',
+    keys: [
+      { key: 'email_commission_new',      label: 'partner_notifications.commission_new',      defaultLabel: 'Nouvelle commission disponible' },
+      { key: 'email_commission_approved', label: 'partner_notifications.commission_approved', defaultLabel: 'Commission approuvée' },
+      { key: 'email_payment_completed',   label: 'partner_notifications.payment_completed',   defaultLabel: 'Paiement effectué' },
+      { key: 'email_commission_deleted',  label: 'partner_notifications.commission_deleted',  defaultLabel: 'Commission supprimée' },
+    ],
+  },
+  {
+    id: 'mon_compte',
+    keys: [
+      { key: 'email_tier_change',    label: 'partner_notifications.tier_change',    defaultLabel: 'Changement de niveau partenaire' },
+      { key: 'email_access_revoked', label: 'partner_notifications.access_revoked', defaultLabel: 'Accès révoqué' },
+    ],
+  },
+  {
+    id: 'communication',
+    keys: [
+      { key: 'email_news',        label: 'partner_notifications.news',        defaultLabel: 'Nouvelle actualité publiée' },
+      { key: 'email_new_message', label: 'partner_notifications.new_message', defaultLabel: 'Nouveau message' },
+    ],
+  },
+];
+
 function PartnerNotificationsTab() {
   const { t } = useTranslation();
-  const KEYS = [
-    { key: 'email_referral_status',   label: t('partner_notifications.referral_status',   'Nouveau statut de mon referral') },
-    { key: 'email_referral_won',      label: t('partner_notifications.referral_won',      'Referral gagné / commission déclenchée') },
-    { key: 'email_commission_update', label: t('partner_notifications.commission_update', 'Commission approuvée / payée') },
-    { key: 'email_new_message',       label: t('partner_notifications.new_message',       'Nouveau message') },
-    { key: 'email_news',              label: t('partner_notifications.news',              'Actualité publiée') },
-    { key: 'email_tier_change',       label: t('partner_notifications.tier_change',       'Changement de niveau') },
-  ];
   const [prefs, setPrefs] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(0);
@@ -2709,22 +2739,28 @@ function PartnerNotificationsTab() {
         {t('partner_notifications.subtitle', 'Choisissez les emails que vous souhaitez recevoir. Les notifications dans l\'application restent toujours actives.')}
       </p>
 
-      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          <div>{t('notifications.event', 'Événement')}</div>
-          <div style={{ textAlign: 'center' }}>Email</div>
-        </div>
-        {KEYS.map(row => (
-          <div key={row.key} style={{ display: 'grid', gridTemplateColumns: '1fr 90px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
-            <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>{row.label}</div>
-            <div style={{ textAlign: 'center' }}>
-              <button
-                onClick={() => toggle(row.key)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: prefs[row.key] ? '#059669' : '#cbd5e1' }}
-              >
-                {prefs[row.key] ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
-              </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {PARTNER_NOTIF_GROUPS.map((g, gi) => (
+          <div key={g.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>
+              <div>{t('partner_notifications.group_' + g.id, g.id.replace('_', ' '))}</div>
+              <div style={{ textAlign: 'center' }}>{gi === 0 ? t('notifications.email', 'E-mail') : ''}</div>
             </div>
+            {g.keys.map(row => (
+              <div key={row.key} style={{ display: 'grid', gridTemplateColumns: '1fr 90px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
+                <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>
+                  {t(row.label, row.defaultLabel)}
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <button
+                    onClick={() => toggle(row.key)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: prefs[row.key] ? '#059669' : '#cbd5e1' }}
+                  >
+                    {prefs[row.key] ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>
