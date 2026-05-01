@@ -2627,8 +2627,7 @@
       "hero_label": "{{category}}-integratie",
       "features_title": "Wat je kunt doen",
       "steps_title": "Hoe het werkt",
-      "preview_title": "Voorvertoning",
-      "preview_placeholder": "Screenshot binnenkort.",
+      "roi_title": "Waarom {{name}} verbinden?",
       "faq_title": "Veelgestelde vragen",
       "cta_title": "Klaar om {{name}} te verbinden?",
       "cta_subtitle": "Maak je RefBoost-account aan en activeer de integratie via Settings → Integraties in minder dan 5 minuten.",
@@ -2657,6 +2656,11 @@
         { "q": "Wordt mijn Notion-data overschreven?", "a": "Nee. RefBoost detecteert duplicaten vóór elke schrijfactie en stelt een merge voor in plaats van te overschrijven. Jij houdt de controle." },
         { "q": "Hoe vaak wordt er gesynchroniseerd?", "a": "Realtime push voor elke creatie/wijziging in RefBoost. Volledige pull één keer per dag om 21u om wijzigingen direct in Notion op te pikken." },
         { "q": "Kan ik meerdere Notion-databases synchroniseren?", "a": "Ja, het Business-plan laat je meerdere Notion-databases verbinden (bijvoorbeeld een leads-database en een klantendatabase)." }
+      ],
+      "roi": [
+        { "metric": "Bespaar 2u/week", "description": "Geen kopieer-plak meer tussen tools. Je referrals synchroniseren automatisch." },
+        { "metric": "0 duplicaten", "description": "Detectie via e-mail elimineert duplicaten vóór elke schrijfactie." },
+        { "metric": "Realtime zichtbaarheid", "description": "Je salesteams zien de referrals in Notion zonder van tool te wisselen." }
       ]
     },
     "hubspot": {
@@ -2679,6 +2683,11 @@
         { "q": "API-key of OAuth?", "a": "Alleen OAuth, voor de veiligheid. Geen API-keys te beheren — de verbinding is twee klikken en kan op elk moment vanuit HubSpot worden ingetrokken." },
         { "q": "Wat gebeurt er met mijn bestaande deals?", "a": "Niets aan HubSpot-zijde. Nieuwe RefBoost-referrals creëren nieuwe deals; bestaande contacten worden automatisch gekoppeld." },
         { "q": "Kan ik de sync pauzeren zonder HubSpot los te koppelen?", "a": "Ja, je kunt de integratie pauzeren via Settings → Integraties zonder de tokens in te trekken." }
+      ],
+      "roi": [
+        { "metric": "Verenigde pipeline", "description": "Je referrals en directe deals in dezelfde HubSpot-pipeline." },
+        { "metric": "+30% conversie", "description": "Partners die de status van hun referrals realtime zien, converteren beter." },
+        { "metric": "Gecentraliseerde rapportage", "description": "Eén dashboard om directe vs partner-prestaties te meten." }
       ]
     },
     "salesforce": {
@@ -2701,6 +2710,11 @@
         { "q": "Kan ik custom objects gebruiken?", "a": "Ja. De mapping-editor laat je elk object (standaard of custom) als sync-doel kiezen." },
         { "q": "Sandbox ondersteund?", "a": "Ja, je kunt eerst een Sandbox verbinden om te testen en daarna naar Production schakelen zonder de mapping opnieuw te configureren." },
         { "q": "Compatibel met zowel Salesforce Lightning als Classic?", "a": "Ja, de integratie gebruikt de REST API die identiek werkt op beide interfaces." }
+      ],
+      "roi": [
+        { "metric": "Meetbare ROI", "description": "Wijs elke deal toe aan zijn bronpartner direct in Salesforce." },
+        { "metric": "Onmiddellijke adoptie", "description": "Je salesmensen blijven in Salesforce, de referrals komen automatisch binnen." },
+        { "metric": "Compliance", "description": "Volledige historie van partneracties voor je audits." }
       ]
     },
     "qonto": {
@@ -2723,6 +2737,11 @@
         { "q": "Hoeveel bulkbetalingen zijn mogelijk?", "a": "Tot 400 commissies per batch. Daarboven splitst het systeem ze automatisch in opeenvolgende batches." },
         { "q": "Zijn er RefBoost-kosten naast de Qonto-kosten?", "a": "Nee, RefBoost rekent geen kosten voor overschrijvingen. Alleen de gebruikelijke SEPA-kosten van je Qonto-account zijn van toepassing (gratis binnen de SEPA-zone)." },
         { "q": "Welk RefBoost-plan heb ik nodig?", "a": "De Qonto-integratie is inbegrepen in het Business-plan. De Starter- en Pro-plannen zien de integratie maar kunnen deze niet activeren." }
+      ],
+      "roi": [
+        { "metric": "Betaling in 30 seconden", "description": "Eén klik om te betalen, één SCA-validatie, klaar." },
+        { "metric": "0 invoerfouten", "description": "IBAN en bedrag worden vooraf ingevuld vanuit de commissie. Geen handmatige overschrijvingen meer." },
+        { "metric": "Tevreden partners", "description": "Een snel betaalde partner is een partner die meer aanbeveelt." }
       ]
     },
     "google-sso": {
@@ -2745,6 +2764,11 @@
         { "q": "Welke Google-data wordt met RefBoost gedeeld?", "a": "Alleen volledige naam en e-mailadres. RefBoost leest noch je contacten, noch je e-mails, noch je Drive." },
         { "q": "Kunnen mijn partners hun bestaande account aan Google koppelen?", "a": "Ja. Als een partner met een e-mail/wachtwoord-account later via Google inlogt met hetzelfde adres, worden beide methodes automatisch gekoppeld." },
         { "q": "Zijn Microsoft SSO of Okta gepland?", "a": "Microsoft SSO staat op de roadmap voor 2026. Okta / generieke SAML zijn gepland voor Enterprise-accounts — neem contact op als je ze nodig hebt." }
+      ],
+      "roi": [
+        { "metric": "0 wachtwoord-tickets", "description": "Geen 'wachtwoord vergeten' meer. Je partners loggen in met één klik." },
+        { "metric": "Onboarding in 10 seconden", "description": "De partner klikt en is binnen. Geen formulier, geen bevestigingsmail." },
+        { "metric": "Sterkere beveiliging", "description": "2FA overgenomen van Google. Geen wachtwoord opgeslagen aan RefBoost-zijde." }
       ]
     }
   }

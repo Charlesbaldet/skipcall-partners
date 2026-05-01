@@ -3,20 +3,27 @@ import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import LandingLayout from '../../components/LandingLayout';
 import { INTEGRATIONS, getIntegration } from './integrationsData';
-import { ILLUSTRATION_BY_SLUG } from './IntegrationIllustrations.jsx';
 
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b' };
 const SITE = 'https://refboost.io';
 const HREF_LANGS = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
 
-function HeroLogo({ letter }) {
+function HeroLogo({ src, alt }) {
   return (
     <div style={{
       width: 56, height: 56, borderRadius: 14, background: '#fff',
-      color: C.s, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 800, fontSize: 26, margin: '0 auto 20px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      margin: '0 auto 20px', padding: 10,
       boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-    }}>{letter}</div>
+    }}>
+      <img
+        src={src}
+        alt={alt}
+        width={36}
+        height={36}
+        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+      />
+    </div>
   );
 }
 
@@ -39,7 +46,6 @@ export default function IntegrationDetailPage() {
   const i = integration;
   const url = SITE + '/integrations/' + i.slug;
   const tk = (k) => t(`integrations.${i.slug}.${k}`);
-  const Illustration = ILLUSTRATION_BY_SLUG[i.slug] || null;
   const categoryLabel = t(`integrations.shared.categories.${i.category}`);
 
   const jsonLd = {
@@ -92,7 +98,7 @@ export default function IntegrationDetailPage() {
           <span style={{ display: 'inline-block', color: C.p, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
             {t('integrations.shared.hero_label', { category: categoryLabel, defaultValue: 'Intégration {{category}}' })}
           </span>
-          <HeroLogo letter={i.logo.letter} />
+          <HeroLogo src={i.logoSrc} alt={tk('name')} />
           <h1 style={{ fontSize: 'clamp(28px,5vw,44px)', fontWeight: 900, color: '#fff', margin: '0 0 14px', lineHeight: 1.15 }}>
             {tk('name')}
           </h1>
@@ -122,7 +128,7 @@ export default function IntegrationDetailPage() {
           </h2>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 18,
           }}>
             {tArr(t, `integrations.${i.slug}.features`).map((f, idx) => (
@@ -184,20 +190,27 @@ export default function IntegrationDetailPage() {
       </section>
 
       <section style={{ padding: '48px 24px', background: '#fafbfc' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 800, color: C.s, margin: '0 0 24px', textAlign: 'center' }}>
-            {t('integrations.shared.preview_title', 'Aperçu')}
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 28, fontWeight: 800, color: C.s, margin: '0 0 32px', textAlign: 'center' }}>
+            {t('integrations.shared.roi_title', { name: tk('name'), defaultValue: 'Pourquoi connecter {{name}} ?' })}
           </h2>
           <div style={{
-            borderRadius: 16, overflow: 'hidden',
-            background: '#fff', border: '1px solid #e2e8f0',
-            padding: 24,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 24,
           }}>
-            {Illustration ? <Illustration height={300} /> : (
-              <div style={{ padding: 60, textAlign: 'center', color: C.m, fontSize: 14 }}>
-                {t('integrations.shared.preview_placeholder', "Capture d'écran à venir.")}
+            {tArr(t, `integrations.${i.slug}.roi`).map((item, idx) => (
+              <div key={idx} style={{
+                textAlign: 'center', padding: '8px 4px',
+              }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: C.p, marginBottom: 8, lineHeight: 1.25 }}>
+                  {item.metric}
+                </div>
+                <div style={{ color: C.m, fontSize: 14, lineHeight: 1.55 }}>
+                  {item.description}
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
@@ -281,10 +294,18 @@ export default function IntegrationDetailPage() {
               >
                 <div style={{
                   width: 40, height: 40, borderRadius: 10,
-                  background: o.logo.bg, color: o.logo.color,
+                  background: '#fff', border: '1px solid #e2e8f0',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 800, fontSize: 18, flexShrink: 0,
-                }}>{o.logo.letter}</div>
+                  flexShrink: 0, padding: 5,
+                }}>
+                  <img
+                    src={o.logoSrc}
+                    alt={t(`integrations.${o.slug}.name`)}
+                    width={28}
+                    height={28}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                </div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14, color: C.s }}>{t(`integrations.${o.slug}.name`)}</div>
                   <div style={{ fontSize: 12, color: C.m }}>{t(`integrations.shared.categories.${o.category}`)}</div>

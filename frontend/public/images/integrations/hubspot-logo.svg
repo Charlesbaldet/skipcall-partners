@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="HubSpot">
+  <g fill="#ff7a59">
+    <line x1="50" y1="22" x2="50" y2="78" stroke="#ff7a59" stroke-width="6"/>
+    <line x1="22" y1="50" x2="78" y2="50" stroke="#ff7a59" stroke-width="6"/>
+    <line x1="32" y1="32" x2="68" y2="68" stroke="#ff7a59" stroke-width="5"/>
+    <line x1="68" y1="32" x2="32" y2="68" stroke="#ff7a59" stroke-width="5"/>
+    <circle cx="50" cy="50" r="15"/>
+    <circle cx="50" cy="18" r="8"/>
+    <circle cx="50" cy="82" r="8"/>
+    <circle cx="18" cy="50" r="8"/>
+    <circle cx="82" cy="50" r="8"/>
+    <circle cx="29" cy="29" r="6"/>
+    <circle cx="71" cy="71" r="6"/>
+    <circle cx="71" cy="29" r="6"/>
+    <circle cx="29" cy="71" r="6"/>
+  </g>
+</svg>

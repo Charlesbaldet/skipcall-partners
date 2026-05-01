@@ -8,13 +8,22 @@ const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b' };
 const SITE = 'https://refboost.io';
 const HREF_LANGS = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
 
-function Logo({ letter, color, bg, size = 44 }) {
+function Logo({ src, alt, size = 44 }) {
   return (
     <div style={{
-      width: size, height: size, borderRadius: 10, background: bg,
-      color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 800, fontSize: size * 0.42, flexShrink: 0,
-    }}>{letter}</div>
+      width: size, height: size, borderRadius: 10,
+      background: '#fff', border: '1px solid #e2e8f0',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, padding: 6,
+    }}>
+      <img
+        src={src}
+        alt={alt}
+        width={size - 12}
+        height={size - 12}
+        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+      />
+    </div>
   );
 }
 
@@ -43,7 +52,7 @@ function IntegrationCard({ integration, t }) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-        <Logo letter={i.logo.letter} color={i.logo.color} bg={i.logo.bg} />
+        <Logo src={i.logoSrc} alt={tk('name')} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: 17, color: C.s }}>{tk('name')}</div>
           <div style={{ fontSize: 11, color: C.m, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>

@@ -2627,8 +2627,7 @@
       "hero_label": "Integração {{category}}",
       "features_title": "O que pode fazer",
       "steps_title": "Como funciona",
-      "preview_title": "Pré-visualização",
-      "preview_placeholder": "Captura em breve.",
+      "roi_title": "Porquê ligar o {{name}}?",
       "faq_title": "Perguntas frequentes",
       "cta_title": "Pronto para ligar o {{name}}?",
       "cta_subtitle": "Crie a sua conta RefBoost e ative a integração em Settings → Integrações em menos de 5 minutos.",
@@ -2657,6 +2656,11 @@
         { "q": "Os meus dados do Notion vão ser sobrescritos?", "a": "Não. O RefBoost deteta duplicados antes de cada escrita e propõe uma fusão em vez de sobrescrever. Mantém o controlo." },
         { "q": "Com que frequência ocorre a sincronização?", "a": "Push em tempo real para qualquer criação/alteração no RefBoost. Pull completo uma vez por dia às 21h para apanhar alterações feitas diretamente no Notion." },
         { "q": "Posso sincronizar várias bases Notion?", "a": "Sim, o plano Business permite ligar várias bases Notion (por exemplo uma base de leads e uma de clientes)." }
+      ],
+      "roi": [
+        { "metric": "Poupe 2h/semana", "description": "Acabou o copy-paste entre ferramentas. Os seus referrals sincronizam-se automaticamente." },
+        { "metric": "0 duplicados", "description": "A deteção por email elimina os duplicados antes de cada escrita." },
+        { "metric": "Visibilidade em tempo real", "description": "As suas equipas de vendas veem os referrals no Notion sem mudar de ferramenta." }
       ]
     },
     "hubspot": {
@@ -2679,6 +2683,11 @@
         { "q": "Chave API ou OAuth?", "a": "Apenas OAuth, por segurança. Sem chaves API a manipular — a ligação faz-se em dois cliques e revoga-se a partir do HubSpot quando quiser." },
         { "q": "O que acontece aos meus deals existentes?", "a": "Nada do lado HubSpot. Os novos referrals RefBoost criam novos deals; os contactos existentes são ligados automaticamente." },
         { "q": "Posso pausar a sincronização sem desligar o HubSpot?", "a": "Sim, pode pausar a integração em Settings → Integrações sem revogar os tokens." }
+      ],
+      "roi": [
+        { "metric": "Pipeline unificado", "description": "Os seus referrals e os seus deals diretos no mesmo pipeline HubSpot." },
+        { "metric": "+30% de conversão", "description": "Os parceiros que veem o estado dos seus referrals em tempo real convertem melhor." },
+        { "metric": "Reporting centralizado", "description": "Um único dashboard para medir o desempenho direto vs parceiro." }
       ]
     },
     "salesforce": {
@@ -2701,6 +2710,11 @@
         { "q": "Posso usar custom objects?", "a": "Sim. O editor de mapeamento permite escolher qualquer objeto (standard ou custom) como destino de sincronização." },
         { "q": "Sandbox suportada?", "a": "Sim, pode ligar primeiro uma Sandbox para testar e depois passar para Production sem reconfigurar o mapeamento." },
         { "q": "Compatível com Salesforce Lightning e Classic?", "a": "Sim, a integração usa a API REST que funciona da mesma forma nas duas interfaces." }
+      ],
+      "roi": [
+        { "metric": "ROI mensurável", "description": "Atribua cada deal ao parceiro de origem diretamente no Salesforce." },
+        { "metric": "Adoção instantânea", "description": "Os seus comerciais permanecem no Salesforce, os referrals chegam automaticamente." },
+        { "metric": "Compliance", "description": "Histórico completo das ações dos parceiros para as suas auditorias." }
       ]
     },
     "qonto": {
@@ -2723,6 +2737,11 @@
         { "q": "Quantos pagamentos em lote são possíveis?", "a": "Até 400 comissões por lote. Acima disso, o sistema divide-os automaticamente em lotes sucessivos." },
         { "q": "Há custos RefBoost além dos custos Qonto?", "a": "Não, o RefBoost não cobra qualquer comissão sobre as transferências. Aplicam-se apenas as taxas SEPA habituais da sua conta Qonto (gratuitas na zona SEPA)." },
         { "q": "Que plano RefBoost é necessário?", "a": "A integração Qonto está incluída no plano Business. Os planos Starter e Pro veem a integração mas não podem ativá-la." }
+      ],
+      "roi": [
+        { "metric": "Pagamento em 30 segundos", "description": "Um clique para pagar, uma validação SCA, feito." },
+        { "metric": "0 erros de entrada", "description": "O IBAN e o valor são pré-preenchidos a partir da comissão. Acabaram-se as transferências manuais." },
+        { "metric": "Parceiros satisfeitos", "description": "Um parceiro pago depressa é um parceiro que recomenda mais." }
       ]
     },
     "google-sso": {
@@ -2745,6 +2764,11 @@
         { "q": "Que dados Google são partilhados com o RefBoost?", "a": "Apenas o nome completo e o endereço de email. O RefBoost não lê nem os seus contactos, nem os seus emails, nem o seu Drive." },
         { "q": "Os meus parceiros podem ligar a sua conta existente ao Google?", "a": "Sim. Se um parceiro com conta email/palavra-passe entrar depois com Google usando o mesmo endereço, os dois métodos ficam ligados automaticamente." },
         { "q": "Microsoft SSO ou Okta estão previstos?", "a": "O Microsoft SSO está na roadmap para 2026. Okta / SAML genérico estão previstos para contas Enterprise — fale connosco se precisar deles." }
+      ],
+      "roi": [
+        { "metric": "0 tickets de suporte de palavra-passe", "description": "Acabou o 'esqueci a palavra-passe'. Os seus parceiros entram com um clique." },
+        { "metric": "Onboarding em 10 segundos", "description": "O parceiro clica e está dentro. Sem formulário, sem email de confirmação." },
+        { "metric": "Segurança reforçada", "description": "2FA herdado do Google. Nenhuma palavra-passe armazenada do lado RefBoost." }
       ]
     }
   }
