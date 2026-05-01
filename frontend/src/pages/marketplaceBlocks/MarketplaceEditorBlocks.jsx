@@ -19,6 +19,24 @@ import { showToast } from '../../components/Dialogs.jsx';
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
+// Returns a safe-to-render string, or '' if the input looks like
+// garbage. We end up with garbage when the auto-translator echoes
+// back its prompt, when a stray i18n key gets written into the DB,
+// or when a JSONB field round-trips through `String(undefined)`.
+// Treat all of those as "no description" so the card falls back to
+// the bare logo + name.
+function cleanText(s) {
+  if (typeof s !== 'string') return '';
+  const v = s.trim();
+  if (!v) return '';
+  if (v === 'undefined' || v === 'null' || v === 'NaN') return '';
+  // Raw i18n key shape: dot-separated identifier with no spaces and no
+  // accented characters (real prose almost always has spaces by the
+  // time it's this long).
+  if (!v.includes(' ') && /^[a-z0-9_]+(\.[a-z0-9_-]+)+$/i.test(v)) return '';
+  return v;
+}
+
 // ─── Threshold label (BUG 3) ─────────────────────────────────────────
 // Builds the per-tier "À partir de N {ventes|€ de MRR/CA/ARR}" line.
 // Reads:
@@ -55,8 +73,12 @@ export function EditableText({ value, onChange, placeholder, multiline = false, 
   if (readOnly) {
     // Plain text rendering for the public page. Multiline preserves
     // newlines so a paragraph break in the editor survives in print.
+    // cleanText strips garbage that the auto-translator or a stray
+    // i18n key may have left in the DB, so the public page never
+    // renders "undefined", "null", or a raw "marketplace.foo.bar"
+    // alongside the prose.
     const ws = multiline ? { whiteSpace: 'pre-wrap' } : null;
-    return <span className={className} style={{ ...style, ...ws }}>{value || ''}</span>;
+    return <span className={className} style={{ ...style, ...ws }}>{cleanText(value)}</span>;
   }
   return (
     <div
@@ -375,8 +397,7 @@ export function TiersBlock({ tenant, t, editable = true }) {
       ) : (
         <>
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(auto-fit, minmax(220px, 1fr))`,
+            display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
             gap: 16,
           }}>
             {levels.map((lvl, i) => {
@@ -387,6 +408,7 @@ export function TiersBlock({ tenant, t, editable = true }) {
                   background: '#fff', border: `1px solid ${C.border}`,
                   boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
                   textAlign: 'center', position: 'relative', overflow: 'hidden',
+                  flex: '0 1 240px', maxWidth: 280, minWidth: 200,
                 }}>
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0,
@@ -523,14 +545,14 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
         )}
         {(others.length > 0 || editable) && (
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(auto-fit, minmax(220px, 1fr))`,
+            display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
             gap: 16,
           }}>
             {others.map(it => (
               <div key={it.id} className={editable ? 'rb-card-hover-parent' : ''} style={{
                 padding: 32, borderRadius: 20, background: '#fff', border: `1px solid ${C.border}`,
                 boxShadow: '0 2px 10px rgba(0,0,0,0.04)', position: 'relative', textAlign: 'center',
+                flex: '0 1 260px', maxWidth: 320, minWidth: 200,
               }}>
                 {editable && (
                   <button
@@ -569,6 +591,7 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
                   fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   minHeight: 130,
+                  flex: '0 1 260px', maxWidth: 320, minWidth: 200,
                 }}
               >
                 <Plus size={16} /> {t('marketplace.editor.add_condition', 'Ajouter une condition')}
@@ -641,7 +664,7 @@ export function WhyJoinBlock({ page, onPatch, t, editable = true }) {
         title={t('marketplace.public.why_join_title', 'Les avantages du programme')}
       />
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16,
+        display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 16,
         maxWidth: 1000, margin: '0 auto',
       }}>
         {items.map(it => (
@@ -650,6 +673,7 @@ export function WhyJoinBlock({ page, onPatch, t, editable = true }) {
             padding: 20, borderRadius: 14,
             background: '#fff', border: `1px solid ${C.border}`,
             position: 'relative',
+            flex: '0 1 320px', maxWidth: 360, minWidth: 280,
           }}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
@@ -685,6 +709,7 @@ export function WhyJoinBlock({ page, onPatch, t, editable = true }) {
               fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               minHeight: 70,
+              flex: '0 1 320px', maxWidth: 360, minWidth: 280,
             }}
           >
             <Plus size={14} /> {t('marketplace.editor.add_advantage', 'Ajouter un avantage')}
@@ -854,7 +879,7 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
         title={t('marketplace.public.references_title', 'Références clients')}
       />
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18,
+        display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18,
         maxWidth: 1100, margin: '0 auto',
       }}>
         {refs.map(r => (
@@ -862,6 +887,7 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
             padding: 24, borderRadius: 16, background: '#fff', border: `1px solid ${C.border}`,
             display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', textAlign: 'center',
             position: 'relative', boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+            flex: '0 1 240px', maxWidth: 280, minWidth: 200,
           }}>
             {editable && (
               <div className="rb-card-hover-only" style={{
@@ -899,8 +925,8 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
                 <span style={{ color: C.m, fontWeight: 800, fontSize: 22 }}>{(r.name || '?').charAt(0).toUpperCase()}</span>
               )}
             </div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: C.s }}>{r.name}</div>
-            {r.description && <p style={{ margin: 0, fontSize: 13, color: C.m, lineHeight: 1.5 }}>{r.description}</p>}
+            <div style={{ fontWeight: 700, fontSize: 15, color: C.s }}>{cleanText(r.name) || '—'}</div>
+            {cleanText(r.description) && <p style={{ margin: 0, fontSize: 13, color: C.m, lineHeight: 1.5 }}>{cleanText(r.description)}</p>}
           </div>
         ))}
         {editable && (
@@ -912,6 +938,7 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
               fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               minHeight: 160,
+              flex: '0 1 240px', maxWidth: 280, minWidth: 200,
             }}
           >
             <Plus size={16} /> {t('marketplace.editor.add_reference', 'Ajouter une référence')}

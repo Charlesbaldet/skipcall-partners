@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import PipelineStagesEditor from '../components/PipelineStagesEditor.jsx';
 import WebhooksSection from '../components/WebhooksSection.jsx';
+import BillingPage from './BillingPage.jsx';
 import { showConfirm, showPrompt, showToast } from '../components/Dialogs.jsx';
 import {
   Trophy, Plus, Edit2,
@@ -13,7 +14,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell, Banknote, Save,
+  Bell, Banknote, Save, CreditCard,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -65,6 +66,7 @@ export default function SettingsPage() {
       { section: t('layout.section.preferences') },
       { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
+      { id: 'billing', icon: CreditCard, label: t('settings.tab_billing', 'Facturation') },
     ] : []),
     ...(isPartner ? [
       { id: 'bank', icon: Banknote, label: t('settings.tab_bank_info', 'Informations bancaires') },
@@ -143,6 +145,7 @@ export default function SettingsPage() {
               </>
             )}
             {tab === 'program' && isAdmin && <ProgramTab />}
+            {tab === 'billing' && isAdmin && <BillingPage />}
           </div>
         </div>
       </div>

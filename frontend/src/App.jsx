@@ -50,7 +50,8 @@ import IntegrationDetailPage from './pages/integrations/IntegrationDetailPage';
 import NewsPage from './pages/NewsPage.jsx';
 import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
-import BillingPage from './pages/BillingPage.jsx';
+// BillingPage is rendered inside SettingsPage's "Facturation" tab,
+// not as a top-level route — the import lives there now.
 import PricingPage from './pages/PricingPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 
@@ -60,6 +61,17 @@ function ProtectedRoute({ children, allowedRoles }) {
   if (!user) return <Navigate to="/login" />;
   if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" />;
   return children;
+}
+
+// Billing moved into Settings as a tab. Forward /billing (+ any Stripe
+// callback querystring) to /settings?tab=billing so existing deep
+// links — emails, the Stripe checkout-success redirect, the Stripe
+// portal return URL — keep working.
+function BillingRedirect() {
+  const location = useLocation();
+  const search = new URLSearchParams(location.search);
+  search.set('tab', 'billing');
+  return <Navigate to={'/settings?' + search.toString()} replace />;
 }
 
 // Route-level canonical fallback. Mounted once above <Routes/> so
@@ -132,7 +144,12 @@ function AppRoutes() {
       <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout><SuperAdminPage /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
         <Route path="/marketplace-admin" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><MarketplaceEditorPage /></Layout></ProtectedRoute>} />
-      <Route path="/billing" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><BillingPage /></Layout></ProtectedRoute>} />
+      {/* Billing now lives inside Settings as the "Facturation" tab.
+          The bare /billing URL stays valid (existing emails, billing
+          portal redirects) by 301-equivalent forwarding to
+          /settings?tab=billing while preserving any Stripe-callback
+          query string (?session_id, ?canceled, etc). */}
+      <Route path="/billing" element={<BillingRedirect />} />
       <Route path="/programme" element={<ProtectedRoute><Layout><ProgrammePage /></Layout></ProtectedRoute>} />
       <Route path="/messaging" element={<ProtectedRoute><Layout><MessagingPage /></Layout></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><Layout><NotificationsPage /></Layout></ProtectedRoute>} />

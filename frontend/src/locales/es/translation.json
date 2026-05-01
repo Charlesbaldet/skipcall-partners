@@ -1380,6 +1380,7 @@
     "tab_members": "Miembros",
     "tab_marketplace": "Marketplace",
     "tab_integrations": "Integraciones",
+    "tab_billing": "Facturación",
     "integrations": {
       "filter_all": "Todas",
       "filter_crm": "CRM",

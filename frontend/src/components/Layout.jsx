@@ -61,7 +61,6 @@ export default function Layout({ children }) {
     { section: t('layout.section.gestion') },
     { to: '/programme', icon: Trophy, label: t('layout.nav.programme') },
     { to: '/marketplace-admin', icon: Store, label: t('layout.nav.marketplace', 'Marketplace'), adminOnly: true },
-    { to: '/billing', icon: CreditCard, label: t('layout.nav.billing'), adminOnly: true },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
 
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
