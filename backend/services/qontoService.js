@@ -250,6 +250,15 @@ async function verifyPayee(tenantId, { iban, beneficiaryName }) {
       beneficiary_name: beneficiaryName,
     }),
   });
+  // Qonto's /v2/sepa/verify_payee response shape isn't fully nailed
+  // down in our notes (proof_token vs data.proof_token, string vs
+  // object). Log the truncated raw body + the proof_token's type so
+  // we can correlate any "must be a string" 400 back to the actual
+  // Qonto response shape.
+  try {
+    console.log('[qonto.vop] verifyPayee full response (truncated):', JSON.stringify(data).slice(0, 200));
+  } catch { /* circular or non-serializable, ignore */ }
+  console.log('[qonto.vop] verifyPayee proof_token type:', typeof data?.proof_token);
   console.log('[qonto.vop] Verify payee result:', {
     iban_prefix: (iban || '').replace(/\s+/g, '').slice(0, 6) + '…',
     name: beneficiaryName,
@@ -353,6 +362,21 @@ async function createSingleTransfer(tenantId, {
     const vop = await verifyPayee(tenantId, { iban, beneficiaryName });
     proofToken = vop.proof_token;
   }
+  // Defensive coercion. Qonto rejects requests with
+  //   {"code":"not_a_string","detail":"vop_proof_token must be a string"}
+  // when the body field isn't a plain string. If verifyPayee returned
+  // a wrapper object (different API version / SDK quirk), unwrap it
+  // before sending. Log the type either way so we can correlate any
+  // 400 back to the actual shape we got.
+  console.log('[qonto.transfer] vop_proof_token type:', typeof proofToken, 'value prefix:', String(proofToken).slice(0, 20));
+  if (proofToken && typeof proofToken !== 'string') {
+    console.error('[qonto.transfer] vop_proof_token is not a string:', JSON.stringify(proofToken).slice(0, 200));
+    if (typeof proofToken === 'object') {
+      proofToken = proofToken.proof_token || proofToken.token || JSON.stringify(proofToken);
+    } else {
+      proofToken = String(proofToken);
+    }
+  }
 
   const reference = buildReference(commissionId);
   const note = `Commission partenaire — ${partnerName || ''}${dealName ? ' — ' + dealName : ''}`.slice(0, 140);
@@ -394,6 +418,7 @@ async function createSingleTransfer(tenantId, {
   // sits at the JSON ROOT, OUTSIDE the `transfer` object — that's
   // where Qonto looks for it.
   const requestBody = { vop_proof_token: proofToken, transfer };
+  console.log('[qonto.transfer] Request body keys:', Object.keys(requestBody), '| vop_proof_token type:', typeof requestBody.vop_proof_token);
 
   let data;
   try {
