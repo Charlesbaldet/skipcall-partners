@@ -126,7 +126,14 @@ export default function SettingsPage() {
   };
   const initialTab = LEGACY_TAB_MAP[searchParams.get('tab')] || searchParams.get('tab') || 'profile';
   const [tab, setTab] = useState(initialTab);
-  const handleClose = () => navigate(-1);
+  // Close → land on the role-aware home (the "/" route resolves it
+  // for us). Replaces the previous `navigate(-1)` because, after a
+  // Qonto OAuth round-trip, the previous history entry is
+  // oauth.qonto.com — so a backdrop click would walk the user
+  // straight back into Qonto. `replace` swaps the current /settings
+  // entry instead of pushing, so the back button still works
+  // sensibly afterwards.
+  const handleClose = () => navigate('/', { replace: true });
 
   // Grouped nav: each entry is either { section: 'label' } or a tab.
   // Admin sees all three sections; superadmin only sees COMPTE (since
@@ -957,6 +964,16 @@ function QontoSection() {
   const [busy, setBusy] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Close the picker on Escape — the modal's own backdrop click
+  // already calls setPickerOpen(false), so this just covers the
+  // keyboard path.
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setPickerOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [pickerOpen]);
   const [err, setErr] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -986,8 +1003,15 @@ function QontoSection() {
       setErr(t('qonto.connect_error', 'Connexion Qonto échouée.'));
     }
     if (flag) {
+      // Strip the OAuth callback flag from the URL so a refresh
+      // doesn't re-toast "Qonto connecté" forever, and so any
+      // accidental back-navigation doesn't try to re-traverse the
+      // callback URL with a now-consumed code/state.
       u.searchParams.delete('qonto');
-      window.history.replaceState({}, '', u.toString());
+      // pathname + remaining querystring only — drop any hash that
+      // might have been left over from upstream redirects.
+      const cleanUrl = u.pathname + (u.searchParams.toString() ? '?' + u.searchParams.toString() : '');
+      window.history.replaceState({}, '', cleanUrl);
     }
   }, [t]);
 
@@ -1106,9 +1130,15 @@ function QontoSection() {
       </div>
 
       {pickerOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div onClick={() => setPickerOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)' }} />
-          <div style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 480, maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', padding: 24 }}>
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => setPickerOpen(false)}
+        >
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.55)' }} />
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 480, maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', padding: 24 }}
+          >
             <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
               {t('qonto.choose_account', 'Choisir le compte à débiter')}
             </div>
