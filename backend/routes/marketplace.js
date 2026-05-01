@@ -335,7 +335,8 @@ router.get('/programs/:slug', async (req, res) => {
               ms.page_headline, ms.page_description, ms.ideal_client,
               ms.ideal_client_tags, ms.why_join, ms.commission_blocks,
               ms.client_references, ms.additional_info, ms.page_blocks,
-              ms.page_description_i18n, ms.ideal_client_i18n, ms.why_join_i18n,
+              ms.page_description_i18n, ms.ideal_client_i18n, ms.ideal_client_tags_i18n,
+              ms.why_join_i18n,
               ms.commission_blocks_i18n, ms.client_references_i18n, ms.additional_info_i18n
          FROM tenants t
          LEFT JOIN marketplace_settings ms ON ms.tenant_id = t.id
@@ -374,7 +375,7 @@ router.get('/programs/:slug', async (req, res) => {
         page_headline: r.page_headline || null,
         page_description: pickI18n(r.page_description, r.page_description_i18n),
         ideal_client: pickI18n(r.ideal_client, r.ideal_client_i18n),
-        ideal_client_tags: r.ideal_client_tags || [],
+        ideal_client_tags: pickI18n(r.ideal_client_tags || [], r.ideal_client_tags_i18n),
         why_join: pickI18n(r.why_join || [], r.why_join_i18n),
         commission_blocks: pickI18n(r.commission_blocks || [], r.commission_blocks_i18n),
         client_references: pickI18n(r.client_references || [], r.client_references_i18n),

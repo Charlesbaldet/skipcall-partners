@@ -137,11 +137,11 @@ function CardEditor({ tenant, onPatch, t }) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) return showToast('Choisissez une image', 'error');
-    if (file.size > 500 * 1024) return showToast('Logo trop volumineux (500 KB max)', 'error');
+    if (!file.type.startsWith('image/')) return showToast(t('marketplace.editor.choose_image', 'Choisissez une image'), 'error');
+    if (file.size > 500 * 1024) return showToast(t('marketplace.editor.logo_too_large_500', 'Logo trop volumineux (500 KB max)'), 'error');
     const reader = new FileReader();
     reader.onload = (ev) => onPatch({ logo_url: ev.target.result });
-    reader.onerror = () => showToast('Lecture du fichier échouée', 'error');
+    reader.onerror = () => showToast(t('marketplace.editor.file_read_failed', 'Lecture du fichier échouée'), 'error');
     reader.readAsDataURL(file);
   };
   return (
@@ -323,7 +323,7 @@ export default function MarketplaceEditorPage() {
   useEffect(() => {
     api.getMarketplacePage()
       .then(d => { setTenant(d.tenant); setPage(d.page); })
-      .catch(err => showToast(err.message || 'Erreur', 'error'))
+      .catch(err => showToast(err.message || t('common.error', 'Erreur'), 'error'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -346,7 +346,7 @@ export default function MarketplaceEditorPage() {
       showToast(t('marketplace.editor.saved', 'Sauvegardé') + ' ✓', 'success', 1800);
       return true;
     } catch (err) {
-      showToast(err.message || 'Erreur sauvegarde', 'error');
+      showToast(err.message || t('marketplace.editor.error_save', 'Erreur sauvegarde'), 'error');
       dirtyRef.current = { ...payload, ...(dirtyRef.current || {}) };
       setHasUnsavedChanges(true);
       return false;
@@ -464,7 +464,7 @@ export default function MarketplaceEditorPage() {
       const code = err?.data?.error;
       if (code === 'anthropic_key_missing') showToast('ANTHROPIC_API_KEY manquant côté serveur', 'error');
       else if (code === 'already_running') showToast(t('marketplace.editor.translate_running', 'Traduction déjà en cours'), 'info');
-      else showToast(err.message || 'Erreur', 'error');
+      else showToast(err.message || t('common.error', 'Erreur'), 'error');
     }
     setTranslateRunning(false);
   };
@@ -501,7 +501,7 @@ export default function MarketplaceEditorPage() {
     try {
       await api.reorderMarketplaceBlocks(nextOrder);
     } catch (err) {
-      showToast(err.message || 'Erreur réorganisation', 'error');
+      showToast(err.message || t('marketplace.editor.error_reorder', 'Erreur réorganisation'), 'error');
     }
   };
 
@@ -528,8 +528,8 @@ export default function MarketplaceEditorPage() {
   };
   const onDragEnd = () => { setDragging(null); setOverId(null); setDragArmed(null); };
 
-  if (loading) return <div style={{ padding: 32, color: C.m, fontSize: 14 }}>Chargement…</div>;
-  if (!tenant) return <div style={{ padding: 32, color: C.m, fontSize: 14 }}>Tenant introuvable.</div>;
+  if (loading) return <div style={{ padding: 32, color: C.m, fontSize: 14 }}>{t('common.loading', 'Chargement…')}</div>;
+  if (!tenant) return <div style={{ padding: 32, color: C.m, fontSize: 14 }}>{t('marketplace.editor.tenant_not_found', 'Tenant introuvable.')}</div>;
 
   const blockProps = { tenant, page, onPatch, t, editable: editMode };
   const renderBlock = (id, isVisible) => {

@@ -61,9 +61,9 @@ async function translatePage(tenantId, { dryRun = false, log = () => {} } = {}) 
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not set');
 
   const { rows } = await query(
-    `SELECT page_description, ideal_client, why_join, commission_blocks,
+    `SELECT page_description, ideal_client, ideal_client_tags, why_join, commission_blocks,
             client_references, additional_info,
-            page_description_i18n, ideal_client_i18n, why_join_i18n,
+            page_description_i18n, ideal_client_i18n, ideal_client_tags_i18n, why_join_i18n,
             commission_blocks_i18n, client_references_i18n, additional_info_i18n
        FROM marketplace_settings WHERE tenant_id = $1`,
     [tenantId]
@@ -73,7 +73,7 @@ async function translatePage(tenantId, { dryRun = false, log = () => {} } = {}) 
     return { done: 0, skipped: 0, failed: 0 };
   }
   const src = rows[0];
-  log(`fields: page_description=${!!src.page_description} ideal_client=${!!src.ideal_client} why_join=${(src.why_join || []).length} commission_blocks=${(src.commission_blocks || []).length} client_references=${(src.client_references || []).length} additional_info=${(src.additional_info || []).length}`);
+  log(`fields: page_description=${!!src.page_description} ideal_client=${!!src.ideal_client} ideal_client_tags=${(src.ideal_client_tags || []).length} why_join=${(src.why_join || []).length} commission_blocks=${(src.commission_blocks || []).length} client_references=${(src.client_references || []).length} additional_info=${(src.additional_info || []).length}`);
 
   let done = 0, skipped = 0, failed = 0;
 
@@ -103,6 +103,44 @@ async function translatePage(tenantId, { dryRun = false, log = () => {} } = {}) 
           done++;
         }
       } catch (err) { failed++; log(`   ${col} failed: ${err.message}`); }
+    }
+
+    // ideal_client_tags — TEXT[] of short labels. We translate each
+    // entry individually with kind='label' so the model treats them
+    // as terse phrases rather than running prose. Result stored as a
+    // JSON array inside ideal_client_tags_i18n[code].
+    {
+      const existing = src.ideal_client_tags_i18n
+        && Array.isArray(src.ideal_client_tags_i18n[code])
+        && src.ideal_client_tags_i18n[code].length;
+      const items = Array.isArray(src.ideal_client_tags) ? src.ideal_client_tags : [];
+      if (existing || !items.length) { skipped++; }
+      else {
+        try {
+          const translated = [];
+          for (const tag of items) {
+            if (!tag || typeof tag !== 'string' || !tag.trim()) { translated.push(tag); continue; }
+            try {
+              const v = await base.translate({ text: tag, targetLangName: name, kind: 'label', log });
+              translated.push(v || tag);
+            } catch (err) {
+              log(`   ideal_client_tags item "${tag}" failed: ${err.message}`);
+              translated.push(tag);
+            }
+          }
+          if (!dryRun) {
+            await query(
+              `UPDATE marketplace_settings
+                  SET ideal_client_tags_i18n = COALESCE(ideal_client_tags_i18n, '{}'::jsonb) || jsonb_build_object($2::text, $3::jsonb),
+                      updated_at = NOW()
+                WHERE tenant_id = $1`,
+              [tenantId, code, JSON.stringify(translated)]
+            );
+            log(`   ideal_client_tags: ${translated.length} item(s)`);
+            done++;
+          }
+        } catch (err) { failed++; log(`   ideal_client_tags failed: ${err.message}`); }
+      }
     }
 
     // JSONB array fields: why_join, commission_blocks, client_references, additional_info.

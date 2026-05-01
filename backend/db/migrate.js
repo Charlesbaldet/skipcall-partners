@@ -553,6 +553,10 @@ async function runMigrations() {
     )
   `);
   await query(`CREATE INDEX IF NOT EXISTS idx_marketplace_settings_tenant ON marketplace_settings(tenant_id)`);
+  // v25: localized tags. Tags are user-generated content
+  // (e.g. "Equipes commerciales") so they need to ride the same
+  // _i18n side-table flow as page_description / ideal_client.
+  await query(`ALTER TABLE marketplace_settings ADD COLUMN IF NOT EXISTS ideal_client_tags_i18n JSONB DEFAULT '{}'`);
   console.log('[marketplace] v24 page-content table ready');
 
   console.log(' Migrations completed');

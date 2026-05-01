@@ -34,6 +34,11 @@ async function throttle() {
 // to preserve HTML, keep it short, etc.
 const INSTRUCTIONS = {
   description: 'Translate the following French marketing description into {LANG}. Return only the translation, with no preamble, no quotes, no explanation. Preserve line breaks. Keep it concise and natural — this will be shown in a product marketplace card.',
+  // 'label' is for terse UI labels / tag chips (e.g. "Equipes commerciales").
+  // The model often returns extra punctuation or capitalisation drift on
+  // single-word inputs so the prompt is explicit about returning a bare
+  // phrase only.
+  label: 'Translate the following short French label or tag into {LANG}. Return only the translation as a bare phrase — no quotes, no period, no preamble, no explanation. Keep it terse: this will be shown as a chip in a UI.',
   title: 'Translate the following French blog-post title into {LANG}. Return only the translated title, with no quotes or preamble. Keep the same tone and length.',
   meta: 'Translate the following French SEO meta description into {LANG}. Return only the translation (max ~160 characters), no quotes, no preamble.',
   content: 'Translate the following French blog article into {LANG}. Preserve ALL HTML tags exactly (including attributes, class names, href values, image src). Only translate human-readable text inside the tags and in text nodes. Return only the translated HTML, with no preamble, no fences, no explanation.',

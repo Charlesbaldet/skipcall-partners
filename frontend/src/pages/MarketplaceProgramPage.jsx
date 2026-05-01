@@ -90,7 +90,7 @@ export default function MarketplaceProgramPage() {
   if (loading) {
     return (
       <LandingLayout>
-        <div style={{ padding: 80, textAlign: 'center', color: C.m, fontSize: 14 }}>Chargement…</div>
+        <div style={{ padding: 80, textAlign: 'center', color: C.m, fontSize: 14 }}>{t('common.loading', 'Chargement…')}</div>
       </LandingLayout>
     );
   }

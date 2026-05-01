@@ -11,6 +11,7 @@
 //   page doesn't render hollow empty states.
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as LinkIcon, Pencil, X, Plus, Trash2, Upload, Award } from 'lucide-react';
 import api from '../../lib/api';
 import { showToast } from '../../components/Dialogs.jsx';
@@ -167,15 +168,16 @@ const sectionBand = {
 // ─── Block: Hero ─────────────────────────────────────────────────────
 
 function LogoEditor({ tenant, onPatch }) {
+  const { t } = useTranslation();
   const handleFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) return showToast('Choisissez une image', 'error');
-    if (file.size > 500 * 1024) return showToast('Logo trop volumineux (500 KB max)', 'error');
+    if (!file.type.startsWith('image/')) return showToast(t('marketplace.editor.choose_image', 'Choisissez une image'), 'error');
+    if (file.size > 500 * 1024) return showToast(t('marketplace.editor.logo_too_large_500', 'Logo trop volumineux (500 KB max)'), 'error');
     const reader = new FileReader();
     reader.onload = (ev) => onPatch({ logo_url: ev.target.result });
-    reader.onerror = () => showToast('Lecture du fichier échouée', 'error');
+    reader.onerror = () => showToast(t('marketplace.editor.file_read_failed', 'Lecture du fichier échouée'), 'error');
     reader.readAsDataURL(file);
   };
   return (
@@ -353,7 +355,7 @@ export function TiersBlock({ tenant, t, editable = true }) {
       />
 
       {loading ? (
-        <div style={{ textAlign: 'center', color: C.m, fontSize: 14, padding: 24 }}>Chargement…</div>
+        <div style={{ textAlign: 'center', color: C.m, fontSize: 14, padding: 24 }}>{t('common.loading', 'Chargement…')}</div>
       ) : (!levels || levels.length === 0) ? (
         <div style={{
           textAlign: 'center', padding: 32,
@@ -472,7 +474,7 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
             {editable && (
               <button
                 onClick={() => removeItem(primary.id)}
-                title="Supprimer"
+                title={t('common.delete', 'Supprimer')}
                 className="rb-card-hover-only"
                 style={{
                   position: 'absolute', top: 12, right: 12, zIndex: 2,
@@ -501,7 +503,7 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
                 <EditableText
                   value={primary.label}
                   onChange={v => updateItem(primary.id, { label: v })}
-                  placeholder="Libellé"
+                  placeholder={t('marketplace.editor.placeholder_label', 'Libellé')}
                   style={{ color: '#fff' }}
                   readOnly={!editable}
                 />
@@ -510,7 +512,7 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
                 <EditableText
                   value={primary.description}
                   onChange={v => updateItem(primary.id, { description: v })}
-                  placeholder="Description…"
+                  placeholder={t('marketplace.editor.placeholder_description', 'Description…')}
                   multiline
                   style={{ color: '#cbd5e1' }}
                   readOnly={!editable}
@@ -533,7 +535,7 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
                 {editable && (
                   <button
                     onClick={() => removeItem(it.id)}
-                    title="Supprimer"
+                    title={t('common.delete', 'Supprimer')}
                     className="rb-card-hover-only"
                     style={{
                       position: 'absolute', top: 8, right: 8,
@@ -551,10 +553,10 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
                   <EditableText value={it.metric} onChange={v => updateItem(it.id, { metric: v })} placeholder="0" readOnly={!editable} />
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.s, marginBottom: 4 }}>
-                  <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" readOnly={!editable} />
+                  <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder={t('marketplace.editor.placeholder_label', 'Libellé')} readOnly={!editable} />
                 </div>
                 <div style={{ fontSize: 13, color: C.m, lineHeight: 1.55 }}>
-                  <EditableText value={it.description} onChange={v => updateItem(it.id, { description: v })} placeholder="Description…" multiline readOnly={!editable} />
+                  <EditableText value={it.description} onChange={v => updateItem(it.id, { description: v })} placeholder={t('marketplace.editor.placeholder_description', 'Description…')} multiline readOnly={!editable} />
                 </div>
               </div>
             ))}
@@ -588,13 +590,13 @@ export function IdealClientBlock({ page, onPatch, t, editable = true }) {
     <section style={sectionCard}>
       <SectionHeader
         label={t('marketplace.public.ideal_client', 'Client idéal')}
-        title={t('marketplace.editor.ideal_client_heading', 'Le profil parfait à recommander')}
+        title={t('marketplace.public.ideal_client_title', 'Le profil parfait à recommander')}
       />
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <EditableText
           value={page.ideal_client}
           onChange={v => onPatch({ ideal_client: v })}
-          placeholder="Décrivez le profil de client idéal pour votre programme…"
+          placeholder={t('marketplace.editor.placeholder_ideal_client', 'Décrivez le profil de client idéal pour votre programme…')}
           multiline
           style={editable ? {
             color: C.m, fontSize: 16, lineHeight: 1.75, textAlign: 'center',
@@ -636,7 +638,7 @@ export function WhyJoinBlock({ page, onPatch, t, editable = true }) {
     <section style={sectionBand}>
       <SectionHeader
         label={t('marketplace.public.why_join', 'Pourquoi devenir partenaire')}
-        title={t('marketplace.editor.why_join_heading', 'Les avantages du programme')}
+        title={t('marketplace.public.why_join_title', 'Les avantages du programme')}
       />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16,
@@ -656,12 +658,12 @@ export function WhyJoinBlock({ page, onPatch, t, editable = true }) {
               fontWeight: 800, fontSize: 16, flexShrink: 0, marginTop: 2,
             }}>✓</div>
             <div style={{ flex: 1, color: C.s, fontSize: 15, lineHeight: 1.6, minWidth: 0 }}>
-              <EditableText value={it.text} onChange={v => updateItem(it.id, { text: v })} placeholder="Avantage…" multiline readOnly={!editable} />
+              <EditableText value={it.text} onChange={v => updateItem(it.id, { text: v })} placeholder={t('marketplace.editor.placeholder_advantage', 'Avantage…')} multiline readOnly={!editable} />
             </div>
             {editable && (
               <button
                 onClick={() => removeItem(it.id)}
-                title="Supprimer"
+                title={t('common.delete', 'Supprimer')}
                 className="rb-card-hover-only"
                 style={{
                   padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
@@ -696,6 +698,7 @@ export function WhyJoinBlock({ page, onPatch, t, editable = true }) {
 // ─── Block: References (with upload modal) ───────────────────────────
 
 function ReferenceModal({ initial, onClose, onSave }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initial?.name || '');
   const [description, setDescription] = useState(initial?.description || '');
   const [logoUrl, setLogoUrl] = useState(initial?.logo_url || null);
@@ -704,16 +707,16 @@ function ReferenceModal({ initial, onClose, onSave }) {
   const handleFile = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      showToast('Choisissez une image', 'error');
+      showToast(t('marketplace.editor.choose_image', 'Choisissez une image'), 'error');
       return;
     }
     if (file.size > 1024 * 700) {
-      showToast('Logo trop volumineux (700 KB max après encodage)', 'error');
+      showToast(t('marketplace.editor.logo_too_large_700', 'Logo trop volumineux (700 KB max après encodage)'), 'error');
       return;
     }
     const reader = new FileReader();
     reader.onload = (e) => setLogoUrl(e.target.result);
-    reader.onerror = () => showToast('Lecture du fichier échouée', 'error');
+    reader.onerror = () => showToast(t('marketplace.editor.file_read_failed', 'Lecture du fichier échouée'), 'error');
     reader.readAsDataURL(file);
   };
 
@@ -735,10 +738,12 @@ function ReferenceModal({ initial, onClose, onSave }) {
         }}
       >
         <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 800, color: C.s }}>
-          {initial ? 'Modifier la référence' : 'Ajouter une référence'}
+          {initial
+            ? t('marketplace.editor.ref_modal_edit', 'Modifier la référence')
+            : t('marketplace.editor.ref_modal_add', 'Ajouter une référence')}
         </h3>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.s, marginBottom: 6 }}>Logo</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.s, marginBottom: 6 }}>{t('marketplace.editor.ref_logo', 'Logo')}</label>
           <div style={{
             width: '100%', height: 110, borderRadius: 12,
             border: `1px dashed ${C.border}`, background: C.bg,
@@ -749,7 +754,7 @@ function ReferenceModal({ initial, onClose, onSave }) {
               <img src={logoUrl} alt={name} style={{ maxWidth: '80%', maxHeight: '80%', objectFit: 'contain' }} />
             ) : (
               <span style={{ color: C.m, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <Upload size={14} /> Cliquez pour téléverser
+                <Upload size={14} /> {t('marketplace.editor.ref_upload_hint', 'Cliquez pour téléverser')}
               </span>
             )}
             <input
@@ -761,7 +766,7 @@ function ReferenceModal({ initial, onClose, onSave }) {
           </div>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.s, marginBottom: 6 }}>Nom *</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.s, marginBottom: 6 }}>{t('marketplace.editor.ref_name', 'Nom *')}</label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
@@ -774,12 +779,12 @@ function ReferenceModal({ initial, onClose, onSave }) {
           />
         </div>
         <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.s, marginBottom: 6 }}>Description</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.s, marginBottom: 6 }}>{t('marketplace.editor.ref_description', 'Description')}</label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={3}
-            placeholder="Que dit le client de votre produit ?"
+            placeholder={t('marketplace.editor.ref_description_ph', 'Que dit le client de votre produit ?')}
             style={{
               width: '100%', padding: '10px 12px', borderRadius: 10,
               border: `1.5px solid ${C.border}`, fontSize: 14, fontFamily: 'inherit',
@@ -792,10 +797,10 @@ function ReferenceModal({ initial, onClose, onSave }) {
             padding: '10px 18px', borderRadius: 10,
             background: '#fff', border: `1.5px solid ${C.border}`, color: C.s,
             fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}>Annuler</button>
+          }}>{t('common.cancel', 'Annuler')}</button>
           <button
             onClick={async () => {
-              if (!name.trim()) { showToast('Nom requis', 'error'); return; }
+              if (!name.trim()) { showToast(t('marketplace.editor.ref_name_required', 'Nom requis'), 'error'); return; }
               setUploading(true);
               try { await onSave({ name: name.trim(), description: description.trim(), logo_url: logoUrl }); }
               finally { setUploading(false); }
@@ -807,7 +812,7 @@ function ReferenceModal({ initial, onClose, onSave }) {
               fontSize: 14, fontWeight: 700, cursor: uploading ? 'wait' : 'pointer', fontFamily: 'inherit',
               opacity: uploading ? 0.7 : 1,
             }}
-          >Enregistrer</button>
+          >{t('marketplace.editor.ref_save', 'Enregistrer')}</button>
         </div>
       </div>
     </div>
@@ -825,8 +830,8 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
       const r = await api.uploadMarketplaceReference({ name, description, dataUrl: logo_url });
       onPatch({ client_references: [...refs, r.reference] });
       setModal(null);
-      showToast('Référence ajoutée', 'success');
-    } catch (err) { showToast(err.message || 'Erreur', 'error'); }
+      showToast(t('marketplace.editor.ref_added', 'Référence ajoutée'), 'success');
+    } catch (err) { showToast(err.message || t('common.error', 'Erreur'), 'error'); }
   };
   const handleEdit = async ({ name, description, logo_url }) => {
     if (!modal?.ref) return;
@@ -839,14 +844,14 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
     try {
       await api.deleteMarketplaceReference(id);
       onPatch({ client_references: refs.filter(r => r.id !== id) });
-    } catch (err) { showToast(err.message || 'Erreur', 'error'); }
+    } catch (err) { showToast(err.message || t('common.error', 'Erreur'), 'error'); }
   };
 
   return (
     <section style={sectionCard}>
       <SectionHeader
         label={t('marketplace.public.references', 'Ils nous font confiance')}
-        title={t('marketplace.editor.references_heading', 'Références clients')}
+        title={t('marketplace.public.references_title', 'Références clients')}
       />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18,
@@ -865,7 +870,7 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
               }}>
                 <button
                   onClick={() => setModal({ mode: 'edit', ref: r })}
-                  title="Modifier"
+                  title={t('common.edit', 'Modifier')}
                   style={{
                     width: 26, height: 26, borderRadius: 8, background: '#fff',
                     border: `1px solid ${C.border}`, color: C.s, cursor: 'pointer',
@@ -874,7 +879,7 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
                 ><Pencil size={12} /></button>
                 <button
                   onClick={() => handleDelete(r.id)}
-                  title="Supprimer"
+                  title={t('common.delete', 'Supprimer')}
                   style={{
                     width: 26, height: 26, borderRadius: 8, background: '#fef2f2',
                     border: `1px solid #fecaca`, color: '#dc2626', cursor: 'pointer',
@@ -952,15 +957,15 @@ export function AdditionalInfoBlock({ page, onPatch, t, editable = true }) {
                 borderTop: i === 0 ? 'none' : `1px solid ${C.border}`,
               }}>
                 <div style={{ fontWeight: 700, color: C.s, fontSize: 14 }}>
-                  <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder="Libellé" readOnly={!editable} />
+                  <EditableText value={it.label} onChange={v => updateItem(it.id, { label: v })} placeholder={t('marketplace.editor.placeholder_label', 'Libellé')} readOnly={!editable} />
                 </div>
                 <div style={{ color: C.m, fontSize: 14 }}>
-                  <EditableText value={it.value} onChange={v => updateItem(it.id, { value: v })} placeholder="Valeur" readOnly={!editable} />
+                  <EditableText value={it.value} onChange={v => updateItem(it.id, { value: v })} placeholder={t('marketplace.editor.placeholder_value', 'Valeur')} readOnly={!editable} />
                 </div>
                 {editable && (
                   <button
                     onClick={() => removeItem(it.id)}
-                    title="Supprimer"
+                    title={t('common.delete', 'Supprimer')}
                     className="rb-card-hover-only"
                     style={{
                       padding: 4, borderRadius: 6, background: 'transparent', border: 'none',
@@ -1005,7 +1010,7 @@ export function AboutBlock({ tenant, page, onPatch, t, editable = true }) {
         <EditableText
           value={page.page_description}
           onChange={v => onPatch({ page_description: v })}
-          placeholder="Présentez votre activité, votre proposition de valeur, vos cibles privilégiées…"
+          placeholder={t('marketplace.editor.placeholder_about', 'Présentez votre activité, votre proposition de valeur, vos cibles privilégiées…')}
           multiline
           style={editable ? {
             color: C.m, fontSize: 16, lineHeight: 1.75,
