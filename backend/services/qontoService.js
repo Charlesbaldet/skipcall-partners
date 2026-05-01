@@ -243,6 +243,13 @@ function parseScaChallenge(err) {
   try {
     const body = typeof err.body === 'string' ? JSON.parse(err.body) : err.body;
     if (body && body.code === 'sca_required' && body.sca_session_token) {
+      if (!body.vop_proof_token) {
+        // Old-API tenants don't ship a VOP token; the replay still
+        // works without the VOP-Proof-Token header in that case.
+        // Logged so we can correlate later 401 vop_proof_token_missing
+        // errors back to the originating 428.
+        console.warn('[qonto.parseScaChallenge] 428 sca_required without vop_proof_token — replay will go out without VOP-Proof-Token header');
+      }
       return {
         sca_session_token: body.sca_session_token,
         // Newer Qonto API versions require this token in the
@@ -414,6 +421,23 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken,
     // est survenu"). Surface as not_found so the caller can reset
     // the row instead of crashing on the generic throw.
     if (err.status === 422) return { ok: false, not_found: true };
+    // 401 vop_proof_token_missing — Qonto upgraded its API and now
+    // requires the VOP-Proof-Token header on the replay, but we
+    // didn't have one saved (typical for rows that hit 428 before
+    // the VOP plumbing was deployed). Same recovery as 422: the
+    // caller resets the row so the next Pay click captures a
+    // fresh challenge and a fresh VOP token.
+    if (err.status === 401) {
+      let parsed = null;
+      try {
+        parsed = typeof err.body === 'string' ? JSON.parse(err.body) : err.body;
+      } catch { /* not JSON, leave as null */ }
+      const errors = parsed?.errors || [];
+      if (errors.some(e => e?.code === 'vop_proof_token_missing')) {
+        console.warn('[qonto.replayTransfer] 401 vop_proof_token_missing — treating as not_found so caller resets the row');
+        return { ok: false, not_found: true };
+      }
+    }
     // 428 Precondition Required — admin hasn't approved on their
     // phone yet. Refresh the SCA + VOP tokens in case Qonto rotated.
     const sca = parseScaChallenge(err);
