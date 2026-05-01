@@ -230,6 +230,7 @@ export default async function middleware(request) {
   let blogIndexPosts = null;
   let marketplaceProgram = null;
   let marketplaceIndexPartners = null;
+  let marketplaceSimilar = null;
 
   if (path.startsWith('/blog/') && path !== '/blog/' && path !== '/blog') {
     try {
@@ -254,10 +255,19 @@ export default async function middleware(request) {
     try {
       const slug = path.slice('/marketplace/'.length).replace(/\/+$/, '');
       if (slug) {
-        const apiUrl = new URL('/api/marketplace/programs/' + encodeURIComponent(slug), url.origin).toString();
-        const apiRes = await fetch(apiUrl, { cf: { cacheTtl: 300 } });
-        if (apiRes.ok) {
-          const data = await apiRes.json().catch(() => null);
+        // Fire the program fetch and the similar-programs fetch in
+        // parallel — both are needed for the detail-page noscript
+        // (the program for hero copy + JSON-LD, the similar list
+        // for the cross-links that turn each detail page into a
+        // hub instead of a leaf in the crawl graph).
+        const programUrl = new URL('/api/marketplace/programs/' + encodeURIComponent(slug), url.origin).toString();
+        const similarUrl = new URL('/api/marketplace/programs/' + encodeURIComponent(slug) + '/similar', url.origin).toString();
+        const [progRes, simRes] = await Promise.all([
+          fetch(programUrl, { cf: { cacheTtl: 300 } }),
+          fetch(similarUrl, { cf: { cacheTtl: 300 } }).catch(() => null),
+        ]);
+        if (progRes && progRes.ok) {
+          const data = await progRes.json().catch(() => null);
           const program = data && data.program;
           if (program) {
             marketplaceProgram = program;
@@ -270,6 +280,10 @@ export default async function middleware(request) {
               description: desc || meta.description,
             };
           }
+        }
+        if (simRes && simRes.ok) {
+          const simData = await simRes.json().catch(() => null);
+          if (simData && Array.isArray(simData.programs)) marketplaceSimilar = simData.programs;
         }
       }
     } catch { /* keep generic marketplace meta */ }
@@ -535,6 +549,18 @@ export default async function middleware(request) {
       `<li><strong>${safe(r && r.name)}</strong>${r && r.description ? ': ' + safe(r.description) : ''}</li>`);
     const conditions = items(p.commission_blocks, c =>
       `<li><strong>${safe(c && c.metric)} ${safe(c && c.label)}</strong>${c && c.description ? ' — ' + safe(c.description) : ''}</li>`);
+    // Cross-links to 2-3 other published programs. Without this
+    // the detail pages were leaf nodes in the crawl graph — Ahrefs
+    // could reach them from /marketplace but couldn't discover any
+    // outgoing internal links, so PageRank stopped flowing past
+    // them. The similar-programs API already returns up to 3 rows
+    // ordered by sector match, so we just need to reshape them
+    // into <a href> rows.
+    const crossLinks = Array.isArray(marketplaceSimilar) && marketplaceSimilar.length
+      ? '<h2>Programmes similaires</h2><ul>' + marketplaceSimilar.slice(0, 3).map(s =>
+          `<li><a href="${SITE}/marketplace/${encodeURIComponent(s.slug)}">${safe(s.company_name)}</a>${s.sector ? ' — ' + safe(s.sector) : ''}</li>`
+        ).join('') + '</ul>'
+      : '';
     const block = `<article>` +
       `<h2>${safe(p.company_name)}</h2>` +
       (p.short_description ? `<p>${safe(p.short_description)}</p>` : '') +
@@ -542,7 +568,9 @@ export default async function middleware(request) {
       (conditions ? `<h2>Conditions du programme</h2>${conditions}` : '') +
       (whyJoin ? `<h2>Pourquoi devenir partenaire</h2>${whyJoin}` : '') +
       (refs ? `<h2>Ils nous font confiance</h2>${refs}` : '') +
-      `<p><a href="${SITE}/marketplace">← Tous les programmes</a></p>` +
+      crossLinks +
+      `<p><a href="${SITE}/marketplace">← Tous les programmes</a> · ` +
+      `<a href="${SITE}/">Accueil RefBoost</a></p>` +
       `</article>`;
     if (/<noscript>[\s\S]*?<\/noscript>/.test(html)) {
       html = html.replace(/<\/noscript>/, block + '</noscript>');
