@@ -2626,7 +2626,9 @@
       "breadcrumb": "Integraciones",
       "hero_label": "Integración {{category}}",
       "features_title": "Lo que puedes hacer",
-      "steps_title": "Cómo funciona",
+      "steps_title": "Conecta {{name}} en 3 pasos",
+      "faq_label": "Preguntas frecuentes",
+      "see_all": "Ver todas las integraciones",
       "roi_title": "¿Por qué conectar {{name}}?",
       "faq_title": "Preguntas frecuentes",
       "cta_title": "¿Listo para conectar {{name}}?",
@@ -2658,9 +2660,9 @@
         { "q": "¿Puedo sincronizar varias bases de Notion?", "a": "Sí, el plan Business permite conectar varias bases (por ejemplo una de leads y otra de clientes)." }
       ],
       "roi": [
-        { "metric": "Ahorra 2h/semana", "description": "Se acabó el copia-pega entre herramientas. Tus referidos se sincronizan automáticamente." },
+        { "metric": "2h / semana", "description": "Tiempo ahorrado al eliminar el copia-pega entre RefBoost y tu CRM." },
         { "metric": "0 duplicados", "description": "La detección por email elimina los duplicados antes de cada escritura." },
-        { "metric": "Visibilidad en tiempo real", "description": "Tus equipos comerciales ven los referidos en Notion sin cambiar de herramienta." }
+        { "metric": "Tiempo real", "description": "Tus equipos ven los referidos en Notion sin cambiar de herramienta." }
       ]
     },
     "hubspot": {
@@ -2685,9 +2687,9 @@
         { "q": "¿Puedo pausar la sincronización sin desconectar HubSpot?", "a": "Sí, puedes pausar la integración desde Settings → Integraciones sin revocar los tokens." }
       ],
       "roi": [
-        { "metric": "Pipeline unificado", "description": "Tus referidos y tus deals directos en el mismo pipeline HubSpot." },
-        { "metric": "+30% de conversión", "description": "Los socios que ven el estado de sus referidos en tiempo real convierten mejor." },
-        { "metric": "Reporting centralizado", "description": "Un solo dashboard para medir el rendimiento directo vs socio." }
+        { "metric": "+30%", "description": "Más conversión cuando los socios ven el estado de sus referidos en tiempo real." },
+        { "metric": "1 pipeline", "description": "Tus referidos y deals directos unificados en HubSpot." },
+        { "metric": "0 entrada", "description": "Los contactos y deals se crean automáticamente." }
       ]
     },
     "salesforce": {
@@ -2712,9 +2714,9 @@
         { "q": "¿Compatible con Salesforce Lightning y Classic?", "a": "Sí, la integración usa la API REST que funciona igual en ambas interfaces." }
       ],
       "roi": [
-        { "metric": "ROI medible", "description": "Atribuye cada deal a su socio de origen directamente en Salesforce." },
-        { "metric": "Adopción instantánea", "description": "Tus comerciales se quedan en Salesforce, los referidos llegan solos." },
-        { "metric": "Compliance", "description": "Historial completo de las acciones de los socios para tus auditorías." }
+        { "metric": "100%", "description": "Atribución de los deals a su socio de origen directamente en Salesforce." },
+        { "metric": "0 adopción", "description": "Tus comerciales se quedan en Salesforce, los referidos llegan solos." },
+        { "metric": "Audit ready", "description": "Historial completo de las acciones de los socios para tus auditorías." }
       ]
     },
     "qonto": {
@@ -2739,9 +2741,9 @@
         { "q": "¿Qué plan RefBoost necesito?", "a": "La integración Qonto está incluida en el plan Business. Los planes Starter y Pro ven la integración pero no pueden activarla." }
       ],
       "roi": [
-        { "metric": "Pago en 30 segundos", "description": "Un clic para pagar, una validación SCA, listo." },
-        { "metric": "0 errores de entrada", "description": "El IBAN y el importe se rellenan desde la comisión. Adiós a las transferencias manuales." },
-        { "metric": "Socios contentos", "description": "Un socio pagado rápido es un socio que recomienda más." }
+        { "metric": "30 seg", "description": "Para pagar una comisión de socio, del clic a la transferencia SEPA." },
+        { "metric": "0 errores", "description": "El IBAN y el importe se rellenan desde la comisión." },
+        { "metric": "x2", "description": "Un socio pagado rápido recomienda el doble." }
       ]
     },
     "google-sso": {
@@ -2766,9 +2768,9 @@
         { "q": "¿Microsoft SSO u Okta están previstos?", "a": "Microsoft SSO está en la roadmap para 2026. Okta / SAML genérico están previstos para cuentas Enterprise — contáctanos si los necesitas." }
       ],
       "roi": [
-        { "metric": "0 tickets de soporte de contraseña", "description": "Adiós al 'olvidé mi contraseña'. Tus socios se conectan con un clic." },
-        { "metric": "Onboarding en 10 segundos", "description": "El socio hace clic y está dentro. Sin formulario, sin email de confirmación." },
-        { "metric": "Seguridad reforzada", "description": "2FA heredado de Google. Sin contraseña almacenada en RefBoost." }
+        { "metric": "0 tickets", "description": "Adiós a las peticiones de restablecimiento de contraseña." },
+        { "metric": "10 seg", "description": "Para que un socio acceda a su espacio." },
+        { "metric": "2FA nativo", "description": "Seguridad reforzada heredada de Google sin configurar nada." }
       ]
     }
   }

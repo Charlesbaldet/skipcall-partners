@@ -2626,7 +2626,9 @@
       "breadcrumb": "Integraties",
       "hero_label": "{{category}}-integratie",
       "features_title": "Wat je kunt doen",
-      "steps_title": "Hoe het werkt",
+      "steps_title": "Verbind {{name}} in 3 stappen",
+      "faq_label": "Veelgestelde vragen",
+      "see_all": "Alle integraties bekijken",
       "roi_title": "Waarom {{name}} verbinden?",
       "faq_title": "Veelgestelde vragen",
       "cta_title": "Klaar om {{name}} te verbinden?",
@@ -2658,9 +2660,9 @@
         { "q": "Kan ik meerdere Notion-databases synchroniseren?", "a": "Ja, het Business-plan laat je meerdere Notion-databases verbinden (bijvoorbeeld een leads-database en een klantendatabase)." }
       ],
       "roi": [
-        { "metric": "Bespaar 2u/week", "description": "Geen kopieer-plak meer tussen tools. Je referrals synchroniseren automatisch." },
+        { "metric": "2u / week", "description": "Bespaarde tijd door het schrappen van copy-paste tussen RefBoost en je CRM." },
         { "metric": "0 duplicaten", "description": "Detectie via e-mail elimineert duplicaten vóór elke schrijfactie." },
-        { "metric": "Realtime zichtbaarheid", "description": "Je salesteams zien de referrals in Notion zonder van tool te wisselen." }
+        { "metric": "Realtime", "description": "Je teams zien de referrals in Notion zonder van tool te wisselen." }
       ]
     },
     "hubspot": {
@@ -2685,9 +2687,9 @@
         { "q": "Kan ik de sync pauzeren zonder HubSpot los te koppelen?", "a": "Ja, je kunt de integratie pauzeren via Settings → Integraties zonder de tokens in te trekken." }
       ],
       "roi": [
-        { "metric": "Verenigde pipeline", "description": "Je referrals en directe deals in dezelfde HubSpot-pipeline." },
-        { "metric": "+30% conversie", "description": "Partners die de status van hun referrals realtime zien, converteren beter." },
-        { "metric": "Gecentraliseerde rapportage", "description": "Eén dashboard om directe vs partner-prestaties te meten." }
+        { "metric": "+30%", "description": "Meer conversie wanneer partners realtime de status van hun referrals zien." },
+        { "metric": "1 pipeline", "description": "Je referrals en directe deals samen in HubSpot." },
+        { "metric": "0 invoer", "description": "Contacten en deals worden automatisch aangemaakt." }
       ]
     },
     "salesforce": {
@@ -2712,9 +2714,9 @@
         { "q": "Compatibel met zowel Salesforce Lightning als Classic?", "a": "Ja, de integratie gebruikt de REST API die identiek werkt op beide interfaces." }
       ],
       "roi": [
-        { "metric": "Meetbare ROI", "description": "Wijs elke deal toe aan zijn bronpartner direct in Salesforce." },
-        { "metric": "Onmiddellijke adoptie", "description": "Je salesmensen blijven in Salesforce, de referrals komen automatisch binnen." },
-        { "metric": "Compliance", "description": "Volledige historie van partneracties voor je audits." }
+        { "metric": "100%", "description": "Toewijzing van deals aan hun bron-partner direct in Salesforce." },
+        { "metric": "0 adoptie", "description": "Je salesmensen blijven in Salesforce, de referrals komen vanzelf." },
+        { "metric": "Audit-klaar", "description": "Volledige historie van partneracties voor je audits." }
       ]
     },
     "qonto": {
@@ -2739,9 +2741,9 @@
         { "q": "Welk RefBoost-plan heb ik nodig?", "a": "De Qonto-integratie is inbegrepen in het Business-plan. De Starter- en Pro-plannen zien de integratie maar kunnen deze niet activeren." }
       ],
       "roi": [
-        { "metric": "Betaling in 30 seconden", "description": "Eén klik om te betalen, één SCA-validatie, klaar." },
-        { "metric": "0 invoerfouten", "description": "IBAN en bedrag worden vooraf ingevuld vanuit de commissie. Geen handmatige overschrijvingen meer." },
-        { "metric": "Tevreden partners", "description": "Een snel betaalde partner is een partner die meer aanbeveelt." }
+        { "metric": "30 sec", "description": "Om een partnercommissie te betalen, van klik tot SEPA-overschrijving." },
+        { "metric": "0 fouten", "description": "IBAN en bedrag worden vooraf ingevuld vanuit de commissie." },
+        { "metric": "x2", "description": "Een snel betaalde partner beveelt twee keer zo veel aan." }
       ]
     },
     "google-sso": {
@@ -2766,9 +2768,9 @@
         { "q": "Zijn Microsoft SSO of Okta gepland?", "a": "Microsoft SSO staat op de roadmap voor 2026. Okta / generieke SAML zijn gepland voor Enterprise-accounts — neem contact op als je ze nodig hebt." }
       ],
       "roi": [
-        { "metric": "0 wachtwoord-tickets", "description": "Geen 'wachtwoord vergeten' meer. Je partners loggen in met één klik." },
-        { "metric": "Onboarding in 10 seconden", "description": "De partner klikt en is binnen. Geen formulier, geen bevestigingsmail." },
-        { "metric": "Sterkere beveiliging", "description": "2FA overgenomen van Google. Geen wachtwoord opgeslagen aan RefBoost-zijde." }
+        { "metric": "0 tickets", "description": "Geen verzoeken voor wachtwoordreset meer." },
+        { "metric": "10 sec", "description": "Om een partner in zijn werkruimte in te laten loggen." },
+        { "metric": "Native 2FA", "description": "Versterkte beveiliging van Google overgenomen, zonder iets te configureren." }
       ]
     }
   }

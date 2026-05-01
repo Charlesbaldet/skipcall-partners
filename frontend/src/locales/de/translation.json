@@ -2626,7 +2626,9 @@
       "breadcrumb": "Integrationen",
       "hero_label": "Integration {{category}}",
       "features_title": "Was Sie tun können",
-      "steps_title": "So funktioniert's",
+      "steps_title": "{{name}} in 3 Schritten verbinden",
+      "faq_label": "Häufige Fragen",
+      "see_all": "Alle Integrationen ansehen",
       "roi_title": "Warum {{name}} verbinden?",
       "faq_title": "Häufige Fragen",
       "cta_title": "Bereit, {{name}} zu verbinden?",
@@ -2658,9 +2660,9 @@
         { "q": "Kann ich mehrere Notion-Datenbanken synchronisieren?", "a": "Ja, der Business-Plan erlaubt das Verbinden mehrerer Notion-Datenbanken (z. B. eine für Leads und eine für Kunden)." }
       ],
       "roi": [
-        { "metric": "Sparen Sie 2h/Woche", "description": "Schluss mit Copy-Paste zwischen Tools. Ihre Referrals synchronisieren sich automatisch." },
+        { "metric": "2h / Woche", "description": "Eingesparte Zeit durch den Verzicht auf Copy-Paste zwischen RefBoost und Ihrem CRM." },
         { "metric": "0 Duplikate", "description": "Die E-Mail-Erkennung eliminiert Duplikate vor jedem Schreibvorgang." },
-        { "metric": "Echtzeit-Sichtbarkeit", "description": "Ihre Sales-Teams sehen die Referrals in Notion, ohne Tool wechseln zu müssen." }
+        { "metric": "Echtzeit", "description": "Ihre Teams sehen die Referrals in Notion, ohne das Tool zu wechseln." }
       ]
     },
     "hubspot": {
@@ -2685,9 +2687,9 @@
         { "q": "Kann ich die Sync pausieren, ohne HubSpot zu trennen?", "a": "Ja, Sie können die Integration unter Settings → Integrationen pausieren, ohne die Tokens zu widerrufen." }
       ],
       "roi": [
-        { "metric": "Einheitliche Pipeline", "description": "Ihre Referrals und Direktdeals in derselben HubSpot-Pipeline." },
-        { "metric": "+30% Conversion", "description": "Partner, die den Status ihrer Referrals in Echtzeit sehen, konvertieren besser." },
-        { "metric": "Zentrales Reporting", "description": "Ein Dashboard, um Direkt- vs. Partner-Performance zu messen." }
+        { "metric": "+30%", "description": "Mehr Conversion, wenn Partner den Status ihrer Referrals in Echtzeit sehen." },
+        { "metric": "1 Pipeline", "description": "Ihre Referrals und Direktdeals vereint in HubSpot." },
+        { "metric": "0 Eingabe", "description": "Kontakte und Deals werden automatisch erstellt." }
       ]
     },
     "salesforce": {
@@ -2712,9 +2714,9 @@
         { "q": "Kompatibel mit Salesforce Lightning und Classic?", "a": "Ja, die Integration nutzt die REST-API, die in beiden Oberflächen identisch funktioniert." }
       ],
       "roi": [
-        { "metric": "Messbarer ROI", "description": "Ordnen Sie jeden Deal direkt in Salesforce dem Quell-Partner zu." },
-        { "metric": "Sofortige Adoption", "description": "Ihre Vertriebler bleiben in Salesforce, die Referrals kommen automatisch." },
-        { "metric": "Compliance", "description": "Vollständige Historie der Partner-Aktionen für Ihre Audits." }
+        { "metric": "100%", "description": "Zuordnung der Deals zu ihrem Quell-Partner direkt in Salesforce." },
+        { "metric": "0 Adoption", "description": "Ihre Vertriebler bleiben in Salesforce, die Referrals kommen von allein." },
+        { "metric": "Audit ready", "description": "Vollständige Historie der Partner-Aktionen für Ihre Audits." }
       ]
     },
     "qonto": {
@@ -2739,9 +2741,9 @@
         { "q": "Welcher RefBoost-Plan ist erforderlich?", "a": "Die Qonto-Integration ist im Business-Plan enthalten. Starter- und Pro-Pläne sehen die Integration, können sie aber nicht aktivieren." }
       ],
       "roi": [
-        { "metric": "Bezahlung in 30 Sekunden", "description": "Ein Klick zum Bezahlen, eine SCA-Validierung, fertig." },
-        { "metric": "0 Eingabefehler", "description": "IBAN und Betrag werden aus der Provision vorausgefüllt. Keine manuellen Überweisungen mehr." },
-        { "metric": "Zufriedene Partner", "description": "Ein schnell bezahlter Partner ist ein Partner, der mehr empfiehlt." }
+        { "metric": "30 Sek.", "description": "Um eine Partner-Provision zu bezahlen, vom Klick bis zur SEPA-Überweisung." },
+        { "metric": "0 Fehler", "description": "IBAN und Betrag werden aus der Provision vorausgefüllt." },
+        { "metric": "x2", "description": "Ein schnell bezahlter Partner empfiehlt doppelt so viel." }
       ]
     },
     "google-sso": {
@@ -2766,9 +2768,9 @@
         { "q": "Sind Microsoft SSO oder Okta geplant?", "a": "Microsoft SSO steht für 2026 auf der Roadmap. Okta / generisches SAML sind für Enterprise-Konten geplant — sprechen Sie uns an, wenn Sie sie brauchen." }
       ],
       "roi": [
-        { "metric": "0 Passwort-Tickets", "description": "Schluss mit 'Passwort vergessen'. Ihre Partner melden sich per Klick an." },
-        { "metric": "Onboarding in 10 Sekunden", "description": "Der Partner klickt und ist drin. Kein Formular, keine E-Mail-Bestätigung." },
-        { "metric": "Höhere Sicherheit", "description": "2FA von Google geerbt. Kein Passwort auf RefBoost-Seite gespeichert." }
+        { "metric": "0 Tickets", "description": "Schluss mit Passwort-Reset-Anfragen." },
+        { "metric": "10 Sek.", "description": "Damit ein Partner sich in seinem Workspace anmeldet." },
+        { "metric": "Natives 2FA", "description": "Höhere Sicherheit von Google geerbt, ohne Konfiguration." }
       ]
     }
   }
