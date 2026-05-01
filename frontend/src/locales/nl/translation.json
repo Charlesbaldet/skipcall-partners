@@ -1261,7 +1261,44 @@
     "results_count_other": "programma's gevonden",
     "results_count": "{{count}} programma's gevonden",
     "results_in": "in",
-    "results_for": "voor"
+    "results_for": "voor",
+    "learn_more": "Meer informatie",
+    "editor": {
+      "publish_toggle": "Publiceren op de marketplace",
+      "preview": "Voorbeeld",
+      "save": "Opslaan",
+      "saved": "Opgeslagen",
+      "translate": "Automatisch vertalen",
+      "translate_started": "Vertaling gestart. Het duurt ongeveer 6 minuten op de achtergrond.",
+      "translate_running": "Vertaling al bezig",
+      "add_condition": "Voorwaarde toevoegen",
+      "add_advantage": "Voordeel toevoegen",
+      "add_reference": "Referentie toevoegen",
+      "add_info": "Informatie toevoegen",
+      "add_tag": "Toevoegen",
+      "hidden": "Verborgen",
+      "hidden_blocks": "Verborgen blokken",
+      "tiers_note": "Geconfigureerd in Programma → Niveaus",
+      "published": "Gepubliceerd",
+      "draft": "Concept"
+    },
+    "public": {
+      "partner_program": "Partnerprogramma",
+      "tiers_title": "Partnerniveaus",
+      "conditions_title": "Programmavoorwaarden",
+      "about_title": "Over ons",
+      "discover": "Ontdek {{company}}",
+      "ideal_client": "Ideale klant",
+      "why_join": "Waarom partner worden",
+      "references": "Zij vertrouwen ons",
+      "additional_info": "Aanvullende informatie",
+      "apply": "Solliciteren bij het programma",
+      "apply_now": "Nu solliciteren",
+      "visit_site": "Bezoek de site",
+      "similar": "Vergelijkbare programma's",
+      "view_all": "Alle programma's bekijken",
+      "back_home": "Terug naar home"
+    }
   },
   "settings": {
     "title": "Instellingen",
@@ -2772,44 +2809,6 @@
         { "metric": "10 sec", "description": "Om een partner in zijn werkruimte in te laten loggen." },
         { "metric": "Native 2FA", "description": "Versterkte beveiliging van Google overgenomen, zonder iets te configureren." }
       ]
-    }
-  },
-  "marketplace": {
-    "editor": {
-      "publish_toggle": "Publiceren op de marketplace",
-      "preview": "Voorbeeld",
-      "save": "Opslaan",
-      "saved": "Opgeslagen",
-      "translate": "Automatisch vertalen",
-      "translate_started": "Vertaling gestart. Het duurt ongeveer 6 minuten op de achtergrond.",
-      "translate_running": "Vertaling al bezig",
-      "add_condition": "Voorwaarde toevoegen",
-      "add_advantage": "Voordeel toevoegen",
-      "add_reference": "Referentie toevoegen",
-      "add_info": "Informatie toevoegen",
-      "add_tag": "Toevoegen",
-      "hidden": "Verborgen",
-      "hidden_blocks": "Verborgen blokken",
-      "tiers_note": "Geconfigureerd in Programma → Niveaus",
-      "published": "Gepubliceerd",
-      "draft": "Concept"
-    },
-    "public": {
-      "partner_program": "Partnerprogramma",
-      "tiers_title": "Partnerniveaus",
-      "conditions_title": "Programmavoorwaarden",
-      "about_title": "Over ons",
-      "discover": "Ontdek {{company}}",
-      "ideal_client": "Ideale klant",
-      "why_join": "Waarom partner worden",
-      "references": "Zij vertrouwen ons",
-      "additional_info": "Aanvullende informatie",
-      "apply": "Solliciteren bij het programma",
-      "apply_now": "Nu solliciteren",
-      "visit_site": "Bezoek de site",
-      "similar": "Vergelijkbare programma's",
-      "view_all": "Alle programma's bekijken",
-      "back_home": "Terug naar home"
     }
   }
 }

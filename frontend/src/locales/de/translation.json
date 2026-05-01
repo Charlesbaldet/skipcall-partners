@@ -1261,7 +1261,44 @@
     "results_count_other": "Programme gefunden",
     "results_count": "{{count}} Programme gefunden",
     "results_in": "in",
-    "results_for": "für"
+    "results_for": "für",
+    "learn_more": "Mehr erfahren",
+    "editor": {
+      "publish_toggle": "Im Marketplace veröffentlichen",
+      "preview": "Vorschau",
+      "save": "Speichern",
+      "saved": "Gespeichert",
+      "translate": "Automatisch übersetzen",
+      "translate_started": "Übersetzung gestartet. Sie dauert ca. 6 Minuten im Hintergrund.",
+      "translate_running": "Übersetzung läuft bereits",
+      "add_condition": "Bedingung hinzufügen",
+      "add_advantage": "Vorteil hinzufügen",
+      "add_reference": "Referenz hinzufügen",
+      "add_info": "Information hinzufügen",
+      "add_tag": "Hinzufügen",
+      "hidden": "Ausgeblendet",
+      "hidden_blocks": "Ausgeblendete Blöcke",
+      "tiers_note": "Konfiguriert in Programm → Stufen",
+      "published": "Veröffentlicht",
+      "draft": "Entwurf"
+    },
+    "public": {
+      "partner_program": "Partnerprogramm",
+      "tiers_title": "Partnerstufen",
+      "conditions_title": "Programmbedingungen",
+      "about_title": "Über uns",
+      "discover": "{{company}} entdecken",
+      "ideal_client": "Idealer Kunde",
+      "why_join": "Warum Partner werden",
+      "references": "Sie vertrauen uns",
+      "additional_info": "Zusätzliche Informationen",
+      "apply": "Am Programm teilnehmen",
+      "apply_now": "Jetzt bewerben",
+      "visit_site": "Website besuchen",
+      "similar": "Ähnliche Programme",
+      "view_all": "Alle Programme anzeigen",
+      "back_home": "Zur Startseite"
+    }
   },
   "settings": {
     "title": "Einstellungen",
@@ -2772,44 +2809,6 @@
         { "metric": "10 Sek.", "description": "Damit ein Partner sich in seinem Workspace anmeldet." },
         { "metric": "Natives 2FA", "description": "Höhere Sicherheit von Google geerbt, ohne Konfiguration." }
       ]
-    }
-  },
-  "marketplace": {
-    "editor": {
-      "publish_toggle": "Im Marketplace veröffentlichen",
-      "preview": "Vorschau",
-      "save": "Speichern",
-      "saved": "Gespeichert",
-      "translate": "Automatisch übersetzen",
-      "translate_started": "Übersetzung gestartet. Sie dauert ca. 6 Minuten im Hintergrund.",
-      "translate_running": "Übersetzung läuft bereits",
-      "add_condition": "Bedingung hinzufügen",
-      "add_advantage": "Vorteil hinzufügen",
-      "add_reference": "Referenz hinzufügen",
-      "add_info": "Information hinzufügen",
-      "add_tag": "Hinzufügen",
-      "hidden": "Ausgeblendet",
-      "hidden_blocks": "Ausgeblendete Blöcke",
-      "tiers_note": "Konfiguriert in Programm → Stufen",
-      "published": "Veröffentlicht",
-      "draft": "Entwurf"
-    },
-    "public": {
-      "partner_program": "Partnerprogramm",
-      "tiers_title": "Partnerstufen",
-      "conditions_title": "Programmbedingungen",
-      "about_title": "Über uns",
-      "discover": "{{company}} entdecken",
-      "ideal_client": "Idealer Kunde",
-      "why_join": "Warum Partner werden",
-      "references": "Sie vertrauen uns",
-      "additional_info": "Zusätzliche Informationen",
-      "apply": "Am Programm teilnehmen",
-      "apply_now": "Jetzt bewerben",
-      "visit_site": "Website besuchen",
-      "similar": "Ähnliche Programme",
-      "view_all": "Alle Programme anzeigen",
-      "back_home": "Zur Startseite"
     }
   }
 }

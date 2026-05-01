@@ -1261,7 +1261,44 @@
     "results_count_other": "programas encontrados",
     "results_count": "{{count}} programas encontrados",
     "results_in": "en",
-    "results_for": "para"
+    "results_for": "para",
+    "learn_more": "Saber más",
+    "editor": {
+      "publish_toggle": "Publicar en la marketplace",
+      "preview": "Vista previa",
+      "save": "Guardar",
+      "saved": "Guardado",
+      "translate": "Traducir automáticamente",
+      "translate_started": "Traducción iniciada. Tarda unos 6 minutos en segundo plano.",
+      "translate_running": "Traducción ya en curso",
+      "add_condition": "Añadir una condición",
+      "add_advantage": "Añadir una ventaja",
+      "add_reference": "Añadir una referencia",
+      "add_info": "Añadir una información",
+      "add_tag": "Añadir",
+      "hidden": "Oculto",
+      "hidden_blocks": "Bloques ocultos",
+      "tiers_note": "Configurado en Programa → Niveles",
+      "published": "Publicado",
+      "draft": "Borrador"
+    },
+    "public": {
+      "partner_program": "Programa de socios",
+      "tiers_title": "Niveles de socios",
+      "conditions_title": "Condiciones del programa",
+      "about_title": "Sobre nosotros",
+      "discover": "Descubre {{company}}",
+      "ideal_client": "Cliente ideal",
+      "why_join": "Por qué convertirse en socio",
+      "references": "Confían en nosotros",
+      "additional_info": "Información adicional",
+      "apply": "Solicitar al programa",
+      "apply_now": "Solicitar ahora",
+      "visit_site": "Ver el sitio",
+      "similar": "Programas similares",
+      "view_all": "Ver todos los programas",
+      "back_home": "Volver al inicio"
+    }
   },
   "settings": {
     "title": "Configuración",
@@ -2772,44 +2809,6 @@
         { "metric": "10 seg", "description": "Para que un socio acceda a su espacio." },
         { "metric": "2FA nativo", "description": "Seguridad reforzada heredada de Google sin configurar nada." }
       ]
-    }
-  },
-  "marketplace": {
-    "editor": {
-      "publish_toggle": "Publicar en la marketplace",
-      "preview": "Vista previa",
-      "save": "Guardar",
-      "saved": "Guardado",
-      "translate": "Traducir automáticamente",
-      "translate_started": "Traducción iniciada. Tarda unos 6 minutos en segundo plano.",
-      "translate_running": "Traducción ya en curso",
-      "add_condition": "Añadir una condición",
-      "add_advantage": "Añadir una ventaja",
-      "add_reference": "Añadir una referencia",
-      "add_info": "Añadir una información",
-      "add_tag": "Añadir",
-      "hidden": "Oculto",
-      "hidden_blocks": "Bloques ocultos",
-      "tiers_note": "Configurado en Programa → Niveles",
-      "published": "Publicado",
-      "draft": "Borrador"
-    },
-    "public": {
-      "partner_program": "Programa de socios",
-      "tiers_title": "Niveles de socios",
-      "conditions_title": "Condiciones del programa",
-      "about_title": "Sobre nosotros",
-      "discover": "Descubre {{company}}",
-      "ideal_client": "Cliente ideal",
-      "why_join": "Por qué convertirse en socio",
-      "references": "Confían en nosotros",
-      "additional_info": "Información adicional",
-      "apply": "Solicitar al programa",
-      "apply_now": "Solicitar ahora",
-      "visit_site": "Ver el sitio",
-      "similar": "Programas similares",
-      "view_all": "Ver todos los programas",
-      "back_home": "Volver al inicio"
     }
   }
 }

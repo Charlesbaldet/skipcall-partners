@@ -38,7 +38,12 @@ function PartnerCard({ partner }) {
             ? <img src={partner.logo_url} alt={partner.name} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'contain', border: '1px solid #f1f5f9' }} />
             : <div style={{ width: 48, height: 48, borderRadius: 12, background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color }}>{initials}</div>}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, color: C.s }}>{partner.name}</div>
+            <a href={'/marketplace/' + partner.slug}
+               style={{ fontWeight: 700, fontSize: 16, color: C.s, textDecoration: 'none', display: 'block' }}
+               onMouseEnter={e => { e.currentTarget.style.color = color; }}
+               onMouseLeave={e => { e.currentTarget.style.color = C.s; }}>
+              {partner.name}
+            </a>
             {partner.sector && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color, background: color + '15', borderRadius: 20, padding: '2px 10px', marginTop: 4 }}>
                 <Tag size={10} /> {trSector(partner.sector)}
@@ -55,6 +60,10 @@ function PartnerCard({ partner }) {
             <span><strong style={{ color: C.s }}>{t("marketplace.target")}</strong> {partner.icp}</span>
           </div>
         )}
+        <a href={'/marketplace/' + partner.slug}
+           style={{ display: 'inline-block', marginTop: 12, color: C.p, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+          {t('marketplace.learn_more')} →
+        </a>
       </div>
       <div style={{ display: 'flex', gap: 8, padding: '0 24px 24px', marginTop: 'auto' }}>
         {partner.website && (

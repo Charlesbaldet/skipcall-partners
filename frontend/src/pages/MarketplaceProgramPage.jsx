@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
@@ -374,7 +374,6 @@ export default function MarketplaceProgramPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, i18n.language]);
 
-  if (notFound) return <Navigate to="/marketplace" replace />;
   if (loading) {
     return (
       <LandingLayout>
@@ -382,7 +381,23 @@ export default function MarketplaceProgramPage() {
       </LandingLayout>
     );
   }
-  if (!program) return null;
+  if (notFound || !program) {
+    return (
+      <LandingLayout>
+        <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 }}>
+          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: C.s }}>
+            {t('marketplace.not_found_title', 'Programme introuvable')}
+          </h1>
+          <p style={{ margin: 0, color: C.m, fontSize: 15, maxWidth: 480, textAlign: 'center', lineHeight: 1.55 }}>
+            {t('marketplace.not_found_body', "Ce programme n'est pas (encore) publié sur la marketplace, ou son URL a changé.")}
+          </p>
+          <a href="/marketplace" style={{ marginTop: 8, color: C.p, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+            ← {t('marketplace.see_all', 'Voir tous les programmes')}
+          </a>
+        </div>
+      </LandingLayout>
+    );
+  }
 
   const blocks = Array.isArray(program.page_blocks) && program.page_blocks.length
     ? program.page_blocks
