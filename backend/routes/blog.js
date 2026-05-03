@@ -4,13 +4,29 @@ const { authenticate } = require('../middleware/auth');
 const { resolveLang } = require('../middleware/i18n-lang');
 const router = express.Router();
 
-// Build SELECT fragments that swap in `<col>_<lang>` (with fallback to the
-// base column) when the caller's lang is not fr. `lang` must come from
-// resolveLang() — whitelisted, safe to interpolate.
+// Build SELECT fragments that swap in `<col>_<lang>` (with fallback to
+// the base column) when the caller's lang is not fr. `lang` must come
+// from resolveLang() — whitelisted, safe to interpolate.
+//
+// IMPORTANT: when `<col>_<lang>` is NULL or empty in the database, the
+// COALESCE silently returns the French source. From the FE that looks
+// like "the API ignored ?lang=en" — but it didn't, the translation
+// row is just missing. Run the auto-translate (Super-admin →
+// Articles → Traduire les articles) before chasing a code bug.
 function localizedCol(col, lang) {
   return lang === 'fr'
     ? col
     : `COALESCE(NULLIF(${col}_${lang}, ''), ${col})`;
+}
+
+// Localized endpoints opt out of shared caching. Vary: Accept-Language
+// is already set per route, but some intermediary tiers (older CDN
+// edges, ISP caches) honor it inconsistently. private + max-age=60
+// keeps responses out of shared caches and lets the user's own
+// browser keep them for a minute (locale switches still re-fetch
+// because the URL gains `?lang=<x>`).
+function setLocalizedCache(res) {
+  res.set('Cache-Control', 'private, max-age=60, must-revalidate');
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -44,6 +60,7 @@ router.get('/posts', async (req, res) => {
     const lang = resolveLang(req);
     // Key browser / CDN caches by language so changing locale invalidates.
     res.vary('Accept-Language');
+    setLocalizedCache(res);
     let where = 'WHERE published = true';
     const params = [];
     let i = 1;
@@ -95,6 +112,7 @@ router.get('/posts/:slug', async (req, res) => {
   try {
     const lang = resolveLang(req);
     res.vary('Accept-Language');
+    setLocalizedCache(res);
     const { rows } = await query(
       `SELECT id, slug,
               ${localizedCol('title', lang)} AS title,
@@ -127,6 +145,7 @@ router.get('/posts/:slug/related', async (req, res) => {
   try {
     const lang = resolveLang(req);
     res.vary('Accept-Language');
+    setLocalizedCache(res);
     const { rows: cur } = await query(
       'SELECT category FROM blog_posts WHERE slug = $1 AND published = true LIMIT 1',
       [req.params.slug]
