@@ -403,7 +403,7 @@ export default function PricingPage() {
             {t('pricing.final_cta_start')} →
           </button>
           <a
-            href="mailto:sales@refboost.io"
+            href="mailto:sales@refboost.io?subject=Demande%20de%20d%C3%A9mo"
             style={{ padding: '14px 28px', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.25)', background: 'transparent', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none', display: 'inline-block' }}
           >
             {t('pricing.final_cta_sales')}
