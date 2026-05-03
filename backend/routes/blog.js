@@ -209,8 +209,22 @@ function requireSuperAdmin(req, res, next) {
 // GET /api/blog/admin/posts — tous les articles (draft + published)
 router.get('/admin/posts', authenticate, requireSuperAdmin, async (req, res) => {
   try {
+    // translated_count: 1 (FR is the source) + the number of target
+    // languages where the title cell is non-empty. Title is the
+    // sentinel because the translator writes title first and bails
+    // on retry-budget exhaustion before content; counting any
+    // weaker field would over-report. Range is 1..7 — 1 means
+    // French only, 7 means all six target locales filled.
     const { rows } = await query(
-      `SELECT id, slug, title, excerpt, category, published, published_at, created_at, reading_time_minutes
+      `SELECT id, slug, title, excerpt, category, published, published_at, created_at, reading_time_minutes,
+              1
+              + (CASE WHEN COALESCE(title_en, '') <> '' THEN 1 ELSE 0 END)
+              + (CASE WHEN COALESCE(title_es, '') <> '' THEN 1 ELSE 0 END)
+              + (CASE WHEN COALESCE(title_de, '') <> '' THEN 1 ELSE 0 END)
+              + (CASE WHEN COALESCE(title_it, '') <> '' THEN 1 ELSE 0 END)
+              + (CASE WHEN COALESCE(title_nl, '') <> '' THEN 1 ELSE 0 END)
+              + (CASE WHEN COALESCE(title_pt, '') <> '' THEN 1 ELSE 0 END)
+              AS translated_count
        FROM blog_posts ORDER BY created_at DESC`
     );
     res.json({ posts: rows });
@@ -239,6 +253,20 @@ router.post('/admin/posts', authenticate, requireSuperAdmin, async (req, res) =>
       [slug, title, content, excerpt || '', author || 'RefBoost', category || null, tags || [], cover_image_url || null, !!published, publishedAt, meta_title || null, meta_description || null, reading_time]
     );
     res.status(201).json({ post });
+
+    // Auto-translate on publish. The translateBlogPosts service is
+    // idempotent — it skips cells that already have a translation,
+    // so a no-op for previously-translated posts and only the new
+    // article actually hits Anthropic. Fire-and-forget; failure
+    // gets logged but doesn't roll back the create.
+    if (published && process.env.ANTHROPIC_API_KEY) {
+      setTimeout(() => {
+        const result = startBlogTranslationJob({ scope: 'blog' });
+        if (!result.ok) {
+          console.log(`[blog] auto-translate skipped — job ${result.reason} (started ${result.startedAt})`);
+        }
+      }, 2000);
+    }
   } catch (err) {
     console.error('[blog] create error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -275,6 +303,20 @@ router.put('/admin/posts/:id', authenticate, requireSuperAdmin, async (req, res)
       [title, content, excerpt, author, category || null, tags || null, cover_image_url || null, published, publishedAt, meta_title || null, meta_description || null, reading_time || null, req.params.id]
     );
     res.json({ post });
+
+    // Auto-translate on draft → published transition. Same
+    // idempotent guard as the create handler — already-translated
+    // cells are skipped, only this post (and any other untranslated
+    // posts) hit Anthropic.
+    const justPublished = published && !current.published;
+    if (justPublished && process.env.ANTHROPIC_API_KEY) {
+      setTimeout(() => {
+        const result = startBlogTranslationJob({ scope: 'blog' });
+        if (!result.ok) {
+          console.log(`[blog] auto-translate skipped — job ${result.reason} (started ${result.startedAt})`);
+        }
+      }, 2000);
+    }
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
@@ -301,27 +343,14 @@ router.delete('/admin/posts/:id', authenticate, requireSuperAdmin, async (req, r
 // calls, throttled to one every 13s ≈ ~2h wall time. That's longer
 // than any reasonable HTTP timeout, so the request returns
 // immediately and the work continues in the Node process.
-const translateService = require('../services/translateContentService');
 
-let _runningJob = null;
-
-router.post('/admin/translate-blog', authenticate, requireSuperAdmin, async (req, res) => {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(503).json({ error: 'anthropic_key_missing', message: 'ANTHROPIC_API_KEY is not set on the server.' });
-  }
-  if (_runningJob) {
-    return res.status(409).json({
-      error: 'already_running',
-      startedAt: _runningJob.startedAt,
-      message: 'A translation job is already in progress. Check status at GET /api/blog/admin/translate-blog/status.',
-    });
-  }
-
-  // Accepts ?scope=blog (default) | tenants | partners | all so the
-  // admin can re-run a single section without redoing the others.
-  const scope = (req.query.scope || 'blog').toLowerCase();
-  const dryRun = req.query.dryRun === '1' || req.query.dry_run === '1';
-
+// Shared between the explicit POST /admin/translate-blog button-press
+// path and the auto-translate-on-publish hook in POST /admin/posts.
+// Both use the same mutex so a publish during a manual run doesn't
+// fan out into a second concurrent Anthropic stream and trip the
+// rate-limit budget.
+function startBlogTranslationJob({ scope = 'blog', dryRun = false } = {}) {
+  if (_runningJob) return { ok: false, reason: 'already_running', startedAt: _runningJob.startedAt };
   _runningJob = {
     startedAt: new Date().toISOString(),
     scope,
@@ -330,9 +359,6 @@ router.post('/admin/translate-blog', authenticate, requireSuperAdmin, async (req
     finishedAt: null,
     error: null,
   };
-
-  // Kick off in the background. setImmediate so the 202 response goes
-  // out before we start hammering the Anthropic API.
   setImmediate(async () => {
     const log = (msg) => console.log(`[translate-blog] ${msg}`);
     const onProgress = (p) => { _runningJob.progress = { ...p }; };
@@ -354,25 +380,43 @@ router.post('/admin/translate-blog', authenticate, requireSuperAdmin, async (req
       _runningJob.finishedAt = new Date().toISOString();
       log(`failed: ${err.message}`);
     } finally {
-      // Keep the last job descriptor around so /status keeps reporting
-      // after the run finishes; cleared next time someone POSTs.
       const finished = _runningJob;
       _runningJob = null;
-      // Park the last-finished job on the module so /status surfaces it.
       lastJob = finished;
     }
   });
+  return { ok: true, startedAt: _runningJob.startedAt };
+}
 
+const translateService = require('../services/translateContentService');
+
+let _runningJob = null;
+let lastJob = null;
+
+router.post('/admin/translate-blog', authenticate, requireSuperAdmin, async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'anthropic_key_missing', message: 'ANTHROPIC_API_KEY is not set on the server.' });
+  }
+  // Accepts ?scope=blog (default) | tenants | partners | all so the
+  // admin can re-run a single section without redoing the others.
+  const scope = (req.query.scope || 'blog').toLowerCase();
+  const dryRun = req.query.dryRun === '1' || req.query.dry_run === '1';
+  const result = startBlogTranslationJob({ scope, dryRun });
+  if (!result.ok) {
+    return res.status(409).json({
+      error: 'already_running',
+      startedAt: result.startedAt,
+      message: 'A translation job is already in progress. Check status at GET /api/blog/admin/translate-blog/status.',
+    });
+  }
   res.status(202).json({
     ok: true,
     message: 'Translation started in the background. Watch Railway logs and poll /api/blog/admin/translate-blog/status.',
-    startedAt: _runningJob.startedAt,
+    startedAt: result.startedAt,
     scope,
     dryRun,
   });
 });
-
-let lastJob = null;
 
 // GET /api/blog/admin/translate-blog/status
 // Returns the running job (if any) + last-finished job, and a count

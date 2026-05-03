@@ -32,6 +32,12 @@ export default function SuperAdminPage() {
   const [blogSaving, setBlogSaving] = useState(false);
   const [blogShowForm, setBlogShowForm] = useState(false);
   const [blogMsg, setBlogMsg] = useState('');
+  // Blog auto-translate: kicked off by the "Traduire les articles"
+  // button in the header, polled at 10s while running. running ===
+  // true the moment we POST and stays that way until /status reports
+  // finishedAt. translateStatus shadows the backend payload.
+  const [blogTranslating, setBlogTranslating] = useState(false);
+  const [blogTranslateStatus, setBlogTranslateStatus] = useState(null);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -56,6 +62,64 @@ export default function SuperAdminPage() {
       const d = await api.request('/blog/admin/posts');
       setBlogPosts(d.posts || []);
     } catch(e) {}
+  };
+
+  // Wakes up the running-job poller — useful when the user
+  // refreshes the page while a translation is mid-flight, AND on
+  // every blog tab mount so the badge can show "running" state
+  // immediately.
+  const refreshBlogTranslateStatus = async () => {
+    try {
+      const s = await api.getBlogTranslateStatus();
+      setBlogTranslateStatus(s);
+      if (s?.running && !s.running.finishedAt) {
+        setBlogTranslating(true);
+      } else {
+        setBlogTranslating(false);
+      }
+      return s;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const handleTranslateBlog = async () => {
+    if (blogTranslating) return;
+    setBlogTranslating(true);
+    try {
+      await api.translateBlog('blog');
+      showToast(t('admin.translate_started', 'Traduction lancée en arrière-plan'), 'success', 4000);
+      // Kick the poller. We stop polling either when the backend
+      // reports finishedAt OR when the page tab unmounts (no
+      // explicit cleanup — the closure naturally collapses on
+      // navigation because the next load resets state).
+      const tick = async () => {
+        const s = await refreshBlogTranslateStatus();
+        if (s?.running && !s.running.finishedAt) {
+          setTimeout(tick, 10000);
+          return;
+        }
+        // Run finished — refetch the list so badges update.
+        loadBlog();
+        const missing = s?.blog_progress?.totalMissing ?? null;
+        if (missing === 0) {
+          showToast(t('admin.translate_done', 'Tous les articles sont traduits ✓'), 'success', 5000);
+        } else if (missing != null) {
+          showToast(t('admin.translate_partial', { n: missing, defaultValue: '{{n}} traductions restantes — relancez si nécessaire' }), 'info', 6000);
+        }
+      };
+      setTimeout(tick, 10000);
+    } catch (err) {
+      const msg = err?.data?.error === 'anthropic_key_missing'
+        ? 'ANTHROPIC_API_KEY manquant côté serveur'
+        : err?.data?.error === 'already_running'
+          ? t('admin.translate_already_running', 'Une traduction est déjà en cours')
+          : err.message || 'Erreur';
+      showToast(msg, 'error', 5000);
+      // Re-sync state from the server in case a concurrent run
+      // already started — keeps the spinner in step with reality.
+      refreshBlogTranslateStatus();
+    }
   };
 
   const saveBlogPost = async () => {
@@ -103,7 +167,7 @@ export default function SuperAdminPage() {
     } catch {}
   };
 
-  useEffect(() => { load(); loadBlog(); }, []);
+  useEffect(() => { load(); loadBlog(); refreshBlogTranslateStatus(); }, []);
   useEffect(() => { if (tab === 'logs') loadLogs(); }, [tab]);
 
   const handleCreate = async () => {
@@ -321,12 +385,46 @@ export default function SuperAdminPage() {
 
       {tab === 'blog' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          {/* Globe spinner keyframe — scoped tag, idempotent on
+              re-renders. */}
+          <style>{`@keyframes rb-spin { to { transform: rotate(360deg); } } .rb-spin { animation: rb-spin 1.6s linear infinite; }`}</style>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 12, flexWrap: 'wrap' }}>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{t('admin.blog_articles')}</h2>
-            <button onClick={() => { setBlogShowForm(!blogShowForm); setBlogEditId(null); setBlogForm({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' }); }}
-              style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
-              {blogShowForm ? t('admin.cancel') : t('admin.new_article')}
-            </button>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <button
+                  onClick={handleTranslateBlog}
+                  disabled={blogTranslating}
+                  title={t('admin.translate_tooltip', 'Lance la traduction des articles dans 6 langues. Idempotent : ne retraduit pas ce qui est déjà fait.')}
+                  style={{
+                    padding: '10px 16px', borderRadius: 10,
+                    background: blogTranslating ? '#93c5fd' : '#2563eb',
+                    color: '#fff', border: 'none',
+                    cursor: blogTranslating ? 'wait' : 'pointer',
+                    fontWeight: 700, fontSize: 13,
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    opacity: blogTranslating ? 0.85 : 1,
+                  }}
+                >
+                  <Globe size={14} className={blogTranslating ? 'rb-spin' : ''} />
+                  {blogTranslating
+                    ? t('admin.translate_running', 'Traduction en cours…')
+                    : t('admin.translate_button', 'Traduire les articles')}
+                </button>
+                {blogTranslating && blogTranslateStatus?.running && !blogTranslateStatus.running.finishedAt && (
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                    {(blogTranslateStatus.running.progress?.done || 0)} {t('admin.translate_done_count', 'traduits')}
+                    {blogTranslateStatus.blog_progress?.totalMissing != null
+                      ? ` · ${blogTranslateStatus.blog_progress.totalMissing} ${t('admin.translate_remaining', 'restants')}`
+                      : ''}
+                  </div>
+                )}
+              </div>
+              <button onClick={() => { setBlogShowForm(!blogShowForm); setBlogEditId(null); setBlogForm({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' }); }}
+                style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+                {blogShowForm ? t('admin.cancel') : t('admin.new_article')}
+              </button>
+            </div>
           </div>
           {blogMsg && <div style={{ padding: '12px 16px', borderRadius: 10, background: blogMsg.startsWith('\u2705') ? '#f0fdf4' : '#fef2f2', color: blogMsg.startsWith('\u2705') ? '#16a34a' : '#dc2626', marginBottom: 20, fontSize: 14 }}>{blogMsg}</div>}
           {blogShowForm && (
@@ -386,12 +484,30 @@ export default function SuperAdminPage() {
             ) : blogPosts.map(p => (
               <div key={p.id} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: p.published ? '#f0fdf4' : '#f8fafc', color: p.published ? '#16a34a' : '#94a3b8', fontWeight: 700 }}>
                       {p.published ? '● ' + t('admin.blog_published') : '○ ' + t('admin.blog_draft')}
                     </span>
                     {p.category && <span style={{ fontSize: 11, color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{p.category}</span>}
                     <span style={{ fontSize: 11, color: '#94a3b8' }}>{p.reading_time_minutes} {t('admin.blog_min')}</span>
+                    {/* Translation badge — 7/7 = green, partial =
+                        amber, FR-only = grey. Range 1..7 because
+                        French is the source and always counts. */}
+                    {(() => {
+                      const n = Number(p.translated_count) || 1;
+                      const palette = n >= 7
+                        ? { bg: '#f0fdf4', fg: '#15803d', dot: '#22c55e' }
+                        : n >= 2
+                          ? { bg: '#fffbeb', fg: '#a16207', dot: '#f59e0b' }
+                          : { bg: '#f1f5f9', fg: '#64748b', dot: '#94a3b8' };
+                      return (
+                        <span title={t('admin.translate_badge_tooltip', 'Langues couvertes par cet article (FR comprise)')}
+                          style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: palette.bg, color: palette.fg, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: palette.dot }} />
+                          {n}/7 {t('admin.translate_badge_unit', 'langues')}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{p.title}</h3>
                   <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>/blog/{p.slug} · {p.published_at ? new Date(p.published_at).toLocaleDateString(t('admin.fmt_locale')) : t('admin.blog_not_published')}</p>

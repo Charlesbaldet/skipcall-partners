@@ -328,6 +328,17 @@ class ApiClient {
   getMarketplaceTranslateStatus() {
     return this.request('/marketplace/page/translate/status');
   }
+  // Blog translation: kicks off the same fire-and-forget translator
+  // that the CLI script uses. Default scope is 'blog' (the only one
+  // exposed via the admin button); the endpoint also accepts
+  // tenants / partners / all for one-shot full re-runs.
+  translateBlog(scope = 'blog') {
+    const qs = scope ? '?scope=' + encodeURIComponent(scope) : '';
+    return this.request('/blog/admin/translate-blog' + qs, { method: 'POST' });
+  }
+  getBlogTranslateStatus() {
+    return this.request('/blog/admin/translate-blog/status');
+  }
   getMarketplaceProgram(slug) {
     return this.request('/marketplace/programs/' + encodeURIComponent(slug));
   }
