@@ -232,6 +232,15 @@ export function LandingFooter() {
               ))}
             </div>
             <div>
+              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.contact', 'Contact')}</div>
+              <a href="mailto:sales@refboost.io" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+                {t('landing.footer.links.sales', 'Sales')} : sales@refboost.io
+              </a>
+              <a href="mailto:support@refboost.io" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+                {t('landing.footer.links.support', 'Support')} : support@refboost.io
+              </a>
+            </div>
+            <div>
               <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.legal')}</div>
               {[
                 { key: 'cgv',     href: '/cgv' },

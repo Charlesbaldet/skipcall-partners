@@ -308,6 +308,13 @@ export default function PricingPage() {
             );
           })}
         </div>
+        {/* Sales contact line — sits just below the plan cards so
+            visitors with custom-quote questions don't have to
+            scroll all the way to the dark final CTA. */}
+        <p style={{ textAlign: 'center', marginTop: 24, color: C.m, fontSize: 14 }}>
+          {t('pricing.cards_contact_prefix', 'Une question ? Contactez-nous à')}{' '}
+          <a href="mailto:sales@refboost.io" style={{ color: C.p, fontWeight: 600, textDecoration: 'none' }}>sales@refboost.io</a>
+        </p>
       </main>
 
       {/* ─── COMPARISON TABLE ─── */}

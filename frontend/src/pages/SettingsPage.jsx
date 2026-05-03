@@ -14,7 +14,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell, Banknote, Save, CreditCard,
+  Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -82,6 +82,10 @@ export default function SettingsPage() {
       { section: t('layout.section.preferences') },
       { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
     ] : []),
+    // Contact is the last entry across every role's preferences
+    // group — admin, sales, partner, superadmin all get a way to
+    // reach the team without leaving Settings.
+    { id: 'contact', icon: Mail, label: t('settings.contact.title', 'Contact') },
   ];
 
   return (
@@ -155,8 +159,113 @@ export default function SettingsPage() {
             )}
             {tab === 'program' && isAdmin && <ProgramTab />}
             {tab === 'billing' && isAdmin && <BillingPage />}
+            {tab === 'contact' && <ContactTab />}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ CONTACT ═══
+// Available to admin / sales / partner / superadmin. Three cards
+// (Sales / Support / Resources) with mailto + external links —
+// no API calls, no tenant scoping, just a clean way to reach the
+// team without leaving Settings.
+function ContactTab() {
+  const { t } = useTranslation();
+  const cards = [
+    {
+      icon: Mail,
+      iconBg: '#ecfdf5',
+      iconColor: '#059669',
+      titleKey: 'settings.contact.sales_title',
+      titleDefault: 'Commercial',
+      descKey: 'settings.contact.sales_desc',
+      descDefault: 'Questions sur les plans, démos, partenariats',
+      href: 'mailto:sales@refboost.io',
+      label: 'sales@refboost.io',
+      labelColor: '#059669',
+      external: false,
+    },
+    {
+      icon: LifeBuoy,
+      iconBg: '#eff6ff',
+      iconColor: '#2563eb',
+      titleKey: 'settings.contact.support_title',
+      titleDefault: 'Support technique',
+      descKey: 'settings.contact.support_desc',
+      descDefault: 'Aide sur votre compte, bugs, intégrations',
+      href: 'mailto:support@refboost.io',
+      label: 'support@refboost.io',
+      labelColor: '#2563eb',
+      external: false,
+    },
+    {
+      icon: BookOpen,
+      iconBg: '#f8fafc',
+      iconColor: '#64748b',
+      titleKey: 'settings.contact.docs_title',
+      titleDefault: 'Ressources',
+      descKey: 'settings.contact.docs_desc',
+      descDefault: 'Guides, articles et bonnes pratiques',
+      href: 'https://refboost.io/blog',
+      label: 'refboost.io/blog →',
+      labelColor: '#475569',
+      external: true,
+      dashed: true,
+    },
+  ];
+  return (
+    <div style={{ maxWidth: 520 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+        {t('settings.contact.title', 'Contact')}
+      </h2>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+        {t('settings.contact.subtitle', "Besoin d'aide ou d'informations ? Contactez notre équipe.")}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {cards.map(c => (
+          <div
+            key={c.titleKey}
+            style={{
+              border: c.dashed ? '1.5px dashed #e2e8f0' : '1px solid #e2e8f0',
+              borderRadius: 12, padding: 16, background: '#fff',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10,
+                background: c.iconBg, color: c.iconColor,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <c.icon size={20} />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                  {t(c.titleKey, c.titleDefault)}
+                </div>
+                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                  {t(c.descKey, c.descDefault)}
+                </div>
+              </div>
+            </div>
+            <a
+              href={c.href}
+              {...(c.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              style={{
+                display: 'block', marginTop: 12,
+                fontSize: 13, fontWeight: 600,
+                color: c.labelColor, textDecoration: 'none',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.textDecoration = 'underline'; }}
+              onMouseLeave={e => { e.currentTarget.style.textDecoration = 'none'; }}
+            >
+              {c.label}
+            </a>
+          </div>
+        ))}
       </div>
     </div>
   );

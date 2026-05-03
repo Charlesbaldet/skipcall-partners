@@ -1381,6 +1381,16 @@
     "tab_marketplace": "Marketplace",
     "tab_integrations": "Integraties",
     "tab_billing": "Facturering",
+    "contact": {
+      "title": "Contact",
+      "subtitle": "Hulp of informatie nodig? Neem contact op met ons team.",
+      "sales_title": "Sales",
+      "sales_desc": "Vragen over plannen, demo's, partnerschappen",
+      "support_title": "Technische ondersteuning",
+      "support_desc": "Hulp met je account, bugs, integraties",
+      "docs_title": "Bronnen",
+      "docs_desc": "Gidsen, artikelen en best practices"
+    },
     "integrations": {
       "filter_all": "Alle",
       "filter_crm": "CRM",

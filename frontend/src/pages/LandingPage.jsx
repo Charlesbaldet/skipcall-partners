@@ -600,6 +600,10 @@ export default function LandingPage() {
             <button onClick={()=>{trackClick('footer_cta');navigate('/signup'+(email?'?email='+encodeURIComponent(email):''));}} className="bp" style={{padding:'16px 28px',borderRadius:12,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:15,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',boxShadow:`0 8px 30px ${C.p}30`}}>{t('landing.cta.cta_btn')}</button>
           </div>
           <p style={{color:'#475569',fontSize:12,marginTop:16}}>{t('landing.cta.note')}</p>
+          <p style={{color:'#94a3b8',fontSize:13,marginTop:14}}>
+            {t('landing.cta.demo_hint', 'Besoin d\'une démo ?')}{' '}
+            <a href="mailto:sales@refboost.io" style={{color:'#34d399',fontWeight:600,textDecoration:'none'}}>sales@refboost.io</a>
+          </p>
         </div>
       </section>
 
@@ -636,6 +640,11 @@ export default function LandingPage() {
                 {['blog','guide','faq','contact'].map(key=>(
                   <a key={key} href={key==='blog'?'/blog':'#'} style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>
                 ))}
+              </div>
+              <div>
+                <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.contact', 'Contact')}</div>
+                <a href="mailto:sales@refboost.io" style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t('landing.footer.links.sales', 'Sales')} : sales@refboost.io</a>
+                <a href="mailto:support@refboost.io" style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t('landing.footer.links.support', 'Support')} : support@refboost.io</a>
               </div>
               <div>
                 <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.legal')}</div>

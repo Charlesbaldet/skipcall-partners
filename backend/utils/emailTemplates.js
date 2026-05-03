@@ -69,7 +69,11 @@ function baseTemplate(content, ctaUrl, ctaText) {
     </div>
     <div class="footer">
       <p>RefBoost — Gestion de programme partenaires</p>
-      <p><a href="https://refboost.io" style="color:#059669">refboost.io</a></p>
+      <p>
+        Besoin d'aide ? <a href="mailto:support@refboost.io" style="color:#059669">support@refboost.io</a>
+        &nbsp;·&nbsp;
+        <a href="https://refboost.io" style="color:#059669">refboost.io</a>
+      </p>
     </div>
   </div>
 </body>

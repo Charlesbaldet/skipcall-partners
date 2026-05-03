@@ -1381,6 +1381,16 @@
     "tab_marketplace": "Marketplace",
     "tab_integrations": "Integrações",
     "tab_billing": "Faturação",
+    "contact": {
+      "title": "Contacto",
+      "subtitle": "Precisa de ajuda ou informações? Contacte a nossa equipa.",
+      "sales_title": "Comercial",
+      "sales_desc": "Questões sobre planos, demos, parcerias",
+      "support_title": "Suporte técnico",
+      "support_desc": "Ajuda com a conta, bugs, integrações",
+      "docs_title": "Recursos",
+      "docs_desc": "Guias, artigos e boas práticas"
+    },
     "integrations": {
       "filter_all": "Todas",
       "filter_crm": "CRM",
