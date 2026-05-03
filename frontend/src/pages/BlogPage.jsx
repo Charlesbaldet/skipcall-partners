@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../lib/api';
 import { translateCat } from '../lib/blog-categories';
 import LandingLayout from '../components/LandingLayout';
+import Pagination from '../components/Pagination';
 
 const SITE = 'https://refboost.io';
+const ITEMS_PER_PAGE = 9;
 const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
 
 function formatDate(iso) {
@@ -52,6 +54,19 @@ export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // URL is the source of truth for both filters. ?page= is read on
+  // mount and on every browser back/forward; ?category= mirrors
+  // activeCategory so the same URL bookmarks the same view.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+
+  // Sync activeCategory ← URL on mount + popstate.
+  useEffect(() => {
+    const cat = searchParams.get('category') || '';
+    if (cat !== activeCategory) setActiveCategory(cat);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   useEffect(() => {
     api.request('/blog/categories').then(d => setCategories(d.categories || [])).catch(()=>{});
   }, []);
@@ -71,12 +86,54 @@ export default function BlogPage() {
   // user clicks a category pill.
   const totalAll = categories.reduce((s, c) => s + (parseInt(c.count, 10) || 0), 0);
 
+  // Pagination — slice after filtering. Server already filters by
+  // category so `posts` is the visible set; we just window it.
+  const totalPages = Math.max(1, Math.ceil(posts.length / ITEMS_PER_PAGE));
+  // Guard: if a stale ?page= points past the new last page after a
+  // filter change, snap to the last available page on the next URL
+  // edit (handled inside handlePageChange — UI shows the clamped
+  // slice immediately).
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = posts.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
+  // Canonical URL: /blog for page 1 (drop the querystring entirely
+  // so /blog and /blog?page=1 don't both index), /blog?page=N
+  // otherwise. Category never appears in the canonical so search
+  // engines treat the filtered views as the same page —
+  // intentional: the SEO weight stays on the unfiltered listing.
+  const canonical = SITE + '/blog' + (currentPage > 1 ? '?page=' + currentPage : '');
+
+  const updateUrl = (next) => {
+    setSearchParams(next, { replace: false });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePageChange = (page) => {
+    const next = new URLSearchParams(searchParams);
+    if (page <= 1) next.delete('page');
+    else next.set('page', String(page));
+    updateUrl(next);
+  };
+
+  const handleCategoryChange = (cat) => {
+    setActiveCategory(cat);
+    const next = new URLSearchParams(searchParams);
+    if (cat) next.set('category', cat);
+    else next.delete('category');
+    // Filter change always resets to page 1 so the user doesn't
+    // land on an empty page-3 of a small category.
+    next.delete('page');
+    updateUrl(next);
+  };
+
   return (
     <LandingLayout>
       <Helmet>
         <title>Blog RefBoost — Conseils et ressources pour programmes partenaires B2B</title>
         <meta name="description" content="Stratégies, guides et bonnes pratiques pour créer et gérer un programme d'apporteurs d'affaires performant." />
-        <link rel="canonical" href={SITE + '/blog'} />
+        <link rel="canonical" href={canonical} />
         <meta property="og:title" content="Blog RefBoost — Conseils pour programmes partenaires B2B" />
         <meta property="og:description" content="Stratégies, guides et bonnes pratiques pour créer et gérer un programme d'apporteurs d'affaires performant." />
         <meta property="og:type" content="website" />
@@ -101,11 +158,11 @@ export default function BlogPage() {
         {/* Filtres */}
         {categories.length > 0 && (
           <nav aria-label={t('blog.categories')} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
-            <button onClick={()=>setActiveCategory('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? '#059669' : '#e2e8f0', background: !activeCategory ? '#059669' : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            <button onClick={()=>handleCategoryChange('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? '#059669' : '#e2e8f0', background: !activeCategory ? '#059669' : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
               {t('blog.all_categories')} ({totalAll})
             </button>
             {categories.map(c => (
-              <button key={c.category} onClick={()=>setActiveCategory(c.category === activeCategory ? '' : c.category)}
+              <button key={c.category} onClick={()=>handleCategoryChange(c.category === activeCategory ? '' : c.category)}
                 style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: activeCategory === c.category ? '#059669' : '#e2e8f0', background: activeCategory === c.category ? '#059669' : 'transparent', color: activeCategory === c.category ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
                 {translateCat(c.category)} ({c.count})
               </button>
@@ -122,9 +179,12 @@ export default function BlogPage() {
             <p style={{ color: C.m, fontSize: 14 }}>{t('blog.come_back_soon')}</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 28 }}>
-            {posts.map(post => <BlogCard key={post.id} post={post} />)}
-          </div>
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 28 }}>
+              {paginated.map(post => <BlogCard key={post.id} post={post} />)}
+            </div>
+            <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={handlePageChange} />
+          </>
         )}
       </main>
     </LandingLayout>

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, ArrowRight, Users, Tag, X, Filter } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import LandingLayout from '../components/LandingLayout';
+import Pagination from '../components/Pagination';
 import api from '../lib/api';
 import { useTranslation } from 'react-i18next';
 
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
+const ITEMS_PER_PAGE = 9;
+const SITE = 'https://refboost.io';
 
 const SECTORS_STATIC = [
   'SaaS / Logiciel', 'Conseil & Services', 'Finance & Fintech', 'RH & Recrutement',
@@ -81,6 +85,13 @@ export default function MarketplacePage() {
   const [activeSector, setActiveSector] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // URL-driven pagination — same pattern as /blog. Filters
+  // (sector + search) reset the page back to 1 so the user
+  // doesn't land on an empty page-3 of a small sector after
+  // narrowing the list.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+
   useEffect(() => {
     api.getMarketplaceSectors()
       .then(d => setSectors(d.sectors || []))
@@ -101,15 +112,54 @@ export default function MarketplacePage() {
     return () => clearTimeout(t);
   }, [search, activeSector]);
 
-  const reset = () => { setSearch(''); setActiveSector(''); };
   const allSectors = sectors.length > 0 ? sectors : SECTORS_STATIC;
+  const totalPages = Math.max(1, Math.ceil(partners.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = partners.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
+  // Drop ?page= when filters change so the next render starts on
+  // page 1. setSearchParams replaces the current entry to keep the
+  // browser history clean (one back == back to homepage, not back
+  // through every keystroke of the search box).
+  const dropPageParam = () => {
+    if (!searchParams.has('page')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('page');
+    setSearchParams(next, { replace: true });
+  };
+
+  const reset = () => {
+    setSearch('');
+    setActiveSector('');
+    dropPageParam();
+  };
+  const setSectorAndReset = (s) => {
+    setActiveSector(s);
+    dropPageParam();
+  };
+  const setSearchAndReset = (s) => {
+    setSearch(s);
+    dropPageParam();
+  };
+
+  const handlePageChange = (page) => {
+    const next = new URLSearchParams(searchParams);
+    if (page <= 1) next.delete('page');
+    else next.set('page', String(page));
+    setSearchParams(next);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const canonical = SITE + '/marketplace' + (currentPage > 1 ? '?page=' + currentPage : '');
 
   return (
     <LandingLayout>
       <Helmet>
         <title>Marketplace RefBoost — Programmes d'apporteurs d'affaires disponibles</title>
         <meta name="description" content="Découvrez les programmes partenaires disponibles et rejoignez-les en un clic. Commencez à générer des commissions." />
-        <link rel="canonical" href="https://refboost.io/marketplace" />
+        <link rel="canonical" href={canonical} />
         <meta property="og:title" content="Marketplace RefBoost — Programmes d'apporteurs d'affaires" />
         <meta property="og:description" content="Découvrez les programmes partenaires disponibles et rejoignez-les en un clic." />
         <meta property="og:type" content="website" />
@@ -138,12 +188,12 @@ export default function MarketplacePage() {
             <Search size={18} color={C.m} />
             <input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => setSearchAndReset(e.target.value)}
               placeholder={t("marketplace.search_ph")}
               style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: C.s, fontFamily: 'inherit', background: 'transparent' }}
             />
             {search && (
-              <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+              <button onClick={() => setSearchAndReset('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
                 <X size={16} color={C.m} />
               </button>
             )}
@@ -161,10 +211,10 @@ export default function MarketplacePage() {
         <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 24px' }}>
           <nav aria-label="Secteurs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 960, margin: '0 auto', alignItems: 'center' }}>
             <button
-              onClick={() => setActiveSector('')}
+              onClick={() => setSectorAndReset('')}
               style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (!activeSector ? C.p : '#e2e8f0'), background: !activeSector ? C.p : '#fff', color: !activeSector ? '#fff' : C.m, transition: 'all .2s' }}>{t("marketplace.all")}</button>
             {allSectors.map(s => (
-              <button key={s} onClick={() => setActiveSector(activeSector === s ? '' : s)}
+              <button key={s} onClick={() => setSectorAndReset(activeSector === s ? '' : s)}
                 style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (activeSector === s ? C.p : '#e2e8f0'), background: activeSector === s ? C.p : '#fff', color: activeSector === s ? '#fff' : C.m, transition: 'all .2s' }}>
                 {s}
               </button>
@@ -215,9 +265,12 @@ export default function MarketplacePage() {
               )}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 24 }}>
-              {partners.map(p => <PartnerCard key={p.id} partner={p} />)}
-            </div>
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 24 }}>
+                {paginated.map(p => <PartnerCard key={p.id} partner={p} />)}
+              </div>
+              <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={handlePageChange} />
+            </>
           )}
 
           {/* CTA */}

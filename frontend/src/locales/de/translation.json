@@ -1,4 +1,10 @@
 {
+  "pagination": {
+    "label": "Seitennummerierung",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "page": "Seite"
+  },
   "common": {
     "loading": "Laden...",
     "error": "Fehler",

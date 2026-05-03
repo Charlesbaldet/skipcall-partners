@@ -1,4 +1,10 @@
 {
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "page": "Page"
+  },
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",
