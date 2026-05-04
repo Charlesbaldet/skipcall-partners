@@ -608,13 +608,13 @@ export default function CommissionsPage() {
   return (
     <div className="fade-in">
       <style>{`@keyframes rb-spin{to{transform:rotate(360deg)}}.rb-spin{animation:rb-spin 1s linear infinite}@keyframes rb-pulse{0%,100%{opacity:1}50%{opacity:.4}}.rb-pulse{animation:rb-pulse 1.4s ease-in-out infinite}`}</style>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('commissions.title')}</h1>
-          <p style={{ color: '#64748b', marginBottom: 24 }}>{t('commissions.subtitle')}</p>
+          <p style={{ color: '#64748b' }}>{t('commissions.subtitle')}</p>
         </div>
-        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-          <Download size={14} /> {t('commissions.export_csv')}
+        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+          <Download size={14} /> {t('commissions.export')}
         </button>
       </div>
 
@@ -625,39 +625,106 @@ export default function CommissionsPage() {
         <ComKPI icon={CheckCircle} label={t('commissions.kpi_paid')} value={fmt(totals.paid)} color="#16a34a" />
       </div>
 
-      {/* Tabs + view toggle */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-          {[
-            { id: 'summary', label: t('commissions.tab_by_partner') },
-            { id: 'pipeline', label: t('commissions.tab_pipeline') },
-          ].map(tab_ => (
-            <button key={tab_.id} onClick={() => setTab(tab_.id)} style={{
-              padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: tab === tab_.id ? '#fff' : 'transparent', color: tab === tab_.id ? '#0f172a' : '#64748b',
-              boxShadow: tab === tab_.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}>
-              {tab_.label}
-            </button>
-          ))}
-        </div>
+      {/* Toolbar — tabs left, view toggle + actions right, separated
+          from the body by a single bottom border. The right-side
+          actions are pipeline-tab-only and the Qonto-bound buttons
+          only appear when the integration is connected. */}
+      {(() => {
+        const payableCount = visibleCommissions.filter(c => c.status === 'pending_validation').length;
+        return (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', marginBottom: 20 }}>
+            <div style={{ display: 'flex' }}>
+              {[
+                { id: 'pipeline', label: t('commissions.pipeline') },
+                { id: 'summary', label: t('commissions.by_partner') },
+              ].map(tab_ => {
+                const active = tab === tab_.id;
+                return (
+                  <button
+                    key={tab_.id}
+                    onClick={() => setTab(tab_.id)}
+                    style={{
+                      padding: '10px 16px', fontSize: 13, fontFamily: 'inherit',
+                      background: 'transparent', border: 'none',
+                      borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
+                      color: active ? '#059669' : '#64748b',
+                      fontWeight: active ? 700 : 500,
+                      cursor: 'pointer',
+                      marginBottom: -1,
+                    }}
+                  >
+                    {tab_.label}
+                  </button>
+                );
+              })}
+            </div>
 
-        {tab === 'pipeline' && (
-          <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-            <button onClick={() => setViewMode('kanban')} style={{
-              padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-              background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8',
-              fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}><LayoutGrid size={14} /> {t('commissions.kanban')}</button>
-            <button onClick={() => setViewMode('table')} style={{
-              padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-              background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8',
-              fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            }}><List size={14} /> {t('commissions.table')}</button>
+            {tab === 'pipeline' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 6 }}>
+                {/* Kanban / Table toggle (dark pill) */}
+                <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+                  <button onClick={() => setViewMode('kanban')} style={{
+                    padding: '6px 10px', fontSize: 12, fontWeight: 600, border: 'none',
+                    background: viewMode === 'kanban' ? '#0f172a' : '#fff',
+                    color: viewMode === 'kanban' ? '#fff' : '#64748b',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit',
+                  }}>
+                    <LayoutGrid size={12} /> {t('commissions.kanban')}
+                  </button>
+                  <button onClick={() => setViewMode('table')} style={{
+                    padding: '6px 10px', fontSize: 12, fontWeight: 600, border: 'none', borderLeft: '1px solid #e2e8f0',
+                    background: viewMode === 'table' ? '#0f172a' : '#fff',
+                    color: viewMode === 'table' ? '#fff' : '#64748b',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit',
+                  }}>
+                    <List size={12} /> {t('commissions.table')}
+                  </button>
+                </div>
+
+                {qontoStatus?.connected && (
+                  <>
+                    <div style={{ width: 1, height: 24, background: '#e2e8f0' }} />
+
+                    <button
+                      onClick={selectAllPayable}
+                      disabled={payableCount === 0}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '6px 12px', borderRadius: 8,
+                        border: '1px solid ' + (payableCount === 0 ? '#e2e8f0' : '#a7f3d0'),
+                        background: payableCount === 0 ? '#fff' : '#f0fdf4',
+                        color: payableCount === 0 ? '#94a3b8' : '#059669',
+                        fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                        cursor: payableCount === 0 ? 'not-allowed' : 'pointer',
+                        opacity: payableCount === 0 ? 0.5 : 1,
+                      }}
+                    >
+                      {t('commissions.pay_all')} ({payableCount})
+                    </button>
+
+                    <button
+                      onClick={handleRefreshPolls}
+                      disabled={refreshingPolls}
+                      title={t('qonto.refresh_status_tooltip', 'Rafraîchir les statuts Qonto')}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '6px 12px', borderRadius: 8, border: '1px solid #e2e8f0',
+                        background: '#fff', color: '#475569',
+                        fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                        cursor: refreshingPolls ? 'wait' : 'pointer',
+                        opacity: refreshingPolls ? 0.7 : 1,
+                      }}
+                    >
+                      <RefreshCw size={12} className={refreshingPolls ? 'rb-spin' : ''} />
+                      {refreshingPolls ? t('qonto.refreshing_status', 'Actualisation…') : t('commissions.refresh')}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {tab === 'summary' && (
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
@@ -696,43 +763,19 @@ export default function CommissionsPage() {
         </div>
       )}
 
-      {/* Bulk-pay action bar — only renders when at least one
-          pending_validation card is checked. The "Tout payer" button
-          shows independently so the admin can one-click select every
-          payable card. */}
-      {tab === 'pipeline' && qontoStatus?.connected && (
+      {/* Contextual bulk-pay action bar. "Tout payer" and "Actualiser"
+          live in the toolbar above; this row only shows up while at
+          least one pending_validation card is selected — Pay selection
+          + Cancel. */}
+      {tab === 'pipeline' && qontoStatus?.connected && selected.size > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-          {selected.size > 0 ? (
-            <>
-              <button onClick={handlePayBulk} disabled={bulkBusy}
-                style={{ padding: '9px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: bulkBusy ? 0.7 : 1 }}>
-                <Send size={14} /> {bulkBusy ? t('common.saving', 'Enregistrement…') : t('qonto.pay_selection', { count: selected.size, defaultValue: 'Payer la sélection ({{count}})' })}
-              </button>
-              <button onClick={clearSelection} disabled={bulkBusy}
-                style={{ padding: '9px 14px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                {t('common.cancel', 'Annuler')}
-              </button>
-            </>
-          ) : (
-            <button onClick={selectAllPayable}
-              style={{ padding: '9px 14px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-              {t('qonto.pay_all', 'Tout payer (À valider)')}
-            </button>
-          )}
-          <button onClick={handleRefreshPolls} disabled={refreshingPolls}
-            style={{
-              marginLeft: 'auto',
-              padding: '9px 16px', borderRadius: 10,
-              background: '#fff', border: '1px solid #e2e8f0',
-              color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6,
-              opacity: refreshingPolls ? 0.7 : 1,
-            }}
-            title={t('qonto.refresh_status_tooltip', 'Rafraîchir les statuts Qonto')}>
-            <RefreshCw size={14} className={refreshingPolls ? 'rb-spin' : ''} />
-            {refreshingPolls
-              ? t('qonto.refreshing_status', 'Actualisation…')
-              : t('qonto.refresh_status_full', 'Actualiser les statuts')}
+          <button onClick={handlePayBulk} disabled={bulkBusy}
+            style={{ padding: '9px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: bulkBusy ? 0.7 : 1 }}>
+            <Send size={14} /> {bulkBusy ? t('common.saving', 'Enregistrement…') : t('qonto.pay_selection', { count: selected.size, defaultValue: 'Payer la sélection ({{count}})' })}
+          </button>
+          <button onClick={clearSelection} disabled={bulkBusy}
+            style={{ padding: '9px 14px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            {t('common.cancel', 'Annuler')}
           </button>
         </div>
       )}
