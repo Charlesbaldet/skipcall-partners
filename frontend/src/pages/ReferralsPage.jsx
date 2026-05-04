@@ -260,6 +260,19 @@ export default function ReferralsPage() {
             const cards = allCards.slice(0, limit);
             const hasMore = allCards.length > limit;
             const stageColor = stage.color || '#64748b';
+            // Sum MRR/CA across the WHOLE column, not the page
+            // slice, so the header total stays correct even when
+            // only the first 25 cards are rendered.
+            const columnMrr = allCards.reduce((sum, r) => sum + (parseFloat(r.deal_value) || 0), 0);
+            // Per tenant revenue_model: MRR/CA bill monthly, ARR is
+            // annual, Other gets a generic label. The /mois suffix
+            // tracks whatever monthly cadence applies.
+            const rModel = (myTenant?.revenue_model || 'CA');
+            const columnLabel = rModel === 'ARR'
+              ? `${rModel} /${t('referrals.unit_year_short', 'an')}`
+              : rModel === 'Other'
+                ? t('common.revenue', 'Revenu')
+                : `${rModel} /${t('referrals.unit_month_short', 'mois')}`;
             return (
               <div key={stage.id || stage.slug}
                 onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${stageColor}0a`; }}
@@ -272,79 +285,128 @@ export default function ReferralsPage() {
                   borderTop: `3px solid ${stageColor}`,
                 }}
               >
-                {/* Column header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: stageColor }} />
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{stage.name}</span>
+                {/* Column header — title row + MRR/CA total. Total
+                    is the WHOLE-column sum, not the visible slice,
+                    so paging through the column doesn't shift it. */}
+                <div style={{ padding: '10px 12px', marginBottom: 10, borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: stageColor, flexShrink: 0 }} />
+                      <span style={{ fontWeight: 600, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stage.name}</span>
+                      <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}>{allCards.length}</span>
+                    </div>
+                    {columnMrr > 0 && (
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{fmt(columnMrr)}</div>
+                        <div style={{ fontSize: 10, color: '#94a3b8', marginTop: -1 }}>{columnLabel}</div>
+                      </div>
+                    )}
                   </div>
-                  <span style={{ background: stageColor + '15', color: stageColor, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
                 </div>
 
                 {/* Cards - scrollable */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
-                  {cards.map(r => (
+                  {cards.map(r => {
+                    // Forecast commission per the shared helper —
+                    // matches the cents that will land in /commissions
+                    // when this deal moves to won. Only shown when the
+                    // partner's rate is known and the deal carries a
+                    // positive MRR/CA value.
+                    const dealValue = parseFloat(r.deal_value) || 0;
+                    const rate = r.effective_commission_rate != null
+                      ? Number(r.effective_commission_rate)
+                      : (Number(r.commission_rate) || 0);
+                    const fc = dealValue > 0 && r.engagement
+                      ? calculateCommissionAmount({
+                          engagementType: r.engagement,
+                          periods: r.engagement_periods,
+                          dealValue,
+                          rate,
+                        })
+                      : null;
+                    return (
                     <div key={r.id} draggable onDragStart={e => handleDragStart(e, r.id)}
                       onClick={() => openDetail(r)}
                       style={{
-                        background: '#fff', borderRadius: 12, padding: 14, cursor: 'grab',
+                        background: '#fff', borderRadius: 12, padding: 12, cursor: 'grab',
                         border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        // Won column: 3px green left accent so closed
+                        // deals jump out visually without a separate
+                        // badge.
+                        borderLeft: stage.is_won ? '3px solid #16a34a' : (draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0'),
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                         opacity: draggedId === r.id ? 0.5 : 1, transition: 'all 0.15s',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.prospect_name}</div>
+                      {/* Row 1: company / prospect + amount */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {r.prospect_company || r.prospect_name}
+                          </div>
                           <CrmSyncBadge referral={r}/>
                         </div>
-                        <GripVertical size={14} color="#cbd5e1" />
+                        {dealValue > 0 && (
+                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13, whiteSpace: 'nowrap' }}>{fmt(dealValue)}</div>
+                        )}
                       </div>
-                      <LeadHandlingBadge handling={r.lead_handling}/>
-                      {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>{r.prospect_company}</div>}
-                      {(r.contact_first_name || r.contact_last_name) && (
-                        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, fontStyle: 'italic' }}>
+                      {/* Row 2: lead-handling badge ("GÉRÉ PAR
+                          PARTENAIRE" / "PROSPECT CLIENT"). */}
+                      <div style={{ marginTop: 6 }}>
+                        <LeadHandlingBadge handling={r.lead_handling}/>
+                      </div>
+                      {/* Row 3: contact + partner name. The
+                          "GÉRÉ PAR PARTENAIRE" line above already
+                          covers the lead source, so this line is
+                          purely contact info. */}
+                      {(r.contact_first_name || r.contact_last_name || r.partner_name) && (
+                        <div style={{ color: '#64748b', fontSize: 11, marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {[r.contact_first_name, r.contact_last_name].filter(Boolean).join(' ')}
+                          {(r.contact_first_name || r.contact_last_name) && r.partner_name ? ' · ' : ''}
+                          {r.partner_name && <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{r.partner_name}</span>}
                         </div>
                       )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600 }}>{r.partner_name}</span>
-                        {r.deal_value > 0 && <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</span>}
-                      </div>
-                      {/* Deal temperature — sits between the partner
-                          row and the status dropdown so admins can
-                          read it at a glance without opening the
-                          card. Pill styled like the other status
-                          badges. */}
-                      {r.recommendation_level && TEMPERATURE_CONFIG[r.recommendation_level] && (
-                        <div style={{ marginTop: 8, display: 'flex' }}>
+                      {/* Row 4: temperature pill (left) + commission
+                          forecast (right). Forecast omitted when the
+                          deal has no MRR or no engagement set. */}
+                      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 18 }}>
+                        {r.recommendation_level && TEMPERATURE_CONFIG[r.recommendation_level] ? (
                           <span style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
                             padding: '2px 8px', borderRadius: 999,
                             background: TEMPERATURE_CONFIG[r.recommendation_level].bg,
                             color: TEMPERATURE_CONFIG[r.recommendation_level].color,
-                            fontSize: 11, fontWeight: 700,
+                            fontSize: 10, fontWeight: 700,
                           }}>
                             <span aria-hidden="true" style={{
-                              width: 6, height: 6, borderRadius: '50%',
+                              width: 5, height: 5, borderRadius: '50%',
                               background: TEMPERATURE_CONFIG[r.recommendation_level].color,
                             }}/>
                             {TEMPERATURE_CONFIG[r.recommendation_level].label}
                           </span>
-                        </div>
-                      )}
-                      {/* Quick status change */}
-                      <div style={{ marginTop: 10, borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+                        ) : <span/>}
+                        {fc && fc.amount > 0 && (
+                          <span style={{ color: '#16a34a', fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            ~{fmt(fc.amount)} {t('referrals.commission_short', 'comm.')}
+                          </span>
+                        )}
+                      </div>
+                      {/* Quick status change — kept verbatim from
+                          before the redesign, including the
+                          stopPropagation guard so the dropdown
+                          doesn't open the modal. */}
+                      <div style={{ marginTop: 8 }}>
                         <select value={r.status} onChange={e => { e.stopPropagation(); handleStatusChangeFromCard(r.id, e.target.value); }}
                           onClick={e => e.stopPropagation()}
-                          style={{ width: '100%', padding: '4px 6px', borderRadius: 6, border: `1px solid ${stageColor}30`, background: stageColor + '15', color: stageColor, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontWeight: 500, fontSize: 11, cursor: 'pointer' }}>
                           {(stages.length ? stages.map(s => ({ k: s.slug, label: s.name })) : Object.entries(STATUS_CONFIG).map(([k, v]) => ({ k, label: v.label }))).map(({ k, label }) => (
                             <option key={k} value={k}>{label}</option>
                           ))}
                         </select>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                   {hasMore && (
                     <button onClick={() => setKanbanLimits(prev => ({ ...prev, [stage.id || stage.slug]: limit + 25 }))} style={{
                       padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
