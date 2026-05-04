@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
 const { calculateCommissionAmount } = require('../utils/commissionFormula');
+const { bulkResolveTiers, resolveTierForPartner, effectiveRate } = require('../utils/tierResolver');
 // emails via resend.sendAndLog — emailService.queueNotification removed
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
@@ -76,8 +77,21 @@ router.get('/', async (req, res) => {
       params
     );
 
+    // Bulk-resolve tiers so the FE renders the per-row "Silver",
+    // "Gold" badge without firing a tier query per card.
+    const partnerIds = rows.map(r => r.partner_id);
+    const tiers = await bulkResolveTiers(req.tenantId || null, partnerIds);
+    const enriched = rows.map(r => {
+      const tier = tiers.get(r.partner_id) || null;
+      return {
+        ...r,
+        partner_tier: tier,
+        effective_commission_rate: effectiveRate(r, tier),
+      };
+    });
+
     res.json({
-      referrals: rows,
+      referrals: enriched,
       total: parseInt(count),
       page: parseInt(page),
       totalPages: Math.ceil(count / limit),
@@ -134,6 +148,25 @@ router.get('/:id', async (req, res) => {
     const referral = rows[0];
     referral.deal_value_locked = lockingComm.length > 0;
     referral.locking_commission_status = lockingComm[0]?.status || null;
+
+    // Resolve the partner's current tier so the deal modal can show
+    // the badge + the rate the override is being compared against.
+    // Single-row endpoint → the simpler resolveTierForPartner path,
+    // not the bulk one.
+    const { rows: [stats] } = await query(
+      `SELECT COUNT(*) FILTER (WHERE status = 'won') AS won_deals,
+              COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
+         FROM referrals WHERE partner_id = $1`,
+      [referral.partner_id]
+    );
+    const tier = await resolveTierForPartner({
+      tenantId: req.tenantId || null,
+      partnerId: referral.partner_id,
+      wonDeals: stats?.won_deals,
+      totalRevenue: stats?.total_revenue,
+    });
+    referral.partner_tier = tier;
+    referral.effective_commission_rate = effectiveRate(referral, tier);
 
     // Get activity log
     const { rows: activities } = await query(
@@ -381,7 +414,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
   const client = await getClient();
   try {
     let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement, engagement_periods,
-          contact_first_name, contact_last_name } = req.body;
+          contact_first_name, contact_last_name,
+          commission_rate_override, commission_overridden } = req.body;
 
     // Get current state (with tenant check)
     let selectQuery = 'SELECT * FROM referrals WHERE id = $1';
@@ -427,6 +461,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       lost_reason = undefined;
       engagement = undefined;
       engagement_periods = undefined;
+      commission_rate_override = undefined;
+      commission_overridden = undefined;
       contact_first_name = undefined;
       contact_last_name = undefined;
     }
@@ -566,6 +602,39 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       }
     }
 
+    // Commission-rate override. Two related fields:
+    //   commission_overridden       boolean — drives the "use the
+    //                               override / use the tier" branch
+    //                               at read + commission-creation time.
+    //   commission_rate_override    NUMERIC — only meaningful when
+    //                               commission_overridden = true.
+    // The FE always sends both together (the warning modal forces an
+    // explicit confirmation), but the backend defends against either
+    // arriving alone — flipping the flag without a value clears the
+    // override; passing a value without the flag is treated as
+    // overridden=true.
+    if (commission_rate_override !== undefined) {
+      const v = parseFloat(commission_rate_override);
+      const next = isFinite(v) && v >= 0 ? Math.min(100, v) : null;
+      if (next !== current.commission_rate_override) {
+        updates.commission_rate_override = next;
+        activities.push({ action: 'commission_rate_override_updated', old_value: String(current.commission_rate_override ?? ''), new_value: String(next ?? '') });
+      }
+    }
+    if (commission_overridden !== undefined) {
+      const flag = !!commission_overridden;
+      if (flag !== !!current.commission_overridden) {
+        updates.commission_overridden = flag;
+        activities.push({ action: 'commission_overridden_updated', old_value: String(!!current.commission_overridden), new_value: String(flag) });
+      }
+      // Clear the value when the flag goes off — keeps the row tidy
+      // and lets the next /referrals GET fall back to the tier rate
+      // cleanly.
+      if (!flag) {
+        updates.commission_rate_override = null;
+      }
+    }
+
     // Contact person fields — optional, any non-undefined value
     // (including explicit '') wins, so admins can clear a wrong
     // entry. Partners can't write these (stripped above alongside
@@ -622,7 +691,40 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       );
 
       if (partner) {
-        const rate = parseFloat(partner.commission_rate) || 0;
+        // Effective commission rate: override (when flagged) > tier
+        // rate (live from tenant_levels) > legacy partner.commission_rate.
+        // Pulls the in-flight updates first so the same drag that
+        // toggled the override uses the new value.
+        const overriddenFlag = updates.commission_overridden !== undefined
+          ? updates.commission_overridden
+          : !!current.commission_overridden;
+        const overrideValue = updates.commission_rate_override !== undefined
+          ? updates.commission_rate_override
+          : current.commission_rate_override;
+        let rate;
+        if (overriddenFlag && overrideValue != null) {
+          rate = parseFloat(overrideValue);
+        } else {
+          // Resolve current tier from won-deal stats — a partner who
+          // crossed a threshold mid-deal sees the new rate applied
+          // automatically the moment Gagné fires, which is the
+          // user's "auto-update non-overridden deals" intent.
+          const { rows: [stats] } = await client.query(
+            `SELECT COUNT(*) FILTER (WHERE status = 'won') AS won_deals,
+                    COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
+               FROM referrals WHERE partner_id = $1 AND id <> $2`,
+            [partner.id, req.params.id]
+          );
+          const tier = await resolveTierForPartner({
+            tenantId: req.tenantId || null,
+            partnerId: partner.id,
+            wonDeals: stats?.won_deals,
+            totalRevenue: stats?.total_revenue,
+          });
+          rate = tier && tier.commission_rate != null
+            ? parseFloat(tier.commission_rate)
+            : (parseFloat(partner.commission_rate) || 0);
+        }
         // Use the same formula as the deal-card forecast so the
         // commission row matches what the admin already saw.
         // Engagement metadata is read from the in-flight `updates`

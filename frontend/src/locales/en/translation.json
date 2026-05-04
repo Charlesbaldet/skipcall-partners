@@ -16,7 +16,13 @@
     "months": "months",
     "quarters": "qtr.",
     "years": "year(s)",
-    "forecast_commission": "Forecast commission"
+    "forecast_commission": "Forecast commission",
+    "partner_commission": "Partner commission",
+    "commission_warning_title": "Custom commission rate",
+    "commission_warning_message": "The {{tierName}} tier rate is {{tierRate}}%. You're about to apply a {{newRate}}% rate. Are you sure you want to override the commission?",
+    "commission_warning_confirm": "Apply custom rate",
+    "commission_warning_cancel": "Keep tier rate",
+    "commission_overridden": "Overridden (tier {{tierName}}: {{tierRate}}%)"
   },
   "common": {
     "loading": "Loading...",

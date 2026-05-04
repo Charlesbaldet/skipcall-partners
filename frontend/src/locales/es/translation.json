@@ -16,7 +16,13 @@
     "months": "meses",
     "quarters": "trim.",
     "years": "año(s)",
-    "forecast_commission": "Comisión prevista"
+    "forecast_commission": "Comisión prevista",
+    "partner_commission": "Comisión del socio",
+    "commission_warning_title": "Tasa de comisión personalizada",
+    "commission_warning_message": "La tasa del nivel {{tierName}} es del {{tierRate}}%. Vas a aplicar una tasa del {{newRate}}%. ¿Seguro que quieres anular la comisión?",
+    "commission_warning_confirm": "Aplicar tasa personalizada",
+    "commission_warning_cancel": "Mantener tasa del nivel",
+    "commission_overridden": "Tasa modificada (nivel {{tierName}}: {{tierRate}}%)"
   },
   "common": {
     "loading": "Cargando...",

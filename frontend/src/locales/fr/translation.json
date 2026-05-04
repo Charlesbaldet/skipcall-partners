@@ -16,7 +16,13 @@
     "months": "mois",
     "quarters": "trim.",
     "years": "an(s)",
-    "forecast_commission": "Commission prévisionnelle"
+    "forecast_commission": "Commission prévisionnelle",
+    "partner_commission": "Commission du partenaire",
+    "commission_warning_title": "Taux de commission personnalisé",
+    "commission_warning_message": "Le taux du niveau {{tierName}} est de {{tierRate}}%. Vous allez appliquer un taux de {{newRate}}%. Êtes-vous sûr de vouloir modifier la commission ?",
+    "commission_warning_confirm": "Appliquer le taux personnalisé",
+    "commission_warning_cancel": "Garder le taux du niveau",
+    "commission_overridden": "Taux modifié (niveau {{tierName}} : {{tierRate}}%)"
   },
   "common": {
     "loading": "Chargement...",

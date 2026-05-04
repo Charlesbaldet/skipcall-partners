@@ -1,6 +1,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
+const { invalidateCache: invalidateTierCache } = require('../utils/tierResolver');
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.post('/threshold-type', authorize('admin'), async (req, res) => {
     if (!['deals', 'volume'].includes(type)) return res.status(400).json({ error: 'Type invalide (deals ou volume)' });
     if (!req.tenantId) return res.status(400).json({ error: 'Pas de tenant' });
     await query('UPDATE tenants SET level_threshold_type = $1 WHERE id = $2', [type, req.tenantId]);
+    invalidateTierCache(req.tenantId);
     res.json({ threshold_type: type });
   } catch (err) {
     console.error('Set threshold type error:', err);
@@ -45,6 +47,7 @@ router.post('/reset', authorize('admin'), async (req, res) => {
     await query('DELETE FROM tenant_levels WHERE tenant_id = $1', [req.tenantId]);
     await seedDefaults(req.tenantId);
     const { rows } = await query('SELECT * FROM tenant_levels WHERE tenant_id = $1 ORDER BY position ASC', [req.tenantId]);
+    invalidateTierCache(req.tenantId);
     res.json({ levels: rows });
   } catch (err) {
     console.error('Reset levels error:', err);
@@ -78,6 +81,7 @@ router.post('/', authorize('admin'), async (req, res) => {
       'INSERT INTO tenant_levels (tenant_id, name, min_threshold, commission_rate, color, icon, position) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
       [req.tenantId, name, min_threshold || 0, commission_rate || 10, color || '#94a3b8', icon || '⭐', position || 0]
     );
+    invalidateTierCache(req.tenantId);
     res.status(201).json({ level });
   } catch (err) {
     console.error('Create level error:', err);
@@ -100,6 +104,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
       [name, min_threshold, commission_rate, color, icon, position, req.params.id, req.tenantId]
     );
     if (!level) return res.status(404).json({ error: 'Niveau introuvable' });
+    invalidateTierCache(req.tenantId);
     res.json({ level });
   } catch (err) {
     console.error('Update level error:', err);
@@ -114,6 +119,7 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
       [req.params.id, req.tenantId]
     );
     if (rowCount === 0) return res.status(404).json({ error: 'Niveau introuvable' });
+    invalidateTierCache(req.tenantId);
     res.json({ message: 'Niveau supprimé' });
   } catch (err) {
     console.error('Delete level error:', err);

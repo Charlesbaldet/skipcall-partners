@@ -619,6 +619,18 @@ async function runMigrations() {
   await query(`UPDATE referrals SET engagement = 'annuel'      WHERE engagement = 'yearly'`);
   console.log('[engagement] v27 forfait + engagement_periods + normalised legacy keys');
 
+  // v28: per-deal commission rate override. Pending deals normally
+  // pick up their commission rate live from the partner's current
+  // tier (computed in GET /referrals from tenant_levels), so a
+  // Silver → Gold promotion automatically reflects on every open
+  // deal. When the admin wants to negotiate a custom rate on one
+  // specific deal, commission_overridden flips to true and
+  // commission_rate_override holds the bespoke value — the tier
+  // stops driving that one row.
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS commission_overridden BOOLEAN DEFAULT FALSE`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS commission_rate_override NUMERIC(5,2)`);
+  console.log('[commission] v28 commission_overridden + rate override columns');
+
   console.log(' Migrations completed');
 
   } catch (err) {

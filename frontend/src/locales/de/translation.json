@@ -16,7 +16,13 @@
     "months": "Monate",
     "quarters": "Q.",
     "years": "Jahr(e)",
-    "forecast_commission": "Voraussichtliche Provision"
+    "forecast_commission": "Voraussichtliche Provision",
+    "partner_commission": "Provision des Partners",
+    "commission_warning_title": "Benutzerdefinierter Provisionssatz",
+    "commission_warning_message": "Der Satz der Stufe {{tierName}} liegt bei {{tierRate}}%. Du wendest jetzt {{newRate}}% an. Bist du sicher, dass du die Provision überschreiben willst?",
+    "commission_warning_confirm": "Benutzerdefinierten Satz anwenden",
+    "commission_warning_cancel": "Stufensatz beibehalten",
+    "commission_overridden": "Überschrieben (Stufe {{tierName}}: {{tierRate}}%)"
   },
   "common": {
     "loading": "Laden...",

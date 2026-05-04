@@ -5,7 +5,7 @@ import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { calculateCommissionAmount } from '../lib/commissionFormula';
-import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock } from 'lucide-react';
+import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock, AlertTriangle } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
@@ -405,6 +405,21 @@ function Confetti() {
 // Pipeline tab renders the tenant's custom columns — not a hardcoded
 // list. Falls back to STATUS_CONFIG so the modal still works during
 // the brief window before stages load.
+// Tier badge palette. Bronze/Silver/Gold/Platinum are the default
+// tier names — any custom name a tenant defines falls through to
+// the neutral slate palette so unknown tiers still look intentional.
+const TIER_PALETTE = {
+  Bronze:   { bg: '#fef3c7', text: '#92400e', border: '#f59e0b' },
+  Silver:   { bg: '#e0f2fe', text: '#0c4a6e', border: '#3b82f6' },
+  Gold:     { bg: '#fef9c3', text: '#854d0e', border: '#eab308' },
+  Platinum: { bg: '#f3e8ff', text: '#6b21a8', border: '#8b5cf6' },
+};
+const TIER_NEUTRAL = { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
+function tierPalette(tier) {
+  if (!tier || !tier.name) return TIER_NEUTRAL;
+  return TIER_PALETTE[tier.name] || TIER_NEUTRAL;
+}
+
 function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTenant, stages = [] }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
@@ -434,6 +449,46 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   const [tab, setTab] = useState('info');
   const [saveToast, setSaveToast] = useState(null);
 
+  // Commission rate state. Initial value is the effective rate the
+  // backend resolved (override → tier → legacy partner.commission_rate).
+  // partner_tier carries the live tier so the badge + warning modal
+  // know what to compare against.
+  const partnerTier = referral.partner_tier || null;
+  const initialRate = referral.effective_commission_rate != null
+    ? Number(referral.effective_commission_rate)
+    : (Number(referral.commission_rate) || 10);
+  const [editRate, setEditRate] = useState(initialRate);
+  const [commissionOverridden, setCommissionOverridden] = useState(!!referral.commission_overridden);
+  const [pendingRate, setPendingRate] = useState(null);
+  const [showCommissionWarning, setShowCommissionWarning] = useState(false);
+
+  // Editing the rate is a two-step flow:
+  //   - typing always commits a local "pending" value (so the input
+  //     feels live)
+  //   - on blur (or hit-Enter) we compare to the tier rate; if it
+  //     differs, the warning modal pops to confirm the override.
+  // This keeps the user from accidentally locking a deal to a custom
+  // rate by pressing the wrong key.
+  const tierRate = partnerTier ? parseFloat(partnerTier.commission_rate) : null;
+  const handleRateBlur = () => {
+    const v = parseFloat(editRate);
+    if (!isFinite(v)) {
+      // Bad input — snap back to whatever the saved state has.
+      setEditRate(initialRate);
+      return;
+    }
+    const clamped = Math.max(0, Math.min(100, v));
+    if (clamped !== v) setEditRate(clamped);
+    if (tierRate != null && clamped !== tierRate) {
+      // Pop the warning before committing the override flag.
+      setPendingRate(clamped);
+      setShowCommissionWarning(true);
+    } else if (clamped === tierRate) {
+      // User snapped back to the tier rate — clear the override.
+      setCommissionOverridden(false);
+    }
+  };
+
   // Keep periods=1 whenever the user flips to forfait. The backend
   // also clamps but doing it client-side keeps the forecast number
   // honest the moment the pill changes.
@@ -457,6 +512,11 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
         deal_value: Number(editValue) || 0,
         engagement: editEngagement,
         engagement_periods: editEngagement === 'forfait' ? 1 : Math.max(1, parseInt(editPeriods, 10) || 1),
+        commission_overridden: commissionOverridden,
+        // Always send the override value so the backend can clear
+        // it on flag-off (it sets commission_rate_override = null
+        // when commission_overridden flips to false).
+        commission_rate_override: commissionOverridden ? Number(editRate) : null,
       };
       if (editStageId) patch.stage_id = editStageId;
       else if (editStatus) patch.status = editStatus;
@@ -478,7 +538,9 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
     setSaving(false);
   };
 
-  const rate = referral.commission_rate || 10;
+  // Live rate flows through to the forecast so the displayed
+  // amount tracks every keystroke in the rate input.
+  const rate = Number(editRate) || 0;
   const isWonSelected = selectedStage ? !!selectedStage.is_won : editStatus === 'won';
   // Shared with the backend's calculateCommissionAmount() so the
   // forecast we show here matches the row that lands in
@@ -647,6 +709,60 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   </div>
                 )}
               </div>
+              {/* Commission rate field with the partner's tier
+                  badge inline. The rate is editable but a confirm
+                  modal pops on blur if the value drifts from the
+                  tier rate so the admin doesn't accidentally
+                  override. */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>
+                  {t('pipeline.partner_commission', 'Commission du partenaire')}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', width: 110 }}>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                      value={editRate}
+                      onChange={e => setEditRate(e.target.value)}
+                      onBlur={handleRateBlur}
+                      style={{
+                        width: '100%', padding: '10px 30px 10px 14px', borderRadius: 10,
+                        border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 700,
+                        color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                      }}
+                    />
+                    <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>%</span>
+                  </div>
+                  {partnerTier && (() => {
+                    const pal = tierPalette(partnerTier);
+                    return (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        fontSize: 12, fontWeight: 600,
+                        padding: '5px 12px', borderRadius: 999,
+                        background: pal.bg, color: pal.text,
+                        borderTop: `2px solid ${pal.border}`,
+                      }}>
+                        {partnerTier.icon ? `${partnerTier.icon} ` : ''}{partnerTier.name}
+                      </span>
+                    );
+                  })()}
+                </div>
+                {commissionOverridden && partnerTier && tierRate != null && (
+                  <div style={{ marginTop: 6, fontSize: 12, color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <AlertTriangle size={13} />
+                    {t('pipeline.commission_overridden', {
+                      tierName: partnerTier.name,
+                      tierRate: tierRate,
+                      defaultValue: 'Taux modifié (niveau {{tierName}} : {{tierRate}}%)',
+                    })}
+                  </div>
+                )}
+              </div>
+
               {/* Forecast box — always shown when there's a value
                   to compute against, not gated on the won-stage
                   selection so the partner / admin sees what the
@@ -701,6 +817,34 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
           )}
         </div>
       </div>
+      {showCommissionWarning && partnerTier && (
+        <ConfirmModal
+          isOpen={showCommissionWarning}
+          title={t('pipeline.commission_warning_title', 'Taux de commission personnalisé')}
+          message={t('pipeline.commission_warning_message', {
+            tierName: partnerTier.name,
+            tierRate: tierRate,
+            newRate: pendingRate,
+            defaultValue: 'Le taux du niveau {{tierName}} est de {{tierRate}}%. Vous allez appliquer un taux de {{newRate}}%. Êtes-vous sûr de vouloir modifier la commission ?',
+          })}
+          confirmLabel={t('pipeline.commission_warning_confirm', 'Appliquer le taux personnalisé')}
+          cancelLabel={t('pipeline.commission_warning_cancel', 'Garder le taux du niveau')}
+          variant="warning"
+          onConfirm={() => {
+            setShowCommissionWarning(false);
+            setEditRate(pendingRate);
+            setCommissionOverridden(true);
+            setPendingRate(null);
+          }}
+          onCancel={() => {
+            setShowCommissionWarning(false);
+            // Snap back to the tier rate; the override is cleared.
+            setEditRate(tierRate);
+            setCommissionOverridden(false);
+            setPendingRate(null);
+          }}
+        />
+      )}
     </div>
   );
 }

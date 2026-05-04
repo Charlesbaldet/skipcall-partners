@@ -16,7 +16,13 @@
     "months": "maanden",
     "quarters": "kw.",
     "years": "jaar",
-    "forecast_commission": "Verwachte commissie"
+    "forecast_commission": "Verwachte commissie",
+    "partner_commission": "Commissie van de partner",
+    "commission_warning_title": "Aangepaste commissietarief",
+    "commission_warning_message": "Het tarief van het niveau {{tierName}} is {{tierRate}}%. Je past nu {{newRate}}% toe. Weet je zeker dat je de commissie wilt overschrijven?",
+    "commission_warning_confirm": "Aangepast tarief toepassen",
+    "commission_warning_cancel": "Niveautarief behouden",
+    "commission_overridden": "Aangepast (niveau {{tierName}}: {{tierRate}}%)"
   },
   "common": {
     "loading": "Laden...",
