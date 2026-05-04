@@ -48,7 +48,7 @@ function BlogCard({ post }) {
 }
 
 export default function BlogPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('');
@@ -67,9 +67,16 @@ export default function BlogPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // Re-fetch on language change too — the api client appends
+  // ?lang=<i18n.language> automatically so the new URL hits a
+  // different cache entry, but React still needs to be told to
+  // re-run the effect. Without this dep, switching FR → EN → ES
+  // would refetch the first time (because activeCategory was reset
+  // to '' implicitly) but stay stuck on EN for any further
+  // switches.
   useEffect(() => {
     api.request('/blog/categories').then(d => setCategories(d.categories || [])).catch(()=>{});
-  }, []);
+  }, [i18n.language]);
 
   useEffect(() => {
     setLoading(true);
@@ -78,7 +85,7 @@ export default function BlogPage() {
       .then(d => { setPosts(d.posts || []); })
       .catch(()=>{})
       .finally(()=>setLoading(false));
-  }, [activeCategory]);
+  }, [activeCategory, i18n.language]);
 
   // "Tous" must always show the grand total, never the filtered
   // count. Sum once from the categories payload (which is fetched

@@ -15,7 +15,7 @@ function formatDate(iso) {
 }
 
 export default function BlogPostPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { slug } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
@@ -38,7 +38,12 @@ export default function BlogPostPage() {
     api.request('/blog/posts/' + slug + '/related')
       .then(d => setRelated(d.posts || []))
       .catch(() => { /* keep related empty on error */ });
-  }, [slug]);
+    // Re-fetch on language switch. api.request automatically appends
+    // ?lang=<i18n.language> so the URL changes; without i18n.language
+    // in the dep array, React keeps the first render's response in
+    // state and the page stays stuck on the previously-selected
+    // locale.
+  }, [slug, i18n.language]);
 
   if (loading) return (
     <LandingLayout>
