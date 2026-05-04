@@ -1093,6 +1093,31 @@ router.delete('/:id', async (req, res) => {
       return res.status(403).json({ error: 'AccÃ¨s interdit' });
     }
 
+    // Mirror the guards on DELETE /commissions/:id — once money has
+    // moved (paid) or is mid-flight on Qonto, we can't pretend the
+    // commission never existed by cascade-deleting the parent deal.
+    const { rows: blockers } = await query(
+      `SELECT id, status, qonto_transfer_id, payment_completed_at
+         FROM commissions
+        WHERE referral_id = $1
+          AND (status = 'paid'
+               OR (qonto_transfer_id IS NOT NULL AND payment_completed_at IS NULL))`,
+      [req.params.id]
+    );
+    if (blockers.length > 0) {
+      const inFlight = blockers.some(c => c.qonto_transfer_id && !c.payment_completed_at);
+      if (inFlight) {
+        return res.status(409).json({
+          error: 'transfer_in_flight',
+          message: 'Un virement est en cours pour une commission liée à ce deal. Annulez-le côté Qonto avant de supprimer le deal.',
+        });
+      }
+      return res.status(409).json({
+        error: 'commission_paid',
+        message: 'Ce deal a une commission déjà payée et ne peut pas être supprimé.',
+      });
+    }
+
     await client.query('BEGIN');
     await client.query('DELETE FROM referral_activities WHERE referral_id = $1', [req.params.id]);
     await client.query('DELETE FROM commissions WHERE referral_id = $1', [req.params.id]);
