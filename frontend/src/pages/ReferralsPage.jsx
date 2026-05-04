@@ -662,10 +662,41 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               )}
             </div>
           )}
-          {tab === 'pipeline' && (
+          {tab === 'pipeline' && (() => {
+            // Compute stepper data once per render — both the bar and
+            // the pills below it derive their state from the same
+            // selected-stage flags so the visual progress stays in
+            // lock-step with the active pill.
+            const stageList = stages.length ? stages : [];
+            const currentStage = stageList.find(s => s.id === editStageId)
+              || stageList.find(s => s.slug === editStatus)
+              || null;
+            const isLost = !!(currentStage && currentStage.is_lost) || editStatus === 'lost' || editStatus === 'perdu';
+            // Index of the currently-selected stage. Lost stages are
+            // collapsed to -1 so the green progression doesn't reach
+            // them; the lost-state colours the whole bar red instead.
+            const currentIndex = stageList.findIndex(s =>
+              s.id === editStageId || s.slug === editStatus
+            );
+            return (
             <div>
-              <div style={{ marginBottom: 24 }}>
+              {/* Section: status with stepper bar */}
+              <div style={{ marginBottom: 20 }}>
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 10 }}>{t('referrals.field_status')}</div>
+                {stageList.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+                    {stageList.map((s, i) => {
+                      const bg = isLost
+                        ? '#fee2e2'
+                        : i <= currentIndex && currentIndex >= 0
+                          ? '#16a34a'
+                          : i === currentIndex + 1
+                            ? '#fbbf24'
+                            : '#e2e8f0';
+                      return <div key={s.id} style={{ flex: 1, height: 4, borderRadius: 999, background: bg, transition: 'background-color .15s' }} />;
+                    })}
+                  </div>
+                )}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {(stages.length
                     ? stages.map(s => ({ id: s.id, slug: s.slug, label: s.name, color: s.color || '#64748b', isStage: true, stage: s }))
@@ -673,10 +704,6 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   ).map(opt => {
                     const active = opt.isStage ? editStageId === opt.id : editStatus === opt.slug;
                     const bg = opt.isStage ? (opt.color + '15') : opt.bg;
-                    // Status locked when a commission is past
-                    // pending_approval: only the currently-active
-                    // (won) stage stays clickable so the user can't
-                    // walk the card out of "Gagné" mid-payment.
                     const stageLocked = !!referral.deal_value_locked && !active;
                     return (
                       <button
@@ -704,39 +731,99 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   })}
                 </div>
               </div>
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>
-                  {rLabel} ({rUnit})
-                  {referral.deal_value_locked && (
-                    <span title={t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 8px', marginLeft: 4 }}>
-                      <Lock size={11} /> {t('referrals.deal_value_locked', 'Verrouillé')}
-                    </span>
+
+              {/* Separator between status and the financial section */}
+              <div style={{ borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
+
+              {/* Section: MRR/CA + Commission rate side by side. The
+                  two-column row matches the Option A approved
+                  layout — the value drives the forecast on the
+                  left, the rate drives it on the right. */}
+              <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 220px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                    {rLabel} ({rUnit})
+                    {referral.deal_value_locked && (
+                      <span title={t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 8px' }}>
+                        <Lock size={11} /> {t('referrals.deal_value_locked', 'Verrouillé')}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="number"
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    placeholder={t('referrals.value_ph')}
+                    disabled={referral.deal_value_locked}
+                    title={referral.deal_value_locked ? t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement') : undefined}
+                    style={{
+                      width: '100%', padding: '10px 14px', borderRadius: 10,
+                      border: '2px solid #e2e8f0',
+                      fontSize: 14, fontWeight: 600,
+                      color: referral.deal_value_locked ? '#94a3b8' : '#0f172a',
+                      background: referral.deal_value_locked ? '#f8fafc' : '#fff',
+                      cursor: referral.deal_value_locked ? 'not-allowed' : 'text',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 220px' }}>
+                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                    {t('pipeline.partner_commission', 'Commission du partenaire')}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', width: 90 }}>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={editRate}
+                        onChange={e => setEditRate(e.target.value)}
+                        onBlur={handleRateBlur}
+                        style={{
+                          width: '100%', padding: '10px 26px 10px 12px', borderRadius: 10,
+                          border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 700,
+                          color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                        }}
+                      />
+                      <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>%</span>
+                    </div>
+                    {partnerTier && (() => {
+                      const pal = tierPalette(partnerTier);
+                      return (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          fontSize: 12, fontWeight: 600,
+                          padding: '5px 12px', borderRadius: 999,
+                          background: pal.bg, color: pal.text,
+                          borderTop: `2px solid ${pal.border}`,
+                        }}>
+                          {partnerTier.icon ? `${partnerTier.icon} ` : ''}{partnerTier.name}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  {commissionOverridden && partnerTier && tierRate != null && (
+                    <div style={{ marginTop: 6, fontSize: 12, color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <AlertTriangle size={13} />
+                      {t('pipeline.commission_overridden', {
+                        tierName: partnerTier.name,
+                        tierRate: tierRate,
+                        defaultValue: 'Taux modifié (niveau {{tierName}} : {{tierRate}}%)',
+                      })}
+                    </div>
                   )}
                 </div>
-                <input
-                  type="number"
-                  value={editValue}
-                  onChange={e => setEditValue(e.target.value)}
-                  placeholder={t('referrals.value_ph')}
-                  disabled={referral.deal_value_locked}
-                  title={referral.deal_value_locked ? t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement') : undefined}
-                  style={{
-                    width: '100%', padding: '12px 16px', borderRadius: 12,
-                    border: '2px solid #e2e8f0',
-                    fontSize: 16, fontWeight: 600,
-                    color: referral.deal_value_locked ? '#94a3b8' : '#0f172a',
-                    background: referral.deal_value_locked ? '#f8fafc' : '#fff',
-                    cursor: referral.deal_value_locked ? 'not-allowed' : 'text',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {referral.deal_value_locked && (
-                  <div style={{ marginTop: 6, fontSize: 12, color: '#92400e' }}>
-                    {t('referrals.deal_value_locked_help', 'Le montant ne peut plus être modifié — un virement est en cours pour cette commission.')}
-                  </div>
-                )}
               </div>
-              <div style={{ marginBottom: 24 }}>
+              {referral.deal_value_locked && (
+                <div style={{ marginTop: -10, marginBottom: 16, fontSize: 12, color: '#92400e' }}>
+                  {t('referrals.deal_value_locked_help', 'Le montant ne peut plus être modifié — un virement est en cours pour cette commission.')}
+                </div>
+              )}
+
+              {/* Section: engagement + periods */}
+              <div style={{ marginBottom: 20 }}>
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('referrals.engagement')}</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {[
@@ -748,7 +835,6 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                     <button key={k} onClick={() => handleEngagementChange(k)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editEngagement === k ? '2px solid var(--rb-primary, #059669)' : '2px solid #e2e8f0', background: editEngagement === k ? '#eef2ff' : '#fff', color: editEngagement === k ? '#6366f1' : '#64748b' }}>{label}</button>
                   ))}
                 </div>
-                {/* Periods selector — hidden on forfait (always 1). */}
                 {editEngagement !== 'forfait' && (
                   <div style={{ marginTop: 12 }}>
                     <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>
@@ -771,76 +857,16 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   </div>
                 )}
               </div>
-              {/* Commission rate field with the partner's tier
-                  badge inline. The rate is editable but a confirm
-                  modal pops on blur if the value drifts from the
-                  tier rate so the admin doesn't accidentally
-                  override. */}
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>
-                  {t('pipeline.partner_commission', 'Commission du partenaire')}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <div style={{ position: 'relative', width: 110 }}>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.5"
-                      value={editRate}
-                      onChange={e => setEditRate(e.target.value)}
-                      onBlur={handleRateBlur}
-                      style={{
-                        width: '100%', padding: '10px 30px 10px 14px', borderRadius: 10,
-                        border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 700,
-                        color: '#0f172a', background: '#fff', boxSizing: 'border-box',
-                      }}
-                    />
-                    <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>%</span>
-                  </div>
-                  {partnerTier && (() => {
-                    const pal = tierPalette(partnerTier);
-                    return (
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        fontSize: 12, fontWeight: 600,
-                        padding: '5px 12px', borderRadius: 999,
-                        background: pal.bg, color: pal.text,
-                        borderTop: `2px solid ${pal.border}`,
-                      }}>
-                        {partnerTier.icon ? `${partnerTier.icon} ` : ''}{partnerTier.name}
-                      </span>
-                    );
-                  })()}
-                </div>
-                {commissionOverridden && partnerTier && tierRate != null && (
-                  <div style={{ marginTop: 6, fontSize: 12, color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <AlertTriangle size={13} />
-                    {t('pipeline.commission_overridden', {
-                      tierName: partnerTier.name,
-                      tierRate: tierRate,
-                      defaultValue: 'Taux modifié (niveau {{tierName}} : {{tierRate}}%)',
-                    })}
-                  </div>
-                )}
-              </div>
 
-              {/* Forecast box — always shown when there's a value
-                  to compute against, not gated on the won-stage
-                  selection so the partner / admin sees what the
-                  commission WILL be once the deal closes. The
-                  amount comes from the shared formula so the
-                  number on the card === the number that lands in
-                  /commissions when the deal moves to won. */}
+              {/* Section: forecast commission. Updates live as the
+                  user drags any of the four inputs above. */}
               {Number(editValue) > 0 && (
-                <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #bbf7d0' }}>
-                  <div style={{ fontSize: 11, color: '#15803d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid #bbf7d0' }}>
+                  <div style={{ fontSize: 10, color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                     {t('pipeline.forecast_commission', 'Commission prévisionnelle')}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 26, fontWeight: 800, color: '#16a34a' }}>{fmt(forecast.amount)}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>
+                  <div style={{ fontSize: 22, fontWeight: 600, color: '#16a34a', lineHeight: 1.2 }}>{fmt(forecast.amount)}</div>
+                  <div style={{ fontSize: 11, color: '#86efac', marginTop: 2 }}>
                     {rate}% × {fmt(Number(editValue))} × {forecast.multiplier}
                     {editEngagement === 'forfait'     && ` (${t('pipeline.forfait', 'Forfait').toLowerCase()})`}
                     {editEngagement === 'mensuel'     && ` (${editPeriods} ${t('pipeline.months',   'mois')})`}
@@ -849,17 +875,22 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   </div>
                 </div>
               )}
+
+              {/* Separator before the footer buttons. */}
+              <div style={{ borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
+
               {saveToast && (
-              <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 600, background: saveToast.type === 'success' ? '#f0fdf4' : '#fef2f2', color: saveToast.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${saveToast.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
-                {saveToast.text}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 600, background: saveToast.type === 'success' ? '#f0fdf4' : '#fef2f2', color: saveToast.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${saveToast.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+                  {saveToast.text}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12 }}>
                 <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1 }}>{saving ? t('referrals.saving') : t('referrals.save')}</button>
                 <button onClick={() => onDelete(referral.id)} style={{ padding: '14px 20px', borderRadius: 12, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><Trash2 size={16} /> {t('referrals.delete')}</button>
               </div>
             </div>
-          )}
+            );
+          })()}
           {tab === 'history' && (
             <div>
               {activities.length === 0 ? (
