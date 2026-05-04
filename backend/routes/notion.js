@@ -282,7 +282,7 @@ router.post('/sync/:referralId', async (req, res) => {
       `SELECT r.*, p.name AS partner_name
          FROM referrals r
          LEFT JOIN partners p ON p.id = r.partner_id
-        WHERE r.id = $1 AND r.tenant_id = $2
+        WHERE r.id = $1 AND r.tenant_id = $2 AND r.deleted_at IS NULL
         LIMIT 1`,
       [req.params.referralId, req.tenantId]
     );

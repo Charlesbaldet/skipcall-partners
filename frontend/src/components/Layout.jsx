@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2 } from 'lucide-react';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -64,6 +64,7 @@ export default function Layout({ children }) {
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
 
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
+    { bottom: true, to: '/trash', icon: Trash2, label: t('sidebar.trash'), badge: 'trash' },
   ];
 
   // Partner navigation. Dashboard shows KPI cards + feature-gated
@@ -92,6 +93,10 @@ export default function Layout({ children }) {
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },
   ];
 
+  // Note: Corbeille is admin/commercial only — partners don't see it
+  // because they can't restore other people's deals. Same for
+  // superadmin (which has its own teardown flows).
+
   const SUPERADMIN_NAV = [
     { to: '/super-admin?tab=clients', icon: Globe, label: t('layout.nav.clients') },
     { to: '/super-admin?tab=stats', icon: BarChart2, label: t('layout.nav.statistics') },
@@ -111,6 +116,7 @@ export default function Layout({ children }) {
   const [spaceSwitcherOpen, setSpaceSwitcherOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
+  const [trashCount, setTrashCount] = useState(0);
   const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
   // Per-category unread counts driving the sidebar red dots.
   const [unreadByCat, setUnreadByCat] = useState({});
@@ -136,11 +142,16 @@ export default function Layout({ children }) {
       try { const d = await api.getUnreadCount(); setUnread(d.count || 0); } catch (e) {}
       if (isAdmin) { try { const d = await api.getApplications('pending'); setPendingApps((d.applications || []).length); } catch (e) {} }
       try { const d = await api.getUnreadByCategory(); setUnreadByCat(d.counts || {}); } catch (e) {}
+      // Corbeille badge — admin/commercial only. Partners don't see
+      // /trash so we skip the request for them.
+      if (isAdmin || isCommercial) {
+        try { const d = await api.getTrashCount(); setTrashCount(d.count || 0); } catch (e) {}
+      }
     };
     fetchCounts();
     const interval = setInterval(fetchCounts, 30000);
     return () => clearInterval(interval);
-  }, [isAdmin, isSuperAdmin]);
+  }, [isAdmin, isCommercial, isSuperAdmin]);
 
   // Auto-mark categories as read when the user lands on a page whose
   // nav item owns them. Fires once per path change so clicking around
@@ -271,6 +282,7 @@ export default function Layout({ children }) {
   const getBadge = (item) => {
     if (item.badge === 'messages' && unread > 0) return unread;
     if (item.badge === 'applications' && pendingApps > 0) return pendingApps;
+    if (item.badge === 'trash' && trashCount > 0) return trashCount;
     return 0;
   };
 
@@ -480,12 +492,14 @@ export default function Layout({ children }) {
           })()}
         </nav>
 
-        {/* ─── Bottom Notifications row ─── */}
+        {/* ─── Bottom rows (Notifications, Corbeille) ─── */}
         {nav.filter(it => it.bottom).map((item) => {
           const notifyCount = (item.notifyKeys || []).reduce(
             (n, k) => n + (unreadByCat[k] || 0), 0
           );
-          const hasUnread = notifyCount > 0;
+          const explicitBadge = getBadge(item);
+          const count = notifyCount + explicitBadge;
+          const hasUnread = count > 0;
           return (
             <NavLink
               key={'bot-' + item.to}
@@ -510,7 +524,7 @@ export default function Layout({ children }) {
               <span style={{ flex: 1 }}>{item.label}</span>
               {hasUnread && (
                 <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
-                  {notifyCount}
+                  {count}
                 </span>
               )}
             </NavLink>

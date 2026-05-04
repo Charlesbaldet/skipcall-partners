@@ -250,6 +250,12 @@ class ApiClient {
   getTopPartners(range)     { return this.request('/dashboard/top-partners' + dateQS(range)); }
   getLevels(range)          { return this.request('/dashboard/levels' + dateQS(range)); }
 
+  // Trash / Corbeille — admin/commercial only.
+  getTrash()                     { return this.request('/trash'); }
+  getTrashCount()                { return this.request('/trash/count'); }
+  restoreTrashItem(type, id)     { return this.request(`/trash/${type}/${id}/restore`, { method: 'POST' }); }
+  permanentlyDeleteTrashItem(type, id) { return this.request(`/trash/${type}/${id}/permanent`, { method: 'DELETE' }); }
+
   // Messages
   getConversations() { return this.request('/messages/conversations'); }
   createConversation(data) { return this.request('/messages/conversations', { method: 'POST', body: JSON.stringify(data) }); }

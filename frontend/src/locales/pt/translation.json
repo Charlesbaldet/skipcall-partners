@@ -6,23 +6,27 @@
     "page": "Página"
   },
   "pipeline": {
-    "forfait": "Taxa fixa",
-    "mensuel": "Mensal",
-    "trimestriel": "Trimestral",
-    "annuel": "Anual",
-    "nb_months": "Número de meses",
-    "nb_quarters": "Número de trimestres",
-    "nb_years": "Número de anos",
-    "months": "meses",
-    "quarters": "trim.",
-    "years": "ano(s)",
-    "forecast_commission": "Comissão prevista",
-    "partner_commission": "Comissão do parceiro",
-    "commission_warning_title": "Taxa de comissão personalizada",
-    "commission_warning_message": "A taxa do nível {{tierName}} é de {{tierRate}}%. Vais aplicar uma taxa de {{newRate}}%. Tens a certeza que queres modificar a comissão?",
-    "commission_warning_confirm": "Aplicar taxa personalizada",
-    "commission_warning_cancel": "Manter taxa do nível",
-    "commission_overridden": "Taxa modificada (nível {{tierName}}: {{tierRate}}%)"
+    "stages": "Etapas do pipeline",
+    "stages_desc": "Personaliza as colunas do teu Kanban. «Ganho» e «Perdido» são obrigatórias e não podem ser eliminadas.",
+    "add_stage": "Adicionar etapa",
+    "edit_stage": "Editar etapa",
+    "delete_stage": "Eliminar etapa",
+    "stage_name": "Nome da etapa",
+    "stage_name_ph": "Ex. Reunião",
+    "color": "Cor",
+    "reorder": "Reordenar",
+    "save_stages": "Guardar",
+    "system_stage_warning": "Esta etapa é necessária para a automação de comissões e não pode ser eliminada",
+    "won_stage_info": "Quando um referral chega a esta etapa, é criada automaticamente uma comissão",
+    "lost_stage_info": "Quando um referral chega a esta etapa, é marcado como perdido",
+    "cannot_delete_only": "Não é possível eliminar a única etapa restante",
+    "confirm_delete": "Eliminar esta etapa? Os referrals serão movidos para a etapa anterior.",
+    "default_new": "Novo",
+    "default_contacted": "Contactado",
+    "default_qualified": "Qualificado",
+    "default_proposal": "Proposta",
+    "default_won": "Ganho",
+    "default_lost": "Perdido"
   },
   "common": {
     "loading": "Carregando...",
@@ -2333,29 +2337,6 @@
     "field_role": "Cargo",
     "field_deal_name": "Nome do deal"
   },
-  "pipeline": {
-    "stages": "Etapas do pipeline",
-    "stages_desc": "Personaliza as colunas do teu Kanban. «Ganho» e «Perdido» são obrigatórias e não podem ser eliminadas.",
-    "add_stage": "Adicionar etapa",
-    "edit_stage": "Editar etapa",
-    "delete_stage": "Eliminar etapa",
-    "stage_name": "Nome da etapa",
-    "stage_name_ph": "Ex. Reunião",
-    "color": "Cor",
-    "reorder": "Reordenar",
-    "save_stages": "Guardar",
-    "system_stage_warning": "Esta etapa é necessária para a automação de comissões e não pode ser eliminada",
-    "won_stage_info": "Quando um referral chega a esta etapa, é criada automaticamente uma comissão",
-    "lost_stage_info": "Quando um referral chega a esta etapa, é marcado como perdido",
-    "cannot_delete_only": "Não é possível eliminar a única etapa restante",
-    "confirm_delete": "Eliminar esta etapa? Os referrals serão movidos para a etapa anterior.",
-    "default_new": "Novo",
-    "default_contacted": "Contactado",
-    "default_qualified": "Qualificado",
-    "default_proposal": "Proposta",
-    "default_won": "Ganho",
-    "default_lost": "Perdido"
-  },
   "search": {
     "title": "Pesquisa",
     "placeholder": "Pesquisar referrals, parceiros, comissões, programas…",
@@ -2826,34 +2807,85 @@
       "cta_subtitle": "Crie a sua conta RefBoost e ative a integração em Settings → Integrações em menos de 5 minutos.",
       "cta_signup": "Começar gratuitamente",
       "cross_links_title": "Outras integrações",
-      "categories": { "crm": "CRM", "payments": "Pagamentos", "auth": "Autenticação" },
-      "filters": { "all": "Todas", "crm": "CRM", "payments": "Pagamentos", "auth": "Autenticação" }
+      "categories": {
+        "crm": "CRM",
+        "payments": "Pagamentos",
+        "auth": "Autenticação"
+      },
+      "filters": {
+        "all": "Todas",
+        "crm": "CRM",
+        "payments": "Pagamentos",
+        "auth": "Autenticação"
+      }
     },
     "notion": {
       "name": "Notion",
       "shortDescription": "Sincronize o seu pipeline com as suas bases Notion. Mapeamento bidirecional de estados e campos.",
       "heroSubtitle": "Ligue as suas bases Notion ao RefBoost para sincronizar o seu pipeline de parceiros em tempo real. Mapeamento bidirecional de estados, campos e contactos.",
       "features": [
-        { "title": "Sincronização bidirecional", "description": "Os referrals criados no RefBoost aparecem no Notion e vice-versa, sem duplicação." },
-        { "title": "Mapeamento de campos", "description": "Mapeie as suas propriedades Notion aos campos do RefBoost (nome, empresa, valor, estado, etc.)." },
-        { "title": "Mapeamento de estados", "description": "As suas colunas de estado do Notion estão alinhadas com as fases do pipeline RefBoost." },
-        { "title": "Deteção de duplicados", "description": "Sem risco de sobrescrever os seus dados: detetamos os duplicados antes de cada escrita." }
+        {
+          "title": "Sincronização bidirecional",
+          "description": "Os referrals criados no RefBoost aparecem no Notion e vice-versa, sem duplicação."
+        },
+        {
+          "title": "Mapeamento de campos",
+          "description": "Mapeie as suas propriedades Notion aos campos do RefBoost (nome, empresa, valor, estado, etc.)."
+        },
+        {
+          "title": "Mapeamento de estados",
+          "description": "As suas colunas de estado do Notion estão alinhadas com as fases do pipeline RefBoost."
+        },
+        {
+          "title": "Deteção de duplicados",
+          "description": "Sem risco de sobrescrever os seus dados: detetamos os duplicados antes de cada escrita."
+        }
       ],
       "steps": [
-        { "title": "Ligue o Notion", "description": "Crie um token de integração interna do Notion e cole-o no RefBoost. Sem OAuth necessário." },
-        { "title": "Configure o mapeamento", "description": "Escolha a base a sincronizar, mapeie campos e estados em poucos cliques." },
-        { "title": "Está sincronizado", "description": "Push em tempo real dos novos referrals, pull diário às 21h para apanhar alterações no Notion." }
+        {
+          "title": "Ligue o Notion",
+          "description": "Crie um token de integração interna do Notion e cole-o no RefBoost. Sem OAuth necessário."
+        },
+        {
+          "title": "Configure o mapeamento",
+          "description": "Escolha a base a sincronizar, mapeie campos e estados em poucos cliques."
+        },
+        {
+          "title": "Está sincronizado",
+          "description": "Push em tempo real dos novos referrals, pull diário às 21h para apanhar alterações no Notion."
+        }
       ],
       "faqs": [
-        { "q": "É preciso uma conta Notion paga?", "a": "Não, a integração funciona com uma conta gratuita. O único requisito é um token de integração interna (gratuito e instantâneo de criar)." },
-        { "q": "Os meus dados do Notion vão ser sobrescritos?", "a": "Não. O RefBoost deteta duplicados antes de cada escrita e propõe uma fusão em vez de sobrescrever. Mantém o controlo." },
-        { "q": "Com que frequência ocorre a sincronização?", "a": "Push em tempo real para qualquer criação/alteração no RefBoost. Pull completo uma vez por dia às 21h para apanhar alterações feitas diretamente no Notion." },
-        { "q": "Posso sincronizar várias bases Notion?", "a": "Sim, o plano Business permite ligar várias bases Notion (por exemplo uma base de leads e uma de clientes)." }
+        {
+          "q": "É preciso uma conta Notion paga?",
+          "a": "Não, a integração funciona com uma conta gratuita. O único requisito é um token de integração interna (gratuito e instantâneo de criar)."
+        },
+        {
+          "q": "Os meus dados do Notion vão ser sobrescritos?",
+          "a": "Não. O RefBoost deteta duplicados antes de cada escrita e propõe uma fusão em vez de sobrescrever. Mantém o controlo."
+        },
+        {
+          "q": "Com que frequência ocorre a sincronização?",
+          "a": "Push em tempo real para qualquer criação/alteração no RefBoost. Pull completo uma vez por dia às 21h para apanhar alterações feitas diretamente no Notion."
+        },
+        {
+          "q": "Posso sincronizar várias bases Notion?",
+          "a": "Sim, o plano Business permite ligar várias bases Notion (por exemplo uma base de leads e uma de clientes)."
+        }
       ],
       "roi": [
-        { "metric": "2h / semana", "description": "Tempo poupado ao eliminar o copy-paste entre o RefBoost e o seu CRM." },
-        { "metric": "0 duplicados", "description": "A deteção por email elimina os duplicados antes de cada escrita." },
-        { "metric": "Tempo real", "description": "As suas equipas veem os referrals no Notion sem mudar de ferramenta." }
+        {
+          "metric": "2h / semana",
+          "description": "Tempo poupado ao eliminar o copy-paste entre o RefBoost e o seu CRM."
+        },
+        {
+          "metric": "0 duplicados",
+          "description": "A deteção por email elimina os duplicados antes de cada escrita."
+        },
+        {
+          "metric": "Tempo real",
+          "description": "As suas equipas veem os referrals no Notion sem mudar de ferramenta."
+        }
       ]
     },
     "hubspot": {
@@ -2861,26 +2893,68 @@
       "shortDescription": "Envie os seus referrals para HubSpot Deals. Sincronização automática de contactos e negócios.",
       "heroSubtitle": "Ligue o seu HubSpot CRM ao RefBoost. Cada referral torna-se um Deal HubSpot, cada prospect um Contact, tudo sincronizado em tempo real.",
       "features": [
-        { "title": "Sincronização de deals", "description": "Cada referral RefBoost torna-se um Deal HubSpot no pipeline da sua escolha." },
-        { "title": "Contactos automáticos", "description": "O prospect aparece como Contact HubSpot com as informações do parceiro nas propriedades associadas." },
-        { "title": "Estados mapeados", "description": "As suas etapas de Deal HubSpot estão alinhadas com os estados RefBoost nos dois sentidos." },
-        { "title": "Deteção de duplicados", "description": "Se o contacto já existe no HubSpot, ligamos o deal ao contacto existente em vez de criar um novo." }
+        {
+          "title": "Sincronização de deals",
+          "description": "Cada referral RefBoost torna-se um Deal HubSpot no pipeline da sua escolha."
+        },
+        {
+          "title": "Contactos automáticos",
+          "description": "O prospect aparece como Contact HubSpot com as informações do parceiro nas propriedades associadas."
+        },
+        {
+          "title": "Estados mapeados",
+          "description": "As suas etapas de Deal HubSpot estão alinhadas com os estados RefBoost nos dois sentidos."
+        },
+        {
+          "title": "Deteção de duplicados",
+          "description": "Se o contacto já existe no HubSpot, ligamos o deal ao contacto existente em vez de criar um novo."
+        }
       ],
       "steps": [
-        { "title": "Ligue o HubSpot", "description": "Clique em \"Ligar HubSpot\": OAuth seguro, sem chave de API para colar." },
-        { "title": "Configure o mapeamento", "description": "Escolha o pipeline HubSpot de destino e mapeie as etapas aos seus estados RefBoost." },
-        { "title": "Sincronização automática", "description": "Cada novo referral aparece de imediato no HubSpot. Webhook bidirecional para as atualizações de estado." }
+        {
+          "title": "Ligue o HubSpot",
+          "description": "Clique em \"Ligar HubSpot\": OAuth seguro, sem chave de API para colar."
+        },
+        {
+          "title": "Configure o mapeamento",
+          "description": "Escolha o pipeline HubSpot de destino e mapeie as etapas aos seus estados RefBoost."
+        },
+        {
+          "title": "Sincronização automática",
+          "description": "Cada novo referral aparece de imediato no HubSpot. Webhook bidirecional para as atualizações de estado."
+        }
       ],
       "faqs": [
-        { "q": "Que versão do HubSpot é necessária?", "a": "HubSpot Starter ou superior. A versão gratuita não dá acesso à API CRM necessária para a integração." },
-        { "q": "Chave API ou OAuth?", "a": "Apenas OAuth, por segurança. Sem chaves API a manipular — a ligação faz-se em dois cliques e revoga-se a partir do HubSpot quando quiser." },
-        { "q": "O que acontece aos meus deals existentes?", "a": "Nada do lado HubSpot. Os novos referrals RefBoost criam novos deals; os contactos existentes são ligados automaticamente." },
-        { "q": "Posso pausar a sincronização sem desligar o HubSpot?", "a": "Sim, pode pausar a integração em Settings → Integrações sem revogar os tokens." }
+        {
+          "q": "Que versão do HubSpot é necessária?",
+          "a": "HubSpot Starter ou superior. A versão gratuita não dá acesso à API CRM necessária para a integração."
+        },
+        {
+          "q": "Chave API ou OAuth?",
+          "a": "Apenas OAuth, por segurança. Sem chaves API a manipular — a ligação faz-se em dois cliques e revoga-se a partir do HubSpot quando quiser."
+        },
+        {
+          "q": "O que acontece aos meus deals existentes?",
+          "a": "Nada do lado HubSpot. Os novos referrals RefBoost criam novos deals; os contactos existentes são ligados automaticamente."
+        },
+        {
+          "q": "Posso pausar a sincronização sem desligar o HubSpot?",
+          "a": "Sim, pode pausar a integração em Settings → Integrações sem revogar os tokens."
+        }
       ],
       "roi": [
-        { "metric": "+30%", "description": "Mais conversão quando os parceiros veem o estado dos seus referrals em tempo real." },
-        { "metric": "1 pipeline", "description": "Os seus referrals e deals diretos unificados no HubSpot." },
-        { "metric": "0 entrada", "description": "Os contactos e deals são criados automaticamente." }
+        {
+          "metric": "+30%",
+          "description": "Mais conversão quando os parceiros veem o estado dos seus referrals em tempo real."
+        },
+        {
+          "metric": "1 pipeline",
+          "description": "Os seus referrals e deals diretos unificados no HubSpot."
+        },
+        {
+          "metric": "0 entrada",
+          "description": "Os contactos e deals são criados automaticamente."
+        }
       ]
     },
     "salesforce": {
@@ -2888,26 +2962,68 @@
       "shortDescription": "Ligue as suas Opportunities Salesforce. Importação/exportação de leads e estados em tempo real.",
       "heroSubtitle": "Ligue a sua instância Salesforce ao RefBoost. Sincronização de Opportunities, Contacts e Accounts com mapeamento personalizado para objetos standard e custom.",
       "features": [
-        { "title": "Sincronização de Opportunities", "description": "Cada referral RefBoost torna-se uma Opportunity Salesforce na Stage da sua escolha." },
-        { "title": "Contacts e Accounts", "description": "O prospect é criado como Contact ligado a um Account, com associação inteligente aos Accounts existentes." },
-        { "title": "Estados de pipeline", "description": "As suas Stages Salesforce estão alinhadas com os estados RefBoost nos dois sentidos." },
-        { "title": "Custom objects", "description": "Mapeie os seus custom objects e fields Salesforce aos dados RefBoost a partir do editor de mapeamento." }
+        {
+          "title": "Sincronização de Opportunities",
+          "description": "Cada referral RefBoost torna-se uma Opportunity Salesforce na Stage da sua escolha."
+        },
+        {
+          "title": "Contacts e Accounts",
+          "description": "O prospect é criado como Contact ligado a um Account, com associação inteligente aos Accounts existentes."
+        },
+        {
+          "title": "Estados de pipeline",
+          "description": "As suas Stages Salesforce estão alinhadas com os estados RefBoost nos dois sentidos."
+        },
+        {
+          "title": "Custom objects",
+          "description": "Mapeie os seus custom objects e fields Salesforce aos dados RefBoost a partir do editor de mapeamento."
+        }
       ],
       "steps": [
-        { "title": "Ligue o Salesforce", "description": "OAuth através do seu login Salesforce. Production ou Sandbox — o RefBoost deteta automaticamente." },
-        { "title": "Mapeie os objetos", "description": "Escolha Opportunities ou um custom object, mapeie os fields, os record types e as Stages." },
-        { "title": "Sincronização bidirecional", "description": "Push em tempo real através da API REST. Webhook Salesforce para RefBoost para as atualizações de Stage." }
+        {
+          "title": "Ligue o Salesforce",
+          "description": "OAuth através do seu login Salesforce. Production ou Sandbox — o RefBoost deteta automaticamente."
+        },
+        {
+          "title": "Mapeie os objetos",
+          "description": "Escolha Opportunities ou um custom object, mapeie os fields, os record types e as Stages."
+        },
+        {
+          "title": "Sincronização bidirecional",
+          "description": "Push em tempo real através da API REST. Webhook Salesforce para RefBoost para as atualizações de Stage."
+        }
       ],
       "faqs": [
-        { "q": "Que edição Salesforce é necessária?", "a": "Enterprise Edition ou Professional com acesso à API ativado. As edições Essentials e Group não incluem a API REST." },
-        { "q": "Posso usar custom objects?", "a": "Sim. O editor de mapeamento permite escolher qualquer objeto (standard ou custom) como destino de sincronização." },
-        { "q": "Sandbox suportada?", "a": "Sim, pode ligar primeiro uma Sandbox para testar e depois passar para Production sem reconfigurar o mapeamento." },
-        { "q": "Compatível com Salesforce Lightning e Classic?", "a": "Sim, a integração usa a API REST que funciona da mesma forma nas duas interfaces." }
+        {
+          "q": "Que edição Salesforce é necessária?",
+          "a": "Enterprise Edition ou Professional com acesso à API ativado. As edições Essentials e Group não incluem a API REST."
+        },
+        {
+          "q": "Posso usar custom objects?",
+          "a": "Sim. O editor de mapeamento permite escolher qualquer objeto (standard ou custom) como destino de sincronização."
+        },
+        {
+          "q": "Sandbox suportada?",
+          "a": "Sim, pode ligar primeiro uma Sandbox para testar e depois passar para Production sem reconfigurar o mapeamento."
+        },
+        {
+          "q": "Compatível com Salesforce Lightning e Classic?",
+          "a": "Sim, a integração usa a API REST que funciona da mesma forma nas duas interfaces."
+        }
       ],
       "roi": [
-        { "metric": "100%", "description": "Atribuição dos deals ao parceiro de origem diretamente no Salesforce." },
-        { "metric": "0 adoção", "description": "Os seus comerciais permanecem no Salesforce, os referrals chegam sozinhos." },
-        { "metric": "Audit ready", "description": "Histórico completo das ações dos parceiros para as suas auditorias." }
+        {
+          "metric": "100%",
+          "description": "Atribuição dos deals ao parceiro de origem diretamente no Salesforce."
+        },
+        {
+          "metric": "0 adoção",
+          "description": "Os seus comerciais permanecem no Salesforce, os referrals chegam sozinhos."
+        },
+        {
+          "metric": "Audit ready",
+          "description": "Histórico completo das ações dos parceiros para as suas auditorias."
+        }
       ]
     },
     "qonto": {
@@ -2915,26 +3031,68 @@
       "shortDescription": "Transferências SEPA automatizadas. Pague aos seus parceiros com um clique e validação SCA segura.",
       "heroSubtitle": "Ligue a sua conta pro Qonto ao RefBoost e pague as comissões dos seus parceiros num clique. Transferências SEPA, validação SCA e comprovativo de transferência automatizado.",
       "features": [
-        { "title": "Transferências SEPA automatizadas", "description": "Um clique em \"Pagar\" desencadeia uma transferência SEPA da sua conta Qonto, sem voltar a inserir o IBAN." },
-        { "title": "Validação SCA segura", "description": "Em conformidade com a DSP2: cada transferência passa pela autenticação forte na sua app Qonto antes de ser executada." },
-        { "title": "Pagamentos em lote", "description": "Selecione até 400 comissões e pague-as todas numa única ação." },
-        { "title": "Comprovativo por email", "description": "O parceiro recebe um email automático com a referência da transferência assim que o Qonto a executa." }
+        {
+          "title": "Transferências SEPA automatizadas",
+          "description": "Um clique em \"Pagar\" desencadeia uma transferência SEPA da sua conta Qonto, sem voltar a inserir o IBAN."
+        },
+        {
+          "title": "Validação SCA segura",
+          "description": "Em conformidade com a DSP2: cada transferência passa pela autenticação forte na sua app Qonto antes de ser executada."
+        },
+        {
+          "title": "Pagamentos em lote",
+          "description": "Selecione até 400 comissões e pague-as todas numa única ação."
+        },
+        {
+          "title": "Comprovativo por email",
+          "description": "O parceiro recebe um email automático com a referência da transferência assim que o Qonto a executa."
+        }
       ],
       "steps": [
-        { "title": "Ligue o Qonto", "description": "OAuth oficial Qonto a partir de Settings → Integrações. A ligação demora 30 segundos." },
-        { "title": "Selecione a sua conta", "description": "Escolha que conta Qonto debitar (útil se tiver várias subcontas)." },
-        { "title": "Pague num clique", "description": "Em cada comissão validada, o botão \"Pagar\" desencadeia a transferência com validação SCA." }
+        {
+          "title": "Ligue o Qonto",
+          "description": "OAuth oficial Qonto a partir de Settings → Integrações. A ligação demora 30 segundos."
+        },
+        {
+          "title": "Selecione a sua conta",
+          "description": "Escolha que conta Qonto debitar (útil se tiver várias subcontas)."
+        },
+        {
+          "title": "Pague num clique",
+          "description": "Em cada comissão validada, o botão \"Pagar\" desencadeia a transferência com validação SCA."
+        }
       ],
       "faqs": [
-        { "q": "A validação SCA é obrigatória?", "a": "Sim, é imposta pela diretiva europeia DSP2. O RefBoost apenas o lembra de validar na sua app Qonto, a operação em si demora 5 segundos." },
-        { "q": "Quantos pagamentos em lote são possíveis?", "a": "Até 400 comissões por lote. Acima disso, o sistema divide-os automaticamente em lotes sucessivos." },
-        { "q": "Há custos RefBoost além dos custos Qonto?", "a": "Não, o RefBoost não cobra qualquer comissão sobre as transferências. Aplicam-se apenas as taxas SEPA habituais da sua conta Qonto (gratuitas na zona SEPA)." },
-        { "q": "Que plano RefBoost é necessário?", "a": "A integração Qonto está incluída no plano Business. Os planos Starter e Pro veem a integração mas não podem ativá-la." }
+        {
+          "q": "A validação SCA é obrigatória?",
+          "a": "Sim, é imposta pela diretiva europeia DSP2. O RefBoost apenas o lembra de validar na sua app Qonto, a operação em si demora 5 segundos."
+        },
+        {
+          "q": "Quantos pagamentos em lote são possíveis?",
+          "a": "Até 400 comissões por lote. Acima disso, o sistema divide-os automaticamente em lotes sucessivos."
+        },
+        {
+          "q": "Há custos RefBoost além dos custos Qonto?",
+          "a": "Não, o RefBoost não cobra qualquer comissão sobre as transferências. Aplicam-se apenas as taxas SEPA habituais da sua conta Qonto (gratuitas na zona SEPA)."
+        },
+        {
+          "q": "Que plano RefBoost é necessário?",
+          "a": "A integração Qonto está incluída no plano Business. Os planos Starter e Pro veem a integração mas não podem ativá-la."
+        }
       ],
       "roi": [
-        { "metric": "30 seg", "description": "Para pagar uma comissão de parceiro, do clique à transferência SEPA." },
-        { "metric": "0 erros", "description": "O IBAN e o valor são pré-preenchidos a partir da comissão." },
-        { "metric": "x2", "description": "Um parceiro pago depressa recomenda o dobro." }
+        {
+          "metric": "30 seg",
+          "description": "Para pagar uma comissão de parceiro, do clique à transferência SEPA."
+        },
+        {
+          "metric": "0 erros",
+          "description": "O IBAN e o valor são pré-preenchidos a partir da comissão."
+        },
+        {
+          "metric": "x2",
+          "description": "Um parceiro pago depressa recomenda o dobro."
+        }
       ]
     },
     "google-sso": {
@@ -2942,27 +3100,90 @@
       "shortDescription": "Autenticação segura via Google para a sua equipa e parceiros. Zero palavras-passe a gerir.",
       "heroSubtitle": "Ativado por defeito em todos os planos. As suas equipas e parceiros entram no RefBoost com a sua conta Google num clique — zero palavras-passe a gerir, segurança reforçada.",
       "features": [
-        { "title": "Autenticação sem palavra-passe", "description": "Um clique em \"Entrar com o Google\" e o utilizador está no seu espaço RefBoost." },
-        { "title": "Multi-tenant", "description": "A mesma conta Google pode aceder a vários espaços de parceiro se o utilizador trabalhar com vários programas." },
-        { "title": "Segurança reforçada", "description": "Sem palavra-passe armazenada: as fugas de palavras-passe deixam de ser problema seu. 2FA herdado do Google." },
-        { "title": "Onboarding simplificado", "description": "Sem mais resets de palavra-passe esquecida: um parceiro que se regista com Google pode voltar para sempre, sem fricção." }
+        {
+          "title": "Autenticação sem palavra-passe",
+          "description": "Um clique em \"Entrar com o Google\" e o utilizador está no seu espaço RefBoost."
+        },
+        {
+          "title": "Multi-tenant",
+          "description": "A mesma conta Google pode aceder a vários espaços de parceiro se o utilizador trabalhar com vários programas."
+        },
+        {
+          "title": "Segurança reforçada",
+          "description": "Sem palavra-passe armazenada: as fugas de palavras-passe deixam de ser problema seu. 2FA herdado do Google."
+        },
+        {
+          "title": "Onboarding simplificado",
+          "description": "Sem mais resets de palavra-passe esquecida: um parceiro que se regista com Google pode voltar para sempre, sem fricção."
+        }
       ],
       "steps": [
-        { "title": "Ativado por defeito", "description": "Sem configuração necessária. O botão \"Entrar com o Google\" aparece em todas as páginas de autenticação RefBoost." },
-        { "title": "O parceiro clica", "description": "O parceiro escolhe \"Entrar com o Google\" no ecrã de login ou de registo." },
-        { "title": "Acesso instantâneo", "description": "O utilizador chega ao seu espaço; as sessões Google e RefBoost são mantidas sincronizadas." }
+        {
+          "title": "Ativado por defeito",
+          "description": "Sem configuração necessária. O botão \"Entrar com o Google\" aparece em todas as páginas de autenticação RefBoost."
+        },
+        {
+          "title": "O parceiro clica",
+          "description": "O parceiro escolhe \"Entrar com o Google\" no ecrã de login ou de registo."
+        },
+        {
+          "title": "Acesso instantâneo",
+          "description": "O utilizador chega ao seu espaço; as sessões Google e RefBoost são mantidas sincronizadas."
+        }
       ],
       "faqs": [
-        { "q": "O Google SSO é obrigatório para os meus utilizadores?", "a": "Não. A autenticação por email + palavra-passe continua disponível. Os utilizadores podem escolher o método no momento do registo." },
-        { "q": "Que dados Google são partilhados com o RefBoost?", "a": "Apenas o nome completo e o endereço de email. O RefBoost não lê nem os seus contactos, nem os seus emails, nem o seu Drive." },
-        { "q": "Os meus parceiros podem ligar a sua conta existente ao Google?", "a": "Sim. Se um parceiro com conta email/palavra-passe entrar depois com Google usando o mesmo endereço, os dois métodos ficam ligados automaticamente." },
-        { "q": "Microsoft SSO ou Okta estão previstos?", "a": "O Microsoft SSO está na roadmap para 2026. Okta / SAML genérico estão previstos para contas Enterprise — fale connosco se precisar deles." }
+        {
+          "q": "O Google SSO é obrigatório para os meus utilizadores?",
+          "a": "Não. A autenticação por email + palavra-passe continua disponível. Os utilizadores podem escolher o método no momento do registo."
+        },
+        {
+          "q": "Que dados Google são partilhados com o RefBoost?",
+          "a": "Apenas o nome completo e o endereço de email. O RefBoost não lê nem os seus contactos, nem os seus emails, nem o seu Drive."
+        },
+        {
+          "q": "Os meus parceiros podem ligar a sua conta existente ao Google?",
+          "a": "Sim. Se um parceiro com conta email/palavra-passe entrar depois com Google usando o mesmo endereço, os dois métodos ficam ligados automaticamente."
+        },
+        {
+          "q": "Microsoft SSO ou Okta estão previstos?",
+          "a": "O Microsoft SSO está na roadmap para 2026. Okta / SAML genérico estão previstos para contas Enterprise — fale connosco se precisar deles."
+        }
       ],
       "roi": [
-        { "metric": "0 tickets", "description": "Acabaram-se os pedidos de redefinição de palavra-passe." },
-        { "metric": "10 seg", "description": "Para que um parceiro entre no seu espaço." },
-        { "metric": "2FA nativo", "description": "Segurança reforçada herdada do Google sem configurar nada." }
+        {
+          "metric": "0 tickets",
+          "description": "Acabaram-se os pedidos de redefinição de palavra-passe."
+        },
+        {
+          "metric": "10 seg",
+          "description": "Para que um parceiro entre no seu espaço."
+        },
+        {
+          "metric": "2FA nativo",
+          "description": "Segurança reforçada herdada do Google sem configurar nada."
+        }
       ]
     }
+  },
+  "sidebar": {
+    "trash": "Lixeira"
+  },
+  "trash": {
+    "title": "Lixeira",
+    "subtitle": "Os itens excluídos são mantidos por 30 dias antes da exclusão definitiva.",
+    "empty": "A lixeira está vazia",
+    "restore": "Restaurar",
+    "restored": "Item restaurado com sucesso",
+    "permanent_delete": "Excluir definitivamente",
+    "permanently_deleted": "Item excluído definitivamente",
+    "deleted_on": "Excluído em {{date}}",
+    "days_remaining": "{{n}} dias restantes",
+    "confirm_title": "Excluir este item?",
+    "confirm_message": "Este item será movido para a lixeira.",
+    "confirm_delete": "Mover para a lixeira",
+    "recovery_notice": "Você pode restaurá-lo nos próximos 30 dias a partir da lixeira.",
+    "permanent_confirm_title": "Excluir definitivamente?",
+    "permanent_confirm_message": "Esta ação é irreversível. O item será excluído permanentemente.",
+    "permanent_confirm_delete": "Excluir definitivamente"
   }
 }

@@ -44,6 +44,8 @@ const partnerBankInfoRoutes = require('./routes/partnerBankInfo');
 const qontoRoutes = require('./routes/qonto');
 const dashboardStatsRoutes = require('./routes/dashboardStats');
 const webhooksRoutes = require('./routes/webhooks');
+const trashRoutes = require('./routes/trash');
+const { purgeDeletedRecords } = require('./routes/trash');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -130,6 +132,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/commissions', commissionRoutes);
+app.use('/api/trash', trashRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/dashboard', dashboardStatsRoutes);
 app.use('/api/messages', messageRoutes);
@@ -229,6 +232,13 @@ app.listen(PORT, () => {
   // Cleanup old data every 24h (ISO 27001 A.12.4)
   setInterval(cleanupOldData, 24 * 60 * 60 * 1000);
   setTimeout(cleanupOldData, 60000); // First cleanup after 1 min
+
+  // Purge soft-deleted referrals + commissions older than 30 days.
+  // Same cadence as cleanupOldData; first run delayed +2 min so the
+  // boot sequence isn't overloaded.
+  const tickPurge = () => purgeDeletedRecords().catch(e => console.error('[trash.purge] tick error:', e.message));
+  setTimeout(tickPurge, 2 * 60 * 1000);
+  setInterval(tickPurge, 24 * 60 * 60 * 1000);
 
   console.log(` Skipcall API running on port ${PORT}`);
 

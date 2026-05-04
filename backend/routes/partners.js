@@ -128,7 +128,7 @@ router.get('/', async (req, res) => {
               COALESCE(SUM(CASE WHEN r.status = 'won' THEN r.deal_value END), 0) as total_revenue
        FROM partners p
        LEFT JOIN partner_categories pc ON pc.id = p.category_id
-       LEFT JOIN referrals r ON p.id = r.partner_id
+       LEFT JOIN referrals r ON p.id = r.partner_id AND r.deleted_at IS NULL
        ${whereClause}
        GROUP BY p.id, pc.name, pc.slug, pc.color
        ORDER BY p.is_active DESC, p.name`,
@@ -160,7 +160,7 @@ router.get('/:id', async (req, res) => {
               COALESCE(SUM(CASE WHEN r.status = 'won' THEN r.deal_value END), 0) as total_revenue,
               COALESCE(SUM(CASE WHEN r.status = 'won' THEN r.deal_value * p.commission_rate / 100 END), 0) as total_commission
        FROM partners p
-       LEFT JOIN referrals r ON p.id = r.partner_id
+       LEFT JOIN referrals r ON p.id = r.partner_id AND r.deleted_at IS NULL
        WHERE ${where.join(' AND ')}
        GROUP BY p.id`,
       params

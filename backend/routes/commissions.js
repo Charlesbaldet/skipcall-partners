@@ -37,7 +37,10 @@ function normalizeStatus(s) {
 router.get('/', async (req, res) => {
   try {
     const { status, partner_id, approval_status } = req.query;
-    let where = [];
+    // Hide soft-deleted commissions and any commission whose parent
+    // deal has been moved to the Corbeille — both live in /trash for
+    // 30 days before purge.
+    let where = ['c.deleted_at IS NULL', 'r.deleted_at IS NULL'];
     let params = [];
     let i = 1;
 
@@ -126,7 +129,7 @@ router.get('/summary', authorize('admin', 'commercial'), async (req, res) => {
               COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.amount END), 0) as paid_amount,
               COALESCE(SUM(c.deal_value), 0) as total_deal_value
        FROM partners p
-       LEFT JOIN commissions c ON p.id = c.partner_id
+       LEFT JOIN commissions c ON p.id = c.partner_id AND c.deleted_at IS NULL
        WHERE ${where.join(' AND ')}
        GROUP BY p.id
        ORDER BY total_amount DESC`,
@@ -159,7 +162,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
 
     const { rows: [commission] } = await query(
       `UPDATE commissions SET status = $2, approved_at = COALESCE($3, approved_at), paid_at = COALESCE($4, paid_at)
-       WHERE id = $1${whereExtra}
+       WHERE id = $1 AND deleted_at IS NULL${whereExtra}
        RETURNING *`,
       params
     );
@@ -181,7 +184,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
              JOIN referrals r ON c.referral_id = r.id
              JOIN partners p ON c.partner_id = p.id
              JOIN tenants t ON p.tenant_id = t.id
-             WHERE c.id = $1`,
+             WHERE c.id = $1 AND c.deleted_at IS NULL AND r.deleted_at IS NULL`,
             [req.params.id]
           );
           if (!enriched) return;
@@ -223,7 +226,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
              FROM commissions c
              JOIN referrals r ON c.referral_id = r.id
              JOIN partners p ON c.partner_id = p.id
-            WHERE c.id = $1`,
+            WHERE c.id = $1 AND c.deleted_at IS NULL AND r.deleted_at IS NULL`,
           [req.params.id]
         );
         if (!enriched) return;
@@ -253,12 +256,18 @@ router.put('/:id', authorize('admin'), async (req, res) => {
 
 // ─── Approve / Reject commission (admin approval flow) ─────────────
 async function loadCommissionWithContext(commissionId, tenantId) {
+  // Approve / reject / delete flows always operate on live (non-trashed)
+  // rows. Soft-deleted commissions and commissions whose parent deal
+  // is in the Corbeille are filtered out so 404 is returned instead of
+  // letting the admin act on a row the UI doesn't show.
   const { rows } = await query(
     `SELECT c.*, p.name AS partner_name, r.prospect_name
        FROM commissions c
        JOIN partners p ON p.id = c.partner_id
        JOIN referrals r ON r.id = c.referral_id
-      WHERE c.id = $1 AND ($2::uuid IS NULL OR c.tenant_id = $2)
+      WHERE c.id = $1
+        AND c.deleted_at IS NULL AND r.deleted_at IS NULL
+        AND ($2::uuid IS NULL OR c.tenant_id = $2)
       LIMIT 1`,
     [commissionId, tenantId || null]
   );
@@ -403,7 +412,11 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
       [req.params.id]
     );
 
-    await query('DELETE FROM commissions WHERE id = $1', [req.params.id]);
+    // Soft delete — moves the row to the Corbeille for 30 days.
+    await query(
+      'UPDATE commissions SET deleted_at = NOW(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL',
+      [req.user?.id || null, req.params.id]
+    );
 
     (async () => {
       try {
@@ -454,7 +467,7 @@ router.post('/:id/upload-invoice', async (req, res) => {
       return res.status(400).json({ error: 'Fichier requis (PDF)' });
     }
 
-    let where = 'id = $1';
+    let where = 'id = $1 AND deleted_at IS NULL';
     const params = [req.params.id];
     let i = 2;
     if (req.tenantId && !req.skipTenantFilter) {
@@ -546,7 +559,7 @@ router.post('/:id/upload-invoice', async (req, res) => {
 // Admin: any commission in their tenant. Partner: only their own.
 router.get('/:id/invoice', async (req, res) => {
   try {
-    let where = 'id = $1';
+    let where = 'id = $1 AND deleted_at IS NULL';
     const params = [req.params.id];
     let i = 2;
     if (req.tenantId && !req.skipTenantFilter) {
@@ -676,6 +689,8 @@ function sanitizePaymentError(err) {
 }
 
 async function loadCommissionForPayment(commissionId, tenantId) {
+  // Pay flow operates on live rows only — once a commission is in the
+  // Corbeille, the bulk-pay UI shouldn't be able to push it to Qonto.
   const { rows } = await query(
     `SELECT c.id, c.tenant_id, c.amount, c.status, c.qonto_transfer_id,
             c.invoice_url, c.invoice_filename, c.qonto_attachment_id,
@@ -686,7 +701,9 @@ async function loadCommissionForPayment(commissionId, tenantId) {
        FROM commissions c
        JOIN partners p ON p.id = c.partner_id
        JOIN referrals r ON r.id = c.referral_id
-      WHERE c.id = $1 AND ($2::uuid IS NULL OR c.tenant_id = $2)
+      WHERE c.id = $1
+        AND c.deleted_at IS NULL AND r.deleted_at IS NULL
+        AND ($2::uuid IS NULL OR c.tenant_id = $2)
       LIMIT 1`,
     [commissionId, tenantId || null]
   );
@@ -942,7 +959,9 @@ router.post('/pay-bulk', authorize('admin'), requireBusinessPlan, async (req, re
          FROM commissions c
          JOIN partners p ON p.id = c.partner_id
          JOIN referrals r ON r.id = c.referral_id
-        WHERE c.tenant_id = $1 AND c.id IN (${placeholders})`,
+        WHERE c.tenant_id = $1
+          AND c.deleted_at IS NULL AND r.deleted_at IS NULL
+          AND c.id IN (${placeholders})`,
       [req.tenantId, ...ids]
     );
 
@@ -1413,7 +1432,7 @@ router.post('/poll-qonto', authorize('admin'), async (req, res) => {
 router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
   console.log(`[confirm-sca] User clicked "J'ai déjà approuvé" for commission ${req.params.id}`);
   try {
-    let where = 'id = $1';
+    let where = 'id = $1 AND deleted_at IS NULL';
     const params = [req.params.id];
     let i = 2;
     if (req.tenantId && !req.skipTenantFilter) {

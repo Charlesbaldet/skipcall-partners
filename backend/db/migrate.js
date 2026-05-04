@@ -631,6 +631,20 @@ async function runMigrations() {
   await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS commission_rate_override NUMERIC(5,2)`);
   console.log('[commission] v28 commission_overridden + rate override columns');
 
+  // v29: soft-delete on referrals + commissions. Rows with
+  // deleted_at IS NOT NULL are hidden from every list/read query and
+  // can be restored from the Corbeille for 30 days. The daily cleanup
+  // worker permanently removes rows whose deleted_at is older than
+  // that window. deleted_by is the UUID of the user who issued the
+  // soft delete (users.id is UUID).
+  await query(`ALTER TABLE referrals   ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
+  await query(`ALTER TABLE referrals   ADD COLUMN IF NOT EXISTS deleted_by UUID`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
+  await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS deleted_by UUID`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_referrals_deleted_at   ON referrals(deleted_at)   WHERE deleted_at IS NOT NULL`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_commissions_deleted_at ON commissions(deleted_at) WHERE deleted_at IS NOT NULL`);
+  console.log('[trash] v29 soft-delete columns + partial indexes');
+
   console.log(' Migrations completed');
 
   } catch (err) {

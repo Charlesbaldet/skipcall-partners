@@ -26,7 +26,9 @@ router.get('/', async (req, res) => {
     const { status, partner_id, level, page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
 
-    let where = [];
+    // Hide soft-deleted referrals from every list query — they live
+    // in the Corbeille for 30 days before purge.
+    let where = ['r.deleted_at IS NULL'];
     let params = [];
     let i = 1;
 
@@ -105,7 +107,7 @@ router.get('/', async (req, res) => {
 // âââ Get single referral with activities âââ
 router.get('/:id', async (req, res) => {
   try {
-    let where = ['r.id = $1'];
+    let where = ['r.id = $1', 'r.deleted_at IS NULL'];
     let params = [req.params.id];
     let i = 2;
 
@@ -141,6 +143,7 @@ router.get('/:id', async (req, res) => {
     const { rows: lockingComm } = await query(
       `SELECT id, status FROM commissions
         WHERE referral_id = $1
+          AND deleted_at IS NULL
           AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
         ORDER BY created_at DESC LIMIT 1`,
       [req.params.id]
@@ -156,7 +159,7 @@ router.get('/:id', async (req, res) => {
     const { rows: [stats] } = await query(
       `SELECT COUNT(*) FILTER (WHERE status = 'won') AS won_deals,
               COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
-         FROM referrals WHERE partner_id = $1`,
+         FROM referrals WHERE partner_id = $1 AND deleted_at IS NULL`,
       [referral.partner_id]
     );
     const tier = await resolveTierForPartner({
@@ -417,8 +420,9 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           contact_first_name, contact_last_name,
           commission_rate_override, commission_overridden } = req.body;
 
-    // Get current state (with tenant check)
-    let selectQuery = 'SELECT * FROM referrals WHERE id = $1';
+    // Get current state (with tenant check). Skip soft-deleted rows
+    // — admins can't edit a deal that's in the Corbeille.
+    let selectQuery = 'SELECT * FROM referrals WHERE id = $1 AND deleted_at IS NULL';
     let selectParams = [req.params.id];
     if (req.tenantId && !req.skipTenantFilter) {
       selectQuery += ' AND tenant_id = $2';
@@ -541,6 +545,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       const { rows: comm } = await client.query(
         `SELECT id, status FROM commissions
           WHERE referral_id = $1
+            AND deleted_at IS NULL
             AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
           LIMIT 1`,
         [req.params.id]
@@ -569,6 +574,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       const { rows: comm } = await client.query(
         `SELECT id, status FROM commissions
           WHERE referral_id = $1
+            AND deleted_at IS NULL
             AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
           LIMIT 1`,
         [req.params.id]
@@ -712,7 +718,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           const { rows: [stats] } = await client.query(
             `SELECT COUNT(*) FILTER (WHERE status = 'won') AS won_deals,
                     COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
-               FROM referrals WHERE partner_id = $1 AND id <> $2`,
+               FROM referrals WHERE partner_id = $1 AND id <> $2 AND deleted_at IS NULL`,
             [partner.id, req.params.id]
           );
           const tier = await resolveTierForPartner({
@@ -747,7 +753,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         // paid) shouldn't get its lifecycle reset by a re-drag onto the
         // same column.
         const { rows: [existingCom] } = await client.query(
-          'SELECT id, status FROM commissions WHERE referral_id = $1',
+          'SELECT id, status FROM commissions WHERE referral_id = $1 AND deleted_at IS NULL',
           [req.params.id]
         );
 
@@ -819,7 +825,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       const { rows: [partnerUser] } = await client.query(
         `SELECT u.email, u.full_name
          FROM users u JOIN referrals r ON u.partner_id = r.partner_id
-         WHERE r.id = $1 LIMIT 1`,
+         WHERE r.id = $1 AND r.deleted_at IS NULL LIMIT 1`,
         [req.params.id]
       );
 
@@ -870,7 +876,7 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
             `SELECT DISTINCT u.id, u.email, u.full_name
                FROM users u
                JOIN referrals r ON r.partner_id = u.partner_id
-              WHERE r.id = $1 AND u.is_active = TRUE`,
+              WHERE r.id = $1 AND r.deleted_at IS NULL AND u.is_active = TRUE`,
             [req.params.id]
           );
           for (const pu of partnerUsers) {
@@ -966,7 +972,7 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
     const { rows: [updated] } = await client.query(
       `SELECT r.*, p.name as partner_name, p.commission_rate
        FROM referrals r JOIN partners p ON r.partner_id = p.id
-       WHERE r.id = $1`,
+       WHERE r.id = $1 AND r.deleted_at IS NULL`,
       [req.params.id]
     );
 
@@ -1067,8 +1073,9 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
 router.delete('/:id', async (req, res) => {
   const client = await getClient();
   try {
-    // Get the referral (with tenant check)
-    let selectQuery = 'SELECT * FROM referrals WHERE id = $1';
+    // Get the referral (with tenant check). Skip already-deleted rows
+    // so a double-delete returns 404 cleanly.
+    let selectQuery = 'SELECT * FROM referrals WHERE id = $1 AND deleted_at IS NULL';
     let selectParams = [req.params.id];
     if (req.tenantId && !req.skipTenantFilter) {
       selectQuery += ' AND tenant_id = $2';
@@ -1100,6 +1107,7 @@ router.delete('/:id', async (req, res) => {
       `SELECT id, status, qonto_transfer_id, payment_completed_at
          FROM commissions
         WHERE referral_id = $1
+          AND deleted_at IS NULL
           AND (status = 'paid'
                OR (qonto_transfer_id IS NOT NULL AND payment_completed_at IS NULL))`,
       [req.params.id]
@@ -1118,10 +1126,20 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
+    // Soft delete: stamp deleted_at + deleted_by on the deal and any
+    // linked commissions. referral_activities are kept untouched —
+    // restoring the deal restores them too. The Corbeille worker
+    // permanently removes rows older than 30 days.
+    const userId = req.user?.id || null;
     await client.query('BEGIN');
-    await client.query('DELETE FROM referral_activities WHERE referral_id = $1', [req.params.id]);
-    await client.query('DELETE FROM commissions WHERE referral_id = $1', [req.params.id]);
-    await client.query('DELETE FROM referrals WHERE id = $1', [req.params.id]);
+    await client.query(
+      'UPDATE commissions SET deleted_at = NOW(), deleted_by = $1 WHERE referral_id = $2 AND deleted_at IS NULL',
+      [userId, req.params.id]
+    );
+    await client.query(
+      'UPDATE referrals SET deleted_at = NOW(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL',
+      [userId, req.params.id]
+    );
     await client.query('COMMIT');
 
     res.json({ message: 'Referral supprimÃ©' });

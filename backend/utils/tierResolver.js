@@ -99,6 +99,7 @@ async function bulkResolveTiers(tenantId, partnerIds) {
             COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
        FROM referrals
       WHERE partner_id = ANY($1::uuid[])
+        AND deleted_at IS NULL
       GROUP BY partner_id`,
     [ids]
   );

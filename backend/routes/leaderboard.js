@@ -83,6 +83,7 @@ router.get('/', authenticate, tenantScope, async (req, res) => {
           COUNT(*) as total_referrals,
           COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) as total_revenue
         FROM referrals
+        WHERE deleted_at IS NULL
         GROUP BY partner_id
       ) r ON p.id = r.partner_id
       LEFT JOIN (
@@ -90,6 +91,7 @@ router.get('/', authenticate, tenantScope, async (req, res) => {
           COALESCE(SUM(amount), 0) as total_commissions,
           COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0) as paid_commissions
         FROM commissions
+        WHERE deleted_at IS NULL
         GROUP BY partner_id
       ) c ON p.id = c.partner_id
       ${whereSql}

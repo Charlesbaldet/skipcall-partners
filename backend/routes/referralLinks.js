@@ -113,7 +113,8 @@ router.get('/click-stats', requireFeature('feature_referral_links'), authorize('
          LEFT JOIN (
            SELECT partner_id, COUNT(*) AS n
              FROM referrals
-            WHERE tenant_id = $1 AND (source IN ('referral_link', 'promo_code') OR referral_code_used IS NOT NULL)
+            WHERE tenant_id = $1 AND deleted_at IS NULL
+              AND (source IN ('referral_link', 'promo_code') OR referral_code_used IS NOT NULL)
             GROUP BY partner_id
          ) conv ON conv.partner_id = p.id
         WHERE p.tenant_id = $1
@@ -134,7 +135,7 @@ router.get('/source-breakdown', authorize('admin', 'superadmin'), async (req, re
     const { rows } = await query(
       `SELECT COALESCE(source, 'manual') AS source, COUNT(*)::int AS n
          FROM referrals
-        WHERE tenant_id = $1
+        WHERE tenant_id = $1 AND deleted_at IS NULL
         GROUP BY 1
         ORDER BY n DESC`,
       [req.tenantId]

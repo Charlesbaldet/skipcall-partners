@@ -37,7 +37,8 @@ router.get('/referrals', async (req, res) => {
     const partnerId = req.partnerId || req.apiKey.partner_id;
     const { status, limit = 50, offset = 0 } = req.query;
 
-    let where = [];
+    // Public API also hides Corbeille rows from external integrations.
+    let where = ['r.deleted_at IS NULL'];
     let params = [];
     let i = 1;
 
@@ -71,7 +72,7 @@ router.get('/referrals/:id', async (req, res) => {
   try {
     const partnerId = req.partnerId || req.apiKey.partner_id;
     const { rows } = await query(
-      `SELECT r.* FROM referrals r WHERE r.id = $1 ${partnerId ? 'AND r.partner_id = $2' : ''}`,
+      `SELECT r.* FROM referrals r WHERE r.id = $1 AND r.deleted_at IS NULL ${partnerId ? 'AND r.partner_id = $2' : ''}`,
       partnerId ? [req.params.id, partnerId] : [req.params.id]
     );
 
@@ -92,7 +93,8 @@ router.get('/commissions', async (req, res) => {
       `SELECT c.id, c.amount, c.rate, c.deal_value, c.status, c.created_at, c.approved_at, c.paid_at,
               r.prospect_name, r.prospect_company
        FROM commissions c JOIN referrals r ON c.referral_id = r.id
-       WHERE c.partner_id = $1 ORDER BY c.created_at DESC`,
+       WHERE c.partner_id = $1 AND c.deleted_at IS NULL AND r.deleted_at IS NULL
+       ORDER BY c.created_at DESC`,
       [partnerId]
     );
 

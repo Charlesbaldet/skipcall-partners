@@ -45,6 +45,7 @@ router.get('/', authenticate, tenantScope, async (req, res) => {
         FROM referrals r
    LEFT JOIN pipeline_stages ps ON ps.id = r.stage_id
        WHERE r.tenant_id = $1
+         AND r.deleted_at IS NULL
          AND (${isPartner ? 'r.partner_id = $4 AND ' : ''} (
               r.prospect_name   ILIKE $2
            OR r.prospect_company ILIKE $2
@@ -86,6 +87,7 @@ router.get('/', authenticate, tenantScope, async (req, res) => {
         JOIN partners p ON p.id = c.partner_id
         JOIN referrals r ON r.id = c.referral_id
        WHERE c.tenant_id = $1
+         AND c.deleted_at IS NULL AND r.deleted_at IS NULL
          AND (${isPartner ? 'c.partner_id = $4 AND ' : ''} (
               p.name ILIKE $2
            OR r.prospect_name ILIKE $2

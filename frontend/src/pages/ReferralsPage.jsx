@@ -164,14 +164,18 @@ export default function ReferralsPage() {
     <div className="fade-in">
       <ConfirmModal
         isOpen={!!deleteId}
-        title={t('referrals.delete_title') || 'Supprimer'}
-        message={t('referrals.confirm_delete')}
-        confirmLabel={t('referrals.delete') || 'Supprimer'}
+        title={t('trash.confirm_title')}
+        message={t('trash.confirm_message')}
+        confirmLabel={t('trash.confirm_delete')}
         cancelLabel={t('partners.cancel') || 'Annuler'}
         variant="danger"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteId(null)}
-      />
+      >
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+          {t('trash.recovery_notice')}
+        </span>
+      </ConfirmModal>
       {/* Confetti */}
       {showConfetti && <Confetti />}
 

@@ -6,23 +6,27 @@
     "page": "Pagina"
   },
   "pipeline": {
-    "forfait": "Vast bedrag",
-    "mensuel": "Maandelijks",
-    "trimestriel": "Per kwartaal",
-    "annuel": "Jaarlijks",
-    "nb_months": "Aantal maanden",
-    "nb_quarters": "Aantal kwartalen",
-    "nb_years": "Aantal jaren",
-    "months": "maanden",
-    "quarters": "kw.",
-    "years": "jaar",
-    "forecast_commission": "Verwachte commissie",
-    "partner_commission": "Commissie van de partner",
-    "commission_warning_title": "Aangepaste commissietarief",
-    "commission_warning_message": "Het tarief van het niveau {{tierName}} is {{tierRate}}%. Je past nu {{newRate}}% toe. Weet je zeker dat je de commissie wilt overschrijven?",
-    "commission_warning_confirm": "Aangepast tarief toepassen",
-    "commission_warning_cancel": "Niveautarief behouden",
-    "commission_overridden": "Aangepast (niveau {{tierName}}: {{tierRate}}%)"
+    "stages": "Pipeline-stages",
+    "stages_desc": "Pas je Kanban-kolommen aan. \"Gewonnen\" en \"Verloren\" zijn verplicht en kunnen niet worden verwijderd.",
+    "add_stage": "Stage toevoegen",
+    "edit_stage": "Stage bewerken",
+    "delete_stage": "Stage verwijderen",
+    "stage_name": "Naam van de stage",
+    "stage_name_ph": "Bijv. Afspraak",
+    "color": "Kleur",
+    "reorder": "Opnieuw ordenen",
+    "save_stages": "Opslaan",
+    "system_stage_warning": "Deze stage is vereist voor de commissie-automatisering en kan niet worden verwijderd",
+    "won_stage_info": "Wanneer een referral deze stage bereikt, wordt automatisch een commissie aangemaakt",
+    "lost_stage_info": "Wanneer een referral deze stage bereikt, wordt deze als verloren gemarkeerd",
+    "cannot_delete_only": "De enige overgebleven stage kan niet worden verwijderd",
+    "confirm_delete": "Deze stage verwijderen? Referrals worden verplaatst naar de vorige stage.",
+    "default_new": "Nieuw",
+    "default_contacted": "Gecontacteerd",
+    "default_qualified": "Gekwalificeerd",
+    "default_proposal": "Voorstel",
+    "default_won": "Gewonnen",
+    "default_lost": "Verloren"
   },
   "common": {
     "loading": "Laden...",
@@ -2333,29 +2337,6 @@
     "field_role": "Functie",
     "field_deal_name": "Dealnaam"
   },
-  "pipeline": {
-    "stages": "Pipeline-stages",
-    "stages_desc": "Pas je Kanban-kolommen aan. \"Gewonnen\" en \"Verloren\" zijn verplicht en kunnen niet worden verwijderd.",
-    "add_stage": "Stage toevoegen",
-    "edit_stage": "Stage bewerken",
-    "delete_stage": "Stage verwijderen",
-    "stage_name": "Naam van de stage",
-    "stage_name_ph": "Bijv. Afspraak",
-    "color": "Kleur",
-    "reorder": "Opnieuw ordenen",
-    "save_stages": "Opslaan",
-    "system_stage_warning": "Deze stage is vereist voor de commissie-automatisering en kan niet worden verwijderd",
-    "won_stage_info": "Wanneer een referral deze stage bereikt, wordt automatisch een commissie aangemaakt",
-    "lost_stage_info": "Wanneer een referral deze stage bereikt, wordt deze als verloren gemarkeerd",
-    "cannot_delete_only": "De enige overgebleven stage kan niet worden verwijderd",
-    "confirm_delete": "Deze stage verwijderen? Referrals worden verplaatst naar de vorige stage.",
-    "default_new": "Nieuw",
-    "default_contacted": "Gecontacteerd",
-    "default_qualified": "Gekwalificeerd",
-    "default_proposal": "Voorstel",
-    "default_won": "Gewonnen",
-    "default_lost": "Verloren"
-  },
   "search": {
     "title": "Zoeken",
     "placeholder": "Zoek referrals, partners, commissies, programma's…",
@@ -2826,34 +2807,85 @@
       "cta_subtitle": "Maak je RefBoost-account aan en activeer de integratie via Settings → Integraties in minder dan 5 minuten.",
       "cta_signup": "Gratis starten",
       "cross_links_title": "Andere integraties",
-      "categories": { "crm": "CRM", "payments": "Betalingen", "auth": "Authenticatie" },
-      "filters": { "all": "Alle", "crm": "CRM", "payments": "Betalingen", "auth": "Authenticatie" }
+      "categories": {
+        "crm": "CRM",
+        "payments": "Betalingen",
+        "auth": "Authenticatie"
+      },
+      "filters": {
+        "all": "Alle",
+        "crm": "CRM",
+        "payments": "Betalingen",
+        "auth": "Authenticatie"
+      }
     },
     "notion": {
       "name": "Notion",
       "shortDescription": "Synchroniseer je pipeline met je Notion-databases. Tweeweg-mapping van statussen en velden.",
       "heroSubtitle": "Verbind je Notion-databases met RefBoost om je partnerpipeline in realtime te synchroniseren. Tweeweg-mapping van statussen, velden en contacten.",
       "features": [
-        { "title": "Tweeweg-sync", "description": "Referrals die in RefBoost worden aangemaakt verschijnen in Notion en omgekeerd, zonder duplicaten." },
-        { "title": "Veld-mapping", "description": "Map je Notion-eigenschappen aan RefBoost-velden (naam, bedrijf, waarde, status, enz.)." },
-        { "title": "Status-mapping", "description": "Je Notion-statuskolommen zijn afgestemd op de RefBoost-pipelinefases." },
-        { "title": "Duplicaatdetectie", "description": "Geen risico dat je data wordt overschreven: we detecteren duplicaten vóór elke schrijfactie." }
+        {
+          "title": "Tweeweg-sync",
+          "description": "Referrals die in RefBoost worden aangemaakt verschijnen in Notion en omgekeerd, zonder duplicaten."
+        },
+        {
+          "title": "Veld-mapping",
+          "description": "Map je Notion-eigenschappen aan RefBoost-velden (naam, bedrijf, waarde, status, enz.)."
+        },
+        {
+          "title": "Status-mapping",
+          "description": "Je Notion-statuskolommen zijn afgestemd op de RefBoost-pipelinefases."
+        },
+        {
+          "title": "Duplicaatdetectie",
+          "description": "Geen risico dat je data wordt overschreven: we detecteren duplicaten vóór elke schrijfactie."
+        }
       ],
       "steps": [
-        { "title": "Verbind Notion", "description": "Maak een Notion interne integratietoken aan en plak die in RefBoost. Geen OAuth nodig." },
-        { "title": "Configureer de mapping", "description": "Kies de te synchroniseren database, map velden en statussen in een paar klikken." },
-        { "title": "Het is gesynchroniseerd", "description": "Realtime push van nieuwe referrals, dagelijkse pull om 21u om wijzigingen aan Notion-zijde op te pikken." }
+        {
+          "title": "Verbind Notion",
+          "description": "Maak een Notion interne integratietoken aan en plak die in RefBoost. Geen OAuth nodig."
+        },
+        {
+          "title": "Configureer de mapping",
+          "description": "Kies de te synchroniseren database, map velden en statussen in een paar klikken."
+        },
+        {
+          "title": "Het is gesynchroniseerd",
+          "description": "Realtime push van nieuwe referrals, dagelijkse pull om 21u om wijzigingen aan Notion-zijde op te pikken."
+        }
       ],
       "faqs": [
-        { "q": "Heb ik een betaald Notion-account nodig?", "a": "Nee, de integratie werkt met een gratis account. Het enige vereiste is een interne integratietoken (gratis en direct aan te maken)." },
-        { "q": "Wordt mijn Notion-data overschreven?", "a": "Nee. RefBoost detecteert duplicaten vóór elke schrijfactie en stelt een merge voor in plaats van te overschrijven. Jij houdt de controle." },
-        { "q": "Hoe vaak wordt er gesynchroniseerd?", "a": "Realtime push voor elke creatie/wijziging in RefBoost. Volledige pull één keer per dag om 21u om wijzigingen direct in Notion op te pikken." },
-        { "q": "Kan ik meerdere Notion-databases synchroniseren?", "a": "Ja, het Business-plan laat je meerdere Notion-databases verbinden (bijvoorbeeld een leads-database en een klantendatabase)." }
+        {
+          "q": "Heb ik een betaald Notion-account nodig?",
+          "a": "Nee, de integratie werkt met een gratis account. Het enige vereiste is een interne integratietoken (gratis en direct aan te maken)."
+        },
+        {
+          "q": "Wordt mijn Notion-data overschreven?",
+          "a": "Nee. RefBoost detecteert duplicaten vóór elke schrijfactie en stelt een merge voor in plaats van te overschrijven. Jij houdt de controle."
+        },
+        {
+          "q": "Hoe vaak wordt er gesynchroniseerd?",
+          "a": "Realtime push voor elke creatie/wijziging in RefBoost. Volledige pull één keer per dag om 21u om wijzigingen direct in Notion op te pikken."
+        },
+        {
+          "q": "Kan ik meerdere Notion-databases synchroniseren?",
+          "a": "Ja, het Business-plan laat je meerdere Notion-databases verbinden (bijvoorbeeld een leads-database en een klantendatabase)."
+        }
       ],
       "roi": [
-        { "metric": "2u / week", "description": "Bespaarde tijd door het schrappen van copy-paste tussen RefBoost en je CRM." },
-        { "metric": "0 duplicaten", "description": "Detectie via e-mail elimineert duplicaten vóór elke schrijfactie." },
-        { "metric": "Realtime", "description": "Je teams zien de referrals in Notion zonder van tool te wisselen." }
+        {
+          "metric": "2u / week",
+          "description": "Bespaarde tijd door het schrappen van copy-paste tussen RefBoost en je CRM."
+        },
+        {
+          "metric": "0 duplicaten",
+          "description": "Detectie via e-mail elimineert duplicaten vóór elke schrijfactie."
+        },
+        {
+          "metric": "Realtime",
+          "description": "Je teams zien de referrals in Notion zonder van tool te wisselen."
+        }
       ]
     },
     "hubspot": {
@@ -2861,26 +2893,68 @@
       "shortDescription": "Push je referrals naar HubSpot Deals. Automatische sync van contacten en deals.",
       "heroSubtitle": "Verbind je HubSpot CRM met RefBoost. Elke referral wordt een HubSpot Deal, elke prospect een Contact, alles realtime gesynchroniseerd.",
       "features": [
-        { "title": "Deal-sync", "description": "Elke RefBoost-referral wordt een HubSpot Deal in de pipeline van jouw keuze." },
-        { "title": "Automatische contacten", "description": "De prospect verschijnt als HubSpot Contact met de partner-info als gekoppelde properties." },
-        { "title": "Gemapte statussen", "description": "Je HubSpot Deal-fases zijn afgestemd op de RefBoost-statussen, in beide richtingen." },
-        { "title": "Duplicaatdetectie", "description": "Bestaat het contact al in HubSpot, dan koppelen we de deal aan het bestaande contact in plaats van een nieuwe aan te maken." }
+        {
+          "title": "Deal-sync",
+          "description": "Elke RefBoost-referral wordt een HubSpot Deal in de pipeline van jouw keuze."
+        },
+        {
+          "title": "Automatische contacten",
+          "description": "De prospect verschijnt als HubSpot Contact met de partner-info als gekoppelde properties."
+        },
+        {
+          "title": "Gemapte statussen",
+          "description": "Je HubSpot Deal-fases zijn afgestemd op de RefBoost-statussen, in beide richtingen."
+        },
+        {
+          "title": "Duplicaatdetectie",
+          "description": "Bestaat het contact al in HubSpot, dan koppelen we de deal aan het bestaande contact in plaats van een nieuwe aan te maken."
+        }
       ],
       "steps": [
-        { "title": "Verbind HubSpot", "description": "Klik op \"Verbind HubSpot\": veilige OAuth, geen API-key te plakken." },
-        { "title": "Configureer de mapping", "description": "Kies de doel-HubSpot-pipeline en map de fases aan je RefBoost-statussen." },
-        { "title": "Automatische sync", "description": "Elke nieuwe referral verschijnt onmiddellijk in HubSpot. Tweerichtings-webhook voor status-updates." }
+        {
+          "title": "Verbind HubSpot",
+          "description": "Klik op \"Verbind HubSpot\": veilige OAuth, geen API-key te plakken."
+        },
+        {
+          "title": "Configureer de mapping",
+          "description": "Kies de doel-HubSpot-pipeline en map de fases aan je RefBoost-statussen."
+        },
+        {
+          "title": "Automatische sync",
+          "description": "Elke nieuwe referral verschijnt onmiddellijk in HubSpot. Tweerichtings-webhook voor status-updates."
+        }
       ],
       "faqs": [
-        { "q": "Welke HubSpot-versie heb ik nodig?", "a": "HubSpot Starter of hoger. De gratis versie geeft geen toegang tot de CRM-API die de integratie nodig heeft." },
-        { "q": "API-key of OAuth?", "a": "Alleen OAuth, voor de veiligheid. Geen API-keys te beheren — de verbinding is twee klikken en kan op elk moment vanuit HubSpot worden ingetrokken." },
-        { "q": "Wat gebeurt er met mijn bestaande deals?", "a": "Niets aan HubSpot-zijde. Nieuwe RefBoost-referrals creëren nieuwe deals; bestaande contacten worden automatisch gekoppeld." },
-        { "q": "Kan ik de sync pauzeren zonder HubSpot los te koppelen?", "a": "Ja, je kunt de integratie pauzeren via Settings → Integraties zonder de tokens in te trekken." }
+        {
+          "q": "Welke HubSpot-versie heb ik nodig?",
+          "a": "HubSpot Starter of hoger. De gratis versie geeft geen toegang tot de CRM-API die de integratie nodig heeft."
+        },
+        {
+          "q": "API-key of OAuth?",
+          "a": "Alleen OAuth, voor de veiligheid. Geen API-keys te beheren — de verbinding is twee klikken en kan op elk moment vanuit HubSpot worden ingetrokken."
+        },
+        {
+          "q": "Wat gebeurt er met mijn bestaande deals?",
+          "a": "Niets aan HubSpot-zijde. Nieuwe RefBoost-referrals creëren nieuwe deals; bestaande contacten worden automatisch gekoppeld."
+        },
+        {
+          "q": "Kan ik de sync pauzeren zonder HubSpot los te koppelen?",
+          "a": "Ja, je kunt de integratie pauzeren via Settings → Integraties zonder de tokens in te trekken."
+        }
       ],
       "roi": [
-        { "metric": "+30%", "description": "Meer conversie wanneer partners realtime de status van hun referrals zien." },
-        { "metric": "1 pipeline", "description": "Je referrals en directe deals samen in HubSpot." },
-        { "metric": "0 invoer", "description": "Contacten en deals worden automatisch aangemaakt." }
+        {
+          "metric": "+30%",
+          "description": "Meer conversie wanneer partners realtime de status van hun referrals zien."
+        },
+        {
+          "metric": "1 pipeline",
+          "description": "Je referrals en directe deals samen in HubSpot."
+        },
+        {
+          "metric": "0 invoer",
+          "description": "Contacten en deals worden automatisch aangemaakt."
+        }
       ]
     },
     "salesforce": {
@@ -2888,26 +2962,68 @@
       "shortDescription": "Verbind je Salesforce-Opportunities. Realtime import/export van leads en statussen.",
       "heroSubtitle": "Verbind je Salesforce-instance met RefBoost. Synchronisatie van Opportunities, Contacts en Accounts met aangepaste mapping voor standaard- en custom-objecten.",
       "features": [
-        { "title": "Opportunities-sync", "description": "Elke RefBoost-referral wordt een Salesforce-Opportunity in de Stage van jouw keuze." },
-        { "title": "Contacts & Accounts", "description": "De prospect wordt aangemaakt als Contact gekoppeld aan een Account, met slimme matching aan bestaande Accounts." },
-        { "title": "Pipeline-statussen", "description": "Je Salesforce Stages zijn afgestemd op de RefBoost-statussen, in beide richtingen." },
-        { "title": "Custom objects", "description": "Map je Salesforce custom objects en velden aan RefBoost-data via de mapping-editor." }
+        {
+          "title": "Opportunities-sync",
+          "description": "Elke RefBoost-referral wordt een Salesforce-Opportunity in de Stage van jouw keuze."
+        },
+        {
+          "title": "Contacts & Accounts",
+          "description": "De prospect wordt aangemaakt als Contact gekoppeld aan een Account, met slimme matching aan bestaande Accounts."
+        },
+        {
+          "title": "Pipeline-statussen",
+          "description": "Je Salesforce Stages zijn afgestemd op de RefBoost-statussen, in beide richtingen."
+        },
+        {
+          "title": "Custom objects",
+          "description": "Map je Salesforce custom objects en velden aan RefBoost-data via de mapping-editor."
+        }
       ],
       "steps": [
-        { "title": "Verbind Salesforce", "description": "OAuth via je Salesforce-login. Production of Sandbox — RefBoost detecteert het automatisch." },
-        { "title": "Map de objecten", "description": "Kies Opportunities of een custom object, map velden, record types en Stages." },
-        { "title": "Tweeweg-sync", "description": "Realtime push via de REST API. Salesforce-naar-RefBoost-webhook voor Stage-updates." }
+        {
+          "title": "Verbind Salesforce",
+          "description": "OAuth via je Salesforce-login. Production of Sandbox — RefBoost detecteert het automatisch."
+        },
+        {
+          "title": "Map de objecten",
+          "description": "Kies Opportunities of een custom object, map velden, record types en Stages."
+        },
+        {
+          "title": "Tweeweg-sync",
+          "description": "Realtime push via de REST API. Salesforce-naar-RefBoost-webhook voor Stage-updates."
+        }
       ],
       "faqs": [
-        { "q": "Welke Salesforce-editie heb ik nodig?", "a": "Enterprise Edition of Professional met API-toegang ingeschakeld. Essentials en Group bevatten geen REST API." },
-        { "q": "Kan ik custom objects gebruiken?", "a": "Ja. De mapping-editor laat je elk object (standaard of custom) als sync-doel kiezen." },
-        { "q": "Sandbox ondersteund?", "a": "Ja, je kunt eerst een Sandbox verbinden om te testen en daarna naar Production schakelen zonder de mapping opnieuw te configureren." },
-        { "q": "Compatibel met zowel Salesforce Lightning als Classic?", "a": "Ja, de integratie gebruikt de REST API die identiek werkt op beide interfaces." }
+        {
+          "q": "Welke Salesforce-editie heb ik nodig?",
+          "a": "Enterprise Edition of Professional met API-toegang ingeschakeld. Essentials en Group bevatten geen REST API."
+        },
+        {
+          "q": "Kan ik custom objects gebruiken?",
+          "a": "Ja. De mapping-editor laat je elk object (standaard of custom) als sync-doel kiezen."
+        },
+        {
+          "q": "Sandbox ondersteund?",
+          "a": "Ja, je kunt eerst een Sandbox verbinden om te testen en daarna naar Production schakelen zonder de mapping opnieuw te configureren."
+        },
+        {
+          "q": "Compatibel met zowel Salesforce Lightning als Classic?",
+          "a": "Ja, de integratie gebruikt de REST API die identiek werkt op beide interfaces."
+        }
       ],
       "roi": [
-        { "metric": "100%", "description": "Toewijzing van deals aan hun bron-partner direct in Salesforce." },
-        { "metric": "0 adoptie", "description": "Je salesmensen blijven in Salesforce, de referrals komen vanzelf." },
-        { "metric": "Audit-klaar", "description": "Volledige historie van partneracties voor je audits." }
+        {
+          "metric": "100%",
+          "description": "Toewijzing van deals aan hun bron-partner direct in Salesforce."
+        },
+        {
+          "metric": "0 adoptie",
+          "description": "Je salesmensen blijven in Salesforce, de referrals komen vanzelf."
+        },
+        {
+          "metric": "Audit-klaar",
+          "description": "Volledige historie van partneracties voor je audits."
+        }
       ]
     },
     "qonto": {
@@ -2915,26 +3031,68 @@
       "shortDescription": "Geautomatiseerde SEPA-overschrijvingen. Betaal je partners met één klik via veilige SCA-validatie.",
       "heroSubtitle": "Verbind je Qonto zakelijk-account met RefBoost en betaal de commissies van je partners met één klik. SEPA-overschrijvingen, SCA-validatie en automatisch betaalbewijs.",
       "features": [
-        { "title": "Geautomatiseerde SEPA-overschrijvingen", "description": "Een klik op \"Betalen\" start een SEPA-overschrijving vanaf je Qonto-account, zonder IBAN opnieuw in te voeren." },
-        { "title": "Veilige SCA-validatie", "description": "Voldoet aan PSD2: elke overschrijving doorloopt de sterke authenticatie in je Qonto-app voordat hij wordt uitgevoerd." },
-        { "title": "Bulkbetalingen", "description": "Selecteer tot 400 commissies en betaal ze allemaal in één actie." },
-        { "title": "Betaalbewijs per e-mail", "description": "De partner ontvangt een automatische e-mail met de overschrijvingsreferentie zodra Qonto deze heeft uitgevoerd." }
+        {
+          "title": "Geautomatiseerde SEPA-overschrijvingen",
+          "description": "Een klik op \"Betalen\" start een SEPA-overschrijving vanaf je Qonto-account, zonder IBAN opnieuw in te voeren."
+        },
+        {
+          "title": "Veilige SCA-validatie",
+          "description": "Voldoet aan PSD2: elke overschrijving doorloopt de sterke authenticatie in je Qonto-app voordat hij wordt uitgevoerd."
+        },
+        {
+          "title": "Bulkbetalingen",
+          "description": "Selecteer tot 400 commissies en betaal ze allemaal in één actie."
+        },
+        {
+          "title": "Betaalbewijs per e-mail",
+          "description": "De partner ontvangt een automatische e-mail met de overschrijvingsreferentie zodra Qonto deze heeft uitgevoerd."
+        }
       ],
       "steps": [
-        { "title": "Verbind Qonto", "description": "Officiële Qonto OAuth via Settings → Integraties. De verbinding duurt 30 seconden." },
-        { "title": "Kies je rekening", "description": "Kies welke Qonto-rekening wordt belast (handig als je meerdere subaccounts hebt)." },
-        { "title": "Betaal met één klik", "description": "Bij elke gevalideerde commissie start de \"Betalen\"-knop de overschrijving met SCA-validatie." }
+        {
+          "title": "Verbind Qonto",
+          "description": "Officiële Qonto OAuth via Settings → Integraties. De verbinding duurt 30 seconden."
+        },
+        {
+          "title": "Kies je rekening",
+          "description": "Kies welke Qonto-rekening wordt belast (handig als je meerdere subaccounts hebt)."
+        },
+        {
+          "title": "Betaal met één klik",
+          "description": "Bij elke gevalideerde commissie start de \"Betalen\"-knop de overschrijving met SCA-validatie."
+        }
       ],
       "faqs": [
-        { "q": "Is SCA-validatie verplicht?", "a": "Ja, opgelegd door de Europese PSD2-richtlijn. RefBoost herinnert je er gewoon aan om in je Qonto-app te bevestigen, de actie zelf duurt 5 seconden." },
-        { "q": "Hoeveel bulkbetalingen zijn mogelijk?", "a": "Tot 400 commissies per batch. Daarboven splitst het systeem ze automatisch in opeenvolgende batches." },
-        { "q": "Zijn er RefBoost-kosten naast de Qonto-kosten?", "a": "Nee, RefBoost rekent geen kosten voor overschrijvingen. Alleen de gebruikelijke SEPA-kosten van je Qonto-account zijn van toepassing (gratis binnen de SEPA-zone)." },
-        { "q": "Welk RefBoost-plan heb ik nodig?", "a": "De Qonto-integratie is inbegrepen in het Business-plan. De Starter- en Pro-plannen zien de integratie maar kunnen deze niet activeren." }
+        {
+          "q": "Is SCA-validatie verplicht?",
+          "a": "Ja, opgelegd door de Europese PSD2-richtlijn. RefBoost herinnert je er gewoon aan om in je Qonto-app te bevestigen, de actie zelf duurt 5 seconden."
+        },
+        {
+          "q": "Hoeveel bulkbetalingen zijn mogelijk?",
+          "a": "Tot 400 commissies per batch. Daarboven splitst het systeem ze automatisch in opeenvolgende batches."
+        },
+        {
+          "q": "Zijn er RefBoost-kosten naast de Qonto-kosten?",
+          "a": "Nee, RefBoost rekent geen kosten voor overschrijvingen. Alleen de gebruikelijke SEPA-kosten van je Qonto-account zijn van toepassing (gratis binnen de SEPA-zone)."
+        },
+        {
+          "q": "Welk RefBoost-plan heb ik nodig?",
+          "a": "De Qonto-integratie is inbegrepen in het Business-plan. De Starter- en Pro-plannen zien de integratie maar kunnen deze niet activeren."
+        }
       ],
       "roi": [
-        { "metric": "30 sec", "description": "Om een partnercommissie te betalen, van klik tot SEPA-overschrijving." },
-        { "metric": "0 fouten", "description": "IBAN en bedrag worden vooraf ingevuld vanuit de commissie." },
-        { "metric": "x2", "description": "Een snel betaalde partner beveelt twee keer zo veel aan." }
+        {
+          "metric": "30 sec",
+          "description": "Om een partnercommissie te betalen, van klik tot SEPA-overschrijving."
+        },
+        {
+          "metric": "0 fouten",
+          "description": "IBAN en bedrag worden vooraf ingevuld vanuit de commissie."
+        },
+        {
+          "metric": "x2",
+          "description": "Een snel betaalde partner beveelt twee keer zo veel aan."
+        }
       ]
     },
     "google-sso": {
@@ -2942,27 +3100,90 @@
       "shortDescription": "Veilige aanmelding via Google voor je team en partners. Geen wachtwoorden meer te beheren.",
       "heroSubtitle": "Standaard ingeschakeld op elk plan. Je team en partners loggen in op RefBoost met hun Google-account in één klik — geen wachtwoorden te beheren, sterkere beveiliging.",
       "features": [
-        { "title": "Wachtwoordvrije aanmelding", "description": "Eén klik op \"Inloggen met Google\" en de gebruiker is in zijn RefBoost-werkruimte." },
-        { "title": "Multi-tenant", "description": "Hetzelfde Google-account kan toegang krijgen tot meerdere partner-werkruimtes als de gebruiker met meerdere programma's werkt." },
-        { "title": "Sterkere beveiliging", "description": "Geen wachtwoord opgeslagen: wachtwoordlekken zijn niet langer jouw zorg. 2FA overgenomen van Google." },
-        { "title": "Eenvoudigere onboarding", "description": "Geen vergeten wachtwoord-resets meer: een partner die zich met Google registreert kan altijd terugkomen, zonder frictie." }
+        {
+          "title": "Wachtwoordvrije aanmelding",
+          "description": "Eén klik op \"Inloggen met Google\" en de gebruiker is in zijn RefBoost-werkruimte."
+        },
+        {
+          "title": "Multi-tenant",
+          "description": "Hetzelfde Google-account kan toegang krijgen tot meerdere partner-werkruimtes als de gebruiker met meerdere programma's werkt."
+        },
+        {
+          "title": "Sterkere beveiliging",
+          "description": "Geen wachtwoord opgeslagen: wachtwoordlekken zijn niet langer jouw zorg. 2FA overgenomen van Google."
+        },
+        {
+          "title": "Eenvoudigere onboarding",
+          "description": "Geen vergeten wachtwoord-resets meer: een partner die zich met Google registreert kan altijd terugkomen, zonder frictie."
+        }
       ],
       "steps": [
-        { "title": "Standaard ingeschakeld", "description": "Geen configuratie nodig. De \"Inloggen met Google\"-knop verschijnt op elke RefBoost-aanmeldpagina." },
-        { "title": "De partner klikt", "description": "De partner kiest \"Inloggen met Google\" op het login- of registratiescherm." },
-        { "title": "Directe toegang", "description": "De gebruiker komt in zijn werkruimte; Google- en RefBoost-sessies blijven gesynchroniseerd." }
+        {
+          "title": "Standaard ingeschakeld",
+          "description": "Geen configuratie nodig. De \"Inloggen met Google\"-knop verschijnt op elke RefBoost-aanmeldpagina."
+        },
+        {
+          "title": "De partner klikt",
+          "description": "De partner kiest \"Inloggen met Google\" op het login- of registratiescherm."
+        },
+        {
+          "title": "Directe toegang",
+          "description": "De gebruiker komt in zijn werkruimte; Google- en RefBoost-sessies blijven gesynchroniseerd."
+        }
       ],
       "faqs": [
-        { "q": "Is Google SSO verplicht voor mijn gebruikers?", "a": "Nee. Aanmelding met e-mail + wachtwoord blijft beschikbaar. Gebruikers kunnen hun methode kiezen bij registratie." },
-        { "q": "Welke Google-data wordt met RefBoost gedeeld?", "a": "Alleen volledige naam en e-mailadres. RefBoost leest noch je contacten, noch je e-mails, noch je Drive." },
-        { "q": "Kunnen mijn partners hun bestaande account aan Google koppelen?", "a": "Ja. Als een partner met een e-mail/wachtwoord-account later via Google inlogt met hetzelfde adres, worden beide methodes automatisch gekoppeld." },
-        { "q": "Zijn Microsoft SSO of Okta gepland?", "a": "Microsoft SSO staat op de roadmap voor 2026. Okta / generieke SAML zijn gepland voor Enterprise-accounts — neem contact op als je ze nodig hebt." }
+        {
+          "q": "Is Google SSO verplicht voor mijn gebruikers?",
+          "a": "Nee. Aanmelding met e-mail + wachtwoord blijft beschikbaar. Gebruikers kunnen hun methode kiezen bij registratie."
+        },
+        {
+          "q": "Welke Google-data wordt met RefBoost gedeeld?",
+          "a": "Alleen volledige naam en e-mailadres. RefBoost leest noch je contacten, noch je e-mails, noch je Drive."
+        },
+        {
+          "q": "Kunnen mijn partners hun bestaande account aan Google koppelen?",
+          "a": "Ja. Als een partner met een e-mail/wachtwoord-account later via Google inlogt met hetzelfde adres, worden beide methodes automatisch gekoppeld."
+        },
+        {
+          "q": "Zijn Microsoft SSO of Okta gepland?",
+          "a": "Microsoft SSO staat op de roadmap voor 2026. Okta / generieke SAML zijn gepland voor Enterprise-accounts — neem contact op als je ze nodig hebt."
+        }
       ],
       "roi": [
-        { "metric": "0 tickets", "description": "Geen verzoeken voor wachtwoordreset meer." },
-        { "metric": "10 sec", "description": "Om een partner in zijn werkruimte in te laten loggen." },
-        { "metric": "Native 2FA", "description": "Versterkte beveiliging van Google overgenomen, zonder iets te configureren." }
+        {
+          "metric": "0 tickets",
+          "description": "Geen verzoeken voor wachtwoordreset meer."
+        },
+        {
+          "metric": "10 sec",
+          "description": "Om een partner in zijn werkruimte in te laten loggen."
+        },
+        {
+          "metric": "Native 2FA",
+          "description": "Versterkte beveiliging van Google overgenomen, zonder iets te configureren."
+        }
       ]
     }
+  },
+  "sidebar": {
+    "trash": "Prullenbak"
+  },
+  "trash": {
+    "title": "Prullenbak",
+    "subtitle": "Verwijderde items worden 30 dagen bewaard voordat ze definitief worden verwijderd.",
+    "empty": "De prullenbak is leeg",
+    "restore": "Herstellen",
+    "restored": "Item succesvol hersteld",
+    "permanent_delete": "Definitief verwijderen",
+    "permanently_deleted": "Item definitief verwijderd",
+    "deleted_on": "Verwijderd op {{date}}",
+    "days_remaining": "Nog {{n}} dagen",
+    "confirm_title": "Dit item verwijderen?",
+    "confirm_message": "Dit item wordt naar de prullenbak verplaatst.",
+    "confirm_delete": "Naar prullenbak",
+    "recovery_notice": "Je kunt het de komende 30 dagen herstellen vanuit de prullenbak.",
+    "permanent_confirm_title": "Definitief verwijderen?",
+    "permanent_confirm_message": "Deze actie is onomkeerbaar. Het item wordt permanent verwijderd.",
+    "permanent_confirm_delete": "Definitief verwijderen"
   }
 }

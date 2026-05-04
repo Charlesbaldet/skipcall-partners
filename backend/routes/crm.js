@@ -462,7 +462,7 @@ router.post('/sync/:referralId', authenticate, tenantScope, authorize('admin', '
     const { rows } = await query(
       `SELECT r.*, p.name AS partner_name FROM referrals r
        LEFT JOIN partners p ON p.id = r.partner_id
-       WHERE r.id = $1 AND ($2::uuid IS NULL OR r.tenant_id = $2)
+       WHERE r.id = $1 AND r.deleted_at IS NULL AND ($2::uuid IS NULL OR r.tenant_id = $2)
        LIMIT 1`,
       [req.params.referralId, req.tenantId || null]
     );

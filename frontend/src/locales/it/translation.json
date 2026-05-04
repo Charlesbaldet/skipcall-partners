@@ -6,23 +6,27 @@
     "page": "Pagina"
   },
   "pipeline": {
-    "forfait": "Forfait",
-    "mensuel": "Mensile",
-    "trimestriel": "Trimestrale",
-    "annuel": "Annuale",
-    "nb_months": "Numero di mesi",
-    "nb_quarters": "Numero di trimestri",
-    "nb_years": "Numero di anni",
-    "months": "mesi",
-    "quarters": "trim.",
-    "years": "anno/anni",
-    "forecast_commission": "Commissione prevista",
-    "partner_commission": "Commissione del partner",
-    "commission_warning_title": "Tasso di commissione personalizzato",
-    "commission_warning_message": "Il tasso del livello {{tierName}} è {{tierRate}}%. Stai per applicare un tasso del {{newRate}}%. Sei sicuro di voler modificare la commissione?",
-    "commission_warning_confirm": "Applica tasso personalizzato",
-    "commission_warning_cancel": "Mantieni tasso del livello",
-    "commission_overridden": "Tasso modificato (livello {{tierName}}: {{tierRate}}%)"
+    "stages": "Fasi del pipeline",
+    "stages_desc": "Personalizza le colonne del tuo Kanban. «Vinto» e «Perso» sono obbligatorie e non possono essere eliminate.",
+    "add_stage": "Aggiungi fase",
+    "edit_stage": "Modifica fase",
+    "delete_stage": "Elimina fase",
+    "stage_name": "Nome della fase",
+    "stage_name_ph": "Es. Riunione",
+    "color": "Colore",
+    "reorder": "Riordina",
+    "save_stages": "Salva",
+    "system_stage_warning": "Questa fase è necessaria per l'automazione delle commissioni e non può essere eliminata",
+    "won_stage_info": "Quando un referral raggiunge questa fase, viene creata automaticamente una commissione",
+    "lost_stage_info": "Quando un referral raggiunge questa fase, viene segnato come perso",
+    "cannot_delete_only": "Impossibile eliminare l'unica fase rimasta",
+    "confirm_delete": "Eliminare questa fase? I referral verranno spostati alla fase precedente.",
+    "default_new": "Nuovo",
+    "default_contacted": "Contattato",
+    "default_qualified": "Qualificato",
+    "default_proposal": "Proposta",
+    "default_won": "Vinto",
+    "default_lost": "Perso"
   },
   "common": {
     "loading": "Caricamento...",
@@ -2333,29 +2337,6 @@
     "field_role": "Ruolo",
     "field_deal_name": "Nome del deal"
   },
-  "pipeline": {
-    "stages": "Fasi del pipeline",
-    "stages_desc": "Personalizza le colonne del tuo Kanban. «Vinto» e «Perso» sono obbligatorie e non possono essere eliminate.",
-    "add_stage": "Aggiungi fase",
-    "edit_stage": "Modifica fase",
-    "delete_stage": "Elimina fase",
-    "stage_name": "Nome della fase",
-    "stage_name_ph": "Es. Riunione",
-    "color": "Colore",
-    "reorder": "Riordina",
-    "save_stages": "Salva",
-    "system_stage_warning": "Questa fase è necessaria per l'automazione delle commissioni e non può essere eliminata",
-    "won_stage_info": "Quando un referral raggiunge questa fase, viene creata automaticamente una commissione",
-    "lost_stage_info": "Quando un referral raggiunge questa fase, viene segnato come perso",
-    "cannot_delete_only": "Impossibile eliminare l'unica fase rimasta",
-    "confirm_delete": "Eliminare questa fase? I referral verranno spostati alla fase precedente.",
-    "default_new": "Nuovo",
-    "default_contacted": "Contattato",
-    "default_qualified": "Qualificato",
-    "default_proposal": "Proposta",
-    "default_won": "Vinto",
-    "default_lost": "Perso"
-  },
   "search": {
     "title": "Ricerca",
     "placeholder": "Cerca referral, partner, commissioni, programmi…",
@@ -2826,34 +2807,85 @@
       "cta_subtitle": "Crea il tuo account RefBoost e attiva l'integrazione da Settings → Integrazioni in meno di 5 minuti.",
       "cta_signup": "Inizia gratis",
       "cross_links_title": "Altre integrazioni",
-      "categories": { "crm": "CRM", "payments": "Pagamenti", "auth": "Autenticazione" },
-      "filters": { "all": "Tutte", "crm": "CRM", "payments": "Pagamenti", "auth": "Autenticazione" }
+      "categories": {
+        "crm": "CRM",
+        "payments": "Pagamenti",
+        "auth": "Autenticazione"
+      },
+      "filters": {
+        "all": "Tutte",
+        "crm": "CRM",
+        "payments": "Pagamenti",
+        "auth": "Autenticazione"
+      }
     },
     "notion": {
       "name": "Notion",
       "shortDescription": "Sincronizza la tua pipeline con i tuoi database Notion. Mappatura bidirezionale di stati e campi.",
       "heroSubtitle": "Connetti i tuoi database Notion a RefBoost per sincronizzare la tua pipeline partner in tempo reale. Mappatura bidirezionale di stati, campi e contatti.",
       "features": [
-        { "title": "Sync bidirezionale", "description": "I referral creati in RefBoost compaiono in Notion e viceversa, senza duplicati." },
-        { "title": "Mappatura dei campi", "description": "Mappa le tue proprietà Notion ai campi RefBoost (nome, azienda, valore, stato, ecc.)." },
-        { "title": "Mappatura degli stati", "description": "Le colonne di stato di Notion sono allineate alle fasi del pipeline RefBoost." },
-        { "title": "Rilevamento dei duplicati", "description": "Nessun rischio di sovrascrivere i tuoi dati: rileviamo i duplicati prima di ogni scrittura." }
+        {
+          "title": "Sync bidirezionale",
+          "description": "I referral creati in RefBoost compaiono in Notion e viceversa, senza duplicati."
+        },
+        {
+          "title": "Mappatura dei campi",
+          "description": "Mappa le tue proprietà Notion ai campi RefBoost (nome, azienda, valore, stato, ecc.)."
+        },
+        {
+          "title": "Mappatura degli stati",
+          "description": "Le colonne di stato di Notion sono allineate alle fasi del pipeline RefBoost."
+        },
+        {
+          "title": "Rilevamento dei duplicati",
+          "description": "Nessun rischio di sovrascrivere i tuoi dati: rileviamo i duplicati prima di ogni scrittura."
+        }
       ],
       "steps": [
-        { "title": "Connetti Notion", "description": "Crea un token di integrazione interna Notion e incollalo in RefBoost. Nessun OAuth richiesto." },
-        { "title": "Configura la mappatura", "description": "Scegli il database da sincronizzare, mappa campi e stati in pochi clic." },
-        { "title": "È sincronizzato", "description": "Push in tempo reale dei nuovi referral, pull giornaliero alle 21 per recuperare le modifiche fatte in Notion." }
+        {
+          "title": "Connetti Notion",
+          "description": "Crea un token di integrazione interna Notion e incollalo in RefBoost. Nessun OAuth richiesto."
+        },
+        {
+          "title": "Configura la mappatura",
+          "description": "Scegli il database da sincronizzare, mappa campi e stati in pochi clic."
+        },
+        {
+          "title": "È sincronizzato",
+          "description": "Push in tempo reale dei nuovi referral, pull giornaliero alle 21 per recuperare le modifiche fatte in Notion."
+        }
       ],
       "faqs": [
-        { "q": "Serve un account Notion a pagamento?", "a": "No, l'integrazione funziona con un account gratuito. L'unico requisito è un token di integrazione interna (gratuito e immediato)." },
-        { "q": "I miei dati Notion verranno sovrascritti?", "a": "No. RefBoost rileva i duplicati prima di ogni scrittura e propone una fusione invece di sovrascrivere. Mantieni il controllo." },
-        { "q": "Con quale frequenza avviene la sincronizzazione?", "a": "Push in tempo reale per ogni creazione/modifica in RefBoost. Pull completo una volta al giorno alle 21 per intercettare le modifiche fatte direttamente in Notion." },
-        { "q": "Posso sincronizzare più database Notion?", "a": "Sì, il piano Business consente di connettere più database Notion (per esempio uno per i lead e uno per i clienti)." }
+        {
+          "q": "Serve un account Notion a pagamento?",
+          "a": "No, l'integrazione funziona con un account gratuito. L'unico requisito è un token di integrazione interna (gratuito e immediato)."
+        },
+        {
+          "q": "I miei dati Notion verranno sovrascritti?",
+          "a": "No. RefBoost rileva i duplicati prima di ogni scrittura e propone una fusione invece di sovrascrivere. Mantieni il controllo."
+        },
+        {
+          "q": "Con quale frequenza avviene la sincronizzazione?",
+          "a": "Push in tempo reale per ogni creazione/modifica in RefBoost. Pull completo una volta al giorno alle 21 per intercettare le modifiche fatte direttamente in Notion."
+        },
+        {
+          "q": "Posso sincronizzare più database Notion?",
+          "a": "Sì, il piano Business consente di connettere più database Notion (per esempio uno per i lead e uno per i clienti)."
+        }
       ],
       "roi": [
-        { "metric": "2h / settimana", "description": "Tempo risparmiato eliminando il copia-incolla tra RefBoost e il tuo CRM." },
-        { "metric": "0 duplicati", "description": "La rilevazione via email elimina i duplicati prima di ogni scrittura." },
-        { "metric": "Tempo reale", "description": "I tuoi team vedono i referral in Notion senza cambiare strumento." }
+        {
+          "metric": "2h / settimana",
+          "description": "Tempo risparmiato eliminando il copia-incolla tra RefBoost e il tuo CRM."
+        },
+        {
+          "metric": "0 duplicati",
+          "description": "La rilevazione via email elimina i duplicati prima di ogni scrittura."
+        },
+        {
+          "metric": "Tempo reale",
+          "description": "I tuoi team vedono i referral in Notion senza cambiare strumento."
+        }
       ]
     },
     "hubspot": {
@@ -2861,26 +2893,68 @@
       "shortDescription": "Invia i tuoi referral a HubSpot Deals. Sync automatica di contatti e deal.",
       "heroSubtitle": "Connetti il tuo HubSpot CRM a RefBoost. Ogni referral diventa un Deal HubSpot, ogni prospect un Contact, tutto sincronizzato in tempo reale.",
       "features": [
-        { "title": "Sync dei deal", "description": "Ogni referral RefBoost diventa un Deal HubSpot nella pipeline che scegli." },
-        { "title": "Contatti automatici", "description": "Il prospect compare come Contact HubSpot con le info partner nelle proprietà associate." },
-        { "title": "Stati mappati", "description": "Le tue fasi Deal di HubSpot sono allineate agli stati RefBoost in entrambe le direzioni." },
-        { "title": "Rilevamento dei duplicati", "description": "Se il contatto esiste già in HubSpot, colleghiamo il deal al contatto esistente invece di crearne uno nuovo." }
+        {
+          "title": "Sync dei deal",
+          "description": "Ogni referral RefBoost diventa un Deal HubSpot nella pipeline che scegli."
+        },
+        {
+          "title": "Contatti automatici",
+          "description": "Il prospect compare come Contact HubSpot con le info partner nelle proprietà associate."
+        },
+        {
+          "title": "Stati mappati",
+          "description": "Le tue fasi Deal di HubSpot sono allineate agli stati RefBoost in entrambe le direzioni."
+        },
+        {
+          "title": "Rilevamento dei duplicati",
+          "description": "Se il contatto esiste già in HubSpot, colleghiamo il deal al contatto esistente invece di crearne uno nuovo."
+        }
       ],
       "steps": [
-        { "title": "Connetti HubSpot", "description": "Clic su \"Connetti HubSpot\": OAuth sicuro, nessuna chiave API da incollare." },
-        { "title": "Configura la mappatura", "description": "Scegli la pipeline HubSpot di destinazione e mappa le fasi ai tuoi stati RefBoost." },
-        { "title": "Sync automatica", "description": "Ogni nuovo referral compare istantaneamente in HubSpot. Webhook bidirezionale per gli aggiornamenti di stato." }
+        {
+          "title": "Connetti HubSpot",
+          "description": "Clic su \"Connetti HubSpot\": OAuth sicuro, nessuna chiave API da incollare."
+        },
+        {
+          "title": "Configura la mappatura",
+          "description": "Scegli la pipeline HubSpot di destinazione e mappa le fasi ai tuoi stati RefBoost."
+        },
+        {
+          "title": "Sync automatica",
+          "description": "Ogni nuovo referral compare istantaneamente in HubSpot. Webhook bidirezionale per gli aggiornamenti di stato."
+        }
       ],
       "faqs": [
-        { "q": "Quale livello HubSpot serve?", "a": "HubSpot Starter o superiore. La versione gratuita non dà accesso all'API CRM necessaria all'integrazione." },
-        { "q": "Chiave API o OAuth?", "a": "Solo OAuth, per sicurezza. Nessuna chiave API da gestire — la connessione si fa in due clic e si revoca da HubSpot in qualsiasi momento." },
-        { "q": "Cosa succede ai miei deal esistenti?", "a": "Niente lato HubSpot. I nuovi referral RefBoost creano nuovi deal; i contatti esistenti vengono collegati automaticamente." },
-        { "q": "Posso mettere in pausa la sync senza disconnettere HubSpot?", "a": "Sì, puoi mettere in pausa l'integrazione da Settings → Integrazioni senza revocare i token." }
+        {
+          "q": "Quale livello HubSpot serve?",
+          "a": "HubSpot Starter o superiore. La versione gratuita non dà accesso all'API CRM necessaria all'integrazione."
+        },
+        {
+          "q": "Chiave API o OAuth?",
+          "a": "Solo OAuth, per sicurezza. Nessuna chiave API da gestire — la connessione si fa in due clic e si revoca da HubSpot in qualsiasi momento."
+        },
+        {
+          "q": "Cosa succede ai miei deal esistenti?",
+          "a": "Niente lato HubSpot. I nuovi referral RefBoost creano nuovi deal; i contatti esistenti vengono collegati automaticamente."
+        },
+        {
+          "q": "Posso mettere in pausa la sync senza disconnettere HubSpot?",
+          "a": "Sì, puoi mettere in pausa l'integrazione da Settings → Integrazioni senza revocare i token."
+        }
       ],
       "roi": [
-        { "metric": "+30%", "description": "Conversione in più quando i partner vedono lo stato dei loro referral in tempo reale." },
-        { "metric": "1 pipeline", "description": "I tuoi referral e i deal diretti unificati in HubSpot." },
-        { "metric": "0 inserimenti", "description": "I contatti e i deal vengono creati automaticamente." }
+        {
+          "metric": "+30%",
+          "description": "Conversione in più quando i partner vedono lo stato dei loro referral in tempo reale."
+        },
+        {
+          "metric": "1 pipeline",
+          "description": "I tuoi referral e i deal diretti unificati in HubSpot."
+        },
+        {
+          "metric": "0 inserimenti",
+          "description": "I contatti e i deal vengono creati automaticamente."
+        }
       ]
     },
     "salesforce": {
@@ -2888,26 +2962,68 @@
       "shortDescription": "Connetti le tue Opportunities Salesforce. Importazione/esportazione di lead e stati in tempo reale.",
       "heroSubtitle": "Connetti la tua istanza Salesforce a RefBoost. Sincronizzazione di Opportunities, Contacts e Accounts con mappatura personalizzata per oggetti standard e custom.",
       "features": [
-        { "title": "Sync Opportunities", "description": "Ogni referral RefBoost diventa una Opportunity Salesforce nella Stage che scegli." },
-        { "title": "Contacts e Accounts", "description": "Il prospect viene creato come Contact collegato a un Account, con associazione intelligente agli Account esistenti." },
-        { "title": "Stati pipeline", "description": "Le tue Stages Salesforce sono allineate agli stati RefBoost in entrambe le direzioni." },
-        { "title": "Custom object", "description": "Mappa i tuoi custom object e field Salesforce ai dati RefBoost dall'editor di mappatura." }
+        {
+          "title": "Sync Opportunities",
+          "description": "Ogni referral RefBoost diventa una Opportunity Salesforce nella Stage che scegli."
+        },
+        {
+          "title": "Contacts e Accounts",
+          "description": "Il prospect viene creato come Contact collegato a un Account, con associazione intelligente agli Account esistenti."
+        },
+        {
+          "title": "Stati pipeline",
+          "description": "Le tue Stages Salesforce sono allineate agli stati RefBoost in entrambe le direzioni."
+        },
+        {
+          "title": "Custom object",
+          "description": "Mappa i tuoi custom object e field Salesforce ai dati RefBoost dall'editor di mappatura."
+        }
       ],
       "steps": [
-        { "title": "Connetti Salesforce", "description": "OAuth tramite il tuo login Salesforce. Production o Sandbox — RefBoost lo rileva automaticamente." },
-        { "title": "Mappa gli oggetti", "description": "Scegli Opportunities o un custom object, mappa i field, i record type e le Stages." },
-        { "title": "Sync bidirezionale", "description": "Push in tempo reale via API REST. Webhook Salesforce verso RefBoost per gli aggiornamenti di Stage." }
+        {
+          "title": "Connetti Salesforce",
+          "description": "OAuth tramite il tuo login Salesforce. Production o Sandbox — RefBoost lo rileva automaticamente."
+        },
+        {
+          "title": "Mappa gli oggetti",
+          "description": "Scegli Opportunities o un custom object, mappa i field, i record type e le Stages."
+        },
+        {
+          "title": "Sync bidirezionale",
+          "description": "Push in tempo reale via API REST. Webhook Salesforce verso RefBoost per gli aggiornamenti di Stage."
+        }
       ],
       "faqs": [
-        { "q": "Quale edizione Salesforce serve?", "a": "Enterprise Edition o Professional con accesso API attivato. Le edizioni Essentials e Group non includono l'API REST." },
-        { "q": "Posso usare custom object?", "a": "Sì. L'editor di mappatura permette di scegliere qualsiasi oggetto (standard o custom) come destinazione di sync." },
-        { "q": "Sandbox supportato?", "a": "Sì, puoi connettere prima una Sandbox per testare e poi passare a Production senza riconfigurare la mappatura." },
-        { "q": "Compatibile con Salesforce Lightning e Classic?", "a": "Sì, l'integrazione usa l'API REST che funziona allo stesso modo su entrambe le interfacce." }
+        {
+          "q": "Quale edizione Salesforce serve?",
+          "a": "Enterprise Edition o Professional con accesso API attivato. Le edizioni Essentials e Group non includono l'API REST."
+        },
+        {
+          "q": "Posso usare custom object?",
+          "a": "Sì. L'editor di mappatura permette di scegliere qualsiasi oggetto (standard o custom) come destinazione di sync."
+        },
+        {
+          "q": "Sandbox supportato?",
+          "a": "Sì, puoi connettere prima una Sandbox per testare e poi passare a Production senza riconfigurare la mappatura."
+        },
+        {
+          "q": "Compatibile con Salesforce Lightning e Classic?",
+          "a": "Sì, l'integrazione usa l'API REST che funziona allo stesso modo su entrambe le interfacce."
+        }
       ],
       "roi": [
-        { "metric": "100%", "description": "Attribuzione dei deal al partner di origine direttamente in Salesforce." },
-        { "metric": "0 adozione", "description": "I tuoi commerciali restano in Salesforce, i referral arrivano da soli." },
-        { "metric": "Audit ready", "description": "Cronologia completa delle azioni dei partner per i tuoi audit." }
+        {
+          "metric": "100%",
+          "description": "Attribuzione dei deal al partner di origine direttamente in Salesforce."
+        },
+        {
+          "metric": "0 adozione",
+          "description": "I tuoi commerciali restano in Salesforce, i referral arrivano da soli."
+        },
+        {
+          "metric": "Audit ready",
+          "description": "Cronologia completa delle azioni dei partner per i tuoi audit."
+        }
       ]
     },
     "qonto": {
@@ -2915,26 +3031,68 @@
       "shortDescription": "Bonifici SEPA automatizzati. Paga i tuoi partner in un clic con validazione SCA sicura.",
       "heroSubtitle": "Connetti il tuo conto pro Qonto a RefBoost e paga le commissioni dei tuoi partner in un clic. Bonifici SEPA, validazione SCA e ricevuta automatica del bonifico.",
       "features": [
-        { "title": "Bonifici SEPA automatizzati", "description": "Un clic su \"Paga\" lancia un bonifico SEPA dal tuo conto Qonto, senza reinserire l'IBAN." },
-        { "title": "Validazione SCA sicura", "description": "Conforme alla PSD2: ogni bonifico passa dalla validazione forte sulla tua app Qonto prima dell'esecuzione." },
-        { "title": "Pagamenti in batch", "description": "Seleziona fino a 400 commissioni e pagale tutte in un'unica azione." },
-        { "title": "Ricevuta via email", "description": "Il partner riceve un'email automatica con il riferimento del bonifico non appena Qonto lo ha eseguito." }
+        {
+          "title": "Bonifici SEPA automatizzati",
+          "description": "Un clic su \"Paga\" lancia un bonifico SEPA dal tuo conto Qonto, senza reinserire l'IBAN."
+        },
+        {
+          "title": "Validazione SCA sicura",
+          "description": "Conforme alla PSD2: ogni bonifico passa dalla validazione forte sulla tua app Qonto prima dell'esecuzione."
+        },
+        {
+          "title": "Pagamenti in batch",
+          "description": "Seleziona fino a 400 commissioni e pagale tutte in un'unica azione."
+        },
+        {
+          "title": "Ricevuta via email",
+          "description": "Il partner riceve un'email automatica con il riferimento del bonifico non appena Qonto lo ha eseguito."
+        }
       ],
       "steps": [
-        { "title": "Connetti Qonto", "description": "OAuth ufficiale Qonto da Settings → Integrazioni. La connessione richiede 30 secondi." },
-        { "title": "Seleziona il conto", "description": "Scegli quale conto Qonto addebitare (utile se hai più sotto-conti)." },
-        { "title": "Paga in un clic", "description": "Su ogni commissione validata, il pulsante \"Paga\" lancia il bonifico con validazione SCA." }
+        {
+          "title": "Connetti Qonto",
+          "description": "OAuth ufficiale Qonto da Settings → Integrazioni. La connessione richiede 30 secondi."
+        },
+        {
+          "title": "Seleziona il conto",
+          "description": "Scegli quale conto Qonto addebitare (utile se hai più sotto-conti)."
+        },
+        {
+          "title": "Paga in un clic",
+          "description": "Su ogni commissione validata, il pulsante \"Paga\" lancia il bonifico con validazione SCA."
+        }
       ],
       "faqs": [
-        { "q": "La validazione SCA è obbligatoria?", "a": "Sì, è imposta dalla direttiva europea PSD2. RefBoost ti ricorda solo di confermare sulla tua app Qonto, l'operazione in sé richiede 5 secondi." },
-        { "q": "Quanti pagamenti in batch sono possibili?", "a": "Fino a 400 commissioni per batch. Oltre, il sistema le suddivide automaticamente in batch successivi." },
-        { "q": "Ci sono commissioni RefBoost oltre a quelle Qonto?", "a": "No, RefBoost non applica alcuna commissione sui bonifici. Si applicano solo le commissioni SEPA standard del tuo conto Qonto (gratis nell'area SEPA)." },
-        { "q": "Quale piano RefBoost serve?", "a": "L'integrazione Qonto è inclusa nel piano Business. I piani Starter e Pro vedono l'integrazione ma non possono attivarla." }
+        {
+          "q": "La validazione SCA è obbligatoria?",
+          "a": "Sì, è imposta dalla direttiva europea PSD2. RefBoost ti ricorda solo di confermare sulla tua app Qonto, l'operazione in sé richiede 5 secondi."
+        },
+        {
+          "q": "Quanti pagamenti in batch sono possibili?",
+          "a": "Fino a 400 commissioni per batch. Oltre, il sistema le suddivide automaticamente in batch successivi."
+        },
+        {
+          "q": "Ci sono commissioni RefBoost oltre a quelle Qonto?",
+          "a": "No, RefBoost non applica alcuna commissione sui bonifici. Si applicano solo le commissioni SEPA standard del tuo conto Qonto (gratis nell'area SEPA)."
+        },
+        {
+          "q": "Quale piano RefBoost serve?",
+          "a": "L'integrazione Qonto è inclusa nel piano Business. I piani Starter e Pro vedono l'integrazione ma non possono attivarla."
+        }
       ],
       "roi": [
-        { "metric": "30 sec", "description": "Per pagare una commissione partner, dal clic al bonifico SEPA." },
-        { "metric": "0 errori", "description": "L'IBAN e l'importo sono precompilati dalla commissione." },
-        { "metric": "x2", "description": "Un partner pagato in fretta raccomanda il doppio." }
+        {
+          "metric": "30 sec",
+          "description": "Per pagare una commissione partner, dal clic al bonifico SEPA."
+        },
+        {
+          "metric": "0 errori",
+          "description": "L'IBAN e l'importo sono precompilati dalla commissione."
+        },
+        {
+          "metric": "x2",
+          "description": "Un partner pagato in fretta raccomanda il doppio."
+        }
       ]
     },
     "google-sso": {
@@ -2942,27 +3100,90 @@
       "shortDescription": "Connessione sicura via Google per il tuo team e i tuoi partner. Zero password da gestire.",
       "heroSubtitle": "Attivato di default su tutti i piani. I tuoi team e i tuoi partner si collegano a RefBoost con il loro account Google in un clic — zero password da gestire, sicurezza rafforzata.",
       "features": [
-        { "title": "Connessione senza password", "description": "Un clic su \"Accedi con Google\" e l'utente è nel suo workspace RefBoost." },
-        { "title": "Multi-tenant", "description": "Lo stesso account Google può accedere a più workspace partner se l'utente lavora con più programmi." },
-        { "title": "Sicurezza rafforzata", "description": "Nessuna password salvata: i leak di password non ti riguardano più. 2FA ereditato da Google." },
-        { "title": "Onboarding semplificato", "description": "Niente più reset di password dimenticati: un partner che si registra con Google può tornare a vita, senza attriti." }
+        {
+          "title": "Connessione senza password",
+          "description": "Un clic su \"Accedi con Google\" e l'utente è nel suo workspace RefBoost."
+        },
+        {
+          "title": "Multi-tenant",
+          "description": "Lo stesso account Google può accedere a più workspace partner se l'utente lavora con più programmi."
+        },
+        {
+          "title": "Sicurezza rafforzata",
+          "description": "Nessuna password salvata: i leak di password non ti riguardano più. 2FA ereditato da Google."
+        },
+        {
+          "title": "Onboarding semplificato",
+          "description": "Niente più reset di password dimenticati: un partner che si registra con Google può tornare a vita, senza attriti."
+        }
       ],
       "steps": [
-        { "title": "Attivato di default", "description": "Nessuna configurazione necessaria. Il pulsante \"Accedi con Google\" compare su tutte le pagine di accesso RefBoost." },
-        { "title": "Il partner clicca", "description": "Il partner sceglie \"Accedi con Google\" sulla schermata di login o registrazione." },
-        { "title": "Accesso istantaneo", "description": "L'utente arriva nel suo workspace; le sessioni Google e RefBoost restano sincronizzate." }
+        {
+          "title": "Attivato di default",
+          "description": "Nessuna configurazione necessaria. Il pulsante \"Accedi con Google\" compare su tutte le pagine di accesso RefBoost."
+        },
+        {
+          "title": "Il partner clicca",
+          "description": "Il partner sceglie \"Accedi con Google\" sulla schermata di login o registrazione."
+        },
+        {
+          "title": "Accesso istantaneo",
+          "description": "L'utente arriva nel suo workspace; le sessioni Google e RefBoost restano sincronizzate."
+        }
       ],
       "faqs": [
-        { "q": "Google SSO è obbligatorio per i miei utenti?", "a": "No. La connessione email + password resta disponibile. Gli utenti possono scegliere il metodo al momento della registrazione." },
-        { "q": "Quali dati Google vengono condivisi con RefBoost?", "a": "Solo nome completo e indirizzo email. RefBoost non legge né i tuoi contatti, né le tue email, né il tuo Drive." },
-        { "q": "I miei partner possono collegare il loro account esistente a Google?", "a": "Sì. Se un partner con account email/password si collega poi via Google con lo stesso indirizzo, i due metodi vengono collegati automaticamente." },
-        { "q": "Microsoft SSO o Okta sono previsti?", "a": "Microsoft SSO è in roadmap per il 2026. Okta / SAML generico sono previsti per gli account Enterprise — contattaci se ti servono." }
+        {
+          "q": "Google SSO è obbligatorio per i miei utenti?",
+          "a": "No. La connessione email + password resta disponibile. Gli utenti possono scegliere il metodo al momento della registrazione."
+        },
+        {
+          "q": "Quali dati Google vengono condivisi con RefBoost?",
+          "a": "Solo nome completo e indirizzo email. RefBoost non legge né i tuoi contatti, né le tue email, né il tuo Drive."
+        },
+        {
+          "q": "I miei partner possono collegare il loro account esistente a Google?",
+          "a": "Sì. Se un partner con account email/password si collega poi via Google con lo stesso indirizzo, i due metodi vengono collegati automaticamente."
+        },
+        {
+          "q": "Microsoft SSO o Okta sono previsti?",
+          "a": "Microsoft SSO è in roadmap per il 2026. Okta / SAML generico sono previsti per gli account Enterprise — contattaci se ti servono."
+        }
       ],
       "roi": [
-        { "metric": "0 ticket", "description": "Basta richieste di reset della password." },
-        { "metric": "10 sec", "description": "Perché un partner acceda al suo spazio." },
-        { "metric": "2FA nativo", "description": "Sicurezza rafforzata ereditata da Google senza configurare nulla." }
+        {
+          "metric": "0 ticket",
+          "description": "Basta richieste di reset della password."
+        },
+        {
+          "metric": "10 sec",
+          "description": "Perché un partner acceda al suo spazio."
+        },
+        {
+          "metric": "2FA nativo",
+          "description": "Sicurezza rafforzata ereditata da Google senza configurare nulla."
+        }
       ]
     }
+  },
+  "sidebar": {
+    "trash": "Cestino"
+  },
+  "trash": {
+    "title": "Cestino",
+    "subtitle": "Gli elementi eliminati vengono conservati 30 giorni prima dell’eliminazione definitiva.",
+    "empty": "Il cestino è vuoto",
+    "restore": "Ripristina",
+    "restored": "Elemento ripristinato con successo",
+    "permanent_delete": "Elimina definitivamente",
+    "permanently_deleted": "Elemento eliminato definitivamente",
+    "deleted_on": "Eliminato il {{date}}",
+    "days_remaining": "{{n}} giorni rimanenti",
+    "confirm_title": "Eliminare questo elemento?",
+    "confirm_message": "Questo elemento verrà spostato nel cestino.",
+    "confirm_delete": "Sposta nel cestino",
+    "recovery_notice": "Potrai ripristinarlo nei prossimi 30 giorni dal cestino.",
+    "permanent_confirm_title": "Eliminare definitivamente?",
+    "permanent_confirm_message": "Questa azione è irreversibile. L’elemento verrà eliminato in modo permanente.",
+    "permanent_confirm_delete": "Elimina definitivamente"
   }
 }

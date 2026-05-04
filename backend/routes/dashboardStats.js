@@ -97,6 +97,7 @@ async function monthly(tenantId, range) {
             COUNT(*) FILTER (WHERE status = 'lost')::int AS lost
        FROM referrals
       WHERE tenant_id = $1
+        AND deleted_at IS NULL
         AND ${dc.sql}
       GROUP BY 1
       ORDER BY 1`,
@@ -110,9 +111,9 @@ async function byStage(tenantId, range) {
   // range narrows the deal counts on each stage; stages with zero
   // matches still show via LEFT JOIN.
   const params = [tenantId];
-  let joinDate = '';
+  let joinDate = ' AND r.deleted_at IS NULL';
   if (range) {
-    joinDate = ` AND r.created_at >= $2::date AND r.created_at < ($3::date + INTERVAL '1 day')`;
+    joinDate += ` AND r.created_at >= $2::date AND r.created_at < ($3::date + INTERVAL '1 day')`;
     params.push(range.startDate, range.endDate);
   }
   const { rows } = await query(
@@ -155,6 +156,7 @@ async function monthlyMrr(tenantId, range) {
             COALESCE(SUM(deal_value), 0)::numeric AS mrr
        FROM referrals
       WHERE tenant_id = $1 AND status = 'won'
+        AND deleted_at IS NULL
         AND ${dc.sql}
       GROUP BY 1
       ORDER BY 1`,
@@ -182,7 +184,7 @@ async function commissionStatus(tenantId, range) {
        COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0)::numeric AS paid,
        COALESCE(SUM(amount) FILTER (WHERE approval_status = 'rejected'), 0)::numeric AS rejected
      FROM commissions
-     WHERE tenant_id = $1${dateAnd}`,
+     WHERE tenant_id = $1 AND deleted_at IS NULL${dateAnd}`,
     params
   );
   const r = rows[0] || {};
@@ -201,6 +203,7 @@ async function commissionMonthly(tenantId, range) {
             COALESCE(SUM(amount), 0)::numeric AS amount
        FROM commissions
       WHERE tenant_id = $1
+        AND deleted_at IS NULL
         AND ${dc.sql}
       GROUP BY 1
       ORDER BY 1`,
@@ -218,7 +221,7 @@ async function temperature(tenantId, range) {
             COUNT(*)::int AS total,
             COUNT(*) FILTER (WHERE status = 'won')::int AS won
        FROM referrals
-      WHERE tenant_id = $1 AND recommendation_level IS NOT NULL${dateAnd}
+      WHERE tenant_id = $1 AND recommendation_level IS NOT NULL AND deleted_at IS NULL${dateAnd}
       GROUP BY recommendation_level`,
     params
   );
@@ -243,7 +246,7 @@ async function cycle(tenantId, range) {
   const overallRow = await query(
     `SELECT AVG(EXTRACT(EPOCH FROM (updated_at - created_at))/86400)::numeric AS days
        FROM referrals
-      WHERE tenant_id = $1 AND status = 'won'${dateAnd}`,
+      WHERE tenant_id = $1 AND status = 'won' AND deleted_at IS NULL${dateAnd}`,
     overallParams
   );
 
@@ -257,7 +260,7 @@ async function cycle(tenantId, range) {
          FROM referral_activities a1
          JOIN referral_activities a2 ON a2.referral_id = a1.referral_id
          JOIN referrals r ON r.id = a1.referral_id
-        WHERE r.tenant_id = $1
+        WHERE r.tenant_id = $1 AND r.deleted_at IS NULL
           AND a1.action = 'status_change' AND a1.new_value = $2
           AND a2.action = 'status_change' AND a2.new_value = $3
           AND a2.created_at > a1.created_at${trDateAnd}`,

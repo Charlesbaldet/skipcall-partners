@@ -24,8 +24,8 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
       query('SELECT COUNT(*) FROM users WHERE is_active = true'),
       query('SELECT COUNT(*) FROM partners'),
       query("SELECT COUNT(*) FROM partners WHERE is_active = true"),
-      query('SELECT status, COUNT(*) as count FROM referrals GROUP BY status'),
-      query('SELECT status, COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE deal_value IS NOT NULL GROUP BY status'),
+      query('SELECT status, COUNT(*) as count FROM referrals WHERE deleted_at IS NULL GROUP BY status'),
+      query('SELECT status, COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE deal_value IS NOT NULL AND deleted_at IS NULL GROUP BY status'),
       query(`
         SELECT t.id, t.name, t.slug,
                (SELECT u.full_name FROM users u WHERE u.tenant_id = t.id AND u.role = 'admin' ORDER BY u.id LIMIT 1) as admin_name,
@@ -35,7 +35,7 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
                COALESCE(SUM(r.deal_value) FILTER (WHERE r.status IN ('contacted', 'meeting', 'proposal')), 0) as volume_pipeline
         FROM tenants t
         LEFT JOIN partners p ON p.tenant_id = t.id
-        LEFT JOIN referrals r ON r.partner_id = p.id
+        LEFT JOIN referrals r ON r.partner_id = p.id AND r.deleted_at IS NULL
         WHERE t.is_active = true
         GROUP BY t.id
         ORDER BY lead_count DESC
@@ -355,13 +355,13 @@ router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
       query(`
         SELECT to_char(created_at, 'YYYY-MM') as month, COUNT(*) as count
         FROM referrals
-        WHERE created_at >= NOW() - INTERVAL '12 months'
+        WHERE created_at >= NOW() - INTERVAL '12 months' AND deleted_at IS NULL
         GROUP BY month ORDER BY month
       `),
       query(`
         SELECT to_char(closed_at, 'YYYY-MM') as month, COALESCE(SUM(deal_value), 0) as total
         FROM referrals
-        WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at >= NOW() - INTERVAL '12 months'
+        WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at >= NOW() - INTERVAL '12 months' AND deleted_at IS NULL
         GROUP BY month ORDER BY month
       `),
     ]);
@@ -374,8 +374,8 @@ router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
     const [tBefore, pBefore, lBefore, vBefore] = await Promise.all([
       query(`SELECT COUNT(*) as count FROM tenants WHERE created_at < NOW() - INTERVAL '12 months'`),
       query(`SELECT COUNT(*) as count FROM partners WHERE created_at < NOW() - INTERVAL '12 months'`),
-      query(`SELECT COUNT(*) as count FROM referrals WHERE created_at < NOW() - INTERVAL '12 months'`),
-      query(`SELECT COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at < NOW() - INTERVAL '12 months'`),
+      query(`SELECT COUNT(*) as count FROM referrals WHERE created_at < NOW() - INTERVAL '12 months' AND deleted_at IS NULL`),
+      query(`SELECT COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at < NOW() - INTERVAL '12 months' AND deleted_at IS NULL`),
     ]);
     let cumulTenants = parseInt(tBefore.rows[0].count);
     let cumulPartners = parseInt(pBefore.rows[0].count);

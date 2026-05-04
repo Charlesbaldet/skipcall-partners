@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import ReferralsPage from './pages/ReferralsPage.jsx';
 import CommissionsPage from './pages/CommissionsPage.jsx';
+import TrashPage from './pages/TrashPage.jsx';
 import PartnersPage from './pages/PartnersPage.jsx';
 import PartnerMyReferrals from './pages/PartnerMyReferrals.jsx';
 import PartnerDashboardPage from './pages/PartnerDashboardPage.jsx';
@@ -139,6 +140,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><DashboardPage /></Layout></ProtectedRoute>} />
       <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><ReferralsPage /></Layout></ProtectedRoute>} />
       <Route path="/commissions" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><CommissionsPage /></Layout></ProtectedRoute>} />
+      <Route path="/trash" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><TrashPage /></Layout></ProtectedRoute>} />
       <Route path="/partners" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout><PartnersPage /></Layout></ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout><AdminApplicationsPage /></Layout></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><AdminSettingsPage /></Layout></ProtectedRoute>} />

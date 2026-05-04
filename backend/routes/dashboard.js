@@ -22,7 +22,9 @@ function parseDateRange(req) {
 // `opts.skipDate` skips date injection (e.g. for endpoints that already
 // own their date logic, like /timeline).
 function buildFilters(req, tableAlias = 'r', partnerCol = 'partner_id', opts = {}) {
-  const where = [];
+  // Soft-deleted rows are always excluded from dashboard reads — they
+  // live in the Corbeille for 30 days and shouldn't shape KPIs.
+  const where = [`${tableAlias}.deleted_at IS NULL`];
   const params = [];
   let i = 1;
 
@@ -97,7 +99,8 @@ router.get('/timeline', async (req, res) => {
     const range = parseDateRange(req);
     const { months = 6 } = req.query;
 
-    const where = [];
+    // Soft-deleted rows hidden from the timeline; same rule as KPIs.
+    const where = ['r.deleted_at IS NULL'];
     const params = [];
     let i = 1;
 
@@ -177,10 +180,10 @@ router.get('/top-partners', authorize('admin', 'commercial'), async (req, res) =
       params.push(req.tenantId);
     }
 
-    let joinDate = '';
+    let joinDate = ' AND r.deleted_at IS NULL';
     const range = parseDateRange(req);
     if (range) {
-      joinDate = ` AND r.created_at >= $${i}::date AND r.created_at < ($${i + 1}::date + INTERVAL '1 day')`;
+      joinDate += ` AND r.created_at >= $${i}::date AND r.created_at < ($${i + 1}::date + INTERVAL '1 day')`;
       params.push(range.startDate, range.endDate);
       i += 2;
     }
