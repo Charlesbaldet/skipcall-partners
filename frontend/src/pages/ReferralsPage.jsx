@@ -866,7 +866,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                     {t('pipeline.forecast_commission', 'Commission prévisionnelle')}
                   </div>
                   <div style={{ fontSize: 22, fontWeight: 600, color: '#16a34a', lineHeight: 1.2 }}>{fmt(forecast.amount)}</div>
-                  <div style={{ fontSize: 11, color: '#86efac', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
                     {rate}% × {fmt(Number(editValue))} × {forecast.multiplier}
                     {editEngagement === 'forfait'     && ` (${t('pipeline.forfait', 'Forfait').toLowerCase()})`}
                     {editEngagement === 'mensuel'     && ` (${editPeriods} ${t('pipeline.months',   'mois')})`}
