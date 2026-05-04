@@ -55,8 +55,20 @@ router.put('/:id', authenticate, async (req, res) => {
     cleanSlug = String(slug).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 50);
     if (cleanSlug.length === 0) return res.status(400).json({ error: 'Slug invalide' });
     try {
-      const { rows: existing } = await query('SELECT id FROM tenants WHERE slug = $1 AND id != $2', [cleanSlug, req.params.id]);
-      if (existing.length > 0) return res.status(409).json({ error: 'Ce slug est déjà utilisé par un autre espace' });
+      // Skip the uniqueness check when the slug hasn't actually
+      // changed. The Apparence form derives the slug from form.name
+      // on every save, so an admin who just bumps their accent
+      // colour would resubmit the same slug — and any data drift
+      // (legacy duplicates from before the unique constraint, or a
+      // concurrent edit racing the same PUT) would surface a
+      // false-positive 409 even though the current tenant's row
+      // was the only match. Reading the current slug first keeps
+      // the no-change path unconditionally green.
+      const { rows: [current] } = await query('SELECT slug FROM tenants WHERE id = $1', [req.params.id]);
+      if (!current || current.slug !== cleanSlug) {
+        const { rows: existing } = await query('SELECT id FROM tenants WHERE slug = $1 AND id != $2', [cleanSlug, req.params.id]);
+        if (existing.length > 0) return res.status(409).json({ error: 'Ce slug est déjà utilisé par un autre espace' });
+      }
     } catch (e) {}
   }
 
