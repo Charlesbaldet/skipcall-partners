@@ -73,66 +73,77 @@ export function LandingNav() {
             </button>
           </div>
         ) : (
-          <div style={{ display:'flex',alignItems:'center',gap:24 }}>
-            <div style={{ position:'relative' }} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
-              <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
-                {t('nav.features')}
-                <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:featOpen?'rotate(180deg)':'none' }}>
-                  <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                </svg>
-              </span>
-              {featOpen && (
-                <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:260,zIndex:200 }}>
-                  {FEATURES.map(f=>(
-                    <a key={f.href} href={f.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                      <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{f.label}</div>
-                      <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{f.desc}</div>
-                    </a>
-                  ))}
-                </div>
-              )}
+          <>
+            {/* Centered nav links — absolutely positioned so the
+                centring is anchored to the page width, not to the
+                space left between logo + right cluster. */}
+            <div style={{ position:'absolute',left:'50%',top:'50%',transform:'translate(-50%,-50%)',display:'flex',alignItems:'center',gap:24 }}>
+              <div style={{ position:'relative' }} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
+                <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
+                  {t('nav.features')}
+                  <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:featOpen?'rotate(180deg)':'none' }}>
+                    <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  </svg>
+                </span>
+                {featOpen && (
+                  <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:260,zIndex:200 }}>
+                    {FEATURES.map(f=>(
+                      <a key={f.href} href={f.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
+                        onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                        <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{f.label}</div>
+                        <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{f.desc}</div>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ position:'relative' }} onMouseEnter={()=>setUseCasesOpen(true)} onMouseLeave={()=>setUseCasesOpen(false)}>
+                <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
+                  {t('useCases.nav.menuLabel')}
+                  <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:useCasesOpen?'rotate(180deg)':'none' }}>
+                    <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  </svg>
+                </span>
+                {useCasesOpen && (
+                  <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:280,zIndex:200 }}>
+                    {USE_CASES.map(u=>(
+                      <a key={u.href} href={u.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
+                        onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                        <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{u.label}</div>
+                        <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{u.desc}</div>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
+                <a key={key} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
+                  onMouseEnter={e=>e.target.style.color=C.p}
+                  onMouseLeave={e=>e.target.style.color=C.m}>
+                  {t(key)}
+                </a>
+              ))}
             </div>
-            <div style={{ position:'relative' }} onMouseEnter={()=>setUseCasesOpen(true)} onMouseLeave={()=>setUseCasesOpen(false)}>
-              <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
-                {t('useCases.nav.menuLabel')}
-                <svg width="12" height="12" viewBox="0 0 12 12" style={{ transition:'transform .2s',transform:useCasesOpen?'rotate(180deg)':'none' }}>
-                  <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                </svg>
-              </span>
-              {useCasesOpen && (
-                <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:280,zIndex:200 }}>
-                  {USE_CASES.map(u=>(
-                    <a key={u.href} href={u.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                      <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{u.label}</div>
-                      <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{u.desc}</div>
-                    </a>
-                  ))}
-                </div>
-              )}
+
+            {/* Right cluster — auth + language switcher. The outer
+                nav's space-between pushes this against the right edge
+                while the absolute nav block stays centered on the page. */}
+            <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+              <LanguageSwitcher direction="down" dark={false}/>
+              <button onClick={()=>navigate('/login')}
+                style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer' }}
+                onMouseEnter={e=>{e.currentTarget.style.background=C.s;e.currentTarget.style.color='#fff';}}
+                onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=C.s;}}>
+                {t('nav.login')}
+              </button>
+              <button onClick={()=>navigate('/signup')}
+                style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer' }}>
+                {t('nav.freeTrial')}
+              </button>
             </div>
-            {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
-              <a key={key} href={href} style={{ color:C.m,textDecoration:'none',fontSize:14,fontWeight:500 }}
-                onMouseEnter={e=>e.target.style.color=C.p}
-                onMouseLeave={e=>e.target.style.color=C.m}>
-                {t(key)}
-              </a>
-            ))}
-            <LanguageSwitcher direction="down" dark={false}/>
-            <button onClick={()=>navigate('/login')}
-              style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer' }}
-              onMouseEnter={e=>{e.currentTarget.style.background=C.s;e.currentTarget.style.color='#fff';}}
-              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color=C.s;}}>
-              {t('nav.login')}
-            </button>
-            <button onClick={()=>navigate('/signup')}
-              style={{ padding:'10px 24px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer' }}>
-              {t('nav.freeTrial')}
-            </button>
-          </div>
+          </>
         )}
       </nav>
 
