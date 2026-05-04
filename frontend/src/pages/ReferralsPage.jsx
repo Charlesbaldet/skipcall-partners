@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
+import { calculateCommissionAmount } from '../lib/commissionFormula';
 import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
@@ -420,9 +421,26 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   const [editStatus, setEditStatus] = useState(initialStage?.slug || referral.status);
   const [editValue, setEditValue] = useState(referral.deal_value || '');
   const [saving, setSaving] = useState(false);
-  const [editEngagement, setEditEngagement] = useState(referral.engagement || 'monthly');
+  // Existing rows can ship one of the legacy English keys
+  // (monthly/quarterly/yearly) until the v27 migration drains them.
+  // Map them on read so the selector highlights the right pill;
+  // writes always send the French key.
+  const _legacyEng = { monthly: 'mensuel', quarterly: 'trimestriel', yearly: 'annuel' };
+  const _initialEng = _legacyEng[referral.engagement] || referral.engagement || 'mensuel';
+  const [editEngagement, setEditEngagement] = useState(_initialEng);
+  const [editPeriods, setEditPeriods] = useState(
+    _initialEng === 'forfait' ? 1 : Math.max(1, parseInt(referral.engagement_periods, 10) || 1)
+  );
   const [tab, setTab] = useState('info');
   const [saveToast, setSaveToast] = useState(null);
+
+  // Keep periods=1 whenever the user flips to forfait. The backend
+  // also clamps but doing it client-side keeps the forecast number
+  // honest the moment the pill changes.
+  const handleEngagementChange = (next) => {
+    setEditEngagement(next);
+    if (next === 'forfait') setEditPeriods(1);
+  };
 
   const pickStage = (stage) => {
     setEditStageId(stage.id);
@@ -435,7 +453,11 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
     setSaving(true);
     setSaveToast(null);
     try {
-      const patch = { deal_value: Number(editValue) || 0, engagement: editEngagement };
+      const patch = {
+        deal_value: Number(editValue) || 0,
+        engagement: editEngagement,
+        engagement_periods: editEngagement === 'forfait' ? 1 : Math.max(1, parseInt(editPeriods, 10) || 1),
+      };
       if (editStageId) patch.stage_id = editStageId;
       else if (editStatus) patch.status = editStatus;
       await onUpdate(referral.id, patch);
@@ -458,7 +480,18 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
 
   const rate = referral.commission_rate || 10;
   const isWonSelected = selectedStage ? !!selectedStage.is_won : editStatus === 'won';
-  const commission = isWonSelected ? (Number(editValue) || 0) * rate / 100 : 0;
+  // Shared with the backend's calculateCommissionAmount() so the
+  // forecast we show here matches the row that lands in
+  // /commissions to the cent. multiplier exposes the
+  // months-per-period × periods product so the breakdown line can
+  // explain the math without recomputing it.
+  const forecast = calculateCommissionAmount({
+    engagementType: editEngagement,
+    periods: editPeriods,
+    dealValue: Number(editValue) || 0,
+    rate,
+  });
+  const commission = isWonSelected ? forecast.amount : 0;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -581,18 +614,60 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               </div>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('referrals.engagement')}</div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[['monthly', t('referrals.engagement_monthly')], ['quarterly', t('referrals.engagement_quarterly')], ['yearly', t('referrals.engagement_yearly')]].map(([k, label]) => (
-                    <button key={k} onClick={() => setEditEngagement(k)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editEngagement === k ? '2px solid var(--rb-primary, #059669)' : '2px solid #e2e8f0', background: editEngagement === k ? '#eef2ff' : '#fff', color: editEngagement === k ? '#6366f1' : '#64748b' }}>{label}</button>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[
+                    ['forfait',     t('pipeline.forfait',     'Forfait')],
+                    ['mensuel',     t('pipeline.mensuel',     'Mensuel')],
+                    ['trimestriel', t('pipeline.trimestriel', 'Trimestriel')],
+                    ['annuel',      t('pipeline.annuel',      'Annuel')],
+                  ].map(([k, label]) => (
+                    <button key={k} onClick={() => handleEngagementChange(k)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editEngagement === k ? '2px solid var(--rb-primary, #059669)' : '2px solid #e2e8f0', background: editEngagement === k ? '#eef2ff' : '#fff', color: editEngagement === k ? '#6366f1' : '#64748b' }}>{label}</button>
                   ))}
                 </div>
+                {/* Periods selector — hidden on forfait (always 1). */}
+                {editEngagement !== 'forfait' && (
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>
+                      {editEngagement === 'mensuel' && t('pipeline.nb_months', 'Nombre de mois')}
+                      {editEngagement === 'trimestriel' && t('pipeline.nb_quarters', 'Nombre de trimestres')}
+                      {editEngagement === 'annuel' && t('pipeline.nb_years', "Nombre d'années")}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={editPeriods}
+                      onChange={e => setEditPeriods(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      style={{
+                        width: 140, padding: '10px 14px', borderRadius: 10,
+                        border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 600,
+                        color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                )}
               </div>
-              {isWonSelected && Number(editValue) > 0 && (
-                <div style={{ background: 'linear-gradient(135deg,#fef3c7,#fffbeb)', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #fcd34d' }}>
-                  <div style={{ color: '#92400e', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('referrals.commission_est')}</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                    <span style={{ fontSize: 26, fontWeight: 800, color: '#f59e0b' }}>{fmt(commission)}</span>
-                    <span style={{ color: '#92400e', fontSize: 13 }}>({rate}% {t('referrals.of')} {fmt(Number(editValue))})</span>
+              {/* Forecast box — always shown when there's a value
+                  to compute against, not gated on the won-stage
+                  selection so the partner / admin sees what the
+                  commission WILL be once the deal closes. The
+                  amount comes from the shared formula so the
+                  number on the card === the number that lands in
+                  /commissions when the deal moves to won. */}
+              {Number(editValue) > 0 && (
+                <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 20, marginBottom: 24, border: '1px solid #bbf7d0' }}>
+                  <div style={{ fontSize: 11, color: '#15803d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                    {t('pipeline.forecast_commission', 'Commission prévisionnelle')}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 26, fontWeight: 800, color: '#16a34a' }}>{fmt(forecast.amount)}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#64748b' }}>
+                    {rate}% × {fmt(Number(editValue))} × {forecast.multiplier}
+                    {editEngagement === 'forfait'     && ` (${t('pipeline.forfait', 'Forfait').toLowerCase()})`}
+                    {editEngagement === 'mensuel'     && ` (${editPeriods} ${t('pipeline.months',   'mois')})`}
+                    {editEngagement === 'trimestriel' && ` (${editPeriods} ${t('pipeline.quarters', 'trim.')} × 3 ${t('pipeline.months', 'mois')})`}
+                    {editEngagement === 'annuel'      && ` (${editPeriods} ${t('pipeline.years',    'an(s)')} × 12 ${t('pipeline.months', 'mois')})`}
                   </div>
                 </div>
               )}

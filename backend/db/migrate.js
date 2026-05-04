@@ -603,6 +603,22 @@ async function runMigrations() {
   `);
   console.log('[notifications] v26 prefs table + new event types seeded');
 
+  // v27: forfait engagement type + periods multiplier on referrals,
+  // engagement metadata on commissions so the commissions kanban can
+  // display the breakdown that produced the amount. Also a one-time
+  // normalisation of legacy English engagement values
+  // (monthly/quarterly/yearly) to the new French keys
+  // (mensuel/trimestriel/annuel) — the UI now writes the French
+  // values so without this step old rows would render as the
+  // fallback "(default)" label.
+  await query(`ALTER TABLE referrals    ADD COLUMN IF NOT EXISTS engagement_periods INTEGER DEFAULT 1`);
+  await query(`ALTER TABLE commissions  ADD COLUMN IF NOT EXISTS engagement_type    VARCHAR(20)`);
+  await query(`ALTER TABLE commissions  ADD COLUMN IF NOT EXISTS engagement_periods INTEGER DEFAULT 1`);
+  await query(`UPDATE referrals SET engagement = 'mensuel'    WHERE engagement = 'monthly'`);
+  await query(`UPDATE referrals SET engagement = 'trimestriel' WHERE engagement = 'quarterly'`);
+  await query(`UPDATE referrals SET engagement = 'annuel'      WHERE engagement = 'yearly'`);
+  console.log('[engagement] v27 forfait + engagement_periods + normalised legacy keys');
+
   console.log(' Migrations completed');
 
   } catch (err) {

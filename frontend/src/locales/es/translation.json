@@ -5,6 +5,19 @@
     "next": "Siguiente",
     "page": "Página"
   },
+  "pipeline": {
+    "forfait": "Tarifa plana",
+    "mensuel": "Mensual",
+    "trimestriel": "Trimestral",
+    "annuel": "Anual",
+    "nb_months": "Número de meses",
+    "nb_quarters": "Número de trimestres",
+    "nb_years": "Número de años",
+    "months": "meses",
+    "quarters": "trim.",
+    "years": "año(s)",
+    "forecast_commission": "Comisión prevista"
+  },
   "common": {
     "loading": "Cargando...",
     "error": "Error",

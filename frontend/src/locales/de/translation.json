@@ -5,6 +5,19 @@
     "next": "Weiter",
     "page": "Seite"
   },
+  "pipeline": {
+    "forfait": "Pauschale",
+    "mensuel": "Monatlich",
+    "trimestriel": "Quartalsweise",
+    "annuel": "Jährlich",
+    "nb_months": "Anzahl Monate",
+    "nb_quarters": "Anzahl Quartale",
+    "nb_years": "Anzahl Jahre",
+    "months": "Monate",
+    "quarters": "Q.",
+    "years": "Jahr(e)",
+    "forecast_commission": "Voraussichtliche Provision"
+  },
   "common": {
     "loading": "Laden...",
     "error": "Fehler",

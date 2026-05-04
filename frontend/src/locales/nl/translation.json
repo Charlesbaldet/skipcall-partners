@@ -5,6 +5,19 @@
     "next": "Volgende",
     "page": "Pagina"
   },
+  "pipeline": {
+    "forfait": "Vast bedrag",
+    "mensuel": "Maandelijks",
+    "trimestriel": "Per kwartaal",
+    "annuel": "Jaarlijks",
+    "nb_months": "Aantal maanden",
+    "nb_quarters": "Aantal kwartalen",
+    "nb_years": "Aantal jaren",
+    "months": "maanden",
+    "quarters": "kw.",
+    "years": "jaar",
+    "forecast_commission": "Verwachte commissie"
+  },
   "common": {
     "loading": "Laden...",
     "error": "Fout",

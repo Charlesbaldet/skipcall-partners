@@ -826,6 +826,20 @@ export default function CommissionsPage() {
                         <span style={{ fontWeight: 800, color: sc.color, fontSize: 16 }}>{fmt(c.amount)}</span>
                         <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.rate}% · {fmt(c.deal_value)}</span>
                       </div>
+                      {/* Engagement breakdown — explains how the
+                          amount was reached so admins approving
+                          the commission don't have to recompute. */}
+                      {c.engagement_type && (
+                        <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>
+                          {c.engagement_type === 'forfait'     && t('pipeline.forfait', 'Forfait')}
+                          {(c.engagement_type === 'mensuel' || c.engagement_type === 'monthly') &&
+                            `${c.engagement_periods || 1} ${t('pipeline.months', 'mois')}`}
+                          {(c.engagement_type === 'trimestriel' || c.engagement_type === 'quarterly') &&
+                            `${c.engagement_periods || 1} ${t('pipeline.quarters', 'trim.')} (${(c.engagement_periods || 1) * 3} ${t('pipeline.months', 'mois')})`}
+                          {(c.engagement_type === 'annuel' || c.engagement_type === 'yearly') &&
+                            `${c.engagement_periods || 1} ${t('pipeline.years', 'an(s)')} (${(c.engagement_periods || 1) * 12} ${t('pipeline.months', 'mois')})`}
+                        </div>
+                      )}
                       <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>{fmtDate(c.created_at)}</div>
 
                       {/* Qonto in-flight status block: only renders

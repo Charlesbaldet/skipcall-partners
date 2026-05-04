@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
+const { calculateCommissionAmount } = require('../utils/commissionFormula');
 // emails via resend.sendAndLog — emailService.queueNotification removed
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
@@ -379,7 +380,7 @@ Voir : ${_dashUrl}`,
 router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), async (req, res) => {
   const client = await getClient();
   try {
-    let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement,
+    let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement, engagement_periods,
           contact_first_name, contact_last_name } = req.body;
 
     // Get current state (with tenant check)
@@ -425,6 +426,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       notes = undefined;
       lost_reason = undefined;
       engagement = undefined;
+      engagement_periods = undefined;
       contact_first_name = undefined;
       contact_last_name = undefined;
     }
@@ -549,6 +551,19 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     if (engagement && engagement !== current.engagement) {
       updates.engagement = engagement;
       activities.push({ action: 'engagement_updated', old_value: current.engagement, new_value: engagement });
+      // Forfait is a one-time fee: clamp the periods count to 1 even
+      // if the client sent something else. Keeps the commission math
+      // honest even when the FE selector forgets to reset.
+      if (engagement === 'forfait') {
+        engagement_periods = 1;
+      }
+    }
+    if (engagement_periods !== undefined) {
+      const ep = Math.max(1, parseInt(engagement_periods, 10) || 1);
+      if (ep !== current.engagement_periods) {
+        updates.engagement_periods = ep;
+        activities.push({ action: 'engagement_periods_updated', old_value: String(current.engagement_periods || 1), new_value: String(ep) });
+      }
     }
 
     // Contact person fields — optional, any non-undefined value
@@ -608,7 +623,21 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
 
       if (partner) {
         const rate = parseFloat(partner.commission_rate) || 0;
-        const amount = effectiveDealValue * rate / 100;
+        // Use the same formula as the deal-card forecast so the
+        // commission row matches what the admin already saw.
+        // Engagement metadata is read from the in-flight `updates`
+        // first (the change the user just made on the same drag),
+        // then falls back to whatever's on the row.
+        const effEngagement = updates.engagement || current.engagement || 'mensuel';
+        const effPeriods    = updates.engagement_periods != null
+          ? updates.engagement_periods
+          : (current.engagement_periods || 1);
+        const amount = calculateCommissionAmount({
+          engagementType: effEngagement,
+          periods: effPeriods,
+          dealValue: effectiveDealValue,
+          rate,
+        });
 
         // Look up an existing commission first so we can decide between
         // INSERT and a status-aware UPDATE: a row that already moved
@@ -623,18 +652,19 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         let createdCommission;
         if (!existingCom) {
           ({ rows: [createdCommission] } = await client.query(
-            `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status)
-             VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval')
+            `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status, engagement_type, engagement_periods)
+             VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval', $7, $8)
              RETURNING id, amount, rate, deal_value, created_at`,
-            [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null]
+            [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null, effEngagement, effPeriods]
           ));
         } else if (existingCom.status === 'pending_approval') {
           ({ rows: [createdCommission] } = await client.query(
             `UPDATE commissions
-                SET amount = $2, rate = $3, deal_value = $4
+                SET amount = $2, rate = $3, deal_value = $4,
+                    engagement_type = $5, engagement_periods = $6
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
-            [existingCom.id, amount, rate, effectiveDealValue]
+            [existingCom.id, amount, rate, effectiveDealValue, effEngagement, effPeriods]
           ));
         } else {
           // Already approved or further along — keep numbers in sync
@@ -642,10 +672,11 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           // commission.created webhook (it isn't a fresh creation).
           ({ rows: [createdCommission] } = await client.query(
             `UPDATE commissions
-                SET amount = $2, deal_value = $3
+                SET amount = $2, deal_value = $3,
+                    engagement_type = $4, engagement_periods = $5
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
-            [existingCom.id, amount, effectiveDealValue]
+            [existingCom.id, amount, effectiveDealValue, effEngagement, effPeriods]
           ));
         }
 

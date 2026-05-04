@@ -5,6 +5,19 @@
     "next": "Next",
     "page": "Page"
   },
+  "pipeline": {
+    "forfait": "Flat fee",
+    "mensuel": "Monthly",
+    "trimestriel": "Quarterly",
+    "annuel": "Yearly",
+    "nb_months": "Number of months",
+    "nb_quarters": "Number of quarters",
+    "nb_years": "Number of years",
+    "months": "months",
+    "quarters": "qtr.",
+    "years": "year(s)",
+    "forecast_commission": "Forecast commission"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

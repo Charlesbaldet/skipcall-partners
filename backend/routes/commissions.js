@@ -73,6 +73,7 @@ router.get('/', async (req, res) => {
               c.status, c.approval_status, c.rejection_reason,
               c.approved_at, c.paid_at, c.created_at, c.tenant_id,
               c.invoice_uploaded_at,
+              c.engagement_type, c.engagement_periods,
               (c.invoice_url IS NOT NULL) AS has_invoice,
               c.qonto_transfer_id, c.payment_initiated_at, c.payment_completed_at,
               c.payment_reference, c.payment_error,

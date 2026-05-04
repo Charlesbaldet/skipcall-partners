@@ -5,6 +5,19 @@
     "next": "Successivo",
     "page": "Pagina"
   },
+  "pipeline": {
+    "forfait": "Forfait",
+    "mensuel": "Mensile",
+    "trimestriel": "Trimestrale",
+    "annuel": "Annuale",
+    "nb_months": "Numero di mesi",
+    "nb_quarters": "Numero di trimestri",
+    "nb_years": "Numero di anni",
+    "months": "mesi",
+    "quarters": "trim.",
+    "years": "anno/anni",
+    "forecast_commission": "Commissione prevista"
+  },
   "common": {
     "loading": "Caricamento...",
     "error": "Errore",
