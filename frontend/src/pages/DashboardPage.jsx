@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import OnboardingWizard from '../components/OnboardingWizard.jsx';
 import { fmt, STATUS_CONFIG, LEVEL_CONFIG, categoryName } from '../lib/constants';
+import DateRangePicker from '../components/DateRangePicker.jsx';
 
 const COLORS = ['#6366f1', '#0ea5e9', '#f59e0b', '#c026d3', '#16a34a', '#dc2626'];
 
@@ -36,19 +37,31 @@ export default function DashboardPage() {
   const [revenueCumulState, setRevenueCumulState] = useState(false);
   const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
   const [billingPlan, setBillingPlan] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
+  const [monthlyCumul, setMonthlyCumul] = useState(false);
   const navigate = useNavigate();
 
+  // Re-fetch every dashboard endpoint when the picker range changes.
+  // Initial mount runs with `null` (no filter), matching the legacy
+  // behaviour exactly. Only the first load shows the full-page loader;
+  // subsequent range changes refresh stale data in place.
   useEffect(() => {
+    let active = true;
     Promise.all([
-      api.getKPIs(), api.getTimeline(6), api.getPipeline(),
-      api.getTopPartners(), api.getLevels(), api.getMyTenant(),
-    ]).then(([k, tl, p, tp, l, mt]) => {
-      setKpis(k); setMyTenant(mt && (mt.tenant || mt)); setTimeline(tl.timeline); setPipeline(p.pipeline);
+      api.getKPIs(dateRange), api.getTimeline(6, dateRange), api.getPipeline(dateRange),
+      api.getTopPartners(dateRange), api.getLevels(dateRange),
+    ]).then(([k, tl, p, tp, l]) => {
+      if (!active) return;
+      setKpis(k); setTimeline(tl.timeline); setPipeline(p.pipeline);
       setTopPartners(tp.topPartners); setLevels(l.levels);
-    }).catch(console.error).finally(() => setLoading(false));
-    // Dashboard-wide bundle for the redesigned charts. Fails silently
-    // so the page still renders KPIs even if this endpoint errors.
-    api.getDashboardStats().then(setStats).catch(() => setStats({}));
+    }).catch(console.error).finally(() => { if (active) setLoading(false); });
+    api.getDashboardStats(dateRange).then(d => { if (active) setStats(d); }).catch(() => { if (active) setStats({}); });
+    return () => { active = false; };
+  }, [dateRange]);
+
+  // Range-independent one-time fetches.
+  useEffect(() => {
+    api.getMyTenant().then(mt => setMyTenant(mt && (mt.tenant || mt))).catch(() => {});
     api.getTenantFeatures().then(d => setFeatures(d.features || {})).catch(() => setFeatures({}));
     api.getBillingPlan().then(setBillingPlan).catch(() => {});
   }, []);
@@ -117,21 +130,25 @@ export default function DashboardPage() {
           <p style={{ color: '#64748b', marginTop: 4 }}>{t('dashboard.subtitle')}</p>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-          {[
-            { id: 'overview', label: t('dashboard.tab_overview'), icon: Target },
-            { id: 'classement', label: t('dashboard.tab_leaderboard'), icon: Trophy },
-          ].map(tab_ => (
-            <button key={tab_.id} onClick={() => handleTabChange(tab_.id)} style={{
-              padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              background: tab === tab_.id ? '#fff' : 'transparent', color: tab === tab_.id ? '#0f172a' : '#64748b',
-              boxShadow: tab === tab_.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <tab_.icon size={14} /> {tab_.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
+            {[
+              { id: 'overview', label: t('dashboard.tab_overview'), icon: Target },
+              { id: 'classement', label: t('dashboard.tab_leaderboard'), icon: Trophy },
+            ].map(tab_ => (
+              <button key={tab_.id} onClick={() => handleTabChange(tab_.id)} style={{
+                padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                background: tab === tab_.id ? '#fff' : 'transparent', color: tab === tab_.id ? '#0f172a' : '#64748b',
+                boxShadow: tab === tab_.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <tab_.icon size={14} /> {tab_.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -140,6 +157,7 @@ export default function DashboardPage() {
           kpis={kpis}
           stats={stats}
           revenueCumul={revenueCumulState} setRevenueCumul={setRevenueCumulState}
+          monthlyCumul={monthlyCumul} setMonthlyCumul={setMonthlyCumul}
           myTenant={myTenant}
           billingPlan={billingPlan} navigate={navigate}
         />
@@ -159,7 +177,7 @@ export default function DashboardPage() {
 // ═══════════════════════════════════════
 // VUE D'ENSEMBLE TAB
 // ═══════════════════════════════════════
-function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, billingPlan, navigate }) {
+function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, monthlyCumul, setMonthlyCumul, myTenant, billingPlan, navigate }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
@@ -185,7 +203,19 @@ function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, bil
     const [y, m] = ym.split('-').map(Number);
     return new Date(y, m - 1, 1).toLocaleDateString('fr-FR', { month: 'short' }).toLowerCase();
   };
-  const monthlyData = (stats?.referralsByMonth || []).map(r => ({ ...r, label: monthShort(r.month) }));
+  const monthlyBase = (stats?.referralsByMonth || []).map(r => ({ ...r, label: monthShort(r.month) }));
+  const monthlyData = monthlyCumul
+    ? monthlyBase.reduce((acc, m, i) => {
+        const prev = i > 0 ? acc[i - 1] : { total: 0, won: 0, lost: 0 };
+        acc.push({
+          ...m,
+          total: (prev.total || 0) + (m.total || 0),
+          won: (prev.won || 0) + (m.won || 0),
+          lost: (prev.lost || 0) + (m.lost || 0),
+        });
+        return acc;
+      }, [])
+    : monthlyBase;
   const mrrSeries = (stats?.mrrByMonth || []).map(r => ({ ...r, label: monthShort(r.month), value: revenueCumul ? r.cumulative : r.mrr }));
   const commissionMonthly = (stats?.commissionsByMonth || []).map(r => ({ ...r, label: monthShort(r.month) }));
   const stageData = (stats?.referralsByStage || []).filter(s => s.count > 0);
@@ -241,7 +271,21 @@ function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, bil
           Partenaires par catégorie à droite. Hauteurs alignées
           sur ~180 px pour matcher les deux donuts. */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 20, marginBottom: 20 }}>
-        <ChartCard title={t('dashboard.chart_monthly')}>
+        <ChartCard
+          title={t('dashboard.chart_monthly')}
+          action={
+            <div style={{ display: 'flex', gap: 2, background: '#f3f4f6', borderRadius: 8, padding: 2 }}>
+              {[{ key: false, label: t('dashboard.monthly') }, { key: true, label: t('dashboard.cumulative') }].map(opt => (
+                <button key={String(opt.key)} onClick={() => setMonthlyCumul(opt.key)} style={{
+                  padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                  background: monthlyCumul === opt.key ? '#fff' : 'transparent',
+                  color: monthlyCumul === opt.key ? '#059669' : '#9ca3af',
+                  boxShadow: monthlyCumul === opt.key ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                }}>{opt.label}</button>
+              ))}
+            </div>
+          }
+        >
           {/* Slider horizontal interne : on force un min-width
               proportionnel au nombre de points (~46 px / mois) pour
               qu'avec ~12 mois ça remplisse la colonne, et qu'au-delà
@@ -282,7 +326,7 @@ function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, myTenant, bil
           title={`${rLabel} Généré (€)`}
           action={
             <div style={{ display: 'flex', gap: 2, background: '#f3f4f6', borderRadius: 8, padding: 2 }}>
-              {[{ key: false, label: 'Mensuel' }, { key: true, label: 'Cumulé' }].map(opt => (
+              {[{ key: false, label: t('dashboard.monthly') }, { key: true, label: t('dashboard.cumulative') }].map(opt => (
                 <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
                   padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
                   background: revenueCumul === opt.key ? '#fff' : 'transparent',

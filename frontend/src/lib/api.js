@@ -2,6 +2,15 @@ import i18n from '../i18n';
 
 const API_BASE = '/api';
 
+// Build a `start_date=…&end_date=…` querystring suffix from a
+// {startDate,endDate} object. `sep` is '?' for endpoints with no query
+// string, '&' for endpoints that already have one. Returns '' when the
+// range is null/undefined.
+function dateQS(range, sep = '?') {
+  if (!range || !range.startDate || !range.endDate) return '';
+  return `${sep}start_date=${range.startDate}&end_date=${range.endDate}`;
+}
+
 class ApiClient {
   constructor() { this.token = localStorage.getItem('skipcall_token'); }
 
@@ -232,13 +241,14 @@ class ApiClient {
     return { url, filename, blob };
   }
 
-  // Dashboard
-  getKPIs() { return this.request('/dashboard/kpis'); }
-  getTimeline(months = 6) { return this.request(`/dashboard/timeline?months=${months}`); }
-  getDashboardStats() { return this.request('/dashboard/stats'); }
-  getPipeline() { return this.request('/dashboard/pipeline'); }
-  getTopPartners() { return this.request('/dashboard/top-partners'); }
-  getLevels() { return this.request('/dashboard/levels'); }
+  // Dashboard. The optional `range` arg is `{startDate, endDate}` (ISO
+  // YYYY-MM-DD) or null/undefined for "no filter".
+  getKPIs(range)            { return this.request('/dashboard/kpis' + dateQS(range)); }
+  getTimeline(months = 6, range) { return this.request(`/dashboard/timeline?months=${months}` + dateQS(range, '&')); }
+  getDashboardStats(range)  { return this.request('/dashboard/stats' + dateQS(range)); }
+  getPipeline(range)        { return this.request('/dashboard/pipeline' + dateQS(range)); }
+  getTopPartners(range)     { return this.request('/dashboard/top-partners' + dateQS(range)); }
+  getLevels(range)          { return this.request('/dashboard/levels' + dateQS(range)); }
 
   // Messages
   getConversations() { return this.request('/messages/conversations'); }

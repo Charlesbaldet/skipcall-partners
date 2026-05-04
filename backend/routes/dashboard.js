@@ -7,28 +7,47 @@ router.use(authenticate);
 router.use(tenantScope);
 router.use(partnerScope);
 
-// Helper: build tenant + partner filter clauses
-function buildFilters(req, tableAlias = 'r', partnerCol = 'partner_id') {
+// Parse optional ?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD. Returns null
+// (no date filter) when missing or malformed — backwards compatible.
+function parseDateRange(req) {
+  const { start_date, end_date } = req.query;
+  const re = /^\d{4}-\d{2}-\d{2}$/;
+  if (start_date && re.test(start_date) && end_date && re.test(end_date)) {
+    return { startDate: start_date, endDate: end_date };
+  }
+  return null;
+}
+
+// Helper: build tenant + partner + optional date filter clauses.
+// `opts.skipDate` skips date injection (e.g. for endpoints that already
+// own their date logic, like /timeline).
+function buildFilters(req, tableAlias = 'r', partnerCol = 'partner_id', opts = {}) {
   const where = [];
   const params = [];
   let i = 1;
 
-  // Tenant isolation (via JOIN with partners)
   if (req.tenantId && !req.skipTenantFilter) {
     where.push(`${tableAlias}.tenant_id = $${i++}`);
     params.push(req.tenantId);
   }
-
-  // Partner scope
   if (req.partnerScope) {
     where.push(`${tableAlias}.${partnerCol} = $${i++}`);
     params.push(req.partnerScope);
   }
-
+  if (!opts.skipDate) {
+    const range = parseDateRange(req);
+    if (range) {
+      const dateCol = opts.dateCol || 'created_at';
+      where.push(`${tableAlias}.${dateCol} >= $${i++}::date`);
+      params.push(range.startDate);
+      where.push(`${tableAlias}.${dateCol} < ($${i++}::date + INTERVAL '1 day')`);
+      params.push(range.endDate);
+    }
+  }
   return { where, params, i };
 }
 
-// âââ Main KPIs âââ
+// ─── Main KPIs ───
 router.get('/kpis', async (req, res) => {
   try {
     const { where, params } = buildFilters(req, 'r');
@@ -71,14 +90,26 @@ router.get('/kpis', async (req, res) => {
   }
 });
 
-// âââ Referrals over time (for charts) âââ
+// ─── Referrals over time (for charts) ───
+// When start_date/end_date are supplied, they win over `?months=`.
 router.get('/timeline', async (req, res) => {
   try {
+    const range = parseDateRange(req);
     const { months = 6 } = req.query;
 
-    let where = [`r.created_at >= NOW() - ($1 || ' months')::interval`];
-    let params = [months];
-    let i = 2;
+    const where = [];
+    const params = [];
+    let i = 1;
+
+    if (range) {
+      where.push(`r.created_at >= $${i++}::date`);
+      params.push(range.startDate);
+      where.push(`r.created_at < ($${i++}::date + INTERVAL '1 day')`);
+      params.push(range.endDate);
+    } else {
+      where.push(`r.created_at >= NOW() - ($${i++} || ' months')::interval`);
+      params.push(months);
+    }
 
     if (req.tenantId && !req.skipTenantFilter) {
       where.push(`r.tenant_id = $${i++}`);
@@ -107,7 +138,7 @@ router.get('/timeline', async (req, res) => {
   }
 });
 
-// âââ Pipeline breakdown by status âââ
+// ─── Pipeline breakdown by status ───
 router.get('/pipeline', async (req, res) => {
   try {
     const { where, params } = buildFilters(req, 'r');
@@ -131,16 +162,27 @@ router.get('/pipeline', async (req, res) => {
   }
 });
 
-// âââ Top partners ranking âââ
+// ─── Top partners ranking ───
+// Date range filters joined referrals (so the ranking reflects activity
+// within the window), but partners with zero hits in that window still
+// appear via LEFT JOIN with the date predicate in the ON clause.
 router.get('/top-partners', authorize('admin', 'commercial'), async (req, res) => {
   try {
-    let where = ['p.is_active = true'];
-    let params = [];
+    const where = ['p.is_active = true'];
+    const params = [];
     let i = 1;
 
     if (req.tenantId && !req.skipTenantFilter) {
       where.push(`p.tenant_id = $${i++}`);
       params.push(req.tenantId);
+    }
+
+    let joinDate = '';
+    const range = parseDateRange(req);
+    if (range) {
+      joinDate = ` AND r.created_at >= $${i}::date AND r.created_at < ($${i + 1}::date + INTERVAL '1 day')`;
+      params.push(range.startDate, range.endDate);
+      i += 2;
     }
 
     const { rows } = await query(
@@ -152,7 +194,7 @@ router.get('/top-partners', authorize('admin', 'commercial'), async (req, res) =
                 THEN ROUND(COUNT(CASE WHEN r.status = 'won' THEN 1 END)::numeric / COUNT(CASE WHEN r.status IN ('won','lost') THEN 1 END) * 100, 1)
                 ELSE 0 END as win_rate
        FROM partners p
-       LEFT JOIN referrals r ON p.id = r.partner_id
+       LEFT JOIN referrals r ON p.id = r.partner_id${joinDate}
        WHERE ${where.join(' AND ')}
        GROUP BY p.id
        ORDER BY revenue DESC LIMIT 10`,
@@ -164,7 +206,7 @@ router.get('/top-partners', authorize('admin', 'commercial'), async (req, res) =
   }
 });
 
-// âââ Recommendation level distribution âââ
+// ─── Recommendation level distribution ───
 router.get('/levels', async (req, res) => {
   try {
     const { where, params } = buildFilters(req, 'r');
