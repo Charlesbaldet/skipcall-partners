@@ -10,10 +10,12 @@ const RETRY_WORKER_INTERVAL_MS = 30_000;
 const EVENT_TYPES = [
   'referral.created',
   'referral.updated',
+  'referral.status_changed',  // public-API-friendly alias of `updated` fired only on status transitions
   'referral.won',
   'referral.lost',
   'partner.registered',
   'partner.approved',
+  'partner.created',           // fired by POST /api/v1/partners (CRM-side onboarding)
   'commission.created',
   'commission.approved',
   'commission.paid',

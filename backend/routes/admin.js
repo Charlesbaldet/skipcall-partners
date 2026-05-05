@@ -174,7 +174,9 @@ router.get('/api-keys', async (req, res) => {
 
     const { rows } = await query(
       `SELECT ak.id, ak.name, ak.key_prefix, ak.partner_id, ak.is_active,
-              ak.created_at, ak.last_used_at, p.name as partner_name
+              ak.permissions, ak.rate_limit_per_minute,
+              ak.created_at, ak.last_used_at, ak.revoked_at,
+              p.name as partner_name
        FROM api_keys ak
        LEFT JOIN partners p ON ak.partner_id = p.id
        ${whereClause}
@@ -189,18 +191,31 @@ router.get('/api-keys', async (req, res) => {
 
 router.post('/api-keys', async (req, res) => {
   try {
-    const { name, partner_id } = req.body;
+    const { name, partner_id, permissions, rate_limit_per_minute } = req.body;
     if (!name) return res.status(400).json({ error: 'Nom requis' });
+
+    // Validate permissions — only 'read' and 'write' are user-grantable.
+    // 'admin' implies everything but is reserved for internal use.
+    const VALID = ['read', 'write'];
+    let perms = Array.isArray(permissions) && permissions.length
+      ? permissions.filter(p => VALID.includes(p))
+      : ['read'];
+    if (perms.length === 0) perms = ['read'];
+
+    let rate = parseInt(rate_limit_per_minute);
+    if (!Number.isFinite(rate) || rate < 1 || rate > 600) rate = 60;
 
     const rawKey = generateApiKey();
     const keyHash = hashKey(rawKey);
     const keyPrefix = rawKey.substring(0, 10) + '...';
 
     await query(
-      'INSERT INTO api_keys (name, key_hash, key_prefix, partner_id, created_by, tenant_id) VALUES ($1, $2, $3, $4, $5, $6)',
-      [name, keyHash, keyPrefix, partner_id || null, req.user.id, req.tenantId || null]
+      `INSERT INTO api_keys
+         (name, key_hash, key_prefix, partner_id, created_by, tenant_id, permissions, rate_limit_per_minute)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [name, keyHash, keyPrefix, partner_id || null, req.user.id, req.tenantId || null, perms, rate]
     );
-    res.status(201).json({ apiKey: rawKey, name, keyPrefix });
+    res.status(201).json({ apiKey: rawKey, name, keyPrefix, permissions: perms, rate_limit_per_minute: rate });
   } catch (err) {
     console.error('Create API key error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -209,8 +224,13 @@ router.post('/api-keys', async (req, res) => {
 
 router.delete('/api-keys/:id', async (req, res) => {
   try {
-    await query('UPDATE api_keys SET is_active = false WHERE id = $1', [req.params.id]);
-    res.json({ message: 'ClÃ© rÃ©voquÃ©e' });
+    // Set BOTH flags so legacy auth (is_active) and new auth
+    // (revoked_at IS NULL) agree the key is dead.
+    await query(
+      'UPDATE api_keys SET is_active = false, revoked_at = NOW() WHERE id = $1',
+      [req.params.id]
+    );
+    res.json({ message: 'Cle revoquee' });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }

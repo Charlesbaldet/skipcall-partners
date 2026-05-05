@@ -580,13 +580,32 @@ function IntegrationsTab() {
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState(null);
   const [copied, setCopied] = useState(false);
+  // New keys default to read-only. Toggle Write on for keys that need
+  // to push referrals/partners from the client's CRM.
+  const [permRead, setPermRead] = useState(true);
+  const [permWrite, setPermWrite] = useState(false);
 
   const load = async () => { try { const [k, p] = await Promise.all([api.getApiKeys(), api.getPartners()]); setApiKeys(k.apiKeys || []); setPartners(p.partners || []); } catch {} setLoading(false); };
   useEffect(() => { load(); }, []);
 
   const handleCreate = async () => {
     setCreating(true);
-    try { const data = await api.createApiKey({ name: keyName, partner_id: partnerId || null }); setNewKey(data.apiKey); setKeyName(''); setPartnerId(''); load(); }
+    try {
+      const permissions = [];
+      if (permRead) permissions.push('read');
+      if (permWrite) permissions.push('write');
+      const data = await api.createApiKey({
+        name: keyName,
+        partner_id: partnerId || null,
+        permissions: permissions.length ? permissions : ['read'],
+      });
+      setNewKey(data.apiKey);
+      setKeyName('');
+      setPartnerId('');
+      setPermRead(true);
+      setPermWrite(false);
+      load();
+    }
     catch (err) { showToast.error(err.message); }
     setCreating(false);
   };
@@ -634,8 +653,21 @@ function IntegrationsTab() {
             <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.name_required_label')}</label><input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder={t('settings.integrations_zapier_ph')} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
             <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.partner_optional')}</label><select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }}><option value="">{t('settings.none_option')}</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           </div>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 6 }}>{t('settings.api_permissions')}</div>
+            <div style={{ display: 'flex', gap: 16 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#475569', cursor: 'pointer' }}>
+                <input type="checkbox" checked={permRead} onChange={e => setPermRead(e.target.checked)} />
+                {t('settings.api_read')}
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#475569', cursor: 'pointer' }}>
+                <input type="checkbox" checked={permWrite} onChange={e => setPermWrite(e.target.checked)} />
+                {t('settings.api_write')}
+              </label>
+            </div>
+          </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleCreate} disabled={creating || !keyName} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: creating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? t('settings.creating') : t('settings.api_generate')}</button>
+            <button onClick={handleCreate} disabled={creating || !keyName || (!permRead && !permWrite)} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: (creating || (!permRead && !permWrite)) ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? t('settings.creating') : t('settings.api_generate')}</button>
             <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
           </div>
         </div>

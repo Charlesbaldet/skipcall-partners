@@ -1603,7 +1603,10 @@
     "language_help": "Kies de taal van de interface.",
     "tab_pipeline": "Pipeline & stages",
     "tab_features": "Functies",
-    "tab_bank_info": "Bankgegevens"
+    "tab_bank_info": "Bankgegevens",
+    "api_permissions": "Rechten",
+    "api_read": "Lezen",
+    "api_write": "Schrijven"
   },
   "status": {
     "new": "Nieuw",

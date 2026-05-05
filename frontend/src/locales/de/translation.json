@@ -1603,7 +1603,10 @@
     "language_help": "Wähle die Sprache der Oberfläche.",
     "tab_pipeline": "Pipeline & Stages",
     "tab_features": "Funktionen",
-    "tab_bank_info": "Bankverbindung"
+    "tab_bank_info": "Bankverbindung",
+    "api_permissions": "Berechtigungen",
+    "api_read": "Lesen",
+    "api_write": "Schreiben"
   },
   "status": {
     "new": "Neu",

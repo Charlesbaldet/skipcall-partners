@@ -1603,7 +1603,10 @@
     "language_help": "Scegli la lingua dell'interfaccia.",
     "tab_pipeline": "Pipeline e fasi",
     "tab_features": "Funzionalità",
-    "tab_bank_info": "Dati bancari"
+    "tab_bank_info": "Dati bancari",
+    "api_permissions": "Permessi",
+    "api_read": "Lettura",
+    "api_write": "Scrittura"
   },
   "status": {
     "new": "Nuovo",

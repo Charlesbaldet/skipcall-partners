@@ -645,6 +645,24 @@ async function runMigrations() {
   await query(`CREATE INDEX IF NOT EXISTS idx_commissions_deleted_at ON commissions(deleted_at) WHERE deleted_at IS NOT NULL`);
   console.log('[trash] v29 soft-delete columns + partial indexes');
 
+  // v30: public REST API plumbing.
+  //   - api_keys: permissions[] (default ['read']) + rate_limit_per_minute
+  //     (default 60) + revoked_at (nullable). The legacy `is_active`
+  //     column stays — both flags are checked at auth time so existing
+  //     keys keep working.
+  //   - referrals + partners: external_id (CRM-side identifier) so
+  //     POST endpoints can be idempotent. Partial unique index per
+  //     (tenant_id, external_id) — non-null only — lets tenants reuse
+  //     external ids across each other and lets multiple NULLs coexist.
+  await query(`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS permissions TEXT[] DEFAULT ARRAY['read']`);
+  await query(`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rate_limit_per_minute INTEGER DEFAULT 60`);
+  await query(`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ`);
+  await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS external_id VARCHAR(255)`);
+  await query(`ALTER TABLE partners  ADD COLUMN IF NOT EXISTS external_id VARCHAR(255)`);
+  await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_referrals_external_id_tenant ON referrals(tenant_id, external_id) WHERE external_id IS NOT NULL`);
+  await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_partners_external_id_tenant  ON partners(tenant_id, external_id)  WHERE external_id IS NOT NULL`);
+  console.log('[publicApi] v30 api_keys.permissions + rate_limit + external_id columns');
+
   console.log(' Migrations completed');
 
   } catch (err) {
