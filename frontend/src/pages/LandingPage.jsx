@@ -10,24 +10,11 @@ function useMobile() {
   return mobile;
 }
 
-// 768–1023 px: tighten the nav-link gap so all 7 entries fit between
-// the logo and the right cluster without forcing the centred block
-// off-axis. Mirrors the breakpoint used by LandingLayout's nav.
-function useTablet() {
-  const [tablet, setTablet] = useState(
-    typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024
-  );
-  useEffect(() => {
-    const h = () => setTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
-    window.addEventListener('resize', h, { passive: true });
-    return () => window.removeEventListener('resize', h);
-  }, []);
-  return tablet;
-}
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { LandingNav } from '../components/LandingLayout';
 
 
 const C = { p:'#059669',pl:'#10b981',pd:'#047857',s:'#0f172a',sl:'#1e293b',a:'#f97316',al:'#fb923c',m:'#64748b',bg:'#fafbfc' };
@@ -92,13 +79,9 @@ export default function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const mobile = useMobile();
-  const tablet = useTablet();
   const [pricingInterval, setPricingInterval] = useState('monthly');
   const [email, setEmail] = useState('');
   const [scrollY, setScrollY] = useState(0);
-  const [featOpen, setFeatOpen] = useState(false);
-  const [useCasesOpen, setUseCasesOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [featuredPartners, setFeaturedPartners] = useState([]);
 
   useEffect(() => {
@@ -133,21 +116,6 @@ export default function LandingPage() {
   const plans = t('landing.pricing.plans',{returnObjects:true});
   const faqItems = t('landing.faq.items',{returnObjects:true});
   const steps = t('landing.howItWorks.steps',{returnObjects:true});
-  const featDropdown = [
-    {href:'/fonctionnalites/pipeline',label:t('landing.featuresDropdown.pipeline_label'),desc:t('landing.featuresDropdown.pipeline_desc')},
-    {href:'/fonctionnalites/commissions',label:t('landing.featuresDropdown.commissions_label'),desc:t('landing.featuresDropdown.commissions_desc')},
-    {href:'/fonctionnalites/analytics',label:t('landing.featuresDropdown.analytics_label'),desc:t('landing.featuresDropdown.analytics_desc')},
-    {href:'/fonctionnalites/personnalisation',label:t('landing.featuresDropdown.branding_label'),desc:t('landing.featuresDropdown.branding_desc')},
-    {href:'/fonctionnalites/tracking',label:t('landing.featuresDropdown.tracking_label'),desc:t('landing.featuresDropdown.tracking_desc')},
-  ];
-  const useCasesDropdown = [
-    {href:'/cas-dusage/saas-b2b',label:t('useCases.nav.saas'),desc:t('useCases.nav.saasDesc')},
-    {href:'/cas-dusage/cabinet-conseil',label:t('useCases.nav.conseil'),desc:t('useCases.nav.conseilDesc')},
-    {href:'/cas-dusage/startup',label:t('useCases.nav.startup'),desc:t('useCases.nav.startupDesc')},
-    {href:'/cas-dusage/reseau-distribution',label:t('useCases.nav.distribution'),desc:t('useCases.nav.distributionDesc')},
-    {href:'/cas-dusage/marketplace-plateforme',label:t('useCases.nav.marketplace'),desc:t('useCases.nav.marketplaceDesc')},
-    {href:'/cas-dusage/agence-marketing',label:t('useCases.nav.agence'),desc:t('useCases.nav.agenceDesc')},
-  ];
 
   const s = {
     section:{padding:'100px 48px'},
@@ -184,123 +152,7 @@ export default function LandingPage() {
         .bs:hover{background:${C.s}!important;color:#fff!important}
       `}</style>
 
-      {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ NAV Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
-      <nav style={{
-        position:'fixed',top:0,left:0,right:0,zIndex:100,
-        padding:mobile?'14px 20px':'16px 48px',
-        alignItems:'center',
-        background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',
-        backdropFilter:'blur(20px)',
-        borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',
-        transition:'all .3s',
-        // Desktop: 1fr / auto / 1fr grid so the centre column is
-        // anchored to the page midline regardless of how wide the
-        // logo or right cluster grow. Mobile: simple flex row with
-        // the existing logo + hamburger group.
-        ...(mobile
-          ? { display:'flex', justifyContent:'space-between' }
-          : { display:'grid', gridTemplateColumns:'1fr auto 1fr', columnGap:24 }),
-      }}>
-        <div style={{ justifySelf:'start' }}><Logo size={mobile?30:36}/></div>
-        {mobile ? (
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            {/* Compact switcher (flag + caret) sits right next to the
-                burger so the dropdown anchors to the viewport's right
-                edge and never clips off the left of the screen. */}
-            <LanguageSwitcher compact />
-            <button onClick={()=>setMenuOpen(!menuOpen)} style={{background:'none',border:'none',cursor:'pointer',padding:8,display:'flex',flexDirection:'column',gap:5}} aria-label={t('nav.menu')}>
-              <span style={{display:'block',width:22,height:2,background:menuOpen?'transparent':'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(45deg) translate(5px,5px)':'none'}}/>
-              <span style={{display:'block',width:22,height:2,background:'#0f172a',transition:'all .2s',transform:menuOpen?'rotate(-45deg) translate(0,-1px)':'none'}}/>
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Centre column — auto-sized middle of the 1fr/auto/1fr
-                grid so the link block is anchored to the page midline.
-                Tablet (768–1023 px) tightens the link gap so all 7
-                entries fit before the right cluster squeezes them. */}
-            <div style={{display:'flex',alignItems:'center',gap: tablet ? 14 : 28, justifySelf:'center'}}>
-            {/* FonctionnalitÃÂ©s dropdown */}
-            <div style={{position:'relative'}} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
-              <span style={{color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4}}>
-                {t('nav.features')} <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
-              </span>
-              {featOpen && (
-                <div style={{position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:260,zIndex:200}}>
-                  {featDropdown.map(({href,label,desc})=>(
-                    <a key={href} href={href} style={{display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none'}} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                      <div style={{fontWeight:600,fontSize:14,color:'#0f172a'}}>{label}</div>
-                      <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{desc}</div>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Cas d'usage dropdown */}
-            <div style={{position:'relative'}} onMouseEnter={()=>setUseCasesOpen(true)} onMouseLeave={()=>setUseCasesOpen(false)}>
-              <span style={{color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4}}>
-                {t('useCases.nav.menuLabel')} <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
-              </span>
-              {useCasesOpen && (
-                <div style={{position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:280,zIndex:200}}>
-                  {useCasesDropdown.map(({href,label,desc})=>(
-                    <a key={href} href={href} style={{display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none'}} onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                      <div style={{fontWeight:600,fontSize:14,color:'#0f172a'}}>{label}</div>
-                      <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{desc}</div>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-            {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
-              <a key={key} href={href} style={{color:C.m,textDecoration:'none',fontSize:14,fontWeight:500,cursor:'pointer',transition:'color .2s'}} onMouseEnter={e=>e.target.style.color=C.p} onMouseLeave={e=>e.target.style.color=C.m}>
-                {t(key)}
-              </a>
-            ))}
-            </div>
-
-            {/* Right column — language switcher + auth buttons,
-                aligned to the right edge by `justifySelf: end`. */}
-            <div style={{display:'flex',alignItems:'center',gap:12, justifySelf:'end'}}>
-              <LanguageSwitcher style={{}} />
-              <button onClick={()=>navigate('/login')} className="bs" style={{padding:'10px 20px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>{t('nav.login')}</button>
-              <button onClick={()=>{trackClick('nav_cta');navigate('/signup');}} className="bp" style={{padding:'10px 20px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>{t('nav.freeTrial')}</button>
-            </div>
-          </>
-        )}
-        {/* Mobile menu */}
-        {mobile && menuOpen && (
-          <div style={{position:'fixed',top:58,left:0,right:0,height:'calc(100vh - 58px)',zIndex:200,background:'#fff',overflowY:'auto',padding:'24px 20px'}}>
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('nav.features')}</div>
-              {featDropdown.map(({href,label,desc})=>(
-                <a key={href} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none'}}>
-                  <div style={{fontWeight:600,fontSize:15,color:'#0f172a'}}>{label}</div>
-                  <div style={{fontSize:13,color:'#64748b',marginTop:2}}>{desc}</div>
-                </a>
-              ))}
-            </div>
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('useCases.nav.menuLabel')}</div>
-              {useCasesDropdown.map(({href,label,desc})=>(
-                <a key={href} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none'}}>
-                  <div style={{fontWeight:600,fontSize:15,color:'#0f172a'}}>{label}</div>
-                  <div style={{fontSize:13,color:'#64748b',marginTop:2}}>{desc}</div>
-                </a>
-              ))}
-            </div>
-            <div style={{display:'flex',flexDirection:'column',gap:2,marginTop:16}}>
-              {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
-                <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:'#0f172a',textDecoration:'none'}}>{t(key)}</a>
-              ))}
-            </div>
-            <div style={{display:'flex',flexDirection:'column',gap:12,marginTop:24}}>
-              <button onClick={()=>{setMenuOpen(false);navigate('/login');}} style={{padding:'14px',borderRadius:12,border:'2px solid #0f172a',background:'transparent',color:'#0f172a',fontWeight:600,fontSize:16,cursor:'pointer',width:'100%'}}>{t('nav.login')}</button>
-              <button onClick={()=>{setMenuOpen(false);navigate('/signup');}} style={{padding:'14px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#059669,#10b981)',color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',width:'100%'}}>{t('nav.freeTrial')}</button>
-            </div>
-          </div>
-        )}
-      </nav>
+      <LandingNav />
 
       {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ HERO Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
       <section style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'140px 48px 80px',position:'relative',background:`radial-gradient(ellipse 80% 60% at 50% -20%,${C.p}12,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,${C.a}08,transparent),${C.bg}`}}>
