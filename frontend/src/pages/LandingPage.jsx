@@ -9,6 +9,21 @@ function useMobile() {
   }, []);
   return mobile;
 }
+
+// 768–1023 px: tighten the nav-link gap so all 7 entries fit between
+// the logo and the right cluster without forcing the centred block
+// off-axis. Mirrors the breakpoint used by LandingLayout's nav.
+function useTablet() {
+  const [tablet, setTablet] = useState(
+    typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024
+  );
+  useEffect(() => {
+    const h = () => setTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    window.addEventListener('resize', h, { passive: true });
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return tablet;
+}
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
@@ -77,6 +92,7 @@ export default function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const mobile = useMobile();
+  const tablet = useTablet();
   const [pricingInterval, setPricingInterval] = useState('monthly');
   const [email, setEmail] = useState('');
   const [scrollY, setScrollY] = useState(0);
@@ -169,8 +185,23 @@ export default function LandingPage() {
       `}</style>
 
       {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ NAV Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
-      <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,padding:mobile?'14px 20px':'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',backdropFilter:'blur(20px)',borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',transition:'all .3s'}}>
-        <Logo size={mobile?30:36}/>
+      <nav style={{
+        position:'fixed',top:0,left:0,right:0,zIndex:100,
+        padding:mobile?'14px 20px':'16px 48px',
+        alignItems:'center',
+        background:scrollY>50?'rgba(255,255,255,.95)':'rgba(255,255,255,.85)',
+        backdropFilter:'blur(20px)',
+        borderBottom:scrollY>50?'1px solid rgba(0,0,0,.06)':'1px solid rgba(0,0,0,.02)',
+        transition:'all .3s',
+        // Desktop: 1fr / auto / 1fr grid so the centre column is
+        // anchored to the page midline regardless of how wide the
+        // logo or right cluster grow. Mobile: simple flex row with
+        // the existing logo + hamburger group.
+        ...(mobile
+          ? { display:'flex', justifyContent:'space-between' }
+          : { display:'grid', gridTemplateColumns:'1fr auto 1fr', columnGap:24 }),
+      }}>
+        <div style={{ justifySelf:'start' }}><Logo size={mobile?30:36}/></div>
         {mobile ? (
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             {/* Compact switcher (flag + caret) sits right next to the
@@ -183,7 +214,12 @@ export default function LandingPage() {
             </button>
           </div>
         ) : (
-          <div style={{display:'flex',alignItems:'center',gap:28}}>
+          <>
+            {/* Centre column — auto-sized middle of the 1fr/auto/1fr
+                grid so the link block is anchored to the page midline.
+                Tablet (768–1023 px) tightens the link gap so all 7
+                entries fit before the right cluster squeezes them. */}
+            <div style={{display:'flex',alignItems:'center',gap: tablet ? 14 : 28, justifySelf:'center'}}>
             {/* FonctionnalitÃÂ©s dropdown */}
             <div style={{position:'relative'}} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
               <span style={{color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4}}>
@@ -221,10 +257,16 @@ export default function LandingPage() {
                 {t(key)}
               </a>
             ))}
-            <LanguageSwitcher style={{}} />
-            <button onClick={()=>navigate('/login')} className="bs" style={{padding:'10px 20px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>{t('nav.login')}</button>
-            <button onClick={()=>{trackClick('nav_cta');navigate('/signup');}} className="bp" style={{padding:'10px 20px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>{t('nav.freeTrial')}</button>
-          </div>
+            </div>
+
+            {/* Right column — language switcher + auth buttons,
+                aligned to the right edge by `justifySelf: end`. */}
+            <div style={{display:'flex',alignItems:'center',gap:12, justifySelf:'end'}}>
+              <LanguageSwitcher style={{}} />
+              <button onClick={()=>navigate('/login')} className="bs" style={{padding:'10px 20px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>{t('nav.login')}</button>
+              <button onClick={()=>{trackClick('nav_cta');navigate('/signup');}} className="bp" style={{padding:'10px 20px',borderRadius:10,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:600,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>{t('nav.freeTrial')}</button>
+            </div>
+          </>
         )}
         {/* Mobile menu */}
         {mobile && menuOpen && (
