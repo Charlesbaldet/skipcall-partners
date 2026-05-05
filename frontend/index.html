@@ -75,30 +75,11 @@
     }
     </script>
 
-    <!-- SoftwareApplication schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "RefBoost",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "description": "Plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires",
-      "url": "https://refboost.io",
-      "offers": {
-        "@type": "AggregateOffer",
-        "lowPrice": "0",
-        "highPrice": "79",
-        "priceCurrency": "EUR",
-        "offerCount": "3"
-      },
-      "author": {
-        "@type": "Organization",
-        "name": "RefBoost",
-        "url": "https://refboost.io"
-      }
-    }
-    </script>
+    <!-- SoftwareApplication schema is injected ONLY on the homepage
+         (LandingPage.jsx via react-helmet-async). Keeping it here in
+         the static shell would have ship it on every SPA route, which
+         Ahrefs flags as duplicate structured data on ~70 pages. -->
+
 
     <!-- Google Analytics 4 — only fires page_view on public pages; app
          pages (dashboard, referrals, etc.) stay untracked for privacy. -->

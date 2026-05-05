@@ -141,6 +141,27 @@ export default function LandingPage() {
         <meta name="twitter:title" content={_meta_title}/>
         <meta name="twitter:description" content={_meta_desc}/>
         <meta name="twitter:image" content="https://refboost.io/og-image.png"/>
+        {/* SoftwareApplication schema — homepage only. Lives here
+            (not in index.html) so Ahrefs doesn't see duplicate
+            structured data on every SPA route. The Organization
+            schema in index.html stays — it's accurate on every page. */}
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'RefBoost',
+          applicationCategory: 'BusinessApplication',
+          operatingSystem: 'Web',
+          description: 'Plateforme SaaS de gestion de programme partenaires et d\'apporteurs d\'affaires',
+          url: 'https://refboost.io',
+          offers: {
+            '@type': 'AggregateOffer',
+            lowPrice: '0',
+            highPrice: '79',
+            priceCurrency: 'EUR',
+            offerCount: '3',
+          },
+          author: { '@type': 'Organization', name: 'RefBoost', url: 'https://refboost.io' },
+        })}</script>
       </Helmet>
       <style>{`
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}

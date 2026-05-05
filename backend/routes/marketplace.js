@@ -402,18 +402,45 @@ router.get('/programs/:slug/similar', async (req, res) => {
       : `COALESCE(NULLIF(t.short_description_${lang}, ''), t.short_description)`;
     const { rows: cur } = await query('SELECT sector FROM tenants WHERE slug = $1 LIMIT 1', [req.params.slug]);
     const sector = cur[0]?.sector || null;
-    const params = [req.params.slug];
-    let where = `t.slug <> $1 AND t.marketplace_visible = true AND t.short_description IS NOT NULL AND t.short_description <> ''`;
-    if (sector) { params.push(sector); where += ` AND t.sector = $${params.length}`; }
-    const { rows } = await query(
-      `SELECT t.id, t.name AS company_name, t.slug, t.logo_url, t.sector,
-              ${descCol} AS short_description
-         FROM tenants t
-        WHERE ${where}
-        ORDER BY t.created_at DESC
-        LIMIT 3`,
-      params
-    );
+    const select = `t.id, t.name AS company_name, t.slug, t.logo_url, t.sector, ${descCol} AS short_description`;
+
+    // First pass: same sector (when the program has one). Mirrors the
+    // /blog/posts/:slug/related approach so every detail page emits a
+    // consistent, populated cross-link block.
+    let rows = [];
+    if (sector) {
+      const r = await query(
+        `SELECT ${select}
+           FROM tenants t
+          WHERE t.slug <> $1
+            AND t.marketplace_visible = true
+            AND t.short_description IS NOT NULL AND t.short_description <> ''
+            AND t.sector = $2
+          ORDER BY t.created_at DESC
+          LIMIT 3`,
+        [req.params.slug, sector]
+      );
+      rows = r.rows;
+    }
+
+    // Backfill with most-recent visible programs so every page always
+    // emits 3 cross-links — orphan / single-link reports flagged
+    // detail pages whose sector matched zero peers.
+    if (rows.length < 3) {
+      const have = [req.params.slug, ...rows.map(r => r.slug)];
+      const need = 3 - rows.length;
+      const r2 = await query(
+        `SELECT ${select}
+           FROM tenants t
+          WHERE t.slug <> ALL($1::text[])
+            AND t.marketplace_visible = true
+            AND t.short_description IS NOT NULL AND t.short_description <> ''
+          ORDER BY t.created_at DESC
+          LIMIT $2`,
+        [have, need]
+      );
+      rows = [...rows, ...r2.rows];
+    }
     res.json({ programs: rows });
   } catch (err) {
     console.error('[marketplace.programs/similar]', err.message);
