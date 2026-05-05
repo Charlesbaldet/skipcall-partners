@@ -645,16 +645,17 @@ export default async function middleware(request) {
   // fallback, so Google's structured-data validator picks the right
   // schema for each page kind. /blog/:slug already gets Article LD
   // upstream and is skipped here.
-  // SoftwareApplication schema — homepage only. Used to live in the
-  // static index.html, which meant Ahrefs saw it on every SPA route
-  // (~70 duplicates flagged). Now we inject it only on `/` here at
-  // the edge so non-JS crawlers see it on the homepage and only on
-  // the homepage. The Organization schema in index.html stays — it's
+  // WebApplication schema — homepage only. Used to live in the
+  // static index.html (Ahrefs flagged ~70 duplicates), then briefly
+  // moved here as SoftwareApplication, which Google rejects without
+  // aggregateRating / review. WebApplication keeps the same shape
+  // and metadata but isn't gated on a rating, so the Rich Results
+  // test passes. The Organization schema in index.html stays — it's
   // accurate everywhere.
   if (path === '/' || path === '') {
     const softwareLd = {
       '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
+      '@type': 'WebApplication',
       name: 'RefBoost',
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',

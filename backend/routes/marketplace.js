@@ -342,6 +342,8 @@ router.get('/programs/:slug', async (req, res) => {
          LEFT JOIN marketplace_settings ms ON ms.tenant_id = t.id
         WHERE t.slug = $1
           AND t.marketplace_visible = true
+          AND t.short_description IS NOT NULL
+          AND t.short_description <> ''
         LIMIT 1`,
       [req.params.slug]
     );

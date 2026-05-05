@@ -26,6 +26,14 @@ const STATIC_PAGES = [
   { path: '/integrations/salesforce',           changefreq: 'monthly', priority: '0.7' },
   { path: '/integrations/qonto',                changefreq: 'monthly', priority: '0.7' },
   { path: '/integrations/google-sso',           changefreq: 'monthly', priority: '0.7' },
+  // /fonctionnalites/* — same priority as /integrations because both
+  // are top-level product feature pages. Each route is rendered by
+  // FeaturePageTemplate and has its own translated content.
+  { path: '/fonctionnalites/pipeline',          changefreq: 'monthly', priority: '0.8' },
+  { path: '/fonctionnalites/commissions',       changefreq: 'monthly', priority: '0.8' },
+  { path: '/fonctionnalites/analytics',         changefreq: 'monthly', priority: '0.8' },
+  { path: '/fonctionnalites/personnalisation',  changefreq: 'monthly', priority: '0.8' },
+  { path: '/fonctionnalites/tracking',          changefreq: 'monthly', priority: '0.8' },
   { path: '/cgv',              changefreq: 'yearly', priority: '0.3' },
   { path: '/confidentialite',  changefreq: 'yearly', priority: '0.3' },
   { path: '/mentions-legales', changefreq: 'yearly', priority: '0.3' },

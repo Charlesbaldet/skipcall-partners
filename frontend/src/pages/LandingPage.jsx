@@ -141,13 +141,15 @@ export default function LandingPage() {
         <meta name="twitter:title" content={_meta_title}/>
         <meta name="twitter:description" content={_meta_desc}/>
         <meta name="twitter:image" content="https://refboost.io/og-image.png"/>
-        {/* SoftwareApplication schema — homepage only. Lives here
-            (not in index.html) so Ahrefs doesn't see duplicate
-            structured data on every SPA route. The Organization
-            schema in index.html stays — it's accurate on every page. */}
+        {/* WebApplication schema — homepage only. Used to be
+            SoftwareApplication, but Google rejects that type without
+            aggregateRating / review and we don't have public reviews
+            yet. WebApplication has the same fields available with no
+            mandatory rating. The Organization schema in index.html
+            stays — it's accurate on every page. */}
         <script type="application/ld+json">{JSON.stringify({
           '@context': 'https://schema.org',
-          '@type': 'SoftwareApplication',
+          '@type': 'WebApplication',
           name: 'RefBoost',
           applicationCategory: 'BusinessApplication',
           operatingSystem: 'Web',

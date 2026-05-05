@@ -25,4 +25,4 @@ Disallow: /programme
 Disallow: /billing
 Disallow: /news
 
-Sitemap: https://refboost.io/api/sitemap.xml
+Sitemap: https://refboost.io/sitemap.xml
