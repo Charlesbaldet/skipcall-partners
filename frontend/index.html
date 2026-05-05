@@ -44,6 +44,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
+    <!-- Stabilise the scrollbar gutter so navigating between landing
+         pages of different heights doesn't shift the centred nav by
+         the scrollbar width (~17 px). `scrollbar-gutter: stable` is
+         the modern, no-visible-scrollbar-on-short-pages variant; the
+         `overflow-y: scroll` fallback keeps older Safari builds (and
+         engines that ignore scrollbar-gutter) on a stable layout. -->
+    <style>
+      html { scrollbar-gutter: stable; overflow-y: scroll; }
+    </style>
+
     <!-- Organization schema — identity of the publisher, reused by
          every Article schema downstream. -->
     <script type="application/ld+json">
