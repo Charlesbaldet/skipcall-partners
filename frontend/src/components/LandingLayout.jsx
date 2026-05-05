@@ -16,6 +16,21 @@ function useMobile() {
   return mobile;
 }
 
+// 768–1023 px: desktop nav fits but is tight — tighten the link gap
+// from 24 px to 12 px so all 7 entries fit without the right cluster
+// pushing the centered block off-screen.
+function useTablet() {
+  const [tablet, setTablet] = useState(
+    typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024
+  );
+  useEffect(() => {
+    const h = () => setTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    window.addEventListener('resize', h, { passive: true });
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return tablet;
+}
+
 function Logo({ size = 36, white = false }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -36,6 +51,7 @@ export function LandingNav() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const mobile = useMobile();
+  const tablet = useTablet();
   const [featOpen, setFeatOpen] = useState(false);
   const [useCasesOpen, setUseCasesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,8 +75,23 @@ export function LandingNav() {
 
   return (
     <>
-      <nav style={{ position:'fixed',top:0,left:0,right:0,zIndex:100,padding:mobile?'14px 20px':'16px 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(255,255,255,0.98)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(0,0,0,0.08)',boxShadow:'0 1px 8px rgba(0,0,0,0.06)' }}>
-        <a href="/" style={{ textDecoration:'none' }}><Logo size={mobile?30:36}/></a>
+      <nav style={{
+        position:'fixed',top:0,left:0,right:0,zIndex:100,
+        padding:mobile?'14px 20px':'16px 48px',
+        alignItems:'center',
+        background:'rgba(255,255,255,0.98)',
+        backdropFilter:'blur(12px)',
+        borderBottom:'1px solid rgba(0,0,0,0.08)',
+        boxShadow:'0 1px 8px rgba(0,0,0,0.06)',
+        // Desktop: 3-column grid so the centered nav block sits at the
+        // exact page midline regardless of how wide the logo or the
+        // right cluster get. Mobile: simple flex row with logo + the
+        // hamburger group at each end.
+        ...(mobile
+          ? { display:'flex', justifyContent:'space-between' }
+          : { display:'grid', gridTemplateColumns:'1fr auto 1fr', columnGap:24 }),
+      }}>
+        <a href="/" style={{ textDecoration:'none', justifySelf:'start' }}><Logo size={mobile?30:36}/></a>
         {mobile ? (
           <div style={{ display:'flex',alignItems:'center',gap:8 }}>
             {/* Language switcher sits in the header bar on mobile so the
@@ -74,10 +105,12 @@ export function LandingNav() {
           </div>
         ) : (
           <>
-            {/* Centered nav links — absolutely positioned so the
-                centring is anchored to the page width, not to the
-                space left between logo + right cluster. */}
-            <div style={{ position:'absolute',left:'50%',top:'50%',transform:'translate(-50%,-50%)',display:'flex',alignItems:'center',gap:24 }}>
+            {/* Center column — the auto-sized middle of the
+                `1fr auto 1fr` grid keeps these links anchored to the
+                page midline regardless of how wide the logo or the
+                right cluster get. Tablet (768–1023 px) drops the link
+                gap from 24 to 12 px so all 7 entries fit. */}
+            <div style={{ display:'flex',alignItems:'center',gap: tablet ? 12 : 24, justifySelf:'center' }}>
               <div style={{ position:'relative' }} onMouseEnter={()=>setFeatOpen(true)} onMouseLeave={()=>setFeatOpen(false)}>
                 <span style={{ color:C.m,fontSize:14,fontWeight:500,cursor:'default',display:'flex',alignItems:'center',gap:4 }}>
                   {t('nav.features')}
@@ -127,10 +160,10 @@ export function LandingNav() {
               ))}
             </div>
 
-            {/* Right cluster — auth + language switcher. The outer
-                nav's space-between pushes this against the right edge
-                while the absolute nav block stays centered on the page. */}
-            <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+            {/* Right column — language switcher + auth buttons. The
+                grid's third 1fr column mirrors the first so the centre
+                column is symmetric. */}
+            <div style={{ display:'flex',alignItems:'center',gap:12, justifySelf:'end' }}>
               <LanguageSwitcher direction="down" dark={false}/>
               <button onClick={()=>navigate('/login')}
                 style={{ padding:'10px 24px',borderRadius:10,border:`2px solid ${C.s}`,background:'transparent',color:C.s,fontWeight:600,fontSize:14,cursor:'pointer' }}
