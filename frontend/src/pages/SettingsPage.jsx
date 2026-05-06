@@ -2958,13 +2958,21 @@ function PartnerNotificationsTab() {
 // can override (we keep the input editable). Only EU countries we
 // explicitly support; others can be entered manually if Qonto rolls
 // out new corridors. Source: standard rates 2026.
+// Standard 2026 VAT rates. CH and UK aren't EU but partners abroad
+// may still need a rate captured for their accounting; US is included
+// as 0 % so a partner can mark themselves "subject" with a rate of 0
+// (i.e. they file VAT but the rate is zero on this corridor); OTHER
+// is a sentinel for any country we don't list yet — backend treats it
+// as "country unknown, rate is whatever the partner typed".
 const VAT_DEFAULT_RATES = {
   FR: 20, DE: 19, ES: 21, IT: 22, NL: 21, PT: 23, BE: 21, LU: 17, AT: 20, IE: 23,
+  CH: 8.1, UK: 20, US: 0, OTHER: 0,
 };
-const VAT_COUNTRIES = ['FR', 'DE', 'ES', 'IT', 'NL', 'PT', 'BE', 'LU', 'AT', 'IE'];
+const VAT_COUNTRIES = ['FR', 'DE', 'ES', 'IT', 'NL', 'PT', 'BE', 'LU', 'AT', 'IE', 'CH', 'UK', 'US', 'OTHER'];
 const COUNTRY_FLAGS = {
   FR: '🇫🇷', DE: '🇩🇪', ES: '🇪🇸', IT: '🇮🇹', NL: '🇳🇱',
   PT: '🇵🇹', BE: '🇧🇪', LU: '🇱🇺', AT: '🇦🇹', IE: '🇮🇪',
+  CH: '🇨🇭', UK: '🇬🇧', US: '🇺🇸', OTHER: '🌍',
 };
 
 function PartnerBankInfoTab() {

@@ -1013,7 +1013,13 @@
     "app_website": "Site web",
     "app_size": "Taille",
     "app_date": "Date",
-    "app_motivation": "Motivation"
+    "app_motivation": "Motivation",
+    "tax_section": "Informations fiscales",
+    "tax_subject_label": "Assujetti à la TVA",
+    "tax_country_label": "Pays",
+    "tax_rate_label": "Taux TVA (%)",
+    "tax_id_label": "N° TVA intracom",
+    "tax_not_subject": "Non assujetti à la TVA"
   },
   "partnerReferrals": {
     "title": "Mes recommandations",

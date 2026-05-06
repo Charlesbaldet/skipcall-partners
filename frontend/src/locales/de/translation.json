@@ -1013,7 +1013,13 @@
     "app_website": "Website",
     "app_size": "Größe",
     "app_date": "Datum",
-    "app_motivation": "Motivation"
+    "app_motivation": "Motivation",
+    "tax_section": "Steuerinformationen",
+    "tax_subject_label": "Mehrwertsteuerpflichtig",
+    "tax_country_label": "Land",
+    "tax_rate_label": "MwSt.-Satz (%)",
+    "tax_id_label": "USt-IdNr.",
+    "tax_not_subject": "Nicht mehrwertsteuerpflichtig"
   },
   "partnerReferrals": {
     "title": "Meine Referrals",

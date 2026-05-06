@@ -17,7 +17,15 @@ export default function PartnersPage() {
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10, category_id: '' });
+  const [form, setForm] = useState({
+    name: '', contact_name: '', email: '', phone: '', company_website: '',
+    commission_rate: 10, category_id: '',
+    // VAT: defaults match the legacy "no tax" behaviour. Admins can
+    // tick the assujetti toggle to capture the new partner's status
+    // up-front; otherwise the partner can fill it in later from
+    // their own Settings.
+    tax_subject: false, tax_country: '', tax_rate: '', tax_id: '',
+  });
   const [categories, setCategories] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [tempPwd, setTempPwd] = useState(null);
@@ -112,8 +120,46 @@ export default function PartnersPage() {
     }
   };
 
-  const startEdit = (p) => { setEditingId(p.id); setEditForm({ name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '', company_website: p.company_website || '', commission_rate: p.commission_rate, iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '', category_id: p.category_id || '' }); };
-  const saveEdit = async () => { try { await api.updatePartner(editingId, editForm); setEditingId(null); await loadPartners(showArchived); } catch(e) { showToast.error(e.message); } };
+  const startEdit = (p) => {
+    setEditingId(p.id);
+    setEditForm({
+      name: p.name, contact_name: p.contact_name, email: p.email, phone: p.phone || '',
+      company_website: p.company_website || '', commission_rate: p.commission_rate,
+      iban: p.iban || '', bic: p.bic || '', account_holder: p.account_holder || '',
+      category_id: p.category_id || '',
+      tax_subject: !!p.tax_subject,
+      tax_country: p.tax_country || '',
+      tax_rate: p.tax_rate != null ? String(p.tax_rate) : '',
+      tax_id: p.tax_id || '',
+    });
+  };
+  const saveEdit = async () => {
+    try {
+      // Mirror partnerBankInfo's contract: when admin marks a partner
+      // VAT-subject, country + rate are mandatory. Validate locally so
+      // the row doesn't bounce back from the API with a generic 400.
+      if (editForm.tax_subject) {
+        if (!editForm.tax_country) { showToast.error(t('partners.tax.errors_country_missing', 'Sélectionnez le pays TVA.')); return; }
+        const r = parseFloat(editForm.tax_rate);
+        if (!Number.isFinite(r) || r <= 0 || r > 30) { showToast.error(t('partners.tax.errors_rate_invalid', 'Taux TVA invalide (0 < r ≤ 30).')); return; }
+      }
+      const payload = {
+        ...editForm,
+        tax_subject: !!editForm.tax_subject,
+        tax_country: editForm.tax_subject ? (editForm.tax_country || null) : null,
+        tax_rate:    editForm.tax_subject ? (parseFloat(editForm.tax_rate) || null) : null,
+        tax_id:      editForm.tax_id?.trim() || null,
+      };
+      await api.updatePartner(editingId, payload);
+      setEditingId(null);
+      await loadPartners(showArchived);
+    } catch (e) { showToast.error(e.message); }
+  };
+  // VAT defaults — kept in sync with the partner-side picker in
+  // SettingsPage so admins see the same standard rate hint when
+  // selecting a country.
+  const VAT_DEFAULT_RATES = { FR:20, DE:19, ES:21, IT:22, NL:21, PT:23, BE:21, LU:17, AT:20, IE:23, CH:8.1, UK:20, US:0, OTHER:0 };
+  const VAT_COUNTRIES = ['FR','DE','ES','IT','NL','PT','BE','LU','AT','IE','CH','UK','US','OTHER'];
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setSaving(true);
@@ -209,6 +255,70 @@ export default function PartnersPage() {
                   </select>
                 </div>
               )}
+
+              {/* ─── Informations fiscales ───────────────────────── */}
+              <div style={{ gridColumn: '1 / -1', marginTop: 12, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>
+                  {t('partners.tax_section', 'Informations fiscales')}
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155', cursor: 'pointer', marginBottom: 10 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!editForm.tax_subject}
+                    onChange={e => setEditForm(f => ({ ...f, tax_subject: e.target.checked }))}
+                  />
+                  {t('partners.tax_subject_label', 'Assujetti à la TVA')}
+                </label>
+                {editForm.tax_subject && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_country_label', 'Pays')}</label>
+                      <select
+                        value={editForm.tax_country || ''}
+                        onChange={e => {
+                          const next = e.target.value;
+                          // Suggest the standard rate when the admin
+                          // hasn't typed a custom one (or it matches
+                          // the previous country's default).
+                          setEditForm(f => {
+                            const prevDefault = VAT_DEFAULT_RATES[f.tax_country];
+                            const cur = f.tax_rate ? parseFloat(f.tax_rate) : null;
+                            const align = (cur == null) || (prevDefault != null && cur === prevDefault);
+                            const aligned = align && VAT_DEFAULT_RATES[next] != null
+                              ? String(VAT_DEFAULT_RATES[next])
+                              : f.tax_rate;
+                            return { ...f, tax_country: next, tax_rate: aligned };
+                          });
+                        }}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, background: '#fff' }}
+                      >
+                        <option value="">—</option>
+                        {VAT_COUNTRIES.map(cc => (
+                          <option key={cc} value={cc}>{cc} ({VAT_DEFAULT_RATES[cc]}%)</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_rate_label', 'Taux TVA (%)')}</label>
+                      <input
+                        type="number" min="0" max="30" step="0.01"
+                        value={editForm.tax_rate || ''}
+                        onChange={e => setEditForm(f => ({ ...f, tax_rate: e.target.value }))}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }}
+                      />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_id_label', 'N° TVA intracom')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({t('common.optional', 'optionnel')})</span></label>
+                      <input
+                        value={editForm.tax_id || ''}
+                        onChange={e => setEditForm(f => ({ ...f, tax_id: e.target.value }))}
+                        placeholder="FR12345678901"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, fontFamily: 'monospace' }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.cancel')}</button>
@@ -371,6 +481,59 @@ export default function PartnersPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Optional: capture VAT status at creation time so
+                      the partner's first commission already wires the
+                      right gross amount. Defaults off → identical to
+                      the legacy create flow. */}
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16, marginBottom: 20 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155', cursor: 'pointer', marginBottom: form.tax_subject ? 12 : 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!form.tax_subject}
+                        onChange={e => setForm(f => ({ ...f, tax_subject: e.target.checked }))}
+                      />
+                      <span>{t('partners.tax_subject_label', 'Assujetti à la TVA')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({t('common.optional', 'optionnel')})</span></span>
+                    </label>
+                    {form.tax_subject && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div>
+                          <label style={{ display: 'block', color: '#475569', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partners.tax_country_label', 'Pays')}</label>
+                          <select
+                            value={form.tax_country || ''}
+                            onChange={e => {
+                              const next = e.target.value;
+                              setForm(f => {
+                                const prevDefault = VAT_DEFAULT_RATES[f.tax_country];
+                                const cur = f.tax_rate ? parseFloat(f.tax_rate) : null;
+                                const align = (cur == null) || (prevDefault != null && cur === prevDefault);
+                                const aligned = align && VAT_DEFAULT_RATES[next] != null
+                                  ? String(VAT_DEFAULT_RATES[next])
+                                  : f.tax_rate;
+                                return { ...f, tax_country: next, tax_rate: aligned };
+                              });
+                            }}
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
+                          >
+                            <option value="">—</option>
+                            {VAT_COUNTRIES.map(cc => (
+                              <option key={cc} value={cc}>{cc} ({VAT_DEFAULT_RATES[cc]}%)</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', color: '#475569', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partners.tax_rate_label', 'Taux TVA (%)')}</label>
+                          <input
+                            type="number" min="0" max="30" step="0.01"
+                            value={form.tax_rate || ''}
+                            onChange={e => setForm(f => ({ ...f, tax_rate: e.target.value }))}
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? t('partners.creating') : t('partners.create')}</button>
                 </form>
               )}

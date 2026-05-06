@@ -134,6 +134,11 @@ router.get('/', async (req, res) => {
        ORDER BY p.is_active DESC, p.name`,
       params
     );
+    // Normalise NULL country + subject=true → "OTHER" so the admin
+    // dropdown matches what the partner saw in their own settings.
+    for (const p of rows) {
+      if (p.tax_subject && !p.tax_country) p.tax_country = 'OTHER';
+    }
     res.json({ partners: rows });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
@@ -167,7 +172,9 @@ router.get('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) return res.status(404).json({ error: 'Partenaire introuvable' });
-    res.json({ partner: rows[0] });
+    const p = rows[0];
+    if (p.tax_subject && !p.tax_country) p.tax_country = 'OTHER';
+    res.json({ partner: p });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
@@ -187,7 +194,29 @@ router.post('/', authorize('admin'), [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, contact_name, email, phone, company_website, commission_rate, category_id } = req.body;
+    const { name, contact_name, email, phone, company_website, commission_rate, category_id,
+            tax_subject, tax_country, tax_rate, tax_id } = req.body;
+
+    // VAT capture is optional at create time — admin can skip and let
+    // the partner fill it in via Settings later. When the toggle is
+    // explicitly true the same validation as PUT applies.
+    let createTaxSubject = false;
+    let createTaxCountry = null;
+    let createTaxRate = null;
+    let createTaxId = tax_id ? String(tax_id).trim().slice(0, 64) || null : null;
+    if (tax_subject === true) {
+      const c = String(tax_country || '').trim().toUpperCase();
+      if (!/^([A-Z]{2}|OTHER)$/.test(c)) {
+        return res.status(400).json({ error: 'tax_country_required', message: 'Pays TVA invalide ou manquant.' });
+      }
+      const r = parseFloat(tax_rate);
+      if (!Number.isFinite(r) || r <= 0 || r > 30) {
+        return res.status(400).json({ error: 'tax_rate_invalid', message: 'Taux TVA invalide (0 < r ≤ 30).' });
+      }
+      createTaxSubject = true;
+      createTaxCountry = c === 'OTHER' ? null : c;
+      createTaxRate    = Math.round(r * 100) / 100;
+    }
 
     // Validate category_id belongs to this tenant; fall back to the
     // tenant's default category when missing/invalid so every partner
@@ -314,10 +343,12 @@ router.post('/', authorize('admin'), [
       );
     } else {
       const { rows: [created] } = await client.query(
-        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id, category_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO partners (name, contact_name, email, phone, company_website, commission_rate, tenant_id, category_id,
+                                tax_subject, tax_country, tax_rate, tax_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING *`,
-        [name, contact_name, email, phone, company_website, commission_rate, req.tenantId || null, resolvedCategoryId]
+        [name, contact_name, email, phone, company_website, commission_rate, req.tenantId || null, resolvedCategoryId,
+         createTaxSubject, createTaxCountry, createTaxRate, createTaxId]
       );
       partner = created;
       await client.query(
@@ -344,7 +375,8 @@ router.post('/', authorize('admin'), [
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
     const { name, contact_name, email, phone, company_website,
-            commission_rate, is_active, iban, bic, account_holder, category_id } = req.body;
+            commission_rate, is_active, iban, bic, account_holder, category_id,
+            tax_subject, tax_country, tax_rate, tax_id } = req.body;
 
     // Validate the new category_id (if any) belongs to this tenant
     // before we COALESCE it in.
@@ -361,12 +393,42 @@ router.put('/:id', authorize('admin'), async (req, res) => {
       }
     }
 
-    // Tenant check
+    // Tax fields. Mirrors partnerBankInfo's contract: when subject is
+    // explicitly true in the body, country (ISO-2 or sentinel OTHER)
+    // and rate (0–30) are required; OTHER is stored as NULL because
+    // tax_country is CHAR(2). When subject is false, all VAT fields
+    // are nulled out. Undefined leaves the row's existing values
+    // alone (COALESCE pattern below).
+    let safeSubject = undefined, safeCountry = undefined, safeRate = undefined, safeTaxId = undefined;
+    if (tax_subject !== undefined) {
+      const s = tax_subject === true;
+      safeSubject = s;
+      if (s) {
+        const c = String(tax_country || '').trim().toUpperCase();
+        if (!/^([A-Z]{2}|OTHER)$/.test(c)) {
+          return res.status(400).json({ error: 'tax_country_required', message: 'Pays TVA invalide ou manquant.' });
+        }
+        const r = parseFloat(tax_rate);
+        if (!Number.isFinite(r) || r <= 0 || r > 30) {
+          return res.status(400).json({ error: 'tax_rate_invalid', message: 'Taux TVA invalide (0 < r ≤ 30).' });
+        }
+        safeCountry = c === 'OTHER' ? null : c;
+        safeRate    = Math.round(r * 100) / 100;
+      } else {
+        safeCountry = null;
+        safeRate    = null;
+      }
+    }
+    if (tax_id !== undefined) {
+      safeTaxId = tax_id == null ? null : (String(tax_id).trim().slice(0, 64) || null);
+    }
+
     let whereExtra = '';
     let params = [req.params.id, name, contact_name, email, phone,
-                  company_website, commission_rate, is_active, iban, bic, account_holder, safeCategoryId];
+                  company_website, commission_rate, is_active, iban, bic, account_holder, safeCategoryId,
+                  safeSubject, safeCountry, safeRate, safeTaxId];
     if (req.tenantId && !req.skipTenantFilter) {
-      whereExtra = ` AND tenant_id = $13`;
+      whereExtra = ` AND tenant_id = $17`;
       params.push(req.tenantId);
     }
 
@@ -382,15 +444,28 @@ router.put('/:id', authorize('admin'), async (req, res) => {
         iban = COALESCE($9, iban),
         bic = COALESCE($10, bic),
         account_holder = COALESCE($11, account_holder),
-        category_id = COALESCE($12, category_id)
+        category_id = COALESCE($12, category_id),
+        -- VAT: $13 boolean is COALESCE-able; the country/rate/id NULL
+        -- branches are intentional (we want to clear them when the
+        -- caller passes tax_subject=false), so we only fall back to
+        -- the existing row when the entire VAT trio came in undefined
+        -- (safeSubject still undefined → $13 is undefined → NULL,
+        -- COALESCE keeps existing).
+        tax_subject = COALESCE($13, tax_subject),
+        tax_country = CASE WHEN $13::boolean IS NULL THEN tax_country WHEN $13::boolean = false THEN NULL ELSE $14 END,
+        tax_rate    = CASE WHEN $13::boolean IS NULL THEN tax_rate    WHEN $13::boolean = false THEN NULL ELSE $15 END,
+        tax_id      = COALESCE($16, tax_id)
        WHERE id = $1${whereExtra}
        RETURNING *`,
       params
     );
 
     if (!partner) return res.status(404).json({ error: 'Partenaire introuvable' });
+    // Map NULL country + subject=true → "OTHER" for the admin UI.
+    if (partner.tax_subject && !partner.tax_country) partner.tax_country = 'OTHER';
     res.json({ partner });
   } catch (err) {
+    console.error('[partners.update]', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

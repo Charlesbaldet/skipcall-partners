@@ -1013,7 +1013,13 @@
     "app_website": "Site",
     "app_size": "Tamanho",
     "app_date": "Data",
-    "app_motivation": "Motivação"
+    "app_motivation": "Motivação",
+    "tax_section": "Informações fiscais",
+    "tax_subject_label": "Sujeito a IVA",
+    "tax_country_label": "País",
+    "tax_rate_label": "Taxa de IVA (%)",
+    "tax_id_label": "Nº IVA intracom.",
+    "tax_not_subject": "Não sujeito a IVA"
   },
   "partnerReferrals": {
     "title": "Minhas indicações",

@@ -1013,7 +1013,13 @@
     "app_website": "Website",
     "app_size": "Grootte",
     "app_date": "Datum",
-    "app_motivation": "Motivatie"
+    "app_motivation": "Motivatie",
+    "tax_section": "Fiscale informatie",
+    "tax_subject_label": "Btw-plichtig",
+    "tax_country_label": "Land",
+    "tax_rate_label": "Btw-tarief (%)",
+    "tax_id_label": "Btw-nummer",
+    "tax_not_subject": "Niet btw-plichtig"
   },
   "partnerReferrals": {
     "title": "Mijn referrals",

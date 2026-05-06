@@ -1013,7 +1013,13 @@
     "app_website": "Website",
     "app_size": "Size",
     "app_date": "Date",
-    "app_motivation": "Motivation"
+    "app_motivation": "Motivation",
+    "tax_section": "Tax info",
+    "tax_subject_label": "VAT-registered",
+    "tax_country_label": "Country",
+    "tax_rate_label": "VAT rate (%)",
+    "tax_id_label": "Intra-EU VAT no.",
+    "tax_not_subject": "Not VAT-registered"
   },
   "partnerReferrals": {
     "title": "My referrals",

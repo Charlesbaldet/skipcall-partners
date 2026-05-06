@@ -17,11 +17,14 @@ const router = express.Router();
 router.use(authenticate);
 router.use(tenantScope);
 
-// ISO-3166 alpha-2 + a guard against junk input. Whitelist the EU
-// countries we explicitly support in the picker; other ISO codes
-// passed by API clients still go through provided they look valid
-// (2 letters), since Qonto itself doesn't care about this column.
-const COUNTRY_RE = /^[A-Z]{2}$/;
+// Two-letter country codes pass through (Qonto itself doesn't care
+// about this column); the sentinel `OTHER` is also accepted from
+// the UI, but stored as NULL since the column is CHAR(2). On read
+// we map NULL + tax_subject=true back to "OTHER" so the dropdown
+// shows the right state.
+const COUNTRY_RE = /^([A-Z]{2}|OTHER)$/;
+const dbCountry = (raw) => (raw === 'OTHER' ? null : raw);
+const apiCountry = (row) => (row && row.tax_subject && !row.tax_country ? 'OTHER' : (row?.tax_country || null));
 
 router.get('/', async (req, res) => {
   if (!req.user.partnerId) return res.status(403).json({ error: 'Accès interdit' });
@@ -33,7 +36,8 @@ router.get('/', async (req, res) => {
       [req.user.partnerId]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Partenaire introuvable' });
-    res.json({ bank_info: rows[0] });
+    const row = rows[0];
+    res.json({ bank_info: { ...row, tax_country: apiCountry(row) } });
   } catch (err) {
     console.error('Get bank-info error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -94,13 +98,13 @@ router.put('/', async (req, res) => {
         bic ? String(bic).toUpperCase() : null,
         bank_name || null,
         subject,
-        subject ? country : null,
+        subject ? dbCountry(country) : null,
         subject ? rate : null,
         cleanTaxId || null,
       ]
     );
     if (!partner) return res.status(404).json({ error: 'Partenaire introuvable' });
-    res.json({ bank_info: partner });
+    res.json({ bank_info: { ...partner, tax_country: apiCountry(partner) } });
   } catch (err) {
     console.error('Update bank-info error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
