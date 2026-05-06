@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
-const { calculateCommissionAmount } = require('../utils/commissionFormula');
+const { calculateCommissionAmount, decomposeAmountWithTax } = require('../utils/commissionFormula');
 const { bulkResolveTiers, resolveTierForPartner, effectiveRate } = require('../utils/tierResolver');
 // emails via resend.sendAndLog — emailService.queueNotification removed
 const resend = require('../services/resend');
@@ -696,7 +696,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
 
     if (status === 'won') {
       const { rows: [partner] } = await client.query(
-        `SELECT p.id, p.name, p.commission_rate
+        `SELECT p.id, p.name, p.commission_rate,
+                p.tax_subject, p.tax_rate
          FROM partners p JOIN referrals r ON r.partner_id = p.id
          WHERE r.id = $1`,
         [req.params.id]
@@ -753,6 +754,17 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           rate,
         });
 
+        // Snapshot VAT decomposition at creation/sync time using the
+        // partner's current tax profile. Without this the row sits at
+        // tax_rate_applied = 0 / amount_ttc = amount until /pay-qonto
+        // re-snapshots — and the partner's payments page can't show
+        // their HT/TVA/TTC breakdown for unpaid commissions. The
+        // /pay-qonto path will overwrite this snapshot with whatever
+        // the partner's tax config is at payout time, so this is a
+        // best-known-now value, not a final commitment.
+        const partnerTaxRate = partner.tax_subject ? Number(partner.tax_rate) : 0;
+        const breakdown = decomposeAmountWithTax(amount, partnerTaxRate);
+
         // Look up an existing commission first so we can decide between
         // INSERT and a status-aware UPDATE: a row that already moved
         // past pending_approval (awaiting_invoice / pending_validation /
@@ -766,31 +778,45 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         let createdCommission;
         if (!existingCom) {
           ({ rows: [createdCommission] } = await client.query(
-            `INSERT INTO commissions (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status, engagement_type, engagement_periods)
-             VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval', $7, $8)
+            `INSERT INTO commissions
+               (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status,
+                engagement_type, engagement_periods,
+                amount_ht, tax_rate_applied, amount_tax, amount_ttc)
+             VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval',
+                     $7, $8,
+                     $9, $10, $11, $12)
              RETURNING id, amount, rate, deal_value, created_at`,
-            [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null, effEngagement, effPeriods]
+            [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null,
+             effEngagement, effPeriods,
+             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
           ));
         } else if (existingCom.status === 'pending_approval') {
           ({ rows: [createdCommission] } = await client.query(
             `UPDATE commissions
                 SET amount = $2, rate = $3, deal_value = $4,
-                    engagement_type = $5, engagement_periods = $6
+                    engagement_type = $5, engagement_periods = $6,
+                    amount_ht = $7, tax_rate_applied = $8, amount_tax = $9, amount_ttc = $10
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
-            [existingCom.id, amount, rate, effectiveDealValue, effEngagement, effPeriods]
+            [existingCom.id, amount, rate, effectiveDealValue, effEngagement, effPeriods,
+             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
           ));
         } else {
           // Already approved or further along — keep numbers in sync
           // with the latest deal_value but don't fire the
           // commission.created webhook (it isn't a fresh creation).
+          // The breakdown is re-snapshotted too: pay-qonto will
+          // re-do it fresh anyway right before wiring, so this stays
+          // consistent with what the partner actually receives.
           ({ rows: [createdCommission] } = await client.query(
             `UPDATE commissions
                 SET amount = $2, deal_value = $3,
-                    engagement_type = $4, engagement_periods = $5
+                    engagement_type = $4, engagement_periods = $5,
+                    amount_ht = $6, tax_rate_applied = $7, amount_tax = $8, amount_ttc = $9
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
-            [existingCom.id, amount, effectiveDealValue, effEngagement, effPeriods]
+            [existingCom.id, amount, effectiveDealValue, effEngagement, effPeriods,
+             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
           ));
         }
 
