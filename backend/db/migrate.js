@@ -694,6 +694,47 @@ async function runMigrations() {
                 WHERE amount_ht IS NULL`);
   console.log('[vat] v31 partners.tax_* + commissions.amount_(ht|tax|ttc) + backfill');
 
+  // v32: data migration — backfill VAT on old commissions where the
+  // partner is now tax_subject = true but the commission row still
+  // has tax_rate_applied = 0 (created before the routes/referrals.js
+  // INSERT was taught to read partner.tax_subject in 99b848c).
+  //
+  // Strict one-shot via the new `migrations` table. Won't fire again
+  // even if a partner toggles tax_subject later — deliberate
+  // hand-off to the admin (Settings → Coordonnées bancaires) so a
+  // future status change can't silently rewrite historical commission
+  // rows. The WHERE filter is still tight (commission must be at
+  // rate=0), so already-decomposed rows are never touched.
+  await query(`CREATE TABLE IF NOT EXISTS migrations (
+    name VARCHAR(100) PRIMARY KEY,
+    executed_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+  const VAT_MIG_KEY = 'backfill_vat_from_partner_v1';
+  const { rows: vatDone } = await query(
+    'SELECT 1 FROM migrations WHERE name = $1',
+    [VAT_MIG_KEY]
+  );
+  if (vatDone.length === 0) {
+    const { rowCount: vatRows } = await query(`
+      UPDATE commissions c
+         SET tax_rate_applied = p.tax_rate,
+             amount_ht        = COALESCE(c.amount_ht, c.amount),
+             amount_tax       = ROUND(COALESCE(c.amount_ht, c.amount) * p.tax_rate / 100, 2),
+             amount_ttc       = ROUND(COALESCE(c.amount_ht, c.amount) * (1 + p.tax_rate / 100.0), 2)
+        FROM partners p
+       WHERE c.partner_id = p.id
+         AND c.deleted_at IS NULL
+         AND p.tax_subject = true
+         AND p.tax_rate > 0
+         AND (c.tax_rate_applied IS NULL OR c.tax_rate_applied = 0)
+    `);
+    await query(
+      'INSERT INTO migrations (name) VALUES ($1) ON CONFLICT DO NOTHING',
+      [VAT_MIG_KEY]
+    );
+    console.log(`[vat] v32 backfill_vat_from_partner_v1: ${vatRows} commission(s) updated`);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {
