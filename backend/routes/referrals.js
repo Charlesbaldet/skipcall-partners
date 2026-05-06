@@ -61,7 +61,10 @@ router.get('/', async (req, res) => {
 
     const { rows } = await query(
       `SELECT r.*, p.name as partner_name, p.contact_name as partner_contact,
-              p.commission_rate, u.full_name as assigned_name
+              p.commission_rate,
+              p.tax_subject AS partner_tax_subject,
+              p.tax_rate    AS partner_tax_rate,
+              u.full_name as assigned_name
        FROM referrals r
        JOIN partners p ON r.partner_id = p.id
        LEFT JOIN users u ON r.assigned_to = u.id
@@ -119,7 +122,10 @@ router.get('/:id', async (req, res) => {
 
     const { rows } = await query(
       `SELECT r.*, p.name as partner_name, p.contact_name as partner_contact,
-              p.commission_rate, u.full_name as assigned_name
+              p.commission_rate,
+              p.tax_subject AS partner_tax_subject,
+              p.tax_rate    AS partner_tax_rate,
+              u.full_name as assigned_name
        FROM referrals r
        JOIN partners p ON r.partner_id = p.id
        LEFT JOIN users u ON r.assigned_to = u.id

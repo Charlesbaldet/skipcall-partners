@@ -40,3 +40,19 @@ export function calculateCommissionAmount({ engagementType, periods, dealValue, 
     safePeriods,
   };
 }
+
+// Mirror of backend/utils/commissionFormula.js::decomposeAmountWithTax.
+// Used on the deal-card forecast so the live HT/TVA/TTC preview
+// matches the snapshot the payout pipeline writes to the cent.
+// taxRate is a percentage (20 means 20 %, NOT 0.20). 0 / null /
+// undefined → no VAT, ttc == ht and tax = 0.
+export function decomposeAmountWithTax(amountHt, taxRate) {
+  const ht = Math.round((parseFloat(amountHt) || 0) * 100) / 100;
+  const rate = parseFloat(taxRate);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    return { amount_ht: ht, tax_rate: 0, amount_tax: 0, amount_ttc: ht };
+  }
+  const tax = Math.round(ht * (rate / 100) * 100) / 100;
+  const ttc = Math.round((ht + tax) * 100) / 100;
+  return { amount_ht: ht, tax_rate: rate, amount_tax: tax, amount_ttc: ttc };
+}

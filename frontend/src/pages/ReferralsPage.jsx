@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
-import { calculateCommissionAmount } from '../lib/commissionFormula';
+import { calculateCommissionAmount, decomposeAmountWithTax } from '../lib/commissionFormula';
 import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock, AlertTriangle } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
@@ -863,22 +863,42 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               </div>
 
               {/* Section: forecast commission. Updates live as the
-                  user drags any of the four inputs above. */}
-              {Number(editValue) > 0 && (
-                <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid #bbf7d0' }}>
-                  <div style={{ fontSize: 10, color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                    {t('pipeline.forecast_commission', 'Commission prévisionnelle')}
+                  user drags any of the four inputs above. When the
+                  partner is VAT-subject, the headline is HT and a
+                  second line shows TVA + TTC so the admin sees what
+                  the partner will actually receive on payout (the
+                  same breakdown the Qonto note will carry). */}
+              {Number(editValue) > 0 && (() => {
+                const partnerVatSubject = !!referral.partner_tax_subject;
+                const partnerVatRate = parseFloat(referral.partner_tax_rate) || 0;
+                const breakdown = partnerVatSubject && partnerVatRate > 0
+                  ? decomposeAmountWithTax(forecast.amount, partnerVatRate)
+                  : null;
+                return (
+                  <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid #bbf7d0' }}>
+                    <div style={{ fontSize: 10, color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                      {t('pipeline.forecast_commission', 'Commission prévisionnelle')}
+                    </div>
+                    <div style={{ fontSize: 22, fontWeight: 600, color: '#16a34a', lineHeight: 1.2 }}>
+                      {fmt(forecast.amount)}{breakdown ? ' HT' : ''}
+                    </div>
+                    {breakdown && (
+                      <div style={{ fontSize: 13, color: '#15803d', marginTop: 4 }}>
+                        TVA {breakdown.tax_rate}% : {fmt(breakdown.amount_tax)}
+                        {' · '}
+                        <strong style={{ color: '#166534' }}>TTC : {fmt(breakdown.amount_ttc)}</strong>
+                      </div>
+                    )}
+                    <div style={{ fontSize: 11, color: '#15803d', marginTop: breakdown ? 4 : 2 }}>
+                      {rate}% × {fmt(Number(editValue))} × {forecast.multiplier}
+                      {editEngagement === 'forfait'     && ` (${t('pipeline.forfait', 'Forfait').toLowerCase()})`}
+                      {editEngagement === 'mensuel'     && ` (${editPeriods} ${t('pipeline.months',   'mois')})`}
+                      {editEngagement === 'trimestriel' && ` (${editPeriods} ${t('pipeline.quarters', 'trim.')} × 3 ${t('pipeline.months', 'mois')})`}
+                      {editEngagement === 'annuel'      && ` (${editPeriods} ${t('pipeline.years',    'an(s)')} × 12 ${t('pipeline.months', 'mois')})`}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 22, fontWeight: 600, color: '#16a34a', lineHeight: 1.2 }}>{fmt(forecast.amount)}</div>
-                  <div style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
-                    {rate}% × {fmt(Number(editValue))} × {forecast.multiplier}
-                    {editEngagement === 'forfait'     && ` (${t('pipeline.forfait', 'Forfait').toLowerCase()})`}
-                    {editEngagement === 'mensuel'     && ` (${editPeriods} ${t('pipeline.months',   'mois')})`}
-                    {editEngagement === 'trimestriel' && ` (${editPeriods} ${t('pipeline.quarters', 'trim.')} × 3 ${t('pipeline.months', 'mois')})`}
-                    {editEngagement === 'annuel'      && ` (${editPeriods} ${t('pipeline.years',    'an(s)')} × 12 ${t('pipeline.months', 'mois')})`}
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Separator before the footer buttons. */}
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
