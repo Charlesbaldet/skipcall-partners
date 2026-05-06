@@ -154,6 +154,61 @@ router.get('/summary', authorize('admin', 'commercial'), async (req, res) => {
   }
 });
 
+// ─── ONE-SHOT: backfill VAT on existing commissions ────────────────
+// POST /api/commissions/admin/backfill-vat
+// Body: { rate?: number (default 20) }
+// Query: ?dryRun=1 → preview row count without writing.
+//
+// Tenant-scoped via req.tenantId (set by tenantScope middleware).
+// admin / superadmin only. Idempotent: WHERE tax_rate_applied IS NULL
+// OR = 0, so re-running on the same tenant is a no-op.
+//
+// REMOVE THIS ROUTE once Skipcall + Getalead are backfilled and
+// confirmed — leaving a write-mutation endpoint in the codebase
+// indefinitely is bad hygiene even with auth + scope.
+router.post('/admin/backfill-vat', authorize('admin', 'superadmin'), async (req, res) => {
+  try {
+    const rate = parseFloat(req.body?.rate ?? 20);
+    if (!Number.isFinite(rate) || rate <= 0 || rate > 30) {
+      return res.status(400).json({ error: 'invalid_rate', message: 'rate must be in (0, 30]' });
+    }
+    if (!req.tenantId) {
+      return res.status(400).json({ error: 'tenant_missing', message: 'No tenant in JWT.' });
+    }
+    const dryRun = req.query.dryRun === '1' || req.query.dryRun === 'true';
+
+    const sqlPredicate = `
+        tenant_id = $1
+        AND deleted_at IS NULL
+        AND (tax_rate_applied IS NULL OR tax_rate_applied = 0)`;
+
+    if (dryRun) {
+      const { rows: [count] } = await query(
+        `SELECT COUNT(*)::int AS n FROM commissions WHERE ${sqlPredicate}`,
+        [req.tenantId]
+      );
+      console.log(`[backfill-vat] DRY RUN tenant=${req.tenantId} user=${req.user.id} rate=${rate} would_update=${count.n}`);
+      return res.json({ dryRun: true, would_update: count.n, rate });
+    }
+
+    const result = await query(
+      `UPDATE commissions
+          SET tax_rate_applied = $2,
+              amount_ht        = COALESCE(amount_ht, amount),
+              amount_tax       = ROUND(COALESCE(amount_ht, amount) * ($2 / 100.0), 2),
+              amount_ttc       = ROUND(COALESCE(amount_ht, amount) * (1 + $2 / 100.0), 2)
+        WHERE ${sqlPredicate}
+        RETURNING id, amount, amount_ht, amount_tax, amount_ttc, tax_rate_applied, status`,
+      [req.tenantId, rate]
+    );
+    console.log(`[backfill-vat] tenant=${req.tenantId} user=${req.user.id} rate=${rate} updated=${result.rowCount}`);
+    res.json({ updated: result.rowCount, rate, rows: result.rows });
+  } catch (err) {
+    console.error('[backfill-vat] error:', err.message);
+    res.status(500).json({ error: 'server_error', message: err.message });
+  }
+});
+
 // ─── Update commission status (admin only) ───
 // Accepts the new lifecycle values. Legacy values ('pending','approved')
 // are translated for backwards compat. 'paid' here is the
