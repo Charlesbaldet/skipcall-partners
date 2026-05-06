@@ -117,12 +117,30 @@ export default function PartnerPaymentsPage() {
         </Link>
       )}
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <PayKPI icon={DollarSign} label={t('commissions.kpi_total')} value={fmt(totalAll)} color="#6366f1" />
-        <PayKPI icon={Clock} label={t('partnerPayments.kpi_pending')} value={fmt(totals.pending)} color="#f59e0b" />
-        <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')} value={fmt(totals.paid)} color="#16a34a" />
-      </div>
+      {/* KPIs.
+          Backend `totals.pending/paid` and `totalAll` sum c.amount
+          (HT). When any commission carries VAT we additionally derive
+          TTC sums client-side from the loaded list so the partner
+          sees the gross amount they actually receive on Qonto. Legacy
+          / non-subject rows have amount_ttc == amount, so the TTC
+          sum equals HT and we keep the single-line UI for partners
+          who aren't assujettis. */}
+      {(() => {
+        const sum = (filterFn, key) => commissions.filter(filterFn).reduce((s, c) => s + (parseFloat(c[key]) || 0), 0);
+        const isPending = (c) => c.status === 'pending_approval' || c.status === 'awaiting_invoice' || c.status === 'pending_validation';
+        const isPaid    = (c) => c.status === 'paid';
+        const totalTtcAll     = commissions.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
+        const totalTtcPending = sum(isPending, 'amount_ttc') || sum(isPending, 'amount');
+        const totalTtcPaid    = sum(isPaid,    'amount_ttc') || sum(isPaid,    'amount');
+        const anyVat = commissions.some(c => parseFloat(c.amount_tax || 0) > 0);
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+            <PayKPI icon={DollarSign}  label={t('commissions.kpi_total')}        value={fmt(anyVat ? totalTtcAll     : totalAll)}        sub={anyVat ? `${fmt(totalAll)} HT`        : null} suffix={anyVat ? 'TTC' : null} color="#6366f1" />
+            <PayKPI icon={Clock}       label={t('partnerPayments.kpi_pending')}  value={fmt(anyVat ? totalTtcPending : totals.pending)}  sub={anyVat ? `${fmt(totals.pending)} HT` : null} suffix={anyVat ? 'TTC' : null} color="#f59e0b" />
+            <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')}         value={fmt(anyVat ? totalTtcPaid    : totals.paid)}     sub={anyVat ? `${fmt(totals.paid)} HT`    : null} suffix={anyVat ? 'TTC' : null} color="#16a34a" />
+          </div>
+        );
+      })()}
 
       {/* Rejected rows surfaced before the kanban so partners actually see them */}
       {rejectedRows.length > 0 && (
@@ -131,19 +149,26 @@ export default function PartnerPaymentsPage() {
             <XCircle size={16} /> {t('commission.rejected')} ({rejectedRows.length})
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
-            {rejectedRows.map(c => (
-              <div key={c.id} style={{ padding: 12, background: '#fef2f2', borderRadius: 10, border: '1px solid #fecaca' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_company || c.prospect_name}</div>
-                  <div style={{ fontWeight: 700, color: '#dc2626' }}>{fmt(c.amount)}</div>
-                </div>
-                {c.rejection_reason && (
-                  <div style={{ color: '#991b1b', fontSize: 12 }}>
-                    <strong>{t('commission.rejection_reason_label')}:</strong> {c.rejection_reason}
+            {rejectedRows.map(c => {
+              const hasVat = parseFloat(c.amount_tax || 0) > 0;
+              const headlineAmount = hasVat ? c.amount_ttc : c.amount;
+              return (
+                <div key={c.id} style={{ padding: 12, background: '#fef2f2', borderRadius: 10, border: '1px solid #fecaca' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_company || c.prospect_name}</div>
+                    <div style={{ fontWeight: 700, color: '#dc2626', textAlign: 'right', lineHeight: 1.15 }}>
+                      <div>{fmt(headlineAmount)}{hasVat ? ' TTC' : ''}</div>
+                      {hasVat && <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>{fmt(c.amount_ht)} HT</div>}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                  {c.rejection_reason && (
+                    <div style={{ color: '#991b1b', fontSize: 12 }}>
+                      <strong>{t('commission.rejection_reason_label')}:</strong> {c.rejection_reason}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -154,7 +179,13 @@ export default function PartnerPaymentsPage() {
         {STATUS_KEYS.map(statusKey => {
             const st = PAY_STATUS[statusKey];
             const cards = visibleRows.filter(c => c.status === statusKey);
-            const colTotal = cards.reduce((s, c) => s + parseFloat(c.amount || 0), 0);
+            // Column total. Sum TTC when amount_ttc exists, fall back
+            // to amount for legacy rows. The HT total renders only
+            // when at least one card in the column carries VAT —
+            // partners who aren't subject keep the compact header.
+            const colTotalTtc = cards.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
+            const colTotalHt  = cards.reduce((s, c) => s + (parseFloat(c.amount_ht)  || parseFloat(c.amount) || 0), 0);
+            const colHasVat = cards.some(c => parseFloat(c.amount_tax || 0) > 0);
             return (
               <div
                 key={statusKey}
@@ -173,9 +204,12 @@ export default function PartnerPaymentsPage() {
                   <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, flexShrink: 0 }}>{cards.length}</span>
                 </div>
 
-                {colTotal > 0 && (
-                  <div style={{ padding: '4px 10px 8px', fontSize: 11, fontWeight: 700, color: st.color }}>
-                    {fmt(colTotal)}
+                {colTotalTtc > 0 && (
+                  <div style={{ padding: '4px 10px 8px', fontSize: 11, fontWeight: 700, color: st.color, lineHeight: 1.2 }}>
+                    {fmt(colTotalTtc)}{colHasVat ? ' TTC' : ''}
+                    {colHasVat && (
+                      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>{fmt(colTotalHt)} HT</div>
+                    )}
                   </div>
                 )}
 
@@ -201,9 +235,29 @@ export default function PartnerPaymentsPage() {
                         <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{c.prospect_name}</div>
                       )}
 
-                      <div style={{ fontSize: 22, fontWeight: 800, color: st.color, letterSpacing: -0.5, marginBottom: 4 }}>
-                        {fmt(c.amount)}
-                      </div>
+                      {(() => {
+                        // VAT-subject row: headline is HT, subline
+                        // shows "TVA Y% : Z € · TTC : W €" so the
+                        // partner has the numbers they need to put
+                        // on their invoice (TTC = what Qonto will
+                        // wire). Non-VAT rows keep the legacy
+                        // single-line layout for partners who aren't
+                        // assujettis.
+                        const hasVat = parseFloat(c.amount_tax || 0) > 0;
+                        const headline = hasVat ? c.amount_ht : c.amount;
+                        return (
+                          <>
+                            <div style={{ fontSize: 22, fontWeight: 800, color: st.color, letterSpacing: -0.5, marginBottom: hasVat ? 2 : 4 }}>
+                              {fmt(headline)}{hasVat ? ' HT' : ''}
+                            </div>
+                            {hasVat && (
+                              <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6, lineHeight: 1.4 }}>
+                                TVA {c.tax_rate_applied}% : {fmt(c.amount_tax)} · <strong style={{ color: '#0f172a' }}>TTC : {fmt(c.amount_ttc)}</strong>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                       <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>
                         {c.rate}% · {fmt(c.deal_value)} · {fmtDate(c.created_at)}
                       </div>
@@ -277,13 +331,17 @@ export default function PartnerPaymentsPage() {
   );
 }
 
-function PayKPI({ icon: Icon, label, value, color }) {
+function PayKPI({ icon: Icon, label, value, sub, suffix, color }) {
   return (
     <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>{value}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>
+            {value}
+            {suffix && <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 6, color: '#94a3b8' }}>{suffix}</span>}
+          </div>
+          {sub && <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 4 }}>{sub}</div>}
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={20} color={color} />
