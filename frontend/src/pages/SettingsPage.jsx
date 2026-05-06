@@ -2953,9 +2953,26 @@ function PartnerNotificationsTab() {
 }
 
 // ═══ INFORMATIONS BANCAIRES (vue partenaire) ═══
+// Default VAT rate per country — pre-fills the rate input when the
+// user picks a country and their saved rate doesn't match. The user
+// can override (we keep the input editable). Only EU countries we
+// explicitly support; others can be entered manually if Qonto rolls
+// out new corridors. Source: standard rates 2026.
+const VAT_DEFAULT_RATES = {
+  FR: 20, DE: 19, ES: 21, IT: 22, NL: 21, PT: 23, BE: 21, LU: 17, AT: 20, IE: 23,
+};
+const VAT_COUNTRIES = ['FR', 'DE', 'ES', 'IT', 'NL', 'PT', 'BE', 'LU', 'AT', 'IE'];
+const COUNTRY_FLAGS = {
+  FR: '🇫🇷', DE: '🇩🇪', ES: '🇪🇸', IT: '🇮🇹', NL: '🇳🇱',
+  PT: '🇵🇹', BE: '🇧🇪', LU: '🇱🇺', AT: '🇦🇹', IE: '🇮🇪',
+};
+
 function PartnerBankInfoTab() {
   const { t } = useTranslation();
-  const [form, setForm] = useState({ account_holder: '', iban: '', bic: '', bank_name: '' });
+  const [form, setForm] = useState({
+    account_holder: '', iban: '', bic: '', bank_name: '',
+    tax_subject: false, tax_country: '', tax_rate: '', tax_id: '',
+  });
   const [saved, setSaved] = useState(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -2973,6 +2990,10 @@ function PartnerBankInfoTab() {
           iban: info.iban || '',
           bic: info.bic || '',
           bank_name: info.bank_name || '',
+          tax_subject: !!info.tax_subject,
+          tax_country: info.tax_country || '',
+          tax_rate: info.tax_rate != null ? String(info.tax_rate) : '',
+          tax_id: info.tax_id || '',
         });
         setEditing(!info.iban);
       })
@@ -2982,8 +3003,34 @@ function PartnerBankInfoTab() {
 
   const formatIban = (v) => v.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
 
+  // When the user picks a country, suggest the default rate IF either
+  // the rate is empty or it matches the previous country's default.
+  // We never overwrite a hand-edited rate without asking.
+  const handleCountryChange = (next) => {
+    setForm(f => {
+      const prevDefault = VAT_DEFAULT_RATES[f.tax_country];
+      const currentRate = f.tax_rate ? parseFloat(f.tax_rate) : null;
+      const shouldAlign = currentRate == null
+        || (prevDefault != null && currentRate === prevDefault);
+      const aligned = shouldAlign && VAT_DEFAULT_RATES[next] != null
+        ? String(VAT_DEFAULT_RATES[next])
+        : f.tax_rate;
+      return { ...f, tax_country: next, tax_rate: aligned };
+    });
+  };
+
   const handleSave = async () => {
     setErr('');
+    // Client-side guard mirroring the server validation so the user
+    // sees the issue immediately instead of after a 400 round-trip.
+    if (form.tax_subject) {
+      if (!form.tax_country) { setErr(t('settings.bankInfo.tax.errors.countryMissing')); return; }
+      const rateNum = parseFloat(form.tax_rate);
+      if (!Number.isFinite(rateNum) || rateNum <= 0 || rateNum > 30) {
+        setErr(t('settings.bankInfo.tax.errors.rateMissing'));
+        return;
+      }
+    }
     setSaving(true);
     try {
       const payload = {
@@ -2991,6 +3038,10 @@ function PartnerBankInfoTab() {
         iban: form.iban.replace(/\s/g, '').toUpperCase() || null,
         bic: form.bic.toUpperCase() || null,
         bank_name: form.bank_name.trim() || null,
+        tax_subject: !!form.tax_subject,
+        tax_country: form.tax_subject ? (form.tax_country || null) : null,
+        tax_rate: form.tax_subject ? (parseFloat(form.tax_rate) || null) : null,
+        tax_id: form.tax_id?.trim() || null,
       };
       const res = await api.updateMyBankInfo(payload);
       setSaved(res.bank_info);
@@ -3038,6 +3089,15 @@ function PartnerBankInfoTab() {
               value={<span style={{ fontFamily: 'monospace' }}>{saved.bic || '—'}</span>}
             />
           </div>
+          {/* VAT summary line — only shown when subject. Keeps the
+              read-only view compact for non-subject partners (the
+              vast majority). */}
+          {saved.tax_subject && (
+            <div style={{ padding: '12px 14px', borderRadius: 10, background: '#f0f9ff', border: '1px solid #bae6fd', color: '#075985', fontSize: 13, marginBottom: 18 }}>
+              <strong>{t('settings.bankInfo.tax.title')}</strong> · {COUNTRY_FLAGS[saved.tax_country] || ''} {saved.tax_country || '—'} · {saved.tax_rate || 0}%
+              {saved.tax_id && <> · {saved.tax_id}</>}
+            </div>
+          )}
           <button onClick={() => setEditing(true)} style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10,
             background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer',
@@ -3088,6 +3148,71 @@ function PartnerBankInfoTab() {
               />
             </div>
           </div>
+          {/* ─── VAT section ──────────────────────────────────────── */}
+          <div style={{ marginTop: 16, paddingTop: 20, borderTop: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 12px' }}>
+              {t('settings.bankInfo.tax.title')}
+            </h3>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#334155', cursor: 'pointer', marginBottom: 12 }}>
+              <input
+                type="checkbox"
+                checked={form.tax_subject}
+                onChange={e => setForm(f => ({ ...f, tax_subject: e.target.checked }))}
+                style={{ width: 16, height: 16, cursor: 'pointer' }}
+              />
+              <span>{t('settings.bankInfo.tax.subjectToggle')}</span>
+            </label>
+            {form.tax_subject && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 12 }}>
+                  <div>
+                    <label style={labelStyle}>{t('settings.bankInfo.tax.countryLabel')}</label>
+                    <select
+                      value={form.tax_country}
+                      onChange={e => handleCountryChange(e.target.value)}
+                      style={inputStyle}
+                    >
+                      <option value="">—</option>
+                      {VAT_COUNTRIES.map(cc => (
+                        <option key={cc} value={cc}>
+                          {COUNTRY_FLAGS[cc]} {cc} ({VAT_DEFAULT_RATES[cc]}%)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>{t('settings.bankInfo.tax.rateLabel')}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      step="0.01"
+                      value={form.tax_rate}
+                      onChange={e => setForm(f => ({ ...f, tax_rate: e.target.value }))}
+                      placeholder="20.00"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={labelStyle}>
+                    {t('settings.bankInfo.tax.taxIdLabel')}
+                    <span style={{ color: '#94a3b8', fontWeight: 400, marginLeft: 4 }}>({t('common.optional', 'optionnel')})</span>
+                  </label>
+                  <input
+                    value={form.tax_id}
+                    onChange={e => setForm(f => ({ ...f, tax_id: e.target.value }))}
+                    placeholder="FR12345678901"
+                    style={{ ...inputStyle, fontFamily: 'monospace' }}
+                  />
+                </div>
+                <div style={{ padding: '10px 12px', borderRadius: 10, background: '#f0f9ff', border: '1px solid #bae6fd', color: '#075985', fontSize: 12, lineHeight: 1.5 }}>
+                  {t('settings.bankInfo.tax.helperBanner')}
+                </div>
+              </>
+            )}
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
             <button onClick={handleSave} disabled={saving} style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
@@ -3103,6 +3228,10 @@ function PartnerBankInfoTab() {
                 iban: saved.iban || '',
                 bic: saved.bic || '',
                 bank_name: saved.bank_name || '',
+                tax_subject: !!saved.tax_subject,
+                tax_country: saved.tax_country || '',
+                tax_rate: saved.tax_rate != null ? String(saved.tax_rate) : '',
+                tax_id: saved.tax_id || '',
               }); }} disabled={saving} style={{
                 padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
                 background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 14, cursor: 'pointer',

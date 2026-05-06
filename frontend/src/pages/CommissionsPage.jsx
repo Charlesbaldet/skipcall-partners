@@ -866,9 +866,19 @@ export default function CommissionsPage() {
                       </div>
                       {c.prospect_name && <div style={{ color: '#475569', fontSize: 12, marginBottom: 8 }}>{c.prospect_name}{c.prospect_company ? ' · ' + c.prospect_company : ''}</div>}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{ fontWeight: 800, color: sc.color, fontSize: 16 }}>{fmt(c.amount)}</span>
+                        <span style={{ fontWeight: 800, color: sc.color, fontSize: 16 }}>
+                          {fmt(c.amount_ttc != null && parseFloat(c.amount_tax || 0) > 0 ? c.amount_ttc : c.amount)}
+                        </span>
                         <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.rate}% · {fmt(c.deal_value)}</span>
                       </div>
+                      {/* HT / VAT / TTC breakdown when the partner is
+                          VAT-subject. Hidden for legacy / non-subject
+                          rows so the card stays compact. */}
+                      {parseFloat(c.amount_tax || 0) > 0 && (
+                        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 4, lineHeight: 1.4 }}>
+                          HT {fmt(c.amount_ht)} · TVA {c.tax_rate_applied}% {fmt(c.amount_tax)} · TTC {fmt(c.amount_ttc)}
+                        </div>
+                      )}
                       {/* Engagement breakdown — explains how the
                           amount was reached so admins approving
                           the commission don't have to recompute. */}

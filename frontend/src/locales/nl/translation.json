@@ -1606,7 +1606,22 @@
     "tab_bank_info": "Bankgegevens",
     "api_permissions": "Rechten",
     "api_read": "Lezen",
-    "api_write": "Schrijven"
+    "api_write": "Schrijven",
+    "bankInfo": {
+      "tax": {
+        "title": "Belasting toegevoegde waarde",
+        "subjectToggle": "Ik ben btw-plichtig",
+        "countryLabel": "Land",
+        "rateLabel": "Btw-tarief (%)",
+        "taxIdLabel": "Intracommunautair btw-nummer",
+        "helperBanner": "De btw wordt per Qonto-overschrijving apart vastgelegd. RefBoost betaalt je het brutobedrag, en de netto / btw / bruto-uitsplitsing verschijnt in de omschrijving van de overschrijving voor je boekhouding.",
+        "errors": {
+          "rateMissing": "Vul een geldig btw-tarief in (tussen 0 en 30) om btw te activeren.",
+          "countryMissing": "Selecteer je btw-land."
+        },
+        "countryAlignTooltip": "Tarief op het gekozen land afstemmen?"
+      }
+    }
   },
   "status": {
     "new": "Nieuw",

@@ -1606,7 +1606,22 @@
     "tab_bank_info": "Bank details",
     "api_permissions": "Permissions",
     "api_read": "Read",
-    "api_write": "Write"
+    "api_write": "Write",
+    "bankInfo": {
+      "tax": {
+        "title": "Value-added tax",
+        "subjectToggle": "I'm VAT-registered",
+        "countryLabel": "Country",
+        "rateLabel": "VAT rate (%)",
+        "taxIdLabel": "Intra-EU VAT number",
+        "helperBanner": "VAT is tracked separately on every Qonto transfer. RefBoost pays you the gross amount and the net / VAT / gross breakdown appears in the transfer reference for your bookkeeping.",
+        "errors": {
+          "rateMissing": "Enter a valid VAT rate (between 0 and 30) to enable VAT.",
+          "countryMissing": "Select your VAT country."
+        },
+        "countryAlignTooltip": "Align the rate with the selected country?"
+      }
+    }
   },
   "status": {
     "new": "New",

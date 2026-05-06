@@ -1606,7 +1606,22 @@
     "tab_bank_info": "Informations bancaires",
     "api_permissions": "Permissions",
     "api_read": "Lecture",
-    "api_write": "Écriture"
+    "api_write": "Écriture",
+    "bankInfo": {
+      "tax": {
+        "title": "Taxe sur la valeur ajoutée",
+        "subjectToggle": "Je suis assujetti(e) à la TVA",
+        "countryLabel": "Pays",
+        "rateLabel": "Taux TVA (%)",
+        "taxIdLabel": "Numéro TVA intracommunautaire",
+        "helperBanner": "La TVA sera tracée séparément lors de chaque versement Qonto. RefBoost vous paiera le TTC ; le détail HT / TVA / TTC apparaît dans le libellé du virement pour faciliter votre comptabilité.",
+        "errors": {
+          "rateMissing": "Renseignez un taux TVA valide (entre 0 et 30) pour activer l'assujettissement.",
+          "countryMissing": "Sélectionnez votre pays TVA."
+        },
+        "countryAlignTooltip": "Aligner le taux sur le pays sélectionné ?"
+      }
+    }
   },
   "status": {
     "new": "Nouveau",

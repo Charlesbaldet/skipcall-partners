@@ -1606,7 +1606,22 @@
     "tab_bank_info": "Dados bancários",
     "api_permissions": "Permissões",
     "api_read": "Leitura",
-    "api_write": "Escrita"
+    "api_write": "Escrita",
+    "bankInfo": {
+      "tax": {
+        "title": "Imposto sobre o valor acrescentado",
+        "subjectToggle": "Estou sujeito(a) ao IVA",
+        "countryLabel": "País",
+        "rateLabel": "Taxa de IVA (%)",
+        "taxIdLabel": "Número de IVA intracomunitário",
+        "helperBanner": "O IVA é registado separadamente em cada transferência Qonto. A RefBoost paga-lhe o valor bruto, e o detalhe líquido / IVA / bruto aparece na referência da transferência para a sua contabilidade.",
+        "errors": {
+          "rateMissing": "Insira uma taxa de IVA válida (entre 0 e 30) para ativar o IVA.",
+          "countryMissing": "Selecione o seu país de IVA."
+        },
+        "countryAlignTooltip": "Alinhar a taxa com o país selecionado?"
+      }
+    }
   },
   "status": {
     "new": "Novo",

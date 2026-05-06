@@ -663,6 +663,37 @@ async function runMigrations() {
   await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_partners_external_id_tenant  ON partners(tenant_id, external_id)  WHERE external_id IS NOT NULL`);
   console.log('[publicApi] v30 api_keys.permissions + rate_limit + external_id columns');
 
+  // v31: VAT support on partner payouts.
+  //   - partners: tax_subject (default false → legacy behaviour, no VAT
+  //     applied), tax_country (ISO-3166 alpha-2), tax_rate (e.g. 20.00),
+  //     tax_id (optional intracom number, free-form within a sane size).
+  //   - commissions: amount_ht / tax_rate_applied / amount_tax /
+  //     amount_ttc — snapshot taken at payout time so the breakdown
+  //     stays correct even if the partner's VAT status changes later.
+  //
+  //  Backfill assumes the legacy `commissions.amount` was already net of
+  //  VAT (RefBoost paid HT) so amount_ht = amount, tax_rate = 0,
+  //  amount_tax = 0, amount_ttc = amount. Backfilling on first run only:
+  //  the WHERE amount_ht IS NULL clause skips rows already populated by
+  //  a prior payout.
+  await query(`ALTER TABLE partners
+    ADD COLUMN IF NOT EXISTS tax_subject BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS tax_country CHAR(2),
+    ADD COLUMN IF NOT EXISTS tax_rate    DECIMAL(5,2),
+    ADD COLUMN IF NOT EXISTS tax_id      VARCHAR(64)`);
+  await query(`ALTER TABLE commissions
+    ADD COLUMN IF NOT EXISTS amount_ht        DECIMAL(12,2),
+    ADD COLUMN IF NOT EXISTS tax_rate_applied DECIMAL(5,2),
+    ADD COLUMN IF NOT EXISTS amount_tax       DECIMAL(12,2),
+    ADD COLUMN IF NOT EXISTS amount_ttc       DECIMAL(12,2)`);
+  await query(`UPDATE commissions
+                  SET amount_ht        = amount,
+                      tax_rate_applied = 0,
+                      amount_tax       = 0,
+                      amount_ttc       = amount
+                WHERE amount_ht IS NULL`);
+  console.log('[vat] v31 partners.tax_* + commissions.amount_(ht|tax|ttc) + backfill');
+
   console.log(' Migrations completed');
 
   } catch (err) {

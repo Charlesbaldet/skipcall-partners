@@ -48,4 +48,25 @@ function calculateCommissionAmount({ engagementType, periods, dealValue, rate })
   return Math.round(raw * 100) / 100;
 }
 
-module.exports = { calculateCommissionAmount, normalizeEngagement, PERIOD_MULTIPLIERS };
+// Decompose a HT (net) amount into HT / VAT / TTC (gross) at a given
+// rate. Used at payout time when the partner is VAT-subject — the
+// existing `commissions.amount` is treated as HT and we top it up with
+// the partner's local VAT rate so RefBoost wires the gross amount and
+// the Qonto note carries the breakdown for the accounting export.
+//
+// taxRate is a percentage (20 means 20%, NOT 0.20). taxRate <= 0 / null
+// / undefined → no VAT applied: amount_ttc == amount_ht and tax = 0.
+// All three monetary values are rounded to 2 decimals; tax_rate is
+// returned as-is (Number) so the caller can format it however it likes.
+function decomposeAmountWithTax(amountHt, taxRate) {
+  const ht = Math.round((parseFloat(amountHt) || 0) * 100) / 100;
+  const rate = parseFloat(taxRate);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    return { amount_ht: ht, tax_rate: 0, amount_tax: 0, amount_ttc: ht };
+  }
+  const tax = Math.round(ht * (rate / 100) * 100) / 100;
+  const ttc = Math.round((ht + tax) * 100) / 100;
+  return { amount_ht: ht, tax_rate: rate, amount_tax: tax, amount_ttc: ttc };
+}
+
+module.exports = { calculateCommissionAmount, normalizeEngagement, PERIOD_MULTIPLIERS, decomposeAmountWithTax };

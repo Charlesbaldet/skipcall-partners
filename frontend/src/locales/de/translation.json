@@ -1606,7 +1606,22 @@
     "tab_bank_info": "Bankverbindung",
     "api_permissions": "Berechtigungen",
     "api_read": "Lesen",
-    "api_write": "Schreiben"
+    "api_write": "Schreiben",
+    "bankInfo": {
+      "tax": {
+        "title": "Mehrwertsteuer",
+        "subjectToggle": "Ich bin mehrwertsteuerpflichtig",
+        "countryLabel": "Land",
+        "rateLabel": "MwSt.-Satz (%)",
+        "taxIdLabel": "USt-IdNr.",
+        "helperBanner": "Die MwSt. wird bei jeder Qonto-Überweisung separat erfasst. RefBoost überweist Ihnen den Bruttobetrag, und die Netto- / MwSt.- / Brutto-Aufschlüsselung erscheint im Verwendungszweck für Ihre Buchhaltung.",
+        "errors": {
+          "rateMissing": "Geben Sie einen gültigen MwSt.-Satz (zwischen 0 und 30) ein, um die MwSt. zu aktivieren.",
+          "countryMissing": "Wählen Sie Ihr MwSt.-Land aus."
+        },
+        "countryAlignTooltip": "Satz an das gewählte Land anpassen?"
+      }
+    }
   },
   "status": {
     "new": "Neu",

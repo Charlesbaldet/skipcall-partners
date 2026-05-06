@@ -6,6 +6,7 @@ const templates = require('../services/email-templates');
 const { sendEmail } = require('../services/emailService');
 const notify = require('../services/notifyService');
 const { sendWebhookEvent } = require('../services/webhookService');
+const { decomposeAmountWithTax } = require('../utils/commissionFormula');
 
 const router = express.Router();
 
@@ -77,6 +78,7 @@ router.get('/', async (req, res) => {
               c.approved_at, c.paid_at, c.created_at, c.tenant_id,
               c.invoice_uploaded_at,
               c.engagement_type, c.engagement_periods,
+              c.amount_ht, c.tax_rate_applied, c.amount_tax, c.amount_ttc,
               (c.invoice_url IS NOT NULL) AS has_invoice,
               c.qonto_transfer_id, c.payment_initiated_at, c.payment_completed_at,
               c.payment_reference, c.payment_error,
@@ -697,6 +699,7 @@ async function loadCommissionForPayment(commissionId, tenantId) {
             c.qonto_idempotency_key, c.qonto_sca_session_token,
             p.id AS partner_id, p.name AS partner_name,
             p.iban, p.bic, p.account_holder, p.bank_name,
+            p.tax_subject, p.tax_country, p.tax_rate, p.tax_id,
             r.prospect_name, r.prospect_company
        FROM commissions c
        JOIN partners p ON p.id = c.partner_id
@@ -747,7 +750,24 @@ router.post('/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (re
     const amount = parseFloat(c.amount) || 0;
     if (amount <= 0) return res.status(400).json({ error: 'amount_zero' });
 
-    console.log(`[pay-qonto] Starting payment for commission ${c.id} (amount: ${amount}€)`);
+    // ─── VAT decomposition ──────────────────────────────────────────
+    // TODO: handle intracommunity reverse charge — when the payer's
+    // country differs from the partner's country and both are VAT-
+    // subject inside the EU, the partner should invoice without VAT
+    // and the payer self-assesses (reverse charge B2B). The current
+    // model is "RefBoost wires the partner's local VAT" which is
+    // correct for FR→FR but not for FR→DE intra-EU. Out of scope for
+    // this ticket per spec section 10.
+    if (c.tax_subject && (!c.tax_rate || parseFloat(c.tax_rate) <= 0)) {
+      return res.status(400).json({
+        error: 'partner_tax_rate_missing',
+        message: 'Le partenaire est déclaré assujetti TVA mais sans taux configuré.',
+      });
+    }
+    const taxRate = c.tax_subject ? Number(c.tax_rate) : 0;
+    const breakdown = decomposeAmountWithTax(amount, taxRate);
+
+    console.log(`[pay-qonto] Starting payment for commission ${c.id} (HT: ${breakdown.amount_ht}€, TVA ${breakdown.tax_rate}%: ${breakdown.amount_tax}€, TTC: ${breakdown.amount_ttc}€)`);
 
     // Upload attachment (best-effort)
     let attachmentId = null;
@@ -786,10 +806,25 @@ router.post('/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (re
       );
     }
 
+    // Snapshot the breakdown on the row BEFORE wiring — if the
+    // transfer fails partway, we still know what numbers were attempted.
+    await query(
+      `UPDATE commissions
+          SET amount_ht = $2, tax_rate_applied = $3, amount_tax = $4, amount_ttc = $5
+        WHERE id = $1`,
+      [c.id, breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
+    );
+
     const result = await qonto.createSingleTransfer(req.tenantId, {
       commissionId: c.id,
       bankAccountId: integ.bank_account_id,
+      // Legacy `amount` kept for back-compat; qontoService prefers
+      // amountTtc when present.
       amount,
+      amountHt:  breakdown.amount_ht,
+      amountTax: breakdown.amount_tax,
+      amountTtc: breakdown.amount_ttc,
+      taxRate:   breakdown.tax_rate,
       partnerName: c.partner_name,
       dealName,
       iban: c.iban,
@@ -861,6 +896,15 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
   const amount = parseFloat(c.amount) || 0;
   if (amount <= 0) return { ok: false, code: 'amount_zero' };
 
+  // VAT decomposition — same gate as /pay-qonto. Bulk surfaces the
+  // missing-rate error per-commission so a mis-configured partner
+  // doesn't block the whole batch.
+  if (c.tax_subject && (!c.tax_rate || parseFloat(c.tax_rate) <= 0)) {
+    return { ok: false, code: 'partner_tax_rate_missing' };
+  }
+  const taxRate = c.tax_subject ? Number(c.tax_rate) : 0;
+  const breakdown = decomposeAmountWithTax(amount, taxRate);
+
   // === CORRIGÉ : Idempotency Key Strategy ===
   let idempotencyKey = c.qonto_idempotency_key;
   if (!idempotencyKey) {
@@ -877,10 +921,23 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
   } catch {}
 
   try {
+    // Snapshot the breakdown before wiring (same rationale as the
+    // single endpoint: persist what we attempted).
+    await query(
+      `UPDATE commissions
+          SET amount_ht = $2, tax_rate_applied = $3, amount_tax = $4, amount_ttc = $5
+        WHERE id = $1`,
+      [c.id, breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
+    );
+
     const result = await qonto.createSingleTransfer(tenantId, {
       commissionId: c.id,
       bankAccountId: integ.bank_account_id,
       amount,
+      amountHt:  breakdown.amount_ht,
+      amountTax: breakdown.amount_tax,
+      amountTtc: breakdown.amount_ttc,
+      taxRate:   breakdown.tax_rate,
       partnerName: c.partner_name,
       dealName: c.prospect_company || c.prospect_name || '',
       iban: c.iban,
@@ -955,6 +1012,7 @@ router.post('/pay-bulk', authorize('admin'), requireBusinessPlan, async (req, re
               c.qonto_idempotency_key, c.qonto_sca_session_token,
               p.id AS partner_id, p.name AS partner_name,
               p.iban, p.account_holder,
+              p.tax_subject, p.tax_country, p.tax_rate, p.tax_id,
               r.prospect_name, r.prospect_company
          FROM commissions c
          JOIN partners p ON p.id = c.partner_id

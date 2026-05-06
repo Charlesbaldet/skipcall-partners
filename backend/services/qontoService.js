@@ -333,10 +333,35 @@ function parseScaChallenge(err) {
   return null;
 }
 
+// Build a 140-char Qonto note. RefBoost's accounting export reads
+// this field; we embed the VAT breakdown here when the partner is
+// subject so each transfer line shows HT / VAT / TTC. Falls back to
+// the legacy `Commission partenaire — name — deal` shape when no
+// VAT is applied. Note is hard-capped at 140 by Qonto, so we
+// truncate the human-readable prefix first and always preserve the
+// trailing breakdown intact.
+function buildNote({ partnerName, dealName, taxRate, amountHt, amountTax, amountTtc }) {
+  const NOTE_LIMIT = 140;
+  const tail = (taxRate > 0 && amountTtc != null)
+    ? ` | HT ${Number(amountHt).toFixed(2)} | TVA ${Number(taxRate)}% ${Number(amountTax).toFixed(2)} | TTC ${Number(amountTtc).toFixed(2)}`
+    : '';
+  const head = `Commission partenaire — ${partnerName || ''}${dealName ? ' — ' + dealName : ''}`;
+  const headBudget = Math.max(0, NOTE_LIMIT - tail.length);
+  return (head.length <= headBudget ? head : head.slice(0, headBudget)) + tail;
+}
+
 async function createSingleTransfer(tenantId, {
   commissionId,
   bankAccountId,
-  amount,
+  amount,           // legacy single amount (back-compat). Ignored when amountTtc is set.
+  // VAT breakdown — when present, amountTtc is the gross figure wired
+  // to Qonto and amountHt/amountTax/taxRate hydrate the note for the
+  // accounting export. When all three are absent, behaviour is
+  // identical to the pre-VAT code (sends `amount` as the gross EUR).
+  amountHt,
+  amountTax,
+  amountTtc,
+  taxRate = 0,
   partnerName,
   dealName,
   iban,
@@ -379,7 +404,11 @@ async function createSingleTransfer(tenantId, {
   }
 
   const reference = buildReference(commissionId);
-  const note = `Commission partenaire — ${partnerName || ''}${dealName ? ' — ' + dealName : ''}`.slice(0, 140);
+  const note = buildNote({ partnerName, dealName, taxRate, amountHt, amountTax, amountTtc });
+  // The amount actually wired: TTC when VAT is being applied,
+  // otherwise the legacy `amount` arg. Both branches converge on a
+  // single 2-decimal EUR string for Qonto's API.
+  const grossAmount = (amountTtc != null) ? amountTtc : amount;
 
   // Qonto's POST /v2/sepa/transfers expects the source account under
   // `bank_account_id` (not `debit_bank_account_id`). Without it the
@@ -389,7 +418,7 @@ async function createSingleTransfer(tenantId, {
     reference,
     note,
     currency: 'EUR',
-    amount: Number(amount).toFixed(2),
+    amount: Number(grossAmount).toFixed(2),
   };
   if (beneficiaryId) {
     transfer.beneficiary_id = beneficiaryId;
@@ -565,7 +594,13 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken,
 
 async function createBulkTransfer(tenantId, {
   bankAccountId,
-  transfers, // [{ commissionId, amount, iban, beneficiaryName, partnerName, dealName, attachmentIds }]
+  // Each transfer item now optionally carries a VAT breakdown:
+  // [{ commissionId, amount, amountHt, amountTax, amountTtc, taxRate,
+  //    iban, beneficiaryName, partnerName, dealName, attachmentIds }]
+  // When amountTtc is set, it's the gross EUR wired to Qonto and the
+  // note carries `| HT … | TVA …% … | TTC …`. When not, behaviour
+  // matches the pre-VAT code (sends `amount`, no breakdown in note).
+  transfers,
   idempotencyKey,
   scaSessionToken,
 }) {
@@ -581,6 +616,7 @@ async function createBulkTransfer(tenantId, {
   // messages whose JSON pointers ("/bank_account_id",
   // "/bulk_transfers") explicitly tell us they live at the root.
   const items = transfers.map(t => {
+    const grossAmount = (t.amountTtc != null) ? t.amountTtc : t.amount;
     const item = {
       // Each line MUST carry a client_transfer_id (unique string we
       // generate) — Qonto's bulk response uses it to report which
@@ -589,9 +625,16 @@ async function createBulkTransfer(tenantId, {
       // a fresh uuid if the caller forgot.
       client_transfer_id: String(t.commissionId || newIdempotencyKey()),
       reference: buildReference(t.commissionId),
-      note: `Commission partenaire — ${t.partnerName || ''}${t.dealName ? ' — ' + t.dealName : ''}`.slice(0, 140),
+      note: buildNote({
+        partnerName: t.partnerName,
+        dealName: t.dealName,
+        taxRate: t.taxRate || 0,
+        amountHt: t.amountHt,
+        amountTax: t.amountTax,
+        amountTtc: t.amountTtc,
+      }),
       currency: 'EUR',
-      amount: Number(t.amount).toFixed(2),
+      amount: Number(grossAmount).toFixed(2),
     };
     if (t.beneficiaryId) item.beneficiary_id = t.beneficiaryId;
     else item.beneficiary = { iban: t.iban.replace(/\s+/g, '').toUpperCase(), name: t.beneficiaryName };

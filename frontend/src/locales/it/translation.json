@@ -1606,7 +1606,22 @@
     "tab_bank_info": "Dati bancari",
     "api_permissions": "Permessi",
     "api_read": "Lettura",
-    "api_write": "Scrittura"
+    "api_write": "Scrittura",
+    "bankInfo": {
+      "tax": {
+        "title": "Imposta sul valore aggiunto",
+        "subjectToggle": "Sono soggetto a IVA",
+        "countryLabel": "Paese",
+        "rateLabel": "Aliquota IVA (%)",
+        "taxIdLabel": "Numero IVA intracomunitario",
+        "helperBanner": "L'IVA viene tracciata separatamente per ogni bonifico Qonto. RefBoost ti versa il lordo e il dettaglio netto / IVA / lordo compare nella causale del bonifico per la tua contabilità.",
+        "errors": {
+          "rateMissing": "Inserisci un'aliquota IVA valida (tra 0 e 30) per attivare l'IVA.",
+          "countryMissing": "Seleziona il tuo paese IVA."
+        },
+        "countryAlignTooltip": "Allineare l'aliquota al paese selezionato?"
+      }
+    }
   },
   "status": {
     "new": "Nuovo",
