@@ -618,12 +618,30 @@ export default function CommissionsPage() {
         </button>
       </div>
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComKPI icon={DollarSign} label={t('commissions.kpi_total')} value={fmt(totalAll)} color="var(--rb-primary, #059669)" />
-        <ComKPI icon={Clock} label={t('commissions.kpi_pending')} value={fmt(totals.pending)} color="#f59e0b" />
-        <ComKPI icon={CheckCircle} label={t('commissions.kpi_paid')} value={fmt(totals.paid)} color="#16a34a" />
-      </div>
+      {/* KPIs.
+          Backend `totals.pending/paid` and `totalAll` (summary tab)
+          all sum c.amount (HT). When any commission carries VAT we
+          additionally derive a TTC sum client-side from the loaded
+          commissions so the tile shows the gross amount the partner
+          actually receives. Legacy / non-subject rows have
+          amount_ttc == amount, so the TTC sum equals the HT sum and
+          we keep the single-line UI for tenants without assujettis. */}
+      {(() => {
+        const sum = (filterFn, key) => commissions.filter(filterFn).reduce((s, c) => s + (parseFloat(c[key]) || 0), 0);
+        const isPending = (c) => c.status === 'pending_approval' || c.status === 'awaiting_invoice' || c.status === 'pending_validation';
+        const isPaid    = (c) => c.status === 'paid';
+        const totalTtcAll     = commissions.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
+        const totalTtcPending = sum(isPending, 'amount_ttc') || sum(isPending, 'amount');
+        const totalTtcPaid    = sum(isPaid,    'amount_ttc') || sum(isPaid,    'amount');
+        const anyVat = commissions.some(c => parseFloat(c.amount_tax || 0) > 0);
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+            <ComKPI icon={DollarSign}   label={t('commissions.kpi_total')}   value={fmt(anyVat ? totalTtcAll     : totalAll)}        sub={anyVat ? `${fmt(totalAll)} HT`        : null} suffix={anyVat ? 'TTC' : null} color="var(--rb-primary, #059669)" />
+            <ComKPI icon={Clock}        label={t('commissions.kpi_pending')} value={fmt(anyVat ? totalTtcPending : totals.pending)}  sub={anyVat ? `${fmt(totals.pending)} HT` : null} suffix={anyVat ? 'TTC' : null} color="#f59e0b" />
+            <ComKPI icon={CheckCircle}  label={t('commissions.kpi_paid')}    value={fmt(anyVat ? totalTtcPaid    : totals.paid)}     sub={anyVat ? `${fmt(totals.paid)} HT`    : null} suffix={anyVat ? 'TTC' : null} color="#16a34a" />
+          </div>
+        );
+      })()}
 
       {/* Toolbar — tabs left, view toggle + actions right, separated
           from the body by a single bottom border. The right-side
@@ -790,16 +808,36 @@ export default function CommissionsPage() {
             const hasMore = allCards.length > limit;
             return (
               <div key={status} style={{ flex: 1, background: '#f8fafc', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: sc.color }} />
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>{fmt(allCards.reduce((s, c) => s + parseFloat(c.amount), 0))}</span>
-                    <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
-                  </div>
-                </div>
+                {(() => {
+                  // Column total. Sum TTC from amount_ttc when set
+                  // (post-payment snapshot), fall back to amount for
+                  // commissions that haven't been wired yet. The HT
+                  // line shows alongside only when at least one card
+                  // in the column carries VAT — keeps the header
+                  // compact for tenants whose partners aren't subject.
+                  const totalTtc = allCards.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
+                  const totalHt  = allCards.reduce((s, c) => s + (parseFloat(c.amount_ht)  || parseFloat(c.amount) || 0), 0);
+                  const anyVat = allCards.some(c => parseFloat(c.amount_tax || 0) > 0);
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: sc.color }} />
+                        <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.15 }}>
+                          <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>
+                            {fmt(totalTtc)}{anyVat ? ' TTC' : ''}
+                          </span>
+                          {anyVat && (
+                            <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmt(totalHt)} HT</span>
+                          )}
+                        </div>
+                        <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                   {cards.map(c => {
                     const isSelected = selected.has(c.id);
@@ -865,20 +903,31 @@ export default function CommissionsPage() {
                         )}
                       </div>
                       {c.prospect_name && <div style={{ color: '#475569', fontSize: 12, marginBottom: 8 }}>{c.prospect_name}{c.prospect_company ? ' · ' + c.prospect_company : ''}</div>}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{ fontWeight: 800, color: sc.color, fontSize: 16 }}>
-                          {fmt(c.amount_ttc != null && parseFloat(c.amount_tax || 0) > 0 ? c.amount_ttc : c.amount)}
-                        </span>
-                        <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.rate}% · {fmt(c.deal_value)}</span>
-                      </div>
-                      {/* HT / VAT / TTC breakdown when the partner is
-                          VAT-subject. Hidden for legacy / non-subject
-                          rows so the card stays compact. */}
-                      {parseFloat(c.amount_tax || 0) > 0 && (
-                        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 4, lineHeight: 1.4 }}>
-                          HT {fmt(c.amount_ht)} · TVA {c.tax_rate_applied}% {fmt(c.amount_tax)} · TTC {fmt(c.amount_ttc)}
-                        </div>
-                      )}
+                      {(() => {
+                        // VAT-subject row: top line shows the HT
+                        // amount + rate · deal, second line shows
+                        // "TVA X% : amount · TTC : amount". Non-VAT
+                        // rows keep the legacy single-line layout
+                        // (just the amount + rate · deal) so the card
+                        // doesn't grow for tenants without assujettis.
+                        const hasVat = parseFloat(c.amount_tax || 0) > 0;
+                        const headlineAmount = hasVat ? c.amount_ht : c.amount;
+                        return (
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasVat ? 2 : 8 }}>
+                              <span style={{ fontWeight: 800, color: sc.color, fontSize: 16 }}>
+                                {fmt(headlineAmount)}{hasVat ? ' HT' : ''}
+                              </span>
+                              <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.rate}% · {fmt(c.deal_value)}</span>
+                            </div>
+                            {hasVat && (
+                              <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6, lineHeight: 1.4 }}>
+                                TVA {c.tax_rate_applied}% : {fmt(c.amount_tax)} · <strong style={{ color: '#0f172a' }}>TTC : {fmt(c.amount_ttc)}</strong>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                       {/* Engagement breakdown — explains how the
                           amount was reached so admins approving
                           the commission don't have to recompute. */}
@@ -1539,13 +1588,17 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
   return null;
 }
 
-function ComKPI({ icon: Icon, label, value, color }) {
+function ComKPI({ icon: Icon, label, value, sub, suffix, color }) {
   return (
     <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>{value}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>
+            {value}
+            {suffix && <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 6, color: '#94a3b8' }}>{suffix}</span>}
+          </div>
+          {sub && <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 4 }}>{sub}</div>}
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={20} color={color} /></div>
       </div>
