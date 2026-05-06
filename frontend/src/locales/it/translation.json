@@ -935,7 +935,11 @@
     "view_table": "Tabella",
     "modal_no_iban": "IBAN non inserito.",
     "modal_confirming": "Elaborazione...",
-    "modal_error": "Errore pagamento"
+    "modal_error": "Errore pagamento",
+    "tbl_ht": "Netto",
+    "tbl_tva": "IVA",
+    "tbl_tva_rate": "Aliquota IVA",
+    "tbl_ttc": "Lordo"
   },
   "partners": {
     "title": "Partner",

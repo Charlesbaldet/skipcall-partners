@@ -935,7 +935,11 @@
     "view_table": "Tabla",
     "modal_no_iban": "IBAN no registrado.",
     "modal_confirming": "Procesando...",
-    "modal_error": "Error de pago"
+    "modal_error": "Error de pago",
+    "tbl_ht": "Neto",
+    "tbl_tva": "IVA",
+    "tbl_tva_rate": "Tipo de IVA",
+    "tbl_ttc": "Bruto"
   },
   "partners": {
     "title": "Socios",

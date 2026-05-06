@@ -935,7 +935,11 @@
     "view_table": "Table",
     "modal_no_iban": "IBAN not provided.",
     "modal_confirming": "Processing...",
-    "modal_error": "Payment error"
+    "modal_error": "Payment error",
+    "tbl_ht": "Net",
+    "tbl_tva": "VAT",
+    "tbl_tva_rate": "VAT rate",
+    "tbl_ttc": "Gross"
   },
   "partners": {
     "title": "Partners",

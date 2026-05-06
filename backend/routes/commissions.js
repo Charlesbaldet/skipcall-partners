@@ -122,14 +122,25 @@ router.get('/summary', authorize('admin', 'commercial'), async (req, res) => {
       params.push(req.tenantId);
     }
 
+    // total_amount stays for back-compat (HT). Legacy commissions
+    // pre-v31 have NULL amount_ht / amount_ttc — COALESCE to amount
+    // so a tenant with no VAT-subject partners still gets the same
+    // numbers in every column. total_tax > 0 on the FE is the signal
+    // to switch the table to the dual HT/TTC layout.
     const { rows } = await query(
       `SELECT p.id, p.name, p.contact_name, p.commission_rate,
-              COUNT(c.id) as total_commissions,
-              COALESCE(SUM(c.amount), 0) as total_amount,
-              COALESCE(SUM(CASE WHEN c.status = 'pending_approval' THEN c.amount END), 0) as pending_amount,
-              COALESCE(SUM(CASE WHEN c.status IN ('awaiting_invoice','pending_validation') THEN c.amount END), 0) as approved_amount,
-              COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.amount END), 0) as paid_amount,
-              COALESCE(SUM(c.deal_value), 0) as total_deal_value
+              COUNT(c.id)                                                                             AS total_commissions,
+              COALESCE(SUM(c.amount), 0)                                                              AS total_amount,
+              COALESCE(SUM(CASE WHEN c.status = 'pending_approval' THEN c.amount END), 0)             AS pending_amount,
+              COALESCE(SUM(CASE WHEN c.status IN ('awaiting_invoice','pending_validation') THEN c.amount END), 0) AS approved_amount,
+              COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.amount END), 0)                         AS paid_amount,
+              COALESCE(SUM(c.deal_value), 0)                                                          AS total_deal_value,
+              COALESCE(SUM(COALESCE(c.amount_ht,  c.amount)), 0)                                      AS total_ht,
+              COALESCE(SUM(COALESCE(c.amount_tax, 0)),         0)                                     AS total_tax,
+              COALESCE(SUM(COALESCE(c.amount_ttc, c.amount)), 0)                                      AS total_ttc,
+              COALESCE(SUM(CASE WHEN c.status = 'pending_approval' THEN COALESCE(c.amount_ttc, c.amount) END), 0)             AS pending_ttc,
+              COALESCE(SUM(CASE WHEN c.status IN ('awaiting_invoice','pending_validation') THEN COALESCE(c.amount_ttc, c.amount) END), 0) AS approved_ttc,
+              COALESCE(SUM(CASE WHEN c.status = 'paid' THEN COALESCE(c.amount_ttc, c.amount) END), 0) AS paid_ttc
        FROM partners p
        LEFT JOIN commissions c ON p.id = c.partner_id AND c.deleted_at IS NULL
        WHERE ${where.join(' AND ')}

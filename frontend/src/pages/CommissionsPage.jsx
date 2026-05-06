@@ -584,8 +584,47 @@ export default function CommissionsPage() {
   };
 
   const exportCSV = () => {
-    const headers = [t('commissions.tbl_prospect'), t('referrals.company'), t('commissions.tbl_partner'), t('commissions.tbl_rate') + ' %', t('commissions.tbl_deal') + ' €', t('commissions.tbl_commission') + ' €', t('commissions.tbl_status'), t('referrals.created_at'), t('commissions.date_validated'), t('commissions.paid_on')];
-    const rows = commissions.map(c => [c.prospect_name, c.prospect_company, c.partner_name, c.rate, c.deal_value, c.amount, COM_STATUS[c.status]?.label || c.status, c.created_at?.split('T')[0] || '', c.approved_at?.split('T')[0] || '', c.paid_at?.split('T')[0] || '']);
+    // VAT columns are emitted unconditionally so the same template
+    // works for FR (assujetti) and intra-EU exports. Legacy rows
+    // (no payout snapshot yet) fall back to amount for HT/TTC and
+    // 0 for the VAT line, which matches what RefBoost actually
+    // wired and stayed correct against the backfill in v31.
+    const headers = [
+      t('commissions.tbl_prospect'),
+      t('referrals.company'),
+      t('commissions.tbl_partner'),
+      t('commissions.tbl_rate') + ' %',
+      t('commissions.tbl_deal') + ' €',
+      t('commissions.tbl_ht') + ' €',
+      t('commissions.tbl_tva_rate') + ' %',
+      t('commissions.tbl_tva') + ' €',
+      t('commissions.tbl_ttc') + ' €',
+      t('commissions.tbl_status'),
+      t('referrals.created_at'),
+      t('commissions.date_validated'),
+      t('commissions.paid_on'),
+    ];
+    const rows = commissions.map(c => {
+      const ht  = c.amount_ht  != null ? c.amount_ht  : c.amount;
+      const ttc = c.amount_ttc != null ? c.amount_ttc : c.amount;
+      const tax = parseFloat(c.amount_tax || 0);
+      const taxRate = parseFloat(c.tax_rate_applied || 0);
+      return [
+        c.prospect_name,
+        c.prospect_company,
+        c.partner_name,
+        c.rate,
+        c.deal_value,
+        ht,
+        taxRate,
+        tax,
+        ttc,
+        COM_STATUS[c.status]?.label || c.status,
+        c.created_at?.split('T')[0] || '',
+        c.approved_at?.split('T')[0] || '',
+        c.paid_at?.split('T')[0] || '',
+      ];
+    });
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
@@ -744,11 +783,18 @@ export default function CommissionsPage() {
         );
       })()}
 
-      {tab === 'summary' && (
+      {tab === 'summary' && (() => {
+        // Switch headline label + Total column to TTC when at least
+        // one partner has VAT-tagged commissions. Tenants without
+        // assujettis stay on the legacy single-amount layout, so
+        // nothing changes for them visually.
+        const anyVat = summary.some(p => parseFloat(p.total_tax || 0) > 0);
+        const totalAllTtc = summary.reduce((s, p) => s + (parseFloat(p.total_ttc) || parseFloat(p.total_amount) || 0), 0);
+        return (
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
             <thead><tr style={{ background: '#f8fafc' }}>
-              {[t('commissions.tbl_partner'), t('commissions.tbl_rate'), t('commissions.tbl_deals'), `${rLabel} ${t('commissions.tbl_generated')}`, t('commissions.tbl_pending'), t('commissions.tbl_approved'), t('commissions.tbl_paid'), t('commissions.tbl_total')].map((h, i) => (
+              {[t('commissions.tbl_partner'), t('commissions.tbl_rate'), t('commissions.tbl_deals'), `${rLabel} ${t('commissions.tbl_generated')}`, t('commissions.tbl_pending'), t('commissions.tbl_approved'), t('commissions.tbl_paid'), anyVat ? t('commissions.tbl_total') + ' TTC' : t('commissions.tbl_total')].map((h, i) => (
                 <th
                   key={i}
                   style={{
@@ -761,7 +807,12 @@ export default function CommissionsPage() {
                 >{h}</th>
               ))}
             </tr></thead>
-            <tbody>{summary.map(p => (
+            <tbody>{summary.map(p => {
+              const partnerHasVat = parseFloat(p.total_tax || 0) > 0;
+              const totalDisplay = anyVat
+                ? (parseFloat(p.total_ttc) || parseFloat(p.total_amount) || 0)
+                : (parseFloat(p.total_amount) || 0);
+              return (
               <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                 <td style={{ padding: '13px 16px', textAlign: 'left' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{p.contact_name}</div></td>
                 <td style={{ padding: '13px 16px', textAlign: 'right' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{p.commission_rate}%</span></td>
@@ -770,16 +821,25 @@ export default function CommissionsPage() {
                 <td style={{ padding: '13px 16px', textAlign: 'right', color: '#f59e0b', fontWeight: 600 }}>{fmt(p.pending_amount)}</td>
                 <td style={{ padding: '13px 16px', textAlign: 'right', color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{fmt(p.approved_amount)}</td>
                 <td style={{ padding: '13px 16px', textAlign: 'right', color: '#16a34a', fontWeight: 600 }}>{fmt(p.paid_amount)}</td>
-                <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#0f172a' }}>{fmt(p.total_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right' }}>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: '#0f172a', lineHeight: 1.2 }}>{fmt(totalDisplay)}</div>
+                  {anyVat && partnerHasVat && (
+                    <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>{fmt(p.total_ht)} HT</div>
+                  )}
+                </td>
               </tr>
-            ))}</tbody>
+            );})}</tbody>
             <tfoot><tr style={{ background: '#fefce8' }}>
               <td colSpan={7} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 700, color: '#0f172a' }}>{t('commissions.total')}</td>
-              <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#f59e0b', fontSize: 18 }}>{fmt(totalAll)}</td>
+              <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#f59e0b', fontSize: 18 }}>
+                {fmt(anyVat ? totalAllTtc : totalAll)}
+                {anyVat && <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginLeft: 6 }}>TTC</span>}
+              </td>
             </tr></tfoot>
           </table>
         </div>
-      )}
+        );
+      })()}
 
       {/* Contextual bulk-pay action bar. "Tout payer" and "Actualiser"
           live in the toolbar above; this row only shows up while at
@@ -1114,19 +1174,41 @@ export default function CommissionsPage() {
           <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead><tr style={{ background: '#f8fafc' }}>
-                {[t('commissions.tbl_prospect'), t('commissions.tbl_partner'), t('commissions.tbl_rate'), t('commissions.tbl_deal'), t('commissions.tbl_commission'), t('commissions.tbl_status'), t('commissions.tbl_approved_at'), t('commissions.tbl_due'), t('commissions.tbl_action')].map((h, i) => (
+                {[
+                  t('commissions.tbl_prospect'),
+                  t('commissions.tbl_partner'),
+                  t('commissions.tbl_rate'),
+                  t('commissions.tbl_deal'),
+                  t('commissions.tbl_ht'),
+                  t('commissions.tbl_tva'),
+                  t('commissions.tbl_ttc'),
+                  t('commissions.tbl_status'),
+                  t('commissions.tbl_approved_at'),
+                  t('commissions.tbl_due'),
+                  t('commissions.tbl_action'),
+                ].map((h, i) => (
                   <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>{filtered.map(c => {
                 const cs = COM_STATUS[c.status] || COM_STATUS.pending_approval;
+                // Legacy rows have NULL amount_ht / amount_ttc until
+                // they hit /pay-qonto. Fall back to amount so the
+                // table stays usable for unpaid commissions too.
+                const ht  = c.amount_ht  != null ? c.amount_ht  : c.amount;
+                const ttc = c.amount_ttc != null ? c.amount_ttc : c.amount;
+                const tax = parseFloat(c.amount_tax || 0);
                 return (
                   <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                     <td style={{ padding: '13px 16px' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div></td>
                     <td style={{ padding: '13px 16px', color: '#475569' }}>{c.partner_name}</td>
                     <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span></td>
                     <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(c.deal_value)}</td>
-                    <td style={{ padding: '13px 16px', fontWeight: 800, color: '#f59e0b', fontSize: 16 }}>{fmt(c.amount)}</td>
+                    <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{fmt(ht)}</td>
+                    <td style={{ padding: '13px 16px', textAlign: 'right', fontSize: 12, color: '#94a3b8' }}>
+                      {tax > 0 ? `${c.tax_rate_applied}% · ${fmt(tax)}` : '—'}
+                    </td>
+                    <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#f59e0b', fontSize: 16 }}>{fmt(ttc)}</td>
                     <td style={{ padding: '13px 16px' }}><span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: cs.bg, color: cs.color }}>{cs.label}</span></td>
                     <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '—'}</td>
                     <td style={{ padding: '13px 16px', fontSize: 12 }}>

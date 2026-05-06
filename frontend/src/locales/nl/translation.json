@@ -935,7 +935,11 @@
     "view_table": "Tabel",
     "modal_no_iban": "IBAN niet opgegeven.",
     "modal_confirming": "Verwerking...",
-    "modal_error": "Betalingsfout"
+    "modal_error": "Betalingsfout",
+    "tbl_ht": "Netto",
+    "tbl_tva": "Btw",
+    "tbl_tva_rate": "Btw-tarief",
+    "tbl_ttc": "Bruto"
   },
   "partners": {
     "title": "Partners",

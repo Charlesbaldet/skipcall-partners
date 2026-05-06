@@ -935,7 +935,11 @@
     "view_table": "Tabelle",
     "modal_no_iban": "IBAN nicht angegeben.",
     "modal_confirming": "Verarbeitung...",
-    "modal_error": "Zahlungsfehler"
+    "modal_error": "Zahlungsfehler",
+    "tbl_ht": "Netto",
+    "tbl_tva": "MwSt.",
+    "tbl_tva_rate": "MwSt.-Satz",
+    "tbl_ttc": "Brutto"
   },
   "partners": {
     "title": "Partner",

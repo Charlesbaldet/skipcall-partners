@@ -935,7 +935,11 @@
     "view_table": "Tabela",
     "modal_no_iban": "IBAN não cadastrado.",
     "modal_confirming": "Processando...",
-    "modal_error": "Erro no pagamento"
+    "modal_error": "Erro no pagamento",
+    "tbl_ht": "Líquido",
+    "tbl_tva": "IVA",
+    "tbl_tva_rate": "Taxa de IVA",
+    "tbl_ttc": "Bruto"
   },
   "partners": {
     "title": "Parceiros",

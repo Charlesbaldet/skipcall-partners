@@ -935,7 +935,11 @@
     "view_table": "Table",
     "modal_no_iban": "IBAN non renseigné.",
     "modal_confirming": "Validation...",
-    "modal_error": "Erreur lors du paiement"
+    "modal_error": "Erreur lors du paiement",
+    "tbl_ht": "HT",
+    "tbl_tva": "TVA",
+    "tbl_tva_rate": "Taux TVA",
+    "tbl_ttc": "TTC"
   },
   "partners": {
     "title": "Partenaires",
