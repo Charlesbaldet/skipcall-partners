@@ -239,6 +239,26 @@ Avant de mettre en ligne, vérifiez :
 
 ---
 
+## Migration v31 — TVA / Qonto payouts
+
+Auto-exécutée au boot via `runMigrations()` dans backend/db/migrate.js.
+
+Schéma ajouté :
+- partners : tax_subject (bool, default false), tax_country (CHAR 2),
+  tax_rate (DECIMAL 5,2), tax_id (VARCHAR 64)
+- commissions : amount_ht, tax_rate_applied, amount_tax, amount_ttc
+  (tous DECIMAL 12,2)
+
+Backfill : commissions existantes → amount_ht = amount, tax = 0,
+amount_ttc = amount. Aucune perte de données.
+
+Rollback : DROP des 8 colonnes ajoutées. Non destructif.
+
+Champs UI ajoutés : Settings → Coordonnées bancaires → section TVA
+(toggle assujetti, pays ISO 2, taux %, numéro intracom optionnel).
+
+---
+
 ## Support
 
 Des questions ? Besoin d'ajustements ? Revenez me voir sur Claude, je serai là pour vous aider à itérer.
