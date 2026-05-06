@@ -41,6 +41,16 @@ export const config = {
 const SITE = 'https://refboost.io';
 const OG_FALLBACK = SITE + '/og-image.png';
 
+// Railway origin used for server-side fetches from this edge
+// middleware. Mirrors the destination in vercel.json's /api/:path*
+// rewrite. We hit Railway DIRECTLY (instead of going through
+// `url.origin + /api/...`) because same-origin fetches from edge
+// middleware don't always re-trigger the rewrite chain on Vercel —
+// when they don't, the request loops back through middleware and
+// returns the SPA shell instead of JSON, leaving the listing
+// noscript empty and every detail page orphan in the crawl graph.
+const BACKEND_API = 'https://skipcall-partners-production.up.railway.app';
+
 // Per-path meta. Descriptions are kept in the 120-160 char sweet spot
 // for SERP snippets (Ahrefs flags anything under 120). /blog/:slug is
 // resolved separately against the API.
@@ -260,8 +270,8 @@ export default async function middleware(request) {
         // (the program for hero copy + JSON-LD, the similar list
         // for the cross-links that turn each detail page into a
         // hub instead of a leaf in the crawl graph).
-        const programUrl = new URL('/api/marketplace/programs/' + encodeURIComponent(slug), url.origin).toString();
-        const similarUrl = new URL('/api/marketplace/programs/' + encodeURIComponent(slug) + '/similar', url.origin).toString();
+        const programUrl = BACKEND_API + '/api/marketplace/programs/' + encodeURIComponent(slug);
+        const similarUrl = BACKEND_API + '/api/marketplace/programs/' + encodeURIComponent(slug) + '/similar';
         const [progRes, simRes] = await Promise.all([
           fetch(programUrl, { cf: { cacheTtl: 300 } }),
           fetch(similarUrl, { cf: { cacheTtl: 300 } }).catch(() => null),
@@ -293,11 +303,12 @@ export default async function middleware(request) {
     // sitemap already covers discovery, but visible in-page links
     // give us internal-link signal too.
     try {
-      const apiUrl = new URL('/api/blog/posts?limit=200', url.origin).toString();
-      const apiRes = await fetch(apiUrl, { cf: { cacheTtl: 300 } });
+      const apiRes = await fetch(BACKEND_API + '/api/blog/posts?limit=200');
       if (apiRes.ok) {
         const data = await apiRes.json().catch(() => null);
         if (data && Array.isArray(data.posts)) blogIndexPosts = data.posts;
+      } else {
+        console.warn('[edge.blog] non-OK from backend', { status: apiRes.status });
       }
     } catch { /* silent */ }
   } else if (path === '/marketplace') {
@@ -307,14 +318,29 @@ export default async function middleware(request) {
     // gets flagged "Orphan page (has no incoming internal links)".
     // The XML sitemap already lists them, but Ahrefs (and Google's
     // PageRank graph) needs an actual <a href> trail too.
+    //
+    // Hit Railway directly (not the same-origin /api/marketplace/) so
+    // we don't depend on Vercel re-applying its rewrite chain to a
+    // fetch initiated from edge middleware. That ambiguity is what
+    // left Skipcall + Grof orphan: same code, but the fetch was
+    // silently returning the SPA shell instead of JSON, so
+    // marketplaceIndexPartners stayed null and the noscript block
+    // never emitted any /marketplace/:slug anchors.
     try {
-      const apiUrl = new URL('/api/marketplace/', url.origin).toString();
-      const apiRes = await fetch(apiUrl, { cf: { cacheTtl: 300 } });
+      const apiRes = await fetch(BACKEND_API + '/api/marketplace/');
       if (apiRes.ok) {
         const data = await apiRes.json().catch(() => null);
-        if (data && Array.isArray(data.partners)) marketplaceIndexPartners = data.partners;
+        if (data && Array.isArray(data.partners)) {
+          marketplaceIndexPartners = data.partners;
+        } else {
+          console.warn('[edge.marketplace] empty partners array', { status: apiRes.status });
+        }
+      } else {
+        console.warn('[edge.marketplace] non-OK from backend', { status: apiRes.status });
       }
-    } catch { /* silent */ }
+    } catch (err) {
+      console.warn('[edge.marketplace] fetch failed', err && err.message);
+    }
   }
 
   const canonical = SITE + canonicalPath(path);
@@ -711,13 +737,21 @@ export default async function middleware(request) {
     html = html.replace('</head>', '    ' + ldScript + '\n  </head>');
   }
 
+  // Per-path cache TTL. /marketplace and /blog re-fetch the listing
+  // for the noscript injection, so cache them harder (10 min fresh +
+  // 1 day stale-while-revalidate) — the page barely changes between
+  // crawler hits and we don't want every Ahrefs scan to refetch all
+  // tenants/posts. Other matched paths keep the conservative 60 s.
+  const isListingNoscript = path === '/marketplace' || path === '/blog';
+  const cacheControl = isListingNoscript
+    ? 'public, s-maxage=600, stale-while-revalidate=86400'
+    : 'public, s-maxage=60, stale-while-revalidate=300';
+
   return new Response(html, {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      // Let the edge cache briefly so crawlers hitting the same
-      // route don't stampede the API.
-      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      'Cache-Control': cacheControl,
     },
   });
 }
