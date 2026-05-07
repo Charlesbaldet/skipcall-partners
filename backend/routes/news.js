@@ -416,37 +416,31 @@ router.get('/:id/stats', authorize('admin', 'superadmin'), async (req, res) => {
 const partnerRouter = express.Router();
 partnerRouter.use(authenticate);
 
-// GET /api/partner/news — feed across every program this partner belongs to
+// GET /api/partner/news — feed for the partner's CURRENTLY-active tenant.
+//
+// Bug history: this route used to UNION every tenant the partner has
+// an active record in (matched by user.id OR by email). A partner who
+// belongs to two programs (Eficia + Getalead) would log into Eficia
+// and see Getalead's news in the feed. The fix pins the feed to the
+// active tenant from the JWT (req.user.tenantId, set by /switch-space).
+// Switching to the other tenant via the space-switcher gives access
+// to that tenant's news on the next call.
 partnerRouter.get('/', async (req, res) => {
   try {
     if (req.user.role !== 'partner') return res.status(403).json({ error: 'partenaire uniquement' });
-    // Discover every tenant this partner has an active record in — a
-    // partner may exist in multiple programs when an admin re-invites
-    // them with the same email.
-    const { rows: tenantRows } = await query(
-      `SELECT DISTINCT p.tenant_id
-         FROM partners p
-         JOIN users u ON u.partner_id = p.id
-        WHERE u.id = $1 AND p.is_active = true
-        UNION
-        SELECT DISTINCT p.tenant_id
-          FROM partners p
-         WHERE p.is_active = true AND LOWER(p.email) = LOWER($2)`,
-      [req.user.id, req.user.email || '']
-    );
-    const tenantIds = tenantRows.map(r => r.tenant_id).filter(Boolean);
-    if (!tenantIds.length) return res.json({ posts: [] });
+    const tenantId = req.user.tenantId;
+    if (!tenantId) return res.status(400).json({ error: 'tenant_missing' });
 
     const { rows: posts } = await query(
       `SELECT np.*, t.name AS tenant_name, t.logo_url AS tenant_logo,
               (SELECT COUNT(*) FROM news_attachments a WHERE a.news_post_id = np.id)::int AS attachment_count
          FROM news_posts np
          JOIN tenants t ON t.id = np.tenant_id
-        WHERE np.tenant_id = ANY($1::uuid[])
+        WHERE np.tenant_id = $1
           AND np.is_draft = false
           AND (np.published_at IS NULL OR np.published_at <= NOW())
         ORDER BY np.is_pinned DESC, np.published_at DESC`,
-      [tenantIds]
+      [tenantId]
     );
 
     // Auto-mark as read.
@@ -465,17 +459,25 @@ partnerRouter.get('/', async (req, res) => {
 });
 
 // GET /api/partner/news/:id — single post with attachments
+//
+// Tenant gate: the previous query loaded any post by id with no
+// tenant filter, so any partner could fetch any tenant's news post
+// by guessing the UUID — even one from a tenant they don't belong
+// to. Now pinned to the active tenant.
 partnerRouter.get('/:id', async (req, res) => {
   try {
     if (req.user.role !== 'partner') return res.status(403).json({ error: 'partenaire uniquement' });
+    const tenantId = req.user.tenantId;
+    if (!tenantId) return res.status(400).json({ error: 'tenant_missing' });
     const { rows: [post] } = await query(
       `SELECT np.*, t.name AS tenant_name, t.logo_url AS tenant_logo
          FROM news_posts np
          JOIN tenants t ON t.id = np.tenant_id
         WHERE np.id = $1
+          AND np.tenant_id = $2
           AND np.is_draft = false
           AND (np.published_at IS NULL OR np.published_at <= NOW())`,
-      [req.params.id]
+      [req.params.id, tenantId]
     );
     if (!post) return res.status(404).json({ error: 'introuvable' });
     const { rows: attachments } = await query(

@@ -78,10 +78,20 @@ router.use(tenantScope);
 router.use(partnerScope);
 
 // ─── List conversations for current user ───
+// CRITICAL tenant gate: a single users.id can be a participant in
+// conversations across multiple tenants when the same email was
+// re-invited as a partner in two programs (a real production case
+// that surfaced this bug). Filtering only by user_id leaks every
+// such conversation into whichever tenant the user happens to be
+// in right now. The c.tenant_id filter pins the listing to the
+// active tenant from the JWT.
 router.get('/conversations', async (req, res) => {
   try {
+    if (!req.tenantId && !req.skipTenantFilter) {
+      return res.status(400).json({ error: 'tenant_missing' });
+    }
     const { rows } = await query(
-      `SELECT c.*, 
+      `SELECT c.*,
         cp_me.last_read_at,
         u.full_name as created_by_name,
         (SELECT p2.name FROM conversation_participants cp2 JOIN users u3 ON cp2.user_id = u3.id JOIN partners p2 ON u3.partner_id = p2.id WHERE cp2.conversation_id = c.id LIMIT 1) as partner_name,
@@ -93,8 +103,9 @@ router.get('/conversations', async (req, res) => {
        LEFT JOIN users u ON c.created_by = u.id
        LEFT JOIN partners p ON c.partner_id = p.id
        WHERE c.is_archived = false
+         AND c.tenant_id = $2
        ORDER BY c.last_message_at DESC`,
-      [req.user.id]
+      [req.user.id, req.tenantId]
     );
     res.json({ conversations: rows });
   } catch (err) {
@@ -118,13 +129,20 @@ router.post('/conversations', [
 
     const { subject, participant_ids, message, partner_id } = req.body;
 
+    if (!req.tenantId) {
+      return res.status(400).json({ error: 'tenant_missing' });
+    }
+
     await client.query('BEGIN');
 
-    // Create conversation
+    // Create conversation pinned to the requester's active tenant.
+    // The legacy schema had no tenant_id (added in v37); without
+    // setting it on INSERT every new conversation would be
+    // un-filterable and re-introduce the cross-tenant leak.
     const { rows: [conv] } = await client.query(
-      `INSERT INTO conversations (subject, partner_id, created_by, last_message_at)
-       VALUES ($1, $2, $3, NOW()) RETURNING *`,
-      [subject, partner_id || null, req.user.id]
+      `INSERT INTO conversations (subject, partner_id, created_by, tenant_id, last_message_at)
+       VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
+      [subject, partner_id || null, req.user.id, req.tenantId]
     );
 
     // Add creator as participant
@@ -181,10 +199,18 @@ router.post('/conversations', [
 // ─── Get messages for a conversation ───
 router.get('/conversations/:id/messages', async (req, res) => {
   try {
-    // Verify user is participant
+    // Verify user is participant AND the conversation belongs to
+    // the active tenant. The participant check alone allowed
+    // cross-tenant reads when the same users.id was attached to
+    // two tenants' conversations.
     const { rows: participation } = await query(
-      `SELECT 1 FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2`,
-      [req.params.id, req.user.id]
+      `SELECT 1
+         FROM conversation_participants cp
+         JOIN conversations c ON c.id = cp.conversation_id
+        WHERE cp.conversation_id = $1
+          AND cp.user_id = $2
+          AND ($3::uuid IS NULL OR c.tenant_id = $3)`,
+      [req.params.id, req.user.id, req.skipTenantFilter ? null : (req.tenantId || null)]
     );
     if (participation.length === 0) {
       return res.status(403).json({ error: 'Accès interdit' });
@@ -237,10 +263,18 @@ router.post('/conversations/:id/messages', [
       return res.status(400).json({ error: 'Message vide' });
     }
 
-    // Verify user is participant
+    // Verify user is participant AND the conversation belongs to
+    // the active tenant — same gate as the read path so a
+    // cross-tenant participant can't post into a foreign tenant's
+    // thread.
     const { rows: participation } = await query(
-      `SELECT 1 FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2`,
-      [req.params.id, req.user.id]
+      `SELECT 1
+         FROM conversation_participants cp
+         JOIN conversations c ON c.id = cp.conversation_id
+        WHERE cp.conversation_id = $1
+          AND cp.user_id = $2
+          AND ($3::uuid IS NULL OR c.tenant_id = $3)`,
+      [req.params.id, req.user.id, req.skipTenantFilter ? null : (req.tenantId || null)]
     );
     if (participation.length === 0) {
       return res.status(403).json({ error: 'Accès interdit' });
@@ -282,14 +316,20 @@ router.post('/conversations/:id/messages', [
 });
 
 // ─── Get unread count (for nav badge) ───
+// Tenant gate: same reasoning as the conversations list. Without
+// it, the badge in the active tenant counted unread messages
+// across every tenant the user participates in.
 router.get('/unread', async (req, res) => {
   try {
     const { rows: [{ count }] } = await query(
       `SELECT COUNT(DISTINCT m.id) as count
        FROM messages m
        JOIN conversation_participants cp ON cp.conversation_id = m.conversation_id AND cp.user_id = $1
-       WHERE m.created_at > cp.last_read_at AND m.sender_id != $1`,
-      [req.user.id]
+       JOIN conversations c ON c.id = m.conversation_id
+       WHERE m.created_at > cp.last_read_at
+         AND m.sender_id != $1
+         AND ($2::uuid IS NULL OR c.tenant_id = $2)`,
+      [req.user.id, req.skipTenantFilter ? null : (req.tenantId || null)]
     );
     res.json({ unread: parseInt(count) });
   } catch (err) {
@@ -331,8 +371,13 @@ router.get('/users', async (req, res) => {
 router.delete('/conversations/:id', async (req, res) => {
   try {
     const { rows: part } = await query(
-      'SELECT 1 FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2',
-      [req.params.id, req.user.id]
+      `SELECT 1
+         FROM conversation_participants cp
+         JOIN conversations c ON c.id = cp.conversation_id
+        WHERE cp.conversation_id = $1
+          AND cp.user_id = $2
+          AND ($3::uuid IS NULL OR c.tenant_id = $3)`,
+      [req.params.id, req.user.id, req.skipTenantFilter ? null : (req.tenantId || null)]
     );
     if (part.length === 0) return res.status(403).json({ error: 'Accès interdit' });
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {

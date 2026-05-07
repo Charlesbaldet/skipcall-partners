@@ -845,6 +845,37 @@ async function runMigrations() {
     console.error('[migrate.v36] failed:', err.message);
   }
 
+  // v37: tenant scoping on conversations.
+  //
+  // Bug history: the conversations table was created in
+  // migration-v2.sql WITHOUT a tenant_id column — only created_by
+  // (a users.id reference). The legacy superadmin teardown handled
+  // this by using `tenant_id = $1 OR created_by IN (users from
+  // tenant)`, but every other route (the messaging listing, the
+  // GET /:id/messages, the unread badge counter) silently joined
+  // via conversation_participants → user_id without any tenant
+  // gate. A user with the same email re-invited as a partner in a
+  // second tenant ended up with one users.id row and participant
+  // rows in conversations from BOTH tenants — the listing then
+  // surfaced cross-tenant messages.
+  //
+  // Fix: add tenant_id, backfill from created_by's users.tenant_id
+  // for every existing row, and index it. The route fixes that
+  // actually filter on the column ship in the same release.
+  try {
+    await query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS tenant_id UUID`);
+    await query(`UPDATE conversations c
+                    SET tenant_id = u.tenant_id
+                   FROM users u
+                  WHERE u.id = c.created_by
+                    AND c.tenant_id IS NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_conversations_tenant
+                   ON conversations(tenant_id)`);
+    console.log('[messaging] v37 conversations.tenant_id added + backfilled');
+  } catch (err) {
+    console.error('[migrate.v37] failed:', err.message);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {

@@ -1,13 +1,47 @@
 const router = require('express').Router();
 const { query } = require('../db');
+const jwt = require('jsonwebtoken');
 const { authenticate } = require('../middleware/auth');
 const { auditLog } = require('../middleware/security');
 const { getTenantConfig, clearTenantCache } = require('../middleware/tenant');
 
 // ─── Public: Get tenant config (for frontend theming) ───
-router.get('/config', (req, res) => {
-  if (!req.tenant) return res.status(404).json({ error: 'Tenant not found' });
-  res.json({ tenant: getTenantConfig(req.tenant) });
+//
+// Source of truth precedence:
+//   1. The JWT, when an Authorization header is present and valid.
+//      A logged-in partner / admin should always see THEIR tenant's
+//      branding, regardless of which domain the SPA is served from.
+//   2. The host-derived req.tenant (tenantMiddleware) for
+//      unauthenticated visitors — used by the public marketing
+//      pages and the apply form.
+//
+// The previous implementation only looked at req.tenant, so a
+// partner from "Eficia" hitting refboost.io/api/tenants/config
+// got the SPA's default tenant ("Skipcall") back, which the FE
+// then displayed as the branded label everywhere.
+router.get('/config', async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    if (auth && auth.startsWith('Bearer ')) {
+      try {
+        const decoded = jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET);
+        if (decoded?.tenantId) {
+          const { rows } = await query(
+            `SELECT id, name, slug, primary_color, secondary_color, accent_color,
+                    logo_url, domain, settings
+               FROM tenants WHERE id = $1`,
+            [decoded.tenantId]
+          );
+          if (rows[0]) return res.json({ tenant: getTenantConfig(rows[0]) });
+        }
+      } catch { /* fall through to host-derived tenant for invalid/expired tokens */ }
+    }
+    if (!req.tenant) return res.status(404).json({ error: 'Tenant not found' });
+    res.json({ tenant: getTenantConfig(req.tenant) });
+  } catch (err) {
+    console.error('[tenants.config]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // ─── Admin: List all tenants ───
