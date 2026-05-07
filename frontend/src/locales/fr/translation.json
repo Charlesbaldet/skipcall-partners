@@ -3202,7 +3202,31 @@
     }
   },
   "sidebar": {
-    "trash": "Corbeille"
+    "trash": "Corbeille",
+    "progression": "Progression"
+  },
+  "onboarding": {
+    "title": "Bienvenue sur RefBoost !",
+    "subtitle": "Complétez ces étapes pour configurer votre programme partenaires.",
+    "page_title": "Configuration de votre programme",
+    "page_subtitle": "Suivez ces étapes pour tirer le meilleur parti de RefBoost.",
+    "completed": "terminées",
+    "dont_show_again": "Ne plus afficher au démarrage",
+    "configure": "Configurer",
+    "step_billing": "Coordonnées de facturation",
+    "step_billing_desc": "Nom de l'entreprise, adresse, SIRET",
+    "step_program": "Configurer votre programme",
+    "step_program_desc": "Niveaux et seuils de récompense",
+    "step_branding": "Apparence et branding",
+    "step_branding_desc": "Logo, couleurs, modèle de commission",
+    "step_pipeline": "Pipeline et types d'apporteurs",
+    "step_pipeline_desc": "Colonnes du pipeline, catégories de partenaires",
+    "step_marketplace": "Apparaître sur la marketplace",
+    "step_marketplace_desc": "Miniature, description, page programme",
+    "step_banking": "Coordonnées bancaires",
+    "step_banking_desc": "Connexion Qonto pour payer les partenaires",
+    "step_first_partner": "Inviter votre premier partenaire",
+    "step_first_partner_desc": "Ajoutez un partenaire pour démarrer"
   },
   "trash": {
     "title": "Corbeille",

@@ -3202,7 +3202,31 @@
     }
   },
   "sidebar": {
-    "trash": "Papelera"
+    "trash": "Papelera",
+    "progression": "Progreso"
+  },
+  "onboarding": {
+    "title": "¡Bienvenido a RefBoost!",
+    "subtitle": "Completa estos pasos para configurar tu programa de socios.",
+    "page_title": "Configuración del programa",
+    "page_subtitle": "Sigue estos pasos para sacar el máximo partido a RefBoost.",
+    "completed": "completados",
+    "dont_show_again": "No mostrar al iniciar",
+    "configure": "Configurar",
+    "step_billing": "Datos de facturación",
+    "step_billing_desc": "Nombre de la empresa, dirección, NIF/CIF",
+    "step_program": "Configurar tu programa",
+    "step_program_desc": "Niveles y umbrales de recompensa",
+    "step_branding": "Apariencia y marca",
+    "step_branding_desc": "Logo, colores, modelo de comisión",
+    "step_pipeline": "Pipeline y tipos de socios",
+    "step_pipeline_desc": "Columnas del pipeline, categorías de socios",
+    "step_marketplace": "Aparecer en el marketplace",
+    "step_marketplace_desc": "Miniatura, descripción, página del programa",
+    "step_banking": "Datos bancarios",
+    "step_banking_desc": "Conectar Qonto para pagar a los socios",
+    "step_first_partner": "Invitar a tu primer socio",
+    "step_first_partner_desc": "Añade un socio para empezar"
   },
   "trash": {
     "title": "Papelera",

@@ -30,6 +30,7 @@ import SuperAdminPage from './pages/SuperAdminPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import MarketplaceEditorPage from './pages/MarketplaceEditorPage.jsx';
 import ProgrammePage from './pages/ProgrammePage.jsx';
+import ProgressionPage from './pages/ProgressionPage.jsx';
 import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
 import BlogPage from './pages/BlogPage.jsx';
 import BlogPostPage from './pages/BlogPostPage.jsx';
@@ -147,6 +148,7 @@ function AppRoutes() {
       <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout><SuperAdminPage /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
         <Route path="/marketplace-admin" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><MarketplaceEditorPage /></Layout></ProtectedRoute>} />
+        <Route path="/progression" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout><ProgressionPage /></Layout></ProtectedRoute>} />
       {/* Billing now lives inside Settings as the "Facturation" tab.
           The bare /billing URL stays valid (existing emails, billing
           portal redirects) by 301-equivalent forwarding to

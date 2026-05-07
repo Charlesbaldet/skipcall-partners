@@ -3202,7 +3202,31 @@
     }
   },
   "sidebar": {
-    "trash": "Lixeira"
+    "trash": "Lixeira",
+    "progression": "Progresso"
+  },
+  "onboarding": {
+    "title": "Bem-vindo ao RefBoost!",
+    "subtitle": "Complete estas etapas para configurar o seu programa de parceiros.",
+    "page_title": "Configuração do programa",
+    "page_subtitle": "Siga estas etapas para tirar o máximo proveito do RefBoost.",
+    "completed": "concluídas",
+    "dont_show_again": "Não mostrar ao iniciar",
+    "configure": "Configurar",
+    "step_billing": "Dados de faturação",
+    "step_billing_desc": "Nome da empresa, morada, NIF",
+    "step_program": "Configurar o programa",
+    "step_program_desc": "Níveis e limites de recompensa",
+    "step_branding": "Aparência e marca",
+    "step_branding_desc": "Logótipo, cores, modelo de comissão",
+    "step_pipeline": "Pipeline e tipos de parceiros",
+    "step_pipeline_desc": "Colunas do pipeline, categorias de parceiros",
+    "step_marketplace": "Aparecer no marketplace",
+    "step_marketplace_desc": "Miniatura, descrição, página do programa",
+    "step_banking": "Dados bancários",
+    "step_banking_desc": "Ligar o Qonto para pagar aos parceiros",
+    "step_first_partner": "Convidar o primeiro parceiro",
+    "step_first_partner_desc": "Adicione um parceiro para começar"
   },
   "trash": {
     "title": "Lixeira",

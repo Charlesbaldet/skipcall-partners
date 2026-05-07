@@ -294,6 +294,10 @@ class ApiClient {
   getBillingInfo()        { return this.request('/tenants/billing'); }
   updateBillingInfo(data) { return this.request('/tenants/billing', { method: 'PUT', body: JSON.stringify(data) }); }
 
+  // Onboarding checklist — admin-only.
+  getOnboardingStatus() { return this.request('/onboarding/status'); }
+  dismissOnboarding()   { return this.request('/onboarding/dismiss', { method: 'POST' }); }
+
   // Programme (tenant levels)
   getTenantLevels() { return this.request('/levels'); }
   createTenantLevel(data) { return this.request('/levels', { method: 'POST', body: JSON.stringify(data) }); }

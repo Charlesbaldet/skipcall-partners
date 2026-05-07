@@ -3202,7 +3202,31 @@
     }
   },
   "sidebar": {
-    "trash": "Prullenbak"
+    "trash": "Prullenbak",
+    "progression": "Voortgang"
+  },
+  "onboarding": {
+    "title": "Welkom bij RefBoost!",
+    "subtitle": "Voltooi deze stappen om je partnerprogramma in te stellen.",
+    "page_title": "Programma-instellingen",
+    "page_subtitle": "Volg deze stappen om het maximale uit RefBoost te halen.",
+    "completed": "voltooid",
+    "dont_show_again": "Niet meer tonen bij opstarten",
+    "configure": "Instellen",
+    "step_billing": "Facturatiegegevens",
+    "step_billing_desc": "Bedrijfsnaam, adres, KvK-nummer",
+    "step_program": "Programma configureren",
+    "step_program_desc": "Niveaus en beloningsdrempels",
+    "step_branding": "Uiterlijk en branding",
+    "step_branding_desc": "Logo, kleuren, commissiemodel",
+    "step_pipeline": "Pipeline en partnertypes",
+    "step_pipeline_desc": "Pipelinekolommen, partnercategorieën",
+    "step_marketplace": "Verschijnen op de marketplace",
+    "step_marketplace_desc": "Miniatuur, beschrijving, programmapagina",
+    "step_banking": "Bankgegevens",
+    "step_banking_desc": "Qonto verbinden om partners te betalen",
+    "step_first_partner": "Nodig je eerste partner uit",
+    "step_first_partner_desc": "Voeg een partner toe om te starten"
   },
   "trash": {
     "title": "Prullenbak",

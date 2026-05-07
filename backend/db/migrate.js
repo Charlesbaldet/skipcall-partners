@@ -767,6 +767,19 @@ async function runMigrations() {
     console.error('[migrate.v33] failed:', err.message);
   }
 
+  // v34: onboarding checklist state on tenants. The checklist itself
+  // is computed dynamically from the tenant's data on every read
+  // (see routes/onboarding.js); these two columns only persist the
+  // admin's explicit dismiss + a sticky "you finished it" timestamp.
+  try {
+    await query(`ALTER TABLE tenants
+      ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS onboarding_dismissed    BOOLEAN DEFAULT FALSE`);
+    console.log('[onboarding] v34 tenants.onboarding_* columns');
+  } catch (err) {
+    console.error('[migrate.v34] failed:', err.message);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {

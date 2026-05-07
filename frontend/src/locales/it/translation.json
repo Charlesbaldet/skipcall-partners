@@ -3202,7 +3202,31 @@
     }
   },
   "sidebar": {
-    "trash": "Cestino"
+    "trash": "Cestino",
+    "progression": "Avanzamento"
+  },
+  "onboarding": {
+    "title": "Benvenuto su RefBoost!",
+    "subtitle": "Completa questi passaggi per configurare il tuo programma partner.",
+    "page_title": "Configurazione del programma",
+    "page_subtitle": "Segui questi passaggi per sfruttare al meglio RefBoost.",
+    "completed": "completati",
+    "dont_show_again": "Non mostrare all'avvio",
+    "configure": "Configura",
+    "step_billing": "Dati di fatturazione",
+    "step_billing_desc": "Nome azienda, indirizzo, partita IVA",
+    "step_program": "Configura il tuo programma",
+    "step_program_desc": "Livelli e soglie di ricompensa",
+    "step_branding": "Aspetto e branding",
+    "step_branding_desc": "Logo, colori, modello di commissione",
+    "step_pipeline": "Pipeline e tipi di partner",
+    "step_pipeline_desc": "Colonne della pipeline, categorie di partner",
+    "step_marketplace": "Apparire nel marketplace",
+    "step_marketplace_desc": "Miniatura, descrizione, pagina del programma",
+    "step_banking": "Dati bancari",
+    "step_banking_desc": "Collega Qonto per pagare i partner",
+    "step_first_partner": "Invita il tuo primo partner",
+    "step_first_partner_desc": "Aggiungi un partner per iniziare"
   },
   "trash": {
     "title": "Cestino",

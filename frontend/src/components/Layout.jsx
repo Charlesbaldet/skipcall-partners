@@ -4,7 +4,8 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2 } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2, ListChecks } from 'lucide-react';
+import OnboardingChecklist from './OnboardingChecklist.jsx';
 
 const C = {
   p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
@@ -120,6 +121,12 @@ export default function Layout({ children }) {
   const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
   // Per-category unread counts driving the sidebar red dots.
   const [unreadByCat, setUnreadByCat] = useState({});
+  // Onboarding checklist state. `null` = not loaded yet; otherwise
+  // the percentage drives both the sidebar "Progression" entry and
+  // whether the popup auto-opens on mount.
+  const [onboardingPct, setOnboardingPct] = useState(null);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(true);
+  const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -135,6 +142,26 @@ export default function Layout({ children }) {
   // Commercial uses the admin nav minus admin-only entries (Billing).
   let nav = isSuperAdmin ? SUPERADMIN_NAV : isPartner ? PARTNER_NAV : ADMIN_NAV;
   if (isCommercial) nav = nav.filter(it => !it.adminOnly);
+
+  // Inject the Progression entry into the bottom nav for admins who
+  // haven't reached 100%. Spliced rather than baked into ADMIN_NAV
+  // so the percentage badge stays live without rebuilding the
+  // array in a useMemo. Pinned BEFORE Notifications/Trash so the
+  // visual order (Progression → Notifications → Corbeille) matches
+  // the spec.
+  if (isAdmin && onboardingPct !== null && onboardingPct < 100) {
+    const firstBottomIdx = nav.findIndex(it => it.bottom);
+    const progressionItem = {
+      bottom: true, to: '/progression', icon: ListChecks,
+      label: t('sidebar.progression', 'Progression'),
+      progressionBadge: onboardingPct + '%',
+    };
+    if (firstBottomIdx >= 0) {
+      nav = [...nav.slice(0, firstBottomIdx), progressionItem, ...nav.slice(firstBottomIdx)];
+    } else {
+      nav = [...nav, progressionItem];
+    }
+  }
 
   useEffect(() => {
     if (isSuperAdmin) return;
@@ -152,6 +179,26 @@ export default function Layout({ children }) {
     const interval = setInterval(fetchCounts, 30000);
     return () => clearInterval(interval);
   }, [isAdmin, isCommercial, isSuperAdmin]);
+
+  // Onboarding fetch + auto-open. Admin-only because the
+  // /onboarding/status endpoint is admin-gated; commercial users
+  // get nothing extra in their sidebar. The popup auto-opens once
+  // per session when the admin hasn't dismissed and isn't yet at
+  // 100% — re-fetching when the user's role flips so a switch-
+  // space into a fresh tenant resurfaces the popup.
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    api.getOnboardingStatus()
+      .then(d => {
+        if (cancelled || !d) return;
+        setOnboardingPct(typeof d.percentage === 'number' ? d.percentage : null);
+        setOnboardingDismissed(!!d.dismissed);
+        if (!d.dismissed && d.percentage < 100) setShowOnboardingPopup(true);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isAdmin, user?.tenantId]);
 
   // Auto-mark categories as read when the user lands on a page whose
   // nav item owns them. Fires once per path change so clicking around
@@ -522,6 +569,11 @@ export default function Layout({ children }) {
             >
               <ItemIcon Icon={item.icon} hasDot={hasUnread}/>
               <span style={{ flex: 1 }}>{item.label}</span>
+              {item.progressionBadge && (
+                <span style={{ background: C.p, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
+                  {item.progressionBadge}
+                </span>
+              )}
               {hasUnread && (
                 <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
                   {count}
@@ -567,6 +619,9 @@ export default function Layout({ children }) {
       </main>
 
       {user?.mustChangePassword && <ChangePasswordModal user={user} onSuccess={handlePasswordChanged}/>}
+      {showOnboardingPopup && (
+        <OnboardingChecklist onClose={() => setShowOnboardingPopup(false)} />
+      )}
     </div>
   );
 }

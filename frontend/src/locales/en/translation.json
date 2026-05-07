@@ -3202,7 +3202,31 @@
     }
   },
   "sidebar": {
-    "trash": "Trash"
+    "trash": "Trash",
+    "progression": "Progress"
+  },
+  "onboarding": {
+    "title": "Welcome to RefBoost!",
+    "subtitle": "Complete these steps to set up your partner program.",
+    "page_title": "Program setup",
+    "page_subtitle": "Follow these steps to get the most out of RefBoost.",
+    "completed": "completed",
+    "dont_show_again": "Don't show again on startup",
+    "configure": "Configure",
+    "step_billing": "Billing details",
+    "step_billing_desc": "Company name, address, registration number",
+    "step_program": "Configure your program",
+    "step_program_desc": "Tiers and reward thresholds",
+    "step_branding": "Appearance and branding",
+    "step_branding_desc": "Logo, colors, commission model",
+    "step_pipeline": "Pipeline and partner types",
+    "step_pipeline_desc": "Pipeline columns, partner categories",
+    "step_marketplace": "Appear on the marketplace",
+    "step_marketplace_desc": "Thumbnail, description, program page",
+    "step_banking": "Banking details",
+    "step_banking_desc": "Connect Qonto to pay partners",
+    "step_first_partner": "Invite your first partner",
+    "step_first_partner_desc": "Add a partner to get started"
   },
   "trash": {
     "title": "Trash",
