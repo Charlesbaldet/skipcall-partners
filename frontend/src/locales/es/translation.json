@@ -1663,7 +1663,9 @@
     "pennylane_how_it_works": "Cómo funciona:",
     "pennylane_step1": "Comisión aprobada → Factura de proveedor creada en Pennylane",
     "pennylane_step2": "El socio se crea como proveedor en Pennylane",
-    "pennylane_step3": "Pago de Qonto realizado → Factura marcada como pagada"
+    "pennylane_step3": "Pago de Qonto realizado → Factura marcada como pagada",
+    "connected_short": "Conectado",
+    "configure": "Configurar"
   },
   "status": {
     "new": "Nuevo",
@@ -1681,93 +1683,27 @@
     "Platinum": "Platino"
   },
   "onboarding": {
-    "skip": "Saltar este paso",
-    "next": "Siguiente →",
-    "back": "Atrás",
-    "finish": "Finalizar configuración",
-    "subtitle": "Configura tu espacio en unos pocos pasos",
-    "welcome_title": "Bienvenido a RefBoost",
-    "createUser_title": "Crea tu equipo",
-    "createPartner_title": "Invita a tu primer socio",
-    "customize_title": "Personaliza tu espacio",
-    "publicLink_title": "Tu enlace de referido",
-    "marketplace_title": "Tu programa en el marketplace",
-    "done_title": "Todo listo",
-    "step_of": "Paso {{current}} de {{total}}",
-    "step_2_desc": "Añade un miembro del equipo (admin o comercial). Recibirá un email con sus credenciales.",
-    "step_3_desc": "Personaliza la apariencia de tu espacio",
-    "step_4_desc": "Configura tu programa de referidos",
-    "step_5_desc": "Añade socios a tu programa",
-    "step_6_desc": "Conecta tus herramientas favoritas",
-    "step_7_desc": "Publica tu programa en el marketplace",
-    "full_name": "Nombre completo",
-    "contact_name": "Contacto (nombre completo)",
-    "company_name": "Nombre de la empresa",
-    "first_name": "Nombre",
-    "last_name": "Apellido",
-    "phone": "Teléfono",
-    "website": "Sitio web",
-    "company": "Empresa",
-    "role": "Rol",
-    "email": "Email",
-    "role_commercial": "Comercial",
-    "role_admin_opt": "Admin",
-    "role_partner_opt": "Socio",
-    "create_user": "Crear usuario →",
-    "create_partner": "Crear socio →",
-    "user_created": "Usuario creado con éxito",
-    "partner_added": "Socio añadido con éxito",
-    "config_saved": "Configuración guardada",
-    "level_name": "Nombre del nivel",
-    "team_label": "equipo",
-    "prev": "Anterior",
-    "step_1_desc": "Crea tu equipo, invita a tu primer socio, personaliza tus colores y obtén tu enlace público de registro. Tarda un máximo de 3 minutos y puedes saltar cualquier paso.",
-    "mrr_label": "MRR — Ingresos recurrentes mensuales",
-    "arr_label": "ARR — Ingresos recurrentes anuales",
-    "ca_label": "Ingresos — Ingresos totales",
-    "link_desc": "Comparte este enlace con tus socios de referidos. Ellos pueden registrarse solos y tú validarás sus solicitudes.",
-    "sector": "Sector *",
-    "icp": "ICP principal",
-    "short_description": "Descripción breve *",
-    "marketplace_visible": "Mostrar en el marketplace",
-    "createPartner_desc_long": "Añade un socio (referente comercial). Tendrá acceso a su propio espacio para enviar leads.",
-    "customize_desc_long": "Adapta los colores a tu marca (opcional — puedes cambiarlos más tarde en Ajustes).",
-    "customize_company_placeholder": "Tu empresa",
-    "customize_revenue_label": "Modelo de ingresos",
-    "marketplace_desc_long": "Rellena tus datos para aparecer en el marketplace. Puedes editarlos en cualquier momento en Ajustes.",
-    "marketplace_choose": "-- Elegir --",
-    "marketplace_website_placeholder": "https://tu-sitio.com",
-    "marketplace_icp_placeholder": "Ej.: PYMES, startups B2B…",
-    "marketplace_description_placeholder": "Describe tu servicio en 2-3 frases…",
-    "marketplace_active": "Activo",
-    "marketplace_inactive": "Inactivo",
-    "sector_saas_logiciel": "SaaS / Software",
-    "sector_conseil_services": "Consultoría y Servicios",
-    "sector_finance_fintech": "Finanzas y Fintech",
-    "sector_rh_recrutement": "RRHH y Reclutamiento",
-    "sector_marketing_communication": "Marketing y Comunicación",
-    "sector_immobilier": "Inmobiliario",
-    "sector_commerce": "Comercio",
-    "sector_formation": "Formación",
-    "sector_juridique": "Legal",
-    "sector_industrie": "Industria",
-    "sector_autre": "Otro",
-    "revenue_other": "Otro",
-    "in_progress": "En curso...",
-    "error_email_name_required": "Email y nombre obligatorios",
-    "error_generic": "Error",
-    "error_all_fields_required": "Todos los campos son obligatorios",
-    "error_save_failed": "Error al guardar",
-    "user_created_success_code": "Credenciales enviadas por email a {{email}}",
-    "partner_added_success_code": "Credenciales enviadas por email a {{email}}",
-    "space_customized": "¡Tu espacio está personalizado!",
-    "optional": "opcional",
-    "close_aria": "Cerrar",
-    "email_placeholder_user": "juan@empresa.com",
-    "name_placeholder_user": "Juan Pérez",
-    "company_placeholder_example": "Acme Consulting",
-    "contact_placeholder_example": "Juana Pérez",
-    "partner_email_placeholder": "juana@acme.com"
+    "title": "¡Bienvenido a RefBoost!",
+    "subtitle": "Completa estos pasos para configurar tu programa de socios.",
+    "page_title": "Configuración del programa",
+    "page_subtitle": "Sigue estos pasos para sacar el máximo partido a RefBoost.",
+    "completed": "completados",
+    "dont_show_again": "No mostrar al iniciar",
+    "configure": "Configurar",
+    "step_billing": "Datos de facturación",
+    "step_billing_desc": "Nombre de la empresa, dirección, NIF/CIF",
+    "step_program": "Configurar tu programa",
+    "step_program_desc": "Niveles y umbrales de recompensa",
+    "step_branding": "Apariencia y marca",
+    "step_branding_desc": "Logo, colores, modelo de comisión",
+    "step_pipeline": "Pipeline y tipos de socios",
+    "step_pipeline_desc": "Columnas del pipeline, categorías de socios",
+    "step_marketplace": "Aparecer en el marketplace",
+    "step_marketplace_desc": "Miniatura, descripción, página del programa",
+    "step_banking": "Datos bancarios",
+    "step_banking_desc": "Conectar Qonto para pagar a los socios",
+    "step_first_partner": "Invitar a tu primer socio",
+    "step_first_partner_desc": "Añade un socio para empezar"
   },
   "blog": {
     "subtitle": "Consejos, estrategias y recursos",
@@ -2870,12 +2806,14 @@
       "categories": {
         "crm": "CRM",
         "payments": "Pagos",
+        "accounting": "Contabilidad",
         "auth": "Autenticación"
       },
       "filters": {
         "all": "Todas",
         "crm": "CRM",
         "payments": "Pagos",
+        "accounting": "Contabilidad",
         "auth": "Autenticación"
       }
     },
@@ -3155,6 +3093,75 @@
         }
       ]
     },
+    "pennylane": {
+      "name": "Pennylane",
+      "shortDescription": "Crea automáticamente facturas de proveedor en Pennylane por cada comisión aprobada.",
+      "heroSubtitle": "Automatiza la contabilidad de tus socios. Cada comisión aprobada genera una factura de proveedor en Pennylane, y el pago Qonto la marca como pagada — sin entrada manual.",
+      "features": [
+        {
+          "title": "Facturas de proveedor automáticas",
+          "description": "En cuanto se aprueba una comisión en RefBoost, se crea en Pennylane una factura de proveedor con los importes correctos: base, IVA y total."
+        },
+        {
+          "title": "IVA calculado automáticamente",
+          "description": "Tipos estándar franceses (20 %, 10 %, 5,5 %, exento) mapeados. Para otros países, código IVA genérico de Pennylane."
+        },
+        {
+          "title": "Socios creados como proveedores",
+          "description": "Cada socio se convierte en un proveedor Pennylane con sus datos y NIF intracomunitario — una vez, luego reutilizado."
+        },
+        {
+          "title": "Conciliación automática con Qonto",
+          "description": "Cuando se ejecuta la transferencia SEPA Qonto, la factura correspondiente pasa a \"pagada\" en Pennylane automáticamente."
+        }
+      ],
+      "steps": [
+        {
+          "title": "Conecta Pennylane",
+          "description": "Pega tu token API de Pennylane en Ajustes → Integraciones. Se valida contra /me antes de guardarse."
+        },
+        {
+          "title": "Aprueba una comisión",
+          "description": "Al aprobar una comisión, RefBoost crea el proveedor (si no existe) y luego la factura de proveedor en Pennylane."
+        },
+        {
+          "title": "Paga vía Qonto",
+          "description": "La transferencia Qonto ejecutada marca la factura como pagada en Pennylane automáticamente. Ninguna entrada contable adicional."
+        }
+      ],
+      "faqs": [
+        {
+          "q": "¿Qué token API de Pennylane usar?",
+          "a": "Un token de usuario, creado en Pennylane → Ajustes → Desarrolladores → Crear un token. Basta con permisos de lectura/creación en facturas de proveedor."
+        },
+        {
+          "q": "¿Qué ocurre si Pennylane no está disponible temporalmente?",
+          "a": "RefBoost nunca bloquea el flujo de comisión — la aprobación y la transferencia Qonto siguen funcionando. Los errores se registran y puedes reintentar desde admin."
+        },
+        {
+          "q": "¿Qué tipos de IVA se admiten?",
+          "a": "Tipos estándar franceses (20 %, 10 %, 5,5 %, 0 / exento) se mapean a códigos Pennylane. Otros tipos (DE 19 %, CH 8,1 %…) usan código genérico."
+        },
+        {
+          "q": "¿Puedo desconectar sin perder el historial?",
+          "a": "Sí. Desconectar detiene la creación nueva; las facturas ya creadas permanecen en Pennylane y conservan su vínculo con las comisiones RefBoost."
+        }
+      ],
+      "roi": [
+        {
+          "metric": "0 entradas",
+          "description": "Se acabaron las facturas de proveedor manuales — todo está automatizado."
+        },
+        {
+          "metric": "100 % trazabilidad",
+          "description": "Cada comisión está vinculada a su factura con base / IVA / total correctos."
+        },
+        {
+          "metric": "Conciliación auto",
+          "description": "El pago Qonto marca la factura como pagada — sin doble contabilidad."
+        }
+      ]
+    },
     "google-sso": {
       "name": "Google SSO",
       "shortDescription": "Conexión segura con Google para tu equipo y socios. Cero contraseñas que gestionar.",
@@ -3228,29 +3235,6 @@
   "sidebar": {
     "trash": "Papelera",
     "progression": "Progreso"
-  },
-  "onboarding": {
-    "title": "¡Bienvenido a RefBoost!",
-    "subtitle": "Completa estos pasos para configurar tu programa de socios.",
-    "page_title": "Configuración del programa",
-    "page_subtitle": "Sigue estos pasos para sacar el máximo partido a RefBoost.",
-    "completed": "completados",
-    "dont_show_again": "No mostrar al iniciar",
-    "configure": "Configurar",
-    "step_billing": "Datos de facturación",
-    "step_billing_desc": "Nombre de la empresa, dirección, NIF/CIF",
-    "step_program": "Configurar tu programa",
-    "step_program_desc": "Niveles y umbrales de recompensa",
-    "step_branding": "Apariencia y marca",
-    "step_branding_desc": "Logo, colores, modelo de comisión",
-    "step_pipeline": "Pipeline y tipos de socios",
-    "step_pipeline_desc": "Columnas del pipeline, categorías de socios",
-    "step_marketplace": "Aparecer en el marketplace",
-    "step_marketplace_desc": "Miniatura, descripción, página del programa",
-    "step_banking": "Datos bancarios",
-    "step_banking_desc": "Conectar Qonto para pagar a los socios",
-    "step_first_partner": "Invitar a tu primer socio",
-    "step_first_partner_desc": "Añade un socio para empezar"
   },
   "trash": {
     "title": "Papelera",

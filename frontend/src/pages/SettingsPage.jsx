@@ -3398,10 +3398,24 @@ function PennylaneSection() {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Inline expansion below the row card. Auto-opens on first load
+  // when no token is on file (so the admin doesn't have to click
+  // Connecter to discover the input field), and stays closed once
+  // connected — clicking Configurer re-opens it.
+  const [expanded, setExpanded] = useState(false);
 
   const load = async () => {
-    try { const d = await api.getPennylaneStatus(); setStatus(d); }
-    catch (err) { setStatus({ connected: false, enabled: false, error: err.message }); }
+    try {
+      const d = await api.getPennylaneStatus();
+      setStatus(d);
+      // First-load default: open the panel when there's no token,
+      // collapse it when there is. After that, the admin's clicks
+      // win.
+      setExpanded(prev => prev || !d?.connected);
+    } catch (err) {
+      setStatus({ connected: false, enabled: false, error: err.message });
+      setExpanded(true);
+    }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -3413,6 +3427,7 @@ function PennylaneSection() {
       await api.updatePennylaneSettings({ api_token: token, enabled: true });
       setToken('');
       await load();
+      setExpanded(false);
       showToast(t('settings.pennylane_connected_success', 'Connexion à Pennylane réussie !'), 'success');
     } catch (err) {
       showToast(err.message || t('settings.pennylane_connect_error', 'Token invalide.'), 'error');
@@ -3431,6 +3446,7 @@ function PennylaneSection() {
     try {
       await api.disconnectPennylane();
       await load();
+      setExpanded(true);
     } catch (err) { showToast(err.message, 'error'); }
   };
 
@@ -3442,145 +3458,184 @@ function PennylaneSection() {
     } catch (err) { showToast(err.message, 'error'); }
   };
 
+  if (loading) {
+    return <div style={{ color: '#94a3b8', padding: 16, fontSize: 13 }}>{t('settings.loading', 'Chargement…')}</div>;
+  }
+
+  const connected = !!status?.connected;
+  const companyName = status?.company?.name || status?.company?.email
+    || t('settings.pennylane_connected_default', 'Espace connecté');
+
+  // ── Row card — same visual structure as Qonto's IntegrationRow:
+  //    logo (rounded square) + name + description on the left,
+  //    status pill + Configurer/Connecter button on the right.
+  //    Click anywhere on the right-hand controls toggles the
+  //    inline expansion below.
   return (
     <div>
-      <p style={{ fontSize: 13, color: '#64748b', marginTop: 0, marginBottom: 16 }}>
-        {t('settings.pennylane_subtitle', 'Créez automatiquement des factures fournisseurs dans Pennylane pour chaque commission.')}
-      </p>
-
-      {loading ? (
-        <div style={{ color: '#94a3b8', padding: 16 }}>{t('settings.loading', 'Chargement…')}</div>
-      ) : status?.connected ? (
-        <>
-          {/* Connected card */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-            padding: 16, borderRadius: 12,
-            border: '1px solid #bbf7d0', background: '#f0fdf4', marginBottom: 16,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10, background: '#fff',
-                border: '1px solid #e2e8f0',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <BookOpen size={20} color="#7c3aed" />
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#15803d' }}>
-                  {t('settings.pennylane_connected', 'Connecté à Pennylane')}
-                </div>
-                <div style={{ fontSize: 12, color: '#16a34a' }}>
-                  {status.company?.name || status.company?.email || t('settings.pennylane_connected_default', 'Espace connecté')}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={handleDisconnect}
-              style={{
-                background: 'transparent', border: 'none', color: '#dc2626',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 6,
-              }}
-            >
-              {t('settings.disconnect', 'Déconnecter')}
-            </button>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: 16, border: '1px solid #e5e7eb', borderRadius: 12,
+        background: '#fff',
+      }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 8, background: '#fff',
+          border: '1px solid #e5e7eb', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 4,
+        }}>
+          <img
+            src="/images/integrations/pennylane-logo.svg"
+            alt="Pennylane"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 500, fontSize: 14, color: '#0f172a' }}>Pennylane</div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+            {t('settings.pennylane_subtitle', 'Créez automatiquement des factures fournisseurs dans Pennylane pour chaque commission.')}
           </div>
-
-          {/* Enable / disable toggle */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-            padding: '14px 16px', borderRadius: 12,
-            border: '1px solid #e2e8f0', background: '#fff', marginBottom: 24,
-          }}>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
-                {t('settings.pennylane_auto_invoice', 'Création automatique des factures')}
-              </div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-                {t('settings.pennylane_auto_invoice_desc', 'Créer une facture fournisseur dans Pennylane à chaque commission approuvée.')}
-              </div>
-            </div>
-            <button
-              onClick={handleToggle}
-              aria-pressed={!!status.enabled}
-              style={{
-                width: 44, height: 24, borderRadius: 999,
-                background: status.enabled ? '#059669' : '#cbd5e1',
-                border: 'none', cursor: 'pointer', position: 'relative',
-                transition: 'background 0.15s', flexShrink: 0,
-              }}
-            >
-              <span style={{
-                position: 'absolute', top: 2, left: status.enabled ? 22 : 2,
-                width: 20, height: 20, borderRadius: '50%', background: '#fff',
-                transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              }} />
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Disconnected: token input */}
-          {status?.error && status?.error !== 'Pennylane: API token requis' && (
-            <div style={{
-              padding: '10px 14px', borderRadius: 10, marginBottom: 16,
-              background: '#fef2f2', border: '1px solid #fecaca',
-              color: '#b91c1c', fontSize: 12,
-            }}>
-              {t('settings.pennylane_token_invalid', 'Le token enregistré a été refusé par Pennylane. Saisissez-en un nouveau.')}
+          {connected && (
+            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>
+              {companyName}
             </div>
           )}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 600, marginBottom: 6 }}>
-              {t('settings.pennylane_token', 'Token API Pennylane')}
-            </label>
-            <input
-              type="password"
-              value={token}
-              onChange={e => setToken(e.target.value)}
-              placeholder="plk_xxxxxxxxxxxxxxxxxxxxxxxx"
-              style={{
-                width: '100%', padding: '10px 12px', borderRadius: 10,
-                border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'monospace',
-                boxSizing: 'border-box',
-              }}
-            />
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-              {t('settings.pennylane_token_help', 'Disponible dans Pennylane → Paramètres → Développeurs → Créer un token.')}
-            </div>
-          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          {connected && (
+            <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 500 }}>
+              {t('settings.connected_short', 'Connecté')}
+            </span>
+          )}
           <button
-            onClick={handleConnect}
-            disabled={submitting || !token}
+            onClick={() => setExpanded(e => !e)}
             style={{
-              padding: '10px 18px', borderRadius: 10, border: 'none',
-              background: '#059669', color: '#fff', fontSize: 13, fontWeight: 600,
-              cursor: (submitting || !token) ? 'not-allowed' : 'pointer',
-              opacity: (submitting || !token) ? 0.6 : 1,
-              marginBottom: 24,
+              fontSize: 12, padding: '6px 14px',
+              border: '1px solid #e5e7eb', borderRadius: 8,
+              background: '#fff', color: '#0f172a',
+              fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            {submitting ? t('settings.connecting', 'Connexion…') : t('settings.connect', 'Connecter')}
+            {connected
+              ? t('settings.configure', 'Configurer')
+              : t('settings.connect', 'Connecter')}
           </button>
-        </>
-      )}
-
-      {/* "How it works" panel — always visible. The integration is
-          opaque enough that it's worth restating the three-step
-          flow even after connection. */}
-      <div style={{
-        background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12,
-        padding: 16, fontSize: 12, color: '#475569',
-      }}>
-        <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
-          {t('settings.pennylane_how_it_works', 'Comment ça fonctionne :')}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div>1. {t('settings.pennylane_step1', 'Commission approuvée → Facture fournisseur créée dans Pennylane')}</div>
-          <div>2. {t('settings.pennylane_step2', 'Le partenaire est créé comme fournisseur dans Pennylane')}</div>
-          <div>3. {t('settings.pennylane_step3', 'Paiement Qonto effectué → Facture marquée comme payée')}</div>
         </div>
       </div>
+
+      {/* Expansion panel: token input when disconnected, toggle +
+          disconnect link when connected. The "How it works" recap
+          stays inside so admins exploring the integration can read
+          it without leaving the section. */}
+      {expanded && (
+        <div style={{
+          marginTop: 12, padding: 16, borderRadius: 12,
+          background: '#f8fafc', border: '1px solid #e5e7eb',
+        }}>
+          {connected ? (
+            <>
+              {/* Auto-create toggle */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+                padding: '12px 14px', borderRadius: 10,
+                border: '1px solid #e5e7eb', background: '#fff',
+                marginBottom: 14,
+              }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                    {t('settings.pennylane_auto_invoice', 'Création automatique des factures')}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    {t('settings.pennylane_auto_invoice_desc', 'Créer une facture fournisseur dans Pennylane à chaque commission approuvée.')}
+                  </div>
+                </div>
+                <button
+                  onClick={handleToggle}
+                  aria-pressed={!!status.enabled}
+                  style={{
+                    width: 44, height: 24, borderRadius: 999,
+                    background: status.enabled ? '#059669' : '#cbd5e1',
+                    border: 'none', cursor: 'pointer', position: 'relative',
+                    transition: 'background 0.15s', flexShrink: 0,
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute', top: 2, left: status.enabled ? 22 : 2,
+                    width: 20, height: 20, borderRadius: '50%', background: '#fff',
+                    transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  }} />
+                </button>
+              </div>
+              <button
+                onClick={handleDisconnect}
+                style={{
+                  background: 'transparent', border: 'none', color: '#dc2626',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0,
+                }}
+              >
+                {t('settings.disconnect', 'Déconnecter')}
+              </button>
+            </>
+          ) : (
+            <>
+              {status?.error && status?.error !== 'Pennylane: API token requis' && (
+                <div style={{
+                  padding: '8px 12px', borderRadius: 8, marginBottom: 12,
+                  background: '#fef2f2', border: '1px solid #fecaca',
+                  color: '#b91c1c', fontSize: 12,
+                }}>
+                  {t('settings.pennylane_token_invalid', 'Le token enregistré a été refusé par Pennylane. Saisissez-en un nouveau.')}
+                </div>
+              )}
+              <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 600, marginBottom: 6 }}>
+                {t('settings.pennylane_token', 'Token API Pennylane')}
+              </label>
+              <input
+                type="password"
+                value={token}
+                onChange={e => setToken(e.target.value)}
+                placeholder="plk_xxxxxxxxxxxxxxxxxxxxxxxx"
+                style={{
+                  width: '100%', padding: '9px 12px', borderRadius: 8,
+                  border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'monospace',
+                  boxSizing: 'border-box', background: '#fff',
+                }}
+              />
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, marginBottom: 12 }}>
+                {t('settings.pennylane_token_help', 'Disponible dans Pennylane → Paramètres → Développeurs → Créer un token.')}
+              </div>
+              <button
+                onClick={handleConnect}
+                disabled={submitting || !token}
+                style={{
+                  padding: '8px 16px', borderRadius: 8, border: 'none',
+                  background: '#059669', color: '#fff', fontSize: 13, fontWeight: 600,
+                  cursor: (submitting || !token) ? 'not-allowed' : 'pointer',
+                  opacity: (submitting || !token) ? 0.6 : 1,
+                  fontFamily: 'inherit',
+                }}
+              >
+                {submitting ? t('settings.connecting', 'Connexion…') : t('settings.connect', 'Connecter')}
+              </button>
+            </>
+          )}
+
+          {/* "How it works" — always inside the expansion */}
+          <div style={{
+            marginTop: 16, paddingTop: 14, borderTop: '1px solid #e5e7eb',
+            fontSize: 11, color: '#475569',
+          }}>
+            <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+              {t('settings.pennylane_how_it_works', 'Comment ça fonctionne :')}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div>1. {t('settings.pennylane_step1', 'Commission approuvée → Facture fournisseur créée dans Pennylane')}</div>
+              <div>2. {t('settings.pennylane_step2', 'Le partenaire est créé comme fournisseur dans Pennylane')}</div>
+              <div>3. {t('settings.pennylane_step3', 'Paiement Qonto effectué → Facture marquée comme payée')}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

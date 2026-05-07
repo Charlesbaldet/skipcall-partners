@@ -43,7 +43,17 @@ export const INTEGRATIONS = [
     logoSrc: '/images/integrations/qonto-logo.svg',
     seoTitle: 'Intégration Qonto — RefBoost',
     seoDescription: 'Automatisez le paiement de vos commissions partenaires via Qonto. Virements SEPA en un clic avec validation SCA sécurisée.',
-    crossLinks: ['notion', 'hubspot', 'google-sso'],
+    crossLinks: ['notion', 'hubspot', 'pennylane'],
+  },
+  {
+    slug: 'pennylane',
+    category: 'accounting',
+    available: true,
+    plan: null,
+    logoSrc: '/images/integrations/pennylane-logo.svg',
+    seoTitle: 'Intégration Pennylane — RefBoost',
+    seoDescription: 'Automatisez la comptabilité de vos commissions partenaires. Chaque commission approuvée crée une facture fournisseur dans Pennylane, marquée payée dès le virement Qonto.',
+    crossLinks: ['qonto', 'notion', 'hubspot'],
   },
   {
     slug: 'google-sso',
@@ -57,7 +67,7 @@ export const INTEGRATIONS = [
   },
 ];
 
-export const CATEGORY_KEYS = ['all', 'crm', 'payments', 'auth'];
+export const CATEGORY_KEYS = ['all', 'crm', 'payments', 'accounting', 'auth'];
 
 export function getIntegration(slug) {
   return INTEGRATIONS.find(i => i.slug === slug) || null;

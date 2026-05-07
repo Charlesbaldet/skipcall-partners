@@ -112,6 +112,7 @@ export default function IntegrationsIndexPage() {
     all: INTEGRATIONS.length,
     crm: INTEGRATIONS.filter(i => i.category === 'crm').length,
     payments: INTEGRATIONS.filter(i => i.category === 'payments').length,
+    accounting: INTEGRATIONS.filter(i => i.category === 'accounting').length,
     auth: INTEGRATIONS.filter(i => i.category === 'auth').length,
   };
 
@@ -119,7 +120,7 @@ export default function IntegrationsIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: t('integrations.index.seoTitle', 'Intégrations RefBoost'),
-    description: t('integrations.index.seoDescription', "Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Google SSO."),
+    description: t('integrations.index.seoDescription', "Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Pennylane, Google SSO."),
     url: SITE + '/integrations',
   };
 
@@ -127,16 +128,16 @@ export default function IntegrationsIndexPage() {
     <LandingLayout>
       <Helmet>
         <title>Intégrations — RefBoost</title>
-        <meta name="description" content="Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Google SSO. Synchronisez votre pipeline et automatisez les paiements partenaires." />
+        <meta name="description" content="Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Pennylane, Google SSO. Synchronisez votre pipeline et automatisez les paiements partenaires." />
         <link rel="canonical" href={SITE + '/integrations'} />
         <meta property="og:title" content="Intégrations — RefBoost" />
-        <meta property="og:description" content="Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Google SSO." />
+        <meta property="og:description" content="Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Pennylane, Google SSO." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={SITE + '/integrations'} />
         <meta property="og:image" content={SITE + '/og-image.png'} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Intégrations — RefBoost" />
-        <meta name="twitter:description" content="Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Google SSO." />
+        <meta name="twitter:description" content="Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Pennylane, Google SSO." />
         {/* Single x-default — every locale on this site is served from
             the same URL (no /en/* / /es/* paths), so emitting per-lang
             hreflang tags pointing at the same href triggers Ahrefs'

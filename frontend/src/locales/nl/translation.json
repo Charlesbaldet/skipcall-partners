@@ -1663,7 +1663,9 @@
     "pennylane_how_it_works": "Hoe het werkt:",
     "pennylane_step1": "Commissie goedgekeurd → Leveranciersfactuur aangemaakt in Pennylane",
     "pennylane_step2": "Partner wordt als leverancier aangemaakt in Pennylane",
-    "pennylane_step3": "Qonto-betaling voltooid → Factuur als betaald gemarkeerd"
+    "pennylane_step3": "Qonto-betaling voltooid → Factuur als betaald gemarkeerd",
+    "connected_short": "Verbonden",
+    "configure": "Instellen"
   },
   "status": {
     "new": "Nieuw",
@@ -1681,93 +1683,27 @@
     "Platinum": "Platina"
   },
   "onboarding": {
-    "skip": "Stap overslaan",
-    "next": "Volgende →",
-    "back": "Terug",
-    "finish": "Installatie voltooien",
-    "subtitle": "Stel je werkruimte in een paar stappen in",
-    "welcome_title": "Welkom bij RefBoost",
-    "createUser_title": "Maak je team aan",
-    "createPartner_title": "Nodig je eerste partner uit",
-    "customize_title": "Pas je werkruimte aan",
-    "publicLink_title": "Jouw verwijzingslink",
-    "marketplace_title": "Jouw programma op de marketplace",
-    "done_title": "Alles klaar",
-    "step_of": "Stap {{current}} van {{total}}",
-    "step_2_desc": "Voeg een teamlid toe (admin of commercieel). Ze ontvangen een e-mail met hun inloggegevens.",
-    "step_3_desc": "Pas het uiterlijk van je werkruimte aan",
-    "step_4_desc": "Configureer je referralprogramma",
-    "step_5_desc": "Voeg partners toe aan je programma",
-    "step_6_desc": "Verbind je favoriete tools",
-    "step_7_desc": "Publiceer je programma op de marketplace",
-    "full_name": "Volledige naam",
-    "contact_name": "Contact (volledige naam)",
-    "company_name": "Bedrijfsnaam",
-    "first_name": "Voornaam",
-    "last_name": "Achternaam",
-    "phone": "Telefoon",
-    "website": "Website",
-    "company": "Bedrijf",
-    "role": "Rol",
-    "email": "E-mail",
-    "role_commercial": "Commercieel",
-    "role_admin_opt": "Admin",
-    "role_partner_opt": "Partner",
-    "create_user": "Gebruiker aanmaken →",
-    "create_partner": "Partner aanmaken →",
-    "user_created": "Gebruiker succesvol aangemaakt",
-    "partner_added": "Partner succesvol toegevoegd",
-    "config_saved": "Configuratie opgeslagen",
-    "level_name": "Naam van het niveau",
-    "team_label": "team",
-    "prev": "Vorige",
-    "step_1_desc": "Maak je team aan, nodig je eerste partner uit, pas je kleuren aan en ontvang je openbare aanmeldingslink. Dit duurt maximaal 3 minuten en je kunt elke stap overslaan.",
-    "mrr_label": "MRR — Maandelijks terugkerende omzet",
-    "arr_label": "ARR — Jaarlijks terugkerende omzet",
-    "ca_label": "Omzet — Totale omzet",
-    "link_desc": "Deel deze link met je referralpartners. Ze kunnen zichzelf aanmelden en jij valideert hun aanvragen.",
-    "sector": "Sector *",
-    "icp": "Hoofd-ICP",
-    "short_description": "Korte beschrijving *",
-    "marketplace_visible": "Tonen in marketplace",
-    "createPartner_desc_long": "Voeg een partner (zakelijke verwijzer) toe. Hij krijgt toegang tot zijn eigen ruimte om leads in te dienen.",
-    "customize_desc_long": "Pas de kleuren aan jouw merk aan (optioneel — je kunt dit later wijzigen in Instellingen).",
-    "customize_company_placeholder": "Jouw bedrijf",
-    "customize_revenue_label": "Omzetmodel",
-    "marketplace_desc_long": "Vul je gegevens in om op de marketplace te verschijnen. Op elk moment aan te passen in Instellingen.",
-    "marketplace_choose": "-- Kiezen --",
-    "marketplace_website_placeholder": "https://jouw-site.nl",
-    "marketplace_icp_placeholder": "Bijv. mkb, B2B-startups…",
-    "marketplace_description_placeholder": "Beschrijf je dienst in 2-3 zinnen…",
-    "marketplace_active": "Actief",
-    "marketplace_inactive": "Inactief",
-    "sector_saas_logiciel": "SaaS / Software",
-    "sector_conseil_services": "Advies & Diensten",
-    "sector_finance_fintech": "Financiën & Fintech",
-    "sector_rh_recrutement": "HR & Werving",
-    "sector_marketing_communication": "Marketing & Communicatie",
-    "sector_immobilier": "Vastgoed",
-    "sector_commerce": "Handel",
-    "sector_formation": "Opleiding",
-    "sector_juridique": "Juridisch",
-    "sector_industrie": "Industrie",
-    "sector_autre": "Anders",
-    "revenue_other": "Anders",
-    "in_progress": "Bezig...",
-    "error_email_name_required": "E-mail en naam verplicht",
-    "error_generic": "Fout",
-    "error_all_fields_required": "Alle velden zijn verplicht",
-    "error_save_failed": "Fout bij het opslaan",
-    "user_created_success_code": "Inloggegevens per e-mail verzonden naar {{email}}",
-    "partner_added_success_code": "Inloggegevens per e-mail verzonden naar {{email}}",
-    "space_customized": "Je ruimte is aangepast!",
-    "optional": "optioneel",
-    "close_aria": "Sluiten",
-    "email_placeholder_user": "jan@bedrijf.nl",
-    "name_placeholder_user": "Jan Jansen",
-    "company_placeholder_example": "Acme Consulting",
-    "contact_placeholder_example": "Jan Jansen",
-    "partner_email_placeholder": "jan@acme.nl"
+    "title": "Welkom bij RefBoost!",
+    "subtitle": "Voltooi deze stappen om je partnerprogramma in te stellen.",
+    "page_title": "Programma-instellingen",
+    "page_subtitle": "Volg deze stappen om het maximale uit RefBoost te halen.",
+    "completed": "voltooid",
+    "dont_show_again": "Niet meer tonen bij opstarten",
+    "configure": "Instellen",
+    "step_billing": "Facturatiegegevens",
+    "step_billing_desc": "Bedrijfsnaam, adres, KvK-nummer",
+    "step_program": "Programma configureren",
+    "step_program_desc": "Niveaus en beloningsdrempels",
+    "step_branding": "Uiterlijk en branding",
+    "step_branding_desc": "Logo, kleuren, commissiemodel",
+    "step_pipeline": "Pipeline en partnertypes",
+    "step_pipeline_desc": "Pipelinekolommen, partnercategorieën",
+    "step_marketplace": "Verschijnen op de marketplace",
+    "step_marketplace_desc": "Miniatuur, beschrijving, programmapagina",
+    "step_banking": "Bankgegevens",
+    "step_banking_desc": "Qonto verbinden om partners te betalen",
+    "step_first_partner": "Nodig je eerste partner uit",
+    "step_first_partner_desc": "Voeg een partner toe om te starten"
   },
   "blog": {
     "subtitle": "Tips, strategieën & bronnen",
@@ -2870,12 +2806,14 @@
       "categories": {
         "crm": "CRM",
         "payments": "Betalingen",
+        "accounting": "Boekhouding",
         "auth": "Authenticatie"
       },
       "filters": {
         "all": "Alle",
         "crm": "CRM",
         "payments": "Betalingen",
+        "accounting": "Boekhouding",
         "auth": "Authenticatie"
       }
     },
@@ -3155,6 +3093,75 @@
         }
       ]
     },
+    "pennylane": {
+      "name": "Pennylane",
+      "shortDescription": "Maak automatisch leveranciersfacturen in Pennylane voor elke goedgekeurde commissie.",
+      "heroSubtitle": "Automatiseer je partnerboekhouding. Elke goedgekeurde commissie genereert een leveranciersfactuur in Pennylane, en de Qonto-betaling markeert deze als betaald — geen handmatige invoer.",
+      "features": [
+        {
+          "title": "Automatische leveranciersfacturen",
+          "description": "Zodra een commissie in RefBoost wordt goedgekeurd, wordt in Pennylane een leveranciersfactuur aangemaakt met de juiste netto-, btw- en brutobedragen."
+        },
+        {
+          "title": "Btw automatisch berekend",
+          "description": "Franse standaardtarieven (20 %, 10 %, 5,5 %, vrijgesteld) gemapt. Voor andere landen een generieke btw-code in Pennylane."
+        },
+        {
+          "title": "Partners aangemaakt als leveranciers",
+          "description": "Elke partner wordt een Pennylane-leverancier met zijn gegevens en btw-identificatienummer — één keer, daarna hergebruikt."
+        },
+        {
+          "title": "Automatische afstemming met Qonto",
+          "description": "Wanneer de Qonto-SEPA-overschrijving is uitgevoerd, wordt de bijbehorende factuur in Pennylane automatisch op \"betaald\" gezet."
+        }
+      ],
+      "steps": [
+        {
+          "title": "Pennylane verbinden",
+          "description": "Plak je Pennylane API-token in Instellingen → Integraties. De token wordt gevalideerd tegen /me voordat hij wordt opgeslagen."
+        },
+        {
+          "title": "Een commissie goedkeuren",
+          "description": "Bij goedkeuring maakt RefBoost de leverancier aan (als die nog niet bestaat) en daarna de leveranciersfactuur in Pennylane."
+        },
+        {
+          "title": "Betaal via Qonto",
+          "description": "De voltooide Qonto-overschrijving markeert de factuur in Pennylane automatisch als betaald. Geen extra boekhouding."
+        }
+      ],
+      "faqs": [
+        {
+          "q": "Welke Pennylane API-token moet ik gebruiken?",
+          "a": "Een gebruikerstoken, aangemaakt via Pennylane → Instellingen → Ontwikkelaars → Token aanmaken. Lees-/aanmaakrechten op leveranciersfacturen volstaan."
+        },
+        {
+          "q": "Wat als Pennylane tijdelijk onbereikbaar is?",
+          "a": "RefBoost blokkeert nooit de commissieflow — goedkeuring en Qonto-overschrijving werken normaal. Pennylane-fouten worden gelogd; opnieuw aanmaken kan via admin."
+        },
+        {
+          "q": "Welke btw-tarieven worden ondersteund?",
+          "a": "Franse standaardtarieven (20 %, 10 %, 5,5 %, 0 / vrijgesteld) worden gemapt naar Pennylane-codes. Andere tarieven (DE 19 %, CH 8,1 %…) gebruiken een generieke code."
+        },
+        {
+          "q": "Kan ik ontkoppelen zonder de historie te verliezen?",
+          "a": "Ja. Ontkoppelen stopt alleen de aanmaak van nieuwe facturen; reeds aangemaakte facturen blijven in Pennylane en houden hun koppeling met RefBoost-commissies."
+        }
+      ],
+      "roi": [
+        {
+          "metric": "0 invoer",
+          "description": "Geen handmatige leveranciersfacturen meer — alles is geautomatiseerd."
+        },
+        {
+          "metric": "100 % traceerbaarheid",
+          "description": "Elke commissie is gekoppeld aan haar factuur met de juiste netto / btw / bruto bedragen."
+        },
+        {
+          "metric": "Auto-afstemming",
+          "description": "De Qonto-betaling markeert de factuur als betaald — geen dubbele boekhouding."
+        }
+      ]
+    },
     "google-sso": {
       "name": "Google SSO",
       "shortDescription": "Veilige aanmelding via Google voor je team en partners. Geen wachtwoorden meer te beheren.",
@@ -3228,29 +3235,6 @@
   "sidebar": {
     "trash": "Prullenbak",
     "progression": "Voortgang"
-  },
-  "onboarding": {
-    "title": "Welkom bij RefBoost!",
-    "subtitle": "Voltooi deze stappen om je partnerprogramma in te stellen.",
-    "page_title": "Programma-instellingen",
-    "page_subtitle": "Volg deze stappen om het maximale uit RefBoost te halen.",
-    "completed": "voltooid",
-    "dont_show_again": "Niet meer tonen bij opstarten",
-    "configure": "Instellen",
-    "step_billing": "Facturatiegegevens",
-    "step_billing_desc": "Bedrijfsnaam, adres, KvK-nummer",
-    "step_program": "Programma configureren",
-    "step_program_desc": "Niveaus en beloningsdrempels",
-    "step_branding": "Uiterlijk en branding",
-    "step_branding_desc": "Logo, kleuren, commissiemodel",
-    "step_pipeline": "Pipeline en partnertypes",
-    "step_pipeline_desc": "Pipelinekolommen, partnercategorieën",
-    "step_marketplace": "Verschijnen op de marketplace",
-    "step_marketplace_desc": "Miniatuur, beschrijving, programmapagina",
-    "step_banking": "Bankgegevens",
-    "step_banking_desc": "Qonto verbinden om partners te betalen",
-    "step_first_partner": "Nodig je eerste partner uit",
-    "step_first_partner_desc": "Voeg een partner toe om te starten"
   },
   "trash": {
     "title": "Prullenbak",
