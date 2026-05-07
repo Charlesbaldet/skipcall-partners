@@ -12,6 +12,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
+const { validateWebhookUrl } = require('../middleware/webhookValidation');
 const crmService = require('../services/crmService');
 
 const router = express.Router();
@@ -129,6 +130,14 @@ router.post('/integrations/:id/test', authenticate, tenantScope, authorize('admi
 
     if (integration.provider === 'webhook') {
       if (!integration.webhook_url) return res.status(400).json({ error: 'webhook_url manquant' });
+      // SSRF guard: the URL was admin-supplied at integration-create
+      // time. Without DNS-resolution + private-IP rejection an attacker
+      // with admin role could probe internal services (Redis on
+      // localhost, AWS IMDS at 169.254.169.254, RFC1918 ranges,
+      // Railway sidecar internals). Reuse the v30 helper that already
+      // gates POST /api/v1/webhooks the same way.
+      try { await validateWebhookUrl(integration.webhook_url); }
+      catch (e) { return res.status(400).json({ error: 'webhook_url_unsafe', detail: e.message }); }
       const resp = await fetch(integration.webhook_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-RefBoost-Event': 'test.ping' },

@@ -706,8 +706,18 @@ router.get('/:id/invoice', async (req, res) => {
   } catch (err) {
     if (err && /invoice_filename/.test(err.message || '')) {
       // Older DBs without invoice_filename — fall back to plain SELECT.
+      // Tenant filter is the same one the primary path uses; the
+      // previous fallback skipped it, which let any authenticated
+      // user fetch any tenant's invoice base64 by guessing the
+      // commission UUID (CRITICAL pre-fix).
       try {
-        const { rows: [c] } = await query(`SELECT invoice_url FROM commissions WHERE id = $1`, [req.params.id]);
+        const fallbackParams = [req.params.id];
+        let fallbackSql = 'SELECT invoice_url FROM commissions WHERE id = $1';
+        if (req.tenantId && !req.skipTenantFilter) {
+          fallbackParams.push(req.tenantId);
+          fallbackSql += ` AND tenant_id = $${fallbackParams.length}`;
+        }
+        const { rows: [c] } = await query(fallbackSql, fallbackParams);
         if (!c || !c.invoice_url) return res.status(404).json({ error: 'Aucune facture' });
         const m = /^data:([^;]+);base64,(.+)$/.exec(c.invoice_url);
         if (!m) return res.status(500).json({ error: 'Fichier corrompu' });

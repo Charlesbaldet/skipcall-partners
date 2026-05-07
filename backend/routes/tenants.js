@@ -11,10 +11,27 @@ router.get('/config', (req, res) => {
 });
 
 // ─── Admin: List all tenants ───
+// Explicit column allow-list — `SELECT *` would leak
+// pennylane_api_token (added in v35) and any future secret columns
+// added to the tenants table. New columns must be opted in
+// deliberately rather than auto-included.
+const TENANT_PUBLIC_COLUMNS = `
+  id, name, slug, primary_color, secondary_color, accent_color,
+  logo_url, domain, is_active, created_at, updated_at, settings,
+  level_threshold_type, revenue_model,
+  sector, website, icp, short_description, marketplace_visible,
+  notion_status_mapping,
+  short_description_en, short_description_es, short_description_de,
+  short_description_it, short_description_nl, short_description_pt,
+  billing_company_name, billing_address, billing_city,
+  billing_postal_code, billing_country, billing_siret,
+  onboarding_completed_at, onboarding_dismissed,
+  pennylane_enabled
+`;
 router.get('/', authenticate, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
   try {
-    const { rows } = await query('SELECT * FROM tenants ORDER BY created_at ASC');
+    const { rows } = await query(`SELECT ${TENANT_PUBLIC_COLUMNS} FROM tenants ORDER BY created_at ASC`);
     res.json({ tenants: rows });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });

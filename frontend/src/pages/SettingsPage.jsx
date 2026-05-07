@@ -1193,7 +1193,16 @@ function IntegrationRow({ integration, t, busy, expanded, onConnect, onConfigure
           }}>
             {logo ? (
               <img src={logo} alt={name} style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.style.background = color; e.currentTarget.parentElement.innerHTML = letter; }}
+                onError={e => {
+                  // textContent (not innerHTML) — `letter` is derived
+                  // from a partner-supplied name. innerHTML would
+                  // execute any HTML the partner pasted, which is
+                  // a stored-XSS vector reachable by every admin
+                  // viewing the integrations panel.
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement.style.background = color;
+                  e.currentTarget.parentElement.textContent = letter;
+                }}
               />
             ) : letter}
           </div>

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import DOMPurify from 'dompurify';
 import api from '../lib/api';
 import { translateCat } from '../lib/blog-categories';
 import LandingLayout from '../components/LandingLayout';
@@ -168,8 +169,17 @@ export default function BlogPostPage() {
           </figure>
         )}
 
-        {/* Contenu */}
-        <article className="blog-content" dangerouslySetInnerHTML={{ __html: post.content }} style={{ fontSize: 17, lineHeight: 1.85, color: '#1e293b' }} />
+        {/* Contenu — sanitised via DOMPurify before passing to
+            dangerouslySetInnerHTML so a compromised admin (or a
+            CSRF on the blog editor) can't land stored XSS in the
+            published article body. The default DOMPurify config
+            already strips <script>, javascript: hrefs, on*
+            handlers, and dangerous SVG. */}
+        <article
+          className="blog-content"
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || '') }}
+          style={{ fontSize: 17, lineHeight: 1.85, color: '#1e293b' }}
+        />
 
         {/* Tags */}
         {post.tags?.length > 0 && (

@@ -553,10 +553,26 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
   try {
     // Collect partner + linked users BEFORE we delete so we can email
     // them after the transaction commits.
-    const { rows: pRow } = await client.query(
-      'SELECT id, name, tenant_id FROM partners WHERE id = $1 AND (tenant_id = $2 OR $2::uuid IS NULL)',
-      [req.params.id, req.tenantId || null]
-    );
+    //
+    // Tenant scoping: superadmin (skipTenantFilter=true) is allowed to
+    // act cross-tenant by design. Every other role MUST present a
+    // tenant — without that guard, a token issued in the space-
+    // selection short-window (no tenantId) would collapse the WHERE
+    // to id-only and let the holder delete partners across every
+    // tenant by guessing UUIDs. The previous `OR $2::uuid IS NULL`
+    // pattern made that bypass live for any caller whose
+    // req.tenantId resolved to null.
+    if (!req.skipTenantFilter && !req.tenantId) {
+      client.release();
+      return res.status(400).json({ error: 'tenant_missing' });
+    }
+    const lookupSql = req.skipTenantFilter
+      ? 'SELECT id, name, tenant_id FROM partners WHERE id = $1'
+      : 'SELECT id, name, tenant_id FROM partners WHERE id = $1 AND tenant_id = $2';
+    const lookupParams = req.skipTenantFilter
+      ? [req.params.id]
+      : [req.params.id, req.tenantId];
+    const { rows: pRow } = await client.query(lookupSql, lookupParams);
     const partner = pRow[0];
 
     await client.query('BEGIN');
@@ -601,7 +617,13 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
       }
     }
 
-    const { rowCount } = await client.query('DELETE FROM partners WHERE id = $1 AND (tenant_id = $2 OR $2::uuid IS NULL)', [req.params.id, req.tenantId || null]);
+    const deleteSql = req.skipTenantFilter
+      ? 'DELETE FROM partners WHERE id = $1'
+      : 'DELETE FROM partners WHERE id = $1 AND tenant_id = $2';
+    const deleteParams = req.skipTenantFilter
+      ? [req.params.id]
+      : [req.params.id, req.tenantId];
+    const { rowCount } = await client.query(deleteSql, deleteParams);
     await client.query('COMMIT');
 
     if (partner) notifyPartnerRevoked(partner.id, partner.tenant_id, partner.name);

@@ -68,14 +68,28 @@ router.post('/create/:commissionId', authenticate, tenantScope, authorize('admin
   }
 });
 
+// Mollie webhook receiver. Intentionally unauthenticated — Mollie
+// posts the payment id only and doesn't carry our JWT. Mollie's
+// documented protection model is "fetch the payment via the API
+// and trust the API's status, not the request body" (no HMAC
+// signatures are emitted). The route follows that pattern at
+// `mollie.getPaymentStatus(paymentId)` below.
+//
+// Defense-in-depth fixes vs the previous version:
+//  * SELECT also pins the matched commission to its own tenant_id
+//    so subsequent UPDATEs can't be flipped onto a row in another
+//    tenant via id-collision pathology in mollie_payment_id.
+//  * UPDATEs add `AND tenant_id = $X` so a future caller that
+//    re-uses these queries from a non-webhook context can't write
+//    cross-tenant either.
 router.post('/webhook', async (req, res) => {
   try {
     const { id: paymentId } = req.body;
-    if (!paymentId) return res.status(200).send('OK');
+    if (!paymentId || typeof paymentId !== 'string') return res.status(200).send('OK');
 
     const payment = await mollie.getPaymentStatus(paymentId);
     const { rows: [commission] } = await query(
-      'SELECT * FROM commissions WHERE mollie_payment_id = $1',
+      'SELECT id, tenant_id FROM commissions WHERE mollie_payment_id = $1',
       [paymentId]
     );
 
@@ -83,13 +97,13 @@ router.post('/webhook', async (req, res) => {
 
     if (payment.status === 'paid') {
       await query(
-        'UPDATE commissions SET status = $2, paid_at = $3, payment_status = $4 WHERE id = $1',
-        [commission.id, 'paid', new Date().toISOString(), 'paid']
+        'UPDATE commissions SET status = $2, paid_at = $3, payment_status = $4 WHERE id = $1 AND tenant_id = $5',
+        [commission.id, 'paid', new Date().toISOString(), 'paid', commission.tenant_id]
       );
     } else {
       await query(
-        'UPDATE commissions SET payment_status = $2 WHERE id = $1',
-        [commission.id, payment.status]
+        'UPDATE commissions SET payment_status = $2 WHERE id = $1 AND tenant_id = $3',
+        [commission.id, payment.status, commission.tenant_id]
       );
     }
 
