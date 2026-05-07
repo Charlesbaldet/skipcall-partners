@@ -1,62 +1,94 @@
-import SignupPage from './pages/SignupPage.jsx';
-import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
-import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import { DialogsHost } from './components/Dialogs.jsx';
-import Layout from './components/Layout.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import DashboardPage from './pages/DashboardPage.jsx';
-import ReferralsPage from './pages/ReferralsPage.jsx';
-import CommissionsPage from './pages/CommissionsPage.jsx';
-import TrashPage from './pages/TrashPage.jsx';
-import PartnersPage from './pages/PartnersPage.jsx';
-import PartnerMyReferrals from './pages/PartnerMyReferrals.jsx';
-import PartnerDashboardPage from './pages/PartnerDashboardPage.jsx';
-// PartnerSubmitPage is rendered inside the SubmitReferralModal
-// on /partner/referrals — no top-level route imports it.
-import PartnerPaymentsPage from './pages/PartnerPaymentsPage.jsx';
-import MessagingPage from './pages/MessagingPage.jsx';
+
+// ── Eager: landing + login ────────────────────────────────────────────
+// LandingPage carries the SEO-critical homepage Helmet (Software
+// Application JSON-LD) and is the most-visited route, so a Suspense
+// flash here would hurt FCP/LCP for the very metric PageSpeed scores.
+// LoginPage is the conversion funnel and tiny — keep it eager too.
+// Layout sits inside the protected routes, but stays eager because
+// every protected page wraps in <Layout> (lazy-loading it would
+// just postpone the same 100 KB chunk by one tick).
 import LandingPage from './pages/LandingPage.jsx';
-import PublicApplyPage from './pages/PublicApplyPage.jsx';
-import PublicReferralRedirectPage from './pages/PublicReferralRedirectPage.jsx';
-import LegalPage from './pages/LegalPage.jsx';
-import SetupPasswordPage from './pages/SetupPasswordPage.jsx';
-import AdminApplicationsPage from './pages/AdminApplicationsPage.jsx';
-import AdminSettingsPage from './pages/AdminSettingsPage.jsx';
-import SuperAdminPage from './pages/SuperAdminPage.jsx';
-import SettingsPage from './pages/SettingsPage.jsx';
-import MarketplaceEditorPage from './pages/MarketplaceEditorPage.jsx';
-import ProgrammePage from './pages/ProgrammePage.jsx';
-import ProgressionPage from './pages/ProgressionPage.jsx';
-import PublicTrackingPage from './pages/PublicTrackingPage.jsx';
-import BlogPage from './pages/BlogPage.jsx';
-import BlogPostPage from './pages/BlogPostPage.jsx';
-import MarketplacePage from './pages/MarketplacePage.jsx';
-import MarketplaceProgramPage from './pages/MarketplaceProgramPage.jsx';
-import FeaturePipelinePage from './pages/features/FeaturePipelinePage';
-import FeatureCommissionsPage from './pages/features/FeatureCommissionsPage';
-import FeatureAnalyticsPage from './pages/features/FeatureAnalyticsPage';
-import FeaturePersonnalisationPage from './pages/features/FeaturePersonnalisationPage';
-import FeatureTrackingPage from './pages/features/FeatureTrackingPage';
-import UseCaseSaasB2BPage from './pages/usecases/UseCaseSaasB2BPage';
-import UseCaseCabinetConseilPage from './pages/usecases/UseCaseCabinetConseilPage';
-import UseCaseStartupPage from './pages/usecases/UseCaseStartupPage';
-import UseCaseDistributionPage from './pages/usecases/UseCaseDistributionPage';
-import UseCaseMarketplacePage from './pages/usecases/UseCaseMarketplacePage';
-import UseCaseAgencePage from './pages/usecases/UseCaseAgencePage';
-import UseCasesIndexPage from './pages/usecases/UseCasesIndexPage';
-import IntegrationsIndexPage from './pages/integrations/IntegrationsIndexPage';
-import IntegrationDetailPage from './pages/integrations/IntegrationDetailPage';
-import NewsPage from './pages/NewsPage.jsx';
-import PartnerNewsPage from './pages/PartnerNewsPage.jsx';
-import NotificationsPage from './pages/NotificationsPage.jsx';
-// BillingPage is rendered inside SettingsPage's "Facturation" tab,
-// not as a top-level route — the import lives there now.
-import PricingPage from './pages/PricingPage.jsx';
-import SearchPage from './pages/SearchPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import Layout from './components/Layout.jsx';
+
+// ── Lazy: everything else ─────────────────────────────────────────────
+// Auth-protected app pages are heavy (recharts, kanban, the 3000-
+// line SettingsPage) and only logged-in users need them. Public
+// marketing pages (Blog, Pricing, /fonctionnalites/*, /cas-dusage/*)
+// are also lazy because their first paint comes from the static
+// SPA shell + Vercel-edge meta injection — the JS chunk only
+// hydrates the React tree, so a Suspense flash doesn't cost any
+// SEO. Each lazy() call corresponds to one route-level chunk that
+// downloads on demand.
+const SignupPage           = lazy(() => import('./pages/SignupPage.jsx'));
+const ForgotPasswordPage   = lazy(() => import('./pages/ForgotPasswordPage.jsx'));
+const ResetPasswordPage    = lazy(() => import('./pages/ResetPasswordPage.jsx'));
+const SetupPasswordPage    = lazy(() => import('./pages/SetupPasswordPage.jsx'));
+
+const DashboardPage        = lazy(() => import('./pages/DashboardPage.jsx'));
+const ReferralsPage        = lazy(() => import('./pages/ReferralsPage.jsx'));
+const CommissionsPage      = lazy(() => import('./pages/CommissionsPage.jsx'));
+const TrashPage            = lazy(() => import('./pages/TrashPage.jsx'));
+const PartnersPage         = lazy(() => import('./pages/PartnersPage.jsx'));
+const PartnerMyReferrals   = lazy(() => import('./pages/PartnerMyReferrals.jsx'));
+const PartnerDashboardPage = lazy(() => import('./pages/PartnerDashboardPage.jsx'));
+const PartnerPaymentsPage  = lazy(() => import('./pages/PartnerPaymentsPage.jsx'));
+const MessagingPage        = lazy(() => import('./pages/MessagingPage.jsx'));
+const SettingsPage         = lazy(() => import('./pages/SettingsPage.jsx'));
+const MarketplaceEditorPage = lazy(() => import('./pages/MarketplaceEditorPage.jsx'));
+const ProgrammePage        = lazy(() => import('./pages/ProgrammePage.jsx'));
+const ProgressionPage      = lazy(() => import('./pages/ProgressionPage.jsx'));
+const AdminApplicationsPage = lazy(() => import('./pages/AdminApplicationsPage.jsx'));
+const AdminSettingsPage    = lazy(() => import('./pages/AdminSettingsPage.jsx'));
+const SuperAdminPage       = lazy(() => import('./pages/SuperAdminPage.jsx'));
+const NewsPage             = lazy(() => import('./pages/NewsPage.jsx'));
+const PartnerNewsPage      = lazy(() => import('./pages/PartnerNewsPage.jsx'));
+const NotificationsPage    = lazy(() => import('./pages/NotificationsPage.jsx'));
+const SearchPage           = lazy(() => import('./pages/SearchPage.jsx'));
+
+const PublicApplyPage             = lazy(() => import('./pages/PublicApplyPage.jsx'));
+const PublicReferralRedirectPage  = lazy(() => import('./pages/PublicReferralRedirectPage.jsx'));
+const PublicTrackingPage          = lazy(() => import('./pages/PublicTrackingPage.jsx'));
+const LegalPage                   = lazy(() => import('./pages/LegalPage.jsx'));
+const BlogPage                    = lazy(() => import('./pages/BlogPage.jsx'));
+const BlogPostPage                = lazy(() => import('./pages/BlogPostPage.jsx'));
+const MarketplacePage             = lazy(() => import('./pages/MarketplacePage.jsx'));
+const MarketplaceProgramPage      = lazy(() => import('./pages/MarketplaceProgramPage.jsx'));
+const PricingPage                 = lazy(() => import('./pages/PricingPage.jsx'));
+const FeaturePipelinePage         = lazy(() => import('./pages/features/FeaturePipelinePage'));
+const FeatureCommissionsPage      = lazy(() => import('./pages/features/FeatureCommissionsPage'));
+const FeatureAnalyticsPage        = lazy(() => import('./pages/features/FeatureAnalyticsPage'));
+const FeaturePersonnalisationPage = lazy(() => import('./pages/features/FeaturePersonnalisationPage'));
+const FeatureTrackingPage         = lazy(() => import('./pages/features/FeatureTrackingPage'));
+const UseCaseSaasB2BPage          = lazy(() => import('./pages/usecases/UseCaseSaasB2BPage'));
+const UseCaseCabinetConseilPage   = lazy(() => import('./pages/usecases/UseCaseCabinetConseilPage'));
+const UseCaseStartupPage          = lazy(() => import('./pages/usecases/UseCaseStartupPage'));
+const UseCaseDistributionPage     = lazy(() => import('./pages/usecases/UseCaseDistributionPage'));
+const UseCaseMarketplacePage      = lazy(() => import('./pages/usecases/UseCaseMarketplacePage'));
+const UseCaseAgencePage           = lazy(() => import('./pages/usecases/UseCaseAgencePage'));
+const UseCasesIndexPage           = lazy(() => import('./pages/usecases/UseCasesIndexPage'));
+const IntegrationsIndexPage       = lazy(() => import('./pages/integrations/IntegrationsIndexPage'));
+const IntegrationDetailPage       = lazy(() => import('./pages/integrations/IntegrationDetailPage'));
+
+// Suspense fallback. Same visual as the auth-loading state inside
+// ProtectedRoute so the eye doesn't flicker between two grey screens
+// when navigating from a public route to a protected one.
+function PageLoading() {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      height: '100vh', color: '#94a3b8', fontFamily: 'inherit',
+    }}>
+      Chargement…
+    </div>
+  );
+}
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -107,6 +139,7 @@ function AppRoutes() {
   return (
     <>
     <RouteCanonical />
+    <Suspense fallback={<PageLoading />}>
     <Routes>
       {/* Public pages */}
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
@@ -186,6 +219,7 @@ function AppRoutes() {
           <Route path="/integrations" element={<IntegrationsIndexPage />} />
           <Route path="/integrations/:slug" element={<IntegrationDetailPage />} />
           </Routes>
+    </Suspense>
     </>
   );
 }

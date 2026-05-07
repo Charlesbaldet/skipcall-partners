@@ -37,11 +37,19 @@
     <meta name="twitter:description" content="RefBoost est la plateforme SaaS de gestion de programme partenaires et d'apporteurs d'affaires. Automatisez referrals, commissions et performance en 5 min." />
     <meta name="twitter:image" content="https://refboost.io/og-image.png" />
 
-    <!-- Performance hints for the Railway API -->
-    <link rel="preconnect" href="https://skipcall-partners-production.up.railway.app" />
+    <!-- Performance hints. Preconnect for the Railway API + the two
+         Google Fonts hosts (CSS lives on fonts.googleapis.com,
+         font files on fonts.gstatic.com — both need their own
+         preconnect, and gstatic specifically needs the crossorigin
+         attribute since the font fetch is CORS by default). The
+         API runs through the Vercel rewrite at /api/*, but the
+         direct preconnect still helps when the rewrite chain
+         resolves to the Railway origin on cold paths. -->
+    <link rel="preconnect" href="https://skipcall-partners-production.up.railway.app" crossorigin />
     <link rel="dns-prefetch" href="https://skipcall-partners-production.up.railway.app" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <!-- Stabilise the scrollbar gutter so navigating between landing
@@ -83,7 +91,10 @@
 
     <!-- Google Analytics 4 — only fires page_view on public pages; app
          pages (dashboard, referrals, etc.) stay untracked for privacy. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MJY1N13L2S"></script>
+    <!-- defer (not async) so GA doesn't fight with the main JS bundle
+         for parser bandwidth on first load — analytics is non-
+         critical and can wait until DOMContentLoaded. -->
+    <script defer src="https://www.googletagmanager.com/gtag/js?id=G-MJY1N13L2S"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
