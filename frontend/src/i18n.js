@@ -1,26 +1,34 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import fr from './locales/fr/translation.json';
-import en from './locales/en/translation.json';
-import it from './locales/it/translation.json';
-import es from './locales/es/translation.json';
-import de from './locales/de/translation.json';
-import nl from './locales/nl/translation.json';
-import pt from './locales/pt/translation.json';
+import HttpBackend from 'i18next-http-backend';
+
+// Locale JSONs are served from /public/locales/<lng>/translation.json
+// (one HTTP fetch per language). Only the active language loads on
+// init; switching language with i18n.changeLanguage('en') triggers
+// a second fetch on demand. This keeps the main JS bundle ~1 MB
+// lighter than the previous setup — every locale used to be bundled
+// synchronously into the entry chunk via top-level imports.
+//
+// React Suspense is enabled below so a t() call against a not-yet-
+// loaded key suspends the component tree until the locale arrives.
+// App.jsx already wraps <Routes> in <Suspense fallback={...}>, so
+// the same "Chargement…" fallback covers route-change suspense AND
+// language-switch suspense — no separate loading UI to maintain.
 
 i18n
+  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources: {
-      fr: { translation: fr },
-      en: { translation: en },
-      it: { translation: it },
-      es: { translation: es },
-      de: { translation: de },
-      nl: { translation: nl },
-      pt: { translation: pt },
+    backend: {
+      // Static-asset path. Vercel serves /public/* as-is, so the
+      // request is a single CDN-edge GET with normal browser
+      // caching. If a translation deploy needs to invalidate
+      // stale browser caches sooner than default, we'd add a
+      // ?v=<hash> query string — left off for now to keep URLs
+      // clean.
+      loadPath: '/locales/{{lng}}/translation.json',
     },
     lng: (typeof window !== 'undefined' && window.localStorage?.getItem('i18nextLng')) || 'fr',
     fallbackLng: 'fr',
@@ -31,6 +39,13 @@ i18n
     // on English browsers.
     detection: { order: ['localStorage'], caches: ['localStorage'] },
     interpolation: { escapeValue: false },
+    react: {
+      // Suspense mode: components reading t() before their resource
+      // bundle has arrived throw a Promise that React Suspense
+      // catches. Trades a synchronous render for a one-time wait on
+      // first paint — covered by the route-level Suspense in App.jsx.
+      useSuspense: true,
+    },
   });
 
 export default i18n;
