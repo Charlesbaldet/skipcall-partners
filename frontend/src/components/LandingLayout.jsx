@@ -55,6 +55,12 @@ export function LandingNav() {
   const [featOpen, setFeatOpen] = useState(false);
   const [useCasesOpen, setUseCasesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Mobile burger menu accordion state. `null` keeps both collapsed
+  // by default; tapping a header sets this to its id, tapping again
+  // (or tapping the other header) toggles via the prev===id flip
+  // below — single-section-open behaviour without a separate
+  // setExpandedSection wrapper.
+  const [expandedSection, setExpandedSection] = useState(null);
 
   const FEATURES = [
     { label: t('landing.featuresDropdown.pipeline_label'), href: '/fonctionnalites/pipeline', desc: t('landing.featuresDropdown.pipeline_desc') },
@@ -182,25 +188,63 @@ export function LandingNav() {
 
       {mobile && menuOpen && (
         <div style={{ position:'fixed',top:58,left:0,right:0,bottom:0,zIndex:99,background:'#fff',overflowY:'auto',padding:'24px 20px' }}>
-          <div style={{ marginBottom:16 }}>
-            <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('nav.features')}</div>
-            {FEATURES.map(f=>(
-              <a key={f.href} href={f.href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none' }}>
-                <div style={{ fontWeight:600,fontSize:15,color:C.s }}>{f.label}</div>
-                <div style={{ fontSize:13,color:C.m,marginTop:2 }}>{f.desc}</div>
-              </a>
-            ))}
-          </div>
-          <div style={{ marginBottom:16 }}>
-            <div style={{ fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('useCases.nav.menuLabel')}</div>
-            {USE_CASES.map(u=>(
-              <a key={u.href} href={u.href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'12px 0',borderBottom:'1px solid #f1f5f9',textDecoration:'none' }}>
-                <div style={{ fontWeight:600,fontSize:15,color:C.s }}>{u.label}</div>
-                <div style={{ fontSize:13,color:C.m,marginTop:2 }}>{u.desc}</div>
-              </a>
-            ))}
-          </div>
-          <div style={{ display:'flex',flexDirection:'column',gap:4,marginTop:16 }}>
+          {/* Accordion: "Fonctionnalités" + "Cas d'usage" share a
+              single expandedSection state so opening one auto-closes
+              the other (single-section-open behaviour). The chevron
+              rotates 180° on expand and the sub-list slides via a
+              max-height transition — kept inline because the burger
+              only ever has these two collapsibles. */}
+          {[
+            { id: 'features',  label: t('nav.features'),                items: FEATURES  },
+            { id: 'usecases',  label: t('useCases.nav.menuLabel'),     items: USE_CASES },
+          ].map(section => {
+            const isOpen = expandedSection === section.id;
+            return (
+              <div key={section.id} style={{ borderBottom:'1px solid #f1f5f9' }}>
+                <button
+                  onClick={() => setExpandedSection(prev => prev === section.id ? null : section.id)}
+                  aria-expanded={isOpen}
+                  style={{
+                    width:'100%', background:'none', border:'none', cursor:'pointer',
+                    display:'flex', alignItems:'center', justifyContent:'space-between',
+                    padding:'14px 0', fontSize:16, fontWeight:500, color:C.s,
+                    fontFamily:'inherit', textAlign:'left',
+                  }}
+                >
+                  {section.label}
+                  <svg width="14" height="14" viewBox="0 0 12 12" style={{ transition:'transform .2s', transform:isOpen?'rotate(180deg)':'rotate(0deg)' }}>
+                    <path d="M2 4l4 4 4-4" stroke={C.m} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                  </svg>
+                </button>
+                {/* max-height animation: 0 collapsed, 600 px when
+                    open (covers up to ~6 items × ~85 px). overflow
+                    hidden makes the slide actually slide instead of
+                    revealing all rows pre-rendered. */}
+                <div style={{
+                  maxHeight: isOpen ? 600 : 0,
+                  overflow:'hidden',
+                  transition:'max-height .25s ease-out',
+                }}>
+                  <div style={{ paddingLeft:12, paddingBottom:8 }}>
+                    {section.items.map(item => (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        onClick={()=>setMenuOpen(false)}
+                        style={{ display:'block', padding:'10px 0', textDecoration:'none' }}
+                      >
+                        <div style={{ fontWeight:600, fontSize:14, color:C.s }}>{item.label}</div>
+                        <div style={{ fontSize:12, color:C.m, marginTop:2 }}>{item.desc}</div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Simple links — no dropdown */}
+          <div style={{ display:'flex',flexDirection:'column',gap:0,marginTop:4 }}>
             {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
               <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>
                 {t(key)}
