@@ -11,10 +11,41 @@ const { sendWebhookEvent } = require('../services/webhookService');
 
 const router = express.Router();
 
-// In-memory per-IP rate limit for POST /apply (bot protection)
-const applyAttempts = new Map();
+// DB-backed per-IP rate limit for POST /apply. Replaces the previous
+// in-memory Map which lost state on every restart and didn't share
+// across worker instances — an attacker could spam by waiting for a
+// redeploy or by hitting different instances.
+//
+// The apply_rate_limits table (v14 migration) carries (ip,
+// attempt_count, reset_at). We upsert on every hit and atomically
+// either bump the counter or reset the window. SELECT ... FOR
+// UPDATE isn't needed because each row is keyed by IP — concurrent
+// hits from the same IP serialise on the row PK.
 const APPLY_LIMIT = 5;
 const APPLY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+async function checkApplyRateLimit(ip) {
+  const nowMs = Date.now();
+  const newResetAt = new Date(nowMs + APPLY_WINDOW_MS);
+  // Upsert: insert with attempt_count=1 if no row OR if the existing
+  // window already expired (reset). Otherwise increment.
+  const { rows: [row] } = await query(
+    `INSERT INTO apply_rate_limits (ip, attempt_count, reset_at)
+     VALUES ($1, 1, $2)
+     ON CONFLICT (ip) DO UPDATE
+       SET attempt_count = CASE
+             WHEN apply_rate_limits.reset_at < NOW() THEN 1
+             ELSE apply_rate_limits.attempt_count + 1
+           END,
+           reset_at = CASE
+             WHEN apply_rate_limits.reset_at < NOW() THEN $2
+             ELSE apply_rate_limits.reset_at
+           END
+     RETURNING attempt_count, reset_at`,
+    [ip, newResetAt]
+  );
+  return { allowed: row.attempt_count <= APPLY_LIMIT, count: row.attempt_count };
+}
 
 // ─── PUBLIC: Submit application (no auth required) ───
 // Tenant is inherited from req.tenantId set by global tenantMiddleware (domain-based)
@@ -32,23 +63,19 @@ router.post('/apply', [
     if (req.body.website && req.body.website.length > 0) {
       return res.status(400).json({ error: 'Erreur de validation' });
     }
-    // Per-IP rate limit: max 5 applications per hour
+    // Per-IP rate limit: max 5 applications per hour, persisted to
+    // DB so it survives restarts and works across multi-instance
+    // deployments.
     const clientIp = req.ip || (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.connection.remoteAddress;
-    const nowTs = Date.now();
-    const attempt = applyAttempts.get(clientIp);
-    if (attempt && attempt.resetAt > nowTs) {
-      if (attempt.count >= APPLY_LIMIT) {
+    try {
+      const { allowed } = await checkApplyRateLimit(clientIp);
+      if (!allowed) {
         return res.status(429).json({ error: 'Trop de candidatures envoyées depuis cette adresse. Réessayez dans 1h.' });
       }
-      attempt.count++;
-    } else {
-      applyAttempts.set(clientIp, { count: 1, resetAt: nowTs + APPLY_WINDOW_MS });
-    }
-    // Periodic cleanup to prevent memory leak (~0.1% of requests)
-    if (Math.random() < 0.001) {
-      for (const [k, v] of applyAttempts.entries()) {
-        if (v.resetAt <= nowTs) applyAttempts.delete(k);
-      }
+    } catch (rlErr) {
+      // Fail-open on DB hiccup — losing the limiter for one request
+      // is less bad than a 500 on a public form. Log so we notice.
+      console.error('[applications.apply] rate-limit check failed:', rlErr.message);
     }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

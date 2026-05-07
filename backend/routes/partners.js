@@ -131,9 +131,15 @@ router.get('/', async (req, res) => {
        LEFT JOIN referrals r ON p.id = r.partner_id AND r.deleted_at IS NULL
        ${whereClause}
        GROUP BY p.id, pc.name, pc.slug, pc.color
-       ORDER BY p.is_active DESC, p.name`,
+       ORDER BY p.is_active DESC, p.name
+       LIMIT 1000`,
       params
     );
+    // Hard cap at 1000. Same reasoning as the commissions list cap:
+    // the FE paginates client-side and the JOIN+GROUP BY aggregations
+    // here scale O(n*m) with referrals. 1000 partners is well above
+    // any current tenant's headcount; bigger tenants need true
+    // server-side pagination, which is a separate refactor.
     // Normalise NULL country + subject=true → "OTHER" so the admin
     // dropdown matches what the partner saw in their own settings.
     for (const p of rows) {

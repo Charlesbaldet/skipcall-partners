@@ -66,7 +66,47 @@ const PORT = process.env.PORT || 4000;
 
 // ─── Security Headers (ISO 27001 A.13.1) ───
 app.use(securityHeaders);
-app.use(helmet());
+// Default helmet covers X-Frame-Options / X-Content-Type-Options /
+// HSTS / Referrer-Policy. CSP is configured explicitly because the
+// default policy blocks inline styles (we use inline style props
+// liberally) and the Google Fonts + GA + Stripe origins we depend
+// on. The directives below are tight: third-party requests are
+// limited to the four hosts we actually call. `connect-src` lists
+// the Railway API origin so a future fetch hardcoded to its full
+// URL doesn't get blocked.
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        'https://www.googletagmanager.com',
+        'https://js.stripe.com',
+        'https://accounts.google.com',
+        // 'unsafe-inline' is needed for the GA inline bootstrap in
+        // index.html. Removing it would require a nonce + rewriting
+        // the bootstrap snippet — a separate refactor.
+        "'unsafe-inline'",
+      ],
+      scriptSrcAttr: ["'none'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      connectSrc: [
+        "'self'",
+        'https://skipcall-partners-production.up.railway.app',
+        'https://www.google-analytics.com',
+        'https://api.stripe.com',
+      ],
+      frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+}));
 
 // ─── CORS ───
 // Strict allow-list. The previous `*.vercel.app` wildcard let any

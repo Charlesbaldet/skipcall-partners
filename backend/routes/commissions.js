@@ -187,9 +187,17 @@ router.get('/', async (req, res) => {
        JOIN partners p ON c.partner_id = p.id
        JOIN referrals r ON c.referral_id = r.id
        ${whereClause}
-       ORDER BY c.created_at DESC`,
+       ORDER BY c.created_at DESC
+       LIMIT 2000`,
       params
     );
+    // Hard cap at 2000. The FE paginates client-side and the
+    // aggregations below operate on `rows`, so a real cap-and-page
+    // refactor needs FE coordination. The cap stops a tenant with
+    // 50k+ commissions from blowing up the response payload + JSON
+    // serialise time on the heavyweight admin list. 2000 is well
+    // above any current tenant's commission count and gives us
+    // headroom while we plan proper pagination.
 
     const totalPending = rows.filter(r => r.status === 'pending_approval').reduce((s, r) => s + parseFloat(r.amount), 0);
     const totalApproved = rows.filter(r => r.status === 'awaiting_invoice' || r.status === 'pending_validation').reduce((s, r) => s + parseFloat(r.amount), 0);
@@ -306,11 +314,17 @@ router.put('/:id', authorize('admin'), async (req, res) => {
           const dashboardUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/commissions';
           const prospectName = enriched.prospect_name || enriched.prospect_company || 'votre prospect';
           const amount = parseFloat(enriched.amount) || 0;
-          for (const u of partnerUsers) {
+          // Parallel fan-out. The previous serial `for (… await …)`
+          // pattern blocked this IIFE for ~N×Resend-latency (≈300 ms
+          // each), so a partner with 5 users on the account left a
+          // long-running open task hanging well after the response
+          // shipped. Promise.all + per-send catch lets all emails
+          // race; one failure no longer cancels the rest.
+          await Promise.all(partnerUsers.map(u => {
             const tmpl = status === 'paid'
               ? templates.commissionPaid({ partnerName: u.full_name, prospectName, commissionAmount: amount, currency: '€', dashboardUrl, tenantName: enriched.tenant_name })
               : templates.commissionValidated({ partnerName: u.full_name, prospectName, commissionAmount: amount, currency: '€', dashboardUrl, tenantName: enriched.tenant_name });
-            await resend.sendAndLog({
+            return resend.sendAndLog({
               to: u.email,
               subject: tmpl.subject,
               html: tmpl.html,
@@ -318,8 +332,10 @@ router.put('/:id', authorize('admin'), async (req, res) => {
               template: emailKey,
               payload: { recipient_name: u.full_name, commission_id: enriched.id, amount },
               query,
+            }).catch(err => {
+              console.error('[commissions.statusChange] send failed for', u.email, ':', err.message);
             });
-          }
+          }));
         } catch (e) { console.error('[commissions.statusChange] email error:', e.message); }
       })();
     }

@@ -21,6 +21,16 @@ router.get('/', async (req, res) => {
     if (sector) { params.push(sector); sql += ` AND sector = $${params.length}`; }
     if (q) { params.push(`%${q.toLowerCase()}%`); sql += ` AND (LOWER(name) LIKE $${params.length} OR LOWER(short_description) LIKE $${params.length} OR LOWER(icp) LIKE $${params.length})`; }
     sql += ' ORDER BY created_at DESC';
+    // Pagination caps on the public marketplace listing. Without a
+    // LIMIT, a marketplace with 100+ visible tenants returns the full
+    // payload (logo URLs + descriptions + JSONB) on every public hit —
+    // a CDN cache miss on a popular slug would slam the DB. Defaults
+    // line up with the listing UI's page size; max=50 stops a malicious
+    // ?limit=99999 from defeating the cap.
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 50);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+    params.push(limit); sql += ` LIMIT $${params.length}`;
+    params.push(offset); sql += ` OFFSET $${params.length}`;
     const { rows } = await query(sql, params);
     res.json({ partners: rows });
   } catch (err) { console.error('[marketplace]', err.message); res.status(500).json({ error: 'Erreur serveur' }); }

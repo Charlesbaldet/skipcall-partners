@@ -803,6 +803,48 @@ async function runMigrations() {
     console.error('[migrate.v35] failed:', err.message);
   }
 
+  // v36: composite indexes for the hot list queries identified in
+  // the load-readiness audit (2026-05-07). Each one targets a
+  // multi-column WHERE that was scanning sequentially because no
+  // single existing index covered all the predicates.
+  //
+  //   referrals    — list filters by (tenant_id, partner_id, status)
+  //                  and excludes soft-deleted rows on every read.
+  //   commissions  — same shape; payment polling worker also hits
+  //                  this index when sweeping pending settlements.
+  //   notifications — sidebar polls "my unread" + ORDER BY created_at
+  //                   DESC.
+  //   users         — login + reset-token lookups by (tenant_id,
+  //                   email).
+  //   api_keys      — authenticated by key_hash; partial filter on
+  //                   active rows skips the soft-deleted/revoked
+  //                   subset.
+  //
+  // All wrapped in their own try block so a failure (e.g. a column
+  // doesn't exist on a stale schema) doesn't poison v37+.
+  try {
+    await query(`CREATE INDEX IF NOT EXISTS idx_referrals_tenant_partner_status
+                   ON referrals(tenant_id, partner_id, status)
+                   WHERE deleted_at IS NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_commissions_tenant_partner_status
+                   ON commissions(tenant_id, partner_id, status)
+                   WHERE deleted_at IS NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created
+                   ON notifications(user_id, created_at DESC)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_users_tenant_email
+                   ON users(tenant_id, email)`);
+    // api_keys partial — only the rows the auth middleware ever cares
+    // about. The legacy idx_api_keys_hash covers full-table lookups;
+    // this one fast-paths the hot loop in apiKeyAuth that filters by
+    // key_hash AND is_active.
+    await query(`CREATE INDEX IF NOT EXISTS idx_api_keys_active_hash
+                   ON api_keys(key_hash)
+                   WHERE is_active = TRUE`);
+    console.log('[load] v36 composite indexes ready');
+  } catch (err) {
+    console.error('[migrate.v36] failed:', err.message);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {
