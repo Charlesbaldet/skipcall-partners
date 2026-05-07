@@ -761,6 +761,8 @@
     "kpi_commissions": "Comisiones pendientes",
     "kpi_rate": "Tasa de conversión",
     "chart_monthly": "Evolución mensual",
+    "leads_evolution": "Evolución de leads",
+    "new_leads": "Nuevos leads",
     "chart_pipeline": "Pipeline por estado",
     "chart_revenue_label": "Generado (€)",
     "chart_levels": "Rendimiento por nivel",

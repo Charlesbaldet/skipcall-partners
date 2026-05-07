@@ -761,6 +761,8 @@
     "kpi_commissions": "Ausstehende Provisionen",
     "kpi_rate": "Konversionsrate",
     "chart_monthly": "Monatliche Entwicklung",
+    "leads_evolution": "Lead-Entwicklung",
+    "new_leads": "Neue Leads",
     "chart_pipeline": "Pipeline nach Status",
     "chart_revenue_label": "Generiert (€)",
     "chart_levels": "Leistung nach Niveau",

@@ -210,6 +210,51 @@ router.get('/top-partners', authorize('admin', 'commercial'), async (req, res) =
 });
 
 // ─── Recommendation level distribution ───
+// ─── Leads evolution (referrals entering the pipeline over time) ────
+// Auto-bucketed by day / week / month based on the requested range so
+// the line chart stays readable from a 7-day zoom up to "Depuis le
+// début" without the FE having to pick. The FE renders this as an
+// area chart distinct from the existing Évolution mensuelle (which
+// tracks total + won, not just inflow). DATE_TRUNC's first arg is a
+// SQL identifier so we never interpolate user input — `unit` is
+// derived from a hardcoded ternary and constrained by the whitelist
+// below.
+router.get('/leads-evolution', async (req, res) => {
+  try {
+    const range = parseDateRange(req);
+    const daysDiff = range
+      ? Math.max(1, Math.ceil((new Date(range.endDate) - new Date(range.startDate)) / 86400000))
+      : 365;
+    const unit = daysDiff <= 31 ? 'day' : daysDiff <= 180 ? 'week' : 'month';
+    if (!['day', 'week', 'month'].includes(unit)) {
+      return res.status(400).json({ error: 'invalid_unit' });
+    }
+
+    const { where, params } = buildFilters(req, 'r', 'partner_id', { skipDate: true });
+    if (range) {
+      params.push(range.startDate);
+      where.push(`r.created_at >= $${params.length}::date`);
+      params.push(range.endDate);
+      where.push(`r.created_at < ($${params.length}::date + INTERVAL '1 day')`);
+    }
+    const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+
+    const { rows } = await query(
+      `SELECT DATE_TRUNC('${unit}', r.created_at) AS period,
+              COUNT(*)::int AS new_leads
+         FROM referrals r
+         ${whereClause}
+         GROUP BY DATE_TRUNC('${unit}', r.created_at)
+         ORDER BY period ASC`,
+      params
+    );
+    res.json({ data: rows, granularity: unit });
+  } catch (err) {
+    console.error('[dashboard.leads-evolution]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 router.get('/levels', async (req, res) => {
   try {
     const { where, params } = buildFilters(req, 'r');

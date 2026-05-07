@@ -761,6 +761,8 @@
     "kpi_commissions": "Commissioni in attesa",
     "kpi_rate": "Tasso di conversione",
     "chart_monthly": "Evoluzione mensile",
+    "leads_evolution": "Evoluzione dei lead",
+    "new_leads": "Nuovi lead",
     "chart_pipeline": "Pipeline per stato",
     "chart_revenue_label": "Generato (€)",
     "chart_levels": "Prestazioni per livello",

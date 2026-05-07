@@ -761,6 +761,8 @@
     "kpi_commissions": "Uitstaande commissies",
     "kpi_rate": "Conversieratio",
     "chart_monthly": "Maandelijkse evolutie",
+    "leads_evolution": "Leads-evolutie",
+    "new_leads": "Nieuwe leads",
     "chart_pipeline": "Pipeline per status",
     "chart_revenue_label": "Gegenereerd (€)",
     "chart_levels": "Prestaties per niveau",

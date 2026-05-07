@@ -761,6 +761,8 @@
     "kpi_commissions": "Commissions dues",
     "kpi_rate": "Taux de conversion",
     "chart_monthly": "Évolution mensuelle",
+    "leads_evolution": "Évolution des leads",
+    "new_leads": "Nouveaux leads",
     "chart_pipeline": "Pipeline par statut",
     "chart_revenue_label": "Généré (€)",
     "chart_levels": "Performance par niveau de reco",

@@ -156,6 +156,7 @@ export default function DashboardPage() {
         <OverviewTab
           kpis={kpis}
           stats={stats}
+          dateRange={dateRange}
           revenueCumul={revenueCumulState} setRevenueCumul={setRevenueCumulState}
           monthlyCumul={monthlyCumul} setMonthlyCumul={setMonthlyCumul}
           myTenant={myTenant}
@@ -177,7 +178,7 @@ export default function DashboardPage() {
 // ═══════════════════════════════════════
 // VUE D'ENSEMBLE TAB
 // ═══════════════════════════════════════
-function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, monthlyCumul, setMonthlyCumul, myTenant, billingPlan, navigate }) {
+function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, monthlyCumul, setMonthlyCumul, myTenant, billingPlan, navigate }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
@@ -263,6 +264,15 @@ function OverviewTab({ kpis, stats, revenueCumul, setRevenueCumul, monthlyCumul,
         <KPICard icon={TrendingUp} label={t('dashboard.kpi_won')} value={kpis?.won_count} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
         <KPICard icon={DollarSign} label={t('dashboard.kpi_commissions')} value={fmt(kpis?.pending_commission || 0)} color="#f59e0b" highlight />
         <KPICard icon={Users} label={t('dashboard.kpi_rate')} value={`${kpis?.win_rate || 0}%`} color="#c026d3" />
+      </div>
+
+      {/* Leads inflow chart — full-width row sitting between the
+          KPI tiles and the existing Évolution mensuelle (which
+          tracks total + won, not just inflow). Granularity is
+          server-decided from the date-picker range so the line
+          stays readable from a 7-day zoom up to "Depuis le début". */}
+      <div style={{ marginBottom: 20 }}>
+        <LeadsEvolutionChart dateRange={dateRange} />
       </div>
 
       {/* Row 3: 3 cartes côte à côte. Évolution mensuelle réduite
@@ -688,6 +698,112 @@ function ChartCard({ title, action, children }) {
       {children}
     </div>
   );
+}
+
+// ─── Leads evolution chart ──────────────────────────────────────────
+// Area chart of new referrals entering the pipeline per period.
+// Distinct from the existing chart_monthly card (which mixes total +
+// won bars). Granularity is decided server-side from the date-picker
+// range (day ≤31d, week ≤180d, month otherwise) so the line stays
+// readable across zoom levels without a client-side toggle. Re-fires
+// the fetch whenever the parent's dateRange changes.
+function LeadsEvolutionChart({ dateRange }) {
+  const { t, i18n } = useTranslation();
+  const [data, setData] = useState([]);
+  const [granularity, setGranularity] = useState('month');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api.getLeadsEvolution(dateRange)
+      .then(res => {
+        if (cancelled) return;
+        const rows = (res && res.data) || [];
+        const g = (res && res.granularity) || 'month';
+        setGranularity(g);
+        setData(rows.map(r => ({
+          period: r.period,
+          label: formatPeriodLabel(r.period, g, i18n.language),
+          leads: parseInt(r.new_leads, 10) || 0,
+        })));
+      })
+      .catch(() => { if (!cancelled) setData([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [dateRange, i18n.language]);
+
+  return (
+    <ChartCard title={t('dashboard.leads_evolution', 'Évolution des leads')}>
+      <div style={{ height: 250 }}>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: 13 }}>
+            {t('dashboard.loading', 'Chargement…')}
+          </div>
+        ) : data.length === 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: 13 }}>
+            {t('dashboard.no_data', 'Aucune donnée')}
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
+              <defs>
+                <linearGradient id="leadsEvolutionFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#16a34a" stopOpacity={0.18} />
+                  <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#f3f4f6" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} width={40} />
+              <Tooltip
+                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', padding: '8px 12px' }}
+                formatter={(value) => [value, t('dashboard.new_leads', 'Nouveaux leads')]}
+                labelStyle={{ color: '#0f172a', fontWeight: 600, marginBottom: 4 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="leads"
+                stroke="#16a34a"
+                strokeWidth={2}
+                fill="url(#leadsEvolutionFill)"
+                dot={false}
+                activeDot={{ r: 4, fill: '#16a34a', stroke: '#fff', strokeWidth: 2 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    </ChartCard>
+  );
+}
+
+// X-axis tick formatter. Granularity comes from the server so the
+// label vocabulary matches the bucket size (no awkward "S37" tick on
+// a daily series).
+function formatPeriodLabel(periodIso, granularity, lang) {
+  if (!periodIso) return '';
+  const d = new Date(periodIso);
+  if (Number.isNaN(d.getTime())) return '';
+  const locale = (lang || 'fr').slice(0, 2);
+  if (granularity === 'day') {
+    return d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  }
+  if (granularity === 'week') {
+    return 'S' + isoWeekNumber(d);
+  }
+  return d.toLocaleDateString(locale, { month: 'short', year: '2-digit' });
+}
+
+// ISO 8601 week number — Monday-based, week 1 contains the year's
+// first Thursday. Inline rather than pulling date-fns since this is
+// the only consumer.
+function isoWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
 function PageLoader() {

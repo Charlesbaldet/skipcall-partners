@@ -249,6 +249,7 @@ class ApiClient {
   getPipeline(range)        { return this.request('/dashboard/pipeline' + dateQS(range)); }
   getTopPartners(range)     { return this.request('/dashboard/top-partners' + dateQS(range)); }
   getLevels(range)          { return this.request('/dashboard/levels' + dateQS(range)); }
+  getLeadsEvolution(range)  { return this.request('/dashboard/leads-evolution' + dateQS(range)); }
 
   // Trash / Corbeille — admin/commercial only.
   getTrash()                     { return this.request('/trash'); }
