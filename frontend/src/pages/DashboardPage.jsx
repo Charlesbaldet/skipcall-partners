@@ -35,7 +35,17 @@ export default function DashboardPage() {
   const [features, setFeatures] = useState(null);
   const [stats, setStats] = useState(null);
   const [revenueCumulState, setRevenueCumulState] = useState(false);
-  const [showWizard, setShowWizard] = useState(() => localStorage.getItem('refboost_onboarding_pending') === '1');
+  // Wizard is admin-only. The pending flag is set during /signup
+  // (admins only sign up new tenants), but DashboardPage is also
+  // visible to commercial users — clamp to admin/superadmin so a
+  // copy-pasted localStorage flag can't surface the wizard to a
+  // non-admin role. Partners never reach this page (they live on
+  // /partner/dashboard) so they're already excluded by routing.
+  const [showWizard, setShowWizard] = useState(() => {
+    if (localStorage.getItem('refboost_onboarding_pending') !== '1') return false;
+    const u = api.getUser && api.getUser();
+    return u && (u.role === 'admin' || u.role === 'superadmin');
+  });
   const [billingPlan, setBillingPlan] = useState(null);
   const [dateRange, setDateRange] = useState(null);
   const [monthlyCumul, setMonthlyCumul] = useState(false);
