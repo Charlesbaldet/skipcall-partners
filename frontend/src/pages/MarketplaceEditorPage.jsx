@@ -340,7 +340,24 @@ export default function MarketplaceEditorPage() {
 
   useEffect(() => {
     api.getMarketplacePage()
-      .then(d => { setTenant(d.tenant); setPage(d.page); })
+      .then(d => {
+        // Backend returns { tenant, page } at the top level, but the
+        // endpoint has been observed returning the body via
+        // `response.data.tenant` after some upstream rewrites the
+        // payload. Accept both shapes so a future change can't drop
+        // the editor into the "Tenant introuvable" fallback again.
+        const payload = (d && d.tenant) ? d : (d && d.data) || d || {};
+        const tenantValue = payload.tenant ?? null;
+        const pageValue   = payload.page   ?? null;
+        if (!tenantValue) {
+          // We got a 200 but no tenant key — log what we did get so
+          // future debugging doesn't have to go through the network
+          // tab to learn the response shape.
+          console.error('[MarketplaceEditor] response missing `tenant`', d);
+        }
+        setTenant(tenantValue);
+        setPage(pageValue);
+      })
       .catch(err => showToast(err.message || t('common.error', 'Erreur'), 'error'))
       .finally(() => setLoading(false));
   }, []);
