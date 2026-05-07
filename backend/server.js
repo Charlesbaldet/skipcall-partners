@@ -190,8 +190,13 @@ app.use((err, req, res, next) => {
 
 // ─── Start ───
 app.listen(PORT, () => {
-  runMigrations();
-  runSecurityMigrations();
+  // Migrations are fire-and-forget so the server can start serving
+  // requests immediately. The migrate functions already catch their
+  // own errors per-block; the .catch() here is the last-resort safety
+  // net against any unhandled rejection (Node >=15 would otherwise
+  // terminate the process by default).
+  runMigrations().catch(err => console.error('[startup] runMigrations crashed:', err && err.message));
+  runSecurityMigrations().catch(err => console.error('[startup] runSecurityMigrations crashed:', err && err.message));
 
   // Stale Qonto state cleanup — runs on every deploy. Uses
   // RETURNING id so the log line names the rows we touched, which

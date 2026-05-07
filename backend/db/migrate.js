@@ -676,23 +676,34 @@ async function runMigrations() {
   //  amount_tax = 0, amount_ttc = amount. Backfilling on first run only:
   //  the WHERE amount_ht IS NULL clause skips rows already populated by
   //  a prior payout.
-  await query(`ALTER TABLE partners
-    ADD COLUMN IF NOT EXISTS tax_subject BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS tax_country CHAR(2),
-    ADD COLUMN IF NOT EXISTS tax_rate    DECIMAL(5,2),
-    ADD COLUMN IF NOT EXISTS tax_id      VARCHAR(64)`);
-  await query(`ALTER TABLE commissions
-    ADD COLUMN IF NOT EXISTS amount_ht        DECIMAL(12,2),
-    ADD COLUMN IF NOT EXISTS tax_rate_applied DECIMAL(5,2),
-    ADD COLUMN IF NOT EXISTS amount_tax       DECIMAL(12,2),
-    ADD COLUMN IF NOT EXISTS amount_ttc       DECIMAL(12,2)`);
-  await query(`UPDATE commissions
-                  SET amount_ht        = amount,
-                      tax_rate_applied = 0,
-                      amount_tax       = 0,
-                      amount_ttc       = amount
-                WHERE amount_ht IS NULL`);
-  console.log('[vat] v31 partners.tax_* + commissions.amount_(ht|tax|ttc) + backfill');
+  // Each of v31 / v32 / v33 gets its own try/catch so one block's
+  // failure (deadlock, transient FK issue, etc.) doesn't silently
+  // skip the next on the same boot. The earlier blocks (v3–v30)
+  // stay under the outer try at the bottom — they've been running
+  // cleanly for a long time. Pattern for any new migration: wrap
+  // individually, log "[migrate.vXX] failed: …", let the loop
+  // continue.
+  try {
+    await query(`ALTER TABLE partners
+      ADD COLUMN IF NOT EXISTS tax_subject BOOLEAN NOT NULL DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS tax_country CHAR(2),
+      ADD COLUMN IF NOT EXISTS tax_rate    DECIMAL(5,2),
+      ADD COLUMN IF NOT EXISTS tax_id      VARCHAR(64)`);
+    await query(`ALTER TABLE commissions
+      ADD COLUMN IF NOT EXISTS amount_ht        DECIMAL(12,2),
+      ADD COLUMN IF NOT EXISTS tax_rate_applied DECIMAL(5,2),
+      ADD COLUMN IF NOT EXISTS amount_tax       DECIMAL(12,2),
+      ADD COLUMN IF NOT EXISTS amount_ttc       DECIMAL(12,2)`);
+    await query(`UPDATE commissions
+                    SET amount_ht        = amount,
+                        tax_rate_applied = 0,
+                        amount_tax       = 0,
+                        amount_ttc       = amount
+                  WHERE amount_ht IS NULL`);
+    console.log('[vat] v31 partners.tax_* + commissions.amount_(ht|tax|ttc) + backfill');
+  } catch (err) {
+    console.error('[migrate.v31] failed:', err.message);
+  }
 
   // v32: data migration — backfill VAT on old commissions where the
   // partner is now tax_subject = true but the commission row still
@@ -705,48 +716,56 @@ async function runMigrations() {
   // future status change can't silently rewrite historical commission
   // rows. The WHERE filter is still tight (commission must be at
   // rate=0), so already-decomposed rows are never touched.
-  await query(`CREATE TABLE IF NOT EXISTS migrations (
-    name VARCHAR(100) PRIMARY KEY,
-    executed_at TIMESTAMPTZ DEFAULT NOW()
-  )`);
-  const VAT_MIG_KEY = 'backfill_vat_from_partner_v1';
-  const { rows: vatDone } = await query(
-    'SELECT 1 FROM migrations WHERE name = $1',
-    [VAT_MIG_KEY]
-  );
-  if (vatDone.length === 0) {
-    const { rowCount: vatRows } = await query(`
-      UPDATE commissions c
-         SET tax_rate_applied = p.tax_rate,
-             amount_ht        = COALESCE(c.amount_ht, c.amount),
-             amount_tax       = ROUND(COALESCE(c.amount_ht, c.amount) * p.tax_rate / 100, 2),
-             amount_ttc       = ROUND(COALESCE(c.amount_ht, c.amount) * (1 + p.tax_rate / 100.0), 2)
-        FROM partners p
-       WHERE c.partner_id = p.id
-         AND c.deleted_at IS NULL
-         AND p.tax_subject = true
-         AND p.tax_rate > 0
-         AND (c.tax_rate_applied IS NULL OR c.tax_rate_applied = 0)
-    `);
-    await query(
-      'INSERT INTO migrations (name) VALUES ($1) ON CONFLICT DO NOTHING',
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS migrations (
+      name VARCHAR(100) PRIMARY KEY,
+      executed_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    const VAT_MIG_KEY = 'backfill_vat_from_partner_v1';
+    const { rows: vatDone } = await query(
+      'SELECT 1 FROM migrations WHERE name = $1',
       [VAT_MIG_KEY]
     );
-    console.log(`[vat] v32 backfill_vat_from_partner_v1: ${vatRows} commission(s) updated`);
+    if (vatDone.length === 0) {
+      const { rowCount: vatRows } = await query(`
+        UPDATE commissions c
+           SET tax_rate_applied = p.tax_rate,
+               amount_ht        = COALESCE(c.amount_ht, c.amount),
+               amount_tax       = ROUND(COALESCE(c.amount_ht, c.amount) * p.tax_rate / 100, 2),
+               amount_ttc       = ROUND(COALESCE(c.amount_ht, c.amount) * (1 + p.tax_rate / 100.0), 2)
+          FROM partners p
+         WHERE c.partner_id = p.id
+           AND c.deleted_at IS NULL
+           AND p.tax_subject = true
+           AND p.tax_rate > 0
+           AND (c.tax_rate_applied IS NULL OR c.tax_rate_applied = 0)
+      `);
+      await query(
+        'INSERT INTO migrations (name) VALUES ($1) ON CONFLICT DO NOTHING',
+        [VAT_MIG_KEY]
+      );
+      console.log(`[vat] v32 backfill_vat_from_partner_v1: ${vatRows} commission(s) updated`);
+    }
+  } catch (err) {
+    console.error('[migrate.v32] failed:', err.message);
   }
 
   // v33: billing details on tenants. Used on the partner-side
   // /partner/payments page so partners can address their invoice
   // to the right legal entity, and on the admin-side Settings →
   // Entreprise tab where the admin enters the values once.
-  await query(`ALTER TABLE tenants
-    ADD COLUMN IF NOT EXISTS billing_company_name VARCHAR(200),
-    ADD COLUMN IF NOT EXISTS billing_address      VARCHAR(300),
-    ADD COLUMN IF NOT EXISTS billing_city         VARCHAR(100),
-    ADD COLUMN IF NOT EXISTS billing_postal_code  VARCHAR(20),
-    ADD COLUMN IF NOT EXISTS billing_country      VARCHAR(100) DEFAULT 'France',
-    ADD COLUMN IF NOT EXISTS billing_siret        VARCHAR(20)`);
-  console.log('[billing] v33 tenants.billing_* columns');
+  try {
+    await query(`ALTER TABLE tenants
+      ADD COLUMN IF NOT EXISTS billing_company_name VARCHAR(200),
+      ADD COLUMN IF NOT EXISTS billing_address      VARCHAR(300),
+      ADD COLUMN IF NOT EXISTS billing_city         VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS billing_postal_code  VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS billing_country      VARCHAR(100) DEFAULT 'France',
+      ADD COLUMN IF NOT EXISTS billing_siret        VARCHAR(20)`);
+    console.log('[billing] v33 tenants.billing_* columns');
+  } catch (err) {
+    console.error('[migrate.v33] failed:', err.message);
+  }
 
   console.log(' Migrations completed');
 
