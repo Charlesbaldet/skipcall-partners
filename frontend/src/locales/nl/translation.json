@@ -1631,7 +1631,15 @@
         },
         "countryAlignTooltip": "Tarief op het gekozen land afstemmen?"
       }
-    }
+    },
+    "company_tab": "Bedrijf",
+    "company_subtitle": "Deze gegevens worden getoond op de betalingspagina van elke partner zodat zij je correct kunnen factureren.",
+    "billing_company_name": "Bedrijfsnaam",
+    "billing_address": "Adres",
+    "billing_city": "Stad",
+    "billing_postal_code": "Postcode",
+    "billing_country": "Land",
+    "billing_siret": "KvK-nummer"
   },
   "status": {
     "new": "Nieuw",
@@ -3213,5 +3221,8 @@
     "permanent_confirm_title": "Definitief verwijderen?",
     "permanent_confirm_message": "Deze actie is onomkeerbaar. Het item wordt permanent verwijderd.",
     "permanent_confirm_delete": "Definitief verwijderen"
+  },
+  "partner_payments": {
+    "billing_info_title": "Factuurgegevens"
   }
 }

@@ -1631,7 +1631,15 @@
         },
         "countryAlignTooltip": "Alinhar a taxa com o país selecionado?"
       }
-    }
+    },
+    "company_tab": "Empresa",
+    "company_subtitle": "Estas informações são mostradas na página de pagamentos de cada parceiro para que possa faturá-lo corretamente.",
+    "billing_company_name": "Nome da empresa",
+    "billing_address": "Endereço",
+    "billing_city": "Cidade",
+    "billing_postal_code": "Código postal",
+    "billing_country": "País",
+    "billing_siret": "Número de registo"
   },
   "status": {
     "new": "Novo",
@@ -3213,5 +3221,8 @@
     "permanent_confirm_title": "Excluir definitivamente?",
     "permanent_confirm_message": "Esta ação é irreversível. O item será excluído permanentemente.",
     "permanent_confirm_delete": "Excluir definitivamente"
+  },
+  "partner_payments": {
+    "billing_info_title": "Informações de faturação"
   }
 }

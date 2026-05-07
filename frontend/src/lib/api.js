@@ -288,6 +288,12 @@ class ApiClient {
   // Tenant (current user's tenant)
   getMyTenant() { return this.request('/tenants/me'); }
 
+  // Tenant billing details (Settings → Entreprise tab on admin
+  // side, surfaced read-only on the partner /partner/payments
+  // page so the partner can address their invoice).
+  getBillingInfo()        { return this.request('/tenants/billing'); }
+  updateBillingInfo(data) { return this.request('/tenants/billing', { method: 'PUT', body: JSON.stringify(data) }); }
+
   // Programme (tenant levels)
   getTenantLevels() { return this.request('/levels'); }
   createTenantLevel(data) { return this.request('/levels', { method: 'POST', body: JSON.stringify(data) }); }

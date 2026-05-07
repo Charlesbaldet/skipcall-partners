@@ -42,6 +42,65 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
+// ─── Billing details ───
+// GET is open to any authenticated user inside the tenant (partners
+// need it for invoicing), PUT is admin/superadmin only. Both routes
+// MUST be registered BEFORE PUT /:id below — otherwise Express
+// matches "/billing" against "/:id" and swallows the call.
+router.get('/billing', authenticate, async (req, res) => {
+  if (!req.user.tenantId) return res.status(400).json({ error: 'tenant_missing' });
+  try {
+    const { rows } = await query(
+      `SELECT billing_company_name, billing_address, billing_city,
+              billing_postal_code, billing_country, billing_siret
+         FROM tenants WHERE id = $1`,
+      [req.user.tenantId]
+    );
+    res.json({ billing: rows[0] || {} });
+  } catch (err) {
+    console.error('[tenants.billing GET]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.put('/billing', authenticate, async (req, res) => {
+  if (!['admin', 'superadmin'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
+  if (!req.user.tenantId) return res.status(400).json({ error: 'tenant_missing' });
+  try {
+    const {
+      billing_company_name, billing_address, billing_city,
+      billing_postal_code, billing_country, billing_siret,
+    } = req.body || {};
+    const { rows } = await query(
+      `UPDATE tenants
+          SET billing_company_name = $2,
+              billing_address      = $3,
+              billing_city         = $4,
+              billing_postal_code  = $5,
+              billing_country      = $6,
+              billing_siret        = $7
+        WHERE id = $1
+        RETURNING billing_company_name, billing_address, billing_city,
+                  billing_postal_code, billing_country, billing_siret`,
+      [
+        req.user.tenantId,
+        billing_company_name || null,
+        billing_address || null,
+        billing_city || null,
+        billing_postal_code || null,
+        billing_country || null,
+        billing_siret || null,
+      ]
+    );
+    res.json({ billing: rows[0] || {} });
+  } catch (err) {
+    console.error('[tenants.billing PUT]', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ─── Admin: Update tenant ───
 router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'admin' && req.user.role !== 'superadmin') return res.status(403).json({ error: 'Accès interdit' });

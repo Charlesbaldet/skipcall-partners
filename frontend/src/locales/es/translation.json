@@ -1631,7 +1631,15 @@
         },
         "countryAlignTooltip": "¿Alinear el tipo con el país seleccionado?"
       }
-    }
+    },
+    "company_tab": "Empresa",
+    "company_subtitle": "Estos datos se muestran en la página de pagos de cada socio para que pueda facturarte correctamente.",
+    "billing_company_name": "Nombre de la empresa",
+    "billing_address": "Dirección",
+    "billing_city": "Ciudad",
+    "billing_postal_code": "Código postal",
+    "billing_country": "País",
+    "billing_siret": "Número de registro"
   },
   "status": {
     "new": "Nuevo",
@@ -3213,5 +3221,8 @@
     "permanent_confirm_title": "¿Eliminar definitivamente?",
     "permanent_confirm_message": "Esta acción es irreversible. El elemento se eliminará de forma permanente.",
     "permanent_confirm_delete": "Eliminar definitivamente"
+  },
+  "partner_payments": {
+    "billing_info_title": "Información de facturación"
   }
 }

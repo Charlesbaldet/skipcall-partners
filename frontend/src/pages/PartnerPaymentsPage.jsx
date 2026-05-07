@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { fmt, fmtDate } from '../lib/constants';
-import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, FileText, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, FileText, ShieldCheck, AlertTriangle, Building } from 'lucide-react';
 
 // 4-column lifecycle, ordered left → right.
 const STATUS_KEYS = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
@@ -21,6 +21,7 @@ export default function PartnerPaymentsPage() {
   const [totals, setTotals] = useState({ pending: 0, paid: 0 });
   const [loading, setLoading] = useState(true);
   const [bankInfo, setBankInfo] = useState(null);
+  const [billingInfo, setBillingInfo] = useState(null);
   const [uploadingId, setUploadingId] = useState(null);
   const fileInputRef = useRef(null);
   const pendingUploadIdRef = useRef(null);
@@ -35,10 +36,16 @@ export default function PartnerPaymentsPage() {
   const reload = () => Promise.all([
     api.getCommissions(),
     api.getMyBankInfo().catch(() => ({ bank_info: null })),
-  ]).then(([c, b]) => {
+    // Tenant billing info — used to render the "Informations de
+    // facturation" card at the top so the partner has the legal
+    // entity, SIRET, and address to put on their invoice. Failure
+    // is silent; the card simply doesn't render.
+    api.getBillingInfo().catch(() => ({ billing: null })),
+  ]).then(([c, b, bi]) => {
     setCommissions(c.commissions);
     setTotals({ pending: c.totalPending, paid: c.totalPaid });
     setBankInfo(b && b.bank_info ? b.bank_info : null);
+    setBillingInfo(bi && bi.billing && bi.billing.billing_company_name ? bi.billing : null);
   });
 
   useEffect(() => {
@@ -117,30 +124,54 @@ export default function PartnerPaymentsPage() {
         </Link>
       )}
 
-      {/* KPIs.
-          Backend `totals.pending/paid` and `totalAll` sum c.amount
-          (HT). When any commission carries VAT we additionally derive
-          TTC sums client-side from the loaded list so the partner
-          sees the gross amount they actually receive on Qonto. Legacy
-          / non-subject rows have amount_ttc == amount, so the TTC
-          sum equals HT and we keep the single-line UI for partners
-          who aren't assujettis. */}
-      {(() => {
-        const sum = (filterFn, key) => commissions.filter(filterFn).reduce((s, c) => s + (parseFloat(c[key]) || 0), 0);
-        const isPending = (c) => c.status === 'pending_approval' || c.status === 'awaiting_invoice' || c.status === 'pending_validation';
-        const isPaid    = (c) => c.status === 'paid';
-        const totalTtcAll     = commissions.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
-        const totalTtcPending = sum(isPending, 'amount_ttc') || sum(isPending, 'amount');
-        const totalTtcPaid    = sum(isPaid,    'amount_ttc') || sum(isPaid,    'amount');
-        const anyVat = commissions.some(c => parseFloat(c.amount_tax || 0) > 0);
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-            <PayKPI icon={DollarSign}  label={t('commissions.kpi_total')}        value={fmt(anyVat ? totalTtcAll     : totalAll)}        sub={anyVat ? `${fmt(totalAll)} HT`        : null} suffix={anyVat ? 'TTC' : null} color="#6366f1" />
-            <PayKPI icon={Clock}       label={t('partnerPayments.kpi_pending')}  value={fmt(anyVat ? totalTtcPending : totals.pending)}  sub={anyVat ? `${fmt(totals.pending)} HT` : null} suffix={anyVat ? 'TTC' : null} color="#f59e0b" />
-            <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')}         value={fmt(anyVat ? totalTtcPaid    : totals.paid)}     sub={anyVat ? `${fmt(totals.paid)} HT`    : null} suffix={anyVat ? 'TTC' : null} color="#16a34a" />
+      {/* Billing card. Renders only when the tenant admin has filled
+          in Settings → Entreprise. Gives the partner the legal entity
+          + SIRET + address they need to address their invoice to. */}
+      {billingInfo && (
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 12 }}>
+            <Building size={16} color="#94a3b8" />
+            {t('partner_payments.billing_info_title', 'Informations de facturation')}
           </div>
-        );
-      })()}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, fontSize: 13 }}>
+            <div>
+              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                {t('settings.billing_company_name', 'Nom de la structure')}
+              </div>
+              <div style={{ fontWeight: 600, color: '#0f172a' }}>{billingInfo.billing_company_name}</div>
+            </div>
+            <div>
+              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                {t('settings.billing_siret', 'N° SIRET')}
+              </div>
+              <div style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace', fontSize: 12 }}>
+                {billingInfo.billing_siret || '—'}
+              </div>
+            </div>
+          </div>
+          {(billingInfo.billing_address || billingInfo.billing_city || billingInfo.billing_postal_code) && (
+            <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 12, paddingTop: 12 }}>
+              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                {t('settings.billing_address', 'Adresse')}
+              </div>
+              <div style={{ color: '#0f172a', fontSize: 13, lineHeight: 1.5 }}>
+                {billingInfo.billing_address && <>{billingInfo.billing_address}<br/></>}
+                {billingInfo.billing_postal_code} {billingInfo.billing_city}
+                {billingInfo.billing_country ? `, ${billingInfo.billing_country}` : ''}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* KPIs — HT only. Mirrors the admin /commissions tile design.
+          The TVA breakdown lives on each individual card; tile shows
+          one number for at-a-glance scanning. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+        <PayKPI icon={DollarSign}  label={t('commissions.kpi_total')}        value={fmt(totalAll)}       color="#6366f1" />
+        <PayKPI icon={Clock}       label={t('partnerPayments.kpi_pending')}  value={fmt(totals.pending)} color="#f59e0b" />
+        <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')}         value={fmt(totals.paid)}    color="#16a34a" />
+      </div>
 
       {/* Rejected rows surfaced before the kanban so partners actually see them */}
       {rejectedRows.length > 0 && (
@@ -179,13 +210,11 @@ export default function PartnerPaymentsPage() {
         {STATUS_KEYS.map(statusKey => {
             const st = PAY_STATUS[statusKey];
             const cards = visibleRows.filter(c => c.status === statusKey);
-            // Column total. Sum TTC when amount_ttc exists, fall back
-            // to amount for legacy rows. The HT total renders only
-            // when at least one card in the column carries VAT —
-            // partners who aren't subject keep the compact header.
-            const colTotalTtc = cards.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
-            const colTotalHt  = cards.reduce((s, c) => s + (parseFloat(c.amount_ht)  || parseFloat(c.amount) || 0), 0);
-            const colHasVat = cards.some(c => parseFloat(c.amount_tax || 0) > 0);
+            // Column total — HT only, mirroring the admin /commissions
+            // header. The TVA breakdown is on each card; the column
+            // header stays a single number so the partner can scan
+            // their lifecycle stages without doing math.
+            const colTotalHt = cards.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0);
             return (
               <div
                 key={statusKey}
@@ -201,17 +230,11 @@ export default function PartnerPaymentsPage() {
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
                     <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.label}</span>
                   </div>
-                  <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, flexShrink: 0 }}>{cards.length}</span>
-                </div>
-
-                {colTotalTtc > 0 && (
-                  <div style={{ padding: '4px 10px 8px', fontSize: 11, fontWeight: 700, color: st.color, lineHeight: 1.2 }}>
-                    {fmt(colTotalTtc)}{colHasVat ? ' TTC' : ''}
-                    {colHasVat && (
-                      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>{fmt(colTotalHt)} HT</div>
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    {colTotalHt > 0 && <span style={{ fontWeight: 700, fontSize: 13, color: st.color }}>{fmt(colTotalHt)}</span>}
+                    <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{cards.length}</span>
                   </div>
-                )}
+                </div>
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                   {cards.map(c => (

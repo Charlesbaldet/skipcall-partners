@@ -1631,7 +1631,15 @@
         },
         "countryAlignTooltip": "Satz an das gewählte Land anpassen?"
       }
-    }
+    },
+    "company_tab": "Unternehmen",
+    "company_subtitle": "Diese Angaben werden jedem Partner auf der Zahlungsseite angezeigt, damit er Sie korrekt fakturieren kann.",
+    "billing_company_name": "Firmenname",
+    "billing_address": "Adresse",
+    "billing_city": "Stadt",
+    "billing_postal_code": "Postleitzahl",
+    "billing_country": "Land",
+    "billing_siret": "Handelsregisternummer"
   },
   "status": {
     "new": "Neu",
@@ -3213,5 +3221,8 @@
     "permanent_confirm_title": "Endgültig löschen?",
     "permanent_confirm_message": "Diese Aktion ist unwiderruflich. Das Element wird endgültig gelöscht.",
     "permanent_confirm_delete": "Endgültig löschen"
+  },
+  "partner_payments": {
+    "billing_info_title": "Rechnungsinformationen"
   }
 }

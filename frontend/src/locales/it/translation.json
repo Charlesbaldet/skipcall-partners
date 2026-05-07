@@ -1631,7 +1631,15 @@
         },
         "countryAlignTooltip": "Allineare l'aliquota al paese selezionato?"
       }
-    }
+    },
+    "company_tab": "Azienda",
+    "company_subtitle": "Queste informazioni vengono mostrate nella pagina dei pagamenti di ogni partner per una corretta fatturazione.",
+    "billing_company_name": "Ragione sociale",
+    "billing_address": "Indirizzo",
+    "billing_city": "Città",
+    "billing_postal_code": "CAP",
+    "billing_country": "Paese",
+    "billing_siret": "Partita IVA"
   },
   "status": {
     "new": "Nuovo",
@@ -3213,5 +3221,8 @@
     "permanent_confirm_title": "Eliminare definitivamente?",
     "permanent_confirm_message": "Questa azione è irreversibile. L’elemento verrà eliminato in modo permanente.",
     "permanent_confirm_delete": "Elimina definitivamente"
+  },
+  "partner_payments": {
+    "billing_info_title": "Informazioni di fatturazione"
   }
 }

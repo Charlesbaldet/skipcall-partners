@@ -14,7 +14,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen,
+  Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen, Building,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -68,6 +68,7 @@ export default function SettingsPage() {
       { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
       { id: 'billing', icon: CreditCard, label: t('settings.tab_billing', 'Facturation') },
+      { id: 'company', icon: Building, label: t('settings.company_tab', 'Entreprise') },
     ] : []),
     ...(isPartner ? [
       { id: 'bank', icon: Banknote, label: t('settings.tab_bank_info', 'Informations bancaires') },
@@ -138,6 +139,7 @@ export default function SettingsPage() {
             {tab === 'partner-notifications' && isPartner && <PartnerNotificationsTab />}
             {tab === 'bank' && isPartner && <PartnerBankInfoTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
+            {tab === 'company' && isAdmin && <CompanyBillingTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
             {tab === 'pipeline' && isAdmin && (
               <>
@@ -3255,6 +3257,115 @@ function PartnerBankInfoTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ═══ ENTREPRISE — billing details ═══
+// Admin-only tab. Persisted on tenants.billing_* columns added in
+// v33. Read-only twin renders on /partner/payments at the top of
+// the page so partners can address their invoice.
+function CompanyBillingTab() {
+  const { t } = useTranslation();
+  const [form, setForm] = useState({
+    billing_company_name: '', billing_address: '', billing_city: '',
+    billing_postal_code: '', billing_country: 'France', billing_siret: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState(0);
+
+  useEffect(() => {
+    api.getBillingInfo()
+      .then(d => {
+        const b = d.billing || {};
+        setForm({
+          billing_company_name: b.billing_company_name || '',
+          billing_address:      b.billing_address      || '',
+          billing_city:         b.billing_city         || '',
+          billing_postal_code:  b.billing_postal_code  || '',
+          billing_country:      b.billing_country      || 'France',
+          billing_siret:        b.billing_siret        || '',
+        });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.updateBillingInfo({
+        billing_company_name: form.billing_company_name.trim() || null,
+        billing_address:      form.billing_address.trim()      || null,
+        billing_city:         form.billing_city.trim()         || null,
+        billing_postal_code:  form.billing_postal_code.trim()  || null,
+        billing_country:      form.billing_country.trim()      || null,
+        billing_siret:        form.billing_siret.trim()        || null,
+      });
+      setSavedAt(Date.now());
+    } catch (err) {
+      showToast.error(err.message || 'Error');
+    }
+    setSaving(false);
+  };
+
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 6 };
+
+  if (loading) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+        {t('settings.company_tab', 'Entreprise')}
+      </h2>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+        {t('settings.company_subtitle', 'Ces informations sont affichées sur la page de paiement de chaque partenaire pour qu\'il puisse vous facturer correctement.')}
+      </p>
+      <div style={{ maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div>
+          <label style={labelStyle}>{t('settings.billing_company_name', 'Nom de la structure')}</label>
+          <input value={form.billing_company_name} onChange={e => setForm(f => ({ ...f, billing_company_name: e.target.value }))} placeholder="SKIPCALL SAS" style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>{t('settings.billing_address', 'Adresse')}</label>
+          <input value={form.billing_address} onChange={e => setForm(f => ({ ...f, billing_address: e.target.value }))} placeholder="15 rue de la Paix" style={inputStyle} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+          <div>
+            <label style={labelStyle}>{t('settings.billing_postal_code', 'Code postal')}</label>
+            <input value={form.billing_postal_code} onChange={e => setForm(f => ({ ...f, billing_postal_code: e.target.value }))} placeholder="06000" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>{t('settings.billing_city', 'Ville')}</label>
+            <input value={form.billing_city} onChange={e => setForm(f => ({ ...f, billing_city: e.target.value }))} placeholder="Nice" style={inputStyle} />
+          </div>
+        </div>
+        <div>
+          <label style={labelStyle}>{t('settings.billing_country', 'Pays')}</label>
+          <input value={form.billing_country} onChange={e => setForm(f => ({ ...f, billing_country: e.target.value }))} placeholder="France" style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>{t('settings.billing_siret', 'N° SIRET')}</label>
+          <input value={form.billing_siret} onChange={e => setForm(f => ({ ...f, billing_siret: e.target.value }))} placeholder="912 345 678 00015" style={{ ...inputStyle, fontFamily: 'monospace' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+          <button onClick={save} disabled={saving} style={{
+            padding: '10px 20px', borderRadius: 10, border: 'none',
+            background: 'var(--rb-primary, #059669)', color: '#fff',
+            fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
+            <Save size={14} /> {saving ? t('common.saving', 'Enregistrement…') : t('common.save', 'Enregistrer')}
+          </button>
+          {savedAt > 0 && Date.now() - savedAt < 3000 && (
+            <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

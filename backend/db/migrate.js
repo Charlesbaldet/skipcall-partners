@@ -735,6 +735,19 @@ async function runMigrations() {
     console.log(`[vat] v32 backfill_vat_from_partner_v1: ${vatRows} commission(s) updated`);
   }
 
+  // v33: billing details on tenants. Used on the partner-side
+  // /partner/payments page so partners can address their invoice
+  // to the right legal entity, and on the admin-side Settings →
+  // Entreprise tab where the admin enters the values once.
+  await query(`ALTER TABLE tenants
+    ADD COLUMN IF NOT EXISTS billing_company_name VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS billing_address      VARCHAR(300),
+    ADD COLUMN IF NOT EXISTS billing_city         VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS billing_postal_code  VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS billing_country      VARCHAR(100) DEFAULT 'France',
+    ADD COLUMN IF NOT EXISTS billing_siret        VARCHAR(20)`);
+  console.log('[billing] v33 tenants.billing_* columns');
+
   console.log(' Migrations completed');
 
   } catch (err) {

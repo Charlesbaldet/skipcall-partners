@@ -1631,7 +1631,15 @@
         },
         "countryAlignTooltip": "Aligner le taux sur le pays sélectionné ?"
       }
-    }
+    },
+    "company_tab": "Entreprise",
+    "company_subtitle": "Ces informations sont affichées sur la page de paiement de chaque partenaire pour qu'il puisse vous facturer correctement.",
+    "billing_company_name": "Nom de la structure",
+    "billing_address": "Adresse",
+    "billing_city": "Ville",
+    "billing_postal_code": "Code postal",
+    "billing_country": "Pays",
+    "billing_siret": "N° SIRET"
   },
   "status": {
     "new": "Nouveau",
@@ -3213,5 +3221,8 @@
     "permanent_confirm_title": "Supprimer définitivement ?",
     "permanent_confirm_message": "Cette action est irréversible. L'élément sera supprimé de façon permanente.",
     "permanent_confirm_delete": "Supprimer définitivement"
+  },
+  "partner_payments": {
+    "billing_info_title": "Informations de facturation"
   }
 }

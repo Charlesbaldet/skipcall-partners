@@ -1631,7 +1631,15 @@
         },
         "countryAlignTooltip": "Align the rate with the selected country?"
       }
-    }
+    },
+    "company_tab": "Company",
+    "company_subtitle": "These details show on every partner's payments page so they can bill you correctly.",
+    "billing_company_name": "Company name",
+    "billing_address": "Address",
+    "billing_city": "City",
+    "billing_postal_code": "Postal code",
+    "billing_country": "Country",
+    "billing_siret": "Registration number"
   },
   "status": {
     "new": "New",
@@ -3213,5 +3221,8 @@
     "permanent_confirm_title": "Delete permanently?",
     "permanent_confirm_message": "This action is irreversible. The item will be permanently deleted.",
     "permanent_confirm_delete": "Delete permanently"
+  },
+  "partner_payments": {
+    "billing_info_title": "Billing information"
   }
 }

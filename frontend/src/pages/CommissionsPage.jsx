@@ -657,30 +657,15 @@ export default function CommissionsPage() {
         </button>
       </div>
 
-      {/* KPIs.
-          Backend `totals.pending/paid` and `totalAll` (summary tab)
-          all sum c.amount (HT). When any commission carries VAT we
-          additionally derive a TTC sum client-side from the loaded
-          commissions so the tile shows the gross amount the partner
-          actually receives. Legacy / non-subject rows have
-          amount_ttc == amount, so the TTC sum equals the HT sum and
-          we keep the single-line UI for tenants without assujettis. */}
-      {(() => {
-        const sum = (filterFn, key) => commissions.filter(filterFn).reduce((s, c) => s + (parseFloat(c[key]) || 0), 0);
-        const isPending = (c) => c.status === 'pending_approval' || c.status === 'awaiting_invoice' || c.status === 'pending_validation';
-        const isPaid    = (c) => c.status === 'paid';
-        const totalTtcAll     = commissions.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
-        const totalTtcPending = sum(isPending, 'amount_ttc') || sum(isPending, 'amount');
-        const totalTtcPaid    = sum(isPaid,    'amount_ttc') || sum(isPaid,    'amount');
-        const anyVat = commissions.some(c => parseFloat(c.amount_tax || 0) > 0);
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-            <ComKPI icon={DollarSign}   label={t('commissions.kpi_total')}   value={fmt(anyVat ? totalTtcAll     : totalAll)}        sub={anyVat ? `${fmt(totalAll)} HT`        : null} suffix={anyVat ? 'TTC' : null} color="var(--rb-primary, #059669)" />
-            <ComKPI icon={Clock}        label={t('commissions.kpi_pending')} value={fmt(anyVat ? totalTtcPending : totals.pending)}  sub={anyVat ? `${fmt(totals.pending)} HT` : null} suffix={anyVat ? 'TTC' : null} color="#f59e0b" />
-            <ComKPI icon={CheckCircle}  label={t('commissions.kpi_paid')}    value={fmt(anyVat ? totalTtcPaid    : totals.paid)}     sub={anyVat ? `${fmt(totals.paid)} HT`    : null} suffix={anyVat ? 'TTC' : null} color="#16a34a" />
-          </div>
-        );
-      })()}
+      {/* KPIs — HT only. The TVA breakdown lives on each card's
+          gray banner; the tiles stay clean with a single number so
+          the admin can scan totals at a glance. Backend already sums
+          c.amount (HT) for totalAll / totals.pending / totals.paid. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+        <ComKPI icon={DollarSign}  label={t('commissions.kpi_total')}   value={fmt(totalAll)}       color="var(--rb-primary, #059669)" />
+        <ComKPI icon={Clock}       label={t('commissions.kpi_pending')} value={fmt(totals.pending)} color="#f59e0b" />
+        <ComKPI icon={CheckCircle} label={t('commissions.kpi_paid')}    value={fmt(totals.paid)}    color="#16a34a" />
+      </div>
 
       {/* Toolbar — tabs left, view toggle + actions right, separated
           from the body by a single bottom border. The right-side
@@ -869,15 +854,11 @@ export default function CommissionsPage() {
             return (
               <div key={status} style={{ flex: 1, background: '#f8fafc', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
                 {(() => {
-                  // Column total. Sum TTC from amount_ttc when set
-                  // (post-payment snapshot), fall back to amount for
-                  // commissions that haven't been wired yet. The HT
-                  // line shows alongside only when at least one card
-                  // in the column carries VAT — keeps the header
-                  // compact for tenants whose partners aren't subject.
-                  const totalTtc = allCards.reduce((s, c) => s + (parseFloat(c.amount_ttc) || parseFloat(c.amount) || 0), 0);
-                  const totalHt  = allCards.reduce((s, c) => s + (parseFloat(c.amount_ht)  || parseFloat(c.amount) || 0), 0);
-                  const anyVat = allCards.some(c => parseFloat(c.amount_tax || 0) > 0);
+                  // Column total — HT only. Same source as the KPI
+                  // tiles: amount_ht when set (post-payout snapshot),
+                  // fall back to amount for unpaid rows. TVA detail
+                  // is on each card's own banner.
+                  const totalHt = allCards.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0);
                   return (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -885,14 +866,7 @@ export default function CommissionsPage() {
                         <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.15 }}>
-                          <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>
-                            {fmt(totalTtc)}{anyVat ? ' TTC' : ''}
-                          </span>
-                          {anyVat && (
-                            <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmt(totalHt)} HT</span>
-                          )}
-                        </div>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>{fmt(totalHt)}</span>
                         <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
                       </div>
                     </div>
@@ -923,20 +897,26 @@ export default function CommissionsPage() {
                         transition: 'box-shadow .3s, border-color .3s',
                       }}
                     >
-                      {/* Status pill removed from kanban cards — the
-                          column header already conveys it. Card top
-                          row keeps just the partner name + the
-                          bulk-pay checkbox. */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, marginBottom: 4 }}>
+                      {/* Header: bulk-pay checkbox + partner / company
+                          + trash icon. Company moved to a sub-line so
+                          long names don't truncate the partner row. */}
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 0, marginBottom: 8 }}>
                         {status === 'pending_validation' && qontoStatus?.connected && (
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => togglePick(c.id)}
-                            style={{ cursor: 'pointer', flexShrink: 0 }}
+                            style={{ cursor: 'pointer', flexShrink: 0, marginTop: 2 }}
                           />
                         )}
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{c.partner_name}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.partner_name}</div>
+                          {(c.prospect_company || c.prospect_name) && (
+                            <div style={{ color: '#94a3b8', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {c.prospect_company || c.prospect_name}
+                            </div>
+                          )}
+                        </div>
                         {/* Delete button — hidden on paid + on rows
                             with an in-flight Qonto transfer. The
                             backend will 409 those cases anyway, but
@@ -950,59 +930,86 @@ export default function CommissionsPage() {
                             style={{
                               flexShrink: 0,
                               padding: 5, borderRadius: 6, background: 'transparent',
-                              border: '1px solid transparent', color: '#94a3b8',
+                              border: '1px solid transparent', color: '#cbd5e1',
                               cursor: busyId === c.id ? 'wait' : 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               transition: 'background .15s, color .15s, border-color .15s',
                             }}
                             onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = '#fecaca'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'transparent'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; e.currentTarget.style.borderColor = 'transparent'; }}
                           >
                             <Trash2 size={13} />
                           </button>
                         )}
                       </div>
-                      {c.prospect_name && <div style={{ color: '#475569', fontSize: 12, marginBottom: 8 }}>{c.prospect_name}{c.prospect_company ? ' · ' + c.prospect_company : ''}</div>}
+
+                      {/* Amounts row (HT left, rate · MRR right) —
+                          divided from the header by a thin top border
+                          so the eye lands on the number first. */}
                       {(() => {
-                        // VAT-subject row: top line shows the HT
-                        // amount + rate · deal, second line shows
-                        // "TVA X% : amount · TTC : amount". Non-VAT
-                        // rows keep the legacy single-line layout
-                        // (just the amount + rate · deal) so the card
-                        // doesn't grow for tenants without assujettis.
                         const hasVat = parseFloat(c.amount_tax || 0) > 0;
                         const headlineAmount = hasVat ? c.amount_ht : c.amount;
                         return (
-                          <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasVat ? 2 : 8 }}>
-                              <span style={{ fontWeight: 800, color: sc.color, fontSize: 16 }}>
-                                {fmt(headlineAmount)}{hasVat ? ' HT' : ''}
-                              </span>
-                              <span style={{ color: '#94a3b8', fontSize: 11 }}>{c.rate}% · {fmt(c.deal_value)}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderTop: '1px solid #f1f5f9', marginBottom: hasVat ? 6 : 8 }}>
+                            <div>
+                              <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--rb-primary, #059669)' }}>{fmt(headlineAmount)}</span>
+                              {hasVat && <span style={{ fontSize: 11, color: 'var(--rb-primary, #059669)', marginLeft: 4, fontWeight: 600 }}>HT</span>}
                             </div>
-                            {hasVat && (
-                              <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6, lineHeight: 1.4 }}>
-                                TVA {c.tax_rate_applied}% : {fmt(c.amount_tax)} · <strong style={{ color: '#0f172a' }}>TTC : {fmt(c.amount_ttc)}</strong>
-                              </div>
-                            )}
-                          </>
+                            <span style={{ color: '#94a3b8', fontSize: 11, textAlign: 'right' }}>
+                              {c.rate}% · {fmt(c.deal_value)}
+                            </span>
+                          </div>
                         );
                       })()}
-                      {/* Engagement breakdown — explains how the
-                          amount was reached so admins approving
-                          the commission don't have to recompute. */}
-                      {c.engagement_type && (
-                        <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>
-                          {c.engagement_type === 'forfait'     && t('pipeline.forfait', 'Forfait')}
-                          {(c.engagement_type === 'mensuel' || c.engagement_type === 'monthly') &&
-                            `${c.engagement_periods || 1} ${t('pipeline.months', 'mois')}`}
-                          {(c.engagement_type === 'trimestriel' || c.engagement_type === 'quarterly') &&
-                            `${c.engagement_periods || 1} ${t('pipeline.quarters', 'trim.')} (${(c.engagement_periods || 1) * 3} ${t('pipeline.months', 'mois')})`}
-                          {(c.engagement_type === 'annuel' || c.engagement_type === 'yearly') &&
-                            `${c.engagement_periods || 1} ${t('pipeline.years', 'an(s)')} (${(c.engagement_periods || 1) * 12} ${t('pipeline.months', 'mois')})`}
+
+                      {/* Compact gray TVA banner. Drops out entirely
+                          for non-subject rows so the card stays
+                          minimal for tenants without assujettis. */}
+                      {parseFloat(c.amount_tax || 0) > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#64748b', padding: '5px 8px', background: '#f8fafc', borderRadius: 6, marginBottom: 8, lineHeight: 1.3 }}>
+                          <span>TVA {c.tax_rate_applied}% : {fmt(c.amount_tax)}</span>
+                          <span style={{ fontWeight: 600, color: '#334155' }}>TTC : {fmt(c.amount_ttc)}</span>
                         </div>
                       )}
-                      <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>{fmtDate(c.created_at)}</div>
+
+                      {/* Pills row: engagement + date. Engagement
+                          omitted on `forfait` (default, no extra info
+                          to convey). Date is the creation date — the
+                          `paid_at` for paid rows is also surfaced via
+                          the column itself + the ref banner below. */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                        {c.engagement_type && c.engagement_type !== 'forfait' && (
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#64748b', fontWeight: 600 }}>
+                            {(c.engagement_type === 'mensuel' || c.engagement_type === 'monthly') &&
+                              `${c.engagement_periods || 1} ${t('pipeline.months', 'mois')}`}
+                            {(c.engagement_type === 'trimestriel' || c.engagement_type === 'quarterly') &&
+                              `${c.engagement_periods || 1} ${t('pipeline.quarters', 'trim.')}`}
+                            {(c.engagement_type === 'annuel' || c.engagement_type === 'yearly') &&
+                              `${c.engagement_periods || 1} ${t('pipeline.years', 'an(s)')}`}
+                          </span>
+                        )}
+                        <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtDate(c.created_at)}</span>
+                      </div>
+
+                      {/* Compact monospace ref line for paid commissions.
+                          Replaces the previous larger ref block + the
+                          "Vérifier sur Qonto" link (redundant — admin
+                          can paste the ref into Qonto search). */}
+                      {status === 'paid' && c.payment_reference && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontFamily: 'monospace', color: '#94a3b8', padding: '4px 8px', background: '#f8fafc', borderRadius: 6, marginBottom: 8, wordBreak: 'break-all' }}>
+                          <FileText size={10} />
+                          <span style={{ flex: 1 }}>{c.payment_reference}</span>
+                          {c.has_invoice && (
+                            <button
+                              onClick={() => handleDownloadInvoice(c.id)}
+                              title={t('qonto.payment_proof', 'Preuve de virement')}
+                              style={{ padding: 2, borderRadius: 4, background: 'transparent', border: 'none', color: '#16a34a', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            >
+                              <Download size={11} />
+                            </button>
+                          )}
+                        </div>
+                      )}
 
                       {/* Qonto in-flight status block: only renders
                           once a payment has been initiated. Tells
@@ -1029,14 +1036,6 @@ export default function CommissionsPage() {
                               {t('qonto.initiated_on', 'Virement initié le')} {fmtDateTime(c.payment_initiated_at)}
                             </div>
                           )}
-                          <a
-                            href="https://app.qonto.com/business-account"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ display: 'inline-block', marginTop: 4, color: 'inherit', fontWeight: 700, textDecoration: 'underline' }}
-                          >
-                            {t('qonto.check_on_qonto', 'Vérifier sur Qonto')} →
-                          </a>
                         </div>
                       )}
                       {!scaPending && errBanner && (
@@ -1119,33 +1118,14 @@ export default function CommissionsPage() {
                           )}
                         </div>
                       )}
-                      {status === 'paid' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          {c.payment_reference && (
-                            <div style={{ padding: '6px 10px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 11, color: '#475569' }}>
-                              <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('qonto.transfer_reference', 'Réf. virement')}</div>
-                              <div style={{ fontFamily: 'monospace', color: '#0f172a', wordBreak: 'break-all' }}>{c.payment_reference}</div>
-                            </div>
-                          )}
-                          {c.has_invoice && (
-                            <button onClick={() => handleDownloadInvoice(c.id)}
-                              style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                              <Download size={12} /> {t('qonto.payment_proof', 'Preuve de virement')}
-                            </button>
-                          )}
-                          {c.paid_at && (
-                            <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>{t('commissions.paid_on')} {fmtDate(c.paid_at)}</div>
-                          )}
-                          <a
-                            href="https://app.qonto.com/business-account"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textAlign: 'center', color: '#16a34a', fontWeight: 600, fontSize: 11, textDecoration: 'underline' }}
-                          >
-                            {t('qonto.check_on_qonto', 'Vérifier sur Qonto')} →
-                          </a>
-                        </div>
-                      )}
+                      {/* Paid status: nothing rendered here. The
+                          compact ref line above (with the inline
+                          download icon) replaces the previous large
+                          "Réf. virement" block + "Preuve de virement"
+                          button + "Payée le" text + "Vérifier sur
+                          Qonto" link. The column itself conveys the
+                          paid status; pasting the ref into Qonto
+                          search is one keystroke away. */}
                     </div>
                     );
                   })}
