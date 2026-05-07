@@ -68,7 +68,6 @@ export default function SettingsPage() {
       { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
       { id: 'billing', icon: CreditCard, label: t('settings.tab_billing', 'Facturation') },
-      { id: 'invoicing', icon: BookOpen, label: t('settings.tab_invoicing', 'Comptabilité') },
       { id: 'company', icon: Building, label: t('settings.company_tab', 'Entreprise') },
     ] : []),
     ...(isPartner ? [
@@ -140,7 +139,6 @@ export default function SettingsPage() {
             {tab === 'partner-notifications' && isPartner && <PartnerNotificationsTab />}
             {tab === 'bank' && isPartner && <PartnerBankInfoTab />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
-            {tab === 'invoicing' && isAdmin && <InvoicingTab />}
             {tab === 'company' && isAdmin && <CompanyBillingTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
             {tab === 'pipeline' && isAdmin && (
@@ -634,8 +632,21 @@ function IntegrationsTab() {
       {/* Unified integrations panel — filter pills (All / CRM /
           Payments / Auth / Webhooks / History) over a row-card list
           mirroring the spec layout. WebhooksSection and the sync log
-          are surfaced via the Webhooks/History filters. */}
+          are surfaced via the Webhooks/History filters. The PAIEMENT
+          / COMPTABILITÉ category labels are visual section headers
+          for the panel below — Qonto lives inside IntegrationsPanel
+          (filterable via the Payments pill) and Pennylane is its own
+          self-contained card after the panel. */}
+      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', fontWeight: 600, marginBottom: 8 }}>
+        {t('settings.payment_category', 'Paiement')}
+      </div>
       <IntegrationsPanel />
+
+      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', fontWeight: 600, marginTop: 32, marginBottom: 8 }}>
+        {t('settings.accounting_category', 'Comptabilité')}
+      </div>
+      <PennylaneSection />
+
       <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}><Key size={16} color="#6366f1" /><h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Open API</h4></div>
@@ -3373,15 +3384,15 @@ function CompanyBillingTab() {
 }
 
 // ═══ COMPTABILITÉ — Pennylane integration ═══
-// Admin-only tab. Pairs the tenant with a Pennylane workspace via
-// API token; once paired and enabled, every approved commission
-// auto-creates a supplier invoice in Pennylane and the matching
-// Qonto SEPA settlement marks it paid. Wiring lives in routes/
-// commissions.js. The connect call hits /api/pennylane/settings
-// which validates the token against Pennylane's /me before
-// persisting it, so the green "Connected" state actually means the
-// token is live.
-function InvoicingTab() {
+// Renders inside the Intégrations tab below the Payments panel.
+// Pairs the tenant with a Pennylane workspace via API token; once
+// paired and enabled, every approved commission auto-creates a
+// supplier invoice in Pennylane and the matching Qonto SEPA
+// settlement marks it paid. Wiring lives in routes/commissions.js.
+// The connect call hits /api/pennylane/settings which validates
+// the token against Pennylane's /me before persisting it, so the
+// green "Connected" state actually means the token is live.
+function PennylaneSection() {
   const { t } = useTranslation();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -3433,10 +3444,7 @@ function InvoicingTab() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
-        {t('settings.pennylane_title', 'Pennylane')}
-      </h3>
-      <p style={{ fontSize: 13, color: '#64748b', marginBottom: 24 }}>
+      <p style={{ fontSize: 13, color: '#64748b', marginTop: 0, marginBottom: 16 }}>
         {t('settings.pennylane_subtitle', 'Créez automatiquement des factures fournisseurs dans Pennylane pour chaque commission.')}
       </p>
 
