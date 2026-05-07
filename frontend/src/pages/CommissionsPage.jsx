@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { fmt, fmtDate, fmtDateTime } from '../lib/constants';
-import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw, Trash2, Eye } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw, Trash2, Eye, BookOpen } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import { showPrompt } from '../components/Dialogs.jsx';
 
@@ -1008,6 +1008,22 @@ export default function CommissionsPage() {
                               <Download size={11} />
                             </button>
                           )}
+                        </div>
+                      )}
+
+                      {/* Pennylane invoice pointer — shows on every
+                          card that has a Pennylane invoice (created
+                          on approve, marked paid on Qonto settle).
+                          Purple to visually distinguish from the
+                          green Qonto/RefBoost chrome. */}
+                      {c.pennylane_invoice_id && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          fontSize: 10, color: '#7c3aed',
+                          padding: '2px 6px', marginBottom: 6,
+                        }}>
+                          <BookOpen size={10} />
+                          Pennylane #{c.pennylane_invoice_id}
                         </div>
                       )}
 

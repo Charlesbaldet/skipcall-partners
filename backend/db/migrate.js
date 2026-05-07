@@ -780,6 +780,29 @@ async function runMigrations() {
     console.error('[migrate.v34] failed:', err.message);
   }
 
+  // v35: Pennylane accounting integration. Complements the existing
+  // Qonto payment flow by auto-creating a supplier invoice in the
+  // admin's Pennylane workspace whenever a commission is approved,
+  // and marking the same invoice paid once Qonto confirms the SEPA
+  // transfer settled. Per-tenant token + global enable flag on
+  // tenants; per-row pointers on commissions and partners so we
+  // don't re-create the same supplier or duplicate the invoice on
+  // a retry.
+  try {
+    await query(`ALTER TABLE tenants
+      ADD COLUMN IF NOT EXISTS pennylane_api_token TEXT,
+      ADD COLUMN IF NOT EXISTS pennylane_enabled   BOOLEAN DEFAULT FALSE`);
+    await query(`ALTER TABLE commissions
+      ADD COLUMN IF NOT EXISTS pennylane_invoice_id  VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS pennylane_supplier_id VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS pennylane_status      VARCHAR(50)`);
+    await query(`ALTER TABLE partners
+      ADD COLUMN IF NOT EXISTS pennylane_supplier_id VARCHAR(100)`);
+    console.log('[pennylane] v35 tenants/commissions/partners pennylane_* columns');
+  } catch (err) {
+    console.error('[migrate.v35] failed:', err.message);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {

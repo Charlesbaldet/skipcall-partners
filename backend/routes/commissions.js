@@ -7,8 +7,105 @@ const { sendEmail } = require('../services/emailService');
 const notify = require('../services/notifyService');
 const { sendWebhookEvent } = require('../services/webhookService');
 const { decomposeAmountWithTax } = require('../utils/commissionFormula');
+const PennylaneService = require('../services/pennylaneService');
 
 const router = express.Router();
+
+// ─── Pennylane integration helpers ───────────────────────────────────
+// Both fire-and-forget. Pennylane is a downstream accounting layer —
+// every call here is wrapped so a 401/500/timeout from Pennylane
+// never poisons the commission flow. Logs go to Railway with the
+// `[pennylane]` prefix so the admin can correlate failures.
+//
+// Invoice creation runs after a commission is approved; mark-paid
+// runs after Qonto confirms the SEPA transfer settled. Both are
+// guarded by `tenants.pennylane_enabled` AND `pennylane_api_token`,
+// so disabling the integration is a hard kill-switch.
+
+async function createPennylaneInvoice(commissionId, tenantId) {
+  try {
+    const { rows: [tenant] } = await query(
+      'SELECT pennylane_api_token, pennylane_enabled FROM tenants WHERE id = $1',
+      [tenantId]
+    );
+    if (!tenant?.pennylane_enabled || !tenant?.pennylane_api_token) return;
+
+    const { rows: [commission] } = await query(
+      'SELECT * FROM commissions WHERE id = $1',
+      [commissionId]
+    );
+    // Idempotent — never re-create an invoice for the same commission.
+    if (!commission || commission.pennylane_invoice_id) return;
+
+    const { rows: [partner] } = await query(
+      'SELECT * FROM partners WHERE id = $1',
+      [commission.partner_id]
+    );
+    if (!partner) return;
+
+    const pl = new PennylaneService(tenant.pennylane_api_token);
+
+    let supplierId = partner.pennylane_supplier_id;
+    if (!supplierId) {
+      const supplier = await pl.findOrCreateSupplier(partner);
+      supplierId = supplier && supplier.id;
+      if (supplierId) {
+        await query(
+          'UPDATE partners SET pennylane_supplier_id = $1 WHERE id = $2',
+          [String(supplierId), partner.id]
+        );
+      }
+    }
+    if (!supplierId) {
+      console.error('[pennylane] no supplier id for commission', commissionId);
+      return;
+    }
+
+    const invoice = await pl.createSupplierInvoice(commission, partner, { id: supplierId });
+    const invoiceId = invoice && (invoice.id || invoice.uuid);
+    if (!invoiceId) {
+      console.error('[pennylane] no invoice id returned for commission', commissionId);
+      return;
+    }
+    await query(
+      `UPDATE commissions
+          SET pennylane_invoice_id  = $2,
+              pennylane_supplier_id = $3,
+              pennylane_status      = $4
+        WHERE id = $1`,
+      [commissionId, String(invoiceId), String(supplierId), invoice.status || 'imported']
+    );
+    console.log(`[pennylane] created invoice ${invoiceId} for commission ${commissionId}`);
+  } catch (err) {
+    console.error(`[pennylane] invoice create failed for ${commissionId}:`, err.message);
+  }
+}
+
+async function markPennylaneInvoicePaid(commissionId, tenantId) {
+  try {
+    const { rows: [tenant] } = await query(
+      'SELECT pennylane_api_token, pennylane_enabled FROM tenants WHERE id = $1',
+      [tenantId]
+    );
+    if (!tenant?.pennylane_enabled || !tenant?.pennylane_api_token) return;
+
+    const { rows: [commission] } = await query(
+      'SELECT pennylane_invoice_id FROM commissions WHERE id = $1',
+      [commissionId]
+    );
+    if (!commission?.pennylane_invoice_id) return;
+
+    const pl = new PennylaneService(tenant.pennylane_api_token);
+    const today = new Date().toISOString().slice(0, 10);
+    const result = await pl.markInvoiceAsPaid(commission.pennylane_invoice_id, today);
+    if (result) {
+      await query('UPDATE commissions SET pennylane_status = $2 WHERE id = $1', [commissionId, 'paid']);
+      console.log(`[pennylane] marked invoice ${commission.pennylane_invoice_id} paid for commission ${commissionId}`);
+    }
+  } catch (err) {
+    console.error(`[pennylane] mark-paid failed for ${commissionId}:`, err.message);
+  }
+}
 
 router.use(authenticate);
 router.use(tenantScope);
@@ -83,6 +180,7 @@ router.get('/', async (req, res) => {
               c.qonto_transfer_id, c.payment_initiated_at, c.payment_completed_at,
               c.payment_reference, c.payment_error,
               (c.qonto_sca_session_token IS NOT NULL) AS sca_pending,
+              c.pennylane_invoice_id, c.pennylane_status,
               p.name as partner_name, p.contact_name as partner_contact,
               r.prospect_name, r.prospect_company
        FROM commissions c
@@ -318,6 +416,12 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
         WHERE id = $1 RETURNING *`,
       [req.params.id]
     );
+
+    // Fire-and-forget: create the Pennylane supplier invoice if the
+    // tenant has the integration on. Detached from the response so a
+    // slow Pennylane API never makes the admin's "Approuver" click
+    // feel laggy.
+    createPennylaneInvoice(req.params.id, existing.tenant_id).catch(() => {});
 
     (async () => {
       try {
@@ -1125,6 +1229,9 @@ async function reconcileQontoTransfers(tenantId) {
             WHERE id = $1`,
           [c.id]
         );
+        // Mark the Pennylane invoice as paid in lockstep with the
+        // RefBoost status flip. Fire-and-forget; logged on failure.
+        markPennylaneInvoicePaid(c.id, c.tenant_id).catch(() => {});
         // Send the proof-of-payment email. Best-effort — failures are
         // logged, the commission stays paid.
         try {
@@ -1332,6 +1439,7 @@ async function reconcileQontoTransfers(tenantId) {
               WHERE id = $1`,
             [c.id]
           );
+          markPennylaneInvoicePaid(c.id, c.tenant_id).catch(() => {});
           // Best-effort proof-of-payment email — same template path
           // as the regular settled branch above.
           try {
@@ -1591,6 +1699,7 @@ router.post('/:id/confirm-sca', authorize('admin'), async (req, res) => {
             WHERE id = $1`,
           [c.id]
         );
+        markPennylaneInvoicePaid(c.id, c.tenant_id).catch(() => {});
       }
       return res.json({
         ok: true,

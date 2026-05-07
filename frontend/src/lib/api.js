@@ -298,6 +298,13 @@ class ApiClient {
   getOnboardingStatus() { return this.request('/onboarding/status'); }
   dismissOnboarding()   { return this.request('/onboarding/dismiss', { method: 'POST' }); }
 
+  // Pennylane (accounting) integration. Auto-creates supplier
+  // invoices for approved commissions and marks them paid when the
+  // matching Qonto SEPA transfer settles.
+  getPennylaneStatus()           { return this.request('/pennylane/status'); }
+  updatePennylaneSettings(body)  { return this.request('/pennylane/settings', { method: 'PUT', body: JSON.stringify(body) }); }
+  disconnectPennylane()          { return this.request('/pennylane/disconnect', { method: 'DELETE' }); }
+
   // Programme (tenant levels)
   getTenantLevels() { return this.request('/levels'); }
   createTenantLevel(data) { return this.request('/levels', { method: 'POST', body: JSON.stringify(data) }); }
