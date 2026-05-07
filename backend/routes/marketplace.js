@@ -126,15 +126,34 @@ async function tenantBundle(tenantId) {
 }
 
 // ─── GET /api/marketplace/page ───────────────────────────────────────
+// Two failure modes hide behind the FE's hardcoded "Tenant introuvable"
+// message: tenantBundle returning null (real 404) and loadOrCreatePage
+// throwing (500 swallowed by the outer catch). Split the try blocks so
+// Railway logs distinguish them — debugging a blanket "Erreur serveur"
+// against a known-good DB took longer than it should have.
 router.get('/page', authenticate, requireAdmin, async (req, res) => {
+  const tenantId = req.user && req.user.tenantId;
+  if (!tenantId) {
+    console.error('[marketplace.page GET] missing tenantId on req.user', { userId: req.user?.id, role: req.user?.role });
+    return res.status(400).json({ error: 'tenant_missing' });
+  }
+  let tenant;
   try {
-    const tenant = await tenantBundle(req.user.tenantId);
-    if (!tenant) return res.status(404).json({ error: 'Tenant introuvable' });
-    const page = await loadOrCreatePage(req.user.tenantId);
+    tenant = await tenantBundle(tenantId);
+  } catch (err) {
+    console.error('[marketplace.page GET] tenantBundle failed', { tenantId, msg: err.message });
+    return res.status(500).json({ error: 'Erreur serveur (tenant lookup)' });
+  }
+  if (!tenant) {
+    console.error('[marketplace.page GET] tenant row not found', { tenantId });
+    return res.status(404).json({ error: 'Tenant introuvable' });
+  }
+  try {
+    const page = await loadOrCreatePage(tenantId);
     res.json({ tenant, page });
   } catch (err) {
-    console.error('[marketplace.page GET]', err.message);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('[marketplace.page GET] loadOrCreatePage failed', { tenantId, msg: err.message });
+    res.status(500).json({ error: 'Erreur serveur (page load)' });
   }
 });
 
