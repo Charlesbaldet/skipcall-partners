@@ -530,9 +530,13 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
     );
 
     // Soft delete — moves the row to the Corbeille for 30 days.
+    // Tenant filter is defense-in-depth: loadCommissionWithContext()
+    // already verified ownership at line 510, but if a future
+    // refactor changes that helper, the missing filter here would
+    // re-open the cross-tenant delete window.
     await query(
-      'UPDATE commissions SET deleted_at = NOW(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL',
-      [req.user?.id || null, req.params.id]
+      'UPDATE commissions SET deleted_at = NOW(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL AND tenant_id = $3',
+      [req.user?.id || null, req.params.id, existing.tenant_id]
     );
 
     (async () => {
@@ -582,6 +586,14 @@ router.post('/:id/upload-invoice', async (req, res) => {
     const { filename, data_url } = req.body || {};
     if (!data_url || typeof data_url !== 'string' || !data_url.startsWith('data:')) {
       return res.status(400).json({ error: 'Fichier requis (PDF)' });
+    }
+    // Per-file cap: 5 MB raw → ~6.7 MB base64. The global JSON limit
+    // is 15 MB (server.js) so without this check a partner could
+    // file ~10 MB invoices into the DB on every approval. 5 MB is
+    // generous for a PDF invoice and keeps `commissions.invoice_url`
+    // (TEXT) from bloating the row.
+    if (data_url.length > 7_000_000) {
+      return res.status(413).json({ error: 'Fichier trop volumineux (5 MB max)' });
     }
 
     let where = 'id = $1 AND deleted_at IS NULL';
@@ -908,7 +920,7 @@ router.post('/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (re
           });
           attachmentId = att?.id || null;
           if (attachmentId) {
-            await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1', [c.id, attachmentId]);
+            await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1 AND tenant_id = $3', [c.id, attachmentId, tenantId]);
           }
         }
       } catch (e) {
@@ -926,8 +938,8 @@ router.post('/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (re
     if (!idempotencyKey) {
       idempotencyKey = qonto.newIdempotencyKey();
       await query(
-        'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
-        [c.id, idempotencyKey]
+        'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1 AND tenant_id = $3',
+        [c.id, idempotencyKey, tenantId]
       );
     }
 
@@ -1035,8 +1047,8 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
   if (!idempotencyKey) {
     idempotencyKey = qonto.newIdempotencyKey();
     await query(
-      'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1',
-      [c.id, idempotencyKey]
+      'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1 AND tenant_id = $3',
+      [c.id, idempotencyKey, tenantId]
     );
   }
 
@@ -1107,7 +1119,7 @@ async function payOneCommissionViaQonto(c, integ, tenantId) {
     console.error('[qonto.pay-one] failed for', c.id, ':', err.message);
     const sanitized = sanitizePaymentError(err);
     try {
-      await query('UPDATE commissions SET payment_error = $2 WHERE id = $1', [c.id, sanitized]);
+      await query('UPDATE commissions SET payment_error = $2 WHERE id = $1 AND tenant_id = $3', [c.id, sanitized, tenantId]);
     } catch {}
     return { ok: false, commission_id: c.id, code: sanitized || 'qonto_error', error: err.message };
   }
@@ -1521,8 +1533,8 @@ async function reconcileQontoTransfers(tenantId) {
         // Increment BEFORE the call — if the worker crashes mid-
         // request the next sweep still sees one fewer retry slot.
         await query(
-          'UPDATE commissions SET qonto_retry_count = COALESCE(qonto_retry_count, 0) + 1 WHERE id = $1',
-          [c.id]
+          'UPDATE commissions SET qonto_retry_count = COALESCE(qonto_retry_count, 0) + 1 WHERE id = $1 AND tenant_id = $2',
+          [c.id, tenantId]
         );
         const result = await qonto.replayTransfer(tid, {
           body: c.qonto_request_body,

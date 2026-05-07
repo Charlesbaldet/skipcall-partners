@@ -69,18 +69,24 @@ app.use(securityHeaders);
 app.use(helmet());
 
 // ─── CORS ───
+// Strict allow-list. The previous `*.vercel.app` wildcard let any
+// preview deployment (including ones from forks / unrelated Vercel
+// projects in the same DNS namespace) call the prod API with
+// credentials, which is a tenant-data exposure path. Preview builds
+// that need API access set CORS_PREVIEW_ORIGIN to their full
+// origin (e.g. CORS_PREVIEW_ORIGIN=https://refboost-feat-x.vercel.app)
+// so the allow-list stays explicit per-deploy.
 app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     const allowed = [
       process.env.FRONTEND_URL,
+      process.env.CORS_PREVIEW_ORIGIN,
       'http://localhost:5173',
       'http://localhost:3000',
-    ];
-    // Allow all Vercel preview deployments for the project
-    const isVercelPreview = origin && origin.endsWith('.vercel.app');
-    if (allowed.includes(origin) || isVercelPreview) {
+    ].filter(Boolean);
+    if (allowed.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS: ' + origin));
@@ -115,6 +121,21 @@ const authLimiter = rateLimit({
   max: 20,
 });
 app.use('/api/auth/', authLimiter);
+
+// Tighter limiter on the password-reset surface. Both forgot-password
+// (email enumeration) and reset-password (token brute-force) need a
+// ceiling well below the 20/15min auth limiter — 5/hour per IP makes
+// enumeration impractical without breaking legitimate users who
+// occasionally retry. Mounted BEFORE the auth router so its middleware
+// chain hits first.
+const passwordResetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/forgot-password', passwordResetLimiter);
+app.use('/api/auth/reset-password', passwordResetLimiter);
 
 // ─── Tenant middleware (White-label) ───
 app.use('/api/', tenantMiddleware);

@@ -426,6 +426,21 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           contact_first_name, contact_last_name,
           commission_rate_override, commission_overridden } = req.body;
 
+    // Length caps on the free-text fields. Without these, an
+    // attacker (or a careless admin pasting a long log) can stuff
+    // arbitrary-size text into a TEXT column — DB bloat, slower
+    // index scans on the parent row, and a bigger response payload
+    // for every list endpoint that returns the row. 5 KB is plenty
+    // for a deal note; lost_reason fits in 1 KB.
+    if (typeof notes === 'string' && notes.length > 5000) {
+      client.release();
+      return res.status(400).json({ error: 'notes_too_long', max: 5000 });
+    }
+    if (typeof lost_reason === 'string' && lost_reason.length > 1000) {
+      client.release();
+      return res.status(400).json({ error: 'lost_reason_too_long', max: 1000 });
+    }
+
     // Get current state (with tenant check). Skip soft-deleted rows
     // — admins can't edit a deal that's in the Corbeille.
     let selectQuery = 'SELECT * FROM referrals WHERE id = $1 AND deleted_at IS NULL';

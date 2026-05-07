@@ -18,12 +18,15 @@ router.post('/connect', async (req, res) => {
   const { token, dbTransactions, dbContacts, dbCompanies } = req.body || {};
   if (!token || !dbTransactions) return res.status(400).json({ error: 'token et base Transactions requis' });
 
-  // Inbound request tracing. Logs token PREFIX only — never the full
-  // secret. Helps spot paste artefacts ("ntn_" prefix mis-copied,
-  // trailing whitespace, 32-char hex vs UUID) on the Railway side.
+  // Inbound request tracing. Token presence + length only — the
+  // earlier prefix/tail format wrote 19 chars of the secret to the
+  // Railway log stream, which is enough for partial reconstruction
+  // if logs ever leak (Slack screenshot, support ticket, error-
+  // tracking pipeline). Length alone is enough to spot paste
+  // artefacts (trailing whitespace, truncation, 32-char hex vs
+  // UUID) without writing any of the bytes.
   console.log('[notion.connect] body keys:', Object.keys(req.body || {}));
-  console.log('[notion.connect] token prefix:', String(token).slice(0, 15) + '…', 'length:', String(token).length);
-  console.log('[notion.connect] token tail:', '…' + String(token).slice(-4));
+  console.log('[notion.connect] token present:', !!token, 'length:', String(token || '').length);
   console.log('[notion.connect] dbTransactions:', dbTransactions);
   if (dbContacts)  console.log('[notion.connect] dbContacts:',  dbContacts);
   if (dbCompanies) console.log('[notion.connect] dbCompanies:', dbCompanies);

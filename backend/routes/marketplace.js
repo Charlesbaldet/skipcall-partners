@@ -254,8 +254,13 @@ router.post('/references/upload', authenticate, requireAdmin, async (req, res) =
   try {
     const { name, description, data_url } = req.body || {};
     if (!name || typeof name !== 'string') return res.status(400).json({ error: 'name requis' });
-    if (data_url && (typeof data_url !== 'string' || !/^data:image\//.test(data_url))) {
-      return res.status(400).json({ error: 'data_url doit être une image base64' });
+    // Strict MIME allow-list. The previous /^data:image\// regex
+    // accepted SVG payloads, which carry inline <script> + on*
+    // handlers — a stored XSS vector once an admin uploads it and a
+    // partner / public-marketplace visitor renders the reference
+    // page. Bitmap formats only.
+    if (data_url && (typeof data_url !== 'string' || !/^data:image\/(png|jpeg|gif|webp);base64,/.test(data_url))) {
+      return res.status(400).json({ error: 'data_url doit être PNG, JPEG, GIF ou WebP en base64' });
     }
     if (data_url && data_url.length > 1024 * 1024) {
       return res.status(413).json({ error: 'Logo trop volumineux (1MB max)' });

@@ -29,7 +29,9 @@ const TENANT_PUBLIC_COLUMNS = `
   pennylane_enabled
 `;
 router.get('/', authenticate, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
+  if (!['admin', 'superadmin'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
   try {
     const { rows } = await query(`SELECT ${TENANT_PUBLIC_COLUMNS} FROM tenants ORDER BY created_at ASC`);
     res.json({ tenants: rows });
@@ -40,7 +42,9 @@ router.get('/', authenticate, async (req, res) => {
 
 // ─── Admin: Create tenant ───
 router.post('/', authenticate, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Accès interdit' });
+  if (!['admin', 'superadmin'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
   const { name, slug, domain, primary_color, secondary_color, logo_url } = req.body;
   if (!name || !slug) return res.status(400).json({ error: 'Nom et slug requis' });
 
