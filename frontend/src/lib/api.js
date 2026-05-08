@@ -156,6 +156,40 @@ class ApiClient {
   }
   logout() { this.setToken(null); this.setUser(null); }
   getMe() { return this.request('/auth/me'); }
+  // GDPR Article 17 — partner self-service account deletion. Soft
+  // deletes the user + partner row, schedules a 30-day purge, and
+  // sends a confirmation email. The frontend immediately clears the
+  // local session and redirects.
+  deleteAccount() { return this.request('/auth/delete-account', { method: 'POST' }); }
+  // GDPR Article 20 — partner data portability. The endpoint sets
+  // Content-Disposition: attachment so the response IS the file;
+  // we fetch as a Blob (NOT JSON) so the browser preserves the
+  // exact byte stream for the download trigger.
+  async exportData() {
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/partner/export-data`, { headers });
+    if (!res.ok) {
+      let msg = 'Erreur export';
+      try {
+        const body = await res.clone().json();
+        if (body && body.error) msg = body.error;
+      } catch {}
+      const err = new Error(msg);
+      err.status = res.status;
+      throw err;
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('Content-Disposition') || '';
+    const match = /filename="?([^";]+)"?/.exec(cd);
+    const today = new Date().toISOString().slice(0, 10);
+    const filename = match ? match[1] : `refboost-export-${today}.json`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    return { ok: true, filename };
+  }
   changePassword(currentPassword, newPassword) { return this.request('/auth/password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) }); }
   // Phase B: multi-role space switcher
   getMySpaces() { return this.request('/auth/me/spaces'); }

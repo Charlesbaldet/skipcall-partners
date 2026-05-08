@@ -922,4 +922,104 @@ router.post('/switch-space',
   }
 );
 
+// ─── GDPR Article 17 — partner-initiated account deletion ───
+// Soft-deletes the user + partner rows (deleted_at = NOW()) and flips
+// the partner inactive so the existing /auth/me access-revoked check
+// terminates the active session on the next /me poll. The daily purge
+// worker (backend/services/gdprPurge.js) hard-deletes anything past
+// the 30-day grace window. Partners only — admins can't self-delete
+// their tenant (would need a separate tenant-deletion flow).
+router.post('/delete-account', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'partner') {
+      return res.status(403).json({ error: 'Réservé aux partenaires' });
+    }
+    const userId = req.user.id;
+    const tenantId = req.user.tenantId || null;
+    const partnerId = req.user.partnerId || null;
+
+    // Soft-delete the user row. We stamp deleted_at AND flip is_active
+    // so any code path that filters by is_active (the legacy ones that
+    // pre-date the deleted_at column) treats this user as gone too.
+    await query(
+      'UPDATE users SET deleted_at = NOW(), is_active = false, updated_at = NOW() WHERE id = $1',
+      [userId]
+    );
+
+    // Soft-delete the partner row (tenant-scoped). is_active = false
+    // tells the partner-access guard in /auth/me to surface
+    // access_revoked on the next call, so the active session
+    // terminates without waiting for JWT expiry.
+    if (partnerId && tenantId) {
+      await query(
+        'UPDATE partners SET deleted_at = NOW(), is_active = false WHERE id = $1 AND tenant_id = $2',
+        [partnerId, tenantId]
+      );
+    }
+
+    // Pull the user's name + tenant name for a more personable email.
+    let recipientName = null;
+    let tenantName = null;
+    try {
+      const { rows: u } = await query(
+        `SELECT u.full_name, t.name AS tenant_name
+           FROM users u LEFT JOIN tenants t ON t.id = u.tenant_id
+          WHERE u.id = $1`,
+        [userId]
+      );
+      if (u.length) {
+        recipientName = u[0].full_name || null;
+        tenantName = u[0].tenant_name || null;
+      }
+    } catch {}
+
+    const purgeAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const purgeAtIso = purgeAt.toISOString();
+    const purgeAtLabel = purgeAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Confirmation email — best-effort; we never block the deletion
+    // response on email-send latency.
+    try {
+      const resend = require('../services/resend');
+      const { accountDeletionRequested } = require('../utils/emailTemplates');
+      const tpl = accountDeletionRequested({
+        recipientName,
+        scheduledPurgeAt: purgeAtLabel,
+        tenantName,
+      });
+      await resend.sendEmail({
+        to: req.user.email,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+      });
+    } catch (err) {
+      console.error('[delete-account.email] failed:', err.message);
+    }
+
+    // Notify admins of the tenant so they're aware a partner left.
+    try {
+      const notify = require('../services/notifyService');
+      await notify.fanoutAdminNotification(tenantId, 'partner_account_deletion_requested', {
+        title: 'Suppression de compte partenaire',
+        message: `Le partenaire ${recipientName || req.user.email} a demandé la suppression de son compte (purge prévue le ${purgeAtLabel}).`,
+        link: '/partners',
+      });
+    } catch (err) {
+      console.error('[delete-account.notify] failed:', err.message);
+    }
+
+    auditLog(req, 'partner_account_deletion_requested', 'user', userId, {
+      tenant_id: tenantId,
+      partner_id: partnerId,
+      scheduled_purge_at: purgeAtIso,
+    });
+
+    res.json({ ok: true, scheduled_purge_at: purgeAtIso });
+  } catch (err) {
+    console.error('[delete-account] error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

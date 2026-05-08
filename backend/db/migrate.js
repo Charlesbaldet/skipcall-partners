@@ -934,6 +934,26 @@ async function runMigrations() {
     console.error('[migrate.v39] failed:', err.message);
   }
 
+  // v40: GDPR Article 17 — soft delete on users + partners. The
+  // /api/auth/delete-account endpoint stamps deleted_at = NOW(); the
+  // 30-day cron permanently purges anything beyond that window. We
+  // also flag is_active = false on partners so the access-revoked
+  // session check in /auth/me kicks the user out immediately, even
+  // before the JWT itself expires.
+  try {
+    await query(`ALTER TABLE users    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
+    await query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_users_deleted_at
+                   ON users(deleted_at)
+                   WHERE deleted_at IS NOT NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_partners_deleted_at
+                   ON partners(deleted_at)
+                   WHERE deleted_at IS NOT NULL`);
+    console.log('[gdpr] v40 users/partners.deleted_at added');
+  } catch (err) {
+    console.error('[migrate.v40] failed:', err.message);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {
