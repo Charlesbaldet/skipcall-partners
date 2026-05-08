@@ -41,7 +41,7 @@ function Logo({ size = 40, white = false }) {
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login, loginWithGoogle, switchSpace } = useAuth();
+  const { login, loginWithGoogle, switchSpace, finalizeMfaLogin } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const revoked = searchParams.get('revoked') === '1';
@@ -55,6 +55,12 @@ export default function LoginPage() {
   // modal. Cleared once the user picks one.
   const [pickerSpaces, setPickerSpaces] = useState(null);
   const [pickerBusy, setPickerBusy] = useState(false);
+  // MFA-required step. Holds the short-lived mfa_token issued by
+  // /auth/login and the form state for the second-factor screen.
+  const [mfaToken, setMfaToken] = useState(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaUseBackup, setMfaUseBackup] = useState(false);
+  const [mfaBusy, setMfaBusy] = useState(false);
 
   const finishLogin = (u) => {
     navigate(u.role === 'partner' ? '/partner/submit' : '/');
@@ -114,7 +120,9 @@ export default function LoginPage() {
           navigate('/signup?' + qs.toString());
           return;
         }
-        if (data.requiresSpaceSelection) {
+        if (data.mfa_required) {
+          setMfaToken(data.mfa_token);
+        } else if (data.requiresSpaceSelection) {
           setPickerSpaces(data.spaces || []);
         } else {
           finishLogin(data.user);
@@ -138,7 +146,9 @@ export default function LoginPage() {
       // login() returns the full backend payload. Multi-tenant
       // accounts get requiresSpaceSelection + a temp token; the
       // picker modal owns the next step.
-      if (data.requiresSpaceSelection) {
+      if (data.mfa_required) {
+        setMfaToken(data.mfa_token);
+      } else if (data.requiresSpaceSelection) {
         setPickerSpaces(data.spaces || []);
       } else {
         finishLogin(data.user);
@@ -147,6 +157,30 @@ export default function LoginPage() {
       setError(err.message || t("login.error_default"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMfaSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setError('');
+    setMfaBusy(true);
+    try {
+      const data = await finalizeMfaLogin({
+        mfa_token: mfaToken,
+        code: mfaCode,
+        is_backup_code: mfaUseBackup,
+      });
+      if (data.requiresSpaceSelection) {
+        setMfaToken(null);
+        setPickerSpaces(data.spaces || []);
+      } else {
+        setMfaToken(null);
+        finishLogin(data.user);
+      }
+    } catch (err) {
+      setError(err.message || t('mfa.invalid_code'));
+    } finally {
+      setMfaBusy(false);
     }
   };
 
@@ -220,13 +254,13 @@ export default function LoginPage() {
           fontSize: 32, fontWeight: 800, letterSpacing: -1.5,
           textAlign: 'center', margin: '0 0 8px', color: C.s,
         }}>
-          {t("login.title")}
+          {mfaToken ? t('mfa.login_title') : t("login.title")}
         </h1>
         <p style={{
           color: C.m, fontSize: 15, textAlign: 'center',
           margin: '0 0 32px', fontFamily: 'inherit',
         }}>
-          {t("login.subtitle")}
+          {mfaToken ? t('mfa.login_subtitle') : t("login.subtitle")}
         </p>
 
         {/* Access-revoked banner (set by api.js 401 handler when a
@@ -254,7 +288,77 @@ export default function LoginPage() {
           </div>
         )}
 
+        {/* MFA second-factor form. Replaces the credentials form once
+            /auth/login returns mfa_required. Toggling "use backup code"
+            swaps the input from a 6-digit numeric to an 8-char alpha. */}
+        {mfaToken && (
+          <form onSubmit={handleMfaSubmit}>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', color: C.s, fontSize: 13, fontWeight: 600, marginBottom: 8, fontFamily: 'inherit' }}>
+                {t('mfa.code_placeholder')}
+              </label>
+              <input
+                type="text"
+                inputMode={mfaUseBackup ? 'text' : 'numeric'}
+                autoComplete="one-time-code"
+                autoFocus
+                maxLength={mfaUseBackup ? 8 : 6}
+                value={mfaCode}
+                onChange={e => {
+                  const v = mfaUseBackup
+                    ? e.target.value.toUpperCase().replace(/[^0-9A-F]/g, '').slice(0, 8)
+                    : e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setMfaCode(v);
+                  if (!mfaUseBackup && v.length === 6 && !mfaBusy) {
+                    // Auto-submit on the 6th digit. Use a microtask so
+                    // React commits the state update first.
+                    setTimeout(() => {
+                      if (v.length === 6) handleMfaSubmit();
+                    }, 0);
+                  }
+                }}
+                placeholder={mfaUseBackup ? '• • • • • • • •' : '• • • • • •'}
+                className="input-rb"
+                style={{
+                  width: '100%', padding: '14px 16px', borderRadius: 12,
+                  border: '1.5px solid #e2e8f0',
+                  background: '#fafbfc', fontSize: 22, color: C.s,
+                  fontFamily: 'monospace', letterSpacing: 6, textAlign: 'center',
+                  outline: 'none', boxSizing: 'border-box', transition: 'all .2s',
+                }}
+              />
+            </div>
+            <div style={{ textAlign: 'right', marginBottom: 16 }}>
+              <button
+                type="button"
+                onClick={() => { setMfaUseBackup(v => !v); setMfaCode(''); }}
+                style={{ background: 'none', border: 'none', color: C.p, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+              >
+                {mfaUseBackup ? t('mfa.login_use_totp') : t('mfa.login_use_backup')}
+              </button>
+            </div>
+            <button
+              type="submit"
+              disabled={mfaBusy || (mfaUseBackup ? mfaCode.length !== 8 : mfaCode.length !== 6)}
+              className="bp"
+              style={{
+                width: '100%', padding: '15px',
+                borderRadius: 12, border: 'none',
+                background: mfaBusy ? C.m : C.p,
+                color: '#fff', fontWeight: 700, fontSize: 15,
+                cursor: mfaBusy ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: mfaBusy ? 'none' : `0 8px 30px ${C.p}30`,
+                opacity: mfaBusy ? 0.7 : 1,
+              }}
+            >
+              {mfaBusy ? t('login.loading') : t('mfa.login_submit')}
+            </button>
+          </form>
+        )}
+
         {/* Form */}
+        {!mfaToken && (
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 18 }}>
             <label style={{
@@ -352,6 +456,7 @@ export default function LoginPage() {
             {loading ? t("login.loading") : t("login.submit")}
           </button>
         </form>
+        )}
 
         {/* Footer link */}
         <p style={{

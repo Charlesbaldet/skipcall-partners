@@ -491,6 +491,11 @@ function AccountTab({ user }) {
         <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? t('settings.updating') : t('settings.update')}</button>
       </div>
 
+      {/* MFA / 2FA section */}
+      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+        <MfaSection />
+      </div>
+
       {/* Language — moved out of the sidebar so the only language entry
           point lives in the user's account settings. */}
       <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
@@ -505,6 +510,242 @@ function AccountTab({ user }) {
           <LanguageSwitcher direction="up" dark={false} style={{ width: '100%' }}/>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ═══ MFA / 2FA ═══
+// State machine:
+//   loading → disabled / enabled
+//   disabled → setup (QR) → backup-codes display → enabled
+//   enabled → disable modal (TOTP code) → disabled
+function MfaSection() {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState('loading'); // loading|disabled|setup|backup|enabled
+  const [setupData, setSetupData] = useState(null); // { qrCode, secret, otpauthUri }
+  const [setupCode, setSetupCode] = useState('');
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [showDisable, setShowDisable] = useState(false);
+  const [disableCode, setDisableCode] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api.mfaStatus();
+        setStatus(data.mfa_enabled ? 'enabled' : 'disabled');
+      } catch {
+        setStatus('disabled');
+      }
+    })();
+  }, []);
+
+  const handleStartSetup = async () => {
+    setError(null); setBusy(true);
+    try {
+      const data = await api.mfaSetup();
+      setSetupData(data);
+      setStatus('setup');
+    } catch (err) {
+      setError(err.message || t('mfa.invalid_code'));
+    }
+    setBusy(false);
+  };
+
+  const handleVerify = async () => {
+    if (!/^[0-9]{6}$/.test(setupCode)) {
+      setError(t('mfa.invalid_code'));
+      return;
+    }
+    setError(null); setBusy(true);
+    try {
+      const data = await api.mfaVerify(setupCode);
+      setBackupCodes(data.backup_codes || []);
+      setStatus('backup');
+      setSetupCode('');
+    } catch (err) {
+      setError(err.message || t('mfa.invalid_code'));
+    }
+    setBusy(false);
+  };
+
+  const handleDownloadCodes = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const blob = new Blob(
+      [t('mfa.backup_codes_title') + '\n\n' + backupCodes.join('\n') + '\n'],
+      { type: 'text/plain;charset=utf-8' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `refboost-backup-codes-${today}.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+
+  const handleConfirmSaved = () => {
+    setBackupCodes([]);
+    setSetupData(null);
+    setStatus('enabled');
+  };
+
+  const handleDisable = async () => {
+    if (!disableCode) { setError(t('mfa.invalid_code')); return; }
+    setError(null); setBusy(true);
+    try {
+      await api.mfaDisable(disableCode);
+      setShowDisable(false);
+      setDisableCode('');
+      setStatus('disabled');
+    } catch (err) {
+      setError(err.message || t('mfa.invalid_code'));
+    }
+    setBusy(false);
+  };
+
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <Shield size={16} color="#6366f1" />
+        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('mfa.title')}</h4>
+      </div>
+
+      {error && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+          {error}
+        </div>
+      )}
+
+      {status === 'loading' && (
+        <div style={{ color: '#94a3b8', fontSize: 13 }}>…</div>
+      )}
+
+      {status === 'disabled' && (
+        <button
+          onClick={handleStartSetup}
+          disabled={busy}
+          style={{ padding: '11px 18px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1 }}
+        >
+          {t('mfa.activate_cta')}
+        </button>
+      )}
+
+      {status === 'setup' && setupData && (
+        <div>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>
+            {t('mfa.scan_with_app')}
+          </p>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 18 }}>
+            <img src={setupData.qrCode} alt="QR" style={{ width: 200, height: 200, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff' }} />
+            <div style={{ flex: '1 1 220px', minWidth: 220 }}>
+              <div style={{ color: '#64748b', fontSize: 12, marginBottom: 4 }}>{t('mfa.manual_entry')}</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 14, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', wordBreak: 'break-all' }}>
+                {setupData.secret}
+              </div>
+            </div>
+          </div>
+          <div style={{ maxWidth: 260, marginBottom: 12 }}>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={setupCode}
+              onChange={e => setSetupCode(e.target.value.replace(/\D/g, ''))}
+              placeholder={t('mfa.code_placeholder')}
+              style={inputStyle}
+            />
+          </div>
+          <button
+            onClick={handleVerify}
+            disabled={busy || setupCode.length !== 6}
+            style={{ padding: '11px 18px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: busy ? 'wait' : 'pointer', opacity: (busy || setupCode.length !== 6) ? 0.6 : 1 }}
+          >
+            {t('mfa.verify_cta')}
+          </button>
+        </div>
+      )}
+
+      {status === 'backup' && (
+        <div>
+          <h5 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>{t('mfa.backup_codes_title')}</h5>
+          <p style={{ color: '#b91c1c', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55, fontWeight: 500 }}>
+            {t('mfa.backup_codes_warning')}
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, maxWidth: 360, marginBottom: 16 }}>
+            {backupCodes.map((c, i) => (
+              <div key={i} style={{ fontFamily: 'monospace', fontSize: 14, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', textAlign: 'center', letterSpacing: 1 }}>{c}</div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={handleDownloadCodes}
+              style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#0f172a', border: '1.5px solid #e2e8f0', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+            >
+              {t('mfa.download_codes')}
+            </button>
+            <button
+              onClick={handleConfirmSaved}
+              style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+            >
+              {t('mfa.codes_saved_cta')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {status === 'enabled' && (
+        <div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, background: '#d1fae5', color: '#065f46', fontSize: 12, fontWeight: 700, marginBottom: 14 }}>
+            <CheckCircle size={14} /> {t('mfa.active_badge')}
+          </div>
+          <div>
+            <button
+              onClick={() => setShowDisable(true)}
+              style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#dc2626', border: '1.5px solid #fecaca', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+            >
+              {t('mfa.disable_cta')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showDisable && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ width: '100%', maxWidth: 420, background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 25px 60px rgba(0,0,0,0.25)' }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{t('mfa.disable_modal_title')}</h3>
+            <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>{t('mfa.disable_modal_body')}</p>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={8}
+              value={disableCode}
+              onChange={e => setDisableCode(e.target.value)}
+              placeholder={t('mfa.code_placeholder')}
+              style={inputStyle}
+            />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button
+                onClick={() => { setShowDisable(false); setDisableCode(''); setError(null); }}
+                style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#0f172a', border: '1.5px solid #e2e8f0', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              >
+                {t('mfa.cancel')}
+              </button>
+              <button
+                onClick={handleDisable}
+                disabled={busy || !disableCode}
+                style={{ padding: '10px 16px', borderRadius: 10, background: '#dc2626', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: (busy || !disableCode) ? 0.6 : 1 }}
+              >
+                {t('mfa.confirm_disable')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

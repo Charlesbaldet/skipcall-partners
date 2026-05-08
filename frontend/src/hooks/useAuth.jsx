@@ -106,6 +106,25 @@ export function AuthProvider({ children }) {
     setPendingSpaceSelection(null);
   };
 
+  // Final stage of an MFA-gated login. /auth/login returned
+  // mfa_required + mfa_token, the user typed a TOTP/backup code, this
+  // call exchanges it for a real session JWT.
+  const finalizeMfaLogin = async ({ mfa_token, code, is_backup_code }) => {
+    clearTenantCache();
+    resetInactivity();
+    const data = await api.mfaValidate({ mfa_token, code, is_backup_code });
+    if (data.requiresSpaceSelection) {
+      setPendingSpaceSelection({ spaces: data.spaces || [], user: data.user });
+      setSpaces(data.spaces || []);
+      setUser(null);
+      return data;
+    }
+    setUser(data.user);
+    setPendingSpaceSelection(null);
+    await refreshSpaces();
+    return data;
+  };
+
   const switchSpace = async (space) => {
     clearTenantCache();
     resetInactivity();
@@ -155,6 +174,7 @@ export function AuthProvider({ children }) {
         logout,
         switchSpace,
         refreshSpaces,
+        finalizeMfaLogin,
       }}
     >
       {children}

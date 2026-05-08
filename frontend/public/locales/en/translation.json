@@ -1,4 +1,28 @@
 {
+  "mfa": {
+    "title": "Two-factor authentication",
+    "activate_cta": "Enable 2FA",
+    "scan_with_app": "Scan this QR code with your authenticator app (Google Authenticator, 1Password, Authy, …).",
+    "manual_entry": "Or enter this code manually:",
+    "code_placeholder": "6-digit code",
+    "verify_cta": "Verify",
+    "backup_codes_title": "Backup codes",
+    "backup_codes_warning": "Store these codes in a safe place. Each can only be used once and they will not be shown again.",
+    "download_codes": "Download",
+    "codes_saved_cta": "I saved my codes",
+    "active_badge": "2FA active",
+    "disable_cta": "Disable 2FA",
+    "disable_modal_title": "Disable two-factor authentication?",
+    "disable_modal_body": "Enter your 6-digit code or a backup code to confirm.",
+    "cancel": "Cancel",
+    "confirm_disable": "Disable",
+    "invalid_code": "Invalid code",
+    "login_title": "Two-step verification",
+    "login_subtitle": "Enter the code from your authenticator app.",
+    "login_use_backup": "Use a backup code",
+    "login_use_totp": "Use authenticator code",
+    "login_submit": "Verify →"
+  },
   "pagination": {
     "label": "Pagination",
     "previous": "Previous",

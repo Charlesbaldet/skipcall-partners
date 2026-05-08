@@ -1,11 +1,16 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cryptoRandom = require('crypto');
 const { body, validationResult } = require('express-validator');
+const { authenticator } = require('otplib');
+const QRCode = require('qrcode');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
 const { auditLog, recordLoginAttempt, isAccountLocked, validatePassword: legacyValidatePassword } = require('../middleware/security');
 const { validatePassword: strictValidatePassword } = require('../utils/passwordPolicy');
+const { encrypt, decrypt } = require('../utils/crypto');
+const { logAudit } = require('../services/auditLog');
 
 // Compose policy: legacy length/chars rules (FR strings) + the new
 // strict policy (i18n keys, common-passwords blocklist). Both must
@@ -191,6 +196,7 @@ router.post('/login', [
 
     const { rows } = await query(
       `SELECT u.id, u.email, u.password_hash, u.full_name, u.role, u.partner_id, u.is_active, u.tenant_id, u.must_change_password,
+              u.mfa_enabled,
               p.name as partner_name
        FROM users u LEFT JOIN partners p ON u.partner_id = p.id
        WHERE u.email = $1`,
@@ -219,6 +225,21 @@ router.post('/login', [
 
     // Success — reset failed attempts
     await recordLoginAttempt(email, ip, true);
+
+    // MFA gate: when the user has enrolled a TOTP secret we never
+    // hand out a fully-scoped session JWT here. Instead we issue a
+    // short-lived (5-min) "mfa_pending" token that only /auth/mfa/
+    // validate accepts. The full JWT — with tenantId, role, etc. —
+    // is signed only after the second factor checks out.
+    if (user.mfa_enabled) {
+      const mfaToken = jwt.sign(
+        { sub: user.id, mfa_pending: true },
+        process.env.JWT_SECRET,
+        { expiresIn: '5m' }
+      );
+      auditLog(req, 'login_mfa_required', 'user', user.id, { email });
+      return res.json({ mfa_required: true, mfa_token: mfaToken });
+    }
 
     // Self-heal: legacy users created before user_roles existed (or via
     // signup paths that never wrote to it) can otherwise lose their
@@ -734,6 +755,289 @@ router.post('/change-password', authenticate, async (req, res) => {
   }
 });
 
+
+// ─── MFA (TOTP) — setup / verify / disable / validate ──────────────
+//
+// Flow:
+//   1. /auth/mfa/setup    — auth required. Generates a fresh TOTP
+//      secret, encrypts it into users.mfa_secret (mfa_enabled stays
+//      FALSE so the next login still works without 2FA), returns the
+//      otpauth:// URI + a QR-code data URL the frontend can render
+//      directly with <img src=…>.
+//   2. /auth/mfa/verify   — auth required. The user types the first
+//      6-digit code from their authenticator. On match we generate
+//      8 single-use backup codes (8-char hex, bcrypt-hashed at rest)
+//      and flip mfa_enabled = TRUE. The plain backup codes are
+//      returned ONCE and never re-derivable.
+//   3. /auth/mfa/disable  — auth required. Requires a valid TOTP or
+//      backup code, then clears mfa_secret + mfa_backup_codes.
+//   4. /auth/mfa/validate — NO normal auth. Consumes the short-lived
+//      mfa_token issued by /auth/login when mfa_enabled = TRUE, and
+//      returns the real session JWT on a successful TOTP/backup-code
+//      match.
+
+// otplib step defaults to 30 s; window of 1 lets a code from the
+// previous step still match if the user is slightly behind, which
+// matches the UX of every authenticator app on mobile.
+authenticator.options = { window: 1 };
+
+// Helper: load + decrypt the user's TOTP secret. Returns null when the
+// user has no secret enrolled (or the row is missing). Centralises the
+// try/catch around decrypt() so a corrupted ciphertext can't 500 the
+// caller.
+async function loadMfaSecret(userId) {
+  const { rows } = await query(
+    'SELECT mfa_secret FROM users WHERE id = $1 LIMIT 1',
+    [userId]
+  );
+  if (!rows.length || !rows[0].mfa_secret) return null;
+  try { return decrypt(rows[0].mfa_secret); }
+  catch (e) {
+    console.error('[mfa] decrypt failed:', e.message);
+    return null;
+  }
+}
+
+router.post('/mfa/setup', authenticate, async (req, res) => {
+  try {
+    const { rows } = await query(
+      'SELECT id, email FROM users WHERE id = $1 LIMIT 1',
+      [req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    const user = rows[0];
+
+    const secret = authenticator.generateSecret();
+    let encryptedSecret;
+    try { encryptedSecret = encrypt(secret); }
+    catch (e) {
+      console.error('[mfa.setup] encrypt failed:', e.message);
+      return res.status(500).json({ error: 'TOKEN_ENCRYPTION_KEY non configuré' });
+    }
+
+    // Persist the secret but don't enable MFA yet — the user has to
+    // prove they can read codes from it via /verify before we lock the
+    // account behind a second factor.
+    await query(
+      'UPDATE users SET mfa_secret = $1 WHERE id = $2',
+      [encryptedSecret, user.id]
+    );
+
+    const otpauthUri = authenticator.keyuri(user.email, 'RefBoost', secret);
+    const qrCode = await QRCode.toDataURL(otpauthUri);
+
+    res.json({ qrCode, secret, otpauthUri });
+  } catch (err) {
+    console.error('[mfa.setup]', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/mfa/verify', authenticate, async (req, res) => {
+  try {
+    const { code } = req.body || {};
+    if (!code || !/^[0-9]{6}$/.test(String(code))) {
+      return res.status(400).json({ error: 'Code à 6 chiffres requis' });
+    }
+    const secret = await loadMfaSecret(req.user.id);
+    if (!secret) return res.status(400).json({ error: 'MFA non initialisé' });
+
+    if (!authenticator.check(String(code), secret)) {
+      logAudit(req, 'auth.mfa_verify_failed', 'user', req.user.id, {});
+      return res.status(401).json({ error: 'Code invalide' });
+    }
+
+    // Generate 8 single-use backup codes. Hex (4 random bytes → 8
+    // chars) is friendly to read on paper and zero ambiguity between
+    // 0/O or 1/l. Each is bcrypt-hashed before storage so a DB leak
+    // can't be replayed.
+    const plainCodes = [];
+    const hashedCodes = [];
+    for (let i = 0; i < 8; i++) {
+      const c = cryptoRandom.randomBytes(4).toString('hex').toUpperCase();
+      plainCodes.push(c);
+      hashedCodes.push(await bcrypt.hash(c, 10));
+    }
+
+    await query(
+      'UPDATE users SET mfa_enabled = TRUE, mfa_backup_codes = $1 WHERE id = $2',
+      [hashedCodes, req.user.id]
+    );
+    logAudit(req, 'auth.mfa_enabled', 'user', req.user.id, {});
+
+    res.json({ ok: true, backup_codes: plainCodes });
+  } catch (err) {
+    console.error('[mfa.verify]', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/mfa/disable', authenticate, async (req, res) => {
+  try {
+    const { code } = req.body || {};
+    if (!code) return res.status(400).json({ error: 'Code requis' });
+
+    const { rows } = await query(
+      'SELECT mfa_secret, mfa_backup_codes, mfa_enabled FROM users WHERE id = $1 LIMIT 1',
+      [req.user.id]
+    );
+    if (!rows.length || !rows[0].mfa_enabled) {
+      return res.status(400).json({ error: 'MFA non actif' });
+    }
+
+    const secret = rows[0].mfa_secret ? (() => {
+      try { return decrypt(rows[0].mfa_secret); } catch { return null; }
+    })() : null;
+    const backupCodes = rows[0].mfa_backup_codes || [];
+
+    let valid = false;
+    // Accept TOTP first (typical case); fall through to backup-code
+    // check so a user who lost their device can still disable.
+    if (secret && /^[0-9]{6}$/.test(String(code))) {
+      valid = authenticator.check(String(code), secret);
+    }
+    if (!valid) {
+      for (const hashed of backupCodes) {
+        if (await bcrypt.compare(String(code).toUpperCase(), hashed)) {
+          valid = true;
+          break;
+        }
+      }
+    }
+
+    if (!valid) {
+      logAudit(req, 'auth.mfa_disable_failed', 'user', req.user.id, {});
+      return res.status(401).json({ error: 'Code invalide' });
+    }
+
+    await query(
+      'UPDATE users SET mfa_enabled = FALSE, mfa_secret = NULL, mfa_backup_codes = NULL WHERE id = $1',
+      [req.user.id]
+    );
+    logAudit(req, 'auth.mfa_disabled', 'user', req.user.id, {});
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[mfa.disable]', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/mfa/validate', async (req, res) => {
+  try {
+    const { mfa_token, code, is_backup_code } = req.body || {};
+    if (!mfa_token || !code) {
+      return res.status(400).json({ error: 'mfa_token et code requis' });
+    }
+
+    let payload;
+    try { payload = jwt.verify(mfa_token, process.env.JWT_SECRET); }
+    catch { return res.status(401).json({ error: 'Token MFA invalide ou expiré' }); }
+
+    if (!payload || !payload.mfa_pending || !payload.sub) {
+      return res.status(401).json({ error: 'Token MFA invalide' });
+    }
+
+    const { rows } = await query(
+      `SELECT u.id, u.email, u.full_name, u.role, u.partner_id, u.tenant_id,
+              u.is_active, u.must_change_password, u.avatar_url,
+              u.mfa_secret, u.mfa_backup_codes, u.mfa_enabled,
+              p.name AS partner_name
+         FROM users u LEFT JOIN partners p ON u.partner_id = p.id
+        WHERE u.id = $1
+        LIMIT 1`,
+      [payload.sub]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Utilisateur introuvable' });
+    const user = rows[0];
+    if (!user.is_active) return res.status(403).json({ error: 'Compte désactivé' });
+    if (!user.mfa_enabled) {
+      return res.status(400).json({ error: 'MFA non actif sur ce compte' });
+    }
+
+    let valid = false;
+    if (is_backup_code) {
+      const codes = user.mfa_backup_codes || [];
+      let matchedIdx = -1;
+      for (let i = 0; i < codes.length; i++) {
+        if (await bcrypt.compare(String(code).toUpperCase(), codes[i])) {
+          matchedIdx = i;
+          break;
+        }
+      }
+      if (matchedIdx >= 0) {
+        valid = true;
+        // Single-use: drop the consumed hash from the array.
+        const remaining = codes.slice(0, matchedIdx).concat(codes.slice(matchedIdx + 1));
+        await query(
+          'UPDATE users SET mfa_backup_codes = $1 WHERE id = $2',
+          [remaining, user.id]
+        );
+      }
+    } else {
+      let secret = null;
+      try { if (user.mfa_secret) secret = decrypt(user.mfa_secret); } catch {}
+      if (secret && /^[0-9]{6}$/.test(String(code))) {
+        valid = authenticator.check(String(code), secret);
+      }
+    }
+
+    if (!valid) {
+      logAudit({ ...req, user: { id: user.id, email: user.email } }, 'auth.mfa_failed', 'user', user.id, {});
+      return res.status(401).json({ error: 'Code invalide' });
+    }
+
+    // From here on the flow mirrors the tail of /auth/login: heal
+    // user_roles, pick a workspace, and emit the same response shape.
+    await ensureUserRoleEntry(user.id, user.tenant_id, user.role, user.partner_id);
+    const spaces = await listUserSpaces(user.id);
+    const space = pickInitialSpace(spaces, user.tenant_id);
+    logAudit({ ...req, user: { id: user.id, email: user.email } }, 'auth.login_via_mfa', 'user', user.id, {
+      via: is_backup_code ? 'backup_code' : 'totp',
+      spaces: spaces.length,
+    });
+
+    if (!space && spaces.length > 1) {
+      const tempToken = signPendingSelectionToken(user);
+      return res.json({
+        token: tempToken,
+        requiresSpaceSelection: true,
+        spaces,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name,
+          mustChangePassword: user.must_change_password || false,
+        },
+      });
+    }
+
+    if (space) await persistActiveSpace(user.id, space);
+    const tenantId = space?.tenant_id || user.tenant_id;
+    const token = signSessionToken({
+      user,
+      tenantId,
+      role: space?.role || user.role,
+      partnerId: space ? (space.partner_id || null) : user.partner_id,
+    });
+    res.json(buildLoginResponse({ user, space, spaces, token }));
+  } catch (err) {
+    console.error('[mfa.validate]', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.get('/mfa/status', authenticate, async (req, res) => {
+  try {
+    const { rows } = await query(
+      'SELECT mfa_enabled FROM users WHERE id = $1 LIMIT 1',
+      [req.user.id]
+    );
+    res.json({ mfa_enabled: !!(rows[0] && rows[0].mfa_enabled) });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 
 // ─── Forgot password ───
 router.post('/forgot-password', [

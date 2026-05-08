@@ -1,8 +1,9 @@
-<<<<<<< HEAD
 # RefBoost backend
 
 Node + Express API for the RefBoost partner-referral SaaS. Deployed
 to Railway (`PORT`, `RAILWAY_GIT_COMMIT_SHA` come from the platform).
+Migrations live in `db/migrate.js` (idempotent blocks) and run
+automatically on boot.
 
 ## Scripts
 
@@ -34,9 +35,17 @@ level + message + arbitrary context, with `tenant_id` and
 as the `x-request-id` response header so customers can quote it in
 support tickets.
 
-## Environment variables
+## Required environment variables
 
-Standard ones live in `.env.example`. Monitoring-specific:
+| Var | Purpose |
+|---|---|
+| `DATABASE_URL` | Postgres connection string |
+| `JWT_SECRET` | Session signing key |
+| `FRONTEND_URL` | Allowed CORS origin / redirect base |
+| `TOKEN_ENCRYPTION_KEY` | AES-256-CBC key for stored API tokens (Pennylane / Qonto / HubSpot / Salesforce) and TOTP/MFA secrets. Generate once with `openssl rand -hex 32` and set on Railway. **Required** for any new connect/refresh flow and for `/auth/mfa/setup`; existing rows keep working as plaintext until next write thanks to the legacy fallback in `utils/crypto.js`. |
+| `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `QONTO_CLIENT_ID`, `QONTO_CLIENT_SECRET`, `HUBSPOT_CLIENT_ID`, `HUBSPOT_CLIENT_SECRET`, `SALESFORCE_CLIENT_ID`, `SALESFORCE_CLIENT_SECRET`, `GOOGLE_CLIENT_ID` | Third-party integration keys. |
+
+## Optional environment variables
 
 - `ERROR_WEBHOOK_URL` — optional. Slack/Discord/Mattermost-compatible
   incoming webhook. RefBoost POSTs a Slack-shaped payload
@@ -45,21 +54,6 @@ Standard ones live in `.env.example`. Monitoring-specific:
   to avoid leaking PII or secrets into the destination channel.
 - `RAILWAY_GIT_COMMIT_SHA` — set automatically by Railway. The
   health endpoint surfaces the first 7 chars as `version`.
-=======
-# Backend
-
-Node + Express API. Migrations live in `db/migrate.js` (idempotent
-blocks) and run automatically on boot.
-
-## Required environment variables
-
-| Var | Purpose |
-|---|---|
-| `DATABASE_URL` | Postgres connection string |
-| `JWT_SECRET` | Session signing key |
-| `FRONTEND_URL` | Allowed CORS origin / redirect base |
-| `TOKEN_ENCRYPTION_KEY` | AES-256-CBC key for stored API tokens (Pennylane / Qonto / HubSpot / Salesforce). Generate once with `openssl rand -hex 32` and set on Railway. **Required** for any new connect/refresh flow; existing rows keep working as plaintext until next write thanks to the legacy fallback in `utils/crypto.js`. |
-| `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `QONTO_CLIENT_ID`, `QONTO_CLIENT_SECRET`, `HUBSPOT_CLIENT_ID`, `HUBSPOT_CLIENT_SECRET`, `SALESFORCE_CLIENT_ID`, `SALESFORCE_CLIENT_SECRET`, `GOOGLE_CLIENT_ID` | Third-party integration keys. |
 
 ## One-shot scripts
 
@@ -70,4 +64,3 @@ TOKEN_ENCRYPTION_KEY=<hex> node backend/scripts/migrate-encrypt-tokens.js
 
 Run once after deploying the env var. Subsequent runs are no-ops
 (rows already encrypted are skipped).
->>>>>>> origin/workstream/1-technical-security

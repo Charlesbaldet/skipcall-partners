@@ -1,4 +1,28 @@
 {
+  "mfa": {
+    "title": "Tweefactorauthenticatie",
+    "activate_cta": "2FA inschakelen",
+    "scan_with_app": "Scan deze QR-code met je authenticator-app (Google Authenticator, 1Password, Authy, …).",
+    "manual_entry": "Of voer deze code handmatig in:",
+    "code_placeholder": "6-cijferige code",
+    "verify_cta": "Verifiëren",
+    "backup_codes_title": "Back-upcodes",
+    "backup_codes_warning": "Bewaar deze codes op een veilige plek. Elke code kan slechts één keer worden gebruikt en wordt niet opnieuw getoond.",
+    "download_codes": "Downloaden",
+    "codes_saved_cta": "Ik heb mijn codes opgeslagen",
+    "active_badge": "2FA actief",
+    "disable_cta": "2FA uitschakelen",
+    "disable_modal_title": "Tweefactorauthenticatie uitschakelen?",
+    "disable_modal_body": "Voer je 6-cijferige code of een back-upcode in om te bevestigen.",
+    "cancel": "Annuleren",
+    "confirm_disable": "Uitschakelen",
+    "invalid_code": "Ongeldige code",
+    "login_title": "Verificatie in twee stappen",
+    "login_subtitle": "Voer de code uit je authenticator-app in.",
+    "login_use_backup": "Gebruik een back-upcode",
+    "login_use_totp": "Gebruik authenticator-code",
+    "login_submit": "Verifiëren →"
+  },
   "pagination": {
     "label": "Paginering",
     "previous": "Vorige",

@@ -1013,6 +1013,27 @@ async function runMigrations() {
     console.error('[migrate.v42] failed:', err.message);
   }
 
+  // v43: TOTP two-factor authentication on the users table.
+  //
+  //   mfa_secret        — AES-encrypted TOTP shared secret (utils/crypto.js).
+  //                       Set on /auth/mfa/setup, never returned to the
+  //                       client after that. Cleared on /auth/mfa/disable.
+  //   mfa_enabled       — flips to TRUE only after the user types a valid
+  //                       6-digit code in /auth/mfa/verify, so a partial
+  //                       enrolment never strands the user out of their
+  //                       account.
+  //   mfa_backup_codes  — 8 single-use bcrypt-hashed recovery codes that
+  //                       let the user log in if they lose their TOTP
+  //                       device. Each match is removed from the array.
+  try {
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_secret TEXT`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN NOT NULL DEFAULT FALSE`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_backup_codes TEXT[]`);
+    console.log('[mfa] v43 users.mfa_* columns ready');
+  } catch (err) {
+    console.error('[migrate.v43] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
