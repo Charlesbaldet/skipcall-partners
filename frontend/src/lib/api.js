@@ -573,6 +573,10 @@ class ApiClient {
   invalidateSessions() {
     return this.request('/auth/invalidate-sessions', { method: 'POST' });
   }
+
+  // Compliance dashboard (superadmin only) — single round-trip that
+  // returns all 6 KPIs.
+  getComplianceDashboard() { return this.request('/admin/compliance/dashboard'); }
 }
 
 export const api = new ApiClient();

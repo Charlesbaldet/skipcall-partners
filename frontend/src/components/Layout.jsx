@@ -103,6 +103,7 @@ export default function Layout({ children }) {
     { to: '/super-admin?tab=stats', icon: BarChart2, label: t('layout.nav.statistics') },
     { to: '/super-admin?tab=logs', icon: Activity, label: t('layout.nav.audit_logs') },
     { to: '/super-admin?tab=blog', icon: FileText, label: t('layout.nav.blog') },
+    { to: '/admin/compliance', icon: Shield, label: t('compliance.title', 'Conformité') },
     { divider: true },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
   ];
