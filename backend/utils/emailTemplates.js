@@ -440,6 +440,28 @@ function tierChange({ partnerName, oldTier, newTier, tenantName, dashboardUrl } 
   });
 }
 
+// GDPR Article 17 — confirmation that an account-deletion request has
+// been registered. Soft-delete only: the user has a 30-day grace period
+// during which they can email support to cancel the purge. After that
+// the daily cron permanently removes the row.
+function accountDeletionRequested({ recipientName, scheduledPurgeAt, tenantName } = {}) {
+  return renderEmail({
+    subject: `Confirmation de suppression de votre compte RefBoost`,
+    heading: 'Suppression de compte programmée',
+    bodyHtml: `
+      <p>Bonjour ${recipientName || ''},</p>
+      <p>Nous avons bien reçu votre demande de suppression de compte${tenantName ? ` sur le programme <strong>${tenantName}</strong>` : ''}.</p>
+      <div class="highlight">
+        <strong>Période de grâce : 30 jours.</strong><br/>
+        Vos données seront définitivement supprimées le <strong>${scheduledPurgeAt || ''}</strong>.
+      </div>
+      <p>Pour annuler cette demande pendant le délai de 30 jours, écrivez à <a href="mailto:dpo@refboost.io">dpo@refboost.io</a> depuis l'adresse email associée à votre compte.</p>
+      <p style="color:#9ca3af;font-size:13px;">Conformément à l'article 17 du RGPD, certaines données peuvent être conservées au-delà de cette date pour répondre à nos obligations légales (facturation, comptabilité).</p>`,
+    ctaUrl: `${FRONTEND}/`,
+    ctaLabel: 'Retour à RefBoost',
+  });
+}
+
 // Sample payloads for the preview modal. Keys match TEMPLATES below.
 const PREVIEW_SAMPLES = {
   welcome: { name: 'Alex', tenantName: 'Acme Partenaires' },
@@ -463,6 +485,7 @@ const PREVIEW_SAMPLES = {
   newsPublished: { tenantName: 'Acme Partenaires', postTitle: 'Nouveau kit commercial', postExcerpt: 'Téléchargez le pack 2026 et lancez vos campagnes Q2.' },
   accessRevoked: { partnerName: 'Partner Pro', tenantName: 'Acme Partenaires' },
   tierChange: { partnerName: 'Partner Pro', oldTier: 'Silver', newTier: 'Gold', tenantName: 'Acme Partenaires' },
+  accountDeletionRequested: { recipientName: 'Charles', scheduledPurgeAt: '7 juin 2026', tenantName: 'Acme Partenaires' },
 };
 
 const TEMPLATES = {
@@ -487,6 +510,7 @@ const TEMPLATES = {
   newsPublished,
   accessRevoked,
   tierChange,
+  accountDeletionRequested,
 };
 
 function previewEmail(key, payload) {

@@ -74,6 +74,7 @@ export default function SettingsPage() {
       { id: 'bank', icon: Banknote, label: t('settings.tab_bank_info', 'Informations bancaires') },
       { section: t('layout.section.preferences') },
       { id: 'partner-notifications', icon: Bell, label: t('partner_notifications.tab', 'Notifications') },
+      { id: 'privacy', icon: Shield, label: t('settings.tab_privacy', 'Confidentialité') },
     ] : []),
     // Sales (commercial) gets the same notifications panel as
     // admin, scoped server-side to the per-tenant table they share
@@ -138,6 +139,7 @@ export default function SettingsPage() {
             {tab === 'notifications' && (isAdmin || isCommercial) && <NotificationsTab forCommercial={isCommercial} />}
             {tab === 'partner-notifications' && isPartner && <PartnerNotificationsTab />}
             {tab === 'bank' && isPartner && <PartnerBankInfoTab />}
+            {tab === 'privacy' && isPartner && <PartnerPrivacyTab user={user} />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
             {tab === 'company' && isAdmin && <CompanyBillingTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
@@ -3276,6 +3278,165 @@ function PartnerBankInfoTab() {
                 <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
               </span>
             )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══ CONFIDENTIALITÉ — partner GDPR controls ═══
+// Two GDPR self-service flows live here:
+//   - Article 20 (data portability): one-click JSON export of profile,
+//     referrals, commissions, messages.
+//   - Article 17 (right to erasure): account deletion with a typed
+//     email confirmation + 30-day grace period before permanent purge.
+function PartnerPrivacyTab({ user }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [exporting, setExporting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [err, setErr] = useState('');
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await api.exportData();
+      showToast.success(t('settings.export.toast_success', 'Export téléchargé'));
+    } catch (e) {
+      showToast.error(e.message || 'Erreur');
+    }
+    setExporting(false);
+  };
+
+  const handleDelete = async () => {
+    setErr('');
+    if (emailInput.trim().toLowerCase() !== (user?.email || '').toLowerCase()) {
+      setErr(t('settings.delete_account.confirm_email_mismatch', "L'email saisi ne correspond pas à votre compte."));
+      return;
+    }
+    setDeleting(true);
+    try {
+      await api.deleteAccount();
+      showToast.success(t('settings.delete_account.toast_success', 'Demande de suppression enregistrée.'));
+      // Wipe local session and bounce to the public landing.
+      api.logout();
+      navigate('/', { replace: true });
+      // A reload guarantees every cached hook (Auth, Tenant) re-reads
+      // the now-empty localStorage instead of holding the deleted user.
+      setTimeout(() => window.location.reload(), 100);
+    } catch (e) {
+      setErr(e.message || 'Erreur');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+        {t('settings.tab_privacy', 'Confidentialité')}
+      </h2>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+        {t('settings.privacy.subtitle', 'Vos droits RGPD : exportez vos données ou supprimez votre compte à tout moment.')}
+      </p>
+
+      {/* Export — Article 20 */}
+      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+          {t('settings.export.title', 'Exporter mes données')}
+        </h3>
+        <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.5, marginBottom: 14 }}>
+          {t('settings.export.description', 'Téléchargez un fichier JSON contenant votre profil, vos recommandations, vos commissions et vos messages.')}
+        </p>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          style={{
+            padding: '10px 18px', borderRadius: 10, border: 'none',
+            background: 'var(--rb-primary, #059669)', color: '#fff',
+            fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: exporting ? 0.7 : 1,
+          }}
+        >
+          {exporting ? t('common.loading', 'Chargement…') : t('settings.export.cta', 'Exporter mes données')}
+        </button>
+      </div>
+
+      {/* Delete — Article 17 */}
+      <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 14, padding: 20 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#991b1b', marginBottom: 6 }}>
+          {t('settings.delete_account.title', 'Supprimer mon compte')}
+        </h3>
+        <p style={{ color: '#7f1d1d', fontSize: 13, lineHeight: 1.5, marginBottom: 14 }}>
+          {t('settings.delete_account.description', 'Cette action déclenche une suppression définitive de vos données dans 30 jours. Vous pouvez annuler en contactant dpo@refboost.io durant ce délai.')}
+        </p>
+        <button
+          onClick={() => { setConfirmOpen(true); setEmailInput(''); setErr(''); }}
+          style={{
+            padding: '10px 18px', borderRadius: 10, border: 'none',
+            background: '#dc2626', color: '#fff',
+            fontWeight: 600, fontSize: 14, cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <Trash2 size={14} /> {t('settings.delete_account.cta', 'Supprimer mon compte')}
+        </button>
+      </div>
+
+      {/* Confirmation modal — Article 17 */}
+      {confirmOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={() => !deleting && setConfirmOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 480, maxWidth: '100%', padding: 24, boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>
+              {t('settings.delete_account.modal_title', 'Supprimer mon compte')}
+            </h3>
+            <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.5, marginBottom: 16 }}>
+              {t('settings.delete_account.modal_body', 'Cette action est irréversible. Toutes vos données seront supprimées dans 30 jours.')}
+            </p>
+            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>
+              {t('settings.delete_account.confirm_email_label', 'Confirmez en saisissant votre email')}
+            </label>
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              placeholder={user?.email || 'vous@exemple.com'}
+              disabled={deleting}
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: 10,
+                border: '2px solid #e2e8f0', fontSize: 14, marginBottom: 12, boxSizing: 'border-box',
+              }}
+            />
+            {err && (
+              <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 12, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontSize: 13 }}>
+                {err}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmOpen(false)}
+                disabled={deleting}
+                style={{
+                  padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
+                  background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                }}
+              >
+                {t('settings.delete_account.cancel', 'Annuler')}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  padding: '10px 18px', borderRadius: 10, border: 'none',
+                  background: '#dc2626', color: '#fff',
+                  fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: deleting ? 0.7 : 1,
+                }}
+              >
+                {deleting ? t('common.loading', 'Chargement…') : t('settings.delete_account.confirm', 'Supprimer définitivement')}
+              </button>
+            </div>
           </div>
         </div>
       )}

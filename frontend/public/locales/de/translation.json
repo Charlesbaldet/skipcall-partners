@@ -285,7 +285,8 @@
         "privacy": "Datenschutz",
         "legal": "Impressum",
         "rgpd": "DSGVO",
-        "status": "Status"
+        "status": "Status",
+        "dpa": "Auftragsverarbeitungsvertrag"
       },
       "copyright": "© 2026 RefBoost. Alle Rechte vorbehalten.",
       "madeIn": "Mit Sorgfalt in Frankreich gemacht"
@@ -1666,7 +1667,29 @@
     "pennylane_step2": "Partner wird als Lieferant in Pennylane angelegt",
     "pennylane_step3": "Qonto-Zahlung erfolgt → Rechnung als bezahlt markiert",
     "connected_short": "Verbunden",
-    "configure": "Einrichten"
+    "configure": "Einrichten",
+    "tab_privacy": "Datenschutz",
+    "privacy": {
+      "subtitle": "Ihre DSGVO-Rechte: Daten exportieren oder Konto jederzeit löschen."
+    },
+    "export": {
+      "title": "Meine Daten exportieren",
+      "description": "Laden Sie eine JSON-Datei mit Ihrem Profil, Empfehlungen, Provisionen und Nachrichten herunter.",
+      "cta": "Meine Daten exportieren",
+      "toast_success": "Export heruntergeladen"
+    },
+    "delete_account": {
+      "title": "Konto löschen",
+      "description": "Diese Aktion löscht Ihre Daten nach 30 Tagen endgültig. Sie können während dieser Frist über dpo@refboost.io kündigen.",
+      "cta": "Konto löschen",
+      "modal_title": "Konto löschen",
+      "modal_body": "Diese Aktion ist unwiderruflich. Alle Ihre Daten werden innerhalb von 30 Tagen gelöscht.",
+      "confirm_email_label": "Bestätigen Sie, indem Sie Ihre E-Mail eingeben",
+      "confirm_email_mismatch": "Die eingegebene E-Mail stimmt nicht mit Ihrem Konto überein.",
+      "cancel": "Abbrechen",
+      "confirm": "Endgültig löschen",
+      "toast_success": "Löschungsantrag registriert."
+    }
   },
   "status": {
     "new": "Neu",
@@ -3331,7 +3354,8 @@
     "billing_info_title": "Rechnungsinformationen"
   },
   "footer": {
-    "security": "Sicherheit"
+    "security": "Sicherheit",
+    "manage_cookies": "Cookies verwalten"
   },
   "security": {
     "hero_title": "Sicherheit bei RefBoost",
@@ -3403,6 +3427,65 @@
       "identified": "Identifiziert",
       "monitoring": "Beobachtung",
       "resolved": "Behoben"
+    }
+  },
+  "cookies": {
+    "banner_text": "Wir verwenden Cookies, um Ihre Erfahrung zu verbessern.",
+    "banner_link": "Mehr erfahren",
+    "accept": "Akzeptieren",
+    "reject": "Ablehnen"
+  },
+  "dpa": {
+    "title": "Auftragsverarbeitungsvertrag (AVV)",
+    "meta_title": "Auftragsverarbeitungsvertrag — RefBoost",
+    "meta_description": "RefBoost AVV gemäß Art. 28 DSGVO: Unterauftragsverarbeiter, Dauer, Sicherheit, Verletzungsmeldung, Auditrechte.",
+    "last_updated_label": "Letzte Aktualisierung",
+    "intro": "Dieser Auftragsverarbeitungsvertrag („AVV\") wird gemäß Art. 28 DSGVO (Verordnung (EU) 2016/679) zwischen dem Kunden („Verantwortlicher\") und RefBoost SAS („Auftragsverarbeiter\") geschlossen. Er ergänzt die AGB.",
+    "section": {
+      "parties": {
+        "title": "Parteien",
+        "body": "Verantwortlicher ist der Kunde, der die RefBoost-Plattform nutzt. Auftragsverarbeiter ist RefBoost SAS als SaaS-Anbieter."
+      },
+      "subject": {
+        "title": "Gegenstand und Dauer",
+        "body": "Dieser AVV gilt für die gesamte Laufzeit des RefBoost-Abonnements zuzüglich max. 30 Tage zur vollständigen Datenlöschung nach Vertragsende."
+      },
+      "nature": {
+        "title": "Art und Zweck der Verarbeitung",
+        "body": "Der Auftragsverarbeiter verarbeitet personenbezogene Daten ausschließlich zur Erbringung der Partnerprogramm-Verwaltungsdienste."
+      },
+      "categories": {
+        "title": "Kategorien von Daten und betroffenen Personen",
+        "body": "Betroffene: Admin- und Vertriebsbenutzer, Partner, Interessenten. Daten: Name, E-Mail, Telefon, IBAN, Unternehmensdaten, programmbezogene Nachrichten."
+      },
+      "subprocessors": {
+        "title": "Unterauftragsverarbeiter",
+        "body": "Vercel (US/EU) — Frontend; Railway (EU West) — Backend/DB; Resend (US) — E-Mail; Qonto (FR) — Zahlungen; Pennylane (FR) — Buchhaltung; HubSpot/Salesforce (nur bei expliziter Anbindung durch den Tenant). Drittlandübermittlungen via Standardvertragsklauseln und EU-US Data Privacy Framework."
+      },
+      "retention": {
+        "title": "Aufbewahrungsdauer",
+        "body": "Daten werden für die Vertragslaufzeit + 30 Tage gespeichert, mit Ausnahme gesetzlicher Pflichten (10 Jahre für Rechnungen)."
+      },
+      "security": {
+        "title": "Sicherheitsmaßnahmen",
+        "body": "TLS 1.3 in Übertragung, AES-256 bei Speicherung, strenge Mandantentrennung, Zugriffsprotokolle, MFA, tägliche verschlüsselte Backups."
+      },
+      "breach": {
+        "title": "Meldung von Datenschutzverletzungen",
+        "body": "Meldung an den Verantwortlichen binnen 72 Stunden gemäß Art. 33 DSGVO."
+      },
+      "deletion": {
+        "title": "Löschung am Vertragsende",
+        "body": "Endgültige Löschung binnen 30 Tagen nach Vertragsende. Löschnachweis auf Anfrage."
+      },
+      "audit": {
+        "title": "Auditrechte",
+        "body": "Jährliches Audit mit 30 Tagen Vorlauf möglich, auf Kosten des Verantwortlichen, unter Wahrung der Vertraulichkeit anderer Kunden."
+      },
+      "contact": {
+        "title": "Kontakt",
+        "body": "Bei Fragen: dpo@refboost.io."
+      }
     }
   }
 }

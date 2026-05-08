@@ -285,7 +285,8 @@
         "privacy": "Privacy",
         "legal": "Juridische kennisgeving",
         "rgpd": "AVG",
-        "status": "Status"
+        "status": "Status",
+        "dpa": "Verwerkersovereenkomst"
       },
       "copyright": "© 2026 RefBoost. Alle rechten voorbehouden.",
       "madeIn": "Met zorg gemaakt in Frankrijk"
@@ -1666,7 +1667,29 @@
     "pennylane_step2": "Partner wordt als leverancier aangemaakt in Pennylane",
     "pennylane_step3": "Qonto-betaling voltooid → Factuur als betaald gemarkeerd",
     "connected_short": "Verbonden",
-    "configure": "Instellen"
+    "configure": "Instellen",
+    "tab_privacy": "Privacy",
+    "privacy": {
+      "subtitle": "Uw AVG-rechten: exporteer uw gegevens of verwijder uw account op elk moment."
+    },
+    "export": {
+      "title": "Mijn gegevens exporteren",
+      "description": "Download een JSON-bestand met uw profiel, doorverwijzingen, commissies en berichten.",
+      "cta": "Mijn gegevens exporteren",
+      "toast_success": "Export gedownload"
+    },
+    "delete_account": {
+      "title": "Mijn account verwijderen",
+      "description": "Deze actie verwijdert uw gegevens definitief na 30 dagen. U kunt annuleren via dpo@refboost.io binnen die termijn.",
+      "cta": "Mijn account verwijderen",
+      "modal_title": "Mijn account verwijderen",
+      "modal_body": "Deze actie is onomkeerbaar. Al uw gegevens worden binnen 30 dagen verwijderd.",
+      "confirm_email_label": "Bevestig door uw e-mail in te voeren",
+      "confirm_email_mismatch": "Het ingevoerde e-mailadres komt niet overeen met uw account.",
+      "cancel": "Annuleren",
+      "confirm": "Definitief verwijderen",
+      "toast_success": "Verwijderingsverzoek geregistreerd."
+    }
   },
   "status": {
     "new": "Nieuw",
@@ -3331,7 +3354,8 @@
     "billing_info_title": "Factuurgegevens"
   },
   "footer": {
-    "security": "Beveiliging"
+    "security": "Beveiliging",
+    "manage_cookies": "Cookies beheren"
   },
   "security": {
     "hero_title": "Beveiliging bij RefBoost",
@@ -3403,6 +3427,65 @@
       "identified": "Geïdentificeerd",
       "monitoring": "Onder toezicht",
       "resolved": "Opgelost"
+    }
+  },
+  "cookies": {
+    "banner_text": "We gebruiken cookies om uw ervaring te verbeteren.",
+    "banner_link": "Meer informatie",
+    "accept": "Accepteren",
+    "reject": "Weigeren"
+  },
+  "dpa": {
+    "title": "Verwerkersovereenkomst (DPA)",
+    "meta_title": "Verwerkersovereenkomst — RefBoost",
+    "meta_description": "RefBoost verwerkersovereenkomst conform artikel 28 AVG: subverwerkers, duur, beveiliging, datalekmelding, auditrecht.",
+    "last_updated_label": "Laatst bijgewerkt",
+    "intro": "Deze Verwerkersovereenkomst (\"DPA\") wordt aangegaan op grond van artikel 28 AVG (Verordening (EU) 2016/679) tussen de klant (\"Verwerkingsverantwoordelijke\") en RefBoost SAS (\"Verwerker\"). Deze vormt een integraal onderdeel van de algemene voorwaarden.",
+    "section": {
+      "parties": {
+        "title": "Partijen",
+        "body": "De Verwerkingsverantwoordelijke is de klant die het RefBoost-platform gebruikt. De Verwerker is RefBoost SAS als SaaS-leverancier."
+      },
+      "subject": {
+        "title": "Onderwerp en duur",
+        "body": "Deze DPA geldt voor de volledige duur van het RefBoost-abonnement plus de tijd nodig voor volledige verwijdering (max. 30 dagen)."
+      },
+      "nature": {
+        "title": "Aard en doel van de verwerking",
+        "body": "De Verwerker verwerkt persoonsgegevens uitsluitend om de partnerprogramma-beheerdiensten te leveren."
+      },
+      "categories": {
+        "title": "Categorieën gegevens en betrokkenen",
+        "body": "Betrokkenen: admin- en sales-gebruikers, partners, prospects. Gegevens: naam, e-mail, telefoon, IBAN, bedrijfsinfo, berichten."
+      },
+      "subprocessors": {
+        "title": "Subverwerkers",
+        "body": "Vercel (US/EU) — frontend; Railway (EU West) — backend/DB; Resend (US) — e-mail; Qonto (FR) — betalingen; Pennylane (FR) — boekhouding; HubSpot/Salesforce (alleen bij expliciete koppeling). Doorgifte buiten de EU via SCC's en Data Privacy Framework."
+      },
+      "retention": {
+        "title": "Bewaartermijn",
+        "body": "Gegevens bewaard voor de contractduur + 30 dagen, behoudens wettelijke verplichtingen (10 jaar voor facturatie)."
+      },
+      "security": {
+        "title": "Beveiligingsmaatregelen",
+        "body": "TLS 1.3 onderweg, AES-256 in rust, strikte multi-tenant-isolatie, toegangsregistratie, MFA, dagelijkse versleutelde back-ups."
+      },
+      "breach": {
+        "title": "Melding van datalekken",
+        "body": "Melding aan de Verwerkingsverantwoordelijke binnen 72 uur conform art. 33 AVG."
+      },
+      "deletion": {
+        "title": "Verwijdering aan einde contract",
+        "body": "Definitieve verwijdering binnen 30 dagen na contractbeëindiging. Verwijderingscertificaat op verzoek."
+      },
+      "audit": {
+        "title": "Auditrecht",
+        "body": "Jaarlijkse audit mogelijk met 30 dagen vooraankondiging, op kosten van de Verwerkingsverantwoordelijke, met respect voor vertrouwelijkheid van andere klanten."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "Voor vragen: dpo@refboost.io."
+      }
     }
   }
 }

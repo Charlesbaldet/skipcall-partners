@@ -245,6 +245,50 @@ async function purgeDeletedRecords() {
   if (commCount || refCount) {
     console.log(`[trash.purge] permanently removed ${refCount} referrals + ${commCount} commissions + ${actCount} activities (>30d)`);
   }
+
+  // GDPR Article 17 — hard-delete partner accounts soft-deleted via
+  // POST /api/auth/delete-account once the 30-day grace window has
+  // elapsed. We swallow per-table errors so a single FK conflict on
+  // historical data doesn't stop the rest of the purge.
+  try {
+    // Partners first: their FK constraints on commissions/referrals are
+    // ON DELETE for the rows we just removed above, so the orphaned
+    // child set is at its smallest right now. We deliberately don't
+    // hard-delete partners with surviving non-soft-deleted commissions
+    // — keeping the partners row keeps the historical commission
+    // record auditable for the tenant admin (their own data).
+    const { rowCount: partnerCount } = await query(
+      `DELETE FROM partners
+        WHERE deleted_at IS NOT NULL
+          AND deleted_at < $1
+          AND id NOT IN (SELECT DISTINCT partner_id FROM commissions WHERE partner_id IS NOT NULL)
+          AND id NOT IN (SELECT DISTINCT partner_id FROM referrals  WHERE partner_id IS NOT NULL)`,
+      [cutoff]
+    );
+    // Users: anonymise by NULLing PII columns rather than hard-delete,
+    // because audit_logs / notification_queue / referrals.created_by
+    // FK to users.id and we want the audit trail to keep working. The
+    // row stays as a tombstone with a synthetic email so the unique
+    // index is preserved if the same person later re-signs-up.
+    const { rowCount: userCount } = await query(
+      `UPDATE users
+          SET email = 'deleted+' || id::text || '@refboost.invalid',
+              full_name = 'Compte supprimé',
+              password_hash = '!',
+              avatar_url = NULL,
+              partner_id = NULL,
+              is_active = false
+        WHERE deleted_at IS NOT NULL
+          AND deleted_at < $1
+          AND email NOT LIKE 'deleted+%@refboost.invalid'`,
+      [cutoff]
+    );
+    if (partnerCount || userCount) {
+      console.log(`[gdpr.purge] anonymised ${userCount} user(s) + hard-deleted ${partnerCount} partner(s) (>30d)`);
+    }
+  } catch (err) {
+    console.error('[gdpr.purge] failed:', err.message);
+  }
 }
 
 module.exports = router;

@@ -285,7 +285,8 @@
         "privacy": "Privacidad",
         "legal": "Aviso legal",
         "rgpd": "RGPD",
-        "status": "Estado"
+        "status": "Estado",
+        "dpa": "Contrato de tratamiento de datos"
       },
       "copyright": "© 2026 RefBoost. Todos los derechos reservados.",
       "madeIn": "Hecho con cuidado en Francia"
@@ -1666,7 +1667,29 @@
     "pennylane_step2": "El socio se crea como proveedor en Pennylane",
     "pennylane_step3": "Pago de Qonto realizado → Factura marcada como pagada",
     "connected_short": "Conectado",
-    "configure": "Configurar"
+    "configure": "Configurar",
+    "tab_privacy": "Privacidad",
+    "privacy": {
+      "subtitle": "Tus derechos RGPD: exporta tus datos o elimina tu cuenta en cualquier momento."
+    },
+    "export": {
+      "title": "Exportar mis datos",
+      "description": "Descarga un archivo JSON con tu perfil, recomendaciones, comisiones y mensajes.",
+      "cta": "Exportar mis datos",
+      "toast_success": "Exportación descargada"
+    },
+    "delete_account": {
+      "title": "Eliminar mi cuenta",
+      "description": "Esta acción elimina tus datos definitivamente en 30 días. Puedes cancelar contactando dpo@refboost.io durante este plazo.",
+      "cta": "Eliminar mi cuenta",
+      "modal_title": "Eliminar mi cuenta",
+      "modal_body": "Esta acción es irreversible. Todos tus datos se eliminarán en 30 días.",
+      "confirm_email_label": "Confirma escribiendo tu email",
+      "confirm_email_mismatch": "El email introducido no coincide con tu cuenta.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar definitivamente",
+      "toast_success": "Solicitud de eliminación registrada."
+    }
   },
   "status": {
     "new": "Nuevo",
@@ -3331,7 +3354,8 @@
     "billing_info_title": "Información de facturación"
   },
   "footer": {
-    "security": "Seguridad"
+    "security": "Seguridad",
+    "manage_cookies": "Gestionar cookies"
   },
   "security": {
     "hero_title": "Seguridad en RefBoost",
@@ -3403,6 +3427,65 @@
       "identified": "Identificado",
       "monitoring": "Bajo vigilancia",
       "resolved": "Resuelto"
+    }
+  },
+  "cookies": {
+    "banner_text": "Utilizamos cookies para mejorar tu experiencia.",
+    "banner_link": "Más información",
+    "accept": "Aceptar",
+    "reject": "Rechazar"
+  },
+  "dpa": {
+    "title": "Contrato de tratamiento de datos (DPA)",
+    "meta_title": "Contrato de tratamiento de datos — RefBoost",
+    "meta_description": "DPA de RefBoost conforme al artículo 28 del RGPD: subencargados, duración, seguridad, notificación de brechas, derecho de auditoría.",
+    "last_updated_label": "Última actualización",
+    "intro": "Este Contrato de Tratamiento de Datos («DPA») se celebra en aplicación del artículo 28 del RGPD (Reglamento (UE) 2016/679) entre el cliente («Responsable») y RefBoost SAS («Encargado»). Complementa las Condiciones Generales de Venta.",
+    "section": {
+      "parties": {
+        "title": "Partes",
+        "body": "El Responsable es el cliente que utiliza la plataforma RefBoost. El Encargado es RefBoost SAS, proveedor SaaS."
+      },
+      "subject": {
+        "title": "Objeto y duración",
+        "body": "Este DPA se aplica durante toda la duración de la suscripción a RefBoost más el tiempo necesario para la eliminación completa (máx. 30 días)."
+      },
+      "nature": {
+        "title": "Naturaleza y finalidad del tratamiento",
+        "body": "El Encargado trata los datos únicamente para prestar los servicios de gestión del programa de socios."
+      },
+      "categories": {
+        "title": "Categorías de datos y de interesados",
+        "body": "Interesados: administradores, comerciales, socios, prospectos. Datos: nombre, email, teléfono, IBAN, información empresarial, mensajes."
+      },
+      "subprocessors": {
+        "title": "Subencargados",
+        "body": "Vercel (US/UE) — frontend; Railway (UE Oeste) — backend/BD; Resend (US) — email; Qonto (FR) — pagos; Pennylane (FR) — contabilidad; HubSpot/Salesforce (solo si el tenant los conecta). Transferencias fuera de la UE cubiertas por CCT y Data Privacy Framework."
+      },
+      "retention": {
+        "title": "Plazo de conservación",
+        "body": "Datos conservados durante el contrato + 30 días, salvo obligaciones legales (10 años para facturación)."
+      },
+      "security": {
+        "title": "Medidas de seguridad",
+        "body": "TLS 1.3 en tránsito, AES-256 en reposo, aislamiento multi-tenant estricto, registro de accesos, MFA, copias diarias cifradas."
+      },
+      "breach": {
+        "title": "Notificación de brechas",
+        "body": "Notificación al Responsable en un plazo de 72 horas, conforme al art. 33 RGPD."
+      },
+      "deletion": {
+        "title": "Eliminación al final del contrato",
+        "body": "Eliminación definitiva en 30 días tras la resolución. Certificado disponible bajo solicitud."
+      },
+      "audit": {
+        "title": "Derecho de auditoría",
+        "body": "Auditoría anual posible con 30 días de preaviso, a cargo del Responsable, respetando la confidencialidad de otros clientes."
+      },
+      "contact": {
+        "title": "Contacto",
+        "body": "Para cualquier consulta: dpo@refboost.io."
+      }
     }
   }
 }

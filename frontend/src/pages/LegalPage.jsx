@@ -66,39 +66,55 @@ const LEGAL = {
 
 <h2>2. Données collectées</h2>
 <p>Nous collectons les catégories de données suivantes :</p>
-<p><strong>Données d'identification :</strong> nom, prénom, adresse email, numéro de téléphone, nom de l'entreprise, fonction.</p>
+<p><strong>Identification :</strong> nom, prénom, adresse email, numéro de téléphone, fonction.</p>
+<p><strong>Entreprise :</strong> raison sociale, SIRET, adresse de facturation, secteur.</p>
+<p><strong>Bancaires :</strong> IBAN, BIC, titulaire du compte, numéro de TVA (uniquement pour les partenaires payés via la plateforme).</p>
 <p><strong>Données de connexion :</strong> adresse IP, type de navigateur, pages visitées, durée de visite, cookies.</p>
-<p><strong>Données de facturation :</strong> informations de paiement (traitées par Stripe, nous ne stockons pas les numéros de carte bancaire).</p>
-<p><strong>Données métier :</strong> informations relatives aux leads, partenaires, commissions et activités saisies par le Client dans le cadre de l'utilisation du service.</p>
+<p><strong>Données de facturation :</strong> informations de paiement (traitées par Stripe — nous ne stockons jamais les numéros de carte bancaire en clair).</p>
+<p><strong>Données métier :</strong> recommandations soumises (filleul / lead : nom, email, téléphone, entreprise, notes), commissions calculées, échanges intra-programme.</p>
 
 <h2>3. Finalités du traitement</h2>
 <p>Vos données sont collectées pour les finalités suivantes : fourniture et amélioration du service, gestion de votre compte et de votre abonnement, communication relative au service (notifications, mises à jour), support client, analyse statistique et amélioration de la plateforme, respect de nos obligations légales et réglementaires.</p>
 
-<h2>4. Base légale du traitement</h2>
-<p>Le traitement de vos données repose sur l'exécution du contrat (fourniture du service souscrit), le consentement (cookies non essentiels, communications marketing), l'intérêt légitime (amélioration du service, sécurité), et le respect d'obligations légales (facturation, comptabilité).</p>
+<h2>4. Bases légales du traitement</h2>
+<p><strong>Exécution du contrat (art. 6.1.b RGPD) :</strong> fourniture du service souscrit, gestion du compte, calcul des commissions, paiements SEPA via Qonto.</p>
+<p><strong>Intérêt légitime (art. 6.1.f RGPD) :</strong> sécurité de la plateforme, prévention de la fraude, mesure d'audience anonymisée, amélioration produit.</p>
+<p><strong>Consentement (art. 6.1.a RGPD) :</strong> cookies non essentiels (Google Analytics), communications marketing facultatives, partage de données avec un CRM externe choisi par le tenant.</p>
+<p><strong>Obligation légale (art. 6.1.c RGPD) :</strong> conservation des factures et registres comptables (10 ans), réponse aux réquisitions des autorités compétentes.</p>
 
 <h2>5. Partage des données</h2>
 <p>Nous ne vendons jamais vos données personnelles. Nous pouvons partager vos données avec nos sous-traitants techniques (hébergement, paiement, envoi d'emails) dans la stricte mesure nécessaire à la fourniture du service. Ces sous-traitants sont contractuellement tenus de protéger vos données conformément au RGPD.</p>
-<p>Nos principaux sous-traitants : Vercel (hébergement frontend), Railway (hébergement backend), Stripe (paiement), PostgreSQL (base de données).</p>
 
-<h2>6. Durée de conservation</h2>
-<p>Les données de compte sont conservées pendant la durée de l'abonnement et supprimées dans un délai de 12 mois après la clôture du compte. Les données de facturation sont conservées pendant la durée légale de 10 ans. Les données de connexion (logs) sont conservées pendant 12 mois.</p>
+<h2>6. Sous-traitants</h2>
+<p>Nos sous-traitants principaux et leur localisation :</p>
+<p>🇺🇸 <strong>Vercel Inc.</strong> — hébergement frontend (edges UE/US)</p>
+<p>🇪🇺 <strong>Railway</strong> — hébergement backend + base de données PostgreSQL (UE Ouest)</p>
+<p>🇺🇸 <strong>Resend</strong> — envoi des emails transactionnels</p>
+<p>🇺🇸 <strong>Stripe</strong> — encaissement des abonnements RefBoost</p>
+<p>🇫🇷 <strong>Qonto</strong> — paiements SEPA des commissions partenaires</p>
+<p>🇫🇷 <strong>Pennylane</strong> — comptabilité et facturation</p>
+<p>🇺🇸 <strong>Google</strong> — Analytics (uniquement après consentement) et SSO</p>
+<p>🇺🇸 <strong>HubSpot / Salesforce</strong> — uniquement si l'admin du tenant connecte explicitement l'intégration CRM</p>
+<p>Tous les transferts hors UE sont encadrés par les clauses contractuelles types adoptées par la Commission européenne et/ou le Data Privacy Framework (DPF) EU-US.</p>
 
-<h2>7. Sécurité</h2>
-<p>Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données : chiffrement des données en transit (HTTPS/TLS), authentification sécurisée, sauvegardes régulières, accès restreint aux données sur la base du besoin d'en connaître.</p>
+<h2>7. Durée de conservation</h2>
+<p>Les données de compte sont conservées pendant toute la durée de l'abonnement. À la clôture, elles sont supprimées sous 30 jours (cf. notre <a href="/legal/dpa">DPA</a>). Les factures et registres comptables sont conservés 10 ans (obligation légale). Les logs de connexion sont conservés 12 mois. Les sauvegardes chiffrées sont purgées sous 35 jours.</p>
 
-<h2>8. Vos droits</h2>
-<p>Conformément au RGPD, vous disposez des droits suivants : droit d'accès à vos données, droit de rectification, droit à l'effacement (« droit à l'oubli »), droit à la portabilité, droit d'opposition au traitement, droit à la limitation du traitement.</p>
-<p>Pour exercer ces droits, contactez-nous à l'adresse : dpo@refboost.io. Nous répondrons dans un délai maximum de 30 jours.</p>
+<h2>8. Sécurité</h2>
+<p>Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données : chiffrement TLS 1.3 en transit, AES-256 au repos, isolation multi-tenant stricte, journalisation des accès, authentification forte (bcrypt + MFA optionnelle), sauvegardes chiffrées quotidiennes, accès restreint sur la base du besoin d'en connaître.</p>
 
-<h2>9. Cookies</h2>
-<p>Notre site utilise des cookies essentiels au fonctionnement du service (authentification, préférences de langue) et des cookies d'analyse (Google Analytics) pour comprendre l'utilisation du site. Vous pouvez gérer vos préférences de cookies via les paramètres de votre navigateur.</p>
+<h2>9. Vos droits</h2>
+<p>Conformément au RGPD, vous disposez des droits suivants : droit d'accès à vos données (art. 15), droit de rectification (art. 16), droit à l'effacement (art. 17), droit à la portabilité (art. 20), droit d'opposition au traitement (art. 21), droit à la limitation du traitement (art. 18).</p>
+<p>Les partenaires peuvent exporter leurs données (article 20) et supprimer leur compte (article 17) directement depuis l'onglet « Confidentialité » de leurs paramètres. Pour toute autre demande, contactez-nous à <a href="mailto:dpo@refboost.io">dpo@refboost.io</a> — nous répondrons dans un délai maximum de 30 jours.</p>
 
-<h2>10. Modifications</h2>
+<h2>10. Cookies</h2>
+<p>Notre site utilise des cookies essentiels au fonctionnement du service (authentification, préférences de langue) ; aucun consentement n'est requis pour ces cookies. Les cookies d'analyse (Google Analytics) ne sont déposés qu'après votre consentement explicite via la bannière dédiée. Vous pouvez retirer votre consentement à tout moment via le lien « Gérer les cookies » en bas de page.</p>
+
+<h2>11. Modifications</h2>
 <p>Nous nous réservons le droit de modifier la présente politique de confidentialité. Toute modification significative sera notifiée aux utilisateurs par email ou via la plateforme.</p>
 
-<h2>11. Contact</h2>
-<p>Pour toute question relative à la protection de vos données, contactez-nous à : dpo@refboost.io.</p>
+<h2>12. Délégué à la protection des données (DPO)</h2>
+<p>Pour toute question relative à la protection de vos données, contactez notre DPO : <a href="mailto:dpo@refboost.io">dpo@refboost.io</a>. Vous disposez également du droit d'introduire une réclamation auprès de la <a href="https://www.cnil.fr">CNIL</a>.</p>
 `,
   },
 
