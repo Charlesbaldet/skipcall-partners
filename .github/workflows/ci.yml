@@ -38,3 +38,18 @@ jobs:
             echo "Potential hardcoded secrets found!"
             exit 1
           fi
+
+  compliance-audit:
+    runs-on: ubuntu-latest
+    needs: [backend-lint, frontend-build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Tenant isolation
+        run: node scripts/audit-tenant-isolation.js
+      - name: Auth middleware
+        run: node scripts/audit-auth-middleware.js
+      - name: Hardcoded secrets
+        run: node scripts/audit-secrets.js

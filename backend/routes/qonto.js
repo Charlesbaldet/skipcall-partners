@@ -89,6 +89,7 @@ router.get('/connect', authenticate, tenantScope, authorize('admin'), requireBus
 // Public — Qonto's OAuth bounces here. Verifies the signed state,
 // exchanges the code for tokens, persists them, then redirects the
 // admin back to /settings?tab=integrations.
+// audit-skip: OAuth callback — auth is the signed state token
 router.get('/callback', async (req, res) => {
   try {
     const { code, state, error } = req.query;

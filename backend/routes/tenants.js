@@ -20,6 +20,7 @@ const { getTenantConfig, clearTenantCache } = require('../middleware/tenant');
 // partner from "Eficia" hitting refboost.io/api/tenants/config
 // got the SPA's default tenant ("Skipcall") back, which the FE
 // then displayed as the branded label everywhere.
+// audit-skip: public tenant config — used by SPA bootstrap and apply form
 router.get('/config', async (req, res) => {
   try {
     const auth = req.headers.authorization;
@@ -268,7 +269,9 @@ async function publicTenantBySlug(req, res) {
 }
 // Two equivalent public read paths so existing callers (/public/:slug)
 // and new ones (/by-slug/:slug) both hit the same handler.
+// audit-skip: public tenant lookup by slug
 router.get('/public/:slug',  publicTenantBySlug);
+// audit-skip: public tenant lookup by slug (alias)
 router.get('/by-slug/:slug', publicTenantBySlug);
 
 module.exports = router;
