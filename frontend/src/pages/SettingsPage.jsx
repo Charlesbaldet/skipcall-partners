@@ -15,7 +15,7 @@ import {
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
   Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen, Building, History,
-  Download,
+  Download, MonitorSmartphone, AlertTriangle,
 } from 'lucide-react';
 import DateRangePicker from '../components/DateRangePicker.jsx';
 
@@ -585,6 +585,167 @@ function AccountTab({ user }) {
           <LanguageSwitcher direction="up" dark={false} style={{ width: '100%' }}/>
         </div>
       </div>
+
+      <LoginHistoryCard />
+    </div>
+  );
+}
+
+// ═══ LOGIN HISTORY ═══
+// Last 20 successful login events for the signed-in user. SOC 2 CC6.1
+// gives users visibility into where their account has been used and a
+// "this wasn't me" panic button that bumps users.token_version,
+// invalidating every existing JWT (including the current device's).
+function parseUserAgent(ua) {
+  if (!ua) return { device: '—', browser: '' };
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+  let browser = 'Browser';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) browser = 'Chrome';
+  else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = 'Safari';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  let os = '';
+  if (/Windows/.test(ua)) os = 'Windows';
+  else if (/Mac OS X/.test(ua)) os = 'macOS';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/iPhone|iPad/.test(ua)) os = 'iOS';
+  else if (/Linux/.test(ua)) os = 'Linux';
+  return { device: `${os || (isMobile ? 'Mobile' : 'Desktop')}`, browser };
+}
+
+function LoginHistoryCard() {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [logins, setLogins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api.getLoginHistory()
+      .then(d => { if (!cancelled) setLogins(d?.logins || []); })
+      .catch(() => { if (!cancelled) setLogins([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const fmt = (d) => {
+    if (!d) return '—';
+    try {
+      return new Date(d).toLocaleString(i18n.language || 'fr-FR', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+    } catch { return String(d); }
+  };
+
+  const handleConfirmInvalidate = async () => {
+    setSubmitting(true);
+    try {
+      await api.invalidateSessions();
+      // Local logout + navigate to /login. The api client also bails
+      // out as soon as the next request hits a 401 from the bumped
+      // token_version, but going there proactively skips the round-trip.
+      try { showToast(t('settings.profile.login_history.toast_invalidated', 'Sessions invalidées')); } catch {}
+      api.setToken(null);
+      api.setUser(null);
+      navigate('/login', { replace: true });
+    } catch (e) {
+      setSubmitting(false);
+      setConfirmOpen(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <MonitorSmartphone size={16} color="#6366f1" />
+          <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            {t('settings.profile.login_history.title', 'Connexions récentes')}
+          </h4>
+        </div>
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 8,
+            border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <AlertTriangle size={13} />
+          {t('settings.profile.login_history.invalidate_cta', "Ce n'était pas moi")}
+        </button>
+      </div>
+
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead style={{ background: '#f8fafc' }}>
+            <tr>
+              <th style={thCell}>{t('settings.profile.login_history.col_date', 'Date')}</th>
+              <th style={thCell}>{t('settings.profile.login_history.col_ip', 'IP')}</th>
+              <th style={thCell}>{t('settings.profile.login_history.col_device', 'Appareil')}</th>
+              <th style={thCell}>{t('settings.profile.login_history.col_method', 'Méthode')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>...</td></tr>
+            )}
+            {!loading && logins.length === 0 && (
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>
+                {t('settings.profile.login_history.empty', 'Aucune connexion récente')}
+              </td></tr>
+            )}
+            {!loading && logins.map((row, idx) => {
+              const ua = parseUserAgent(row.user_agent);
+              return (
+                <tr key={idx} style={{ borderTop: '1px solid #f1f5f9' }}>
+                  <td style={tdCell}>{fmt(row.created_at)}</td>
+                  <td style={tdCell}><code style={{ fontSize: 12, background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>{row.ip || '—'}</code></td>
+                  <td style={tdCell}>{ua.device}{ua.browser ? ` · ${ua.browser}` : ''}</td>
+                  <td style={tdCell}>{row.method || 'password'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {confirmOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.6)' }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 28, maxWidth: 460, width: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+              {t('settings.profile.login_history.invalidate_modal_title', 'Déconnecter toutes les sessions ?')}
+            </h3>
+            <p style={{ margin: '0 0 20px', color: '#475569', fontSize: 14, lineHeight: 1.5 }}>
+              {t('settings.profile.login_history.invalidate_modal_body', 'Vous serez déconnecté de tous vos appareils, y compris celui-ci. Vous devrez vous reconnecter.')}
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                disabled={submitting}
+                style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                {t('settings.profile.login_history.cancel', 'Annuler')}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmInvalidate}
+                disabled={submitting}
+                style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.6 : 1 }}
+              >
+                {t('settings.profile.login_history.confirm_invalidate', 'Tout déconnecter')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

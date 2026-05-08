@@ -562,6 +562,17 @@ class ApiClient {
     if (!res.ok) throw new Error('Erreur export');
     return res.blob();
   }
+
+  // Recent login events for the signed-in user (Settings → Profil →
+  // Connexions récentes card). Returns { logins: [...] }.
+  getLoginHistory() { return this.request('/auth/login-history'); }
+
+  // Bumps users.token_version → all existing JWTs (this device + every
+  // other) become invalid on next request. The frontend logs the user
+  // out locally and routes to /login.
+  invalidateSessions() {
+    return this.request('/auth/invalidate-sessions', { method: 'POST' });
+  }
 }
 
 export const api = new ApiClient();

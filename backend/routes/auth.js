@@ -6,6 +6,7 @@ const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
 const { auditLog, recordLoginAttempt, isAccountLocked, validatePassword: legacyValidatePassword } = require('../middleware/security');
 const { validatePassword: strictValidatePassword } = require('../utils/passwordPolicy');
+const { logAudit } = require('../services/auditLog');
 
 // Compose policy: legacy length/chars rules (FR strings) + the new
 // strict policy (i18n keys, common-passwords blocklist). Both must
@@ -118,6 +119,9 @@ function buildLoginResponse({ user, space, spaces, token, requiresSpaceSelection
 }
 
 // Sign a normal session JWT bound to a specific (user, tenant, role).
+// token_version is embedded so the authenticate middleware can detect
+// "sign out everywhere" — bumping users.token_version invalidates
+// every outstanding JWT without server-side session storage.
 function signSessionToken({ user, tenantId, role, partnerId }) {
   return jwt.sign(
     {
@@ -127,6 +131,7 @@ function signSessionToken({ user, tenantId, role, partnerId }) {
       partnerId: partnerId ?? user.partner_id ?? null,
       fullName: user.full_name,
       tenantId,
+      token_version: user.token_version || 0,
     },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
@@ -191,6 +196,7 @@ router.post('/login', [
 
     const { rows } = await query(
       `SELECT u.id, u.email, u.password_hash, u.full_name, u.role, u.partner_id, u.is_active, u.tenant_id, u.must_change_password,
+              COALESCE(u.token_version, 0) AS token_version,
               p.name as partner_name
        FROM users u LEFT JOIN partners p ON u.partner_id = p.id
        WHERE u.email = $1`,
@@ -200,6 +206,13 @@ router.post('/login', [
     if (rows.length === 0) {
       await recordLoginAttempt(email, ip, false);
       auditLog(req, 'login_failed', 'user', null, { email, reason: 'unknown_email' });
+      // Synthetic req for the new SOC 2 audit log — no req.user yet
+      // because the email was unknown.
+      logAudit(
+        { ip: req.ip, headers: req.headers, user: null, tenantId: null },
+        'auth.login_failed', 'user', null,
+        { email, ip: req.ip, userAgent: req.headers['user-agent'], reason: 'unknown_email' }
+      );
       return res.status(401).json({ error: 'Identifiants incorrects' });
     }
 
@@ -214,6 +227,11 @@ router.post('/login', [
     if (!validPassword) {
       await recordLoginAttempt(email, ip, false);
       auditLog(req, 'login_failed', 'user', user.id, { email, reason: 'wrong_password' });
+      logAudit(
+        { ip: req.ip, headers: req.headers, user: { id: user.id, tenantId: user.tenant_id }, tenantId: user.tenant_id },
+        'auth.login_failed', 'user', user.id,
+        { email, ip: req.ip, userAgent: req.headers['user-agent'], reason: 'wrong_password' }
+      );
       return res.status(401).json({ error: 'Identifiants incorrects' });
     }
 
@@ -262,6 +280,11 @@ router.post('/login', [
       role: space?.role || user.role,
       partnerId: space ? (space.partner_id || null) : user.partner_id,
     });
+    logAudit(
+      { ip: req.ip, headers: req.headers, user: { id: user.id, tenantId, email: user.email }, tenantId },
+      'auth.login', 'user', user.id,
+      { ip: req.ip, userAgent: req.headers['user-agent'], method: 'password' }
+    );
     res.json(buildLoginResponse({ user, space, spaces, token }));
   } catch (err) {
     console.error('Login error:', err);
@@ -309,6 +332,7 @@ router.post('/google', async (req, res) => {
     const { rows } = await query(
       `SELECT u.id, u.email, u.password_hash, u.full_name, u.role, u.partner_id,
               u.is_active, u.tenant_id, u.must_change_password, u.avatar_url,
+              COALESCE(u.token_version, 0) AS token_version,
               p.name AS partner_name
        FROM users u LEFT JOIN partners p ON u.partner_id = p.id
        WHERE LOWER(u.email) = LOWER($1)
@@ -374,6 +398,11 @@ router.post('/google', async (req, res) => {
       role: space?.role || user.role,
       partnerId: space ? (space.partner_id || null) : user.partner_id,
     });
+    logAudit(
+      { ip: req.ip, headers: req.headers, user: { id: user.id, tenantId, email: user.email }, tenantId },
+      'auth.login', 'user', user.id,
+      { ip: req.ip, userAgent: req.headers['user-agent'], method: 'google' }
+    );
     res.json(buildLoginResponse({ user, space, spaces, token }));
   } catch (err) {
     console.error('[google sso]', err);
@@ -618,7 +647,7 @@ router.post('/signup', [
       [email, hash, fullName, tenant.id]
     );
     await ensureUserRoleEntry(user.id, tenant.id, 'admin', null);
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, tenantId: tenant.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, tenantId: tenant.id, token_version: 0 }, process.env.JWT_SECRET, { expiresIn: '7d' });
     try { await query("INSERT INTO audit_logs (user_id, tenant_id, action, resource_type, resource_id, details) VALUES ($1, $2, 'signup', 'tenant', $3, $4)", [user.id, tenant.id, tenant.id, JSON.stringify({ company, email })]); } catch(e) {}
     res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, tenantId: tenant.id } });
   } catch (err) { console.error('Signup error:', err); res.status(500).json({ error: 'Erreur lors de la creation du compte.' }); }
@@ -698,7 +727,7 @@ router.post('/signup-google', [
     await ensureUserRoleEntry(user.id, tenant.id, 'admin', null);
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, tenantId: tenant.id, fullName: user.full_name },
+      { id: user.id, email: user.email, role: user.role, tenantId: tenant.id, fullName: user.full_name, token_version: 0 },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -895,6 +924,7 @@ router.post('/switch-space',
       // an extra /me round-trip.
       const userRes = await query(
         `SELECT u.id, u.email, u.full_name, u.must_change_password, u.avatar_url,
+                COALESCE(u.token_version, 0) AS token_version,
                 t.name AS tenant_name, t.slug AS tenant_slug,
                 p.name AS partner_name, p.commission_rate
            FROM users u
@@ -907,11 +937,16 @@ router.post('/switch-space',
       if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
 
       const token = signSessionToken({
-        user: { id: user.id, email: user.email, full_name: user.full_name, role, partner_id: partnerId || null },
+        user: { id: user.id, email: user.email, full_name: user.full_name, role, partner_id: partnerId || null, token_version: user.token_version },
         tenantId,
         role,
         partnerId: partnerId || null,
       });
+      logAudit(
+        { ip: req.ip, headers: req.headers, user: { id: user.id, tenantId, email: user.email }, tenantId },
+        'auth.login', 'user', user.id,
+        { ip: req.ip, userAgent: req.headers['user-agent'], method: 'switch_space' }
+      );
 
       res.json({
         token,
@@ -1033,6 +1068,61 @@ router.post('/delete-account', authenticate, async (req, res) => {
     res.json({ ok: true, scheduled_purge_at: purgeAtIso });
   } catch (err) {
     console.error('[delete-account] error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Login history (Settings → Profil → Connexions récentes) ───
+// Last 20 successful login events for the signed-in user. Reads from
+// audit_logs filtered to action = 'auth.login'. SOC 2 CC6.1 — gives
+// users visibility into where their account has been used.
+router.get('/login-history', authenticate, async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT created_at, ip_address, user_agent, details
+         FROM audit_logs
+        WHERE user_id = $1 AND action = 'auth.login'
+        ORDER BY created_at DESC
+        LIMIT 20`,
+      [req.user.id]
+    );
+    const logins = rows.map(r => {
+      const details = (() => {
+        if (!r.details) return {};
+        if (typeof r.details === 'object') return r.details;
+        try { return JSON.parse(r.details); } catch { return {}; }
+      })();
+      return {
+        created_at: r.created_at,
+        ip: r.ip_address || details.ip || null,
+        user_agent: r.user_agent || details.userAgent || null,
+        method: details.method || 'password',
+      };
+    });
+    res.json({ logins });
+  } catch (err) {
+    console.error('[login-history] error:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Invalidate every existing session ───
+// Bumps users.token_version → every outstanding JWT (this device + every
+// other) becomes invalid on the next request through the authenticate
+// middleware. The client logs out locally and routes to /login.
+router.post('/invalidate-sessions', authenticate, async (req, res) => {
+  try {
+    await query(
+      'UPDATE users SET token_version = COALESCE(token_version, 0) + 1, updated_at = NOW() WHERE id = $1',
+      [req.user.id]
+    );
+    logAudit(req, 'session.invalidated', 'user', req.user.id, {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[invalidate-sessions] error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
