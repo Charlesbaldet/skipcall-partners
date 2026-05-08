@@ -350,6 +350,17 @@ app.listen(PORT, () => {
   setInterval(cleanupOldData, 24 * 60 * 60 * 1000);
   setTimeout(cleanupOldData, 60000); // First cleanup after 1 min
 
+  // Daily retention purge — fires at 03:00 UTC. Hard-deletes
+  // soft-deleted partners/referrals/commissions older than 30 days,
+  // anonymises old users, and trims audit_logs/notification_queue.
+  // SOC 2 CC6.5 / ISO 27001 A.18.1.3.
+  try {
+    const { scheduleRetentionPurge } = require('./scripts/retention-purge');
+    scheduleRetentionPurge();
+  } catch (err) {
+    logger.error('retention scheduler failed to arm', { error: err && err.message });
+  }
+
   // Purge soft-deleted referrals + commissions older than 30 days.
   // Same cadence as cleanupOldData; first run delayed +2 min so the
   // boot sequence isn't overloaded.
