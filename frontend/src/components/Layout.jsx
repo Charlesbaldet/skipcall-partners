@@ -365,61 +365,94 @@ export default function Layout({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
       <aside style={s.sidebar}>
-        {/* ─── Top: logo + program name (also the space-switcher trigger) ─ */}
+        {/* ─── Top: tenant logo OR name (single visual, not both), also
+             the space-switcher trigger. Either render the tenant logo
+             (when present) at large size, or the program label with a
+             colour initial avatar — never both side-by-side, which was
+             redundant. The chevron is the only consistent affordance
+             across both states. */}
         <div ref={switcherRef} style={{ position: 'relative', padding: '20px 16px 12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            disabled={!hasMultipleSpaces}
+            onClick={() => hasMultipleSpaces && setSpaceSwitcherOpen(v => !v)}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              display: 'flex', alignItems: 'center', gap: 10,
+              color: '#fff', fontFamily: 'inherit',
+              cursor: hasMultipleSpaces ? 'pointer' : 'default',
+              width: '100%', textAlign: 'left',
+            }}
+            aria-haspopup={hasMultipleSpaces ? 'menu' : undefined}
+            aria-expanded={spaceSwitcherOpen}
+          >
             {isSuperAdmin ? (
-              <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #dc2626, #ef4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
-                <Shield size={18} color="#fff"/>
+              <>
+                <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #dc2626, #ef4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
+                  <Shield size={18} color="#fff"/>
+                </div>
+                <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                  {programLabel}
+                </span>
+              </>
+            ) : tenant?.logo_url ? (
+              // Has logo → big logo only, no name (logo is the brand)
+              <div style={{ flex: 1, minWidth: 0, filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
+                <img
+                  src={tenant.logo_url}
+                  alt={programLabel || t('layout_extra.logo_alt')}
+                  style={{ height: 48, maxWidth: '100%', objectFit: 'contain', display: 'block' }}
+                  onError={e => { e.target.style.display = 'none'; }}
+                />
               </div>
             ) : (
-              <div style={{ flexShrink: 0, filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
-                {tenant?.logo_url
-                  ? <img src={tenant.logo_url} alt={t('layout_extra.logo_alt')} style={{ height: 36, maxWidth: 110, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }}/>
-                  : <RefBoostLogo size={36}/>}
-              </div>
+              // No logo → initial avatar + program/tenant name
+              <>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  background: `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, fontWeight: 800, color: '#fff',
+                  boxShadow: `0 0 16px ${C.p}40`,
+                }}>
+                  {(programLabel || 'R').slice(0, 2).toUpperCase()}
+                </div>
+                <span style={{
+                  fontSize: 16, fontWeight: 800, letterSpacing: -0.4,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  flex: 1, minWidth: 0,
+                }}>
+                  {programLabel}
+                </span>
+              </>
             )}
-            <button
-              type="button"
-              disabled={!hasMultipleSpaces}
-              onClick={() => hasMultipleSpaces && setSpaceSwitcherOpen(v => !v)}
-              style={{
-                background: 'none', border: 'none', padding: 0,
-                display: 'flex', alignItems: 'center', gap: 6,
-                color: '#fff', fontFamily: 'inherit',
-                cursor: hasMultipleSpaces ? 'pointer' : 'default',
-                overflow: 'hidden', flex: 1, textAlign: 'left',
-              }}
-              aria-haspopup={hasMultipleSpaces ? 'menu' : undefined}
-              aria-expanded={spaceSwitcherOpen}
-            >
-              <span style={{
-                fontSize: isSuperAdmin ? 15 : 16, fontWeight: 800, letterSpacing: -0.4,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>
-                {programLabel}
-              </span>
-              {hasMultipleSpaces && (
-                <ChevronDown
-                  size={14}
-                  color="#94a3b8"
-                  style={{
-                    flexShrink: 0,
-                    transition: 'transform .15s ease',
-                    transform: spaceSwitcherOpen ? 'rotate(180deg)' : 'rotate(0)',
-                  }}
-                />
-              )}
-            </button>
-          </div>
+            {hasMultipleSpaces && (
+              <ChevronDown
+                size={14}
+                color="#94a3b8"
+                style={{
+                  flexShrink: 0,
+                  transition: 'transform .15s ease',
+                  transform: spaceSwitcherOpen ? 'rotate(180deg)' : 'rotate(0)',
+                }}
+              />
+            )}
+          </button>
 
-          {/* ─── Space switcher dropdown (spaces only — no external links) ─── */}
+          {/* ─── Space switcher dropdown (spaces only — no external links) ───
+               Width: anchored at left:12 with min/maxWidth so the dropdown can
+               extend past the (narrow) sidebar to fit full tenant names without
+               truncation. Each row prefers tenant_name over partner_name so a
+               user who is a partner-of-X under their own first name still sees
+               "X" (the tenant), not "Charles" (the partner row). The role pill
+               communicates the access type. */}
           {spaceSwitcherOpen && hasMultipleSpaces && (
             <div
               role="menu"
               style={{
-                position: 'absolute', top: '100%', left: 12, right: 12,
+                position: 'absolute', top: '100%', left: 12,
                 marginTop: 4, zIndex: 60,
+                minWidth: 240, maxWidth: 320, width: 'max-content',
                 background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: 10, padding: 6,
                 boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
@@ -431,9 +464,14 @@ export default function Layout({ children }) {
                   && currentSpace.tenant_id === space.tenant_id
                   && currentSpace.role === space.role
                   && (currentSpace.partner_id || null) === (space.partner_id || null);
-                const label = space.role === 'partner'
-                  ? (space.partner_name || t('layout_extra.space_partner'))
-                  : (space.tenant_name || t('layout_extra.space_space'));
+                // Always prefer tenant_name (the company / programme) over
+                // partner_name (which is the partners row's `name` field —
+                // often a personal first-name when the partner is a single
+                // contractor signed up under their own name). The role pill
+                // below handles the admin-vs-partner distinction.
+                const label = space.tenant_name
+                  || space.partner_name
+                  || t('layout_extra.space_space');
                 const initials = (label || '??').slice(0, 2).toUpperCase();
                 const roleLabel = space.role === 'partner'
                   ? t('layout_extra.space_partner')
@@ -446,24 +484,37 @@ export default function Layout({ children }) {
                       if (!isActive) switchSpace(space).then(() => window.location.reload());
                     }}
                     style={{
-                      width: '100%', padding: '8px 10px',
-                      display: 'flex', alignItems: 'center', gap: 10,
+                      width: '100%', padding: '10px 12px',
+                      display: 'flex', alignItems: 'center', gap: 12,
                       borderRadius: 8, border: 'none',
                       background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
                       color: '#fff', cursor: isActive ? 'default' : 'pointer',
                       textAlign: 'left', marginBottom: 2,
                     }}
                   >
-                    <div style={{
-                      width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-                      background: space.role === 'partner'
-                        ? `linear-gradient(135deg, ${C.a}, ${C.al})`
-                        : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 9, fontWeight: 800, color: '#fff',
-                    }}>{initials}</div>
+                    {space.tenant_logo_url ? (
+                      <img
+                        src={space.tenant_logo_url}
+                        alt={label}
+                        style={{
+                          width: 28, height: 28, flexShrink: 0,
+                          borderRadius: 8, objectFit: 'contain',
+                          background: '#fff', padding: 2,
+                        }}
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                        background: space.role === 'partner'
+                          ? `linear-gradient(135deg, ${C.a}, ${C.al})`
+                          : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 11, fontWeight: 800, color: '#fff',
+                      }}>{initials}</div>
+                    )}
                     <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
                     </div>
                     <span style={{
                       fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999,

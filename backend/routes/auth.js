@@ -1160,6 +1160,7 @@ router.get('/me/spaces', authenticate, async (req, res) => {
       `SELECT
          ur.id, ur.tenant_id, ur.role, ur.partner_id, ur.is_active,
          t.name AS tenant_name,
+         t.logo_url AS tenant_logo_url,
          p.name AS partner_name
        FROM user_roles ur
        LEFT JOIN tenants t ON t.id = ur.tenant_id
