@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "dependabot/npm_and_yarn/**": false
+    }
+  },
   "rewrites": [
     {
       "source": "/sitemap.xml",
