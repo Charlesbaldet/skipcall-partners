@@ -335,11 +335,27 @@ export function LandingFooter() {
                 { key: 'privacy', href: '/confidentialite' },
                 { key: 'legal',   href: '/mentions-legales' },
                 { key: 'rgpd',    href: '/rgpd' },
+                { key: 'dpa',     href: '/legal/dpa' },
               ].map(({ key, href })=>(
                 <a key={key} href={href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
                   {t(`landing.footer.links.${key}`)}
                 </a>
               ))}
+              {/* Cookie consent reset — clears the localStorage flag and
+                  forces a reload so the banner shows again. ePrivacy
+                  Article 7 requires consent withdrawal to be as easy as
+                  granting it; this link is the withdrawal entry point. */}
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  try { localStorage.removeItem('cookie_consent'); } catch {}
+                  window.location.reload();
+                }}
+                style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}
+              >
+                {t('footer.manage_cookies', 'Gérer les cookies')}
+              </a>
             </div>
           </div>
         </div>

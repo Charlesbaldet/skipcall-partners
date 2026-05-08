@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import { DialogsHost } from './components/Dialogs.jsx';
+import CookieConsentBanner from './components/CookieConsentBanner.jsx';
 
 // ── Eager: landing + login ────────────────────────────────────────────
 // LandingPage carries the SEO-critical homepage Helmet (Software
@@ -56,6 +57,7 @@ const PublicApplyPage             = lazy(() => import('./pages/PublicApplyPage.j
 const PublicReferralRedirectPage  = lazy(() => import('./pages/PublicReferralRedirectPage.jsx'));
 const PublicTrackingPage          = lazy(() => import('./pages/PublicTrackingPage.jsx'));
 const LegalPage                   = lazy(() => import('./pages/LegalPage.jsx'));
+const DPAPage                     = lazy(() => import('./pages/DPAPage.jsx'));
 const BlogPage                    = lazy(() => import('./pages/BlogPage.jsx'));
 const BlogPostPage                = lazy(() => import('./pages/BlogPostPage.jsx'));
 const MarketplacePage             = lazy(() => import('./pages/MarketplacePage.jsx'));
@@ -178,6 +180,40 @@ function BillingRedirect() {
 // in its own Helmet. Per-page <Helmet><link rel="canonical">…</Helmet>
 // declarations nest inside this one and win (react-helmet-async uses
 // the innermost declaration for single-tag-type elements).
+// Cookie banner gate — only mount on public marketing/legal routes so
+// authenticated app pages (dashboard, settings, partner workspace, etc.)
+// don't ship a redundant CTA every page load. Auth-protected routes
+// already dropped out of the public path-prefix allow-list before they
+// got a session cookie, and showing the banner there would just create
+// noise.
+function PublicCookieBanner() {
+  const location = useLocation();
+  const path = location.pathname || '/';
+  const isPublic =
+    path === '/' ||
+    path === '/login' ||
+    path === '/signup' ||
+    path === '/forgot-password' ||
+    path === '/reset-password' ||
+    path === '/pricing' ||
+    path.startsWith('/legal') ||
+    path.startsWith('/blog') ||
+    path.startsWith('/marketplace') ||
+    path.startsWith('/fonctionnalites/') ||
+    path.startsWith('/cas-dusage') ||
+    path.startsWith('/integrations') ||
+    path.startsWith('/apply') ||
+    path.startsWith('/r/') ||
+    path.startsWith('/ref/') ||
+    path.startsWith('/setup-password/') ||
+    path === '/cgv' ||
+    path === '/confidentialite' ||
+    path === '/mentions-legales' ||
+    path === '/rgpd';
+  if (!isPublic) return null;
+  return <CookieConsentBanner />;
+}
+
 function RouteCanonical() {
   const location = useLocation();
   const base = 'https://refboost.io';
@@ -240,6 +276,11 @@ function AppRoutes() {
         <Route path="/confidentialite" element={suspendElement(<LegalPage which="confidentialite" />)} />
         <Route path="/mentions-legales" element={suspendElement(<LegalPage which="mentions-legales" />)} />
         <Route path="/rgpd"            element={suspendElement(<LegalPage which="rgpd" />)} />
+        {/* /legal points at the privacy policy — the cookie consent
+            banner deep-links to /legal#cookies so visitors can learn
+            more without leaving the page they're on. */}
+        <Route path="/legal"           element={<Navigate to="/confidentialite#cookies" replace />} />
+        <Route path="/legal/dpa"       element={suspend(DPAPage)} />
         <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
       {/* Admin / Commercial — Suspense INSIDE Layout so sidebar stays mounted */}
@@ -300,6 +341,7 @@ export default function App() {
 
       <TenantProvider><AuthProvider>
         <AppRoutes />
+        <PublicCookieBanner />
         <DialogsHost />
       </AuthProvider></TenantProvider>
 

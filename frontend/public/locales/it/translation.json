@@ -284,7 +284,8 @@
         "cgv": "Termini",
         "privacy": "Privacy",
         "legal": "Note legali",
-        "rgpd": "GDPR"
+        "rgpd": "GDPR",
+        "dpa": "Accordo sul trattamento dei dati"
       },
       "copyright": "© 2026 RefBoost. Tutti i diritti riservati.",
       "madeIn": "Fatto con cura in Francia"
@@ -1665,7 +1666,29 @@
     "pennylane_step2": "Il partner viene creato come fornitore in Pennylane",
     "pennylane_step3": "Pagamento Qonto eseguito → Fattura segnata come pagata",
     "connected_short": "Connesso",
-    "configure": "Configura"
+    "configure": "Configura",
+    "tab_privacy": "Privacy",
+    "privacy": {
+      "subtitle": "I tuoi diritti GDPR: esporta i tuoi dati o elimina il tuo account in qualsiasi momento."
+    },
+    "export": {
+      "title": "Esporta i miei dati",
+      "description": "Scarica un file JSON con il tuo profilo, segnalazioni, commissioni e messaggi.",
+      "cta": "Esporta i miei dati",
+      "toast_success": "Esportazione scaricata"
+    },
+    "delete_account": {
+      "title": "Elimina il mio account",
+      "description": "Questa azione elimina definitivamente i tuoi dati dopo 30 giorni. Puoi annullare contattando dpo@refboost.io entro tale periodo.",
+      "cta": "Elimina il mio account",
+      "modal_title": "Elimina il mio account",
+      "modal_body": "Questa azione è irreversibile. Tutti i tuoi dati verranno eliminati entro 30 giorni.",
+      "confirm_email_label": "Conferma digitando la tua email",
+      "confirm_email_mismatch": "L'email inserita non corrisponde al tuo account.",
+      "cancel": "Annulla",
+      "confirm": "Elimina definitivamente",
+      "toast_success": "Richiesta di eliminazione registrata."
+    }
   },
   "status": {
     "new": "Nuovo",
@@ -3328,5 +3351,67 @@
   },
   "partner_payments": {
     "billing_info_title": "Informazioni di fatturazione"
+  },
+  "cookies": {
+    "banner_text": "Utilizziamo cookie per migliorare la tua esperienza.",
+    "banner_link": "Scopri di più",
+    "accept": "Accetta",
+    "reject": "Rifiuta"
+  },
+  "footer": {
+    "manage_cookies": "Gestisci i cookie"
+  },
+  "dpa": {
+    "title": "Accordo sul trattamento dei dati (DPA)",
+    "meta_title": "Accordo sul trattamento dei dati — RefBoost",
+    "meta_description": "DPA di RefBoost conforme all'art. 28 GDPR: sub-responsabili, durata, sicurezza, notifica di violazione, diritto di audit.",
+    "last_updated_label": "Ultimo aggiornamento",
+    "intro": "Il presente Accordo sul Trattamento dei Dati (\"DPA\") è stipulato ai sensi dell'art. 28 GDPR (Regolamento (UE) 2016/679) tra il cliente (\"Titolare\") e RefBoost SAS (\"Responsabile\"). Integra le Condizioni Generali di Vendita.",
+    "section": {
+      "parties": {
+        "title": "Parti",
+        "body": "Il Titolare è il cliente che utilizza la piattaforma RefBoost. Il Responsabile è RefBoost SAS, fornitore SaaS."
+      },
+      "subject": {
+        "title": "Oggetto e durata",
+        "body": "Il presente DPA si applica per tutta la durata dell'abbonamento RefBoost più il tempo necessario all'eliminazione completa (max. 30 giorni)."
+      },
+      "nature": {
+        "title": "Natura e finalità del trattamento",
+        "body": "Il Responsabile tratta i dati solo per fornire i servizi di gestione del programma partner."
+      },
+      "categories": {
+        "title": "Categorie di dati e interessati",
+        "body": "Interessati: amministratori, commerciali, partner, prospect. Dati: nome, email, telefono, IBAN, info aziendali, messaggi."
+      },
+      "subprocessors": {
+        "title": "Sub-responsabili",
+        "body": "Vercel (US/UE) — frontend; Railway (UE Ovest) — backend/DB; Resend (US) — email; Qonto (FR) — pagamenti; Pennylane (FR) — contabilità; HubSpot/Salesforce (solo se collegati dal tenant). Trasferimenti extra-UE coperti da CCT e Data Privacy Framework."
+      },
+      "retention": {
+        "title": "Conservazione",
+        "body": "Dati conservati per la durata del contratto + 30 giorni, salvo obblighi di legge (10 anni per la fatturazione)."
+      },
+      "security": {
+        "title": "Misure di sicurezza",
+        "body": "TLS 1.3 in transito, AES-256 a riposo, isolamento multi-tenant rigoroso, log accessi, MFA, backup giornalieri cifrati."
+      },
+      "breach": {
+        "title": "Notifica di violazione",
+        "body": "Notifica al Titolare entro 72 ore, ai sensi dell'art. 33 GDPR."
+      },
+      "deletion": {
+        "title": "Cancellazione al termine del contratto",
+        "body": "Cancellazione definitiva entro 30 giorni dal termine. Certificato di cancellazione su richiesta."
+      },
+      "audit": {
+        "title": "Diritto di audit",
+        "body": "Audit annuale possibile con preavviso di 30 giorni, a carico del Titolare, rispettando la riservatezza degli altri clienti."
+      },
+      "contact": {
+        "title": "Contatto",
+        "body": "Per qualsiasi domanda: dpo@refboost.io."
+      }
+    }
   }
 }

@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { loadTheme } from './lib/theme';
+import { ensureConsentLoaded } from './components/CookieConsentBanner';
 import './i18n';
 
 const style = document.createElement('style');
@@ -25,6 +26,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1
 `;
 document.head.appendChild(style);
 loadTheme();
+// Re-arm GA for visitors who already accepted on a previous visit.
+// The banner itself only renders for first-time / cleared-consent
+// users, so without this call returning visitors would lose analytics.
+ensureConsentLoaded();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <HelmetProvider>
