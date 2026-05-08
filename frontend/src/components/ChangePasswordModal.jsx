@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
+import PasswordStrengthMeter, { validatePasswordClient } from './PasswordStrengthMeter';
 
 export default function ChangePasswordModal({ onSuccess }) {
   const { t } = useTranslation();
@@ -11,9 +12,12 @@ export default function ChangePasswordModal({ onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const policy = validatePasswordClient(pwd);
+  const passwordOk = policy.valid;
+
   const handleSubmit = async () => {
     setError('');
-    if (pwd.length < 8) return setError(t('changePwd.min_chars'));
+    if (!passwordOk) return setError(t('password.errors.too_short', 'Mot de passe trop faible'));
     if (pwd !== confirm) return setError(t('changePwd.mismatch'));
     setLoading(true);
     try {
@@ -54,6 +58,7 @@ export default function ChangePasswordModal({ onSuccess }) {
               {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <PasswordStrengthMeter password={pwd} />
         </div>
 
         <div style={{ marginBottom: 24 }}>
@@ -77,8 +82,8 @@ export default function ChangePasswordModal({ onSuccess }) {
 
         <button
           onClick={handleSubmit}
-          disabled={loading || !pwd || !confirm}
-          style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: loading || !pwd || !confirm ? '#94a3b8' : '#059669', color: '#fff', fontWeight: 700, fontSize: 16, cursor: loading || !pwd || !confirm ? 'not-allowed' : 'pointer' }}
+          disabled={loading || !pwd || !confirm || !passwordOk || pwd !== confirm}
+          style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: (loading || !pwd || !confirm || !passwordOk || pwd !== confirm) ? '#94a3b8' : '#059669', color: '#fff', fontWeight: 700, fontSize: 16, cursor: (loading || !pwd || !confirm || !passwordOk || pwd !== confirm) ? 'not-allowed' : 'pointer' }}
         >
           {loading ? t('changePwd.submitting') : t('changePwd.set_password')}
         </button>

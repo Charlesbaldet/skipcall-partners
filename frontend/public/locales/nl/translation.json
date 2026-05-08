@@ -1665,7 +1665,37 @@
     "pennylane_step2": "Partner wordt als leverancier aangemaakt in Pennylane",
     "pennylane_step3": "Qonto-betaling voltooid → Factuur als betaald gemarkeerd",
     "connected_short": "Verbonden",
-    "configure": "Instellen"
+    "configure": "Instellen",
+    "audit": {
+      "title": "Actiegeschiedenis",
+      "tab_label": "Geschiedenis",
+      "description": "Logboek van administratoracties — bewaard voor ISO 27001 / SOC 2 compliance.",
+      "col_date": "Datum",
+      "col_user": "Gebruiker",
+      "col_action": "Actie",
+      "col_entity": "Entiteit",
+      "col_details": "Details",
+      "empty": "Geen vermeldingen",
+      "filter_from": "Van",
+      "filter_to": "Tot",
+      "filter_action": "Actie",
+      "pagination": "{{count}} vermeldingen",
+      "actions": {
+        "partner.created": "Partner aangemaakt",
+        "partner.updated": "Partner bijgewerkt",
+        "partner.deleted": "Partner verwijderd",
+        "commission.approved": "Commissie goedgekeurd",
+        "commission.paid": "Commissie betaald",
+        "commission.deleted": "Commissie verwijderd",
+        "referral.status_changed": "Verwijzingsstatus gewijzigd",
+        "settings.updated": "Instellingen bijgewerkt",
+        "billing.updated": "Facturering bijgewerkt",
+        "user.invited": "Gebruiker uitgenodigd",
+        "user.invitation_revoked": "Uitnodiging ingetrokken",
+        "integration.connected": "Integratie verbonden",
+        "integration.disconnected": "Integratie ontkoppeld"
+      }
+    }
   },
   "status": {
     "new": "Nieuw",
@@ -3328,5 +3358,25 @@
   },
   "partner_payments": {
     "billing_info_title": "Factuurgegevens"
+  },
+  "session": {
+    "expired_title": "Uw sessie is verlopen",
+    "expired_message": "Om veiligheidsredenen bent u na 30 minuten inactiviteit afgemeld.",
+    "expired_cta": "Opnieuw inloggen"
+  },
+  "password": {
+    "errors": {
+      "too_short": "Minimaal 8 tekens",
+      "no_uppercase": "Minimaal één hoofdletter",
+      "no_lowercase": "Minimaal één kleine letter",
+      "no_digit": "Minimaal één cijfer",
+      "too_common": "Wachtwoord is te algemeen"
+    },
+    "strength": {
+      "weak": "Zwak",
+      "fair": "Redelijk",
+      "good": "Goed",
+      "strong": "Sterk"
+    }
   }
 }

@@ -3,6 +3,7 @@ const { query } = require('../db');
 const jwt = require('jsonwebtoken');
 const { authenticate } = require('../middleware/auth');
 const { auditLog } = require('../middleware/security');
+const { logAudit } = require('../services/auditLog');
 const { getTenantConfig, clearTenantCache } = require('../middleware/tenant');
 
 // ─── Public: Get tenant config (for frontend theming) ───
@@ -149,6 +150,7 @@ router.put('/billing', authenticate, async (req, res) => {
         billing_siret || null,
       ]
     );
+    logAudit(req, 'billing.updated', 'tenant', req.user.tenantId, { billing_company_name });
     res.json({ billing: rows[0] || {} });
   } catch (err) {
     console.error('[tenants.billing PUT]', err.message);
@@ -202,6 +204,7 @@ router.put('/:id', authenticate, async (req, res) => {
     }
     clearTenantCache();
     auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
+    logAudit(req, 'settings.updated', 'tenant', req.params.id, { name, slug: cleanSlug });
     res.json({ tenant: rows[0] });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });

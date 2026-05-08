@@ -14,7 +14,7 @@ import {
   Link2,
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
-  Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen, Building,
+  Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen, Building, History,
 } from 'lucide-react';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -69,6 +69,11 @@ export default function SettingsPage() {
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
       { id: 'billing', icon: CreditCard, label: t('settings.tab_billing', 'Facturation') },
       { id: 'company', icon: Building, label: t('settings.company_tab', 'Entreprise') },
+      { id: 'audit', icon: History, label: t('settings.audit.tab_label', 'Historique') },
+    ] : []),
+    ...(isSuperadmin ? [
+      { section: t('layout.section.preferences') },
+      { id: 'audit', icon: History, label: t('settings.audit.tab_label', 'Historique') },
     ] : []),
     ...(isPartner ? [
       { id: 'bank', icon: Banknote, label: t('settings.tab_bank_info', 'Informations bancaires') },
@@ -161,6 +166,7 @@ export default function SettingsPage() {
             )}
             {tab === 'program' && isAdmin && <ProgramTab />}
             {tab === 'billing' && isAdmin && <BillingPage />}
+            {tab === 'audit' && (isAdmin || isSuperadmin) && <AuditLogTab />}
             {tab === 'contact' && <ContactTab />}
           </div>
         </div>
@@ -168,6 +174,167 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+// ═══ AUDIT LOG (Historique) ═══
+// Admin/superadmin-only feed of every state-changing admin action
+// for ISO 27001 A.12.4 / SOC 2 CC6 compliance. Joined to users so
+// the actor's display name surfaces; filterable by date range +
+// action; paginated server-side.
+const ACTION_KEYS = [
+  'partner.created', 'partner.updated', 'partner.deleted',
+  'commission.approved', 'commission.paid', 'commission.deleted',
+  'referral.status_changed',
+  'settings.updated', 'billing.updated',
+  'user.invited', 'user.invitation_revoked',
+  'integration.connected', 'integration.disconnected',
+];
+
+function AuditLogTab() {
+  const { t, i18n } = useTranslation();
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(50);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [action, setAction] = useState('');
+  const [data, setData] = useState({ logs: [], total: 0, totalPages: 1 });
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api.getAuditLogs({ page, pageSize, from, to, action })
+      .then(d => { if (!cancelled) setData(d); })
+      .catch(() => { if (!cancelled) setData({ logs: [], total: 0, totalPages: 1 }); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [page, pageSize, from, to, action]);
+
+  const fmt = (d) => {
+    if (!d) return '—';
+    try {
+      return new Date(d).toLocaleString(i18n.language || 'fr-FR', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+    } catch { return String(d); }
+  };
+  const actionLabel = (a) => t(`settings.audit.actions.${a}`, a);
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+        {t('settings.audit.title', 'Historique des actions')}
+      </h2>
+      <p style={{ color: '#64748b', fontSize: 14, margin: '0 0 24px' }}>
+        {t('settings.audit.description', 'Journal des actions administrateur — conservé pour la conformité ISO 27001 / SOC 2.')}
+      </p>
+
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_from', 'Du')}</label>
+          <input type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(1); }}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_to', 'Au')}</label>
+          <input type="date" value={to} onChange={e => { setTo(e.target.value); setPage(1); }}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_action', 'Action')}</label>
+          <select value={action} onChange={e => { setAction(e.target.value); setPage(1); }}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, minWidth: 200 }}>
+            <option value="">{t('common.all', 'Toutes')}</option>
+            {ACTION_KEYS.map(k => <option key={k} value={k}>{actionLabel(k)}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead style={{ background: '#f8fafc' }}>
+            <tr>
+              <th style={thCell}>{t('settings.audit.col_date', 'Date')}</th>
+              <th style={thCell}>{t('settings.audit.col_user', 'Utilisateur')}</th>
+              <th style={thCell}>{t('settings.audit.col_action', 'Action')}</th>
+              <th style={thCell}>{t('settings.audit.col_entity', 'Entité')}</th>
+              <th style={thCell}>{t('settings.audit.col_details', 'Détails')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>...</td></tr>
+            )}
+            {!loading && data.logs.length === 0 && (
+              <tr><td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>
+                {t('settings.audit.empty', 'Aucune entrée')}
+              </td></tr>
+            )}
+            {!loading && data.logs.map(log => {
+              const open = !!expanded[log.id];
+              const detailsStr = (() => {
+                try { return JSON.stringify(log.details || {}, null, 2); }
+                catch { return ''; }
+              })();
+              return (
+                <tr key={log.id} style={{ borderTop: '1px solid #f1f5f9' }}>
+                  <td style={tdCell}>{fmt(log.created_at)}</td>
+                  <td style={tdCell}>{log.user_name || log.user_email || '—'}</td>
+                  <td style={tdCell}><code style={{ fontSize: 12, background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>{actionLabel(log.action)}</code></td>
+                  <td style={tdCell}>
+                    {log.entity_type ? `${log.entity_type}${log.entity_id ? ` · ${String(log.entity_id).slice(0, 8)}` : ''}` : '—'}
+                  </td>
+                  <td style={tdCell}>
+                    {detailsStr && detailsStr !== '{}' ? (
+                      <>
+                        <button
+                          onClick={() => setExpanded(p => ({ ...p, [log.id]: !p[log.id] }))}
+                          style={{ background: 'none', border: 'none', color: '#059669', cursor: 'pointer', fontSize: 12, padding: 0 }}
+                        >
+                          {open ? '▼' : '▶'} JSON
+                        </button>
+                        {open && (
+                          <pre style={{ marginTop: 6, padding: 8, background: '#f8fafc', borderRadius: 6, fontSize: 11, color: '#334155', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {detailsStr}
+                          </pre>
+                        )}
+                      </>
+                    ) : '—'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {data.totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+          <div style={{ fontSize: 12, color: '#64748b' }}>
+            {t('settings.audit.pagination', '{{count}} entrées', { count: data.total })}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: page <= 1 ? 'not-allowed' : 'pointer', fontSize: 13, opacity: page <= 1 ? 0.5 : 1 }}
+            >‹</button>
+            <span style={{ padding: '6px 12px', fontSize: 13, color: '#475569' }}>{page} / {data.totalPages}</span>
+            <button
+              onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
+              disabled={page >= data.totalPages}
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: page >= data.totalPages ? 'not-allowed' : 'pointer', fontSize: 13, opacity: page >= data.totalPages ? 0.5 : 1 }}
+            >›</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const thCell = { textAlign: 'left', padding: '12px 16px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 };
+const tdCell = { padding: '12px 16px', color: '#334155', verticalAlign: 'top' };
 
 // ═══ CONTACT ═══
 // Available to admin / sales / partner / superadmin. Three cards

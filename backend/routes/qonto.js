@@ -10,6 +10,8 @@ const crypto = require('crypto');
 const { query } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const qonto = require('../services/qontoService');
+const { logAudit } = require('../services/auditLog');
+const { encrypt } = require('../utils/crypto');
 
 const router = express.Router();
 
@@ -113,8 +115,9 @@ router.get('/callback', async (req, res) => {
                      refresh_token = COALESCE(EXCLUDED.refresh_token, payment_integrations.refresh_token),
                      token_expires_at = EXCLUDED.token_expires_at,
                      is_active = TRUE, updated_at = NOW()`,
-      [payload.tenantId, tokens.access_token, tokens.refresh_token || null, expiresAt]
+      [payload.tenantId, encrypt(tokens.access_token), tokens.refresh_token ? encrypt(tokens.refresh_token) : null, expiresAt]
     );
+    logAudit({ user: { id: null, tenantId: payload.tenantId }, tenantId: payload.tenantId, ip: req.ip, headers: req.headers }, 'integration.connected', 'payment_integration', null, { provider: 'qonto' });
 
     // Best-effort: also fetch the org and pre-populate the bank account
     // so the admin doesn't have to pick one before the first payment.
@@ -234,6 +237,7 @@ router.post('/disconnect', authenticate, tenantScope, authorize('admin'), async 
         WHERE tenant_id = $1 AND provider = 'qonto'`,
       [req.tenantId]
     );
+    logAudit(req, 'integration.disconnected', 'payment_integration', null, { provider: 'qonto' });
     res.json({ ok: true });
   } catch (err) {
     console.error('[qonto.disconnect] error:', err);

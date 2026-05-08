@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import api from '../lib/api';
+import PasswordStrengthMeter, { validatePasswordClient } from '../components/PasswordStrengthMeter';
 
 const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#fafbfc' };
 
@@ -27,9 +28,13 @@ export default function ResetPasswordPage() {
     </div>
   );
 
+  const policy = validatePasswordClient(password);
+  const passwordOk = policy.valid;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!passwordOk) return setError(t('password.errors.too_short', 'Mot de passe trop faible'));
     if (password !== confirm) return setError(t('resetPwd.mismatch'));
     setLoading(true);
     try {
@@ -86,6 +91,9 @@ export default function ResetPasswordPage() {
                 }
               </button>
             </div>
+          <div style={{ marginBottom: 16 }}>
+            <PasswordStrengthMeter password={password} />
+          </div>
           <label style={{ display: 'block', fontWeight: 600, fontSize: 13, color: C.s, marginBottom: 8 }}>{t('resetPwd.confirm_pwd')}</label>
           <div style={{ position: 'relative' }}>
               <input
@@ -105,8 +113,8 @@ export default function ResetPasswordPage() {
             </div>
           <button
             type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: loading ? '#94a3b8' : C.p, color: '#fff', fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: loading ? 'none' : '0 8px 30px rgba(5,150,105,0.3)' }}
+            disabled={loading || !passwordOk || password !== confirm}
+            style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: (loading || !passwordOk || password !== confirm) ? '#94a3b8' : C.p, color: '#fff', fontWeight: 700, fontSize: 15, cursor: (loading || !passwordOk || password !== confirm) ? 'not-allowed' : 'pointer', boxShadow: (loading || !passwordOk || password !== confirm) ? 'none' : '0 8px 30px rgba(5,150,105,0.3)' }}
           >
             {loading ? t('resetPwd.submitting') : t('resetPwd.submit_full')}
           </button>

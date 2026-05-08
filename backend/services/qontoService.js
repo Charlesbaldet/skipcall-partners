@@ -19,6 +19,7 @@
 
 const crypto = require('crypto');
 const { query } = require('../db');
+const { encrypt, decrypt } = require('../utils/crypto');
 
 // Generate a fresh UUIDv4 for use as a Qonto X-Qonto-Idempotency-Key.
 // Qonto requires this header on every transfer / bulk-transfer /
@@ -115,17 +116,23 @@ async function getAccessToken(tenantId) {
   const integ = rows[0];
   if (!integ) throw new Error('qonto_not_connected');
 
+  // Decrypt-on-read. Tokens are stored encrypted (utils/crypto); the
+  // legacy fallback returns plaintext untouched so older rows keep
+  // working until the next refresh re-encrypts them.
+  const accessToken  = integ.access_token  ? decrypt(integ.access_token)  : null;
+  const refreshToken = integ.refresh_token ? decrypt(integ.refresh_token) : null;
+
   const now = Date.now();
   const expiresAt = integ.token_expires_at ? new Date(integ.token_expires_at).getTime() : 0;
-  if (integ.access_token && expiresAt > now + 60_000) {
-    return integ.access_token;
+  if (accessToken && expiresAt > now + 60_000) {
+    return accessToken;
   }
-  if (!integ.refresh_token) {
+  if (!refreshToken) {
     // Token is expired and we can't refresh — force a reconnect.
     throw new Error('qonto_reconnect_required');
   }
 
-  const tokens = await refreshAccessToken(integ.refresh_token);
+  const tokens = await refreshAccessToken(refreshToken);
   const newExpiresAt = new Date(Date.now() + (tokens.expires_in || 3600) * 1000);
   await query(
     `UPDATE payment_integrations
@@ -134,7 +141,7 @@ async function getAccessToken(tenantId) {
             token_expires_at = $4,
             updated_at = NOW()
       WHERE id = $1`,
-    [integ.id, tokens.access_token, tokens.refresh_token || null, newExpiresAt]
+    [integ.id, encrypt(tokens.access_token), tokens.refresh_token ? encrypt(tokens.refresh_token) : null, newExpiresAt]
   );
   return tokens.access_token;
 }

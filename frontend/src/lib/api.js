@@ -502,6 +502,16 @@ class ApiClient {
   // Global search
   globalSearch(query) { return this.request('/search?q=' + encodeURIComponent(query)); }
   getInvoices() { return this.request('/billing/invoices'); }
+
+  // Audit logs (Settings → Historique tab; admin/superadmin only)
+  getAuditLogs(params = {}) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+    });
+    const suffix = qs.toString();
+    return this.request('/audit-logs' + (suffix ? '?' + suffix : ''));
+  }
 }
 
 export const api = new ApiClient();

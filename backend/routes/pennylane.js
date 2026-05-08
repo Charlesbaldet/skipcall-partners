@@ -2,6 +2,8 @@ const router = require('express').Router();
 const { query } = require('../db');
 const { authenticate, authorize } = require('../middleware/auth');
 const PennylaneService = require('../services/pennylaneService');
+const { logAudit } = require('../services/auditLog');
+const { encrypt, decrypt } = require('../utils/crypto');
 
 // GET /api/pennylane/status — returns connected/enabled flags + the
 // authenticated company name (for the Settings UI). We don't return
@@ -20,8 +22,9 @@ router.get('/status', authenticate, authorize('admin', 'superadmin'), async (req
     if (!tenant?.pennylane_api_token) {
       return res.json({ connected: false, enabled: false });
     }
+    const plainToken = decrypt(tenant.pennylane_api_token);
     try {
-      const pl = new PennylaneService(tenant.pennylane_api_token);
+      const pl = new PennylaneService(plainToken);
       const me = await pl.verifyConnection();
       return res.json({
         connected: true,
@@ -71,8 +74,9 @@ router.put('/settings', authenticate, authorize('admin', 'superadmin'), async (r
           SET pennylane_api_token = COALESCE($2, pennylane_api_token),
               pennylane_enabled   = COALESCE($3, pennylane_enabled)
         WHERE id = $1`,
-      [tenantId, api_token || null, typeof enabled === 'boolean' ? enabled : null]
+      [tenantId, api_token ? encrypt(api_token) : null, typeof enabled === 'boolean' ? enabled : null]
     );
+    if (api_token) logAudit(req, 'integration.connected', 'tenant', tenantId, { provider: 'pennylane' });
     res.json({ ok: true });
   } catch (err) {
     console.error('[pennylane.settings]', err.message);
@@ -92,6 +96,7 @@ router.delete('/disconnect', authenticate, authorize('admin', 'superadmin'), asy
       'UPDATE tenants SET pennylane_api_token = NULL, pennylane_enabled = FALSE WHERE id = $1',
       [tenantId]
     );
+    logAudit(req, 'integration.disconnected', 'tenant', tenantId, { provider: 'pennylane' });
     res.json({ ok: true });
   } catch (err) {
     console.error('[pennylane.disconnect]', err.message);

@@ -1665,7 +1665,37 @@
     "pennylane_step2": "Le partenaire est créé comme fournisseur dans Pennylane",
     "pennylane_step3": "Paiement Qonto effectué → Facture marquée comme payée",
     "connected_short": "Connecté",
-    "configure": "Configurer"
+    "configure": "Configurer",
+    "audit": {
+      "title": "Historique des actions",
+      "tab_label": "Historique",
+      "description": "Journal des actions administrateur — conservé pour la conformité ISO 27001 / SOC 2.",
+      "col_date": "Date",
+      "col_user": "Utilisateur",
+      "col_action": "Action",
+      "col_entity": "Entité",
+      "col_details": "Détails",
+      "empty": "Aucune entrée",
+      "filter_from": "Du",
+      "filter_to": "Au",
+      "filter_action": "Action",
+      "pagination": "{{count}} entrées",
+      "actions": {
+        "partner.created": "Partenaire créé",
+        "partner.updated": "Partenaire mis à jour",
+        "partner.deleted": "Partenaire supprimé",
+        "commission.approved": "Commission approuvée",
+        "commission.paid": "Commission payée",
+        "commission.deleted": "Commission supprimée",
+        "referral.status_changed": "Statut du lead modifié",
+        "settings.updated": "Paramètres mis à jour",
+        "billing.updated": "Facturation mise à jour",
+        "user.invited": "Utilisateur invité",
+        "user.invitation_revoked": "Invitation révoquée",
+        "integration.connected": "Intégration connectée",
+        "integration.disconnected": "Intégration déconnectée"
+      }
+    }
   },
   "status": {
     "new": "Nouveau",
@@ -3328,5 +3358,25 @@
   },
   "partner_payments": {
     "billing_info_title": "Informations de facturation"
+  },
+  "session": {
+    "expired_title": "Votre session a expiré",
+    "expired_message": "Pour des raisons de sécurité, vous avez été déconnecté après 30 minutes d'inactivité.",
+    "expired_cta": "Se reconnecter"
+  },
+  "password": {
+    "errors": {
+      "too_short": "Au moins 8 caractères",
+      "no_uppercase": "Au moins une majuscule",
+      "no_lowercase": "Au moins une minuscule",
+      "no_digit": "Au moins un chiffre",
+      "too_common": "Mot de passe trop courant"
+    },
+    "strength": {
+      "weak": "Faible",
+      "fair": "Moyen",
+      "good": "Bon",
+      "strong": "Fort"
+    }
   }
 }

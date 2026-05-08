@@ -1665,7 +1665,37 @@
     "pennylane_step2": "Partner is created as a supplier in Pennylane",
     "pennylane_step3": "Qonto payment completed → Invoice marked as paid",
     "connected_short": "Connected",
-    "configure": "Configure"
+    "configure": "Configure",
+    "audit": {
+      "title": "Action history",
+      "tab_label": "History",
+      "description": "Admin action log — retained for ISO 27001 / SOC 2 compliance.",
+      "col_date": "Date",
+      "col_user": "User",
+      "col_action": "Action",
+      "col_entity": "Entity",
+      "col_details": "Details",
+      "empty": "No entries",
+      "filter_from": "From",
+      "filter_to": "To",
+      "filter_action": "Action",
+      "pagination": "{{count}} entries",
+      "actions": {
+        "partner.created": "Partner created",
+        "partner.updated": "Partner updated",
+        "partner.deleted": "Partner deleted",
+        "commission.approved": "Commission approved",
+        "commission.paid": "Commission paid",
+        "commission.deleted": "Commission deleted",
+        "referral.status_changed": "Referral status changed",
+        "settings.updated": "Settings updated",
+        "billing.updated": "Billing updated",
+        "user.invited": "User invited",
+        "user.invitation_revoked": "Invitation revoked",
+        "integration.connected": "Integration connected",
+        "integration.disconnected": "Integration disconnected"
+      }
+    }
   },
   "status": {
     "new": "New",
@@ -3328,5 +3358,25 @@
   },
   "partner_payments": {
     "billing_info_title": "Billing information"
+  },
+  "session": {
+    "expired_title": "Your session has expired",
+    "expired_message": "For security reasons, you have been signed out after 30 minutes of inactivity.",
+    "expired_cta": "Sign in again"
+  },
+  "password": {
+    "errors": {
+      "too_short": "At least 8 characters",
+      "no_uppercase": "At least one uppercase letter",
+      "no_lowercase": "At least one lowercase letter",
+      "no_digit": "At least one digit",
+      "too_common": "Password is too common"
+    },
+    "strength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    }
   }
 }

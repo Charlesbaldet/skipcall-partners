@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const { query, getClient } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const { sendEmail, partnerAccessRevoked } = require('../services/emailService');
+const { logAudit } = require('../services/auditLog');
 const router = express.Router();
 
 // ─── Helper: notify every user linked to this partner ───────────────
@@ -365,6 +366,7 @@ router.post('/', authorize('admin'), [
     }
 
     await client.query('COMMIT');
+    logAudit(req, 'partner.created', 'partner', partner.id, { name: partner.name, email, reactivated: reactivating });
     res.status(201).json({ partner, tempPassword, reactivated: reactivating });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -469,6 +471,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
     if (!partner) return res.status(404).json({ error: 'Partenaire introuvable' });
     // Map NULL country + subject=true → "OTHER" for the admin UI.
     if (partner.tax_subject && !partner.tax_country) partner.tax_country = 'OTHER';
+    logAudit(req, 'partner.updated', 'partner', partner.id, { name: partner.name });
     res.json({ partner });
   } catch (err) {
     console.error('[partners.update]', err.message);
@@ -635,6 +638,7 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
     if (partner) notifyPartnerRevoked(partner.id, partner.tenant_id, partner.name);
 
     if (rowCount === 0) return res.status(404).json({ error: 'Partenaire introuvable' });
+    logAudit(req, 'partner.deleted', 'partner', req.params.id, { name: partner?.name || null });
     res.json({ message: 'Partenaire supprimÃ©' });
   } catch (err) {
     await client.query('ROLLBACK');

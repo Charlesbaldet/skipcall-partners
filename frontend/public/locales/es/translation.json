@@ -1665,7 +1665,37 @@
     "pennylane_step2": "El socio se crea como proveedor en Pennylane",
     "pennylane_step3": "Pago de Qonto realizado → Factura marcada como pagada",
     "connected_short": "Conectado",
-    "configure": "Configurar"
+    "configure": "Configurar",
+    "audit": {
+      "title": "Historial de acciones",
+      "tab_label": "Historial",
+      "description": "Registro de acciones de administrador — conservado para conformidad ISO 27001 / SOC 2.",
+      "col_date": "Fecha",
+      "col_user": "Usuario",
+      "col_action": "Acción",
+      "col_entity": "Entidad",
+      "col_details": "Detalles",
+      "empty": "Sin entradas",
+      "filter_from": "Desde",
+      "filter_to": "Hasta",
+      "filter_action": "Acción",
+      "pagination": "{{count}} entradas",
+      "actions": {
+        "partner.created": "Socio creado",
+        "partner.updated": "Socio actualizado",
+        "partner.deleted": "Socio eliminado",
+        "commission.approved": "Comisión aprobada",
+        "commission.paid": "Comisión pagada",
+        "commission.deleted": "Comisión eliminada",
+        "referral.status_changed": "Estado de referido cambiado",
+        "settings.updated": "Configuración actualizada",
+        "billing.updated": "Facturación actualizada",
+        "user.invited": "Usuario invitado",
+        "user.invitation_revoked": "Invitación revocada",
+        "integration.connected": "Integración conectada",
+        "integration.disconnected": "Integración desconectada"
+      }
+    }
   },
   "status": {
     "new": "Nuevo",
@@ -3328,5 +3358,25 @@
   },
   "partner_payments": {
     "billing_info_title": "Información de facturación"
+  },
+  "session": {
+    "expired_title": "Su sesión ha caducado",
+    "expired_message": "Por razones de seguridad, se cerró su sesión tras 30 minutos de inactividad.",
+    "expired_cta": "Iniciar sesión de nuevo"
+  },
+  "password": {
+    "errors": {
+      "too_short": "Al menos 8 caracteres",
+      "no_uppercase": "Al menos una mayúscula",
+      "no_lowercase": "Al menos una minúscula",
+      "no_digit": "Al menos un dígito",
+      "too_common": "Contraseña demasiado común"
+    },
+    "strength": {
+      "weak": "Débil",
+      "fair": "Regular",
+      "good": "Buena",
+      "strong": "Fuerte"
+    }
   }
 }

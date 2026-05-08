@@ -48,6 +48,7 @@ const trashRoutes = require('./routes/trash');
 const { purgeDeletedRecords } = require('./routes/trash');
 const onboardingRoutes = require('./routes/onboarding');
 const pennylaneRoutes = require('./routes/pennylane');
+const auditLogsRoutes = require('./routes/auditLogs');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -241,6 +242,7 @@ app.use('/api/partner-categories', partnerCategoriesRoutes);
 app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/pennylane', pennylaneRoutes);
+app.use('/api/audit-logs', auditLogsRoutes);
 // Public referral-link short URL (mounted at app root, not /api).
 // Vercel rewrites /r/:path* to this service.
 app.use('/r', referralRedirectRoutes);

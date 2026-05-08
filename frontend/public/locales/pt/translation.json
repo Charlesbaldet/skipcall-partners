@@ -1665,7 +1665,37 @@
     "pennylane_step2": "O parceiro é criado como fornecedor no Pennylane",
     "pennylane_step3": "Pagamento Qonto efectuado → Fatura marcada como paga",
     "connected_short": "Ligado",
-    "configure": "Configurar"
+    "configure": "Configurar",
+    "audit": {
+      "title": "Histórico de ações",
+      "tab_label": "Histórico",
+      "description": "Registro de ações de administrador — preservado para conformidade ISO 27001 / SOC 2.",
+      "col_date": "Data",
+      "col_user": "Utilizador",
+      "col_action": "Ação",
+      "col_entity": "Entidade",
+      "col_details": "Detalhes",
+      "empty": "Sem entradas",
+      "filter_from": "De",
+      "filter_to": "Até",
+      "filter_action": "Ação",
+      "pagination": "{{count}} entradas",
+      "actions": {
+        "partner.created": "Parceiro criado",
+        "partner.updated": "Parceiro atualizado",
+        "partner.deleted": "Parceiro removido",
+        "commission.approved": "Comissão aprovada",
+        "commission.paid": "Comissão paga",
+        "commission.deleted": "Comissão removida",
+        "referral.status_changed": "Estado do lead alterado",
+        "settings.updated": "Configurações atualizadas",
+        "billing.updated": "Faturação atualizada",
+        "user.invited": "Utilizador convidado",
+        "user.invitation_revoked": "Convite revogado",
+        "integration.connected": "Integração conectada",
+        "integration.disconnected": "Integração desconectada"
+      }
+    }
   },
   "status": {
     "new": "Novo",
@@ -3328,5 +3358,25 @@
   },
   "partner_payments": {
     "billing_info_title": "Informações de faturação"
+  },
+  "session": {
+    "expired_title": "A sua sessão expirou",
+    "expired_message": "Por motivos de segurança, foi desconectado após 30 minutos de inatividade.",
+    "expired_cta": "Iniciar sessão novamente"
+  },
+  "password": {
+    "errors": {
+      "too_short": "Pelo menos 8 caracteres",
+      "no_uppercase": "Pelo menos uma maiúscula",
+      "no_lowercase": "Pelo menos uma minúscula",
+      "no_digit": "Pelo menos um dígito",
+      "too_common": "Palavra-passe demasiado comum"
+    },
+    "strength": {
+      "weak": "Fraca",
+      "fair": "Razoável",
+      "good": "Boa",
+      "strong": "Forte"
+    }
   }
 }
