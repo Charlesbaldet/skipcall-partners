@@ -108,11 +108,30 @@ router.post('/invite', [
 
 router.get('/invitations', async (req, res) => {
   try {
+    // CRITICAL tenant filter. The previous query had NO WHERE clause
+    // and returned every invitation across every tenant — including
+    // the unconsumed `token` column, which is the bearer credential
+    // for /setup-password/:token. An admin in tenant A could read
+    // tenant B's pending tokens and complete the setup, taking over
+    // accounts in B.
+    //
+    // user_invitations has no direct tenant_id column today; we
+    // scope via the inviter's tenant. Superadmin keeps cross-tenant
+    // reach through skipTenantFilter for ops use.
+    const params = [];
+    let where = '';
+    if (!req.skipTenantFilter) {
+      if (!req.tenantId) return res.status(400).json({ error: 'tenant_missing' });
+      params.push(req.tenantId);
+      where = 'WHERE u.tenant_id = $1';
+    }
     const { rows } = await query(
       `SELECT ui.*, u.full_name as invited_by_name
        FROM user_invitations ui
        JOIN users u ON ui.invited_by = u.id
-       ORDER BY ui.created_at DESC`
+       ${where}
+       ORDER BY ui.created_at DESC`,
+      params
     );
     res.json({ invitations: rows });
   } catch (err) {
@@ -151,8 +170,26 @@ router.put('/users/:id', async (req, res) => {
 
 router.delete('/invitations/:id', async (req, res) => {
   try {
-    await query('DELETE FROM user_invitations WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Invitation supprimÃ©e' });
+    // IDOR fix: scope DELETE by inviter's tenant so an admin in
+    // tenant A can't revoke an invitation issued in tenant B.
+    // Combined with the GET filter above, this also stops the
+    // enumeration → revoke chain that the previous open list
+    // enabled. Superadmin keeps cross-tenant reach through
+    // skipTenantFilter.
+    let sql, params;
+    if (req.skipTenantFilter) {
+      sql = 'DELETE FROM user_invitations WHERE id = $1';
+      params = [req.params.id];
+    } else {
+      if (!req.tenantId) return res.status(400).json({ error: 'tenant_missing' });
+      sql = `DELETE FROM user_invitations
+              WHERE id = $1
+                AND invited_by IN (SELECT id FROM users WHERE tenant_id = $2)`;
+      params = [req.params.id, req.tenantId];
+    }
+    const { rowCount } = await query(sql, params);
+    if (!rowCount) return res.status(404).json({ error: 'Invitation introuvable' });
+    res.json({ message: 'Invitation supprimée' });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }

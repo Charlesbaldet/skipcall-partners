@@ -48,9 +48,9 @@ async function createNotificationsForPost(post, client = null) {
   if (prefs.in_app) {
     for (const u of users) {
       await exec(
-        `INSERT INTO notifications (user_id, type, title, message, link, news_post_id)
-         VALUES ($1, $2, $3, $4, '/partner/news', $5)`,
-        [u.user_id, type, post.title, message, post.id]
+        `INSERT INTO notifications (user_id, tenant_id, type, title, message, link, news_post_id)
+         VALUES ($1, $2, $3, $4, $5, '/partner/news', $6)`,
+        [u.user_id, post.tenant_id, type, post.title, message, post.id]
       );
     }
   }

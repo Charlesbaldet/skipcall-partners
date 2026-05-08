@@ -876,6 +876,41 @@ async function runMigrations() {
     console.error('[migrate.v37] failed:', err.message);
   }
 
+  // v38: tenant scoping on notifications.
+  //
+  // Same shape of bug as v37 conversations: the notifications table
+  // (created in migrate_news.sql) was keyed by user_id only, with no
+  // tenant_id column. A users.id is global — one row per email,
+  // many user_roles — so a partner re-invited with the same email
+  // in two programs got notifications fanned out under one user_id
+  // visible to both tenant contexts. The sidebar feed then mixed
+  // both tenants' updates.
+  //
+  // Backfill priority: news_post_id (carries the post's tenant) wins
+  // when present; remaining rows fall back to the user's currently-
+  // active tenant (imperfect — historically a row could have been
+  // generated when the user was on a different tenant, but the only
+  // alternative is to drop the row entirely). Both stages skip rows
+  // where tenant_id is already set so the migration is idempotent.
+  try {
+    await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS tenant_id UUID`);
+    await query(`UPDATE notifications n
+                    SET tenant_id = np.tenant_id
+                   FROM news_posts np
+                  WHERE np.id = n.news_post_id
+                    AND n.tenant_id IS NULL`);
+    await query(`UPDATE notifications n
+                    SET tenant_id = u.tenant_id
+                   FROM users u
+                  WHERE u.id = n.user_id
+                    AND n.tenant_id IS NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_notifications_tenant_user_created
+                   ON notifications(tenant_id, user_id, created_at DESC)`);
+    console.log('[notifications] v38 tenant_id added + backfilled');
+  } catch (err) {
+    console.error('[migrate.v38] failed:', err.message);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {

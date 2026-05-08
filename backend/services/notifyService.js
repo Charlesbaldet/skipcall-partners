@@ -101,19 +101,35 @@ async function shouldNotifyPartner(partnerId, prefKey) {
 }
 
 // Insert one row if the event is allowed in-app for the tenant.
+//
+// tenant_id is now mandatory on the row — the column was added in
+// v38 (along with a backfill) to close the cross-tenant leak that
+// surfaced when a user re-invited as a partner in two programs got
+// the union of both tenants' notifications in their sidebar feed.
+// If the caller doesn't pass a tenant context, fall back to the
+// user's currently-active tenant via a fresh users lookup so the
+// row is never inserted with NULL.
 async function createNotification(userId, eventType, meta = {}, opts = {}) {
   if (!userId) return;
-  const tenantId = meta.tenantId || opts.tenantId || null;
+  let tenantId = meta.tenantId || opts.tenantId || null;
   if (!opts.skipPreferenceCheck) {
     const { in_app } = await shouldNotify(tenantId, eventType);
     if (!in_app) return;
   }
+  // Resolve tenant from the user row when callers haven't supplied
+  // one. Prevents NULL tenant_id rows from leaking into the table.
+  if (!tenantId) {
+    try {
+      const { rows: [u] } = await query('SELECT tenant_id FROM users WHERE id = $1', [userId]);
+      tenantId = u?.tenant_id || null;
+    } catch { /* fall through with tenantId still null — the INSERT will keep NULL but the lookup is best-effort */ }
+  }
   try {
     await query(
-      `INSERT INTO notifications (user_id, type, title, message, link, news_post_id)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO notifications (user_id, tenant_id, type, title, message, link, news_post_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
-        userId, eventType,
+        userId, tenantId, eventType,
         meta.title || '',
         meta.message || null,
         meta.link || null,
