@@ -1034,6 +1034,36 @@ async function runMigrations() {
     console.error('[migrate.v43] failed:', err.message);
   }
 
+  // v44: PostgreSQL row-level security as defence-in-depth on every
+  // tenant-scoped table. Runs ENABLE only (not FORCE) so existing
+  // queries from owner connections keep working when RLS_ENABLED is
+  // unset; FORCE would block the Railway default connection (which is
+  // table owner) regardless of the env flag, breaking startup. The
+  // authenticate middleware sets app.current_tenant_id /
+  // app.current_role per-request when RLS_ENABLED=true, and the
+  // tenant_isolation policy gates reads accordingly. Each table's
+  // block is wrapped in its own try so one failure (e.g. a
+  // pre-existing policy with a different USING expression) doesn't
+  // abort the rest.
+  const RLS_TABLES = [
+    'referrals', 'commissions', 'partners', 'messages', 'conversations',
+    'news_posts', 'notifications', 'audit_logs',
+  ];
+  for (const table of RLS_TABLES) {
+    try {
+      await query(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY`);
+      await query(`DROP POLICY IF EXISTS tenant_isolation ON ${table}`);
+      await query(`CREATE POLICY tenant_isolation ON ${table}
+        USING (tenant_id::text = current_setting('app.current_tenant_id', true))`);
+      await query(`DROP POLICY IF EXISTS superadmin_bypass ON ${table}`);
+      await query(`CREATE POLICY superadmin_bypass ON ${table}
+        USING (current_setting('app.current_role', true) = 'superadmin')`);
+      console.log(`[rls] v44 ${table} policies ready`);
+    } catch (err) {
+      console.error(`[migrate.v44.${table}] failed:`, err.message);
+    }
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

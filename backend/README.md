@@ -55,6 +55,19 @@ support tickets.
 - `RAILWAY_GIT_COMMIT_SHA` — set automatically by Railway. The
   health endpoint surfaces the first 7 chars as `version`.
 
+## RLS_ENABLED
+
+Optional. Set to `'true'` to enforce PostgreSQL row-level security as
+defence-in-depth. Requires the v44 migration to have run. Test
+thoroughly in staging before enabling — any query that doesn't go
+through the `authenticate` middleware will see zero rows because the
+`tenant_isolation` policy reads `app.current_tenant_id` and that GUC
+is only set inside the per-request transaction `authenticate` opens.
+
+When unset (the default) the RLS policies tolerate the GUCs being
+undefined (the policy USING clauses use `current_setting('…', true)`),
+so the v44 schema is safe to roll out before flipping the flag.
+
 ## One-shot scripts
 
 ```
