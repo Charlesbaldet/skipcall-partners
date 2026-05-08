@@ -1703,6 +1703,15 @@
       "filter_from": "Von",
       "filter_to": "Bis",
       "filter_action": "Aktion",
+      "filter_all": "Alle",
+      "filter_partners": "Partner",
+      "filter_commissions": "Provisionen",
+      "filter_settings": "Einstellungen",
+      "filter_security": "Sicherheit",
+      "col_ip": "IP",
+      "export_csv": "CSV exportieren",
+      "export_progress": "Exportieren…",
+      "export_error": "Export fehlgeschlagen",
       "pagination": "{{count}} Einträge",
       "actions": {
         "partner.created": "Partner erstellt",
@@ -1719,6 +1728,42 @@
         "integration.connected": "Integration verbunden",
         "integration.disconnected": "Integration getrennt"
       }
+    },
+    "profile": {
+      "login_history": {
+        "title": "Letzte Anmeldungen",
+        "col_date": "Datum",
+        "col_ip": "IP",
+        "col_device": "Gerät",
+        "col_method": "Methode",
+        "invalidate_cta": "Das war nicht ich",
+        "invalidate_modal_title": "Alle Sitzungen abmelden?",
+        "invalidate_modal_body": "Sie werden auf allen Geräten abgemeldet, auch auf diesem. Sie müssen sich erneut anmelden.",
+        "cancel": "Abbrechen",
+        "confirm_invalidate": "Überall abmelden",
+        "toast_invalidated": "Sitzungen ungültig gemacht",
+        "empty": "Keine letzten Anmeldungen"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Compliance",
+    "subtitle": "SOC 2 / ISO 27001 Dashboard — operative Nachweise",
+    "card": {
+      "last_audit": "Letztes Sicherheitsaudit",
+      "audit_entries": "Audit-Ereignisse",
+      "mfa_adoption": "MFA-Aktivierung",
+      "failed_logins": "Fehlgeschlagene Anmeldungen",
+      "npm_vulns": "npm-Schwachstellen",
+      "uptime": "Systemverfügbarkeit"
+    },
+    "unit": {
+      "days_ago": "vor {{count}} Tagen",
+      "events_30d": "über 30 Tage",
+      "pct": "% der Admins",
+      "events_24h": "in 24h",
+      "high": "hoch",
+      "critical": "kritisch"
     }
   },
   "status": {

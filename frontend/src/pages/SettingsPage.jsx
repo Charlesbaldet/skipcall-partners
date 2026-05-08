@@ -15,7 +15,9 @@ import {
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
   Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen, Building, History,
+  Download,
 } from 'lucide-react';
+import DateRangePicker from '../components/DateRangePicker.jsx';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
@@ -195,22 +197,59 @@ function AuditLogTab() {
   const { t, i18n } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
+  // Date range now drives the from/to params via the shared
+  // DateRangePicker component (same one the dashboard uses).
+  const [dateRange, setDateRange] = useState(null);
   const [action, setAction] = useState('');
+  // Filter pill — one of '', 'partners', 'commissions', 'settings',
+  // 'security'. Empty string means "all".
+  const [actionType, setActionType] = useState('');
   const [data, setData] = useState({ logs: [], total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState({});
+  const [exporting, setExporting] = useState(false);
+  const [exportErr, setExportErr] = useState(null);
+
+  const from = dateRange?.startDate || '';
+  const to = dateRange?.endDate || '';
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    api.getAuditLogs({ page, pageSize, from, to, action })
+    api.getAuditLogs({ page, pageSize, from, to, action, action_type: actionType })
       .then(d => { if (!cancelled) setData(d); })
       .catch(() => { if (!cancelled) setData({ logs: [], total: 0, totalPages: 1 }); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [page, pageSize, from, to, action]);
+  }, [page, pageSize, from, to, action, actionType]);
+
+  const handleExport = async () => {
+    setExporting(true); setExportErr(null);
+    try {
+      const blob = await api.exportAuditLogsCsv({ from, to, action, action_type: actionType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `refboost-audit-log-${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setExportErr(e.message || 'export_error');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const PILLS = [
+    { id: '', label: t('settings.audit.filter_all', 'Toutes') },
+    { id: 'partners', label: t('settings.audit.filter_partners', 'Partenaires') },
+    { id: 'commissions', label: t('settings.audit.filter_commissions', 'Commissions') },
+    { id: 'settings', label: t('settings.audit.filter_settings', 'Paramètres') },
+    { id: 'security', label: t('settings.audit.filter_security', 'Sécurité') },
+  ];
 
   const fmt = (d) => {
     if (!d) return '—';
@@ -232,17 +271,31 @@ function AuditLogTab() {
         {t('settings.audit.description', 'Journal des actions administrateur — conservé pour la conformité ISO 27001 / SOC 2.')}
       </p>
 
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-        <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_from', 'Du')}</label>
-          <input type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(1); }}
-            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_to', 'Au')}</label>
-          <input type="date" value={to} onChange={e => { setTo(e.target.value); setPage(1); }}
-            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }} />
-        </div>
+      {/* Filter pills — group action families for one-click filtering. */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        {PILLS.map(p => {
+          const active = actionType === p.id;
+          return (
+            <button
+              key={p.id || 'all'}
+              type="button"
+              onClick={() => { setActionType(p.id); setPage(1); }}
+              style={{
+                padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600,
+                border: '1px solid ' + (active ? '#059669' : '#e2e8f0'),
+                background: active ? '#ecfdf5' : '#fff',
+                color: active ? '#059669' : '#475569',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Date range + free-form action picker + export. */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 20 }}>
         <div>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_action', 'Action')}</label>
           <select value={action} onChange={e => { setAction(e.target.value); setPage(1); }}
@@ -250,6 +303,33 @@ function AuditLogTab() {
             <option value="">{t('common.all', 'Toutes')}</option>
             {ACTION_KEYS.map(k => <option key={k} value={k}>{actionLabel(k)}</option>)}
           </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_from', 'Du')} → {t('settings.audit.filter_to', 'Au')}</label>
+          <DateRangePicker value={dateRange} onChange={(r) => { setDateRange(r); setPage(1); }} />
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 14px', borderRadius: 8,
+              border: '1px solid #e2e8f0', background: '#fff', color: '#0f172a',
+              fontSize: 13, fontWeight: 600, cursor: exporting ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit', opacity: exporting ? 0.6 : 1,
+            }}
+          >
+            <Download size={14} /> {exporting
+              ? t('settings.audit.export_progress', 'Export…')
+              : t('settings.audit.export_csv', 'Exporter CSV')}
+          </button>
+          {exportErr && (
+            <span style={{ fontSize: 11, color: '#dc2626' }}>
+              {t('settings.audit.export_error', 'Erreur lors de l’export')}
+            </span>
+          )}
         </div>
       </div>
 

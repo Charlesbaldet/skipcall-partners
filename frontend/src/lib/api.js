@@ -546,6 +546,22 @@ class ApiClient {
     const suffix = qs.toString();
     return this.request('/audit-logs' + (suffix ? '?' + suffix : ''));
   }
+
+  // CSV export of the same filtered audit log set. Returns a Blob so
+  // the caller can trigger a download via an <a download> link without
+  // pulling JSON parsing into the path.
+  async exportAuditLogsCsv(params = {}) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+    });
+    const suffix = qs.toString();
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/audit-logs/export${suffix ? '?' + suffix : ''}`, { headers });
+    if (!res.ok) throw new Error('Erreur export');
+    return res.blob();
+  }
 }
 
 export const api = new ApiClient();

@@ -1703,6 +1703,15 @@
       "filter_from": "From",
       "filter_to": "To",
       "filter_action": "Action",
+      "filter_all": "All",
+      "filter_partners": "Partners",
+      "filter_commissions": "Commissions",
+      "filter_settings": "Settings",
+      "filter_security": "Security",
+      "col_ip": "IP",
+      "export_csv": "Export CSV",
+      "export_progress": "Exporting…",
+      "export_error": "Export failed",
       "pagination": "{{count}} entries",
       "actions": {
         "partner.created": "Partner created",
@@ -1719,6 +1728,42 @@
         "integration.connected": "Integration connected",
         "integration.disconnected": "Integration disconnected"
       }
+    },
+    "profile": {
+      "login_history": {
+        "title": "Recent sign-ins",
+        "col_date": "Date",
+        "col_ip": "IP",
+        "col_device": "Device",
+        "col_method": "Method",
+        "invalidate_cta": "This wasn't me",
+        "invalidate_modal_title": "Sign out of all sessions?",
+        "invalidate_modal_body": "You will be signed out of every device, including this one. You'll have to log in again.",
+        "cancel": "Cancel",
+        "confirm_invalidate": "Sign out everywhere",
+        "toast_invalidated": "Sessions invalidated",
+        "empty": "No recent sign-ins"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Compliance",
+    "subtitle": "SOC 2 / ISO 27001 dashboard — operational evidence",
+    "card": {
+      "last_audit": "Last security audit",
+      "audit_entries": "Audit events",
+      "mfa_adoption": "MFA adoption",
+      "failed_logins": "Failed sign-ins",
+      "npm_vulns": "npm vulnerabilities",
+      "uptime": "System uptime"
+    },
+    "unit": {
+      "days_ago": "{{count}} days ago",
+      "events_30d": "over 30 days",
+      "pct": "% of admins",
+      "events_24h": "in last 24h",
+      "high": "high",
+      "critical": "critical"
     }
   },
   "status": {

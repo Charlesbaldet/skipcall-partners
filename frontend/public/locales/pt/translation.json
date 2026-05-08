@@ -1703,6 +1703,15 @@
       "filter_from": "De",
       "filter_to": "Até",
       "filter_action": "Ação",
+      "filter_all": "Todas",
+      "filter_partners": "Parceiros",
+      "filter_commissions": "Comissões",
+      "filter_settings": "Configurações",
+      "filter_security": "Segurança",
+      "col_ip": "IP",
+      "export_csv": "Exportar CSV",
+      "export_progress": "Exportando…",
+      "export_error": "Erro de exportação",
       "pagination": "{{count}} entradas",
       "actions": {
         "partner.created": "Parceiro criado",
@@ -1719,6 +1728,42 @@
         "integration.connected": "Integração conectada",
         "integration.disconnected": "Integração desconectada"
       }
+    },
+    "profile": {
+      "login_history": {
+        "title": "Acessos recentes",
+        "col_date": "Data",
+        "col_ip": "IP",
+        "col_device": "Dispositivo",
+        "col_method": "Método",
+        "invalidate_cta": "Não fui eu",
+        "invalidate_modal_title": "Encerrar todas as sessões?",
+        "invalidate_modal_body": "Você será desconectado de todos os dispositivos, incluindo este. Será necessário fazer login novamente.",
+        "cancel": "Cancelar",
+        "confirm_invalidate": "Encerrar em todos",
+        "toast_invalidated": "Sessões invalidadas",
+        "empty": "Sem acessos recentes"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Conformidade",
+    "subtitle": "Painel SOC 2 / ISO 27001 — evidência operacional",
+    "card": {
+      "last_audit": "Última auditoria de segurança",
+      "audit_entries": "Eventos de auditoria",
+      "mfa_adoption": "Adoção de MFA",
+      "failed_logins": "Falhas de login",
+      "npm_vulns": "Vulnerabilidades npm",
+      "uptime": "Tempo de atividade"
+    },
+    "unit": {
+      "days_ago": "há {{count}} dias",
+      "events_30d": "em 30 dias",
+      "pct": "% dos admins",
+      "events_24h": "em 24h",
+      "high": "alta",
+      "critical": "crítica"
     }
   },
   "status": {
