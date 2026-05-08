@@ -93,15 +93,21 @@ async function bulkResolveTiers(tenantId, partnerIds) {
   if (ids.length === 0) return new Map();
   const levels = await getLevels(tenantId);
   const thresholdType = await getThresholdType(tenantId);
+  // Defense-in-depth tenant filter. Partner UUIDs don't collide
+  // across tenants today, but this query takes a list of partner_ids
+  // from any caller; without the tenant_id pin, a future call site
+  // that mixes ids from multiple tenants would silently aggregate
+  // wins across tenant boundaries and inflate the resolved tier.
   const { rows } = await query(
     `SELECT partner_id,
             COUNT(*) FILTER (WHERE status = 'won')                  AS won_deals,
             COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
        FROM referrals
       WHERE partner_id = ANY($1::uuid[])
+        AND tenant_id = $2
         AND deleted_at IS NULL
       GROUP BY partner_id`,
-    [ids]
+    [ids, tenantId]
   );
   const stats = new Map(rows.map(r => [r.partner_id, r]));
   const out = new Map();

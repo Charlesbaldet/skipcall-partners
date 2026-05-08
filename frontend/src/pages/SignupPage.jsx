@@ -75,7 +75,14 @@ export default function SignupPage() {
           access_token: accessToken,
         });
         try { sessionStorage.removeItem('google_signup_access_token'); } catch {}
-        localStorage.setItem('refboost_onboarding_pending', '1');
+        try {
+          // Tenant-scoped flag: a user re-invited as admin in a second
+          // tenant should still trigger the wizard there. The data
+          // shape is the auto-login response, which carries the freshly
+          // created tenant's id on user.tenantId.
+          const tid = data && data.user && data.user.tenantId;
+          if (tid) localStorage.setItem('refboost_onboarding_pending_' + tid, '1');
+        } catch {}
         try { window._rb_track?.('signup_google', { company: form.company, plan: requestedPlan || 'starter' }); } catch(e) {}
         if (await redirectToCheckoutIfRequested()) return;
         setStep(3);
@@ -92,7 +99,14 @@ export default function SignupPage() {
       // subsequent /billing/checkout calls authenticate correctly.
       api.setToken(data.token);
       api.setUser(data.user);
-      localStorage.setItem('refboost_onboarding_pending', '1');
+      try {
+          // Tenant-scoped flag: a user re-invited as admin in a second
+          // tenant should still trigger the wizard there. The data
+          // shape is the auto-login response, which carries the freshly
+          // created tenant's id on user.tenantId.
+          const tid = data && data.user && data.user.tenantId;
+          if (tid) localStorage.setItem('refboost_onboarding_pending_' + tid, '1');
+        } catch {}
       try { window._rb_track?.('signup', { company: form.company, plan: requestedPlan || 'starter' }); } catch(e) {}
       if (await redirectToCheckoutIfRequested()) return;
       setStep(3);

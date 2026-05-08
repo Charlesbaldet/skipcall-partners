@@ -89,7 +89,7 @@ const LEGAL = {
 
 <h2>8. Vos droits</h2>
 <p>Conformément au RGPD, vous disposez des droits suivants : droit d'accès à vos données, droit de rectification, droit à l'effacement (« droit à l'oubli »), droit à la portabilité, droit d'opposition au traitement, droit à la limitation du traitement.</p>
-<p>Pour exercer ces droits, contactez-nous à l'adresse : charles@getalead.co. Nous répondrons dans un délai maximum de 30 jours.</p>
+<p>Pour exercer ces droits, contactez-nous à l'adresse : dpo@refboost.io. Nous répondrons dans un délai maximum de 30 jours.</p>
 
 <h2>9. Cookies</h2>
 <p>Notre site utilise des cookies essentiels au fonctionnement du service (authentification, préférences de langue) et des cookies d'analyse (Google Analytics) pour comprendre l'utilisation du site. Vous pouvez gérer vos préférences de cookies via les paramètres de votre navigateur.</p>
@@ -98,7 +98,7 @@ const LEGAL = {
 <p>Nous nous réservons le droit de modifier la présente politique de confidentialité. Toute modification significative sera notifiée aux utilisateurs par email ou via la plateforme.</p>
 
 <h2>11. Contact</h2>
-<p>Pour toute question relative à la protection de vos données, contactez-nous à : charles@getalead.co.</p>
+<p>Pour toute question relative à la protection de vos données, contactez-nous à : dpo@refboost.io.</p>
 `,
   },
 
@@ -110,7 +110,7 @@ const LEGAL = {
     body: `
 <h2>Éditeur du site</h2>
 <p>Le site RefBoost (https://refboost.io) est édité par :</p>
-<p>Contact : charles@getalead.co</p>
+<p>Contact : dpo@refboost.io</p>
 <p>Directeur de la publication : Charles BALDET</p>
 
 <h2>Hébergement</h2>
@@ -122,7 +122,7 @@ const LEGAL = {
 
 <h2>Données personnelles</h2>
 <p>Les informations recueillies sur ce site font l'objet d'un traitement informatique destiné à la fourniture du service RefBoost. Pour plus d'informations, consultez notre <a href="/confidentialite">Politique de Confidentialité</a>.</p>
-<p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant. Pour exercer ce droit, contactez-nous à : charles@getalead.co.</p>
+<p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant. Pour exercer ce droit, contactez-nous à : dpo@refboost.io.</p>
 
 <h2>Cookies</h2>
 <p>Ce site utilise des cookies pour améliorer l'expérience utilisateur et réaliser des statistiques de visite. Pour en savoir plus, consultez notre <a href="/confidentialite">Politique de Confidentialité</a>.</p>
@@ -174,17 +174,17 @@ const LEGAL = {
 <p><strong>Droit à la limitation (art. 18) :</strong> demander la limitation du traitement dans certaines circonstances.</p>
 
 <h2>Exercer vos droits</h2>
-<p>Pour exercer l'un de ces droits, contactez-nous à : charles@getalead.co. Nous traiterons votre demande dans un délai maximum de 30 jours.</p>
+<p>Pour exercer l'un de ces droits, contactez-nous à : dpo@refboost.io. Nous traiterons votre demande dans un délai maximum de 30 jours.</p>
 <p>Si vous estimez que le traitement de vos données constitue une violation du RGPD, vous avez le droit d'introduire une réclamation auprès de la CNIL (Commission Nationale de l'Informatique et des Libertés) : https://www.cnil.fr.</p>
 
 <h2>Transferts internationaux</h2>
 <p>Certains de nos sous-traitants techniques (Vercel, Railway, Stripe) sont basés aux États-Unis. Ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne et/ou le Data Privacy Framework (DPF) EU-US.</p>
 
 <h2>DPA (Data Processing Agreement)</h2>
-<p>RefBoost propose un accord de traitement des données (DPA) conforme à l'article 28 du RGPD à tout Client qui en fait la demande. Contactez-nous à charles@getalead.co pour obtenir votre DPA.</p>
+<p>RefBoost propose un accord de traitement des données (DPA) conforme à l'article 28 du RGPD à tout Client qui en fait la demande. Contactez-nous à dpo@refboost.io pour obtenir votre DPA.</p>
 
 <h2>Délégué à la protection des données</h2>
-<p>Pour toute question relative à la protection des données, contactez : Charles BALDET — charles@getalead.co.</p>
+<p>Pour toute question relative à la protection des données, contactez : RefBoost DPO — dpo@refboost.io.</p>
 `,
   },
 };

@@ -42,9 +42,15 @@ export default function DashboardPage() {
   // non-admin role. Partners never reach this page (they live on
   // /partner/dashboard) so they're already excluded by routing.
   const [showWizard, setShowWizard] = useState(() => {
-    if (localStorage.getItem('refboost_onboarding_pending') !== '1') return false;
     const u = api.getUser && api.getUser();
-    return u && (u.role === 'admin' || u.role === 'superadmin');
+    if (!u || (u.role !== 'admin' && u.role !== 'superadmin')) return false;
+    // Tenant-scoped flag, with legacy unscoped flag as a fallback so
+    // a user who signed up before this patch still gets the wizard
+    // once. The legacy key is cleared by the wizard on dismiss
+    // alongside the new one.
+    if (u.tenantId && localStorage.getItem('refboost_onboarding_pending_' + u.tenantId) === '1') return true;
+    if (localStorage.getItem('refboost_onboarding_pending') === '1') return true;
+    return false;
   });
   const [billingPlan, setBillingPlan] = useState(null);
   const [dateRange, setDateRange] = useState(null);

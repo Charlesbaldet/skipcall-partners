@@ -69,7 +69,17 @@ export default function OnboardingWizard({ onClose }) {
 
   const goNext = () => { setError(''); if (step < STEPS.length - 1) setStep(step + 1); else handleClose(); };
   const goBack = () => { setError(''); if (step > 0) setStep(step - 1); };
-  const handleClose = () => { localStorage.removeItem('refboost_onboarding_pending'); onClose(); };
+  const handleClose = () => {
+    // Clear both the tenant-scoped flag (post-patch signups) and
+    // the legacy unscoped flag (pre-patch signups). Belt-and-braces
+    // so the wizard never resurfaces after explicit dismissal.
+    try {
+      const u = (typeof api.getUser === 'function' && api.getUser()) || null;
+      if (u && u.tenantId) localStorage.removeItem('refboost_onboarding_pending_' + u.tenantId);
+      localStorage.removeItem('refboost_onboarding_pending');
+    } catch {}
+    onClose();
+  };
 
   const submitUser = async () => {
     if (!userForm.email || !userForm.full_name) { setError(t('onboarding.error_email_name_required')); return; }

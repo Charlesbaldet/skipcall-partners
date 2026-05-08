@@ -911,6 +911,29 @@ async function runMigrations() {
     console.error('[migrate.v38] failed:', err.message);
   }
 
+  // v39: tenant scoping on notification_queue (the email-send audit
+  // log written by services/resend.js sendAndLog). The table only
+  // carries (recipient_email, template, payload, sent, sent_at, …)
+  // today — admin queries against it for "what did we send for my
+  // tenant?" can't be filtered. Adds the column and a partial index
+  // for the typical "recent fails per tenant" lookup. Backfill via
+  // recipient_email → users.tenant_id where the recipient is also a
+  // user; rows where the recipient isn't a known user (cold-outreach
+  // emails, public application replies) stay NULL.
+  try {
+    await query(`ALTER TABLE notification_queue ADD COLUMN IF NOT EXISTS tenant_id UUID`);
+    await query(`UPDATE notification_queue nq
+                    SET tenant_id = u.tenant_id
+                   FROM users u
+                  WHERE LOWER(u.email) = LOWER(nq.recipient_email)
+                    AND nq.tenant_id IS NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_notification_queue_tenant_sent_at
+                   ON notification_queue(tenant_id, sent_at DESC)`);
+    console.log('[email-log] v39 notification_queue.tenant_id added + backfilled');
+  } catch (err) {
+    console.error('[migrate.v39] failed:', err.message);
+  }
+
   console.log(' Migrations completed');
 
   } catch (err) {

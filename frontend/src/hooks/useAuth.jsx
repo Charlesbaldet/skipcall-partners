@@ -115,6 +115,17 @@ export function AuthProvider({ children }) {
     setUser(data.user);
     setPendingSpaceSelection(null);
     await refreshSpaces();
+    // Re-fetch the tenant theme so the sidebar / page chrome
+    // reflects the new tenant immediately. Without this the
+    // window.__rbTenant cache + Layout's tenant state stay pinned
+    // to the previous tenant until the user navigates somewhere
+    // that triggers a full re-mount, which is what produced the
+    // "Eficia user sees Skipcall branding" UX bug. The function
+    // exists from main.jsx's loadTheme() bootstrap — guard the
+    // call in case the bootstrap hasn't run yet (SSR / tests).
+    if (typeof window !== 'undefined' && window.__rbLoadTheme) {
+      try { await window.__rbLoadTheme(); } catch {}
+    }
     return data;
   };
 

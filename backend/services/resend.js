@@ -86,13 +86,18 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
  * @param {string} opts.template - Template name for audit log
  * @param {Object} opts.payload - Original payload (for audit log)
  */
-async function sendAndLog({ to, subject, html, text, replyTo, template, payload, query }) {
+async function sendAndLog({ to, subject, html, text, replyTo, template, payload, query, tenantId }) {
   const result = await sendEmail({ to, subject, html, text, replyTo });
   if (query) {
     try {
+      // tenant_id is best-effort: callers that already know the tenant
+      // pass it explicitly; otherwise the v39 migration's backfill
+      // resolves recipient_email → users.tenant_id retroactively.
+      // Cold-outreach / public-form replies legitimately stay NULL.
+      const tid = tenantId || (payload && payload.tenant_id) || null;
       await query(
-        'INSERT INTO notification_queue (recipient_email, recipient_name, template, payload, sent, sent_at, error) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [to, (payload && payload.recipient_name) || null, template, JSON.stringify(payload || {}), result.ok, result.ok ? new Date() : null, result.ok ? null : result.error]
+        'INSERT INTO notification_queue (recipient_email, recipient_name, template, payload, tenant_id, sent, sent_at, error) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [to, (payload && payload.recipient_name) || null, template, JSON.stringify(payload || {}), tid, result.ok, result.ok ? new Date() : null, result.ok ? null : result.error]
       );
     } catch (logErr) {
       console.error('[resend] Failed to log to notification_queue:', logErr.message);
