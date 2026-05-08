@@ -284,7 +284,8 @@
         "cgv": "Termini",
         "privacy": "Privacy",
         "legal": "Note legali",
-        "rgpd": "GDPR"
+        "rgpd": "GDPR",
+        "status": "Stato"
       },
       "copyright": "© 2026 RefBoost. Tutti i diritti riservati.",
       "madeIn": "Fatto con cura in Francia"
@@ -3328,5 +3329,32 @@
   },
   "partner_payments": {
     "billing_info_title": "Informazioni di fatturazione"
+  },
+  "statusPage": {
+    "title": "Stato RefBoost",
+    "subtitle": "Disponibilità in tempo reale dei servizi RefBoost.",
+    "all_ok": "Tutti i sistemi funzionano",
+    "incident": "Incidente in corso",
+    "api": "API",
+    "database": "Database",
+    "last_deploy": "Ultimo deploy",
+    "uptime": "Disponibilità",
+    "last_check": "Ultima verifica",
+    "history": "Cronologia degli incidenti",
+    "empty": "Nessun incidente negli ultimi 30 giorni.",
+    "unit_day": "g",
+    "unit_hour": "h",
+    "unit_min": "min",
+    "severity": {
+      "minor": "Minore",
+      "major": "Maggiore",
+      "critical": "Critico"
+    },
+    "incident_status": {
+      "investigating": "In analisi",
+      "identified": "Identificato",
+      "monitoring": "In monitoraggio",
+      "resolved": "Risolto"
+    }
   }
 }
