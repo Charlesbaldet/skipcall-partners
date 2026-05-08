@@ -1727,6 +1727,15 @@
       "filter_from": "Desde",
       "filter_to": "Hasta",
       "filter_action": "Acción",
+      "filter_all": "Todas",
+      "filter_partners": "Socios",
+      "filter_commissions": "Comisiones",
+      "filter_settings": "Ajustes",
+      "filter_security": "Seguridad",
+      "col_ip": "IP",
+      "export_csv": "Exportar CSV",
+      "export_progress": "Exportando…",
+      "export_error": "Error de exportación",
       "pagination": "{{count}} entradas",
       "actions": {
         "partner.created": "Socio creado",
@@ -1743,6 +1752,42 @@
         "integration.connected": "Integración conectada",
         "integration.disconnected": "Integración desconectada"
       }
+    },
+    "profile": {
+      "login_history": {
+        "title": "Inicios de sesión recientes",
+        "col_date": "Fecha",
+        "col_ip": "IP",
+        "col_device": "Dispositivo",
+        "col_method": "Método",
+        "invalidate_cta": "No fui yo",
+        "invalidate_modal_title": "¿Cerrar todas las sesiones?",
+        "invalidate_modal_body": "Se cerrará la sesión en todos sus dispositivos, incluido este. Tendrá que volver a iniciar sesión.",
+        "cancel": "Cancelar",
+        "confirm_invalidate": "Cerrar en todos lados",
+        "toast_invalidated": "Sesiones invalidadas",
+        "empty": "Sin inicios de sesión recientes"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Cumplimiento",
+    "subtitle": "Panel SOC 2 / ISO 27001 — evidencia operativa",
+    "card": {
+      "last_audit": "Última auditoría de seguridad",
+      "audit_entries": "Eventos de auditoría",
+      "mfa_adoption": "Adopción de MFA",
+      "failed_logins": "Inicios de sesión fallidos",
+      "npm_vulns": "Vulnerabilidades npm",
+      "uptime": "Tiempo de actividad"
+    },
+    "unit": {
+      "days_ago": "hace {{count}} días",
+      "events_30d": "en 30 días",
+      "pct": "% de admins",
+      "events_24h": "en 24h",
+      "high": "alta",
+      "critical": "crítica"
     }
   },
   "status": {

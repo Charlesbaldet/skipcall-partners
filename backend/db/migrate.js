@@ -1064,6 +1064,18 @@ async function runMigrations() {
     }
   }
 
+  // v45: token_version on users — gives the "Sign out everywhere"
+  // panic button (Settings → Profil) a way to invalidate every
+  // outstanding JWT in one UPDATE. The authenticate middleware
+  // compares jwt.token_version against users.token_version on each
+  // request; a bump forces a fresh login.
+  try {
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0`);
+    console.log('[security] v45 users.token_version ready');
+  } catch (err) {
+    console.error('[migrate.v45] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

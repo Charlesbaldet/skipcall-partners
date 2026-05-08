@@ -1727,6 +1727,15 @@
       "filter_from": "Van",
       "filter_to": "Tot",
       "filter_action": "Actie",
+      "filter_all": "Alle",
+      "filter_partners": "Partners",
+      "filter_commissions": "Commissies",
+      "filter_settings": "Instellingen",
+      "filter_security": "Beveiliging",
+      "col_ip": "IP",
+      "export_csv": "CSV exporteren",
+      "export_progress": "Exporteren…",
+      "export_error": "Export mislukt",
       "pagination": "{{count}} vermeldingen",
       "actions": {
         "partner.created": "Partner aangemaakt",
@@ -1743,6 +1752,42 @@
         "integration.connected": "Integratie verbonden",
         "integration.disconnected": "Integratie ontkoppeld"
       }
+    },
+    "profile": {
+      "login_history": {
+        "title": "Recente aanmeldingen",
+        "col_date": "Datum",
+        "col_ip": "IP",
+        "col_device": "Apparaat",
+        "col_method": "Methode",
+        "invalidate_cta": "Dat was ik niet",
+        "invalidate_modal_title": "Alle sessies afmelden?",
+        "invalidate_modal_body": "Je wordt op alle apparaten afgemeld, inclusief dit apparaat. Je moet opnieuw inloggen.",
+        "cancel": "Annuleren",
+        "confirm_invalidate": "Overal afmelden",
+        "toast_invalidated": "Sessies ongeldig gemaakt",
+        "empty": "Geen recente aanmeldingen"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Compliance",
+    "subtitle": "SOC 2 / ISO 27001 dashboard — operationeel bewijs",
+    "card": {
+      "last_audit": "Laatste beveiligingsaudit",
+      "audit_entries": "Auditgebeurtenissen",
+      "mfa_adoption": "MFA-adoptie",
+      "failed_logins": "Mislukte aanmeldingen",
+      "npm_vulns": "npm-kwetsbaarheden",
+      "uptime": "Systeembeschikbaarheid"
+    },
+    "unit": {
+      "days_ago": "{{count}} dagen geleden",
+      "events_30d": "in 30 dagen",
+      "pct": "% van admins",
+      "events_24h": "in 24h",
+      "high": "hoog",
+      "critical": "kritiek"
     }
   },
   "status": {

@@ -50,6 +50,7 @@ const { purgeDeletedRecords } = require('./routes/trash');
 const onboardingRoutes = require('./routes/onboarding');
 const pennylaneRoutes = require('./routes/pennylane');
 const auditLogsRoutes = require('./routes/auditLogs');
+const complianceRoutes = require('./routes/compliance');
 
 // Services & middleware
 const { startNotificationWorker } = require('./services/emailService');
@@ -256,6 +257,7 @@ app.use('/api/webhooks', webhooksRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/pennylane', pennylaneRoutes);
 app.use('/api/audit-logs', auditLogsRoutes);
+app.use('/api/admin/compliance', complianceRoutes);
 // Public referral-link short URL (mounted at app root, not /api).
 // Vercel rewrites /r/:path* to this service.
 app.use('/r', referralRedirectRoutes);
@@ -347,6 +349,17 @@ app.listen(PORT, () => {
   // Cleanup old data every 24h (ISO 27001 A.12.4)
   setInterval(cleanupOldData, 24 * 60 * 60 * 1000);
   setTimeout(cleanupOldData, 60000); // First cleanup after 1 min
+
+  // Daily retention purge — fires at 03:00 UTC. Hard-deletes
+  // soft-deleted partners/referrals/commissions older than 30 days,
+  // anonymises old users, and trims audit_logs/notification_queue.
+  // SOC 2 CC6.5 / ISO 27001 A.18.1.3.
+  try {
+    const { scheduleRetentionPurge } = require('./scripts/retention-purge');
+    scheduleRetentionPurge();
+  } catch (err) {
+    logger.error('retention scheduler failed to arm', { error: err && err.message });
+  }
 
   // Purge soft-deleted referrals + commissions older than 30 days.
   // Same cadence as cleanupOldData; first run delayed +2 min so the

@@ -1727,6 +1727,15 @@
       "filter_from": "Dal",
       "filter_to": "Al",
       "filter_action": "Azione",
+      "filter_all": "Tutte",
+      "filter_partners": "Partner",
+      "filter_commissions": "Commissioni",
+      "filter_settings": "Impostazioni",
+      "filter_security": "Sicurezza",
+      "col_ip": "IP",
+      "export_csv": "Esporta CSV",
+      "export_progress": "Esportazione…",
+      "export_error": "Errore di esportazione",
       "pagination": "{{count}} voci",
       "actions": {
         "partner.created": "Partner creato",
@@ -1743,6 +1752,42 @@
         "integration.connected": "Integrazione connessa",
         "integration.disconnected": "Integrazione disconnessa"
       }
+    },
+    "profile": {
+      "login_history": {
+        "title": "Accessi recenti",
+        "col_date": "Data",
+        "col_ip": "IP",
+        "col_device": "Dispositivo",
+        "col_method": "Metodo",
+        "invalidate_cta": "Non ero io",
+        "invalidate_modal_title": "Disconnettere tutte le sessioni?",
+        "invalidate_modal_body": "Sarai disconnesso da tutti i dispositivi, incluso questo. Dovrai accedere di nuovo.",
+        "cancel": "Annulla",
+        "confirm_invalidate": "Disconnetti ovunque",
+        "toast_invalidated": "Sessioni invalidate",
+        "empty": "Nessun accesso recente"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Conformità",
+    "subtitle": "Dashboard SOC 2 / ISO 27001 — prove operative",
+    "card": {
+      "last_audit": "Ultimo audit di sicurezza",
+      "audit_entries": "Eventi di audit",
+      "mfa_adoption": "Adozione MFA",
+      "failed_logins": "Accessi falliti",
+      "npm_vulns": "Vulnerabilità npm",
+      "uptime": "Tempo di attività"
+    },
+    "unit": {
+      "days_ago": "{{count}} giorni fa",
+      "events_30d": "in 30 giorni",
+      "pct": "% degli admin",
+      "events_24h": "in 24h",
+      "high": "alta",
+      "critical": "critica"
     }
   },
   "status": {

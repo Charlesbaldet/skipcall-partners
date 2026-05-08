@@ -1727,6 +1727,15 @@
       "filter_from": "Du",
       "filter_to": "Au",
       "filter_action": "Action",
+      "filter_all": "Toutes",
+      "filter_partners": "Partenaires",
+      "filter_commissions": "Commissions",
+      "filter_settings": "Paramètres",
+      "filter_security": "Sécurité",
+      "col_ip": "IP",
+      "export_csv": "Exporter CSV",
+      "export_progress": "Export…",
+      "export_error": "Erreur lors de l'export",
       "pagination": "{{count}} entrées",
       "actions": {
         "partner.created": "Partenaire créé",
@@ -1743,6 +1752,42 @@
         "integration.connected": "Intégration connectée",
         "integration.disconnected": "Intégration déconnectée"
       }
+    },
+    "profile": {
+      "login_history": {
+        "title": "Connexions récentes",
+        "col_date": "Date",
+        "col_ip": "IP",
+        "col_device": "Appareil",
+        "col_method": "Méthode",
+        "invalidate_cta": "Ce n'était pas moi",
+        "invalidate_modal_title": "Déconnecter toutes les sessions ?",
+        "invalidate_modal_body": "Vous serez déconnecté de tous vos appareils, y compris celui-ci. Vous devrez vous reconnecter.",
+        "cancel": "Annuler",
+        "confirm_invalidate": "Tout déconnecter",
+        "toast_invalidated": "Sessions invalidées",
+        "empty": "Aucune connexion récente"
+      }
+    }
+  },
+  "compliance": {
+    "title": "Conformité",
+    "subtitle": "Tableau de bord SOC 2 / ISO 27001 — preuves opérationnelles",
+    "card": {
+      "last_audit": "Dernier audit sécurité",
+      "audit_entries": "Événements d'audit",
+      "mfa_adoption": "Adoption MFA",
+      "failed_logins": "Échecs de connexion",
+      "npm_vulns": "Vulnérabilités npm",
+      "uptime": "Temps de fonctionnement"
+    },
+    "unit": {
+      "days_ago": "il y a {{count}} jours",
+      "events_30d": "sur 30 jours",
+      "pct": "% des admins",
+      "events_24h": "sur 24h",
+      "high": "haute",
+      "critical": "critique"
     }
   },
   "status": {

@@ -564,6 +564,37 @@ class ApiClient {
     const suffix = qs.toString();
     return this.request('/audit-logs' + (suffix ? '?' + suffix : ''));
   }
+
+  // CSV export of the same filtered audit log set. Returns a Blob so
+  // the caller can trigger a download via an <a download> link without
+  // pulling JSON parsing into the path.
+  async exportAuditLogsCsv(params = {}) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+    });
+    const suffix = qs.toString();
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/audit-logs/export${suffix ? '?' + suffix : ''}`, { headers });
+    if (!res.ok) throw new Error('Erreur export');
+    return res.blob();
+  }
+
+  // Recent login events for the signed-in user (Settings → Profil →
+  // Connexions récentes card). Returns { logins: [...] }.
+  getLoginHistory() { return this.request('/auth/login-history'); }
+
+  // Bumps users.token_version → all existing JWTs (this device + every
+  // other) become invalid on next request. The frontend logs the user
+  // out locally and routes to /login.
+  invalidateSessions() {
+    return this.request('/auth/invalidate-sessions', { method: 'POST' });
+  }
+
+  // Compliance dashboard (superadmin only) — single round-trip that
+  // returns all 6 KPIs.
+  getComplianceDashboard() { return this.request('/admin/compliance/dashboard'); }
 }
 
 export const api = new ApiClient();

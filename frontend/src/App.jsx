@@ -50,6 +50,7 @@ const ProgressionPage      = lazy(() => import('./pages/ProgressionPage.jsx'));
 const AdminApplicationsPage = lazy(() => import('./pages/AdminApplicationsPage.jsx'));
 const AdminSettingsPage    = lazy(() => import('./pages/AdminSettingsPage.jsx'));
 const SuperAdminPage       = lazy(() => import('./pages/SuperAdminPage.jsx'));
+const CompliancePage       = lazy(() => import('./pages/CompliancePage.jsx'));
 const NewsPage             = lazy(() => import('./pages/NewsPage.jsx'));
 const PartnerNewsPage      = lazy(() => import('./pages/PartnerNewsPage.jsx'));
 const NotificationsPage    = lazy(() => import('./pages/NotificationsPage.jsx'));
@@ -334,6 +335,7 @@ function AppRoutes() {
       <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout>{suspend(AdminApplicationsPage)}</Layout></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout>{suspend(AdminSettingsPage)}</Layout></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout>{suspend(SuperAdminPage)}</Layout></ProtectedRoute>} />
+      <Route path="/admin/compliance" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout>{suspend(CompliancePage)}</Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout>{suspend(SettingsPage)}</Layout></ProtectedRoute>} />
         <Route path="/marketplace-admin" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout>{suspend(MarketplaceEditorPage)}</Layout></ProtectedRoute>} />
         <Route path="/progression" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout>{suspend(ProgressionPage)}</Layout></ProtectedRoute>} />

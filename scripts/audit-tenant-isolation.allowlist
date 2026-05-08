@@ -17,3 +17,7 @@ backend/routes/openapi\.js
 backend/routes/publicApi\.js
 # referralLinks.js:22 — globally unique referral_code lookup (no tenant by design)
 backend/routes/referralLinks\.js:22
+# compliance.js — superadmin-only dashboard, aggregates across all tenants by design
+backend/routes/compliance\.js
+# auth.js login-history endpoint — filtered by user_id = req.user.id (intrinsically tenant-scoped)
+backend/routes/auth\.js:1386
