@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Lock, CheckCircle, AlertTriangle } from 'lucide-react';
+import PasswordStrengthMeter, { validatePasswordClient } from '../components/PasswordStrengthMeter';
 
 export default function SetupPasswordPage() {
   const { t } = useTranslation();
@@ -26,9 +27,12 @@ export default function SetupPasswordPage() {
       .finally(() => setLoading(false));
   }, [token]);
 
+  const policy = validatePasswordClient(password);
+  const passwordOk = policy.valid;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password.length < 8) return setError(t('setupPwd.min_chars'));
+    if (!passwordOk) return setError(t('password.errors.too_short', 'Mot de passe trop faible'));
     if (password !== confirmPassword) return setError(t('setupPwd.mismatch'));
 
     setSaving(true);
@@ -122,17 +126,18 @@ export default function SetupPasswordPage() {
             <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('setupPwd.pwd_label')}</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
               placeholder={t('setupPwd.min_chars_ph')} style={s.input} required minLength={8} />
+            <PasswordStrengthMeter password={password} />
           </div>
           <div style={{ marginBottom: 24 }}>
             <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('resetPwd.confirm_pwd')}</label>
             <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
               placeholder={t('setupPwd.confirm_ph')} style={s.input} required />
           </div>
-          <button type="submit" disabled={saving} style={{
+          <button type="submit" disabled={saving || !passwordOk || password !== confirmPassword} style={{
             width: '100%', padding: '14px', borderRadius: 12,
             background: 'var(--rb-primary, #059669)', color: '#fff',
-            border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1,
+            border: 'none', fontWeight: 600, fontSize: 15, cursor: (saving || !passwordOk || password !== confirmPassword) ? 'not-allowed' : 'pointer',
+            boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: (saving || !passwordOk || password !== confirmPassword) ? 0.7 : 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <Lock size={16} /> {saving ? t('setupPwd.creating') : t('setupPwd.create_account')}

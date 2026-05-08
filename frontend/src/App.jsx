@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { TenantProvider } from './hooks/useTenant.jsx';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
+import useInactivityTimeout from './hooks/useInactivityTimeout.jsx';
 import { DialogsHost } from './components/Dialogs.jsx';
 import CookieConsentBanner from './components/CookieConsentBanner.jsx';
 
@@ -233,6 +235,42 @@ function RouteCanonical() {
   );
 }
 
+function SessionExpiredModal() {
+  const { t } = useTranslation();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleReconnect = async () => {
+    try { await logout(); } catch {}
+    navigate('/login', { replace: true });
+  };
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)' }}>
+      <div style={{ background: '#fff', borderRadius: 24, padding: 40, width: 420, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>!</div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+          {t('session.expired_title', 'Votre session a expiré')}
+        </h2>
+        <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5, margin: '0 0 24px' }}>
+          {t('session.expired_message', 'Pour des raisons de sécurité, vous avez été déconnecté après 30 minutes d’inactivité.')}
+        </p>
+        <button
+          onClick={handleReconnect}
+          style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: '#059669', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
+        >
+          {t('session.expired_cta', 'Se reconnecter')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function InactivityWatcher() {
+  const { user } = useAuth();
+  const { expired } = useInactivityTimeout({ active: !!user });
+  if (!expired) return null;
+  return <SessionExpiredModal />;
+}
+
 function AppRoutes() {
   const { user, loading } = useAuth();
   // Background prefetch: 2 s after a user is present, kick off the
@@ -346,6 +384,7 @@ export default function App() {
       <TenantProvider><AuthProvider>
         <AppRoutes />
         <PublicCookieBanner />
+        <InactivityWatcher />
         <DialogsHost />
       </AuthProvider></TenantProvider>
 

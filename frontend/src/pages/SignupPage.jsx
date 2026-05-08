@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import api from '../lib/api';
 import { Helmet } from 'react-helmet-async';
+import PasswordStrengthMeter, { validatePasswordClient } from '../components/PasswordStrengthMeter';
 
 const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
@@ -45,7 +46,8 @@ export default function SignupPage() {
 
   const passwordOk = form.password.length >= 10 &&
     /[A-Z]/.test(form.password) && /[a-z]/.test(form.password) &&
-    /[0-9]/.test(form.password) && /[^A-Za-z0-9]/.test(form.password);
+    /[0-9]/.test(form.password) && /[^A-Za-z0-9]/.test(form.password) &&
+    validatePasswordClient(form.password).valid;
 
   // After a successful signup, if the user landed here from a paid
   // pricing CTA, immediately push them to Stripe Checkout for that plan.
@@ -226,7 +228,7 @@ export default function SignupPage() {
               </button>
             </div>
             </div>
-            <div style={{ marginBottom:28,display:'flex',flexWrap:'wrap',gap:6 }}>
+            <div style={{ marginBottom:20,display:'flex',flexWrap:'wrap',gap:6 }}>
               {[
                 [form.password.length>=10, t("signup.pwd_chars")],
                 [/[A-Z]/.test(form.password), t("signup.pwd_upper")],
@@ -236,6 +238,9 @@ export default function SignupPage() {
               ].map(([ok,label],i)=>(
                 <span key={i} style={{ fontSize:11,padding:'3px 8px',borderRadius:6,background:ok?`${C.p}15`:'#f1f5f9',color:ok?C.p:'#94a3b8',fontWeight:600 }}>{ok?'':'○'} {label}</span>
               ))}
+            </div>
+            <div style={{ marginBottom:28 }}>
+              <PasswordStrengthMeter password={form.password} />
             </div>
 
             {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#fef2f2',color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}

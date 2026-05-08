@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
+import { resetInactivity } from './useInactivityTimeout.jsx';
 
 const AuthContext = createContext(null);
 
@@ -63,6 +64,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     clearTenantCache();
+    resetInactivity();
     const data = await api.login(email, password);
     if (data.requiresSpaceSelection) {
       // Don't materialize the user yet — the temp token can't load
@@ -81,6 +83,7 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = async (credential) => {
     clearTenantCache();
+    resetInactivity();
     const data = await api.loginWithGoogle(credential);
     if (data.needsSignup) return data;
     if (data.requiresSpaceSelection) {
@@ -105,6 +108,7 @@ export function AuthProvider({ children }) {
 
   const switchSpace = async (space) => {
     clearTenantCache();
+    resetInactivity();
     const data = await api.switchSpace({
       tenantId: space.tenant_id,
       role: space.role,

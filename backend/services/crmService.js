@@ -8,6 +8,7 @@
 // so a CRM outage never breaks the user-facing referral flow.
 const { query } = require('../db');
 const logger = require('./logger');
+const { decrypt } = require('../utils/crypto');
 
 const REFBOOST_BASE_FIELDS = {
   prospect_name:    r => r.prospect_name,
@@ -24,7 +25,15 @@ async function getActiveIntegration(tenantId) {
     'SELECT * FROM crm_integrations WHERE tenant_id = $1 AND is_active = TRUE LIMIT 1',
     [tenantId]
   );
-  return rows[0] || null;
+  const integ = rows[0] || null;
+  // Decrypt-on-read: tokens are stored encrypted (utils/crypto.js); the
+  // legacy fallback returns plaintext untouched so existing rows still
+  // work until the next write.
+  if (integ) {
+    try { if (integ.access_token)  integ.access_token  = decrypt(integ.access_token); } catch {}
+    try { if (integ.refresh_token) integ.refresh_token = decrypt(integ.refresh_token); } catch {}
+  }
+  return integ;
 }
 
 async function getMappings(integrationId) {

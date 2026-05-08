@@ -7,6 +7,7 @@ const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const { generateApiKey, hashKey } = require('../middleware/apiKeyAuth');
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
+const { logAudit } = require('../services/auditLog');
 
 // Migration auto: must_change_password
 require('../db').query('ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false').catch(() => {});
@@ -101,7 +102,8 @@ router.post('/invite', [
         query,
       });
     } catch (e) { console.error('[admin.invite] email error:', e.message); }
-    
+
+    logAudit(req, 'user.invited', 'user', null, { email, role, full_name });
     res.status(201).json({ message: 'Utilisateur créé', tempPassword, email });
   } catch (err) { console.error('Invite error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
 });
@@ -189,6 +191,7 @@ router.delete('/invitations/:id', async (req, res) => {
     }
     const { rowCount } = await query(sql, params);
     if (!rowCount) return res.status(404).json({ error: 'Invitation introuvable' });
+    logAudit(req, 'user.invitation_revoked', 'invitation', req.params.id, {});
     res.json({ message: 'Invitation supprimée' });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });

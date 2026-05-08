@@ -14,6 +14,8 @@ const { query } = require('../db');
 const { authenticate, authorize, tenantScope } = require('../middleware/auth');
 const { validateWebhookUrl } = require('../middleware/webhookValidation');
 const crmService = require('../services/crmService');
+const { logAudit } = require('../services/auditLog');
+const { encrypt, decrypt } = require('../utils/crypto');
 
 const router = express.Router();
 
@@ -96,6 +98,7 @@ router.post('/integrations', authenticate, tenantScope, authorize('admin'), requ
        RETURNING *`,
       [req.tenantId, provider, webhook_url || null, JSON.stringify(settings || {})]
     );
+    logAudit(req, 'integration.connected', 'crm_integration', rows[0].id, { provider });
     res.json({ integration: rows[0] });
   } catch (err) {
     console.error('[crm.create] error:', err);
@@ -111,6 +114,7 @@ router.delete('/integrations/:id', authenticate, tenantScope, authorize('admin')
       [req.params.id, req.tenantId]
     );
     if (!rowCount) return res.status(404).json({ error: 'Integration introuvable' });
+    logAudit(req, 'integration.disconnected', 'crm_integration', req.params.id, {});
     res.json({ ok: true });
   } catch (err) {
     console.error('[crm.delete] error:', err);
@@ -150,15 +154,16 @@ router.post('/integrations/:id/test', authenticate, tenantScope, authorize('admi
 
     // For OAuth providers, hit a lightweight endpoint to confirm the
     // access token still works.
+    const decToken = integration.access_token ? decrypt(integration.access_token) : null;
     if (integration.provider === 'hubspot') {
       const r = await fetch('https://api.hubapi.com/integrations/v1/me', {
-        headers: { Authorization: `Bearer ${integration.access_token}` },
+        headers: { Authorization: `Bearer ${decToken}` },
       });
       return res.json({ ok: r.ok, status: r.status });
     }
     if (integration.provider === 'salesforce' && integration.instance_url) {
       const r = await fetch(`${integration.instance_url}/services/data/v59.0/`, {
-        headers: { Authorization: `Bearer ${integration.access_token}` },
+        headers: { Authorization: `Bearer ${decToken}` },
       });
       return res.json({ ok: r.ok, status: r.status });
     }
@@ -204,8 +209,9 @@ router.get('/hubspot/callback', async (req, res) => {
        ON CONFLICT (tenant_id, provider)
        DO UPDATE SET access_token = EXCLUDED.access_token, refresh_token = EXCLUDED.refresh_token,
                      is_active = TRUE, connected_at = NOW()`,
-      [tenantId, tokens.access_token, tokens.refresh_token || null]
+      [tenantId, encrypt(tokens.access_token), tokens.refresh_token ? encrypt(tokens.refresh_token) : null]
     );
+    logAudit({ user: { id: null, tenantId }, tenantId, ip: req.ip, headers: req.headers }, 'integration.connected', 'crm_integration', null, { provider: 'hubspot' });
     // Bounce the user back to the frontend Integrations tab.
     res.redirect(FRONTEND() + '/settings?tab=integrations&connected=hubspot');
   } catch (err) {
@@ -217,6 +223,7 @@ router.get('/hubspot/callback', async (req, res) => {
 router.post('/hubspot/disconnect', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     await query("UPDATE crm_integrations SET is_active = FALSE, access_token = NULL, refresh_token = NULL WHERE tenant_id = $1 AND provider = 'hubspot'", [req.tenantId]);
+    logAudit(req, 'integration.disconnected', 'crm_integration', null, { provider: 'hubspot' });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
@@ -248,8 +255,9 @@ router.get('/salesforce/callback', async (req, res) => {
        ON CONFLICT (tenant_id, provider)
        DO UPDATE SET access_token = EXCLUDED.access_token, refresh_token = EXCLUDED.refresh_token,
                      instance_url = EXCLUDED.instance_url, is_active = TRUE, connected_at = NOW()`,
-      [tenantId, tokens.access_token, tokens.refresh_token || null, tokens.instance_url || null]
+      [tenantId, encrypt(tokens.access_token), tokens.refresh_token ? encrypt(tokens.refresh_token) : null, tokens.instance_url || null]
     );
+    logAudit({ user: { id: null, tenantId }, tenantId, ip: req.ip, headers: req.headers }, 'integration.connected', 'crm_integration', null, { provider: 'salesforce' });
     res.redirect(FRONTEND() + '/settings?tab=integrations&connected=salesforce');
   } catch (err) {
     console.error('[crm.salesforce.callback] error:', err);
@@ -260,6 +268,7 @@ router.get('/salesforce/callback', async (req, res) => {
 router.post('/salesforce/disconnect', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     await query("UPDATE crm_integrations SET is_active = FALSE, access_token = NULL, refresh_token = NULL WHERE tenant_id = $1 AND provider = 'salesforce'", [req.tenantId]);
+    logAudit(req, 'integration.disconnected', 'crm_integration', null, { provider: 'salesforce' });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
@@ -330,7 +339,7 @@ function mapUpstreamStatus(s) {
 router.get('/hubspot/fields', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     const { rows } = await query("SELECT access_token FROM crm_integrations WHERE tenant_id = $1 AND provider = 'hubspot' AND is_active = TRUE LIMIT 1", [req.tenantId]);
-    const token = rows[0]?.access_token;
+    const token = rows[0]?.access_token ? decrypt(rows[0].access_token) : null;
     if (!token) return res.status(400).json({ error: 'HubSpot non connecté' });
     const r = await fetch('https://api.hubapi.com/crm/v3/properties/deals', {
       headers: { Authorization: `Bearer ${token}` },
@@ -353,7 +362,7 @@ router.get('/hubspot/properties/:object', authenticate, tenantScope, authorize('
   }
   try {
     const { rows } = await query("SELECT access_token FROM crm_integrations WHERE tenant_id = $1 AND provider = 'hubspot' AND is_active = TRUE LIMIT 1", [req.tenantId]);
-    const token = rows[0]?.access_token;
+    const token = rows[0]?.access_token ? decrypt(rows[0].access_token) : null;
     if (!token) return res.status(400).json({ error: 'HubSpot non connecté' });
     const r = await fetch(`https://api.hubapi.com/crm/v3/properties/${object}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -415,7 +424,7 @@ router.put('/hubspot/object-mappings', authenticate, tenantScope, authorize('adm
 router.get('/hubspot/pipelines', authenticate, tenantScope, authorize('admin'), async (req, res) => {
   try {
     const { rows } = await query("SELECT access_token FROM crm_integrations WHERE tenant_id = $1 AND provider = 'hubspot' AND is_active = TRUE LIMIT 1", [req.tenantId]);
-    const token = rows[0]?.access_token;
+    const token = rows[0]?.access_token ? decrypt(rows[0].access_token) : null;
     if (!token) return res.status(400).json({ error: 'HubSpot non connecté' });
     const r = await fetch('https://api.hubapi.com/crm/v3/pipelines/deals', {
       headers: { Authorization: `Bearer ${token}` },
@@ -438,8 +447,9 @@ router.get('/salesforce/fields', authenticate, tenantScope, authorize('admin'), 
     const { rows } = await query("SELECT access_token, instance_url FROM crm_integrations WHERE tenant_id = $1 AND provider = 'salesforce' AND is_active = TRUE LIMIT 1", [req.tenantId]);
     const it = rows[0];
     if (!it?.access_token || !it.instance_url) return res.status(400).json({ error: 'Salesforce non connecté' });
+    const sfToken = decrypt(it.access_token);
     const r = await fetch(`${it.instance_url}/services/data/v59.0/sobjects/Opportunity/describe`, {
-      headers: { Authorization: `Bearer ${it.access_token}` },
+      headers: { Authorization: `Bearer ${sfToken}` },
     });
     if (!r.ok) return res.status(mapUpstreamStatus(r.status)).json({ error: 'Salesforce unreachable', upstream_status: r.status });
     const data = await r.json();
@@ -454,8 +464,9 @@ router.get('/salesforce/stages', authenticate, tenantScope, authorize('admin'), 
     const { rows } = await query("SELECT access_token, instance_url FROM crm_integrations WHERE tenant_id = $1 AND provider = 'salesforce' AND is_active = TRUE LIMIT 1", [req.tenantId]);
     const it = rows[0];
     if (!it?.access_token || !it.instance_url) return res.status(400).json({ error: 'Salesforce non connecté' });
+    const sfToken = decrypt(it.access_token);
     const r = await fetch(`${it.instance_url}/services/data/v59.0/query?q=SELECT+MasterLabel+FROM+OpportunityStage+WHERE+IsActive=true`, {
-      headers: { Authorization: `Bearer ${it.access_token}` },
+      headers: { Authorization: `Bearer ${sfToken}` },
     });
     if (!r.ok) return res.status(mapUpstreamStatus(r.status)).json({ error: 'Salesforce unreachable', upstream_status: r.status });
     const data = await r.json();

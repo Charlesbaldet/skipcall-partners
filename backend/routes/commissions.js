@@ -8,6 +8,8 @@ const notify = require('../services/notifyService');
 const { sendWebhookEvent } = require('../services/webhookService');
 const { decomposeAmountWithTax } = require('../utils/commissionFormula');
 const PennylaneService = require('../services/pennylaneService');
+const { logAudit } = require('../services/auditLog');
+const { decrypt } = require('../utils/crypto');
 
 const router = express.Router();
 
@@ -43,7 +45,7 @@ async function createPennylaneInvoice(commissionId, tenantId) {
     );
     if (!partner) return;
 
-    const pl = new PennylaneService(tenant.pennylane_api_token);
+    const pl = new PennylaneService(decrypt(tenant.pennylane_api_token));
 
     let supplierId = partner.pennylane_supplier_id;
     if (!supplierId) {
@@ -95,7 +97,7 @@ async function markPennylaneInvoicePaid(commissionId, tenantId) {
     );
     if (!commission?.pennylane_invoice_id) return;
 
-    const pl = new PennylaneService(tenant.pennylane_api_token);
+    const pl = new PennylaneService(decrypt(tenant.pennylane_api_token));
     const today = new Date().toISOString().slice(0, 10);
     const result = await pl.markInvoiceAsPaid(commission.pennylane_invoice_id, today);
     if (result) {
@@ -288,6 +290,12 @@ router.put('/:id', authorize('admin'), async (req, res) => {
 
     if (!commission) return res.status(404).json({ error: 'Commission introuvable' });
 
+    if (status === 'paid') {
+      logAudit(req, 'commission.paid', 'commission', commission.id, { amount: commission.amount });
+    } else if (status === 'awaiting_invoice') {
+      logAudit(req, 'commission.approved', 'commission', commission.id, { amount: commission.amount });
+    }
+
     commission.payment_due_date = commission.approved_at ? nextQuarterEnd(commission.approved_at) : null;
     commission.is_late = commission.approved_at && commission.status !== 'paid' && new Date(nextQuarterEnd(commission.approved_at)) < new Date();
 
@@ -433,6 +441,8 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
       [req.params.id]
     );
 
+    logAudit(req, 'commission.approved', 'commission', req.params.id, { amount: existing.amount, partner_id: existing.partner_id });
+
     // Fire-and-forget: create the Pennylane supplier invoice if the
     // tenant has the integration on. Detached from the response so a
     // slow Pennylane API never makes the admin's "Approuver" click
@@ -554,6 +564,12 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
       'UPDATE commissions SET deleted_at = NOW(), deleted_by = $1 WHERE id = $2 AND deleted_at IS NULL AND tenant_id = $3',
       [req.user?.id || null, req.params.id, existing.tenant_id]
     );
+
+    logAudit(req, 'commission.deleted', 'commission', req.params.id, {
+      amount: existing.amount,
+      partner_id: existing.partner_id,
+      reason: reason || null,
+    });
 
     (async () => {
       try {

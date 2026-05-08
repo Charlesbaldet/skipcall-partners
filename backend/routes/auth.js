@@ -4,7 +4,20 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
-const { auditLog, recordLoginAttempt, isAccountLocked, validatePassword } = require('../middleware/security');
+const { auditLog, recordLoginAttempt, isAccountLocked, validatePassword: legacyValidatePassword } = require('../middleware/security');
+const { validatePassword: strictValidatePassword } = require('../utils/passwordPolicy');
+
+// Compose policy: legacy length/chars rules (FR strings) + the new
+// strict policy (i18n keys, common-passwords blocklist). Both must
+// pass; errors from each are merged so the caller sees the union.
+function validatePassword(pwd) {
+  const a = legacyValidatePassword(pwd);
+  const b = strictValidatePassword(pwd);
+  return {
+    valid: a.valid && b.valid,
+    errors: [...(a.errors || []), ...(b.errors || [])],
+  };
+}
 
 const router = express.Router();
 
@@ -579,6 +592,8 @@ router.post('/signup', [
     if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
       return res.status(400).json({ error: 'Mot de passe: majuscule, minuscule, chiffre et caractere special requis.' });
     }
+    const signupPolicy = validatePassword(password);
+    if (!signupPolicy.valid) return res.status(400).json({ error: signupPolicy.errors.join('. ') });
     const { rows: existing } = await query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.length > 0) return res.status(409).json({ error: 'Un compte avec cet email existe deja.' });
     const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);

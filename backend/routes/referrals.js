@@ -12,6 +12,7 @@ const { sendEmail, referralStatusChangedTpl, newCommissionAvailableTpl, dealWonT
 const crmService = require('../services/crmService');
 const notionService = require('../services/notionService');
 const { sendWebhookEvent } = require('../services/webhookService');
+const { logAudit } = require('../services/auditLog');
 
 const router = express.Router();
 
@@ -1022,6 +1023,13 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
        WHERE r.id = $1 AND r.deleted_at IS NULL`,
       [req.params.id]
     );
+
+    if (status && status !== current.status) {
+      logAudit(req, 'referral.status_changed', 'referral', req.params.id, {
+        from: current.status,
+        to: status,
+      });
+    }
 
     res.json({ referral: updated });
 

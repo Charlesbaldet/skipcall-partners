@@ -977,6 +977,42 @@ async function runMigrations() {
     console.error('[migrate.v41] failed:', err.message);
   }
 
+  // v42: audit_logs hardening for ISO 27001 A.12.4 / SOC 2 CC6.
+  //
+  // The table itself already exists (created by db/migrate-security.js
+  // with resource_type/resource_id columns). The new logAudit service
+  // writes the same row but under entity_type/entity_id — the names
+  // the spec uses everywhere else. Add those columns alongside the
+  // legacy pair so both shapes coexist and old queries keep working
+  // until callers migrate. Idempotent: ADD COLUMN IF NOT EXISTS only
+  // touches the schema on first deploy.
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS audit_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tenant_id UUID,
+      user_id UUID,
+      user_email VARCHAR(255),
+      action VARCHAR(100) NOT NULL,
+      resource_type VARCHAR(50),
+      resource_id UUID,
+      entity_type VARCHAR(50),
+      entity_id UUID,
+      details JSONB DEFAULT '{}',
+      ip_address VARCHAR(45),
+      user_agent TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_type VARCHAR(50)`);
+    await query(`ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS entity_id UUID`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_tenant_created
+                   ON audit_logs(tenant_id, created_at DESC)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_action_created
+                   ON audit_logs(action, created_at DESC)`);
+    console.log('[audit] v42 audit_logs entity_type/entity_id columns ready');
+  } catch (err) {
+    console.error('[migrate.v42] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

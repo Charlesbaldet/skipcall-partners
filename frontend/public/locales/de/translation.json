@@ -1689,6 +1689,36 @@
       "cancel": "Abbrechen",
       "confirm": "Endgültig löschen",
       "toast_success": "Löschungsantrag registriert."
+    },
+    "audit": {
+      "title": "Aktionsverlauf",
+      "tab_label": "Verlauf",
+      "description": "Admin-Aktionsprotokoll — aufbewahrt zur ISO 27001 / SOC 2 Konformität.",
+      "col_date": "Datum",
+      "col_user": "Benutzer",
+      "col_action": "Aktion",
+      "col_entity": "Entität",
+      "col_details": "Details",
+      "empty": "Keine Einträge",
+      "filter_from": "Von",
+      "filter_to": "Bis",
+      "filter_action": "Aktion",
+      "pagination": "{{count}} Einträge",
+      "actions": {
+        "partner.created": "Partner erstellt",
+        "partner.updated": "Partner aktualisiert",
+        "partner.deleted": "Partner gelöscht",
+        "commission.approved": "Provision genehmigt",
+        "commission.paid": "Provision bezahlt",
+        "commission.deleted": "Provision gelöscht",
+        "referral.status_changed": "Empfehlungsstatus geändert",
+        "settings.updated": "Einstellungen aktualisiert",
+        "billing.updated": "Abrechnung aktualisiert",
+        "user.invited": "Benutzer eingeladen",
+        "user.invitation_revoked": "Einladung widerrufen",
+        "integration.connected": "Integration verbunden",
+        "integration.disconnected": "Integration getrennt"
+      }
     }
   },
   "status": {
@@ -3486,6 +3516,26 @@
         "title": "Kontakt",
         "body": "Bei Fragen: dpo@refboost.io."
       }
+    }
+  },
+  "session": {
+    "expired_title": "Ihre Sitzung ist abgelaufen",
+    "expired_message": "Aus Sicherheitsgründen wurden Sie nach 30 Minuten Inaktivität abgemeldet.",
+    "expired_cta": "Erneut anmelden"
+  },
+  "password": {
+    "errors": {
+      "too_short": "Mindestens 8 Zeichen",
+      "no_uppercase": "Mindestens ein Großbuchstabe",
+      "no_lowercase": "Mindestens ein Kleinbuchstabe",
+      "no_digit": "Mindestens eine Ziffer",
+      "too_common": "Passwort ist zu häufig"
+    },
+    "strength": {
+      "weak": "Schwach",
+      "fair": "Mittel",
+      "good": "Gut",
+      "strong": "Stark"
     }
   }
 }
