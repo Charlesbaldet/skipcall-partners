@@ -195,6 +195,24 @@ class ApiClient {
   getMySpaces() { return this.request('/auth/me/spaces'); }
   switchSpace(body) { return this.request('/auth/switch-space', { method: 'POST', body: JSON.stringify(body) }); }
 
+  // MFA (TOTP). setup → verify → display backup codes once → enabled.
+  // Validate is the post-login step that consumes the short-lived
+  // mfa_token and returns a real session JWT.
+  mfaStatus()         { return this.request('/auth/mfa/status'); }
+  mfaSetup()          { return this.request('/auth/mfa/setup', { method: 'POST' }); }
+  mfaVerify(code)     { return this.request('/auth/mfa/verify', { method: 'POST', body: JSON.stringify({ code }) }); }
+  mfaDisable(code)    { return this.request('/auth/mfa/disable', { method: 'POST', body: JSON.stringify({ code }) }); }
+  // Bypasses the normal Bearer header — the mfa_token IS the credential.
+  async mfaValidate({ mfa_token, code, is_backup_code }) {
+    const data = await this.request('/auth/mfa/validate', {
+      method: 'POST',
+      body: JSON.stringify({ mfa_token, code, is_backup_code: !!is_backup_code }),
+    });
+    if (data.token) this.setToken(data.token);
+    if (data.user && !data.requiresSpaceSelection) this.setUser(data.user);
+    return data;
+  }
+
   // Partners
   getPartners() { return this.request('/partners'); }
   getPartner(id) { return this.request(`/partners/${id}`); }

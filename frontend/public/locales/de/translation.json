@@ -1,4 +1,28 @@
 {
+  "mfa": {
+    "title": "Zwei-Faktor-Authentifizierung",
+    "activate_cta": "2FA aktivieren",
+    "scan_with_app": "Scannen Sie diesen QR-Code mit Ihrer Authentifizierungs-App (Google Authenticator, 1Password, Authy, …).",
+    "manual_entry": "Oder geben Sie diesen Code manuell ein:",
+    "code_placeholder": "6-stelliger Code",
+    "verify_cta": "Bestätigen",
+    "backup_codes_title": "Backup-Codes",
+    "backup_codes_warning": "Bewahren Sie diese Codes an einem sicheren Ort auf. Jeder kann nur einmal verwendet werden und sie werden nicht erneut angezeigt.",
+    "download_codes": "Herunterladen",
+    "codes_saved_cta": "Ich habe meine Codes gespeichert",
+    "active_badge": "2FA aktiv",
+    "disable_cta": "2FA deaktivieren",
+    "disable_modal_title": "Zwei-Faktor-Authentifizierung deaktivieren?",
+    "disable_modal_body": "Geben Sie Ihren 6-stelligen Code oder einen Backup-Code zur Bestätigung ein.",
+    "cancel": "Abbrechen",
+    "confirm_disable": "Deaktivieren",
+    "invalid_code": "Ungültiger Code",
+    "login_title": "Zwei-Schritt-Verifizierung",
+    "login_subtitle": "Geben Sie den Code aus Ihrer Authentifizierungs-App ein.",
+    "login_use_backup": "Backup-Code verwenden",
+    "login_use_totp": "Authenticator-Code verwenden",
+    "login_submit": "Bestätigen →"
+  },
   "pagination": {
     "label": "Seitennummerierung",
     "previous": "Zurück",

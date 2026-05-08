@@ -35,7 +35,7 @@ level + message + arbitrary context, with `tenant_id` and
 as the `x-request-id` response header so customers can quote it in
 support tickets.
 
-## Environment variables
+## Required environment variables
 
 Standard ones live in `.env.example`. Highlights:
 
@@ -44,10 +44,11 @@ Standard ones live in `.env.example`. Highlights:
 | `DATABASE_URL` | Postgres connection string. |
 | `JWT_SECRET` | Session signing key. |
 | `FRONTEND_URL` | Allowed CORS origin / redirect base. |
-| `TOKEN_ENCRYPTION_KEY` | AES-256-CBC key for stored API tokens (Pennylane / Qonto / HubSpot / Salesforce). Generate once with `openssl rand -hex 32` and set on Railway. **Required** for any new connect/refresh flow; existing rows keep working as plaintext until next write thanks to the legacy fallback in `utils/crypto.js`. |
+| `TOKEN_ENCRYPTION_KEY` | AES-256-CBC key for stored API tokens (Pennylane / Qonto / HubSpot / Salesforce) and TOTP/MFA secrets. Generate once with `openssl rand -hex 32` and set on Railway. **Required** for any new connect/refresh flow and for `/auth/mfa/setup`; existing rows keep working as plaintext until next write thanks to the legacy fallback in `utils/crypto.js`. |
 | `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `QONTO_CLIENT_ID`, `QONTO_CLIENT_SECRET`, `HUBSPOT_CLIENT_ID`, `HUBSPOT_CLIENT_SECRET`, `SALESFORCE_CLIENT_ID`, `SALESFORCE_CLIENT_SECRET`, `GOOGLE_CLIENT_ID` | Third-party integration keys. |
 | `ERROR_WEBHOOK_URL` | Optional. Slack/Discord/Mattermost-compatible incoming webhook. RefBoost POSTs a Slack-shaped payload (`{ "text": "🚨 RefBoost Error: …" }`) on every unhandled 5xx error. 4xx errors stay silent. The payload deliberately omits `req.body` to avoid leaking PII or secrets into the destination channel. |
 | `RAILWAY_GIT_COMMIT_SHA` | Set automatically by Railway. The health endpoint surfaces the first 7 chars as `version`. |
+| `RLS_ENABLED` | Optional. Set to `'true'` to enforce PostgreSQL row-level security as defence-in-depth. Requires the v44 migration to have run. Test thoroughly in staging before enabling — any query that doesn't go through the `authenticate` middleware will see zero rows because the `tenant_isolation` policy reads `app.current_tenant_id` and that GUC is only set inside the per-request transaction `authenticate` opens. When unset (the default) the RLS policies tolerate the GUCs being undefined (the policy USING clauses use `current_setting('…', true)`), so the v44 schema is safe to roll out before flipping the flag. |
 
 ## One-shot scripts
 
