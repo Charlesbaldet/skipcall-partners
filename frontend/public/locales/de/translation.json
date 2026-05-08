@@ -3328,5 +3328,53 @@
   },
   "partner_payments": {
     "billing_info_title": "Rechnungsinformationen"
+  },
+  "footer": {
+    "security": "Sicherheit"
+  },
+  "security": {
+    "hero_title": "Sicherheit bei RefBoost",
+    "hero_subtitle": "Der Schutz Ihrer Daten hat für uns absolute Priorität.",
+    "section": {
+      "encryption": {
+        "title": "Verschlüsselung",
+        "bullet1": "TLS 1.3 bei der Übertragung sämtlicher Kommunikation",
+        "bullet2": "API-Tokens mit AES-256 verschlüsselt im Ruhezustand",
+        "bullet3": "Passwörter mit bcrypt gehasht"
+      },
+      "isolation": {
+        "title": "Mandantentrennung",
+        "bullet1": "Jeder Kunde erhält einen vollständig isolierten Arbeitsbereich",
+        "bullet2": "tenant_id-Filterung bei 100% aller Anfragen (auditiert)",
+        "bullet3": "Automatisierte Isolationstests"
+      },
+      "auth": {
+        "title": "Authentifizierung",
+        "bullet1": "JWT-Authentifizierung mit Ablaufzeit",
+        "bullet2": "Rate Limiting für Anmeldeversuche",
+        "bullet3": "Strenge Passwort-Richtlinie"
+      },
+      "infra": {
+        "title": "Infrastruktur",
+        "bullet1": "Hosting in Europa (Railway EU West + Vercel Edge)",
+        "bullet2": "Tägliche automatische Sicherungen",
+        "bullet3": "Continuous Deployment mit Git-Versionierung"
+      },
+      "compliance": {
+        "title": "Compliance",
+        "bullet1": "DSGVO-konform (DPO: dpo@refboost.io)",
+        "bullet2": "Recht auf Löschung und Übertragbarkeit",
+        "bullet3": "ePrivacy-konforme Cookie-Richtlinie",
+        "bullet4": "Regelmäßige Sicherheitsaudits"
+      },
+      "incident": {
+        "title": "Incident Management",
+        "bullet1": "24/7-Überwachung mit Alarmierung",
+        "bullet2": "Dokumentiertes Vorgehen bei Sicherheitsvorfällen",
+        "bullet3": "Benachrichtigung innerhalb von 72 h bei Datenpannen (DSGVO Art. 33)"
+      }
+    },
+    "cta_title": "Fragen zur Sicherheit? Wenden Sie sich an unser Team.",
+    "cta_button": "security@refboost.io"
   }
 }

@@ -3328,5 +3328,53 @@
   },
   "partner_payments": {
     "billing_info_title": "Factuurgegevens"
+  },
+  "footer": {
+    "security": "Beveiliging"
+  },
+  "security": {
+    "hero_title": "Beveiliging bij RefBoost",
+    "hero_subtitle": "Het beschermen van je data is onze absolute prioriteit.",
+    "section": {
+      "encryption": {
+        "title": "Versleuteling",
+        "bullet1": "TLS 1.3 tijdens verzending van alle communicatie",
+        "bullet2": "API-tokens versleuteld met AES-256 in rust",
+        "bullet3": "Wachtwoorden gehasht met bcrypt"
+      },
+      "isolation": {
+        "title": "Multi-tenant isolatie",
+        "bullet1": "Iedere klant beschikt over een volledig geïsoleerde omgeving",
+        "bullet2": "tenant_id-filtering op 100% van de requests (geaudit)",
+        "bullet3": "Geautomatiseerde isolatietests"
+      },
+      "auth": {
+        "title": "Authenticatie",
+        "bullet1": "JWT-authenticatie met vervaldatum",
+        "bullet2": "Rate limiting op inlogpogingen",
+        "bullet3": "Sterk wachtwoordbeleid"
+      },
+      "infra": {
+        "title": "Infrastructuur",
+        "bullet1": "Gehost in Europa (Railway EU West + Vercel Edge)",
+        "bullet2": "Dagelijkse automatische back-ups",
+        "bullet3": "Continue deployment met Git-versionering"
+      },
+      "compliance": {
+        "title": "Compliance",
+        "bullet1": "AVG-conform (DPO: dpo@refboost.io)",
+        "bullet2": "Recht op vergetelheid en gegevensoverdraagbaarheid",
+        "bullet3": "Cookiebeleid conform ePrivacy",
+        "bullet4": "Periodieke beveiligingsaudits"
+      },
+      "incident": {
+        "title": "Incidentbeheer",
+        "bullet1": "24/7 monitoring met alerts",
+        "bullet2": "Gedocumenteerde incident response procedure",
+        "bullet3": "Melding binnen 72 uur bij een datalek (AVG artikel 33)"
+      }
+    },
+    "cta_title": "Vragen over beveiliging? Neem contact op met ons team.",
+    "cta_button": "security@refboost.io"
   }
 }

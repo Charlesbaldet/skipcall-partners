@@ -335,9 +335,10 @@ export function LandingFooter() {
                 { key: 'privacy', href: '/confidentialite' },
                 { key: 'legal',   href: '/mentions-legales' },
                 { key: 'rgpd',    href: '/rgpd' },
-              ].map(({ key, href })=>(
+                { key: 'security', href: '/security', i18nKey: 'footer.security' },
+              ].map(({ key, href, i18nKey })=>(
                 <a key={key} href={href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
-                  {t(`landing.footer.links.${key}`)}
+                  {t(i18nKey || `landing.footer.links.${key}`)}
                 </a>
               ))}
             </div>

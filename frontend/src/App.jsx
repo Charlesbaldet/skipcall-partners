@@ -56,6 +56,7 @@ const PublicApplyPage             = lazy(() => import('./pages/PublicApplyPage.j
 const PublicReferralRedirectPage  = lazy(() => import('./pages/PublicReferralRedirectPage.jsx'));
 const PublicTrackingPage          = lazy(() => import('./pages/PublicTrackingPage.jsx'));
 const LegalPage                   = lazy(() => import('./pages/LegalPage.jsx'));
+const SecurityPage                = lazy(() => import('./pages/SecurityPage.jsx'));
 const BlogPage                    = lazy(() => import('./pages/BlogPage.jsx'));
 const BlogPostPage                = lazy(() => import('./pages/BlogPostPage.jsx'));
 const MarketplacePage             = lazy(() => import('./pages/MarketplacePage.jsx'));
@@ -236,6 +237,7 @@ function AppRoutes() {
         <Route path="/marketplace" element={suspend(MarketplacePage)} />
         <Route path="/marketplace/:slug" element={suspend(MarketplaceProgramPage)} />
         <Route path="/pricing" element={suspend(PricingPage)} />
+        <Route path="/security" element={suspend(SecurityPage)} />
         <Route path="/cgv"             element={suspendElement(<LegalPage which="cgv" />)} />
         <Route path="/confidentialite" element={suspendElement(<LegalPage which="confidentialite" />)} />
         <Route path="/mentions-legales" element={suspendElement(<LegalPage which="mentions-legales" />)} />

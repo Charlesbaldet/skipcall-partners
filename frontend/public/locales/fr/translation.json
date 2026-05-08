@@ -3328,5 +3328,53 @@
   },
   "partner_payments": {
     "billing_info_title": "Informations de facturation"
+  },
+  "footer": {
+    "security": "Sécurité"
+  },
+  "security": {
+    "hero_title": "Sécurité chez RefBoost",
+    "hero_subtitle": "La protection de vos données est notre priorité absolue.",
+    "section": {
+      "encryption": {
+        "title": "Chiffrement",
+        "bullet1": "TLS 1.3 en transit sur toutes les communications",
+        "bullet2": "Tokens API chiffrés AES-256 au repos",
+        "bullet3": "Mots de passe hashés avec bcrypt"
+      },
+      "isolation": {
+        "title": "Isolation multi-tenant",
+        "bullet1": "Chaque client dispose d'un espace complètement isolé",
+        "bullet2": "Filtrage tenant_id sur 100% des requêtes (audité)",
+        "bullet3": "Tests d'isolation automatisés"
+      },
+      "auth": {
+        "title": "Authentification",
+        "bullet1": "Authentification JWT avec expiration",
+        "bullet2": "Rate limiting sur les tentatives de connexion",
+        "bullet3": "Politique de mot de passe forte"
+      },
+      "infra": {
+        "title": "Infrastructure",
+        "bullet1": "Hébergé en Europe (Railway EU West + Vercel Edge)",
+        "bullet2": "Sauvegardes automatiques quotidiennes",
+        "bullet3": "Déploiement continu avec versioning Git"
+      },
+      "compliance": {
+        "title": "Conformité",
+        "bullet1": "RGPD compliant (DPO: dpo@refboost.io)",
+        "bullet2": "Droit à l'effacement et à la portabilité",
+        "bullet3": "Politique de cookies conforme ePrivacy",
+        "bullet4": "Audit de sécurité régulier"
+      },
+      "incident": {
+        "title": "Gestion des incidents",
+        "bullet1": "Monitoring 24/7 avec alertes",
+        "bullet2": "Procédure de réponse aux incidents documentée",
+        "bullet3": "Notification sous 72h en cas de violation (RGPD Article 33)"
+      }
+    },
+    "cta_title": "Des questions sur la sécurité ? Contactez notre équipe.",
+    "cta_button": "security@refboost.io"
   }
 }

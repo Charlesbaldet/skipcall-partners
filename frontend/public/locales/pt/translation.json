@@ -3328,5 +3328,53 @@
   },
   "partner_payments": {
     "billing_info_title": "Informações de faturação"
+  },
+  "footer": {
+    "security": "Segurança"
+  },
+  "security": {
+    "hero_title": "Segurança na RefBoost",
+    "hero_subtitle": "A proteção dos seus dados é a nossa prioridade absoluta.",
+    "section": {
+      "encryption": {
+        "title": "Cifragem",
+        "bullet1": "TLS 1.3 em trânsito em todas as comunicações",
+        "bullet2": "Tokens de API cifrados com AES-256 em repouso",
+        "bullet3": "Palavras-passe com hash bcrypt"
+      },
+      "isolation": {
+        "title": "Isolamento multi-tenant",
+        "bullet1": "Cada cliente dispõe de um espaço totalmente isolado",
+        "bullet2": "Filtragem de tenant_id em 100% das requisições (auditado)",
+        "bullet3": "Testes de isolamento automatizados"
+      },
+      "auth": {
+        "title": "Autenticação",
+        "bullet1": "Autenticação JWT com expiração",
+        "bullet2": "Rate limiting nas tentativas de login",
+        "bullet3": "Política de palavras-passe forte"
+      },
+      "infra": {
+        "title": "Infraestrutura",
+        "bullet1": "Alojado na Europa (Railway EU West + Vercel Edge)",
+        "bullet2": "Backups automáticos diários",
+        "bullet3": "Deployment contínuo com versionamento Git"
+      },
+      "compliance": {
+        "title": "Conformidade",
+        "bullet1": "Conforme ao RGPD (DPO: dpo@refboost.io)",
+        "bullet2": "Direito ao apagamento e à portabilidade",
+        "bullet3": "Política de cookies conforme ePrivacy",
+        "bullet4": "Auditorias de segurança regulares"
+      },
+      "incident": {
+        "title": "Gestão de incidentes",
+        "bullet1": "Monitorização 24/7 com alertas",
+        "bullet2": "Procedimento de resposta a incidentes documentado",
+        "bullet3": "Notificação em até 72 h em caso de violação (RGPD Artigo 33)"
+      }
+    },
+    "cta_title": "Dúvidas sobre segurança? Contacte a nossa equipa.",
+    "cta_button": "security@refboost.io"
   }
 }
