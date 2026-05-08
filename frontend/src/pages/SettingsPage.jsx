@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const isPartner = user?.role === 'partner';
   const isSuperadmin = user?.role === 'superadmin';
   const isCommercial = user?.role === 'commercial';
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Map legacy tab IDs (deep-links, bookmarks, old emails) to the new
   // grouped tab IDs so existing URLs keep working.
   const LEGACY_TAB_MAP = {
@@ -40,16 +40,15 @@ export default function SettingsPage() {
     'public-link': 'public-marketplace',
     marketplace: 'public-marketplace',
   };
-  const initialTab = LEGACY_TAB_MAP[searchParams.get('tab')] || searchParams.get('tab') || 'profile';
-  const [tab, setTab] = useState(initialTab);
-  // Close → land on the role-aware home (the "/" route resolves it
-  // for us). Replaces the previous `navigate(-1)` because, after a
-  // Qonto OAuth round-trip, the previous history entry is
-  // oauth.qonto.com — so a backdrop click would walk the user
-  // straight back into Qonto. `replace` swaps the current /settings
-  // entry instead of pushing, so the back button still works
-  // sensibly afterwards.
-  const handleClose = () => navigate('/', { replace: true });
+  // Derive the active tab from searchParams on every render so an
+  // external navigation to /settings?tab=X (e.g. from the onboarding
+  // popup or the billing redirect) reaches the right section without
+  // a remount. Keep the page-internal tab clicks fast by pushing the
+  // new tab back into searchParams via setSearchParams, which also
+  // makes the URL shareable / back-button-friendly.
+  const rawTab = searchParams.get('tab');
+  const tab = LEGACY_TAB_MAP[rawTab] || rawTab || 'profile';
+  const setTab = (id) => setSearchParams({ tab: id }, { replace: true });
 
   // Grouped nav: each entry is either { section: 'label' } or a tab.
   // Admin sees all three sections; superadmin only sees COMPTE (since
@@ -98,48 +97,48 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={handleClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
-      <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 920, maxWidth: '100%', height: '85vh', maxHeight: 700, display: 'flex', overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-        {/* Left sidebar */}
-        <div style={{ width: 240, background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 12px', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', padding: '0 12px', marginBottom: 20 }}>{t('settings.title')}</h2>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {NAV.map((item, i) => {
-              if (item.section) {
-                return (
-                  <div
-                    key={'sec-' + i}
-                    style={{
-                      fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
-                      color: '#475569', fontWeight: 700,
-                      padding: '12px 12px 4px',
-                      marginTop: i === 0 ? 0 : 8,
-                    }}
-                  >
-                    {item.section}
-                  </div>
-                );
-              }
+    // Page layout (not modal). The global Layout/sidebar lives outside
+    // (AuthShell renders Layout once, this page goes into <Outlet/>),
+    // so the user always sees the global nav — including the
+    // Progression launcher — while editing settings. Linear/Stripe/
+    // Notion pattern: settings is just another routed page.
+    <div style={{ height: '100%', display: 'flex', background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0' }}>
+      {/* Inner left sidebar — settings sub-nav, NOT the global one */}
+      <div style={{ width: 240, background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 12px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', padding: '0 12px', marginBottom: 20 }}>{t('settings.title')}</h2>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {NAV.map((item, i) => {
+            if (item.section) {
               return (
-                <button key={item.id} onClick={() => setTab(item.id)} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px 10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, textAlign: 'left',
-                  background: tab === item.id ? '#fff' : 'transparent', color: tab === item.id ? '#0f172a' : '#64748b',
-                  boxShadow: tab === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                }}><item.icon size={16} /> {item.label}</button>
+                <div
+                  key={'sec-' + i}
+                  style={{
+                    fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
+                    color: '#475569', fontWeight: 700,
+                    padding: '12px 12px 4px',
+                    marginTop: i === 0 ? 0 : 8,
+                  }}
+                >
+                  {item.section}
+                </div>
               );
-            })}
-          </nav>
-        </div>
-        {/* Right content */}
-        <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
-          <button onClick={handleClose} style={{ position: 'absolute', top: 24, right: 24, width: 36, height: 36, borderRadius: 10, zIndex: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={18} color="#475569" />
-          </button>
-          {/* Extra bottom padding so dropdowns near the bottom (e.g. the
-              language switcher in Profil) aren't clipped by the
-              scroll container's overflow: auto. */}
-          <div style={{ padding: '72px 32px 120px 32px' }}>
+            }
+            return (
+              <button key={item.id} onClick={() => setTab(item.id)} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px 10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, textAlign: 'left',
+                background: tab === item.id ? '#fff' : 'transparent', color: tab === item.id ? '#0f172a' : '#64748b',
+                boxShadow: tab === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              }}><item.icon size={16} /> {item.label}</button>
+            );
+          })}
+        </nav>
+      </div>
+      {/* Right content */}
+      <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+        {/* Extra bottom padding so dropdowns near the bottom (e.g. the
+            language switcher in Profil) aren't clipped by the
+            scroll container's overflow: auto. */}
+        <div style={{ padding: '32px 32px 120px 32px' }}>
             {tab === 'profile' && <AccountTab user={user} />}
             {tab === 'team' && isSuperadmin && <SuperAdminsTab />}
             {tab === 'team' && isAdmin && <MembersTab />}
@@ -175,7 +174,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 
