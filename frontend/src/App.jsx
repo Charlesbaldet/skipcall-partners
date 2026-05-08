@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { TenantProvider } from './hooks/useTenant.jsx';
@@ -168,6 +168,36 @@ function ProtectedRoute({ children, allowedRoles }) {
   return children;
 }
 
+// Layout-route shell. Mounts ONCE for every authenticated navigation
+// inside the protected block — Layout's 9 useStates and badge-count
+// API calls (getUnreadCount, getApplications, getOnboardingStatus,
+// getTrashCount, getUnreadByCategory) only fire on entry to the
+// authenticated section, not on every /dashboard ↔ /commissions hop.
+// React Router renders the matched child leaf into <Outlet/>, which
+// is inside Layout — so React preserves the Layout subtree across
+// route changes instead of unmounting/remounting it. That kills the
+// "sidebar flashes empty for a frame" UX bug.
+function AuthShell() {
+  return (
+    <ProtectedRoute>
+      <Layout><Outlet /></Layout>
+    </ProtectedRoute>
+  );
+}
+
+// Per-leaf role gate. Layout is already mounted by AuthShell, so a
+// role mismatch just renders <Navigate/> inside the Outlet — Layout
+// stays put while the URL flips back to "/". Defensive null-check
+// for `user` because AuthShell already redirects unauth'd users to
+// /login; this branch only protects against tree-rendering edge
+// cases.
+function RoleGate({ roles, children }) {
+  const { user } = useAuth();
+  if (!user) return null;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  return children;
+}
+
 // Billing moved into Settings as a tab. Forward /billing (+ any Stripe
 // callback querystring) to /settings?tab=billing so existing deep
 // links — emails, the Stripe checkout-success redirect, the Stripe
@@ -326,41 +356,58 @@ function AppRoutes() {
         <Route path="/legal/dpa"       element={suspend(DPAPage)} />
         <Route path="/login" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LoginPage />} />
 
-      {/* Admin / Commercial — Suspense INSIDE Layout so sidebar stays mounted */}
-      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout>{suspend(DashboardPage)}</Layout></ProtectedRoute>} />
-      <Route path="/referrals" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout>{suspend(ReferralsPage)}</Layout></ProtectedRoute>} />
-      <Route path="/commissions" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout>{suspend(CommissionsPage)}</Layout></ProtectedRoute>} />
-      <Route path="/trash" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout>{suspend(TrashPage)}</Layout></ProtectedRoute>} />
-      <Route path="/partners" element={<ProtectedRoute allowedRoles={['admin', 'commercial', 'superadmin']}><Layout>{suspend(PartnersPage)}</Layout></ProtectedRoute>} />
-      <Route path="/applications" element={<ProtectedRoute allowedRoles={['admin']}><Layout>{suspend(AdminApplicationsPage)}</Layout></ProtectedRoute>} />
-        <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout>{suspend(AdminSettingsPage)}</Layout></ProtectedRoute>} />
-      <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout>{suspend(SuperAdminPage)}</Layout></ProtectedRoute>} />
-      <Route path="/admin/compliance" element={<ProtectedRoute allowedRoles={['superadmin']}><Layout>{suspend(CompliancePage)}</Layout></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Layout>{suspend(SettingsPage)}</Layout></ProtectedRoute>} />
-        <Route path="/marketplace-admin" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout>{suspend(MarketplaceEditorPage)}</Layout></ProtectedRoute>} />
-        <Route path="/progression" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout>{suspend(ProgressionPage)}</Layout></ProtectedRoute>} />
       {/* Billing now lives inside Settings as the "Facturation" tab.
           The bare /billing URL stays valid (existing emails, billing
           portal redirects) by 301-equivalent forwarding to
           /settings?tab=billing while preserving any Stripe-callback
           query string (?session_id, ?canceled, etc). */}
       <Route path="/billing" element={<BillingRedirect />} />
-      <Route path="/programme" element={<ProtectedRoute><Layout>{suspend(ProgrammePage)}</Layout></ProtectedRoute>} />
-      <Route path="/messaging" element={<ProtectedRoute><Layout>{suspend(MessagingPage)}</Layout></ProtectedRoute>} />
-      <Route path="/notifications" element={<ProtectedRoute><Layout>{suspend(NotificationsPage)}</Layout></ProtectedRoute>} />
-      <Route path="/search" element={<ProtectedRoute><Layout>{suspend(SearchPage)}</Layout></ProtectedRoute>} />
-      <Route path="/news" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><Layout>{suspend(NewsPage)}</Layout></ProtectedRoute>} />
-
-      {/* Partner */}
-      <Route path="/partner/dashboard" element={<ProtectedRoute allowedRoles={['partner']}><Layout>{suspend(PartnerDashboardPage)}</Layout></ProtectedRoute>} />
-      <Route path="/partner/referrals" element={<ProtectedRoute allowedRoles={['partner']}><Layout>{suspend(PartnerMyReferrals)}</Layout></ProtectedRoute>} />
       {/* Legacy /partner/submit route kept as a redirect to the
           referrals page with ?submit=1 — the form now lives in a
           modal opened from the Mes Referrals header. Old emails,
           deep links, and bookmarks still resolve. */}
       <Route path="/partner/submit" element={<Navigate to="/partner/referrals?submit=1" replace />} />
-      <Route path="/partner/payments" element={<ProtectedRoute allowedRoles={['partner']}><Layout>{suspend(PartnerPaymentsPage)}</Layout></ProtectedRoute>} />
-      <Route path="/partner/news" element={<ProtectedRoute allowedRoles={['partner']}><Layout>{suspend(PartnerNewsPage)}</Layout></ProtectedRoute>} />
+
+      {/* Authenticated app — single AuthShell mounts Layout once
+          across every navigation between protected routes. Each leaf
+          uses RoleGate (or no gate, for any-role pages) instead of
+          its own ProtectedRoute, so React preserves the Layout
+          subtree and the sidebar's badge counts don't reset on each
+          /dashboard ↔ /commissions ↔ /partners hop. */}
+      <Route element={<AuthShell />}>
+        {/* admin / commercial / superadmin */}
+        <Route path="/dashboard"   element={<RoleGate roles={['admin', 'commercial', 'superadmin']}>{suspend(DashboardPage)}</RoleGate>} />
+        <Route path="/referrals"   element={<RoleGate roles={['admin', 'commercial', 'superadmin']}>{suspend(ReferralsPage)}</RoleGate>} />
+        <Route path="/commissions" element={<RoleGate roles={['admin', 'commercial', 'superadmin']}>{suspend(CommissionsPage)}</RoleGate>} />
+        <Route path="/trash"       element={<RoleGate roles={['admin', 'commercial', 'superadmin']}>{suspend(TrashPage)}</RoleGate>} />
+        <Route path="/partners"    element={<RoleGate roles={['admin', 'commercial', 'superadmin']}>{suspend(PartnersPage)}</RoleGate>} />
+
+        {/* admin only */}
+        <Route path="/applications" element={<RoleGate roles={['admin']}>{suspend(AdminApplicationsPage)}</RoleGate>} />
+
+        {/* admin / superadmin */}
+        <Route path="/admin/settings"    element={<RoleGate roles={['admin', 'superadmin']}>{suspend(AdminSettingsPage)}</RoleGate>} />
+        <Route path="/marketplace-admin" element={<RoleGate roles={['admin', 'superadmin']}>{suspend(MarketplaceEditorPage)}</RoleGate>} />
+        <Route path="/progression"       element={<RoleGate roles={['admin', 'superadmin']}>{suspend(ProgressionPage)}</RoleGate>} />
+        <Route path="/news"              element={<RoleGate roles={['admin', 'superadmin']}>{suspend(NewsPage)}</RoleGate>} />
+
+        {/* superadmin only */}
+        <Route path="/super-admin"       element={<RoleGate roles={['superadmin']}>{suspend(SuperAdminPage)}</RoleGate>} />
+        <Route path="/admin/compliance"  element={<RoleGate roles={['superadmin']}>{suspend(CompliancePage)}</RoleGate>} />
+
+        {/* any authenticated role */}
+        <Route path="/settings"      element={suspend(SettingsPage)} />
+        <Route path="/programme"     element={suspend(ProgrammePage)} />
+        <Route path="/messaging"     element={suspend(MessagingPage)} />
+        <Route path="/notifications" element={suspend(NotificationsPage)} />
+        <Route path="/search"        element={suspend(SearchPage)} />
+
+        {/* partner only */}
+        <Route path="/partner/dashboard" element={<RoleGate roles={['partner']}>{suspend(PartnerDashboardPage)}</RoleGate>} />
+        <Route path="/partner/referrals" element={<RoleGate roles={['partner']}>{suspend(PartnerMyReferrals)}</RoleGate>} />
+        <Route path="/partner/payments"  element={<RoleGate roles={['partner']}>{suspend(PartnerPaymentsPage)}</RoleGate>} />
+        <Route path="/partner/news"      element={<RoleGate roles={['partner']}>{suspend(PartnerNewsPage)}</RoleGate>} />
+      </Route>
               <Route path="/fonctionnalites/pipeline" element={suspend(FeaturePipelinePage)} />
           <Route path="/fonctionnalites/commissions" element={suspend(FeatureCommissionsPage)} />
           <Route path="/fonctionnalites/analytics" element={suspend(FeatureAnalyticsPage)} />
