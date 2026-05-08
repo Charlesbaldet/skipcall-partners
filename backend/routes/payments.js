@@ -82,6 +82,7 @@ router.post('/create/:commissionId', authenticate, tenantScope, authorize('admin
 //  * UPDATEs add `AND tenant_id = $X` so a future caller that
 //    re-uses these queries from a non-webhook context can't write
 //    cross-tenant either.
+// audit-skip: provider webhook (Mollie) — see comment block above
 router.post('/webhook', async (req, res) => {
   try {
     const { id: paymentId } = req.body;

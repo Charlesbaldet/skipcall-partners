@@ -1,0 +1,24 @@
+# audit-auth-middleware allow-list
+# One file path (substring match) per line. Files matching are
+# treated as fully public; every router.<verb>() in them is skipped.
+# Blank lines and lines starting with '#' are ignored.
+#
+# Inline marker: `// audit-skip` on the same or previous line of any
+# `router.<verb>(...)` call also exempts that single route.
+#
+# Pre-populated with the public routes catalogued in the project layout.
+routes/health.js
+routes/sitemap.js
+routes/blog.js
+routes/marketplace.js
+routes/landing.js
+routes/applications.js
+routes/auth.js
+routes/publicApi.js
+routes/openapi.js
+routes/crm.js
+routes/stripeWebhook.js
+routes/webhooks.js
+routes/tracking.js
+routes/trackingScript.js
+routes/referralRedirect.js
