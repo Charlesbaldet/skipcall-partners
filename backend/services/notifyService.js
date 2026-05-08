@@ -14,6 +14,7 @@
 // roll back the primary flow.
 
 const { query } = require('../db');
+const logger = require('./logger');
 
 const KNOWN_EVENTS = new Set([
   'new_referral',
@@ -56,7 +57,7 @@ async function loadTenantPrefs(tenantId) {
     // fall back to "everything on" so functionality degrades gracefully
     // rather than silently dropping notifications.
     if (err.code === '42P01') return {};
-    console.error('[notify loadTenantPrefs]', err.message);
+    logger.error('notify loadTenantPrefs failed', { tenantId, error: err.message });
     return {};
   }
 }
@@ -95,7 +96,7 @@ async function shouldNotifyPartner(partnerId, prefKey) {
     const email = typeof value === 'boolean' ? value : defaultOn;
     return { in_app: true, email };
   } catch (err) {
-    console.error('[notify.shouldNotifyPartner]', err.message);
+    logger.error('notify.shouldNotifyPartner failed', { partnerId, error: err.message });
     return { in_app: true, email: true };
   }
 }
@@ -137,7 +138,7 @@ async function createNotification(userId, eventType, meta = {}, opts = {}) {
       ]
     );
   } catch (err) {
-    console.error('[notify createNotification]', eventType, err.message);
+    logger.error('notify createNotification failed', { eventType, userId, tenantId, error: err.message });
   }
 }
 
@@ -161,7 +162,7 @@ async function fanoutPartnerNotification(tenantId, eventType, meta = {}) {
     }
     return rows.length;
   } catch (err) {
-    console.error('[notify fanoutPartner]', err.message);
+    logger.error('notify fanoutPartner failed', { tenantId, eventType, error: err.message });
     return 0;
   }
 }
@@ -184,7 +185,7 @@ async function fanoutAdminNotification(tenantId, eventType, meta = {}, { include
     }
     return rows.length;
   } catch (err) {
-    console.error('[notify fanoutAdmin]', err.message);
+    logger.error('notify fanoutAdmin failed', { tenantId, eventType, error: err.message });
     return 0;
   }
 }

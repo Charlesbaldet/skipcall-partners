@@ -19,6 +19,7 @@
 
 const crypto = require('crypto');
 const { query } = require('../db');
+const logger = require('./logger');
 
 // Generate a fresh UUIDv4 for use as a Qonto X-Qonto-Idempotency-Key.
 // Qonto requires this header on every transfer / bulk-transfer /
@@ -312,7 +313,7 @@ function parseScaChallenge(err) {
         // works without the VOP-Proof-Token header in that case.
         // Logged so we can correlate later 401 vop_proof_token_missing
         // errors back to the originating 428.
-        console.warn('[qonto.parseScaChallenge] 428 sca_required without vop_proof_token — replay will go out without VOP-Proof-Token header');
+        logger.warn('qonto.parseScaChallenge 428 sca_required without vop_proof_token');
       }
       return {
         sca_session_token: body.sca_session_token,
@@ -328,7 +329,7 @@ function parseScaChallenge(err) {
       };
     }
   } catch (e) {
-    console.warn('[qonto.parseScaChallenge] failed to parse 428 body:', e.message);
+    logger.warn('qonto.parseScaChallenge failed to parse 428 body', { error: e.message });
   }
   return null;
 }
@@ -395,7 +396,7 @@ async function createSingleTransfer(tenantId, {
   // 400 back to the actual shape we got.
   console.log('[qonto.transfer] vop_proof_token type:', typeof proofToken, 'value prefix:', String(proofToken).slice(0, 20));
   if (proofToken && typeof proofToken !== 'string') {
-    console.error('[qonto.transfer] vop_proof_token is not a string:', JSON.stringify(proofToken).slice(0, 200));
+    logger.error('qonto.transfer vop_proof_token is not a string', { type: typeof proofToken, sample: JSON.stringify(proofToken).slice(0, 200) });
     if (typeof proofToken === 'object') {
       proofToken = proofToken.proof_token || proofToken.token || JSON.stringify(proofToken);
     } else {
@@ -540,7 +541,7 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken,
     headers['VOP-Proof-Token'] = vopToken;
     console.log('[qonto.replayTransfer] forwarding VOP-Proof-Token on replay');
   } else {
-    console.warn('[qonto.replayTransfer] no VOP-Proof-Token available — replay will likely 401 on tenants on the new Qonto API');
+    logger.warn('qonto.replayTransfer no VOP-Proof-Token available — replay will likely 401');
   }
   try {
     const data = await api(tenantId, '/sepa/transfers', {
@@ -573,7 +574,7 @@ async function replayTransfer(tenantId, { body, idempotencyKey, scaSessionToken,
       } catch { /* not JSON, leave as null */ }
       const errors = parsed?.errors || [];
       if (errors.some(e => e?.code === 'vop_proof_token_missing')) {
-        console.warn('[qonto.replayTransfer] 401 vop_proof_token_missing — treating as not_found so caller resets the row');
+        logger.warn('qonto.replayTransfer 401 vop_proof_token_missing — treating as not_found');
         return { ok: false, not_found: true };
       }
     }

@@ -14,7 +14,9 @@
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM = process.env.RESEND_FROM_EMAIL || 'RefBoost <notifications@refboost.io>';
 
-console.log('[resend] Module loaded — API key present:', !!RESEND_KEY, '| length:', (RESEND_KEY || '').length);
+const logger = require('./logger');
+
+logger.info('resend module loaded', { api_key_present: !!RESEND_KEY, key_length: (RESEND_KEY || '').length });
 
 let resendClient = null;
 
@@ -24,10 +26,10 @@ function getClient() {
   try {
     const { Resend } = require('resend');
     resendClient = new Resend(RESEND_KEY);
-    console.log('[resend] Client created successfully');
+    logger.info('resend client created');
     return resendClient;
   } catch (err) {
-    console.warn('[resend] Package not installed or init failed:', err.message);
+    logger.warn('resend package not installed or init failed', { error: err.message });
     return null;
   }
 }
@@ -53,7 +55,7 @@ function getFromAddress() {
 async function sendEmail({ to, subject, html, text, replyTo }) {
   const client = getClient();
   if (!client) {
-    console.warn('[resend] RESEND_API_KEY not configured, email skipped:', subject, '\u2192', to);
+    logger.warn('resend RESEND_API_KEY not configured, email skipped', { subject, to });
     return { ok: false, error: 'not_configured' };
   }
   try {
@@ -65,16 +67,16 @@ async function sendEmail({ to, subject, html, text, replyTo }) {
     };
     if (text) payload.text = text;
     if (replyTo) payload.reply_to = replyTo;
-    console.log('[resend] Sending email to', to, 'subject:', subject);
+    logger.info('resend sending email', { to, subject });
     const { data, error } = await client.emails.send(payload);
     if (error) {
-      console.error('[resend] Send error:', error);
+      logger.error('resend send error', { error: error.message || error });
       return { ok: false, error: error.message || 'send_failed' };
     }
-    console.log('[resend] Email sent OK, id:', data && data.id);
+    logger.info('resend email sent', { id: data && data.id });
     return { ok: true, id: data && data.id };
   } catch (err) {
-    console.error('[resend] Exception:', err);
+    logger.error('resend exception', { error: err.message });
     return { ok: false, error: err.message };
   }
 }
@@ -100,7 +102,7 @@ async function sendAndLog({ to, subject, html, text, replyTo, template, payload,
         [to, (payload && payload.recipient_name) || null, template, JSON.stringify(payload || {}), tid, result.ok, result.ok ? new Date() : null, result.ok ? null : result.error]
       );
     } catch (logErr) {
-      console.error('[resend] Failed to log to notification_queue:', logErr.message);
+      logger.error('resend failed to log to notification_queue', { error: logErr.message });
     }
   }
   return result;
