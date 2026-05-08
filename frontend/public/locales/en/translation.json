@@ -3328,5 +3328,53 @@
   },
   "partner_payments": {
     "billing_info_title": "Billing information"
+  },
+  "footer": {
+    "security": "Security"
+  },
+  "security": {
+    "hero_title": "Security at RefBoost",
+    "hero_subtitle": "Protecting your data is our absolute priority.",
+    "section": {
+      "encryption": {
+        "title": "Encryption",
+        "bullet1": "TLS 1.3 in transit on all communications",
+        "bullet2": "API tokens encrypted with AES-256 at rest",
+        "bullet3": "Passwords hashed with bcrypt"
+      },
+      "isolation": {
+        "title": "Multi-tenant isolation",
+        "bullet1": "Every customer gets a fully isolated workspace",
+        "bullet2": "tenant_id filtering on 100% of requests (audited)",
+        "bullet3": "Automated isolation tests"
+      },
+      "auth": {
+        "title": "Authentication",
+        "bullet1": "JWT authentication with expiration",
+        "bullet2": "Rate limiting on login attempts",
+        "bullet3": "Strong password policy"
+      },
+      "infra": {
+        "title": "Infrastructure",
+        "bullet1": "Hosted in Europe (Railway EU West + Vercel Edge)",
+        "bullet2": "Automated daily backups",
+        "bullet3": "Continuous deployment with Git versioning"
+      },
+      "compliance": {
+        "title": "Compliance",
+        "bullet1": "GDPR compliant (DPO: dpo@refboost.io)",
+        "bullet2": "Right to erasure and portability",
+        "bullet3": "ePrivacy-compliant cookie policy",
+        "bullet4": "Regular security audits"
+      },
+      "incident": {
+        "title": "Incident management",
+        "bullet1": "24/7 monitoring with alerts",
+        "bullet2": "Documented incident response procedure",
+        "bullet3": "Notification within 72h of any breach (GDPR Article 33)"
+      }
+    },
+    "cta_title": "Questions about security? Get in touch with our team.",
+    "cta_button": "security@refboost.io"
   }
 }

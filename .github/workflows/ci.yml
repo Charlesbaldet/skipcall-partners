@@ -1,0 +1,40 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: cd backend && npm ci
+      - run: cd backend && node -c server.js
+      - run: cd backend && npm audit --audit-level=high
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: cd frontend && npm ci
+      - run: cd frontend && npx vite build
+      - run: cd frontend && npm audit --audit-level=high
+
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for secrets in code
+        run: |
+          if grep -rn "password\s*=\s*['\"]" backend/ frontend/src/ --include="*.js" --include="*.jsx" | grep -v node_modules | grep -v "process.env" | grep -v "placeholder\|example\|dummy"; then
+            echo "Potential hardcoded secrets found!"
+            exit 1
+          fi

@@ -3328,5 +3328,53 @@
   },
   "partner_payments": {
     "billing_info_title": "Información de facturación"
+  },
+  "footer": {
+    "security": "Seguridad"
+  },
+  "security": {
+    "hero_title": "Seguridad en RefBoost",
+    "hero_subtitle": "La protección de tus datos es nuestra prioridad absoluta.",
+    "section": {
+      "encryption": {
+        "title": "Cifrado",
+        "bullet1": "TLS 1.3 en tránsito en todas las comunicaciones",
+        "bullet2": "Tokens de API cifrados con AES-256 en reposo",
+        "bullet3": "Contraseñas hasheadas con bcrypt"
+      },
+      "isolation": {
+        "title": "Aislamiento multi-tenant",
+        "bullet1": "Cada cliente dispone de un espacio completamente aislado",
+        "bullet2": "Filtrado de tenant_id en el 100% de las solicitudes (auditado)",
+        "bullet3": "Pruebas de aislamiento automatizadas"
+      },
+      "auth": {
+        "title": "Autenticación",
+        "bullet1": "Autenticación JWT con expiración",
+        "bullet2": "Rate limiting en los intentos de inicio de sesión",
+        "bullet3": "Política de contraseñas robusta"
+      },
+      "infra": {
+        "title": "Infraestructura",
+        "bullet1": "Alojado en Europa (Railway EU West + Vercel Edge)",
+        "bullet2": "Copias de seguridad automáticas diarias",
+        "bullet3": "Despliegue continuo con versionado Git"
+      },
+      "compliance": {
+        "title": "Cumplimiento",
+        "bullet1": "Conforme al RGPD (DPO: dpo@refboost.io)",
+        "bullet2": "Derecho al olvido y a la portabilidad",
+        "bullet3": "Política de cookies conforme a ePrivacy",
+        "bullet4": "Auditorías de seguridad periódicas"
+      },
+      "incident": {
+        "title": "Gestión de incidentes",
+        "bullet1": "Monitorización 24/7 con alertas",
+        "bullet2": "Procedimiento de respuesta a incidentes documentado",
+        "bullet3": "Notificación en menos de 72 h en caso de violación (RGPD Artículo 33)"
+      }
+    },
+    "cta_title": "¿Preguntas sobre seguridad? Contacta con nuestro equipo.",
+    "cta_button": "security@refboost.io"
   }
 }
