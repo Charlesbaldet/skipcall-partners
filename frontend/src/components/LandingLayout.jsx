@@ -336,6 +336,7 @@ export function LandingFooter() {
                 { key: 'legal',   href: '/mentions-legales' },
                 { key: 'rgpd',    href: '/rgpd' },
                 { key: 'security', href: '/security', i18nKey: 'footer.security' },
+                { key: 'status',  href: '/status' },
               ].map(({ key, href, i18nKey })=>(
                 <a key={key} href={href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
                   {t(i18nKey || `landing.footer.links.${key}`)}

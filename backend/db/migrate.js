@@ -1,5 +1,6 @@
 const { query } = require('../db');
 const crypto = require('crypto');
+const logger = require('../services/logger');
 
 async function runMigrations() {
   try {
@@ -934,10 +935,32 @@ async function runMigrations() {
     console.error('[migrate.v39] failed:', err.message);
   }
 
-  console.log(' Migrations completed');
+  // v40: public status page incidents. Tracked manually by superadmins
+  // (no auto-detection yet) so customers visiting /status see the same
+  // human-written timeline they'd get from a Slack post-mortem.
+  // Severity / status enums are kept as VARCHAR rather than CHECK
+  // constraints so the wording can evolve without a migration.
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS status_incidents (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title VARCHAR(200) NOT NULL,
+      severity VARCHAR(20) NOT NULL DEFAULT 'minor',
+      status VARCHAR(20) NOT NULL DEFAULT 'investigating',
+      description TEXT,
+      started_at TIMESTAMPTZ DEFAULT NOW(),
+      resolved_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_status_incidents_started ON status_incidents(started_at DESC)`);
+    console.log('[status] v40 status_incidents table ready');
+  } catch (err) {
+    console.error('[migrate.v40] failed:', err.message);
+  }
+
+  logger.info('Migrations completed');
 
   } catch (err) {
-    console.error('Migration error:', err.message);
+    logger.error('Migration error', { error: err.message });
   }
 }
 

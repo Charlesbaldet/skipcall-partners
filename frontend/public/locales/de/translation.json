@@ -284,7 +284,8 @@
         "cgv": "AGB",
         "privacy": "Datenschutz",
         "legal": "Impressum",
-        "rgpd": "DSGVO"
+        "rgpd": "DSGVO",
+        "status": "Status"
       },
       "copyright": "© 2026 RefBoost. Alle Rechte vorbehalten.",
       "madeIn": "Mit Sorgfalt in Frankreich gemacht"
@@ -3376,5 +3377,32 @@
     },
     "cta_title": "Fragen zur Sicherheit? Wenden Sie sich an unser Team.",
     "cta_button": "security@refboost.io"
+  },
+  "statusPage": {
+    "title": "RefBoost Status",
+    "subtitle": "Echtzeit-Verfügbarkeit der RefBoost-Dienste.",
+    "all_ok": "Alle Systeme funktionieren",
+    "incident": "Vorfall im Gange",
+    "api": "API",
+    "database": "Datenbank",
+    "last_deploy": "Letztes Deployment",
+    "uptime": "Verfügbarkeit",
+    "last_check": "Letzte Prüfung",
+    "history": "Vorfallhistorie",
+    "empty": "Keine Vorfälle in den letzten 30 Tagen.",
+    "unit_day": "T",
+    "unit_hour": "h",
+    "unit_min": "min",
+    "severity": {
+      "minor": "Klein",
+      "major": "Groß",
+      "critical": "Kritisch"
+    },
+    "incident_status": {
+      "investigating": "Wird untersucht",
+      "identified": "Identifiziert",
+      "monitoring": "Beobachtung",
+      "resolved": "Behoben"
+    }
   }
 }

@@ -7,6 +7,7 @@
 // failure logs to crm_sync_log with status='error' rather than throwing
 // so a CRM outage never breaks the user-facing referral flow.
 const { query } = require('../db');
+const logger = require('./logger');
 
 const REFBOOST_BASE_FIELDS = {
   prospect_name:    r => r.prospect_name,
@@ -43,7 +44,7 @@ async function logSync(integrationId, referralId, action, status, details) {
   } catch (e) {
     // Logging must never throw — a failed log entry is strictly less
     // important than the sync attempt itself.
-    console.error('[crm.logSync] failed:', e.message);
+    logger.error('crm.logSync failed', { error: e.message });
   }
 }
 
@@ -131,7 +132,7 @@ async function associate(integration, fromObject, fromId, toObject, toId) {
   } catch (err) {
     // Already-associated responses and transient 409s shouldn't fail
     // the whole sync — log and move on.
-    console.warn('[hubspot.associate]', fromObject, fromId, '→', toObject, toId, err.message);
+    logger.warn('hubspot.associate failed', { fromObject, fromId, toObject, toId, error: err.message });
   }
 }
 
@@ -234,7 +235,7 @@ async function findDealAssociatedWithContact(integration, contactId) {
     return toId ? String(toId) : null;
   } catch (err) {
     if (err.status === 404) return null;
-    console.warn('[hubspot.findDealAssoc]', err.message);
+    logger.warn('hubspot.findDealAssoc failed', { error: err.message });
     return null;
   }
 }
@@ -296,8 +297,8 @@ async function pushToHubSpot(referral, integration, mappings) {
   // Strict order: Company → Contact → Deal → associations. If any step
   // fails we still return whatever we've built so the caller can
   // persist the ids we have and log the partial state.
-  const companyId = await upsertHubSpotCompany(integration, referral, companyMap).catch(e => { console.warn('[hubspot.company]', e.message); return referral.hubspot_company_id || null; });
-  const contactId = await upsertHubSpotContact(integration, referral, contactMap).catch(e => { console.warn('[hubspot.contact]', e.message); return referral.hubspot_contact_id || null; });
+  const companyId = await upsertHubSpotCompany(integration, referral, companyMap).catch(e => { logger.warn('hubspot.company failed', { error: e.message }); return referral.hubspot_company_id || null; });
+  const contactId = await upsertHubSpotContact(integration, referral, contactMap).catch(e => { logger.warn('hubspot.contact failed', { error: e.message }); return referral.hubspot_contact_id || null; });
   const { id: dealId, linkStatus } = await upsertHubSpotDeal(integration, referral, mappings, contactId);
 
   // Associate contact ↔ deal, contact ↔ company, deal ↔ company.
@@ -358,7 +359,7 @@ async function findSalesforceOpportunityByEmail(integration, email) {
     return oData?.records?.[0]?.OpportunityId || null;
   } catch (err) {
     if (err.status === 404) return null;
-    console.warn('[salesforce.dedup]', err.message);
+    logger.warn('salesforce.dedup failed', { error: err.message });
     return null;
   }
 }
@@ -507,7 +508,7 @@ async function pushReferralToCRM(referral, tenantId) {
     });
     return { ok: true, dealId, linkStatus, ...hsIds };
   } catch (err) {
-    console.error('[crm.push] error:', err.message);
+    logger.error('crm.push error', { error: err.message });
     // Best-effort log even on failure — needs the integration id.
     try {
       const integration = await getActiveIntegration(tenantId);
@@ -574,7 +575,7 @@ async function pullStatusFromCRM(payload, integration) {
           if (co?.properties?.name) enrich.prospect_company = co.properties.name;
         }
       } catch (e) {
-        console.warn('[crm.pull.enrich]', e.message);
+        logger.warn('crm.pull.enrich failed', { error: e.message });
       }
     }
 
@@ -593,7 +594,7 @@ async function pullStatusFromCRM(payload, integration) {
     await logSync(integration.id, referralId, 'pull', 'success', { incomingStage, refboostStatus, enriched: enrichKeys });
     return { ok: true, referralId, status: refboostStatus };
   } catch (err) {
-    console.error('[crm.pull] error:', err.message);
+    logger.error('crm.pull error', { error: err.message });
     await logSync(integration.id, null, 'pull', 'error', { message: err.message });
     return { error: err.message };
   }

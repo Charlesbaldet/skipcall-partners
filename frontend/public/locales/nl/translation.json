@@ -284,7 +284,8 @@
         "cgv": "Voorwaarden",
         "privacy": "Privacy",
         "legal": "Juridische kennisgeving",
-        "rgpd": "AVG"
+        "rgpd": "AVG",
+        "status": "Status"
       },
       "copyright": "© 2026 RefBoost. Alle rechten voorbehouden.",
       "madeIn": "Met zorg gemaakt in Frankrijk"
@@ -3376,5 +3377,32 @@
     },
     "cta_title": "Vragen over beveiliging? Neem contact op met ons team.",
     "cta_button": "security@refboost.io"
+  },
+  "statusPage": {
+    "title": "RefBoost Status",
+    "subtitle": "Realtime beschikbaarheid van de RefBoost-diensten.",
+    "all_ok": "Alle systemen werken",
+    "incident": "Incident gaande",
+    "api": "API",
+    "database": "Database",
+    "last_deploy": "Laatste deploy",
+    "uptime": "Beschikbaarheid",
+    "last_check": "Laatste controle",
+    "history": "Incidentgeschiedenis",
+    "empty": "Geen incidenten in de laatste 30 dagen.",
+    "unit_day": "d",
+    "unit_hour": "u",
+    "unit_min": "min",
+    "severity": {
+      "minor": "Klein",
+      "major": "Groot",
+      "critical": "Kritiek"
+    },
+    "incident_status": {
+      "investigating": "Onderzoek loopt",
+      "identified": "Geïdentificeerd",
+      "monitoring": "Onder toezicht",
+      "resolved": "Opgelost"
+    }
   }
 }

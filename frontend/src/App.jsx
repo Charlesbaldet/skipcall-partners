@@ -62,6 +62,7 @@ const BlogPostPage                = lazy(() => import('./pages/BlogPostPage.jsx'
 const MarketplacePage             = lazy(() => import('./pages/MarketplacePage.jsx'));
 const MarketplaceProgramPage      = lazy(() => import('./pages/MarketplaceProgramPage.jsx'));
 const PricingPage                 = lazy(() => import('./pages/PricingPage.jsx'));
+const StatusPage                  = lazy(() => import('./pages/StatusPage.jsx'));
 const FeaturePipelinePage         = lazy(() => import('./pages/features/FeaturePipelinePage'));
 const FeatureCommissionsPage      = lazy(() => import('./pages/features/FeatureCommissionsPage'));
 const FeatureAnalyticsPage        = lazy(() => import('./pages/features/FeatureAnalyticsPage'));
@@ -238,6 +239,7 @@ function AppRoutes() {
         <Route path="/marketplace/:slug" element={suspend(MarketplaceProgramPage)} />
         <Route path="/pricing" element={suspend(PricingPage)} />
         <Route path="/security" element={suspend(SecurityPage)} />
+        <Route path="/status" element={suspend(StatusPage)} />
         <Route path="/cgv"             element={suspendElement(<LegalPage which="cgv" />)} />
         <Route path="/confidentialite" element={suspendElement(<LegalPage which="confidentialite" />)} />
         <Route path="/mentions-legales" element={suspendElement(<LegalPage which="mentions-legales" />)} />

@@ -57,12 +57,21 @@ const { runMigrations } = require('./db/migrate');
 const { runSecurityMigrations } = require('./db/migrate-security');
 const { tenantMiddleware } = require('./middleware/tenant');
 const { securityHeaders, auditLog, cleanupOldData } = require('./middleware/security');
+const requestId = require('./middleware/requestId');
+const logger = require('./services/logger');
 
 const app = express();
 
 // Trust Railway's proxy (fixes express-rate-limit X-Forwarded-For error)
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
+
+// ─── Request ID (must be first) ───
+// Tags every request with a UUID so structured logs and the 5xx
+// alerting webhook can correlate a single user action across log
+// lines. Must run before auth, rate limiters, tenant middleware
+// because we want even 429s and 401s to carry an id.
+app.use(requestId);
 
 // ─── Security Headers (ISO 27001 A.13.1) ───
 app.use(securityHeaders);
@@ -147,6 +156,14 @@ console.log('[startup] Stripe webhook route registered at /api/webhooks/stripe')
 // reasonably-sized invoice (~10MB raw → ~14MB base64).
 app.use(express.json({ limit: '15mb' }));
 
+// ─── Health / status (mounted BEFORE rate limiters + auth) ───
+// Public liveness probe used by Railway, the StatusPage poller, and
+// any external uptime checker. Mounting it ahead of express-rate-limit
+// keeps the probe reachable even when the API is hot — the worst-case
+// is a flood of /api/health hits, which is just a SELECT 1 + a
+// memoryUsage() call.
+app.use('/api/health', require('./routes/health'));
+
 // ─── Rate limiting ───
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -212,12 +229,6 @@ app.use('/api/tenants', tenantFeaturesRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/super-admin', superadminRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// ─── Error handler ───
 app.use('/api/blog', blogRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/news', newsRoutes);
@@ -244,24 +255,54 @@ app.use('/api/pennylane', pennylaneRoutes);
 // Public referral-link short URL (mounted at app root, not /api).
 // Vercel rewrites /r/:path* to this service.
 app.use('/r', referralRedirectRoutes);
+// ─── Global error handler (LAST middleware) ───
+// Logs every unhandled error with structured context, and best-effort
+// fires a Slack-compatible webhook on 5xx so on-call gets paged. 4xx
+// errors stay silent — they're typically validation noise the user
+// will see and correct on their own. We never include req.body in the
+// webhook because that body may carry PII or partial credentials.
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+
+  logger.error('Unhandled error', {
+    requestId: req?.requestId,
+    tenantId: req?.user?.tenantId,
+    method: req?.method,
+    path: req?.path,
+    status,
+    error: err.message,
+    stack: err.stack,
+  });
+
+  if (status >= 500 && process.env.ERROR_WEBHOOK_URL) {
+    fetch(process.env.ERROR_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: `🚨 RefBoost Error: ${err.message}\nRoute: ${req.method} ${req.path}\nTenant: ${req.user?.tenantId || 'anonymous'}\nRequest ID: ${req.requestId || '-'}`,
+      }),
+    }).catch(() => {});
+  }
+
+  res.status(status).json({
     error: process.env.NODE_ENV === 'production'
       ? 'Internal server error'
       : err.message,
+    request_id: req?.requestId,
   });
 });
 
 // ─── Start ───
 app.listen(PORT, () => {
+  logger.info('API server starting', { port: PORT, version: process.env.RAILWAY_GIT_COMMIT_SHA?.substring(0, 7) || 'dev' });
+
   // Migrations are fire-and-forget so the server can start serving
   // requests immediately. The migrate functions already catch their
   // own errors per-block; the .catch() here is the last-resort safety
   // net against any unhandled rejection (Node >=15 would otherwise
   // terminate the process by default).
-  runMigrations().catch(err => console.error('[startup] runMigrations crashed:', err && err.message));
-  runSecurityMigrations().catch(err => console.error('[startup] runSecurityMigrations crashed:', err && err.message));
+  runMigrations().catch(err => logger.error('runMigrations crashed', { error: err && err.message }));
+  runSecurityMigrations().catch(err => logger.error('runSecurityMigrations crashed', { error: err && err.message }));
 
   // Stale Qonto state cleanup — runs on every deploy. Uses
   // RETURNING id so the log line names the rows we touched, which
@@ -290,12 +331,12 @@ app.listen(PORT, () => {
          RETURNING id
       `);
       if (result.rowCount > 0) {
-        console.log(`[startup.cleanup] Reset ${result.rowCount} stuck commission(s):`, result.rows.map(r => r.id));
+        logger.info('startup.cleanup reset stuck commissions', { count: result.rowCount, ids: result.rows.map(r => r.id) });
       } else {
-        console.log('[startup.cleanup] No stuck commissions — nothing to reset.');
+        logger.info('startup.cleanup no stuck commissions');
       }
     } catch (e) {
-      console.error('[startup.cleanup] Failed to clear stale payment errors:', e.message);
+      logger.error('startup.cleanup failed', { error: e.message });
     }
   })();
 
@@ -306,19 +347,19 @@ app.listen(PORT, () => {
   // Purge soft-deleted referrals + commissions older than 30 days.
   // Same cadence as cleanupOldData; first run delayed +2 min so the
   // boot sequence isn't overloaded.
-  const tickPurge = () => purgeDeletedRecords().catch(e => console.error('[trash.purge] tick error:', e.message));
+  const tickPurge = () => purgeDeletedRecords().catch(e => logger.error('trash.purge tick error', { error: e.message }));
   setTimeout(tickPurge, 2 * 60 * 1000);
   setInterval(tickPurge, 24 * 60 * 60 * 1000);
 
-  console.log(` Skipcall API running on port ${PORT}`);
+  logger.info('Skipcall API running', { port: PORT });
 
   if (process.env.SMTP_HOST) {
     startNotificationWorker();
-    console.log(' Email notification worker started');
+    logger.info('Email notification worker started');
   }
 
   startWebhookRetryWorker();
-  console.log('[webhooks] retry worker started');
+  logger.info('webhooks retry worker started');
 
   // Nightly bi-directional-sync pull for Notion. Wakes at 21:00
   // Europe/Paris, iterates every active Notion integration, and
@@ -332,10 +373,10 @@ app.listen(PORT, () => {
   // Qonto webhooks aren't yet wired so polling is the source of truth.
   if (process.env.QONTO_CLIENT_ID) {
     const { reconcileQontoTransfers } = require('./routes/commissions');
-    const tick = () => reconcileQontoTransfers(null).catch(e => console.error('[qonto.poll] tick error:', e.message));
+    const tick = () => reconcileQontoTransfers(null).catch(e => logger.error('qonto.poll tick error', { error: e.message }));
     setTimeout(tick, 30_000);          // first sweep ~30 s after boot
     setInterval(tick, 5 * 60 * 1000);  // then every 5 min
-    console.log('[qonto] transfer polling worker started');
+    logger.info('qonto transfer polling worker started');
   }
 });
 
