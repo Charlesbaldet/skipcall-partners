@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Save, Languages, ExternalLink, GripVertical, Tag, Users, ArrowRight, Upload, Pencil, X as XIcon } from 'lucide-react';
 import api from '../lib/api';
 import { showToast, showConfirm } from '../components/Dialogs.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 import { BLOCK_COMPONENTS } from './marketplaceBlocks/MarketplaceEditorBlocks.jsx';
 
 // Sector list mirrors the public /marketplace filter so admins can
@@ -563,7 +564,7 @@ export default function MarketplaceEditorPage() {
   };
   const onDragEnd = () => { setDragging(null); setOverId(null); setDragArmed(null); };
 
-  if (loading) return <div style={{ padding: 32, color: C.m, fontSize: 14 }}>{t('common.loading', 'Chargement…')}</div>;
+  if (loading) return <PageSkeleton />;
   if (!tenant) return <div style={{ padding: 32, color: C.m, fontSize: 14 }}>{t('marketplace.editor.tenant_not_found', 'Tenant introuvable.')}</div>;
 
   const blockProps = { tenant, page, onPatch, t, editable: editMode };

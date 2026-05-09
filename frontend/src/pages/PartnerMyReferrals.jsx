@@ -5,6 +5,7 @@ import api from '../lib/api';
 import { STATUS_CONFIG, LEVEL_CONFIG, fmt, fmtDate } from '../lib/constants';
 import { DollarSign, Trash2, LayoutGrid, List, ChevronRight, X, Lock, GripVertical, Plus } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 import PartnerSubmitPage from './PartnerSubmitPage.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
@@ -122,7 +123,7 @@ export default function PartnerMyReferrals() {
     setDeleting(null);
   };
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerReferrals.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   return (
     <div className="fade-in">

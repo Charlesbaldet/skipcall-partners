@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 import {
   Trophy, Plus, Edit2,
   Palette,
@@ -94,7 +95,7 @@ export default function ProgrammePage() {
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('programme.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   const isDeal = data.threshold_type === 'deals';
   const unitLabel = isDeal ? t('programme.unit_deals') : t('programme.unit_volume');

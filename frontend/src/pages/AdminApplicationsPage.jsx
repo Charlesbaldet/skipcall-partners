@@ -4,6 +4,7 @@ import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { UserPlus, CheckCircle, XCircle, Clock, Building, Mail, Phone, Globe, Users, User, X } from 'lucide-react';
 import UpgradeModal from '../components/UpgradeModal.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 
 export default function AdminApplicationsPage() {
   const { t } = useTranslation();
@@ -63,7 +64,7 @@ export default function AdminApplicationsPage() {
 
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   return (
     <div className="fade-in">

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { Settings, UserPlus, Shield, Briefcase, Mail, X, CheckCircle, Clock, Copy, Trash2, ToggleLeft, ToggleRight, Lock, Eye, EyeOff } from 'lucide-react';
 
@@ -86,7 +87,7 @@ export default function AdminSettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   return (
     <div className="fade-in">

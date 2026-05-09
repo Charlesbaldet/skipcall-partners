@@ -6,6 +6,7 @@ import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { fmt } from '../lib/constants';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 
 // Partner landing page. Three KPI tiles + (feature-gated) referral
 // link card + promo codes table. The Kanban lives on the dedicated
@@ -29,7 +30,7 @@ export default function PartnerDashboardPage() {
     }).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerReferrals.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   return (
     <div className="fade-in">

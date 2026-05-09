@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 import { fmt, fmtDate } from '../lib/constants';
 import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, FileText, ShieldCheck, AlertTriangle, Building } from 'lucide-react';
 
@@ -93,7 +94,7 @@ export default function PartnerPaymentsPage() {
   const visibleRows = commissions.filter(c => c.approval_status !== 'rejected');
   const bankIncomplete = !bankInfo || !bankInfo.iban;
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partnerPayments.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   return (
     <div className="fade-in">
