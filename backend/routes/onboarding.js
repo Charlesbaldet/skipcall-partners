@@ -47,7 +47,7 @@ router.get('/status', authenticate, authorize('admin', 'superadmin'), async (req
       {
         id: 'billing',
         completed: !!(t.billing_company_name && t.billing_address && t.billing_siret),
-        link: '/settings?tab=entreprise',
+        link: '/settings?tab=company',
         order: 1,
       },
       {
@@ -59,7 +59,7 @@ router.get('/status', authenticate, authorize('admin', 'superadmin'), async (req
       {
         id: 'branding',
         completed: !!(t.logo_url && t.primary_color),
-        link: '/settings?tab=apparence',
+        link: '/settings?tab=branding',
         order: 3,
       },
       {
