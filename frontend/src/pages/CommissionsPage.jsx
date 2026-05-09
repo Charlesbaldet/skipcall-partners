@@ -5,6 +5,7 @@ import api from '../lib/api';
 import { fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw, Trash2, Eye, BookOpen } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 import { showPrompt } from '../components/Dialogs.jsx';
 
 // Map a payment_error column value (which the backend now stores as
@@ -642,7 +643,7 @@ export default function CommissionsPage() {
     ? visibleCommissions
     : visibleCommissions.filter(c => c.status === filterStatus);
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('commissions.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   return (
     <div className="fade-in">

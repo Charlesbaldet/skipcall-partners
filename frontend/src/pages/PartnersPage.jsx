@@ -8,6 +8,7 @@ import { Plus, X, Users, Archive, Trash2, Pencil, ArchiveRestore, UserPlus, Chec
 import { useAuth } from '../hooks/useAuth.jsx';
 import UpgradeModal from '../components/UpgradeModal.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 
 export default function PartnersPage() {
   const { t } = useTranslation();
@@ -201,7 +202,7 @@ export default function PartnersPage() {
   const archivedPartners = partners.filter(p => p.is_active === false && categoryMatches(p));
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partners.loading')}</div>;
+  if (loading) return <PageSkeleton />;
 
   return (
     <div className="fade-in">

@@ -5,6 +5,7 @@ import { TrendingUp, Users, FileText, DollarSign, Target, Zap, Trophy, Copy, Che
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import OnboardingWizard from '../components/OnboardingWizard.jsx';
+import PageSkeleton from '../components/PageSkeleton.jsx';
 import { fmt, STATUS_CONFIG, LEVEL_CONFIG, categoryName } from '../lib/constants';
 import DateRangePicker from '../components/DateRangePicker.jsx';
 
@@ -823,12 +824,7 @@ function isoWeekNumber(date) {
 }
 
 function PageLoader() {
-  const { t } = useTranslation();
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-      <p style={{ color: '#94a3b8' }}>{t('dashboard.loading')}</p>
-    </div>
-  );
+  return <PageSkeleton />;
 }
 
 // Small admin-only breakdown of active partners per category.
