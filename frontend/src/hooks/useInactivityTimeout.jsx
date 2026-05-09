@@ -33,7 +33,14 @@ export default function useInactivityTimeout({ active = true } = {}) {
   }, []);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      // Watcher disabled (post-logout, fresh /login route). Drop any
+      // stale `expired` flag so the SessionExpiredModal unmounts and
+      // 'Se reconnecter' actually navigates the user out instead of
+      // leaving the modal pinned over the LoginPage.
+      setExpired(false);
+      return;
+    }
 
     // Seed activity timestamp on mount so a fresh tab doesn't fire
     // immediately when the storage key is missing.
