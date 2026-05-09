@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, X as XIcon } from 'lucide-react';
 import api from '../lib/api';
 
@@ -20,23 +19,8 @@ const C = {
 
 export default function OnboardingChecklist({ onClose }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
-
-  // Click on a step → close the popup synchronously, then SPA-navigate
-  // to the destination. Plain <a href> does a full-page reload, which
-  // (a) loses the close-on-click intent because the popup remounts in
-  // the new page and (b) creates the inconsistent "popup sometimes
-  // stays open" UX. useNavigate keeps the React tree alive so closing
-  // is deterministic, and SettingsPage's useSearchParams now picks up
-  // the ?tab=… on the same render — no second click needed.
-  const handleStepClick = (e, link) => {
-    e.preventDefault();
-    if (!link) return;
-    onClose && onClose();
-    navigate(link);
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +106,6 @@ export default function OnboardingChecklist({ onClose }) {
             <a
               key={step.id}
               href={step.link}
-              onClick={(e) => handleStepClick(e, step.link)}
               style={{
                 display: 'flex', alignItems: 'flex-start', gap: 12,
                 padding: 12, borderRadius: 12, marginBottom: 8,
