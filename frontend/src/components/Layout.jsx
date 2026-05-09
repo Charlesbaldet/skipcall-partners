@@ -119,6 +119,14 @@ export default function Layout({ children }) {
   const [unread, setUnread] = useState(0);
   const [pendingApps, setPendingApps] = useState(0);
   const [trashCount, setTrashCount] = useState(0);
+  // Trash badge "seen" watermark — last trashCount value the user
+  // had visible while on /trash. The displayed badge is the delta
+  // (count − seen), so visiting /trash silences the badge until
+  // something new is soft-deleted afterwards.
+  const [trashSeenCount, setTrashSeenCount] = useState(() => {
+    try { return Number(localStorage.getItem('rb_trash_seen_count') || 0) || 0; }
+    catch { return 0; }
+  });
   const [tenant, setTenant] = useState(typeof window !== 'undefined' ? window.__rbTenant : null);
   // Per-category unread counts driving the sidebar red dots.
   const [unreadByCat, setUnreadByCat] = useState({});
@@ -327,10 +335,21 @@ export default function Layout({ children }) {
     },
   };
 
+  // Sync the trash seen-count whenever the user is on /trash and a
+  // count is available — covers both the immediate visit (current
+  // count) and any later refetches while the user is still on the
+  // page (so a real-time-arriving item silently raises the watermark
+  // instead of bouncing the badge).
+  useEffect(() => {
+    if (location.pathname !== '/trash') return;
+    try { localStorage.setItem('rb_trash_seen_count', String(trashCount)); } catch {}
+    setTrashSeenCount(trashCount);
+  }, [location.pathname, trashCount]);
+
   const getBadge = (item) => {
     if (item.badge === 'messages' && unread > 0) return unread;
     if (item.badge === 'applications' && pendingApps > 0) return pendingApps;
-    if (item.badge === 'trash' && trashCount > 0) return trashCount;
+    if (item.badge === 'trash') return Math.max(0, trashCount - trashSeenCount);
     return 0;
   };
 
