@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const isPartner = user?.role === 'partner';
   const isSuperadmin = user?.role === 'superadmin';
   const isCommercial = user?.role === 'commercial';
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Map legacy tab IDs (deep-links, bookmarks, old emails) to the new
   // grouped tab IDs so existing URLs keep working.
   const LEGACY_TAB_MAP = {
@@ -40,8 +40,15 @@ export default function SettingsPage() {
     'public-link': 'public-marketplace',
     marketplace: 'public-marketplace',
   };
-  const initialTab = LEGACY_TAB_MAP[searchParams.get('tab')] || searchParams.get('tab') || 'profile';
-  const [tab, setTab] = useState(initialTab);
+  // Derive the active tab from searchParams every render so an
+  // external navigation to /settings?tab=X (onboarding popup,
+  // /billing redirect) reaches the right section without the
+  // component remounting. Page-internal tab clicks write back into
+  // the URL via setSearchParams so the URL stays the source of truth
+  // and back/forward + refresh keep working.
+  const rawTab = searchParams.get('tab');
+  const tab = LEGACY_TAB_MAP[rawTab] || rawTab || 'profile';
+  const setTab = (id) => setSearchParams({ tab: id }, { replace: true });
   // Close → land on the role-aware home (the "/" route resolves it
   // for us). Replaces the previous `navigate(-1)` because, after a
   // Qonto OAuth round-trip, the previous history entry is
