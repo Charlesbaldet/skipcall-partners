@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, X as XIcon } from 'lucide-react';
 import api from '../lib/api';
 
@@ -19,8 +20,21 @@ const C = {
 
 export default function OnboardingChecklist({ onClose }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
+
+  // Plain <a href> on each step did a full-page reload, so the popup
+  // remounted on the destination page and "closed on click" felt
+  // inconsistent (it stayed visible whenever Layout re-rendered it
+  // there). useNavigate keeps the React tree alive: close the popup
+  // synchronously, then SPA-navigate.
+  const handleStepClick = (e, link) => {
+    e.preventDefault();
+    if (!link) return;
+    onClose && onClose();
+    navigate(link);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -106,6 +120,7 @@ export default function OnboardingChecklist({ onClose }) {
             <a
               key={step.id}
               href={step.link}
+              onClick={(e) => handleStepClick(e, step.link)}
               style={{
                 display: 'flex', alignItems: 'flex-start', gap: 12,
                 padding: 12, borderRadius: 12, marginBottom: 8,
