@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
+const { PLANS } = require('./billing');
 
 // ─── Middleware: require superadmin role ───
 function requireSuperAdmin(req, res, next) {
@@ -15,10 +16,52 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
+// ─── Period helpers (shared by /stats + /timeline) ───
+// Returns { from: Date|null, to: Date, durationMs: number|null }. `from`
+// is null when the caller wants "since beginning" (no lower bound).
+function parsePeriod(req) {
+  const toStr = req.query.to;
+  const fromStr = req.query.from;
+  const to = toStr ? new Date(toStr) : new Date();
+  // 'all' is a sentinel meaning "no lower bound" — used by the
+  // "Depuis le début" preset. Skipping the from filter altogether
+  // means the SQL keeps everything from the beginning of time.
+  const from = (fromStr === 'all' || fromStr === '' || fromStr == null)
+    ? (fromStr === 'all' ? null : new Date(to.getTime() - 30 * 24 * 3600 * 1000))
+    : new Date(fromStr);
+  const durationMs = from ? (to.getTime() - from.getTime()) : null;
+  return { from, to, durationMs };
+}
+
+// Monthly MRR contribution per plan, sourced from PLANS in billing.js
+// so the catalog stays single-source-of-truth. Used in both the live
+// snapshot (clients_by_plan + mrr_total) and the period queries.
+const PRO_PRICE = PLANS.pro.priceMonthly;            // 29
+const BUSINESS_PRICE = PLANS.business.priceMonthly;  // 79
+
 // ─── Dashboard stats (non-sensitive) ───
+// Two layers of data:
+//   1. Live snapshot — total_*, active_*, clients_by_plan, mrr_total,
+//      conversions_total, partners_per_client. Independent of any
+//      period; reflects the current state of the database.
+//   2. Period block — every metric defined over [from, to] plus the
+//      delta vs the previous equivalent window [from − duration, from].
+//      Drives the KPI cards on the Statistiques page that follow the
+//      date-picker selection. delta_* fields are null when the period
+//      is "depuis le début" (no previous window to compare against).
 router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
   try {
-    const [tenants, users, activeUsers, partners, activePartners, referralsByStatus, volumeByStatus, leadsByTenant] = await Promise.all([
+    const { from, to, durationMs } = parsePeriod(req);
+    const prevFrom = (from && durationMs) ? new Date(from.getTime() - durationMs) : null;
+    const prevTo = from || null;
+    const hasPrev = !!(prevFrom && prevTo);
+
+    // Live snapshot queries — these don't take from/to.
+    const [
+      tenantsTotal, usersTotal, activeUsersTotal, partnersTotal, activePartnersTotal,
+      referralsByStatus, volumeByStatus, leadsByTenant,
+      plansBreakdown, conversionsTotalRow,
+    ] = await Promise.all([
       query('SELECT COUNT(*) FROM tenants WHERE is_active = true'),
       query('SELECT COUNT(*) FROM users'),
       query('SELECT COUNT(*) FROM users WHERE is_active = true'),
@@ -40,18 +83,95 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
         GROUP BY t.id
         ORDER BY lead_count DESC
       `),
+      query(`SELECT plan, COUNT(*)::int AS c FROM tenants WHERE is_active = TRUE GROUP BY plan`),
+      // Conversions all-time = tenants that ever started a paying plan.
+      // Proxy: plan_started_at IS NOT NULL AND plan != 'starter'. Covers
+      // upgrades pro→business as well as first paid signups — acceptable
+      // until/unless we add a first_paid_at column.
+      query(`SELECT COUNT(*)::int AS c FROM tenants WHERE plan_started_at IS NOT NULL AND plan IS NOT NULL AND plan <> 'starter'`),
     ]);
-    // Format referrals by status as object
+
+    // Plan counts → object + MRR total. Prices come from PLANS via the
+    // module-level constants so the catalog stays in one place.
+    const plansMap = { starter: 0, pro: 0, business: 0 };
+    plansBreakdown.rows.forEach(r => { if (r.plan in plansMap) plansMap[r.plan] = parseInt(r.c); });
+    const mrrTotal = plansMap.pro * PRO_PRICE + plansMap.business * BUSINESS_PRICE;
+    const totalTenants = parseInt(tenantsTotal.rows[0].count);
+    const totalPartners = parseInt(partnersTotal.rows[0].count);
+    const partnersPerClient = totalTenants > 0 ? totalPartners / totalTenants : 0;
+
+    // Period queries — every metric over [from, to]. Previous window
+    // runs the same SQL with the shifted bounds when hasPrev is true.
+    async function periodCounts(lo, hi) {
+      if (!hi) return null;
+      const loStr = lo ? lo.toISOString() : null;
+      const hiStr = hi.toISOString();
+      const where = (col, useFrom) => useFrom
+        ? `${col} >= $1 AND ${col} < $2`
+        : `${col} < $1`;
+      const params = lo ? [loStr, hiStr] : [hiStr];
+
+      const [newT, newP, newU, newL, vol, conv, mrrEndRow, tenantsEndRow] = await Promise.all([
+        query(`SELECT COUNT(*)::int AS c FROM tenants WHERE ${where('created_at', !!lo)}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM partners WHERE ${where('created_at', !!lo)}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM users WHERE ${where('created_at', !!lo)}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM referrals WHERE deleted_at IS NULL AND ${where('created_at', !!lo)}`, params),
+        query(`SELECT COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND ${where('closed_at', !!lo)}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM tenants WHERE plan IN ('pro','business') AND plan_started_at IS NOT NULL AND ${where('plan_started_at', !!lo)}`, params),
+        // MRR at end of period: tenants whose paid plan started on or
+        // before `hi` and isn't already terminated by then. ELSE 0
+        // because plan='starter' contributes nothing.
+        query(`
+          SELECT COALESCE(SUM(
+            CASE plan
+              WHEN 'pro' THEN $${params.length + 1}::int
+              WHEN 'business' THEN $${params.length + 2}::int
+              ELSE 0
+            END
+          ), 0)::int AS s
+          FROM tenants
+          WHERE is_active = TRUE
+            AND plan_started_at IS NOT NULL
+            AND plan_started_at <= $${params.length === 1 ? 1 : 2}
+            AND (plan_ends_at IS NULL OR plan_ends_at > $${params.length === 1 ? 1 : 2})
+        `, [...params, PRO_PRICE, BUSINESS_PRICE]),
+        query(`SELECT COUNT(*)::int AS c FROM tenants WHERE is_active = TRUE AND created_at <= $${params.length === 1 ? 1 : 2}`, params),
+      ]);
+      return {
+        new_tenants: newT.rows[0].c,
+        new_partners: newP.rows[0].c,
+        new_users: newU.rows[0].c,
+        new_leads: newL.rows[0].c,
+        volume_won: vol.rows[0].s,
+        conversions: conv.rows[0].c,
+        mrr_end: mrrEndRow.rows[0].s,
+        tenants_active_end: tenantsEndRow.rows[0].c,
+      };
+    }
+
+    const [curr, prev] = await Promise.all([
+      periodCounts(from, to),
+      hasPrev ? periodCounts(prevFrom, prevTo) : Promise.resolve(null),
+    ]);
+
+    // Delta helpers — return null when there's no previous window to
+    // compare against, so the FE can hide the hint instead of showing
+    // "+Infinity %" or similar.
+    const deltaPct = (c, p) => (prev == null || p == null || p === 0) ? null : Math.round(((c - p) / p) * 100);
+    const deltaAbs = (c, p) => (prev == null || p == null) ? null : (c - p);
+
     const referralsMap = {};
     referralsByStatus.rows.forEach(r => { referralsMap[r.status] = parseInt(r.count); });
     const volumeMap = {};
     volumeByStatus.rows.forEach(r => { volumeMap[r.status] = parseFloat(r.total); });
+
     res.json({
-      total_tenants: parseInt(tenants.rows[0].count),
-      total_users: parseInt(users.rows[0].count),
-      active_users: parseInt(activeUsers.rows[0].count),
-      total_partners: parseInt(partners.rows[0].count),
-      active_partners: parseInt(activePartners.rows[0].count),
+      // ── Existing fields (preserved for back-compat with other UI) ──
+      total_tenants: totalTenants,
+      total_users: parseInt(usersTotal.rows[0].count),
+      active_users: parseInt(activeUsersTotal.rows[0].count),
+      total_partners: totalPartners,
+      active_partners: parseInt(activePartnersTotal.rows[0].count),
       total_leads: Object.values(referralsMap).reduce((a, b) => a + b, 0),
       leads_by_status: referralsMap,
       volume_by_status: volumeMap,
@@ -63,6 +183,32 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
         volume_won: parseFloat(t.volume_won),
         volume_pipeline: parseFloat(t.volume_pipeline),
       })),
+      // ── New: live snapshot ──
+      clients_by_plan: plansMap,
+      mrr_total: mrrTotal,
+      conversions_total: parseInt(conversionsTotalRow.rows[0].c),
+      partners_per_client: partnersPerClient,
+      // ── New: per-period block with deltas vs previous window ──
+      period: {
+        from: from ? from.toISOString() : null,
+        to: to.toISOString(),
+        new_tenants: curr.new_tenants,
+        new_tenants_delta_pct: deltaPct(curr.new_tenants, prev?.new_tenants),
+        new_partners: curr.new_partners,
+        new_partners_delta_abs: deltaAbs(curr.new_partners, prev?.new_partners),
+        new_users: curr.new_users,
+        new_users_delta_abs: deltaAbs(curr.new_users, prev?.new_users),
+        new_leads: curr.new_leads,
+        new_leads_delta_pct: deltaPct(curr.new_leads, prev?.new_leads),
+        volume_won: curr.volume_won,
+        volume_won_delta_pct: deltaPct(curr.volume_won, prev?.volume_won),
+        conversions: curr.conversions,
+        conversions_delta_abs: deltaAbs(curr.conversions, prev?.conversions),
+        mrr_end: curr.mrr_end,
+        mrr_end_delta_abs: deltaAbs(curr.mrr_end, prev?.mrr_end),
+        tenants_active_end: curr.tenants_active_end,
+        tenants_active_end_delta_abs: deltaAbs(curr.tenants_active_end, prev?.tenants_active_end),
+      },
     });
   } catch (err) { console.error('Stats error:', err); res.status(500).json({ error: 'Erreur serveur' }); }
 });
@@ -328,74 +474,111 @@ router.delete('/delete-superadmin/:id', authenticate, requireSuperAdmin, async (
 // ─── Timeline KPIs (last 12 months evolution) ───
 router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
   try {
-    // Generate the last 12 months as YYYY-MM strings
-    const months = [];
-    const now = new Date();
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({
-        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-        label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
-      });
-    }
-    // Cumulative count queries: for each month, how many entities existed at the end of that month
-    const [tenantsRows, partnersRows, leadsRows, volumeRows] = await Promise.all([
-      query(`
-        SELECT to_char(created_at, 'YYYY-MM') as month, COUNT(*) as count
+    const { from: fromIn, to } = parsePeriod(req);
+    // "Depuis le début" sentinel: when from is null we widen the
+    // axis to 12 months by default — same behaviour as the legacy
+    // endpoint so existing dashboards don't break.
+    const from = fromIn || new Date(to.getTime() - 365 * 24 * 3600 * 1000);
+    const durationDays = Math.max(1, Math.ceil((to.getTime() - from.getTime()) / (24 * 3600 * 1000)));
+
+    // Auto-granularity: day for short windows, week for quarterly,
+    // month otherwise. Keeps the X axis from looking crowded or
+    // sparse across very different period lengths.
+    const granularity = durationDays <= 31 ? 'day' : (durationDays <= 95 ? 'week' : 'month');
+    const truncUnit = granularity;  // PG accepts 'day' | 'week' | 'month'
+    const stepInterval = granularity === 'day' ? '1 day' : (granularity === 'week' ? '1 week' : '1 month');
+
+    // Time axis via generate_series. date_trunc + the step interval
+    // keeps the buckets aligned (e.g. weekly series starts on Monday).
+    const axisRows = await query(`
+      SELECT generate_series(
+        date_trunc($1, $2::timestamptz),
+        date_trunc($1, $3::timestamptz),
+        $4::interval
+      ) AS point
+    `, [truncUnit, from.toISOString(), to.toISOString(), stepInterval]);
+
+    // Cumulative-count queries grouped by the truncated bucket. The
+    // "before" pre-window totals seed the cumulative counter so the
+    // first point in the visible series carries the all-time value.
+    const [tenantsRows, partnersRows, leadsRows, volumeRows, tBefore, pBefore, lBefore, vBefore] = await Promise.all([
+      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM tenants WHERE created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
+        [truncUnit, from.toISOString(), to.toISOString()]),
+      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM partners WHERE created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
+        [truncUnit, from.toISOString(), to.toISOString()]),
+      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM referrals WHERE deleted_at IS NULL AND created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
+        [truncUnit, from.toISOString(), to.toISOString()]),
+      query(`SELECT date_trunc($1, closed_at) AS bucket, COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND closed_at >= $2 AND closed_at <= $3 GROUP BY bucket`,
+        [truncUnit, from.toISOString(), to.toISOString()]),
+      query(`SELECT COUNT(*)::int AS c FROM tenants WHERE created_at < $1`, [from.toISOString()]),
+      query(`SELECT COUNT(*)::int AS c FROM partners WHERE created_at < $1`, [from.toISOString()]),
+      query(`SELECT COUNT(*)::int AS c FROM referrals WHERE created_at < $1 AND deleted_at IS NULL`, [from.toISOString()]),
+      query(`SELECT COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND closed_at < $1`, [from.toISOString()]),
+    ]);
+
+    const bucketKey = (d) => new Date(d).toISOString();
+    const tMap = Object.fromEntries(tenantsRows.rows.map(r => [bucketKey(r.bucket), r.c]));
+    const pMap = Object.fromEntries(partnersRows.rows.map(r => [bucketKey(r.bucket), r.c]));
+    const lMap = Object.fromEntries(leadsRows.rows.map(r => [bucketKey(r.bucket), r.c]));
+    const vMap = Object.fromEntries(volumeRows.rows.map(r => [bucketKey(r.bucket), r.s]));
+
+    let cumulT = tBefore.rows[0].c;
+    let cumulP = pBefore.rows[0].c;
+    let cumulL = lBefore.rows[0].c;
+    let cumulV = vBefore.rows[0].s;
+
+    // MRR per bucket: tenants whose paid plan started on or before
+    // the bucket boundary AND whose plan hadn't ended yet. Computed
+    // per-point (N small queries, capped by durationDays/granularity
+    // so worst case ~31). The CASE uses the same PRO_PRICE /
+    // BUSINESS_PRICE constants as /stats so the catalog stays in
+    // one place.
+    const points = axisRows.rows.map(r => new Date(r.point));
+    const mrrAtPoint = async (p) => {
+      const { rows } = await query(`
+        SELECT COALESCE(SUM(
+          CASE plan
+            WHEN 'pro' THEN $2::int
+            WHEN 'business' THEN $3::int
+            ELSE 0
+          END
+        ), 0)::int AS s
         FROM tenants
-        WHERE created_at >= NOW() - INTERVAL '12 months'
-        GROUP BY month ORDER BY month
-      `),
-      query(`
-        SELECT to_char(created_at, 'YYYY-MM') as month, COUNT(*) as count
-        FROM partners
-        WHERE created_at >= NOW() - INTERVAL '12 months'
-        GROUP BY month ORDER BY month
-      `),
-      query(`
-        SELECT to_char(created_at, 'YYYY-MM') as month, COUNT(*) as count
-        FROM referrals
-        WHERE created_at >= NOW() - INTERVAL '12 months' AND deleted_at IS NULL
-        GROUP BY month ORDER BY month
-      `),
-      query(`
-        SELECT to_char(closed_at, 'YYYY-MM') as month, COALESCE(SUM(deal_value), 0) as total
-        FROM referrals
-        WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at >= NOW() - INTERVAL '12 months' AND deleted_at IS NULL
-        GROUP BY month ORDER BY month
-      `),
-    ]);
-    // Map results into the months array
-    const tenantsMap = Object.fromEntries(tenantsRows.rows.map(r => [r.month, parseInt(r.count)]));
-    const partnersMap = Object.fromEntries(partnersRows.rows.map(r => [r.month, parseInt(r.count)]));
-    const leadsMap = Object.fromEntries(leadsRows.rows.map(r => [r.month, parseInt(r.count)]));
-    const volumeMap = Object.fromEntries(volumeRows.rows.map(r => [r.month, parseFloat(r.total)]));
-    // Get cumulative totals before the 12-month window for accurate cumulative lines
-    const [tBefore, pBefore, lBefore, vBefore] = await Promise.all([
-      query(`SELECT COUNT(*) as count FROM tenants WHERE created_at < NOW() - INTERVAL '12 months'`),
-      query(`SELECT COUNT(*) as count FROM partners WHERE created_at < NOW() - INTERVAL '12 months'`),
-      query(`SELECT COUNT(*) as count FROM referrals WHERE created_at < NOW() - INTERVAL '12 months' AND deleted_at IS NULL`),
-      query(`SELECT COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE status = 'won' AND closed_at IS NOT NULL AND closed_at < NOW() - INTERVAL '12 months' AND deleted_at IS NULL`),
-    ]);
-    let cumulTenants = parseInt(tBefore.rows[0].count);
-    let cumulPartners = parseInt(pBefore.rows[0].count);
-    let cumulLeads = parseInt(lBefore.rows[0].count);
-    let cumulVolume = parseFloat(vBefore.rows[0].total);
-    const series = months.map(m => {
-      cumulTenants += (tenantsMap[m.key] || 0);
-      cumulPartners += (partnersMap[m.key] || 0);
-      cumulLeads += (leadsMap[m.key] || 0);
-      cumulVolume += (volumeMap[m.key] || 0);
+        WHERE is_active = TRUE
+          AND plan_started_at IS NOT NULL
+          AND plan_started_at <= $1
+          AND (plan_ends_at IS NULL OR plan_ends_at > $1)
+      `, [p.toISOString(), PRO_PRICE, BUSINESS_PRICE]);
+      return rows[0].s;
+    };
+    const mrrValues = await Promise.all(points.map(mrrAtPoint));
+
+    // Localised bucket label. The FE doesn't translate this — it
+    // displays the precomputed `label` directly on the X axis.
+    const fmtLabel = (d) => {
+      if (granularity === 'month') return d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+      if (granularity === 'week') return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    };
+
+    const series = points.map((p, i) => {
+      const k = p.toISOString();
+      cumulT += (tMap[k] || 0);
+      cumulP += (pMap[k] || 0);
+      cumulL += (lMap[k] || 0);
+      cumulV += (vMap[k] || 0);
       return {
-        month: m.key,
-        label: m.label,
-        tenants_cumul: cumulTenants,
-        partners_cumul: cumulPartners,
-        leads_cumul: cumulLeads,
-        volume_won: cumulVolume,
+        point: k,
+        label: fmtLabel(p),
+        tenants_cumul: cumulT,
+        partners_cumul: cumulP,
+        leads_cumul: cumulL,
+        volume_won: cumulV,
+        mrr: mrrValues[i],
       };
     });
-    res.json({ series });
+
+    res.json({ series, granularity, from: from.toISOString(), to: to.toISOString() });
   } catch (err) {
     console.error('Timeline error:', err);
     res.status(500).json({ error: 'Erreur serveur' });

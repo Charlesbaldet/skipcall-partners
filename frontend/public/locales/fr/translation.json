@@ -3606,5 +3606,57 @@
       "good": "Bon",
       "strong": "Fort"
     }
+  },
+  "super_admin": {
+    "stats": {
+      "title": "Statistiques",
+      "subtitle": "Vue d'ensemble multi-tenants",
+      "section": {
+        "business": "Business",
+        "activity": "Activité"
+      },
+      "kpi": {
+        "mrr": "MRR",
+        "tenants_active": "Tenants actifs",
+        "new_clients": "Nouveaux clients",
+        "conversions": "Conversions",
+        "conversions_total": "{{n}} au total",
+        "leads_created": "Leads créés",
+        "volume_won": "Volume gagné",
+        "partners": "Partenaires",
+        "users": "Utilisateurs"
+      },
+      "delta": {
+        "vs_previous": "vs période précédente"
+      },
+      "clients_by_plan": {
+        "title": "Clients par plan",
+        "subtitle": "Répartition actuelle des {{n}} tenants",
+        "mrr_total": "MRR total",
+        "paid_rate": "Taux payant",
+        "partners_per_client": "Partenaires / client"
+      },
+      "evolution": {
+        "title": "Évolution",
+        "subtitle": "Suit la période sélectionnée",
+        "metric": {
+          "mrr": "MRR"
+        }
+      },
+      "period": {
+        "7d": "7 derniers jours",
+        "30d": "30 derniers jours",
+        "3m": "3 derniers mois",
+        "12m": "12 derniers mois",
+        "all": "Depuis le début",
+        "custom": "Personnalisé…",
+        "custom_apply": "Appliquer"
+      },
+      "plan": {
+        "starter": "Starter (gratuit)",
+        "pro": "Pro (29 €/mois)",
+        "business": "Business (79 €/mois)"
+      }
+    }
   }
 }
