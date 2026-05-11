@@ -6,6 +6,7 @@ import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ChevronDown, Calendar, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import Pagination from '../components/Pagination.jsx';
 
 // ─── Period helpers (Stats tab) ──────────────────────────────────────
 // One function maps a preset key to a concrete {from, to} window so
@@ -66,6 +67,13 @@ export default function SuperAdminPage() {
   const [period, setPeriod] = useState(() => periodFromPreset('30d'));
   const [tenants, setTenants] = useState([]);
   const [logs, setLogs] = useState([]);
+  // Audit logs pagination — 25 rows/page. Numbered pages (not "load more")
+  // because the dataset grows but doesn't churn: revisiting a known time
+  // window deserves a stable URL contract, plus the back-end already
+  // returns `total` so paging is essentially free.
+  const AUDIT_LOGS_PAGE_SIZE = 25;
+  const [auditLogsPage, setAuditLogsPage] = useState(1);
+  const [auditLogsTotal, setAuditLogsTotal] = useState(0);
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #059669)', secondary_color: '#8b5cf6', accent_color: '#f59e0b', logo_url: '' });
@@ -220,15 +228,19 @@ export default function SuperAdminPage() {
     setBlogShowForm(true);
   };
 
-  const loadLogs = async () => {
+  const loadLogs = async (page = 1) => {
     try {
-      const d = await api.request('/super-admin/audit-logs?limit=100');
+      const offset = (page - 1) * AUDIT_LOGS_PAGE_SIZE;
+      const d = await api.request(`/super-admin/audit-logs?limit=${AUDIT_LOGS_PAGE_SIZE}&offset=${offset}`);
       setLogs(d.logs || []);
+      setAuditLogsTotal(d.total || 0);
     } catch {}
   };
 
   useEffect(() => { load(); loadBlog(); refreshBlogTranslateStatus(); }, []);
-  useEffect(() => { if (tab === 'logs') loadLogs(); }, [tab]);
+  // Reset to page 1 every time the tab is entered, then load that page.
+  // Subsequent paging happens via onPageChange below.
+  useEffect(() => { if (tab === 'logs') { setAuditLogsPage(1); loadLogs(1); } }, [tab]);
   // Refetch /stats + /timeline whenever the period selection changes.
   // loadBlog / tenants don't depend on period so they stay in the
   // initial mount-only useEffect above.
@@ -501,7 +513,7 @@ export default function SuperAdminPage() {
         </div>
       </>)}
 
-      {tab === 'logs' && (
+      {tab === 'logs' && (<>
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead><tr style={{ background: '#f8fafc' }}>
@@ -522,7 +534,16 @@ export default function SuperAdminPage() {
           </table>
           {logs.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.no_logs')}</div>}
         </div>
-      )}
+        {auditLogsTotal > AUDIT_LOGS_PAGE_SIZE && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+            <Pagination
+              currentPage={auditLogsPage}
+              totalPages={Math.ceil(auditLogsTotal / AUDIT_LOGS_PAGE_SIZE)}
+              onPageChange={(p) => { setAuditLogsPage(p); loadLogs(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            />
+          </div>
+        )}
+      </>)}
 
       {tab === 'blog' && (
         <div>
