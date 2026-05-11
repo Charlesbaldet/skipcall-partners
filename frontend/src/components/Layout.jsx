@@ -99,9 +99,9 @@ export default function Layout({ children }) {
   // superadmin (which has its own teardown flows).
 
   const SUPERADMIN_NAV = [
+    { to: '/super-admin?tab=search', icon: Search, label: t('super_admin.search.tab', 'Recherche') },
     { to: '/super-admin?tab=clients', icon: Globe, label: t('layout.nav.clients') },
     { to: '/super-admin?tab=stats', icon: BarChart2, label: t('layout.nav.statistics') },
-    { to: '/super-admin?tab=search', icon: Search, label: t('super_admin.search.tab', 'Recherche') },
     { to: '/super-admin?tab=logs', icon: Activity, label: t('layout.nav.audit_logs') },
     { to: '/super-admin?tab=blog', icon: FileText, label: t('layout.nav.blog') },
     { to: '/admin/compliance', icon: Shield, label: t('compliance.title', 'Conformité') },
