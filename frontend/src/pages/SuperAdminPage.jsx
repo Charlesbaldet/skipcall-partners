@@ -84,6 +84,12 @@ export default function SuperAdminPage() {
   const [editForm, setEditForm] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [blogPosts, setBlogPosts] = useState([]);
+  // Blog list pagination — 10 cards/page. Cards are visually dense
+  // (badges + cover hint + actions) so a smaller page size keeps the
+  // tab scannable without scroll.
+  const BLOG_PAGE_SIZE = 10;
+  const [blogPage, setBlogPage] = useState(1);
+  const [blogTotal, setBlogTotal] = useState(0);
   const [blogForm, setBlogForm] = useState({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' });
   const [blogEditId, setBlogEditId] = useState(null);
   const [blogSaving, setBlogSaving] = useState(false);
@@ -125,10 +131,11 @@ export default function SuperAdminPage() {
     setLoading(false);
   };
 
-  const loadBlog = async () => {
+  const loadBlog = async (page = 1) => {
     try {
-      const d = await api.request('/blog/admin/posts');
+      const d = await api.request(`/blog/admin/posts?page=${page}&pageSize=${BLOG_PAGE_SIZE}`);
       setBlogPosts(d.posts || []);
+      setBlogTotal(d.total || 0);
     } catch(e) {}
   };
 
@@ -237,10 +244,11 @@ export default function SuperAdminPage() {
     } catch {}
   };
 
-  useEffect(() => { load(); loadBlog(); refreshBlogTranslateStatus(); }, []);
+  useEffect(() => { load(); loadBlog(1); refreshBlogTranslateStatus(); }, []);
   // Reset to page 1 every time the tab is entered, then load that page.
   // Subsequent paging happens via onPageChange below.
   useEffect(() => { if (tab === 'logs') { setAuditLogsPage(1); loadLogs(1); } }, [tab]);
+  useEffect(() => { if (tab === 'blog') { setBlogPage(1); loadBlog(1); } }, [tab]);
   // Refetch /stats + /timeline whenever the period selection changes.
   // loadBlog / tenants don't depend on period so they stay in the
   // initial mount-only useEffect above.
@@ -682,6 +690,15 @@ export default function SuperAdminPage() {
               </div>
             ))}
           </div>
+          {blogTotal > BLOG_PAGE_SIZE && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+              <Pagination
+                currentPage={blogPage}
+                totalPages={Math.ceil(blogTotal / BLOG_PAGE_SIZE)}
+                onPageChange={(p) => { setBlogPage(p); loadBlog(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

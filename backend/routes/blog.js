@@ -225,28 +225,38 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
-// GET /api/blog/admin/posts — tous les articles (draft + published)
+// GET /api/blog/admin/posts — tous les articles (draft + published).
+// Paginated: ?page=N&pageSize=M (defaults 1 / 10). Returns total so
+// the FE can render the shared Pagination component without a second
+// round-trip.
 router.get('/admin/posts', authenticate, requireSuperAdmin, async (req, res) => {
   try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 10));
+    const offset = (page - 1) * pageSize;
     // translated_count: 1 (FR is the source) + the number of target
     // languages where the title cell is non-empty. Title is the
     // sentinel because the translator writes title first and bails
     // on retry-budget exhaustion before content; counting any
     // weaker field would over-report. Range is 1..7 — 1 means
     // French only, 7 means all six target locales filled.
-    const { rows } = await query(
-      `SELECT id, slug, title, excerpt, category, published, published_at, created_at, reading_time_minutes,
-              1
-              + (CASE WHEN COALESCE(title_en, '') <> '' THEN 1 ELSE 0 END)
-              + (CASE WHEN COALESCE(title_es, '') <> '' THEN 1 ELSE 0 END)
-              + (CASE WHEN COALESCE(title_de, '') <> '' THEN 1 ELSE 0 END)
-              + (CASE WHEN COALESCE(title_it, '') <> '' THEN 1 ELSE 0 END)
-              + (CASE WHEN COALESCE(title_nl, '') <> '' THEN 1 ELSE 0 END)
-              + (CASE WHEN COALESCE(title_pt, '') <> '' THEN 1 ELSE 0 END)
-              AS translated_count
-       FROM blog_posts ORDER BY created_at DESC`
-    );
-    res.json({ posts: rows });
+    const [rowsR, countR] = await Promise.all([
+      query(
+        `SELECT id, slug, title, excerpt, category, published, published_at, created_at, reading_time_minutes,
+                1
+                + (CASE WHEN COALESCE(title_en, '') <> '' THEN 1 ELSE 0 END)
+                + (CASE WHEN COALESCE(title_es, '') <> '' THEN 1 ELSE 0 END)
+                + (CASE WHEN COALESCE(title_de, '') <> '' THEN 1 ELSE 0 END)
+                + (CASE WHEN COALESCE(title_it, '') <> '' THEN 1 ELSE 0 END)
+                + (CASE WHEN COALESCE(title_nl, '') <> '' THEN 1 ELSE 0 END)
+                + (CASE WHEN COALESCE(title_pt, '') <> '' THEN 1 ELSE 0 END)
+                AS translated_count
+         FROM blog_posts ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+        [pageSize, offset],
+      ),
+      query(`SELECT COUNT(*)::int AS c FROM blog_posts`),
+    ]);
+    res.json({ posts: rowsR.rows, total: countR.rows[0].c, page, pageSize });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
