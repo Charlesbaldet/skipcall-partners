@@ -3606,5 +3606,57 @@
       "good": "Goed",
       "strong": "Sterk"
     }
+  },
+  "super_admin": {
+    "stats": {
+      "title": "Statistieken",
+      "subtitle": "Multi-tenant overzicht",
+      "section": {
+        "business": "Business",
+        "activity": "Activiteit"
+      },
+      "kpi": {
+        "mrr": "MRR",
+        "tenants_active": "Actieve tenants",
+        "new_clients": "Nieuwe klanten",
+        "conversions": "Conversies",
+        "conversions_total": "{{n}} totaal",
+        "leads_created": "Aangemaakte leads",
+        "volume_won": "Gewonnen volume",
+        "partners": "Partners",
+        "users": "Gebruikers"
+      },
+      "delta": {
+        "vs_previous": "vs vorige periode"
+      },
+      "clients_by_plan": {
+        "title": "Klanten per plan",
+        "subtitle": "Huidige verdeling van {{n}} tenants",
+        "mrr_total": "Totale MRR",
+        "paid_rate": "Betalend percentage",
+        "partners_per_client": "Partners / klant"
+      },
+      "evolution": {
+        "title": "Evolutie",
+        "subtitle": "Volgt de gekozen periode",
+        "metric": {
+          "mrr": "MRR"
+        }
+      },
+      "period": {
+        "7d": "Laatste 7 dagen",
+        "30d": "Laatste 30 dagen",
+        "3m": "Laatste 3 maanden",
+        "12m": "Laatste 12 maanden",
+        "all": "Sinds het begin",
+        "custom": "Aangepast…",
+        "custom_apply": "Toepassen"
+      },
+      "plan": {
+        "starter": "Starter (gratis)",
+        "pro": "Pro (€29/maand)",
+        "business": "Business (€79/maand)"
+      }
+    }
   }
 }

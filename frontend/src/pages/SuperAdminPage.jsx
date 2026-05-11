@@ -1,10 +1,53 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
-import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
+import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ChevronDown, Calendar, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+
+// ─── Period helpers (Stats tab) ──────────────────────────────────────
+// One function maps a preset key to a concrete {from, to} window so
+// every other piece of code (initial state, picker, refetch) can stay
+// dumb about the math. preset='all' carries from=null so the backend
+// treats it as "depuis le début".
+function periodFromPreset(preset) {
+  const now = new Date();
+  const toIso = now.toISOString().slice(0, 10);
+  if (preset === 'all') return { preset, from: null, to: toIso };
+  const out = new Date(now);
+  switch (preset) {
+    case '7d':  out.setDate(out.getDate() - 7); break;
+    case '30d': out.setDate(out.getDate() - 30); break;
+    case '3m':  out.setMonth(out.getMonth() - 3); break;
+    case '12m': out.setMonth(out.getMonth() - 12); break;
+    default:    out.setDate(out.getDate() - 30); preset = '30d';
+  }
+  return { preset, from: out.toISOString().slice(0, 10), to: toIso };
+}
+
+// ─── Number formatting helpers (Stats tab) ───────────────────────────
+const fmtEUR = (v) => `${Math.round(v || 0).toLocaleString('fr-FR')} €`;
+const fmtEURCompact = (v) => {
+  const n = Number(v) || 0;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace('.', ',')} k€`;
+  return `${Math.round(n)} €`;
+};
+const fmtDeltaAbs = (v) => {
+  if (v == null) return null;
+  const sign = v >= 0 ? '+' : '−';
+  return `${sign}${Math.abs(v).toLocaleString('fr-FR')}`;
+};
+const fmtDeltaEUR = (v) => {
+  if (v == null) return null;
+  const sign = v >= 0 ? '+' : '−';
+  return `${sign}${Math.abs(Math.round(v)).toLocaleString('fr-FR')} €`;
+};
+const fmtDeltaPct = (v) => {
+  if (v == null) return null;
+  const sign = v >= 0 ? '+' : '−';
+  return `${sign}${Math.abs(v)} %`;
+};
 
 export default function SuperAdminPage() {
   const { t } = useTranslation();
@@ -14,7 +57,12 @@ export default function SuperAdminPage() {
   const tab = searchParams.get('tab') || 'clients';
   const [stats, setStats] = useState({});
   const [timeline, setTimeline] = useState([]);
-  const [activeMetric, setActiveMetric] = useState('volume_won');
+  const [activeMetric, setActiveMetric] = useState('tenants_cumul');
+  // Single source of period for the Stats tab. preset='30d' is the
+  // default; from/to are ISO dates 'YYYY-MM-DD'. preset='all' means
+  // "depuis le début" (from=null on the wire). preset='custom' carries
+  // a user-picked range.
+  const [period, setPeriod] = useState(() => periodFromPreset('30d'));
   const [tenants, setTenants] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true)
@@ -40,12 +88,23 @@ export default function SuperAdminPage() {
   const [blogTranslateStatus, setBlogTranslateStatus] = useState(null);
   const navigate = useNavigate();
 
+  // Build ?from=…&to=… for /stats and /timeline. 'all' is the sentinel
+  // for "depuis le début" (no lower bound) — sent literally so the
+  // backend can drop the WHERE clause without ambiguity.
+  const buildPeriodQuery = (p) => {
+    const params = new URLSearchParams();
+    params.set('from', p.from || 'all');
+    if (p.to) params.set('to', p.to);
+    return '?' + params.toString();
+  };
+
   const load = async () => {
     try {
+      const q = buildPeriodQuery(period);
       const [s, tn, tl] = await Promise.all([
-        api.request('/super-admin/stats'),
+        api.request('/super-admin/stats' + q),
         api.request('/super-admin/tenants'),
-        api.request('/super-admin/timeline').catch(() => ({ series: [] })),
+        api.request('/super-admin/timeline' + q).catch(() => ({ series: [] })),
       ]);
       setStats(s);
       setTenants(tn.tenants || []);
@@ -169,6 +228,10 @@ export default function SuperAdminPage() {
 
   useEffect(() => { load(); loadBlog(); refreshBlogTranslateStatus(); }, []);
   useEffect(() => { if (tab === 'logs') loadLogs(); }, [tab]);
+  // Refetch /stats + /timeline whenever the period selection changes.
+  // loadBlog / tenants don't depend on period so they stay in the
+  // initial mount-only useEffect above.
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [period.from, period.to]);
 
   const handleCreate = async () => {
     if (!form.name || !form.slug) return;
@@ -237,16 +300,86 @@ export default function SuperAdminPage() {
       />
 
       {tab === 'stats' && (<>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 16 }}>
-          <KPI icon={Globe} label={t('admin.kpi_active_tenants')} value={stats.total_tenants || 0} color="#059669" />
-          <KPI icon={Users} label={t('admin.kpi_total_users')} value={stats.total_users || 0} color="#0ea5e9" />
-          <KPI icon={Activity} label={t('admin.kpi_active_users')} value={stats.active_users || 0} color="#16a34a" />
+        {/* Header: title + period picker right-aligned. The picker
+            controls every metric below (except the snapshot section
+            'Clients par plan' which is always current state). */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0f172a', letterSpacing: -0.4 }}>{t('super_admin.stats.title', 'Statistiques')}</h2>
+            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 13 }}>{t('super_admin.stats.subtitle', "Vue d'ensemble multi-tenants")}</p>
+          </div>
+          <PeriodPicker period={period} setPeriod={setPeriod} t={t} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <KPI icon={Briefcase} label={t('admin.kpi_total_partners')} value={stats.total_partners || 0} color="#f59e0b" />
-          <KPI icon={Briefcase} label={t('admin.kpi_active_partners')} value={stats.active_partners || 0} color="#16a34a" />
-          <KPI icon={Target} label={t('admin.kpi_total_leads')} value={stats.total_leads || 0} color="#8b5cf6" />
+
+        {/* Section Business — 4 KPI cards driven by the period */}
+        <SectionLabel>{t('super_admin.stats.section.business', 'Business')}</SectionLabel>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.mrr', 'MRR')}
+            value={fmtEUR(stats.period?.mrr_end ?? stats.mrr_total ?? 0)}
+            delta={stats.period?.mrr_end_delta_abs}
+            deltaFormat={(v) => fmtDeltaEUR(v)}
+            t={t}
+          />
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.tenants_active', 'Tenants actifs')}
+            value={stats.period?.tenants_active_end ?? stats.total_tenants ?? 0}
+            delta={stats.period?.tenants_active_end_delta_abs}
+            deltaFormat={(v) => fmtDeltaAbs(v)}
+            t={t}
+          />
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.new_clients', 'Nouveaux clients')}
+            value={stats.period?.new_tenants ?? 0}
+            delta={stats.period?.new_tenants_delta_pct}
+            deltaFormat={(v) => fmtDeltaPct(v)}
+            t={t}
+          />
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.conversions', 'Conversions')}
+            value={stats.period?.conversions ?? 0}
+            hint={t('super_admin.stats.kpi.conversions_total', { n: stats.conversions_total ?? 0, defaultValue: '{{n}} au total' })}
+            t={t}
+          />
         </div>
+
+        {/* Section Activité — 4 KPI cards driven by the period */}
+        <SectionLabel>{t('super_admin.stats.section.activity', 'Activité')}</SectionLabel>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.leads_created', 'Leads créés')}
+            value={stats.period?.new_leads ?? 0}
+            delta={stats.period?.new_leads_delta_pct}
+            deltaFormat={(v) => fmtDeltaPct(v)}
+            t={t}
+          />
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.volume_won', 'Volume gagné')}
+            value={fmtEURCompact(stats.period?.volume_won ?? 0)}
+            delta={stats.period?.volume_won_delta_pct}
+            deltaFormat={(v) => fmtDeltaPct(v)}
+            t={t}
+          />
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.partners', 'Partenaires')}
+            value={stats.total_partners ?? 0}
+            delta={stats.period?.new_partners_delta_abs}
+            deltaFormat={(v) => fmtDeltaAbs(v)}
+            t={t}
+          />
+          <PeriodKPI
+            label={t('super_admin.stats.kpi.users', 'Utilisateurs')}
+            value={stats.total_users ?? 0}
+            delta={stats.period?.new_users_delta_abs}
+            deltaFormat={(v) => fmtDeltaAbs(v)}
+            t={t}
+          />
+        </div>
+
+        {/* Section Clients par plan — snapshot, independent of period */}
+        <ClientsByPlanCard stats={stats} t={t} />
+
+        {/* Section Évolution — chart driven by the period */}
         <TimelineChart series={timeline} active={activeMetric} setActive={setActiveMetric} t={t} />
       </>)}
 
@@ -539,6 +672,7 @@ function TimelineChart({ series, active, setActive, t }) {
     { key: 'partners_cumul', label: t('admin.timeline_metric_partners'), color: '#0ea5e9', format: (v) => v },
     { key: 'leads_cumul', label: t('admin.timeline_metric_leads'), color: '#f59e0b', format: (v) => v },
     { key: 'volume_won', label: t('admin.timeline_metric_volume'), color: '#16a34a', format: (v) => new Intl.NumberFormat(t('admin.fmt_locale'), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0) },
+    { key: 'mrr', label: t('super_admin.stats.evolution.metric.mrr', 'MRR'), color: '#059669', format: (v) => new Intl.NumberFormat(t('admin.fmt_locale'), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0) },
   ];
   const activeM = metrics.find((m) => m.key === active) || metrics[0];
   const values = series.map((p) => Number(p[active]) || 0);
@@ -615,6 +749,260 @@ function KPI({ icon: Icon, label, value, color }) {
           <div style={{ fontSize: 18, fontWeight: 700, color, letterSpacing: -1 }}>{value}</div>
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={20} color={color} /></div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Stats tab — section header label ────────────────────────────────
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
+      {children}
+    </div>
+  );
+}
+
+// ─── Stats tab — KPI card with optional delta or hint ────────────────
+// `delta` is the raw signed number returned by the backend (null when
+// the period is "depuis le début"). `deltaFormat` turns it into a
+// "+12 %" / "−3" / "+29 €" string. `hint` is a fixed phrase shown when
+// there's no period-to-period comparison to make (e.g. "X au total"
+// for the cumulative conversions counter).
+function PeriodKPI({ label, value, delta, deltaFormat, hint, t }) {
+  let hintText = hint || null;
+  let hintColor = '#94a3b8';
+  if (delta != null && deltaFormat) {
+    const arrow = delta > 0 ? '↑ ' : delta < 0 ? '↓ ' : '';
+    hintText = `${arrow}${deltaFormat(delta)} ${t('super_admin.stats.delta.vs_previous', 'vs période précédente')}`;
+    hintColor = delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : '#94a3b8';
+  }
+  return (
+    <div style={{ padding: 16, borderRadius: 12, background: '#fff', border: '1px solid #e2e8f0' }}>
+      <div style={{ color: '#64748b', fontSize: 12, fontWeight: 500, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.4 }}>{value}</div>
+      {hintText && <div style={{ fontSize: 11, color: hintColor, marginTop: 4 }}>{hintText}</div>}
+    </div>
+  );
+}
+
+// ─── Stats tab — date period dropdown ────────────────────────────────
+// Trigger button shows the active range; clicking opens a dropdown
+// with 5 presets + a custom range. Custom mode reveals two date inputs
+// and an "Appliquer" button. Click-outside + Escape close the dropdown
+// — same pattern as the tenant switcher in Layout.
+function PeriodPicker({ period, setPeriod, t }) {
+  const [open, setOpen] = useState(false);
+  const [customMode, setCustomMode] = useState(false);
+  const [customFrom, setCustomFrom] = useState(period.from || '');
+  const [customTo, setCustomTo] = useState(period.to || '');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setCustomMode(false); } };
+    const onKey = (e) => { if (e.key === 'Escape') { setOpen(false); setCustomMode(false); } };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+
+  const presets = [
+    { key: '7d',  label: t('super_admin.stats.period.7d',  '7 derniers jours') },
+    { key: '30d', label: t('super_admin.stats.period.30d', '30 derniers jours') },
+    { key: '3m',  label: t('super_admin.stats.period.3m',  '3 derniers mois') },
+    { key: '12m', label: t('super_admin.stats.period.12m', '12 derniers mois') },
+    { key: 'all', label: t('super_admin.stats.period.all', 'Depuis le début') },
+  ];
+
+  const pick = (key) => {
+    setPeriod(periodFromPreset(key));
+    setOpen(false);
+    setCustomMode(false);
+  };
+
+  const applyCustom = () => {
+    if (!customFrom || !customTo) return;
+    setPeriod({ preset: 'custom', from: customFrom, to: customTo });
+    setOpen(false);
+    setCustomMode(false);
+  };
+
+  // Button label: the matching preset's localised name, or a formatted
+  // range for 'custom'. Compact range format (12 avr. – 11 mai 2026).
+  const label = (() => {
+    const p = presets.find(x => x.key === period.preset);
+    if (p) return p.label;
+    if (period.preset === 'custom' && period.from && period.to) {
+      const f = new Date(period.from);
+      const tt = new Date(period.to);
+      const optDay = { day: 'numeric', month: 'short' };
+      const optFull = { day: 'numeric', month: 'short', year: 'numeric' };
+      return `${f.toLocaleDateString('fr-FR', optDay)} – ${tt.toLocaleDateString('fr-FR', optFull)}`;
+    }
+    return t('super_admin.stats.period.30d', '30 derniers jours');
+  })();
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
+          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+          cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#0f172a',
+        }}
+      >
+        <Calendar size={14} color="#64748b" />
+        <span>{label}</span>
+        <ChevronDown size={14} color="#94a3b8" style={{ transition: 'transform .15s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }} />
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 50,
+          minWidth: 240, background: '#fff', border: '1px solid #e2e8f0',
+          borderRadius: 12, padding: 6,
+          boxShadow: '0 12px 32px rgba(15,23,42,0.12)',
+        }}>
+          {!customMode ? (
+            <>
+              {presets.map(p => (
+                <button
+                  key={p.key}
+                  onClick={() => pick(p.key)}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '8px 12px', border: 'none',
+                    background: period.preset === p.key ? '#f1f5f9' : 'transparent',
+                    borderRadius: 8, fontSize: 13, fontWeight: 500,
+                    color: '#0f172a', cursor: 'pointer',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+              <div style={{ height: 1, background: '#f1f5f9', margin: '6px 0' }} />
+              <button
+                onClick={() => setCustomMode(true)}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  padding: '8px 12px', border: 'none', background: 'transparent',
+                  borderRadius: 8, fontSize: 13, fontWeight: 500,
+                  color: '#0f172a', cursor: 'pointer',
+                }}
+              >
+                {t('super_admin.stats.period.custom', 'Personnalisé…')}
+              </button>
+            </>
+          ) : (
+            <div style={{ padding: 8 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={e => setCustomFrom(e.target.value)}
+                  style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }}
+                />
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={e => setCustomTo(e.target.value)}
+                  style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => setCustomMode(false)}
+                  style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: 12 }}
+                >
+                  {t('admin.cancel', 'Annuler')}
+                </button>
+                <button
+                  onClick={applyCustom}
+                  disabled={!customFrom || !customTo}
+                  style={{ flex: 1, padding: 8, borderRadius: 8, border: 'none', background: '#059669', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600, opacity: (!customFrom || !customTo) ? 0.5 : 1 }}
+                >
+                  {t('super_admin.stats.period.custom_apply', 'Appliquer')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Stats tab — Clients par plan card (snapshot, no period dep) ─────
+// Bar chart on the left + 3 mini-metrics on the right, separated by a
+// vertical border. Bar widths are proportional to total tenant count
+// so a tenant with 0 paid clients still renders cleanly (no NaN).
+function ClientsByPlanCard({ stats, t }) {
+  const plans = stats.clients_by_plan || { starter: 0, pro: 0, business: 0 };
+  const total = (plans.starter || 0) + (plans.pro || 0) + (plans.business || 0);
+  const paid = (plans.pro || 0) + (plans.business || 0);
+  const mrr = stats.mrr_total || 0;
+  const partnersPerClient = stats.partners_per_client || 0;
+  const rows = [
+    { key: 'starter',  label: t('super_admin.stats.plan.starter',  'Starter (gratuit)'), color: '#888780', count: plans.starter || 0, eur: 0 },
+    { key: 'pro',      label: t('super_admin.stats.plan.pro',      'Pro (29 €/mois)'),    color: '#378ADD', count: plans.pro || 0,     eur: (plans.pro || 0) * 29 },
+    { key: 'business', label: t('super_admin.stats.plan.business', 'Business (79 €/mois)'), color: '#1D9E75', count: plans.business || 0, eur: (plans.business || 0) * 79 },
+  ];
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20, marginBottom: 24 }}>
+      <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('super_admin.stats.clients_by_plan.title', 'Clients par plan')}</h3>
+      <p style={{ margin: '4px 0 16px', fontSize: 12, color: '#64748b' }}>
+        {t('super_admin.stats.clients_by_plan.subtitle', { n: total, defaultValue: 'Répartition actuelle des {{n}} tenants' })}
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 24 }}>
+        {/* Bar chart */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {rows.map(r => {
+            const pct = total > 0 ? (r.count / total) * 100 : 0;
+            return (
+              <div key={r.key}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.color }} />
+                    <span style={{ fontSize: 13, color: '#0f172a', fontWeight: 500 }}>{r.label}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#64748b' }}>
+                    {r.count} · {fmtEUR(r.eur)}
+                  </div>
+                </div>
+                <div style={{ height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: r.color, borderRadius: 4 }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Right column — 3 mini-metrics */}
+        <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
+              {t('super_admin.stats.clients_by_plan.mrr_total', 'MRR total')}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: '#059669', letterSpacing: -0.3 }}>{fmtEUR(mrr)}/mois</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
+              {t('super_admin.stats.clients_by_plan.paid_rate', 'Taux payant')}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: '#0f172a', letterSpacing: -0.3 }}>
+              {total > 0 ? Math.round((paid / total) * 100) : 0} % · {paid}/{total}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
+              {t('super_admin.stats.clients_by_plan.partners_per_client', 'Partenaires / client')}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: '#0f172a', letterSpacing: -0.3 }}>
+              {partnersPerClient.toFixed(1)} en moy
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
