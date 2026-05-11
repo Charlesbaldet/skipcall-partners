@@ -3658,6 +3658,23 @@
         "pro": "Pro (29 €/Monat)",
         "business": "Business (79 €/Monat)"
       }
+    },
+    "search": {
+      "tab": "Suche",
+      "title": "Globale Suche",
+      "subtitle": "Suche tenantübergreifend: Kunden, Benutzer, Partner, Deals, Beiträge und Logs.",
+      "placeholder": "Name, E-Mail, Slug, ID, Aktion…",
+      "searching": "Suche…",
+      "hint": "Gib mindestens 2 Zeichen ein, um zu suchen.",
+      "no_results": "Keine Ergebnisse für",
+      "group": {
+        "tenants": "Kunden",
+        "users": "Benutzer",
+        "partners": "Partner",
+        "referrals": "Deals",
+        "blog": "Blog-Artikel",
+        "audit_logs": "Logs"
+      }
     }
   }
 }

@@ -553,6 +553,7 @@ class ApiClient {
 
   // Global search
   globalSearch(query) { return this.request('/search?q=' + encodeURIComponent(query)); }
+  superAdminSearch(query) { return this.request('/super-admin/search?q=' + encodeURIComponent(query)); }
   getInvoices() { return this.request('/billing/invoices'); }
 
   // Audit logs (Settings → Historique tab; admin/superadmin only)

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, FileText, Users, DollarSign, Newspaper, ChevronRight, Compass, Store } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
+import { Highlight, useDebounced } from '../lib/searchUI.jsx';
 
 // Static navigation index — pages, settings tabs, and other actions
 // the user can jump to. Filtered locally on every keystroke; no API
@@ -50,38 +51,6 @@ const CATEGORIES = [
   { key: 'marketplace', icon: Store,      color: '#10B981' },
   { key: 'news',        icon: Newspaper,  color: '#8B5CF6' },
 ];
-
-// Case-insensitive highlight helper: wraps the portion of `text` that
-// matches `query` with a green-tinted <mark>. Escapes regex metachars
-// in the query so punctuation in user input doesn't explode.
-function Highlight({ text, query }) {
-  if (!text || !query || query.length < 2) return text || null;
-  const safe = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  try {
-    const re = new RegExp('(' + safe + ')', 'ig');
-    const parts = String(text).split(re);
-    return (
-      <>
-        {parts.map((p, i) =>
-          re.test(p)
-            ? <mark key={i} style={{ background: 'rgba(5,150,105,0.15)', color: 'inherit', padding: 0, borderRadius: 2 }}>{p}</mark>
-            : <span key={i}>{p}</span>
-        )}
-      </>
-    );
-  } catch {
-    return text;
-  }
-}
-
-function useDebounced(value, ms = 300) {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(id);
-  }, [value, ms]);
-  return v;
-}
 
 export default function SearchPage() {
   const { t } = useTranslation();

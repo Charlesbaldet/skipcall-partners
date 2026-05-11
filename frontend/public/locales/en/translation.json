@@ -3658,6 +3658,23 @@
         "pro": "Pro (€29/mo)",
         "business": "Business (€79/mo)"
       }
+    },
+    "search": {
+      "tab": "Search",
+      "title": "Global search",
+      "subtitle": "Search across all tenants: clients, users, partners, deals, posts and logs.",
+      "placeholder": "Name, email, slug, ID, action…",
+      "searching": "Searching…",
+      "hint": "Type at least 2 characters to search.",
+      "no_results": "No results for",
+      "group": {
+        "tenants": "Clients",
+        "users": "Users",
+        "partners": "Partners",
+        "referrals": "Deals",
+        "blog": "Blog posts",
+        "audit_logs": "Logs"
+      }
     }
   }
 }

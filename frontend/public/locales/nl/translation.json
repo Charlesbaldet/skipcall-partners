@@ -3658,6 +3658,23 @@
         "pro": "Pro (€29/maand)",
         "business": "Business (€79/maand)"
       }
+    },
+    "search": {
+      "tab": "Zoeken",
+      "title": "Globaal zoeken",
+      "subtitle": "Zoek binnen alle tenants: klanten, gebruikers, partners, deals, artikelen en logs.",
+      "placeholder": "Naam, e-mail, slug, ID, actie…",
+      "searching": "Bezig met zoeken…",
+      "hint": "Typ minstens 2 tekens om te zoeken.",
+      "no_results": "Geen resultaten voor",
+      "group": {
+        "tenants": "Klanten",
+        "users": "Gebruikers",
+        "partners": "Partners",
+        "referrals": "Deals",
+        "blog": "Blogartikelen",
+        "audit_logs": "Logs"
+      }
     }
   }
 }

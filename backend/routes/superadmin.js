@@ -603,4 +603,148 @@ router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
   }
 });
 
+// GET /api/super-admin/search?q=…
+//
+// Cross-tenant search for super-admins only. Same ILIKE shape as the
+// per-tenant /api/search router, but no tenant filter — super-admins
+// need to spot which client a row belongs to, so we join the tenant
+// name onto every result that has a tenant_id. Capped at 10 hits per
+// category to keep the dropdown responsive on large datasets.
+//
+// Searchable surfaces: tenants, users, partners, referrals (cross-
+// tenant), blog_posts (no tenant), audit_logs (event-level audit
+// trail). audit_logs is included for completeness but skipped on the
+// FE highlight side — clicking just navigates to the Logs tab.
+router.get('/search', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    const empty = { tenants: [], users: [], partners: [], referrals: [], blog_posts: [], audit_logs: [] };
+    if (q.length < 2) return res.json({ results: empty, total: 0 });
+    const like = '%' + q.replace(/[%_]/g, ch => '\\' + ch) + '%';
+    const CAP = 10;
+
+    const tenantsSql = `
+      SELECT id, name, slug, plan
+        FROM tenants
+       WHERE name ILIKE $1 OR slug ILIKE $1 OR COALESCE(domain, '') ILIKE $1
+       ORDER BY created_at DESC
+       LIMIT $2`;
+
+    const usersSql = `
+      SELECT u.id, u.email, u.full_name, u.role, u.tenant_id,
+             t.name AS tenant_name
+        FROM users u
+   LEFT JOIN tenants t ON t.id = u.tenant_id
+       WHERE u.email ILIKE $1 OR COALESCE(u.full_name, '') ILIKE $1
+       ORDER BY u.created_at DESC NULLS LAST
+       LIMIT $2`;
+
+    const partnersSql = `
+      SELECT p.id, p.name, p.contact_name, p.email, p.tenant_id, p.is_active,
+             t.name AS tenant_name
+        FROM partners p
+   LEFT JOIN tenants t ON t.id = p.tenant_id
+       WHERE p.deleted_at IS NULL
+         AND (p.name ILIKE $1 OR COALESCE(p.contact_name, '') ILIKE $1 OR COALESCE(p.email, '') ILIKE $1)
+       ORDER BY p.created_at DESC
+       LIMIT $2`;
+
+    const referralsSql = `
+      SELECT r.id, r.prospect_name, r.prospect_company, r.prospect_email,
+             r.status, r.tenant_id,
+             t.name AS tenant_name
+        FROM referrals r
+   LEFT JOIN tenants t ON t.id = r.tenant_id
+       WHERE r.deleted_at IS NULL
+         AND (r.prospect_name ILIKE $1
+              OR COALESCE(r.prospect_company, '') ILIKE $1
+              OR COALESCE(r.prospect_email, '')   ILIKE $1
+              OR COALESCE(r.notes, '')            ILIKE $1)
+       ORDER BY r.created_at DESC
+       LIMIT $2`;
+
+    const blogSql = `
+      SELECT id, title, slug, category, published
+        FROM blog_posts
+       WHERE title ILIKE $1
+          OR COALESCE(excerpt, '') ILIKE $1
+          OR COALESCE(category, '') ILIKE $1
+       ORDER BY created_at DESC
+       LIMIT $2`;
+
+    const auditSql = `
+      SELECT a.id, a.action, a.user_email, a.resource_type, a.entity_type,
+             a.created_at, a.tenant_id,
+             t.name AS tenant_name
+        FROM audit_logs a
+   LEFT JOIN tenants t ON t.id = a.tenant_id
+       WHERE a.action ILIKE $1
+          OR COALESCE(a.user_email, '') ILIKE $1
+          OR COALESCE(a.resource_type, '') ILIKE $1
+          OR COALESCE(a.entity_type, '') ILIKE $1
+       ORDER BY a.created_at DESC
+       LIMIT $2`;
+
+    const swallow = (label) => (e) => {
+      console.error('[super-admin.search.' + label + ']', e.message);
+      return { rows: [] };
+    };
+
+    const [tn, us, pa, rf, bl, au] = await Promise.all([
+      query(tenantsSql,   [like, CAP]).catch(swallow('tenants')),
+      query(usersSql,     [like, CAP]).catch(swallow('users')),
+      query(partnersSql,  [like, CAP]).catch(swallow('partners')),
+      query(referralsSql, [like, CAP]).catch(swallow('referrals')),
+      query(blogSql,      [like, CAP]).catch(swallow('blog_posts')),
+      query(auditSql,     [like, CAP]).catch(swallow('audit_logs')),
+    ]);
+
+    const results = {
+      tenants: tn.rows.map(r => ({
+        id: r.id,
+        title: r.name,
+        subtitle: r.slug + (r.plan ? ' · ' + r.plan : ''),
+      })),
+      users: us.rows.map(r => ({
+        id: r.id,
+        title: r.full_name || r.email,
+        subtitle: [r.email, r.role, r.tenant_name].filter(Boolean).join(' · '),
+        tenant_id: r.tenant_id,
+      })),
+      partners: pa.rows.map(r => ({
+        id: r.id,
+        title: r.name,
+        subtitle: [r.contact_name, r.email, r.tenant_name].filter(Boolean).join(' · '),
+        tenant_id: r.tenant_id,
+        status: r.is_active ? 'active' : 'inactive',
+      })),
+      referrals: rf.rows.map(r => ({
+        id: r.id,
+        title: r.prospect_name || r.prospect_company || r.prospect_email,
+        subtitle: [r.prospect_company, r.tenant_name].filter(Boolean).join(' · '),
+        tenant_id: r.tenant_id,
+        status: r.status || '',
+      })),
+      blog_posts: bl.rows.map(r => ({
+        id: r.id,
+        title: r.title,
+        subtitle: '/blog/' + r.slug + (r.category ? ' · ' + r.category : ''),
+        status: r.published ? 'published' : 'draft',
+      })),
+      audit_logs: au.rows.map(r => ({
+        id: r.id,
+        title: r.action,
+        subtitle: [r.user_email, r.entity_type || r.resource_type, r.tenant_name].filter(Boolean).join(' · '),
+        tenant_id: r.tenant_id,
+      })),
+    };
+
+    const total = Object.values(results).reduce((acc, arr) => acc + arr.length, 0);
+    res.json({ results, total });
+  } catch (err) {
+    console.error('[super-admin.search] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

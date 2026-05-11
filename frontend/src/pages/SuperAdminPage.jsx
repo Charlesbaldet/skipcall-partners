@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
-import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ChevronDown, Calendar, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
+import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ChevronDown, Calendar, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3, Search, FileText } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import Pagination from '../components/Pagination.jsx';
+import { Highlight, useDebounced } from '../lib/searchUI.jsx';
 
 // ─── Period helpers (Stats tab) ──────────────────────────────────────
 // One function maps a preset key to a concrete {from, to} window so
@@ -90,6 +91,21 @@ export default function SuperAdminPage() {
   const BLOG_PAGE_SIZE = 10;
   const [blogPage, setBlogPage] = useState(1);
   const [blogTotal, setBlogTotal] = useState(0);
+  // Cross-tenant Recherche tab. Single input → fan-out backend
+  // search across tenants/users/partners/referrals/blog/audit_logs.
+  // Click a result → navigate to the relevant tab with
+  // ?highlight=<id> so the destination row flashes into view.
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const debouncedSearch = useDebounced(searchQuery, 300);
+  // ?highlight=<id> URL param drives a 3s row flash on the destination
+  // tab. The Search tab navigates here after a result click; the
+  // clients/blog tabs read it on mount, scroll the matching row into
+  // view, then fade out.
+  const highlightParam = searchParams.get('highlight');
+  const [flashId, setFlashId] = useState(null);
   const [blogForm, setBlogForm] = useState({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' });
   const [blogEditId, setBlogEditId] = useState(null);
   const [blogSaving, setBlogSaving] = useState(false);
@@ -249,6 +265,32 @@ export default function SuperAdminPage() {
   // Subsequent paging happens via onPageChange below.
   useEffect(() => { if (tab === 'logs') { setAuditLogsPage(1); loadLogs(1); } }, [tab]);
   useEffect(() => { if (tab === 'blog') { setBlogPage(1); loadBlog(1); } }, [tab]);
+  // Flash + scroll-to logic for ?highlight=<id>. Re-runs when the
+  // target data (tenants, blogPosts) refills so the row is present
+  // before we try to query it. Auto-clears after 3s to keep the URL
+  // from leaving a permanent highlight on later navigations.
+  useEffect(() => {
+    if (!highlightParam) { setFlashId(null); return; }
+    setFlashId(highlightParam);
+    const el = document.querySelector(`[data-row-id="${CSS.escape(highlightParam)}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const tm = setTimeout(() => setFlashId(null), 3000);
+    return () => clearTimeout(tm);
+  }, [highlightParam, tenants, blogPosts, tab]);
+  // Recherche tab: fire the backend search whenever the debounced
+  // query has 2+ chars. Cancellation flag prevents an out-of-order
+  // response from clobbering a newer one.
+  useEffect(() => {
+    const q = debouncedSearch.trim();
+    if (q.length < 2) { setSearchResults(null); setSearchLoading(false); return; }
+    let cancelled = false;
+    setSearchLoading(true); setSearchError('');
+    api.superAdminSearch(q)
+      .then(d => { if (!cancelled) setSearchResults(d); })
+      .catch(e => { if (!cancelled) setSearchError(e.message || 'Erreur'); })
+      .finally(() => { if (!cancelled) setSearchLoading(false); });
+    return () => { cancelled = true; };
+  }, [debouncedSearch]);
   // Refetch /stats + /timeline whenever the period selection changes.
   // loadBlog / tenants don't depend on period so they stay in the
   // initial mount-only useEffect above.
@@ -483,7 +525,7 @@ export default function SuperAdminPage() {
               ))}
             </tr></thead>
             <tbody>{tenants.map(tn => (
-              <tr key={tn.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+              <tr key={tn.id} data-row-id={tn.id} style={{ borderBottom: '1px solid #f8fafc', background: flashId === tn.id ? '#fef9c3' : undefined, transition: 'background 0.6s' }}>
                 <td style={{ padding: '13px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 34, height: 34, borderRadius: 8, background: tn.primary_color || '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{tn.name[0]}</div>
@@ -552,6 +594,133 @@ export default function SuperAdminPage() {
           </div>
         )}
       </>)}
+
+      {tab === 'search' && (
+        <div style={{ maxWidth: 900 }}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, color: '#0f172a', letterSpacing: -0.4 }}>
+            {t('super_admin.search.title', 'Recherche globale')}
+          </h2>
+          <p style={{ margin: '0 0 20px', fontSize: 13, color: '#64748b' }}>
+            {t('super_admin.search.subtitle', 'Cherche à travers tous les tenants : clients, utilisateurs, partenaires, deals, articles et logs.')}
+          </p>
+          <div style={{ position: 'relative', marginBottom: 24 }}>
+            <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <input
+              autoFocus
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('super_admin.search.placeholder', 'Nom, email, slug, ID, action…')}
+              style={{
+                width: '100%', height: 44, padding: '0 14px 0 42px',
+                borderRadius: 10, border: '1.5px solid #e2e8f0',
+                fontSize: 14, fontFamily: 'inherit', color: '#0f172a',
+                outline: 'none', background: '#fff', boxSizing: 'border-box',
+              }}
+              onFocus={(e) => { e.target.style.borderColor = '#059669'; }}
+              onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }}
+            />
+          </div>
+          {searchError && (
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+              {searchError}
+            </div>
+          )}
+          {searchLoading && debouncedSearch.trim().length >= 2 && (
+            <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: 13 }}>{t('super_admin.search.searching', 'Recherche…')}</div>
+          )}
+          {!searchLoading && debouncedSearch.trim().length < 2 && !searchResults && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontSize: 13 }}>
+              {t('super_admin.search.hint', 'Tape au moins 2 caractères pour lancer la recherche.')}
+            </div>
+          )}
+          {!searchLoading && searchResults && (searchResults.total || 0) === 0 && debouncedSearch.trim().length >= 2 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b', fontSize: 13 }}>
+              {t('super_admin.search.no_results', 'Aucun résultat pour')} <strong style={{ color: '#0f172a' }}>« {debouncedSearch} »</strong>
+            </div>
+          )}
+          {!searchLoading && searchResults && (searchResults.total || 0) > 0 && (() => {
+            // Group config: title key + tab the row lives in. Click →
+            // navigate to ?tab=<dest>&highlight=<id>. audit_logs is the
+            // exception — no highlight, just jump to the logs tab.
+            const GROUPS = [
+              { key: 'tenants',    label: t('super_admin.search.group.tenants',    'Clients'),       icon: Globe,    color: '#0EA5E9', dest: 'clients' },
+              { key: 'users',      label: t('super_admin.search.group.users',      'Utilisateurs'),  icon: Users,    color: '#6366f1', dest: 'clients' },
+              { key: 'partners',   label: t('super_admin.search.group.partners',   'Partenaires'),   icon: Users,    color: '#059669', dest: 'clients' },
+              { key: 'referrals',  label: t('super_admin.search.group.referrals',  'Deals'),         icon: Briefcase, color: '#3b82f6', dest: 'clients' },
+              { key: 'blog_posts', label: t('super_admin.search.group.blog',       'Articles blog'), icon: FileText, color: '#8b5cf6', dest: 'blog'    },
+              { key: 'audit_logs', label: t('super_admin.search.group.audit_logs', 'Logs'),          icon: Activity, color: '#dc2626', dest: 'logs'    },
+            ];
+            const buckets = GROUPS
+              .map(g => ({ ...g, items: searchResults.results?.[g.key] || [] }))
+              .filter(g => g.items.length > 0);
+            return (
+              <>
+                {buckets.map(group => {
+                  const Icon = group.icon;
+                  return (
+                    <section key={group.key} style={{ marginBottom: 24 }}>
+                      <header style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                        <span style={{ width: 24, height: 24, borderRadius: 7, background: group.color + '15', color: group.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Icon size={13}/>
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{group.label}</span>
+                        <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>({group.items.length})</span>
+                      </header>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {group.items.map(it => (
+                          <button
+                            key={group.key + '-' + it.id}
+                            type="button"
+                            onClick={() => {
+                              // audit_logs: no row to highlight, jump
+                              // straight to the Logs tab.
+                              if (group.key === 'audit_logs') {
+                                navigate('/super-admin?tab=' + group.dest);
+                                return;
+                              }
+                              // Users/partners/referrals live inside a
+                              // tenant — the row they map to in the
+                              // Clients list is the tenant itself. So
+                              // highlight the parent tenant_id when
+                              // present; fall back to the result's own
+                              // id (tenants, blog posts).
+                              const highlightId = (group.dest === 'clients' && group.key !== 'tenants' && it.tenant_id)
+                                ? it.tenant_id
+                                : it.id;
+                              navigate('/super-admin?tab=' + group.dest + '&highlight=' + encodeURIComponent(highlightId));
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '11px 14px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .12s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <Highlight text={it.title} query={debouncedSearch}/>
+                              </div>
+                              {it.subtitle && (
+                                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  <Highlight text={it.subtitle} query={debouncedSearch}/>
+                                </div>
+                              )}
+                            </div>
+                            {it.status && (
+                              <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999, background: group.color + '15', color: group.color, whiteSpace: 'nowrap' }}>
+                                {it.status}
+                              </span>
+                            )}
+                            <ChevronRight size={15} color="#cbd5e1" style={{ flexShrink: 0 }}/>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+              </>
+            );
+          })()}
+        </div>
+      )}
 
       {tab === 'blog' && (
         <div>
@@ -652,7 +821,7 @@ export default function SuperAdminPage() {
                 <p style={{ fontSize: 16 }}>{t('admin.blog_no_articles')}</p>
               </div>
             ) : blogPosts.map(p => (
-              <div key={p.id} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div key={p.id} data-row-id={p.id} style={{ background: flashId === p.id ? '#fef9c3' : '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 16, transition: 'background 0.6s' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: p.published ? '#f0fdf4' : '#f8fafc', color: p.published ? '#16a34a' : '#94a3b8', fontWeight: 700 }}>
