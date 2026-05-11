@@ -3606,57 +3606,5 @@
       "good": "Buena",
       "strong": "Fuerte"
     }
-  },
-  "super_admin": {
-    "stats": {
-      "title": "Estadísticas",
-      "subtitle": "Visión multi-tenant",
-      "section": {
-        "business": "Negocio",
-        "activity": "Actividad"
-      },
-      "kpi": {
-        "mrr": "MRR",
-        "tenants_active": "Inquilinos activos",
-        "new_clients": "Nuevos clientes",
-        "conversions": "Conversiones",
-        "conversions_total": "{{n}} en total",
-        "leads_created": "Leads creados",
-        "volume_won": "Volumen ganado",
-        "partners": "Socios",
-        "users": "Usuarios"
-      },
-      "delta": {
-        "vs_previous": "vs período anterior"
-      },
-      "clients_by_plan": {
-        "title": "Clientes por plan",
-        "subtitle": "Distribución actual de {{n}} inquilinos",
-        "mrr_total": "MRR total",
-        "paid_rate": "Tasa de pago",
-        "partners_per_client": "Socios / cliente"
-      },
-      "evolution": {
-        "title": "Evolución",
-        "subtitle": "Sigue el período seleccionado",
-        "metric": {
-          "mrr": "MRR"
-        }
-      },
-      "period": {
-        "7d": "Últimos 7 días",
-        "30d": "Últimos 30 días",
-        "3m": "Últimos 3 meses",
-        "12m": "Últimos 12 meses",
-        "all": "Desde el inicio",
-        "custom": "Personalizado…",
-        "custom_apply": "Aplicar"
-      },
-      "plan": {
-        "starter": "Starter (gratis)",
-        "pro": "Pro (29 €/mes)",
-        "business": "Business (79 €/mes)"
-      }
-    }
   }
 }

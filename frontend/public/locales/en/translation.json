@@ -3606,57 +3606,5 @@
       "good": "Good",
       "strong": "Strong"
     }
-  },
-  "super_admin": {
-    "stats": {
-      "title": "Statistics",
-      "subtitle": "Multi-tenant overview",
-      "section": {
-        "business": "Business",
-        "activity": "Activity"
-      },
-      "kpi": {
-        "mrr": "MRR",
-        "tenants_active": "Active tenants",
-        "new_clients": "New clients",
-        "conversions": "Conversions",
-        "conversions_total": "{{n}} total",
-        "leads_created": "Leads created",
-        "volume_won": "Won volume",
-        "partners": "Partners",
-        "users": "Users"
-      },
-      "delta": {
-        "vs_previous": "vs previous period"
-      },
-      "clients_by_plan": {
-        "title": "Clients by plan",
-        "subtitle": "Current breakdown of {{n}} tenants",
-        "mrr_total": "Total MRR",
-        "paid_rate": "Paid rate",
-        "partners_per_client": "Partners / client"
-      },
-      "evolution": {
-        "title": "Trend",
-        "subtitle": "Follows the selected period",
-        "metric": {
-          "mrr": "MRR"
-        }
-      },
-      "period": {
-        "7d": "Last 7 days",
-        "30d": "Last 30 days",
-        "3m": "Last 3 months",
-        "12m": "Last 12 months",
-        "all": "All time",
-        "custom": "Custom…",
-        "custom_apply": "Apply"
-      },
-      "plan": {
-        "starter": "Starter (free)",
-        "pro": "Pro (€29/mo)",
-        "business": "Business (€79/mo)"
-      }
-    }
   }
 }

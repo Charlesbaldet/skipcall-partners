@@ -1076,27 +1076,6 @@ async function runMigrations() {
     console.error('[migrate.v45] failed:', err.message);
   }
 
-  // v46: billing / Stripe subscription columns on tenants. Previously
-  // lived in db/migrate_billing.sql (deleted in this commit); porting
-  // the columns here so a fresh deploy picks them up automatically.
-  // Idempotent — safe to run repeatedly (ADD COLUMN IF NOT EXISTS +
-  // UPDATE WHERE NULL).
-  try {
-    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'starter'`);
-    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(200)`);
-    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(200)`);
-    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS plan_partner_limit INTEGER DEFAULT 3`);
-    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS plan_started_at TIMESTAMPTZ`);
-    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS plan_ends_at TIMESTAMPTZ`);
-    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'active'`);
-    await query(`UPDATE tenants SET plan = 'starter' WHERE plan IS NULL`);
-    await query(`UPDATE tenants SET plan_partner_limit = 3 WHERE plan_partner_limit IS NULL`);
-    await query(`UPDATE tenants SET payment_status = 'active' WHERE payment_status IS NULL`);
-    console.log('[billing] v46 tenants.plan + stripe columns ready');
-  } catch (err) {
-    console.error('[migrate.v46] failed:', err.message);
-  }
-
   logger.info('Migrations completed');
 
   } catch (err) {
