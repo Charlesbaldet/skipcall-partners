@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ChevronDown, Calendar, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 // ─── Period helpers (Stats tab) ──────────────────────────────────────
@@ -380,7 +381,7 @@ export default function SuperAdminPage() {
         <ClientsByPlanCard stats={stats} t={t} />
 
         {/* Section Évolution — chart driven by the period */}
-        <TimelineChart series={timeline} active={activeMetric} setActive={setActiveMetric} t={t} />
+        <TimelineChart series={timeline} active={activeMetric} setActive={setActiveMetric} t={t} loading={loading} />
       </>)}
 
       {tab === 'clients' && (<>
@@ -659,82 +660,137 @@ export default function SuperAdminPage() {
   );
 }
 
-function TimelineChart({ series, active, setActive, t }) {
+function TimelineChart({ series, active, setActive, t, loading = false }) {
+  const metrics = [
+    { key: 'tenants_cumul',  label: t('admin.timeline_metric_clients'),  color: '#059669', isCurrency: false },
+    { key: 'partners_cumul', label: t('admin.timeline_metric_partners'), color: '#0ea5e9', isCurrency: false },
+    { key: 'leads_cumul',    label: t('admin.timeline_metric_leads'),    color: '#f59e0b', isCurrency: false },
+    { key: 'volume_won',     label: t('admin.timeline_metric_volume'),   color: '#16a34a', isCurrency: true  },
+    { key: 'mrr',            label: t('super_admin.stats.evolution.metric.mrr', 'MRR'), color: '#6366f1', isCurrency: true },
+  ];
+  const activeM = metrics.find((m) => m.key === active) || metrics[0];
+
+  // Card wrapper shared by all three states so the page layout never
+  // shifts when data arrives or vanishes.
+  const cardStyle = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 20, overflow: 'hidden' };
+
+  // Loading skeleton — distinct from "no data". Renders the same
+  // outer card shape + a pulsing block where the chart will land, so
+  // the visible height is stable across loading → loaded.
+  if (loading) {
+    return (
+      <div style={cardStyle}>
+        <style>{`@keyframes rb-tl-pulse{0%,100%{opacity:.55}50%{opacity:1}}.rb-tl-skel{background:#f1f5f9;border-radius:8;animation:rb-tl-pulse 1.4s ease-in-out infinite}`}</style>
+        <div style={{ padding: '14px 18px 0' }}>
+          <div className="rb-tl-skel" style={{ width: 160, height: 16, marginBottom: 6 }} />
+          <div className="rb-tl-skel" style={{ width: 220, height: 12, marginBottom: 16 }} />
+        </div>
+        <div style={{ padding: '0 24px 24px' }}>
+          <div className="rb-tl-skel" style={{ width: '100%', height: 220 }} />
+        </div>
+      </div>
+    );
+  }
+
   if (!series || series.length === 0) {
     return (
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 40, textAlign: 'center', marginBottom: 28, color: '#94a3b8' }}>
+      <div style={{ ...cardStyle, padding: 40, textAlign: 'center', color: '#94a3b8' }}>
         {t('admin.timeline_no_data')}
       </div>
     );
   }
-  const metrics = [
-    { key: 'tenants_cumul', label: t('admin.timeline_metric_clients'), color: '#059669', format: (v) => v },
-    { key: 'partners_cumul', label: t('admin.timeline_metric_partners'), color: '#0ea5e9', format: (v) => v },
-    { key: 'leads_cumul', label: t('admin.timeline_metric_leads'), color: '#f59e0b', format: (v) => v },
-    { key: 'volume_won', label: t('admin.timeline_metric_volume'), color: '#16a34a', format: (v) => new Intl.NumberFormat(t('admin.fmt_locale'), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0) },
-    { key: 'mrr', label: t('super_admin.stats.evolution.metric.mrr', 'MRR'), color: '#059669', format: (v) => new Intl.NumberFormat(t('admin.fmt_locale'), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0) },
-  ];
-  const activeM = metrics.find((m) => m.key === active) || metrics[0];
-  const values = series.map((p) => Number(p[active]) || 0);
-  const max = Math.max(1, ...values);
-  const min = Math.min(0, ...values);
-  const W = 800, H = 150, padL = 48, padR = 12, padT = 16, padB = 24;
-  const innerW = W - padL - padR, innerH = H - padT - padB;
-  const x = (i) => padL + (series.length === 1 ? innerW / 2 : (i / (series.length - 1)) * innerW);
-  const y = (v) => padT + innerH - ((v - min) / (max - min || 1)) * innerH;
-  const path = series.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(values[i])}`).join(' ');
-  const areaPath = `${path} L ${x(series.length - 1)} ${padT + innerH} L ${x(0)} ${padT + innerH} Z`;
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((r) => min + (max - min) * r);
+
+  // Y axis formatter — compact € for currency metrics, integer for
+  // counts. Mirrors DashboardPage's `v >= 1000 ? Xk : v` pattern.
+  const yTickFormatter = (v) => {
+    if (activeM.isCurrency) {
+      return v >= 1000 ? `${Math.round(v / 1000)} k €` : `${v} €`;
+    }
+    return v;
+  };
+
+  // Tooltip value formatter — full localised currency for €, integer
+  // string for counts. The label (X-axis value) is rendered by
+  // recharts above the value list via labelStyle.
+  const tooltipFormatter = (v) => {
+    if (activeM.isCurrency) {
+      return new Intl.NumberFormat(t('admin.fmt_locale'), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v || 0);
+    }
+    return String(v ?? 0);
+  };
+
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, marginBottom: 20, overflow: 'hidden' }}>
-      <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+    <div style={cardStyle}>
+      <div style={{ padding: '14px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('admin.timeline_title')}</h3>
           <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>{t('admin.timeline_subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {metrics.map((m) => (
-            <button key={m.key} onClick={() => setActive(m.key)}
-              style={{ background: active === m.key ? m.color : '#f1f5f9', color: active === m.key ? '#fff' : '#475569', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
-              {m.label}
-            </button>
-          ))}
+          {metrics.map((m) => {
+            const isActive = active === m.key;
+            return (
+              <button
+                key={m.key}
+                onClick={() => setActive(m.key)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background: isActive ? `${m.color}15` : 'transparent',
+                  color: isActive ? m.color : '#64748b',
+                  border: `1px solid ${isActive ? m.color : '#e2e8f0'}`,
+                  transition: 'all .15s',
+                }}
+              >
+                {m.label}
+              </button>
+            );
+          })}
         </div>
       </div>
-      <div style={{ padding: '10px 18px 16px' }}>
-        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
-          <defs>
-            <linearGradient id={`grad-${active}`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor={activeM.color} stopOpacity="0.25" />
-              <stop offset="100%" stopColor={activeM.color} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {yTicks.map((v, i) => (
-            <g key={i}>
-              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke="#f1f5f9" strokeWidth="1" />
-              <text x={padL - 8} y={y(v) + 4} fontSize="10" fill="#94a3b8" textAnchor="end">
-                {active === 'volume_won' ? new Intl.NumberFormat(t('admin.fmt_locale'), { notation: 'compact' }).format(v) : Math.round(v)}
-              </text>
-            </g>
-          ))}
-          {series.map((p, i) => (
-            i % Math.max(1, Math.ceil(series.length / 6)) === 0 && (
-              <text key={i} x={x(i)} y={H - 10} fontSize="10" fill="#94a3b8" textAnchor="middle">{p.label}</text>
-            )
-          ))}
-          <path d={areaPath} fill={`url(#grad-${active})`} />
-          <path d={path} fill="none" stroke={activeM.color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-          {series.map((p, i) => (
-            <g key={i}>
-              <circle cx={x(i)} cy={y(values[i])} r="3" fill="#fff" stroke={activeM.color} strokeWidth="2" />
-              <title>{`${p.label}: ${activeM.format(values[i])}`}</title>
-            </g>
-          ))}
-        </svg>
-        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: '#64748b' }}>
-          <span>{t('admin.timeline_last_month')}</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: activeM.color }}>{activeM.format(values[values.length - 1] || 0)}</span>
-        </div>
+      <div style={{ padding: '4px 24px 24px' }}>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={series} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
+            <defs>
+              <linearGradient id={`tl-grad-${active}`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor={activeM.color} stopOpacity={0.25} />
+                <stop offset="100%" stopColor={activeM.color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#f3f4f6" vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 11, fill: '#94a3b8' }}
+              axisLine={{ stroke: '#e5e7eb' }}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: '#94a3b8' }}
+              axisLine={false}
+              tickLine={false}
+              width={48}
+              tickFormatter={yTickFormatter}
+            />
+            <Tooltip
+              contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+              labelStyle={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}
+              formatter={(v) => [tooltipFormatter(v), activeM.label]}
+              cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
+            />
+            <Area
+              type="monotone"
+              dataKey={activeM.key}
+              stroke={activeM.color}
+              strokeWidth={2}
+              fill={`url(#tl-grad-${active})`}
+              dot={false}
+              activeDot={{ r: 4, stroke: activeM.color, strokeWidth: 2, fill: '#fff' }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
