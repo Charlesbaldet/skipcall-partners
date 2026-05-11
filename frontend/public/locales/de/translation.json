@@ -2086,7 +2086,8 @@
     "timeline_subtitle": "Verfolgen Sie das Wachstum Ihrer Plattform",
     "timeline_last_month": "Letzter Monat",
     "tenant_users_in_use": "Möchten Sie das Löschen erzwingen?",
-    "fmt_locale": "de-DE"
+    "fmt_locale": "de-DE",
+    "th_plan": "Plan"
   },
   "layout_extra": {
     "space_partner": "Partner",

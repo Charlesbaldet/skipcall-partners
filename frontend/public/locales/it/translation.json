@@ -2086,7 +2086,8 @@
     "timeline_subtitle": "Monitora la crescita della tua piattaforma",
     "timeline_last_month": "Ultimo mese",
     "tenant_users_in_use": "Vuoi forzare l'eliminazione?",
-    "fmt_locale": "it-IT"
+    "fmt_locale": "it-IT",
+    "th_plan": "Piano"
   },
   "layout_extra": {
     "space_partner": "Partner",

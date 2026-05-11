@@ -2086,7 +2086,8 @@
     "timeline_subtitle": "Track your platform's growth",
     "timeline_last_month": "Last month",
     "tenant_users_in_use": "Do you want to force deletion?",
-    "fmt_locale": "en-US"
+    "fmt_locale": "en-US",
+    "th_plan": "Plan"
   },
   "layout_extra": {
     "space_partner": "Partner",

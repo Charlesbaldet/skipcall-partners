@@ -2086,7 +2086,8 @@
     "timeline_subtitle": "Sigue el crecimiento de tu plataforma",
     "timeline_last_month": "Último mes",
     "tenant_users_in_use": "¿Desea forzar la eliminación?",
-    "fmt_locale": "es-ES"
+    "fmt_locale": "es-ES",
+    "th_plan": "Plan"
   },
   "layout_extra": {
     "space_partner": "Socio",

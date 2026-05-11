@@ -2086,7 +2086,8 @@
     "timeline_subtitle": "Volg de groei van je platform",
     "timeline_last_month": "Afgelopen maand",
     "tenant_users_in_use": "Wilt u het verwijderen forceren?",
-    "fmt_locale": "nl-NL"
+    "fmt_locale": "nl-NL",
+    "th_plan": "Plan"
   },
   "layout_extra": {
     "space_partner": "Partner",
