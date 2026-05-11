@@ -68,6 +68,10 @@ export default function SettingsPage() {
       { id: 'team', icon: Users, label: t('settings.tab_team') },
     ] : []),
     ...(isAdmin ? [
+      { id: 'company', icon: Building, label: t('settings.company_tab', 'Entreprise') },
+      { id: 'billing', icon: CreditCard, label: t('settings.tab_billing', 'Facturation') },
+    ] : []),
+    ...(isAdmin ? [
       { section: t('layout.section.programme') },
       { id: 'branding', icon: Palette, label: t('settings.tab_branding') },
       { id: 'pipeline', icon: Trophy, label: t('settings.tab_pipeline') },
@@ -76,8 +80,6 @@ export default function SettingsPage() {
       { section: t('layout.section.preferences') },
       { id: 'notifications', icon: Bell, label: t('settings.tab_notifications_emails') },
       { id: 'integrations', icon: Plug, label: t('settings.tab_integrations') },
-      { id: 'billing', icon: CreditCard, label: t('settings.tab_billing', 'Facturation') },
-      { id: 'company', icon: Building, label: t('settings.company_tab', 'Entreprise') },
       { id: 'audit', icon: History, label: t('settings.audit.tab_label', 'Historique') },
     ] : []),
     ...(isSuperadmin ? [
