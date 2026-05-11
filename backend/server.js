@@ -168,19 +168,32 @@ app.use(express.json({ limit: '15mb' }));
 app.use('/api/health', require('./routes/health'));
 
 // ─── Rate limiting ───
+// General limiter: 600 req / 15 min / IP. Sized for a real admin
+// session (Layout fires ~6 mount fetches, SuperAdmin page does
+// Promise.all of 5+ endpoints, every navigation reissues ~3-5
+// requests). Previous ceiling of 100 was exhausted in minutes by
+// any active admin. Still tight enough to stop a naive scraper.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 600,
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
-const authLimiter = rateLimit({
+// Brute-force protection: 20 req / 15 min / IP, mounted ONLY on
+// /auth/login + /auth/signup (the credential-checking entry points).
+// Other /auth/* endpoints (me, me/spaces, switch-space, mfa, etc.)
+// are session-management calls hit repeatedly during normal use and
+// fall back under the general limiter above. Previously this limiter
+// covered the entire /api/auth/ prefix which choked Layout + multi-
+// tenant switching for active admins.
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
 });
-app.use('/api/auth/', authLimiter);
+app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/signup', loginLimiter);
 
 // Tighter limiter on the password-reset surface. Both forgot-password
 // (email enumeration) and reset-password (token brute-force) need a
