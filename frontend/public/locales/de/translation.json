@@ -3786,6 +3786,16 @@
       "kpi_submissions": "Einsendungen",
       "kpi_conversion": "Gesamtkonversion",
       "funnel_title": "Funnel",
+      "funnel_journey": "Besucherreise",
+      "funnel_overall_rate": "Gesamte Konversionsrate",
+      "funnel_no_start": "{{count}} Besucher haben nicht gestartet",
+      "funnel_abandon_step": "{{count}} Besucher abgebrochen bei Schritt {{step}}",
+      "funnel_abandon_final": "{{count}} Besucher abgebrochen beim letzten Schritt",
+      "funnel_empty": "Keine Daten für diesen Zeitraum.",
+      "period_7d_full": "Letzte 7 Tage",
+      "period_30d_full": "Letzte 30 Tage",
+      "period_90d_full": "Letzte 90 Tage",
+      "period_all_full": "Gesamter Zeitraum",
       "abandons_title": "Top abgebrochene Felder",
       "abandons_empty": "Im Zeitraum keine abgebrochenen Felder."
     }

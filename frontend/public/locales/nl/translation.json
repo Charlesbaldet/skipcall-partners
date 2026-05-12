@@ -3786,6 +3786,16 @@
       "kpi_submissions": "Inzendingen",
       "kpi_conversion": "Algemene conversie",
       "funnel_title": "Funnel",
+      "funnel_journey": "Bezoekersreis",
+      "funnel_overall_rate": "Totale conversieratio",
+      "funnel_no_start": "{{count}} bezoekers zijn niet gestart",
+      "funnel_abandon_step": "{{count}} bezoekers afgehaakt bij stap {{step}}",
+      "funnel_abandon_final": "{{count}} bezoekers afgehaakt bij de laatste stap",
+      "funnel_empty": "Geen gegevens voor deze periode.",
+      "period_7d_full": "Afgelopen 7 dagen",
+      "period_30d_full": "Afgelopen 30 dagen",
+      "period_90d_full": "Afgelopen 90 dagen",
+      "period_all_full": "Volledige periode",
       "abandons_title": "Top verlaten velden",
       "abandons_empty": "Geen verlaten velden in deze periode."
     }

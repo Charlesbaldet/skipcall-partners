@@ -3786,6 +3786,16 @@
       "kpi_submissions": "Submissões",
       "kpi_conversion": "Conversão global",
       "funnel_title": "Funnel",
+      "funnel_journey": "Percurso do visitante",
+      "funnel_overall_rate": "Taxa de conversão global",
+      "funnel_no_start": "{{count}} visitantes não iniciaram",
+      "funnel_abandon_step": "{{count}} visitantes abandonaram na etapa {{step}}",
+      "funnel_abandon_final": "{{count}} visitantes abandonaram na etapa final",
+      "funnel_empty": "Sem dados para este período.",
+      "period_7d_full": "Últimos 7 dias",
+      "period_30d_full": "Últimos 30 dias",
+      "period_90d_full": "Últimos 90 dias",
+      "period_all_full": "Todo o período",
       "abandons_title": "Top de campos abandonados",
       "abandons_empty": "Sem campos abandonados no período."
     }

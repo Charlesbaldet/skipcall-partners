@@ -3786,6 +3786,16 @@
       "kpi_submissions": "Invii",
       "kpi_conversion": "Conversione globale",
       "funnel_title": "Funnel",
+      "funnel_journey": "Percorso del visitatore",
+      "funnel_overall_rate": "Tasso di conversione globale",
+      "funnel_no_start": "{{count}} visitatori non hanno iniziato",
+      "funnel_abandon_step": "{{count}} visitatori abbandonati al passaggio {{step}}",
+      "funnel_abandon_final": "{{count}} visitatori abbandonati al passaggio finale",
+      "funnel_empty": "Nessun dato per questo periodo.",
+      "period_7d_full": "Ultimi 7 giorni",
+      "period_30d_full": "Ultimi 30 giorni",
+      "period_90d_full": "Ultimi 90 giorni",
+      "period_all_full": "Intero periodo",
       "abandons_title": "Top dei campi abbandonati",
       "abandons_empty": "Nessun campo abbandonato nel periodo."
     }

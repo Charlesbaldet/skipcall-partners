@@ -4,7 +4,7 @@ import {
   FileText, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Share2,
   Copy, Check, Globe, X, Eye, EyeOff, AlertTriangle, Link2,
   Type, Mail, Phone, ListChecks, CheckSquare, Circle, Calendar as CalendarIcon, Hash,
-  AlignLeft, ChevronDown, RotateCcw, Loader2,
+  AlignLeft, ChevronDown, RotateCcw, Loader2, ArrowDownRight,
 } from 'lucide-react';
 import api from '../lib/api';
 import { showToast } from '../components/Dialogs.jsx';
@@ -655,7 +655,6 @@ function StatsView({ formId, t }) {
   const funnel = data?.funnel || [];
   const abandons = data?.top_abandons || [];
   const partners = data?.partners || [];
-  const maxFunnel = Math.max(1, ...funnel.map(f => f.count));
   const fmtPct = (n) => Math.round((n || 0) * 100) + ' %';
 
   const PERIODS = [
@@ -702,30 +701,14 @@ function StatsView({ formId, t }) {
             <StatCard label={t('forms.stats.kpi_conversion', 'Conversion globale')} value={fmtPct(k.conversion_rate)} />
           </div>
 
-          {/* Funnel — bars are 100%-relative to the max step count so
-              the shape stays readable even with low absolute traffic. */}
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('forms.stats.funnel_title', 'Funnel')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {funnel.map((row, i) => {
-                const w = Math.round((row.count / maxFunnel) * 100);
-                return (
-                  <div key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 110, fontSize: 12, color: '#64748b' }}>{row.label}</div>
-                    <div style={{ flex: 1, height: 28, position: 'relative', background: '#f8fafc', borderRadius: 6, overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', inset: 0, width: w + '%', background: i === funnel.length - 1 ? '#059669' : '#6366f1', opacity: 0.85, borderRadius: 6, transition: 'width 0.3s' }} />
-                      <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 10px', color: w > 30 ? '#fff' : '#0f172a', fontSize: 12, fontWeight: 600 }}>
-                        <span>{row.count}</span>
-                        {row.rate_from_prev != null && i > 0 && (
-                          <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>{fmtPct(row.rate_from_prev)}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* ─── Funnel — vertical layout with explicit drop-off
+               callouts between each pair of consecutive steps. Bar
+               width is normalised to the first step (Vues) so the
+               whole funnel reads as "share of inbound that reached
+               this point", which is more intuitive than rate-from-
+               previous-step. The drop-off banner between rows surfaces
+               the actual leak. */}
+          <FunnelSection funnel={funnel} period={period} kpis={k} t={t} fmtPct={fmtPct} />
 
           {/* Top abandoned fields */}
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
@@ -754,6 +737,172 @@ function StatCard({ label, value, accent }) {
     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '14px 18px' }}>
       <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 6, letterSpacing: -0.5 }}>{value}</div>
+    </div>
+  );
+}
+
+// ─── Visitor journey funnel ────────────────────────────────────────
+// Vertical funnel with a drop-off callout between each pair of
+// consecutive steps. The funnel rows come from the BE in this order:
+// views → starts → step_1 .. step_N → submit. We render each row as a
+// numbered pill + progress card, and squeeze a red "X visitors dropped
+// off" banner between adjacent rows whenever there's a leak.
+//
+// All wording comes from i18n — the BE-supplied row.label is shown
+// verbatim as a fallback when no translation is registered, so old
+// data shapes still render readably.
+const FUNNEL_PRIMARY      = '#1d9e75';
+const FUNNEL_PRIMARY_BG   = 'rgba(29, 158, 117, 0.18)';
+const FUNNEL_ACCENT_BG    = 'rgba(29, 158, 117, 0.08)';
+const FUNNEL_ACCENT_BORDER = 'rgba(29, 158, 117, 0.3)';
+const FUNNEL_DROP_BG      = 'rgba(226, 75, 74, 0.12)';
+const FUNNEL_DROP_FG      = '#A32D2D';
+
+function periodLabel(period, t) {
+  return ({
+    '7d':  t('forms.stats.period_7d_full',  '7 derniers jours'),
+    '30d': t('forms.stats.period_30d_full', '30 derniers jours'),
+    '90d': t('forms.stats.period_90d_full', '90 derniers jours'),
+    'all': t('forms.stats.period_all_full', 'Toute la période'),
+  })[period] || period;
+}
+
+// Build the drop-off wording for the gap between funnel[i-1] and
+// funnel[i]. Three flavours: didn't start, dropped on step N, dropped
+// on the final step.
+function dropoffText(prevRow, currRow, count, t) {
+  if (currRow.key === 'starts') {
+    return t('forms.stats.funnel_no_start', { count, defaultValue: "{{count}} visiteurs n'ont pas démarré" });
+  }
+  if (currRow.key === 'submit') {
+    return t('forms.stats.funnel_abandon_final', { count, defaultValue: "{{count}} visiteurs abandonnés sur l'étape finale" });
+  }
+  // step_N — extract the step number from the previous row (the user
+  // dropped after completing the previous step but before this one).
+  const m = (prevRow.key || '').match(/^step_(\d+)$/);
+  const stepNum = m ? parseInt(m[1], 10) + 1 : (prevRow.key === 'starts' ? 1 : null);
+  return t('forms.stats.funnel_abandon_step', {
+    count,
+    step: stepNum != null ? stepNum : '',
+    defaultValue: "{{count}} visiteurs abandonnés sur l'étape {{step}}",
+  });
+}
+
+function FunnelStep({ row, index, isLast, baseCount, fmtPct }) {
+  const widthPct = baseCount > 0 ? Math.min(100, Math.max(0, (row.count / baseCount) * 100)) : 0;
+  const showConvFromBase = index > 0 && baseCount > 0;
+  const convFromBase = baseCount > 0 ? row.count / baseCount : 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: 12 }}>
+      {/* Numbered pill — last step (submit) gets a check icon on the
+          primary green to mark it as the goal. */}
+      <div style={{
+        width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+        background: isLast ? FUNNEL_PRIMARY : '#f1f5f9',
+        color: isLast ? '#fff' : '#64748b',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 11, fontWeight: 600,
+        marginTop: 12,
+      }}>
+        {isLast ? <Check size={12} /> : index + 1}
+      </div>
+      <div style={{
+        flex: 1,
+        background: isLast ? FUNNEL_ACCENT_BG : '#f8fafc',
+        border: isLast ? `0.5px solid ${FUNNEL_ACCENT_BORDER}` : 'none',
+        borderRadius: 10, padding: '12px 16px',
+      }}>
+        <div style={{ height: 8, background: FUNNEL_PRIMARY_BG, borderRadius: 999, overflow: 'hidden', marginBottom: 8 }}>
+          <div style={{ height: '100%', width: `${widthPct}%`, background: FUNNEL_PRIMARY, borderRadius: 999, transition: 'width .3s' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{row.label}</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontSize: 18, fontWeight: 500, color: isLast ? '#085041' : '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
+              {row.count.toLocaleString('fr-FR')}
+            </span>
+            {showConvFromBase && (
+              <span style={{ fontSize: 11, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
+                {fmtPct(convFromBase)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FunnelDropoff({ prevRow, currRow, t }) {
+  const dropped = (prevRow.count || 0) - (currRow.count || 0);
+  if (dropped <= 0 || (prevRow.count || 0) === 0) return null;
+  const lossPct = Math.round((dropped / prevRow.count) * 100);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 36, marginTop: 8, marginBottom: 8 }}>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        padding: '2px 8px', borderRadius: 999,
+        background: FUNNEL_DROP_BG, color: FUNNEL_DROP_FG,
+        fontSize: 11, fontWeight: 500, fontVariantNumeric: 'tabular-nums',
+        flexShrink: 0,
+      }}>
+        <ArrowDownRight size={11} /> {lossPct}%
+      </span>
+      <span style={{ fontSize: 11, color: '#94a3b8' }}>
+        {dropoffText(prevRow, currRow, dropped, t)}
+      </span>
+    </div>
+  );
+}
+
+function FunnelSection({ funnel, period, kpis, t, fmtPct }) {
+  if (!funnel || funnel.length === 0) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
+        <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>
+          {t('forms.stats.funnel_empty', 'Aucune donnée sur cette période.')}
+        </p>
+      </div>
+    );
+  }
+  const baseCount = funnel[0]?.count || 0;
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2 }}>
+          {t('forms.stats.funnel_journey', 'Parcours visiteur')}
+        </h3>
+        <span style={{ fontSize: 12, color: '#94a3b8' }}>
+          {periodLabel(period, t)}
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {funnel.map((row, i) => {
+          const prev = i > 0 ? funnel[i - 1] : null;
+          const isLast = i === funnel.length - 1;
+          return (
+            <div key={row.key}>
+              {prev && <FunnelDropoff prevRow={prev} currRow={row} t={t} />}
+              <FunnelStep row={row} index={i} isLast={isLast} baseCount={baseCount} fmtPct={fmtPct} />
+            </div>
+          );
+        })}
+      </div>
+      {/* Global conversion summary — same number as the top KPI tile
+          but anchored at the bottom of the funnel where the eye lands
+          after reading the journey top-to-bottom. */}
+      <div style={{
+        marginTop: 16, padding: '12px 16px',
+        background: '#f8fafc', borderRadius: 10,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <span style={{ fontSize: 13, color: '#64748b' }}>
+          {t('forms.stats.funnel_overall_rate', 'Taux de conversion global')}
+        </span>
+        <span style={{ fontSize: 18, fontWeight: 500, color: FUNNEL_PRIMARY, fontVariantNumeric: 'tabular-nums' }}>
+          {fmtPct(kpis?.conversion_rate || 0)}
+        </span>
+      </div>
     </div>
   );
 }

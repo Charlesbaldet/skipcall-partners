@@ -3786,6 +3786,16 @@
       "kpi_submissions": "Submissions",
       "kpi_conversion": "Overall conversion",
       "funnel_title": "Funnel",
+      "funnel_journey": "Visitor journey",
+      "funnel_overall_rate": "Overall conversion rate",
+      "funnel_no_start": "{{count}} visitors did not start",
+      "funnel_abandon_step": "{{count}} visitors abandoned at step {{step}}",
+      "funnel_abandon_final": "{{count}} visitors abandoned at the final step",
+      "funnel_empty": "No data for this period.",
+      "period_7d_full": "Last 7 days",
+      "period_30d_full": "Last 30 days",
+      "period_90d_full": "Last 90 days",
+      "period_all_full": "All time",
       "abandons_title": "Top abandoned fields",
       "abandons_empty": "No abandoned fields in the period."
     }
