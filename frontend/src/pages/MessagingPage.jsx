@@ -127,8 +127,8 @@ export default function MessagingPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('messaging.title')}</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{t('messaging.team_chat')}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('messaging.title')}</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{t('messaging.subtitle')}</p>
         </div>
         <button onClick={openNewConversation} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
           <Plus size={16} /> {t('messaging.new_conv')}

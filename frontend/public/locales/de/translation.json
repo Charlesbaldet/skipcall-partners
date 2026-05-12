@@ -1170,6 +1170,7 @@
   },
   "messaging": {
     "title": "Nachrichten",
+    "subtitle": "Tauschen Sie sich mit Ihrem Team aus",
     "loading": "Laden...",
     "no_conversations": "Keine Konversationen",
     "type_ph": "Nachricht schreiben...",
@@ -2128,6 +2129,8 @@
   },
   "news": {
     "title": "News & Updates",
+    "subtitle": "Veröffentlichen Sie Neuigkeiten für Ihre Partner",
+    "subtitle_partner": "Aktuelle Neuigkeiten aus Ihren Programmen",
     "new_post": "Neuer Beitrag",
     "edit_post": "Bearbeiten",
     "delete_post": "Löschen",

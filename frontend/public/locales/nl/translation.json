@@ -1170,6 +1170,7 @@
   },
   "messaging": {
     "title": "Berichten",
+    "subtitle": "Communiceer met je team",
     "loading": "Laden...",
     "no_conversations": "Geen gesprekken",
     "type_ph": "Schrijf een bericht...",
@@ -2128,6 +2129,8 @@
   },
   "news": {
     "title": "Nieuws & updates",
+    "subtitle": "Publiceer en deel nieuws met je partners",
+    "subtitle_partner": "Het laatste nieuws van je programma's",
     "new_post": "Nieuwe post",
     "edit_post": "Bewerken",
     "delete_post": "Verwijderen",

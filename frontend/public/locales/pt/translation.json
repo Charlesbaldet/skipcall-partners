@@ -1170,6 +1170,7 @@
   },
   "messaging": {
     "title": "Mensagens",
+    "subtitle": "Converse com sua equipe",
     "loading": "Carregando...",
     "no_conversations": "Sem conversas",
     "type_ph": "Escreva uma mensagem...",
@@ -2128,6 +2129,8 @@
   },
   "news": {
     "title": "Notícias e atualizações",
+    "subtitle": "Publique e compartilhe novidades com seus parceiros",
+    "subtitle_partner": "As últimas novidades dos seus programas",
     "new_post": "Nova publicação",
     "edit_post": "Editar",
     "delete_post": "Eliminar",

@@ -82,7 +82,10 @@ export default function PartnerNewsPage() {
   return (
     <div className="fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: C.s, letterSpacing: -0.5 }}>{t('news.title')}</h1>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: C.s, letterSpacing: -0.2, margin: 0 }}>{t('news.title')}</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{t('news.subtitle_partner')}</p>
+        </div>
       </div>
 
       {/* Filter bar */}

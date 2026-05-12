@@ -400,10 +400,10 @@ export default function Layout({ children }) {
             onClick={() => hasMultipleSpaces && setSpaceSwitcherOpen(v => !v)}
             style={{
               background: 'none', border: 'none', padding: 0,
-              display: 'flex', alignItems: 'center', gap: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               color: '#fff', fontFamily: 'inherit',
               cursor: hasMultipleSpaces ? 'pointer' : 'default',
-              width: '100%', textAlign: 'left',
+              width: '100%', textAlign: 'center',
             }}
             aria-haspopup={hasMultipleSpaces ? 'menu' : undefined}
             aria-expanded={spaceSwitcherOpen}
@@ -413,13 +413,13 @@ export default function Layout({ children }) {
                 <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #dc2626, #ef4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
                   <Shield size={18} color="#fff"/>
                 </div>
-                <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, maxWidth: 140 }}>
                   {programLabel}
                 </span>
               </>
             ) : tenant?.logo_url ? (
               // Has logo → big logo only, no name (logo is the brand)
-              <div style={{ flex: 1, minWidth: 0, filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
+              <div style={{ minWidth: 0, maxWidth: '100%', filter: `drop-shadow(0 0 16px ${C.p}40)` }}>
                 <img
                   src={tenant.logo_url}
                   alt={programLabel || t('layout_extra.logo_alt')}
@@ -442,7 +442,7 @@ export default function Layout({ children }) {
                 <span style={{
                   fontSize: 16, fontWeight: 800, letterSpacing: -0.4,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                  flex: 1, minWidth: 0,
+                  minWidth: 0, maxWidth: 140,
                 }}>
                   {programLabel}
                 </span>

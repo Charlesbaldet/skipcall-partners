@@ -1170,6 +1170,7 @@
   },
   "messaging": {
     "title": "Messaging",
+    "subtitle": "Chat with your team",
     "loading": "Loading...",
     "no_conversations": "No conversations",
     "type_ph": "Write a message...",
@@ -2128,6 +2129,8 @@
   },
   "news": {
     "title": "News & Updates",
+    "subtitle": "Publish and share updates with your partners",
+    "subtitle_partner": "Latest updates from your programs",
     "new_post": "New post",
     "edit_post": "Edit",
     "delete_post": "Delete",
