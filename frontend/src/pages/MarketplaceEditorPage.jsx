@@ -668,7 +668,9 @@ export default function MarketplaceEditorPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flexWrap: 'wrap' }}>
           {/* Standardised title block — 22/500 + 13 sub-title, matches
-              Dashboard / Pipeline / Partenaires / Commissions. */}
+              Dashboard / Pipeline / Partenaires / Commissions. The
+              Publié / Brouillon pill sits on its own line under the
+              subtitle for visibility (mirrors the Formulaire editor). */}
           <div style={{ minWidth: 0 }}>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: C.s, letterSpacing: -0.2 }}>
               {t('marketplace.editor.page_title', 'Marketplace')}
@@ -676,12 +678,14 @@ export default function MarketplaceEditorPage() {
             <p style={{ margin: '4px 0 0', fontSize: 13, color: C.m }}>
               {t('marketplace.editor.page_subtitle', 'Présentation de votre programme')}
             </p>
+            <div style={{ marginTop: 8 }}>
+              <StatusBadge
+                published={!!tenant.marketplace_visible}
+                publishedLabel={t('marketplace.editor.published', 'Publié')}
+                draftLabel={t('marketplace.editor.draft', 'Brouillon')}
+              />
+            </div>
           </div>
-          <StatusBadge
-            published={!!tenant.marketplace_visible}
-            publishedLabel={t('marketplace.editor.published', 'Publié')}
-            draftLabel={t('marketplace.editor.draft', 'Brouillon')}
-          />
           {saving && <span style={{ color: C.m, fontSize: 12 }}>{t('marketplace.editor.saving', 'Enregistrement…')}</span>}
           {hasUnsavedChanges && !saving && (
             <span style={{

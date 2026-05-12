@@ -2,14 +2,19 @@ import { Pencil, X as XIcon } from 'lucide-react';
 
 // Pill badge showing published / draft state next to an editor's title.
 // Used by both MarketplaceEditorPage and FormBuilderPage so the visual
-// stays in sync across editors.
+// stays in sync across editors. Rendered on its own line under the
+// subtitle (left-aligned) with a small coloured dot for extra glance-
+// ability.
 export function StatusBadge({ published, publishedLabel, draftLabel }) {
+  const fg = published ? '#059669' : '#64748b';
   return (
     <span style={{
-      fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontSize: 12, fontWeight: 500, padding: '4px 12px', borderRadius: 999,
       background: published ? '#f0fdf4' : '#f1f5f9',
-      color: published ? '#059669' : '#64748b',
+      color: fg,
     }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: fg }} />
       {published ? publishedLabel : draftLabel}
     </span>
   );

@@ -4,7 +4,7 @@ import {
   FileText, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Share2,
   Copy, Check, Globe, X, Eye, EyeOff, AlertTriangle, Link2,
   Type, Mail, Phone, ListChecks, CheckSquare, Circle, Calendar as CalendarIcon, Hash,
-  AlignLeft, ChevronDown, RotateCcw, Loader2, BarChart2,
+  AlignLeft, ChevronDown, RotateCcw, Loader2,
 } from 'lucide-react';
 import api from '../lib/api';
 import { showToast } from '../components/Dialogs.jsx';
@@ -329,78 +329,72 @@ export default function FormBuilderPage() {
             <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
               {t('forms.builder.subtitle_short', 'Configuration du formulaire de leads')}
             </p>
+            {/* Status badge on its own line, left-aligned under the
+                subtitle so it reads as a deliberate status cue
+                rather than a label crammed into the title row. */}
+            <div style={{ marginTop: 8 }}>
+              <StatusBadge
+                published={!!form.is_published}
+                publishedLabel={t('forms.builder.published', 'Publié')}
+                draftLabel={t('forms.builder.draft', 'Brouillon')}
+              />
+            </div>
           </div>
-          <StatusBadge
-            published={!!form.is_published}
-            publishedLabel={t('forms.builder.published', 'Publié')}
-            draftLabel={t('forms.builder.draft', 'Brouillon')}
-          />
           <SaveIndicator state={saveState} t={t} onRetry={() => setSaveState('idle')} />
         </div>
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Stats opens a dedicated mode — kept as a button (not a
-              tab) per the brief so it sits visually next to the
-              publish toggle rather than in the 4-tab strip. */}
-          <button
-            onClick={() => setMode(mode === 'stats' ? 'preview' : 'stats')}
+        {/* Publish toggle — Toggle first then label, gap 8 — mirrors
+            the Marketplace editor exactly so the two headers align
+            pixel-for-pixel side-by-side. The Statistiques button
+            previously living here has moved into the tab strip as
+            the 5th tab. */}
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#0f172a' }}>
+          <button onClick={togglePublish} aria-pressed={!!form.is_published}
             style={{
-              padding: '6px 14px', borderRadius: 8,
-              background: mode === 'stats' ? '#0f172a' : 'transparent',
-              border: '0.5px solid ' + (mode === 'stats' ? '#0f172a' : '#e2e8f0'),
-              color: mode === 'stats' ? '#fff' : '#475569',
-              fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
+              width: 44, height: 24, borderRadius: 999,
+              background: form.is_published ? '#059669' : '#cbd5e1',
+              border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
             }}>
-            <BarChart2 size={13} /> {t('forms.builder.stats_mode', 'Statistiques')}
+            <span style={{
+              position: 'absolute', top: 2, left: form.is_published ? 22 : 2,
+              width: 20, height: 20, borderRadius: '50%', background: '#fff',
+              transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            }} />
           </button>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 13, color: '#0f172a' }}>
-            <span style={{ fontWeight: 600 }}>{t('forms.builder.publish_label', 'Publier le formulaire')}</span>
-            <button onClick={togglePublish} aria-pressed={!!form.is_published}
-              style={{
-                width: 44, height: 24, borderRadius: 999,
-                background: form.is_published ? '#059669' : '#cbd5e1',
-                border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
-              }}>
-              <span style={{
-                position: 'absolute', top: 2, left: form.is_published ? 22 : 2,
-                width: 20, height: 20, borderRadius: '50%', background: '#fff',
-                transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              }} />
-            </button>
-          </label>
-        </div>
+          <span style={{ fontWeight: 600 }}>{t('forms.builder.publish_label', 'Publier le formulaire')}</span>
+        </label>
       </div>
 
-      {/* ─── Centered tab strip — Marketplace pattern ───────────── */}
-      {mode !== 'stats' && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, paddingTop: 16 }}>
-            {[
-              { id: 'preview',  label: t('forms.builder.tab_preview',  'Aperçu') },
-              { id: 'fields',   label: t('forms.builder.tab_fields',   'Champs') },
-              { id: 'settings', label: t('forms.builder.tab_settings', 'Paramètres') },
-              { id: 'share',    label: t('forms.builder.tab_share',    'Partager') },
-            ].map(tab => {
-              const active = mode === tab.id;
-              return (
-                <button key={tab.id} onClick={() => setMode(tab.id)}
-                  style={{
-                    padding: '10px 20px', background: 'transparent', border: 'none', cursor: 'pointer',
-                    fontFamily: 'inherit', fontSize: 14,
-                    fontWeight: active ? 600 : 500,
-                    color: active ? '#059669' : '#64748b',
-                    borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
-                    marginBottom: -1,
-                    transition: 'color .15s, border-color .15s',
-                  }}>
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-          <div style={{ borderBottom: '1px solid #e2e8f0', marginBottom: 24 }} />
-        </>
-      )}
+      {/* ─── Centered tab strip — Marketplace pattern ─────────────
+          Statistiques is the 5th tab (was a header button until the
+          last cycle). */}
+      <>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, paddingTop: 16 }}>
+          {[
+            { id: 'preview',  label: t('forms.builder.tab_preview',  'Aperçu') },
+            { id: 'fields',   label: t('forms.builder.tab_fields',   'Champs') },
+            { id: 'settings', label: t('forms.builder.tab_settings', 'Paramètres') },
+            { id: 'share',    label: t('forms.builder.tab_share',    'Partager') },
+            { id: 'stats',    label: t('forms.builder.tab_stats',    'Statistiques') },
+          ].map(tab => {
+            const active = mode === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setMode(tab.id)}
+                style={{
+                  padding: '10px 20px', background: 'transparent', border: 'none', cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 14,
+                  fontWeight: active ? 600 : 500,
+                  color: active ? '#059669' : '#64748b',
+                  borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
+                  marginBottom: -1,
+                  transition: 'color .15s, border-color .15s',
+                }}>
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ borderBottom: '1px solid #e2e8f0', marginBottom: 24 }} />
+      </>
 
       {mode === 'preview' && (
         <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: '24px 24px 48px' }}>
@@ -408,7 +402,10 @@ export default function FormBuilderPage() {
             onClick={() => setMode('fields')}
             openLabel={t('forms.builder.edit_mode', 'Éditer')}
           />
-          <div style={{ marginBottom: 24 }}>
+          {/* Title block centred above the preview card, sharing the
+              same horizontal midline as the card itself (480px wide,
+              auto-margined). */}
+          <div style={{ marginBottom: 24, textAlign: 'center' }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#0f172a' }}>
               {t('forms.builder.preview_label', 'Aperçu formulaire')}
             </h2>
