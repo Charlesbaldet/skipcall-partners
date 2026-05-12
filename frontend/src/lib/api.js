@@ -567,6 +567,7 @@ class ApiClient {
   reorderFormFields(formId, items) { return this.request('/forms/' + formId + '/fields/reorder', { method: 'POST', body: JSON.stringify({ items }) }); }
   addFormStep(formId) { return this.request('/forms/' + formId + '/steps/add', { method: 'POST' }); }
   removeFormStep(formId, step) { return this.request('/forms/' + formId + '/steps/remove', { method: 'POST', body: JSON.stringify({ step }) }); }
+  restoreFormDefaults(formId) { return this.request('/forms/' + formId + '/fields/restore-defaults', { method: 'POST' }); }
   // Public form endpoints (no auth). The token is passed as a query
   // param on GET and in the body on POST.
   getPublicForm(formId, token) { return this.request('/f/' + formId + '?p=' + encodeURIComponent(token)); }

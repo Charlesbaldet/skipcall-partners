@@ -28,9 +28,14 @@ router.use(authenticate);
 router.use(tenantScope);
 router.use(authorize('admin', 'superadmin'));
 
+// 'appointment' was removed from this list in v50: appointment booking
+// is now a form-level setting (forms.appointment_enabled + appointment_url)
+// rendered on the thank-you screen, not a field the prospect fills.
+// Legacy 'appointment' fields were migrated to forms.appointment_url
+// in the v50 migration; new POSTs are rejected at validation here.
 const FIELD_TYPES = [
   'text_short', 'text_long', 'email', 'phone', 'dropdown',
-  'multi_select', 'radio', 'date', 'number', 'appointment',
+  'multi_select', 'radio', 'date', 'number',
 ];
 
 const LEAD_HANDLING_VALUES = ['partner_managed', 'client_prospect'];
@@ -39,6 +44,22 @@ const LEAD_HANDLING_VALUES = ['partner_managed', 'client_prospect'];
 // UI. We require options to be a non-empty array of strings for these
 // so the rendered form is actually usable.
 const TYPES_WITH_OPTIONS = new Set(['dropdown', 'multi_select', 'radio']);
+
+// Standard "lead" fields auto-created with every form. Each one's
+// field_role lines up with a referrals column so the public-submit
+// endpoint can drop the answer straight onto the right column. The
+// builder also reads field_role to flag a deletion confirmation
+// (standard field → "this will leave the referral column unfilled")
+// and to drive the restore-defaults action.
+const STANDARD_FIELDS = [
+  { field_role: 'contact_first_name', type: 'text_short', label: 'Prénom',   required: true,  placeholder: null },
+  { field_role: 'contact_last_name',  type: 'text_short', label: 'Nom',      required: true,  placeholder: null },
+  { field_role: 'prospect_email',     type: 'email',      label: 'Email',    required: true,  placeholder: null },
+  { field_role: 'prospect_phone',     type: 'phone',      label: 'Téléphone', required: false, placeholder: null },
+  { field_role: 'prospect_company',   type: 'text_short', label: 'Société',  required: true,  placeholder: null },
+  { field_role: 'prospect_role',      type: 'text_short', label: 'Poste',    required: false, placeholder: null },
+];
+const STANDARD_ROLES = new Set(STANDARD_FIELDS.map(f => f.field_role));
 
 function badRequest(res, error) {
   return res.status(400).json({ error });
@@ -78,14 +99,9 @@ function validateFieldPayload(body, { partial = false, maxStep = 5 } = {}) {
       errs.push('chaque option doit être une string non vide');
     }
   }
-  if (effectiveType === 'appointment') {
-    if (!body.config || typeof body.config !== 'object') {
-      errs.push('config requis pour appointment');
-    } else if (typeof body.config.appointment_url !== 'string' || !body.config.appointment_url.trim()) {
-      errs.push('config.appointment_url requis pour appointment');
-    } else {
-      try { new URL(body.config.appointment_url); }
-      catch { errs.push('config.appointment_url doit être une URL valide'); }
+  if (body.field_role !== undefined && body.field_role !== null) {
+    if (typeof body.field_role !== 'string' || body.field_role.length > 50) {
+      errs.push('field_role invalide');
     }
   }
   return errs;
@@ -131,13 +147,41 @@ router.post('/', [
     }
     const { title, description, thank_you_message } = req.body;
     const leadHandling = req.body.default_lead_handling || 'partner_managed';
-    const { rows } = await query(
-      `INSERT INTO forms (tenant_id, title, description, thank_you_message, default_lead_handling)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-      [req.tenantId, title.trim(), description || null, thank_you_message || null, leadHandling]
-    );
-    res.status(201).json({ form: rows[0] });
+    // Atomic: create the form AND the 6 standard lead fields in one
+    // transaction so the FE never sees a half-created form. If the
+    // standard-field inserts fail mid-flight, the form row is rolled
+    // back and the partial UNIQUE index slot stays free.
+    const { pool } = require('../db');
+    const client = await pool.connect();
+    let formRow;
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query(
+        `INSERT INTO forms (tenant_id, title, description, thank_you_message, default_lead_handling)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [req.tenantId, title.trim(), description || null, thank_you_message || null, leadHandling]
+      );
+      formRow = rows[0];
+      // Standard fields all live on step 1, in declared order. Failing
+      // here triggers ROLLBACK below so the form vanishes too.
+      for (let i = 0; i < STANDARD_FIELDS.length; i++) {
+        const f = STANDARD_FIELDS[i];
+        await client.query(
+          `INSERT INTO form_fields
+            (form_id, tenant_id, step, order_index, type, label, placeholder, required, field_role)
+           VALUES ($1, $2, 1, $3, $4, $5, $6, $7, $8)`,
+          [formRow.id, req.tenantId, i, f.type, f.label, f.placeholder, f.required, f.field_role]
+        );
+      }
+      await client.query('COMMIT');
+    } catch (txErr) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw txErr;
+    } finally {
+      try { client.release(); } catch {}
+    }
+    res.status(201).json({ form: formRow });
   } catch (err) {
     // 23505 = unique violation. Race-condition fallback for the
     // SELECT/INSERT window above.
@@ -167,16 +211,25 @@ router.patch('/:id', [
   body('thank_you_message').optional({ nullable: true }).isString(),
   body('default_lead_handling').optional().isIn(LEAD_HANDLING_VALUES),
   body('is_published').optional().isBoolean(),
+  body('appointment_enabled').optional().isBoolean(),
+  body('appointment_url').optional({ nullable: true }).isString(),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return badRequest(res, errors.array().map(e => e.msg).join(', '));
+  // appointment_url, if provided, must parse as a URL when non-empty.
+  // (express-validator's .isURL() is too restrictive for Calendly
+  // sub-paths so we use the WHATWG URL constructor.)
+  if (req.body.appointment_url) {
+    try { new URL(req.body.appointment_url); }
+    catch { return badRequest(res, 'appointment_url doit être une URL valide'); }
+  }
   try {
     const form = await loadOwnedForm(req.tenantId, req.params.id);
     if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
     const sets = [];
     const params = [];
     let i = 1;
-    for (const k of ['title', 'description', 'thank_you_message', 'default_lead_handling', 'is_published']) {
+    for (const k of ['title', 'description', 'thank_you_message', 'default_lead_handling', 'is_published', 'appointment_enabled', 'appointment_url']) {
       if (req.body[k] !== undefined) {
         sets.push(`${k} = $${i++}`);
         params.push(k === 'title' ? String(req.body[k]).trim() : req.body[k]);
@@ -244,6 +297,12 @@ router.post('/:id/fields', async (req, res) => {
     if (errs.length) return badRequest(res, errs.join(', '));
 
     const { type, label, placeholder = null, required = false, options = null, config = null } = req.body;
+    // Custom-built fields never carry a field_role: the slot is reserved
+    // for the 6 standard lead fields seeded at form creation. Anything
+    // else stays null and falls into referrals.notes at submission time.
+    const fieldRole = req.body.field_role && STANDARD_ROLES.has(req.body.field_role)
+      ? req.body.field_role
+      : null;
     const step = Number(req.body.step);
     // Default order_index to the next slot in the target step so the
     // builder doesn't have to compute it. The FE may still override.
@@ -258,14 +317,15 @@ router.post('/:id/fields', async (req, res) => {
     }
     const { rows } = await query(
       `INSERT INTO form_fields
-        (form_id, tenant_id, step, order_index, type, label, placeholder, required, options, config)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (form_id, tenant_id, step, order_index, type, label, placeholder, required, options, config, field_role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         req.params.id, req.tenantId, step, orderIndex, type,
         label.trim(), placeholder, required,
         options ? JSON.stringify(options) : null,
         config ? JSON.stringify(config) : null,
+        fieldRole,
       ]
     );
     res.status(201).json({ field: rows[0] });
@@ -498,6 +558,59 @@ router.post('/:id/steps/remove', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     try { client.release(); } catch {}
+  }
+});
+
+// POST /api/forms/:id/fields/restore-defaults
+// Recreate any of the 6 STANDARD_FIELDS whose field_role is currently
+// missing on the form. Existing fields are left untouched. Newly
+// inserted rows land on step 1 at the end (order_index = current max
+// of step 1 + 1, incrementing per insertion). Idempotent — calling
+// it on a form that already has all 6 standards returns ok with
+// added=0.
+router.post('/:id/fields/restore-defaults', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const { rows: existing } = await query(
+      `SELECT field_role FROM form_fields
+        WHERE form_id = $1 AND field_role IS NOT NULL`,
+      [req.params.id]
+    );
+    const have = new Set(existing.map(r => r.field_role));
+    const missing = STANDARD_FIELDS.filter(f => !have.has(f.field_role));
+    if (!missing.length) return res.json({ ok: true, added: 0 });
+
+    const { rows: maxRows } = await query(
+      `SELECT COALESCE(MAX(order_index), -1) AS m FROM form_fields
+        WHERE form_id = $1 AND step = 1`,
+      [req.params.id]
+    );
+    let nextIdx = (maxRows[0]?.m ?? -1) + 1;
+
+    const { pool } = require('../db');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const f of missing) {
+        await client.query(
+          `INSERT INTO form_fields
+            (form_id, tenant_id, step, order_index, type, label, placeholder, required, field_role)
+           VALUES ($1, $2, 1, $3, $4, $5, $6, $7, $8)`,
+          [req.params.id, req.tenantId, nextIdx++, f.type, f.label, f.placeholder, f.required, f.field_role]
+        );
+      }
+      await client.query('COMMIT');
+    } catch (txErr) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw txErr;
+    } finally {
+      try { client.release(); } catch {}
+    }
+    res.json({ ok: true, added: missing.length });
+  } catch (err) {
+    console.error('[forms.fields.restore-defaults] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

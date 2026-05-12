@@ -1254,6 +1254,59 @@ async function runMigrations() {
     console.error('[migrate.v49] failed:', err.message);
   }
 
+  // v50: appointment moves from "yet another field type" to a
+  // dedicated form-level setting (one URL per form, rendered as an
+  // iframe on the thank-you screen). Adds a per-field `field_role`
+  // tag so the submission mapping can target legacy referrals
+  // columns deterministically instead of falling back to label
+  // keyword heuristics — and so the builder can flag "standard"
+  // fields when the user tries to delete one.
+  //
+  // Data migration runs in the same block: for every form that
+  // currently has at least one type='appointment' field, we copy
+  // the URL from the FIRST such field (by step + order_index) into
+  // forms.appointment_url, flip appointment_enabled to TRUE, then
+  // delete every appointment field on that form. Logged per form
+  // so a multi-appointment regression (shouldn't happen but might)
+  // is visible in the Railway logs.
+  try {
+    await query(`ALTER TABLE forms ADD COLUMN IF NOT EXISTS appointment_enabled BOOLEAN NOT NULL DEFAULT FALSE`);
+    await query(`ALTER TABLE forms ADD COLUMN IF NOT EXISTS appointment_url TEXT`);
+    await query(`ALTER TABLE form_fields ADD COLUMN IF NOT EXISTS field_role VARCHAR(50)`);
+    // Index for the restore-defaults lookup which queries by
+    // (form_id, field_role).
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_fields_form_role
+                   ON form_fields(form_id, field_role) WHERE field_role IS NOT NULL`);
+
+    // Surface forms that still have appointment fields then iterate.
+    const { rows: formsWithAppt } = await query(
+      `SELECT DISTINCT form_id FROM form_fields WHERE type = 'appointment'`
+    );
+    for (const { form_id } of formsWithAppt) {
+      const { rows: appts } = await query(
+        `SELECT id, config FROM form_fields
+          WHERE form_id = $1 AND type = 'appointment'
+          ORDER BY step ASC, order_index ASC, created_at ASC`,
+        [form_id]
+      );
+      if (!appts.length) continue;
+      const firstUrl = appts[0].config?.appointment_url || null;
+      if (firstUrl) {
+        await query(
+          `UPDATE forms SET appointment_enabled = TRUE, appointment_url = $1, updated_at = NOW()
+            WHERE id = $2 AND deleted_at IS NULL`,
+          [firstUrl, form_id]
+        );
+      }
+      await query(`DELETE FROM form_fields WHERE form_id = $1 AND type = 'appointment'`, [form_id]);
+      const dropped = appts.length - 1;
+      console.log(`[forms] v50: migrated appointment from form ${form_id}${dropped > 0 ? ' (kept first, dropped ' + dropped + ' others)' : ''}`);
+    }
+    console.log('[forms] v50 appointment-as-setting + field_role ready');
+  } catch (err) {
+    console.error('[migrate.v50] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

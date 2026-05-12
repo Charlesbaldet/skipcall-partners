@@ -1,25 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Check, ChevronRight } from 'lucide-react';
+import { AlertTriangle, Check, Clock, ArrowRight } from 'lucide-react';
 import api from '../lib/api';
 
 // Public partner-registration form. Rendered at /f/:formId?p=<token>.
+//
+// The public page is split into two:
+//   - PublicFormPage  (this default export): fetch + error handling +
+//     submission wiring.
+//   - FormPreview     (named export): pure visual component, also
+//     consumed by the builder's preview mode. Takes form + fields +
+//     optional onSubmit.
+//
 // Branding stays neutral RefBoost (green primary, dark slate text)
 // regardless of which tenant owns the form — the partner embeds this
 // on their own site and isn't trying to look like the underlying
-// client. Multi-step UX follows the brief: progress bar, "Prend 30
-// secondes" reassurance kept visible all the way through, per-step
-// validation, "Suivant" only (no Back — the brief opts for autosave
-// in local state rather than navigation history).
+// client.
 
 const C = {
   primary: '#059669',
   dark: '#0f172a',
   muted: '#64748b',
+  mutedLight: '#94a3b8',
   border: '#e2e8f0',
+  borderLight: '#f1f5f9',
   bg: '#f8fafc',
-  danger: '#dc2626',
+  danger: '#e24b4a',
+  white: '#ffffff',
 };
 
 export default function PublicFormPage() {
@@ -29,45 +37,32 @@ export default function PublicFormPage() {
   const token = search.get('p') || '';
 
   const [state, setState] = useState({ phase: 'loading', payload: null, error: null });
-  const [stepIdx, setStepIdx] = useState(0);     // 0-based; UI shows stepIdx+1 / step_count
-  const [answers, setAnswers] = useState({});    // fieldId -> value (string or string[])
-  const [touched, setTouched] = useState({});    // fieldId -> bool
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(null); // { thank_you_message, appointmentField } once done
-  const [website, setWebsite] = useState('');    // honeypot
 
   useEffect(() => {
     if (!formId) { setState({ phase: 'error', error: 'invalid_link' }); return; }
     api.getPublicForm(formId, token)
       .then(data => setState({ phase: 'ok', payload: data, error: null }))
-      .catch(err => {
-        const code = err?.data?.error || 'server_error';
-        setState({ phase: 'error', error: code });
-      });
+      .catch(err => setState({ phase: 'error', error: err?.data?.error || 'server_error' }));
   }, [formId, token]);
 
-  // Derive form metadata + fields defensively (payload is null while
-  // loading / on error). Done BEFORE any early return so the useMemo
-  // below sees a consistent hook count across phase transitions —
-  // React error #310 fires the moment a hook is conditionally
-  // skipped, which the original draft tripped by placing useMemo
-  // after the loading/error returns.
-  const payload = state.payload;
-  const form = payload?.form || null;
-  const fields = payload?.fields || [];
-  const stepCount = form?.step_count || 3;
-
-  const fieldsByStep = useMemo(() => {
-    const buckets = Array.from({ length: stepCount }, () => []);
-    for (const f of fields) {
-      const idx = Math.max(0, Math.min(stepCount - 1, (f.step || 1) - 1));
-      buckets[idx].push(f);
+  const handleSubmit = async (answers, website) => {
+    try {
+      await api.submitPublicForm(formId, {
+        partnerToken: token,
+        website,
+        answers: Object.entries(answers).map(([fieldId, value]) => ({ fieldId, value })),
+      });
+      return { ok: true };
+    } catch (err) {
+      const code = err?.data?.error;
+      const message = code === 'rate_limited' ? t('public_form.error_rate_limited', 'Trop de soumissions. Réessayez dans une heure.')
+                   : code === 'invalid_link' ? t('public_form.error_invalid_link', 'Lien invalide ou expiré.')
+                   : code === 'form_not_available' ? t('public_form.error_not_available', 'Ce formulaire n\'est pas disponible.')
+                   : t('public_form.error_submit', 'L\'envoi a échoué. Veuillez réessayer.');
+      return { ok: false, message };
     }
-    for (const b of buckets) b.sort((a, b) => a.order_index - b.order_index);
-    return buckets;
-  }, [fields, stepCount]);
+  };
 
-  // ─── Loading / error screens ─────────────────────────────────────
   if (state.phase === 'loading') {
     return <CenteredCard><p style={{ color: C.muted }}>{t('public_form.loading', 'Chargement…')}</p></CenteredCard>;
   }
@@ -87,43 +82,112 @@ export default function PublicFormPage() {
     );
   }
 
-  // ─── Thank-you screen ────────────────────────────────────────────
+  return (
+    <PageShell>
+      <FormPreview form={state.payload.form} fields={state.payload.fields} onSubmit={handleSubmit} t={t} />
+    </PageShell>
+  );
+}
+
+// ─── Page chrome ───────────────────────────────────────────────────
+// Gray background with the white card centered vertically + footer
+// outside the card. Used by the public route. Builder preview mode
+// renders FormPreview directly without this wrapper (the builder
+// already has its own page chrome).
+function PageShell({ children }) {
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 480 }}>
+        {children}
+        <div style={{ marginTop: 16, textAlign: 'center', fontSize: 11, color: C.mutedLight }}>
+          <span>{t_('Propulsé par')} <span style={{ color: C.muted, fontWeight: 500 }}>RefBoost</span></span>
+        </div>
+      </div>
+    </div>
+  );
+}
+// Locale-agnostic copy fallback used by the footer (i18n is via
+// react-i18next inside the components, but PageShell is presentational
+// and doesn't take t as a prop).
+function t_(s) { return s; }
+
+function CenteredCard({ children }) {
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 480, background: C.white, border: '0.5px solid ' + C.border, borderRadius: 16, padding: 32, textAlign: 'center' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── FormPreview ───────────────────────────────────────────────────
+// Pure visual form. Used both on /f/:id (real submission via the
+// onSubmit prop) and inside the builder's preview tab (onSubmit
+// omitted → button is a visual no-op and shows a toast-style hint on
+// click).
+export function FormPreview({ form, fields, onSubmit, t }) {
+  const stepCount = form?.step_count || 1;
+
+  const fieldsByStep = useMemo(() => {
+    const buckets = Array.from({ length: stepCount }, () => []);
+    for (const f of (fields || [])) {
+      const idx = Math.max(0, Math.min(stepCount - 1, (f.step || 1) - 1));
+      buckets[idx].push(f);
+    }
+    for (const b of buckets) b.sort((a, b) => a.order_index - b.order_index);
+    return buckets;
+  }, [fields, stepCount]);
+
+  const [stepIdx, setStepIdx] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [touched, setTouched] = useState({});
+  const [website, setWebsite] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [previewToast, setPreviewToast] = useState(false);
+
+  // Reset whenever the underlying form changes (preview tab toggles,
+  // builder swaps the active form).
+  useEffect(() => {
+    setStepIdx(0); setAnswers({}); setTouched({});
+    setWebsite(''); setSubmitError(''); setSubmitted(false);
+  }, [form?.id]);
+
+  const isPreviewMode = !onSubmit;
+
   if (submitted) {
     return (
-      <ShellChrome>
-        <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
+      <Card>
+        <div style={{ textAlign: 'center' }}>
           <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', color: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
             <Check size={28} />
           </div>
-          <h2 style={{ margin: 0, fontSize: 22, color: C.dark, fontWeight: 800 }}>
+          <h2 style={{ margin: 0, fontSize: 22, color: C.dark, fontWeight: 500 }}>
             {t('public_form.thanks_title', 'Merci !')}
           </h2>
-          <p style={{ margin: '10px 0 24px', color: C.muted, fontSize: 14, whiteSpace: 'pre-wrap' }}>
-            {submitted.thank_you_message || t('public_form.thanks_default', 'Nous avons bien reçu votre demande. Nous vous recontactons rapidement.')}
+          <p style={{ margin: '10px 0 0', color: C.muted, fontSize: 14, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+            {form.thank_you_message || t('public_form.thanks_default', 'Nous avons bien reçu votre demande. Nous vous recontactons rapidement.')}
           </p>
-          {submitted.appointmentField && (
+          {form.appointment_enabled && form.appointment_url && (
             <div style={{ marginTop: 24 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: C.dark, marginBottom: 8 }}>
-                {submitted.appointmentField.label}
-              </h3>
               <iframe
-                src={submitted.appointmentField.config?.appointment_url}
+                src={form.appointment_url}
                 title="Appointment booking"
-                style={{ width: '100%', minHeight: 640, border: '1px solid ' + C.border, borderRadius: 12 }}
+                style={{ width: '100%', minHeight: 600, border: 0, borderRadius: 12 }}
                 loading="lazy"
               />
             </div>
           )}
         </div>
-      </ShellChrome>
+      </Card>
     );
   }
 
-  // ─── Step validation ─────────────────────────────────────────────
   const currentFields = fieldsByStep[stepIdx] || [];
   const missingRequired = currentFields.filter(f => {
     if (!f.required) return false;
-    if (f.type === 'appointment') return false;
     const v = answers[f.id];
     return v == null || v === '' || (Array.isArray(v) && v.length === 0);
   });
@@ -132,65 +196,50 @@ export default function PublicFormPage() {
 
   const handleNext = () => {
     if (!canAdvance) {
-      // Mark every required field as touched so error messages show.
-      setTouched(prev => ({
-        ...prev,
-        ...Object.fromEntries(missingRequired.map(f => [f.id, true])),
-      }));
+      setTouched(p => ({ ...p, ...Object.fromEntries(missingRequired.map(f => [f.id, true])) }));
       return;
     }
     setStepIdx(i => Math.min(stepCount - 1, i + 1));
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubmit = async () => {
+  const handleFinalSubmit = async () => {
     if (!canAdvance) {
-      setTouched(prev => ({
-        ...prev,
-        ...Object.fromEntries(missingRequired.map(f => [f.id, true])),
-      }));
+      setTouched(p => ({ ...p, ...Object.fromEntries(missingRequired.map(f => [f.id, true])) }));
+      return;
+    }
+    if (isPreviewMode) {
+      setPreviewToast(true);
+      setTimeout(() => setPreviewToast(false), 2000);
       return;
     }
     setSubmitting(true);
-    try {
-      const payload = {
-        partnerToken: token,
-        website,
-        answers: Object.entries(answers).map(([fieldId, value]) => ({ fieldId, value })),
-      };
-      await api.submitPublicForm(formId, payload);
-      // Find the first appointment field across the whole form so we
-      // can render the booking iframe on the confirmation screen.
-      const appointmentField = fields.find(f => f.type === 'appointment') || null;
-      setSubmitted({
-        thank_you_message: form.thank_you_message,
-        appointmentField,
-      });
-    } catch (err) {
-      const code = err?.data?.error;
-      const msg = code === 'rate_limited' ? t('public_form.error_rate_limited', 'Trop de soumissions. Réessayez dans une heure.')
-               : code === 'invalid_link' ? t('public_form.error_invalid_link', 'Lien invalide ou expiré.')
-               : code === 'form_not_available' ? t('public_form.error_not_available', 'Ce formulaire n\'est pas disponible.')
-               : t('public_form.error_submit', 'L\'envoi a échoué. Veuillez réessayer.');
-      setState(s => ({ ...s, error: msg }));
+    setSubmitError('');
+    const res = await onSubmit(answers, website);
+    if (res.ok) {
+      setSubmitted(true);
+    } else {
+      setSubmitError(res.message || '');
       setSubmitting(false);
     }
   };
 
   return (
-    <ShellChrome>
-      <ProgressBar current={stepIdx + 1} total={stepCount} t={t} />
-
-      <h1 style={{ margin: '0 0 6px', fontSize: 24, fontWeight: 800, color: C.dark, letterSpacing: -0.3 }}>
+    <Card>
+      <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 500, color: C.dark, letterSpacing: -0.2 }}>
         {form.title}
       </h1>
       {form.description && (
-        <p style={{ margin: '0 0 24px', color: C.muted, fontSize: 14, whiteSpace: 'pre-wrap' }}>{form.description}</p>
+        <p style={{ margin: '0 0 24px', color: C.muted, fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{form.description}</p>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <ProgressBar current={stepIdx + 1} total={stepCount} t={t} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 4 }}>
         {currentFields.length === 0 ? (
-          <p style={{ color: C.muted, fontSize: 13 }}>{t('public_form.no_fields_step', 'Cette étape ne contient aucun champ.')}</p>
+          <p style={{ color: C.mutedLight, fontSize: 13 }}>
+            {t('public_form.no_fields_step', 'Cette étape ne contient aucun champ.')}
+          </p>
         ) : currentFields.map(f => (
           <FieldRow
             key={f.id}
@@ -204,83 +253,60 @@ export default function PublicFormPage() {
         ))}
       </div>
 
-      {/* Honeypot — visually hidden but accessible to bots. Real
-          users never see/fill it; if it gets a value the BE silently
-          200s without creating a referral. */}
+      {/* Honeypot — visually hidden, real users never see it. */}
       <input
-        type="text"
-        name="website"
-        value={website}
-        onChange={e => setWebsite(e.target.value)}
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
+        type="text" name="website" value={website} onChange={e => setWebsite(e.target.value)}
+        tabIndex={-1} autoComplete="off" aria-hidden="true"
         style={{ position: 'absolute', left: -10000, top: 'auto', width: 1, height: 1, overflow: 'hidden' }}
       />
 
-      {state.error && typeof state.error === 'string' && (
+      {submitError && (
         <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#fef2f2', color: C.danger, fontSize: 13 }}>
-          {state.error}
+          {submitError}
         </div>
       )}
 
-      <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>
-        {isLastStep ? (
-          <button onClick={handleSubmit} disabled={submitting || !canAdvance}
-            style={{ padding: '12px 24px', borderRadius: 12, background: canAdvance ? C.primary : C.border, color: canAdvance ? '#fff' : C.muted, border: 'none', cursor: canAdvance && !submitting ? 'pointer' : 'not-allowed', fontWeight: 700, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            {submitting ? t('public_form.submitting', 'Envoi…') : t('public_form.submit', 'Envoyer')}
-          </button>
-        ) : (
-          <button onClick={handleNext} disabled={!canAdvance}
-            style={{ padding: '12px 24px', borderRadius: 12, background: canAdvance ? C.primary : C.border, color: canAdvance ? '#fff' : C.muted, border: 'none', cursor: canAdvance ? 'pointer' : 'not-allowed', fontWeight: 700, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            {t('public_form.next', 'Suivant')} <ChevronRight size={16} />
-          </button>
+      <div style={{ marginTop: 32 }}>
+        <button onClick={isLastStep ? handleFinalSubmit : handleNext}
+          disabled={submitting}
+          style={{ width: '100%', padding: '12px 16px', borderRadius: 8, background: canAdvance ? C.primary : '#d1d5db', color: C.white, border: 'none', cursor: submitting ? 'wait' : (canAdvance ? 'pointer' : 'not-allowed'), fontWeight: 500, fontSize: 15, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
+          {isLastStep
+            ? (submitting ? t('public_form.submitting', 'Envoi…') : t('public_form.submit', 'Envoyer'))
+            : <>{t('public_form.next', 'Suivant')} <ArrowRight size={16} /></>
+          }
+        </button>
+        {previewToast && (
+          <p style={{ marginTop: 10, fontSize: 12, color: C.mutedLight, textAlign: 'center' }}>
+            {t('public_form.preview_toast', 'Mode aperçu — soumission désactivée')}
+          </p>
         )}
       </div>
-    </ShellChrome>
+    </Card>
   );
 }
 
-// ─── Chrome wrappers ───────────────────────────────────────────────
-function ShellChrome({ children }) {
+function Card({ children }) {
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '40px 20px', display: 'flex', justifyContent: 'center' }}>
-      <div style={{ width: '100%', maxWidth: 640, background: '#fff', borderRadius: 16, padding: '32px 28px', boxShadow: '0 1px 3px rgba(15,23,42,0.06), 0 8px 32px rgba(15,23,42,0.04)' }}>
-        {children}
-        <div style={{ marginTop: 28, paddingTop: 18, borderTop: '1px solid ' + C.border, textAlign: 'center', fontSize: 11, color: C.muted }}>
-          <a href="https://refboost.io" target="_blank" rel="noopener" style={{ color: C.muted, textDecoration: 'none' }}>
-            Propulsé par <span style={{ color: C.primary, fontWeight: 700 }}>RefBoost</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CenteredCard({ children }) {
-  return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ width: '100%', maxWidth: 480, background: '#fff', borderRadius: 16, padding: '32px 28px', textAlign: 'center', boxShadow: '0 1px 3px rgba(15,23,42,0.06)' }}>
-        {children}
-      </div>
+    <div style={{ background: C.white, border: '0.5px solid ' + C.border, borderRadius: 16, padding: 32, position: 'relative' }}>
+      {children}
     </div>
   );
 }
 
 function ProgressBar({ current, total, t }) {
-  const pct = Math.round((current / total) * 100);
+  const pct = total > 0 ? Math.round((current / total) * 100) : 0;
   return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>
-          {t('public_form.step_label', 'Étape')} {current}/{total}
+    <div style={{ marginTop: 4, marginBottom: 28 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <span style={{ fontSize: 12, color: C.muted, fontWeight: 500 }}>
+          {t('public_form.step_of', { current, total, defaultValue: 'Étape {{current}} sur {{total}}' })}
         </span>
-        <span style={{ fontSize: 11, color: C.primary, fontWeight: 700 }}>
-          {t('public_form.takes_30s', 'Prend 30 secondes')}
+        <span style={{ fontSize: 12, color: C.mutedLight, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <Clock size={12} /> {t('public_form.takes_30s_pretty', 'environ 30 secondes')}
         </span>
       </div>
-      <div style={{ height: 6, background: C.border, borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: pct + '%', background: C.primary, transition: 'width 0.3s ease' }} />
+      <div style={{ height: 4, background: C.borderLight, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: pct + '%', background: C.primary, transition: 'width 0.3s ease', borderRadius: 999 }} />
       </div>
     </div>
   );
@@ -289,20 +315,14 @@ function ProgressBar({ current, total, t }) {
 // ─── Field row ─────────────────────────────────────────────────────
 function FieldRow({ field, value, touched, onChange, onBlur, t }) {
   const isEmpty = value == null || value === '' || (Array.isArray(value) && value.length === 0);
-  const showError = touched && field.required && isEmpty && field.type !== 'appointment';
-
-  const labelEl = (
-    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.dark, marginBottom: 6 }}>
-      {field.label}
-      {field.required && <span style={{ color: C.danger, marginLeft: 4 }}>*</span>}
-    </label>
-  );
+  const showError = touched && field.required && isEmpty;
 
   const inputBase = {
-    width: '100%', padding: '11px 14px', borderRadius: 10,
-    border: '1.5px solid ' + (showError ? C.danger : C.border),
+    width: '100%', padding: '10px 14px', borderRadius: 8,
+    border: '1px solid ' + (showError ? C.danger : C.border),
     fontSize: 14, color: C.dark, fontFamily: 'inherit',
-    boxSizing: 'border-box', outline: 'none', background: '#fff',
+    boxSizing: 'border-box', outline: 'none', background: C.white,
+    transition: 'border-color 0.15s',
   };
   const onFocus = (e) => { e.target.style.borderColor = C.primary; };
   const onBlurFocus = (e) => { e.target.style.borderColor = showError ? C.danger : C.border; if (onBlur) onBlur(); };
@@ -350,7 +370,7 @@ function FieldRow({ field, value, touched, onChange, onBlur, t }) {
       control = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {(field.options || []).map(o => (
-            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1.5px solid ' + (value === o ? C.primary : C.border), borderRadius: 10, cursor: 'pointer', background: value === o ? '#f0fdf4' : '#fff' }}>
+            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (value === o ? C.primary : C.border), borderRadius: 8, cursor: 'pointer', background: value === o ? '#f0fdf4' : C.white }}>
               <input type="radio" name={field.id} checked={value === o} onChange={() => { onChange(o); onBlur?.(); }} style={{ cursor: 'pointer' }} />
               <span style={{ fontSize: 14, color: C.dark }}>{o}</span>
             </label>
@@ -358,7 +378,7 @@ function FieldRow({ field, value, touched, onChange, onBlur, t }) {
         </div>
       );
       break;
-    case 'multi_select':
+    case 'multi_select': {
       const arr = Array.isArray(value) ? value : [];
       const toggle = (o) => {
         const next = arr.includes(o) ? arr.filter(x => x !== o) : [...arr, o];
@@ -367,7 +387,7 @@ function FieldRow({ field, value, touched, onChange, onBlur, t }) {
       control = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {(field.options || []).map(o => (
-            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1.5px solid ' + (arr.includes(o) ? C.primary : C.border), borderRadius: 10, cursor: 'pointer', background: arr.includes(o) ? '#f0fdf4' : '#fff' }}>
+            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (arr.includes(o) ? C.primary : C.border), borderRadius: 8, cursor: 'pointer', background: arr.includes(o) ? '#f0fdf4' : C.white }}>
               <input type="checkbox" checked={arr.includes(o)} onChange={() => { toggle(o); onBlur?.(); }} style={{ cursor: 'pointer' }} />
               <span style={{ fontSize: 14, color: C.dark }}>{o}</span>
             </label>
@@ -375,26 +395,17 @@ function FieldRow({ field, value, touched, onChange, onBlur, t }) {
         </div>
       );
       break;
-    case 'appointment':
-      // Render the booking iframe inline. We don't capture an answer
-      // (the prospect books directly on Calendly/Google's side); the
-      // BE skips this field type in mapping + required checks.
-      control = (
-        <iframe
-          src={field.config?.appointment_url}
-          title={field.label || 'Appointment booking'}
-          style={{ width: '100%', minHeight: 560, border: '1px solid ' + C.border, borderRadius: 12 }}
-          loading="lazy"
-        />
-      );
-      break;
+    }
     default:
-      control = <p style={{ color: C.muted, fontSize: 12 }}>Unknown field type: {field.type}</p>;
+      control = <p style={{ color: C.mutedLight, fontSize: 12 }}>Unknown field type: {field.type}</p>;
   }
 
   return (
     <div>
-      {labelEl}
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: C.dark, marginBottom: 6 }}>
+        {field.label}
+        {field.required && <span style={{ color: C.danger, marginLeft: 4 }}>*</span>}
+      </label>
       {control}
       {showError && (
         <p style={{ margin: '6px 0 0', fontSize: 12, color: C.danger }}>

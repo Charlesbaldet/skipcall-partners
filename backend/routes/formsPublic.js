@@ -76,7 +76,7 @@ router.get('/:formId', async (req, res) => {
 
     const { rows: formRows } = await query(
       `SELECT id, tenant_id, title, description, thank_you_message,
-              is_published, step_count, deleted_at
+              is_published, step_count, appointment_enabled, appointment_url, deleted_at
          FROM forms WHERE id = $1 LIMIT 1`,
       [formId]
     );
@@ -85,7 +85,7 @@ router.get('/:formId', async (req, res) => {
     if (!form.is_published) return res.status(410).json({ error: 'form_not_available' });
 
     const { rows: fields } = await query(
-      `SELECT id, step, order_index, type, label, placeholder, required, options, config
+      `SELECT id, step, order_index, type, label, placeholder, required, options, config, field_role
          FROM form_fields
         WHERE form_id = $1
         ORDER BY step ASC, order_index ASC, created_at ASC`,
@@ -99,6 +99,8 @@ router.get('/:formId', async (req, res) => {
         description: form.description,
         thank_you_message: form.thank_you_message,
         step_count: form.step_count,
+        appointment_enabled: form.appointment_enabled,
+        appointment_url: form.appointment_url,
       },
       fields,
       partner: { id: partner.partner_id, name: partner.partner_name },
@@ -111,13 +113,25 @@ router.get('/:formId', async (req, res) => {
 
 // ─── Submit ─────────────────────────────────────────────────────────
 
-// Map an answers array to the legacy referrals NOT-NULL columns.
-// Heuristic: by field type first (email → prospect_email, phone →
-// prospect_phone), then by label keyword for the text fields
-// (entreprise/society/company → prospect_company, rôle/poste/role →
-// prospect_role, nom/name → prospect_name). Everything else gets
-// agglutinated into the notes column as a multi-line "Label: value"
-// list so the admin sees the full submission.
+// Map an answers array to the legacy referrals columns.
+//
+// Two paths:
+//
+//   1. field.field_role is set (v50+, standard lead fields seeded at
+//      form creation): the role maps 1:1 to the column. Deterministic,
+//      no heuristic needed. Roles: contact_first_name,
+//      contact_last_name, prospect_email, prospect_phone,
+//      prospect_company, prospect_role.
+//
+//   2. field.field_role is null (custom field, OR a legacy field
+//      created before v50): fall back to the older heuristic — by
+//      field type first (email → prospect_email, phone →
+//      prospect_phone), then by label keyword. Anything still
+//      unmapped goes into the notes JSON-ish blob.
+//
+// prospect_name (referrals.prospect_name, NOT NULL) is composed last
+// from contact_first_name + contact_last_name when both are set, so
+// existing read sites that key off prospect_name keep working.
 function pickMapping(fields, answers) {
   const ansByField = new Map();
   for (const a of answers) ansByField.set(a.fieldId, a.value);
@@ -126,51 +140,62 @@ function pickMapping(fields, answers) {
   );
 
   const used = new Set();
+  let contact_first_name = null;
+  let contact_last_name = null;
   let prospect_email = null;
   let prospect_phone = null;
   let prospect_name = null;
   let prospect_company = null;
   let prospect_role = null;
 
+  // Path 1 — explicit field_role wins. Iterate fields first so that
+  // standard slots are claimed before any heuristic pass touches them.
+  for (const f of ordered) {
+    if (!f.field_role) continue;
+    const v = ansByField.get(f.id);
+    if (v == null || v === '') { used.add(f.id); continue; }
+    const sv = String(v);
+    switch (f.field_role) {
+      case 'contact_first_name': contact_first_name = sv; break;
+      case 'contact_last_name':  contact_last_name = sv;  break;
+      case 'prospect_email':     prospect_email = sv;     break;
+      case 'prospect_phone':     prospect_phone = sv;     break;
+      case 'prospect_company':   prospect_company = sv;   break;
+      case 'prospect_role':      prospect_role = sv;      break;
+    }
+    used.add(f.id);
+  }
+
+  // Path 2 — legacy heuristic for custom / pre-v50 fields. Only fills
+  // slots that path 1 left empty.
   const nameRe    = /(nom|name|prénom|prenom|firstname|lastname)/i;
   const companyRe = /(entreprise|société|societe|company|organisation|firma|empresa|azienda|bedrijf|empresa)/i;
   const roleRe    = /(rôle|role|poste|fonction|position|title|job|cargo|ruolo|functie)/i;
 
-  // First pass: explicit type matches.
   for (const f of ordered) {
+    if (used.has(f.id)) continue;
     const v = ansByField.get(f.id);
     if (v == null || v === '') continue;
-    if (f.type === 'email' && !prospect_email)         { prospect_email = String(v); used.add(f.id); }
-    else if (f.type === 'phone' && !prospect_phone)    { prospect_phone = String(v); used.add(f.id); }
+    if (f.type === 'email' && !prospect_email)      { prospect_email = String(v); used.add(f.id); }
+    else if (f.type === 'phone' && !prospect_phone) { prospect_phone = String(v); used.add(f.id); }
   }
-
-  // Second pass: text fields with company/role labels — these are
-  // semantically stronger than the bare "nom" match.
   for (const f of ordered) {
     if (used.has(f.id)) continue;
     if (f.type !== 'text_short') continue;
     const v = ansByField.get(f.id);
     if (v == null || v === '') continue;
     const label = f.label || '';
-    if (companyRe.test(label) && !prospect_company) {
-      prospect_company = String(v); used.add(f.id);
-    } else if (roleRe.test(label) && !prospect_role) {
-      prospect_role = String(v); used.add(f.id);
-    }
+    if (companyRe.test(label) && !prospect_company)    { prospect_company = String(v); used.add(f.id); }
+    else if (roleRe.test(label) && !prospect_role)     { prospect_role = String(v);    used.add(f.id); }
   }
-
-  // Third pass: text fields that look like a name.
   for (const f of ordered) {
     if (used.has(f.id)) continue;
     if (f.type !== 'text_short') continue;
     const v = ansByField.get(f.id);
     if (v == null || v === '') continue;
     const label = f.label || '';
-    if (nameRe.test(label) && !prospect_name) {
-      prospect_name = String(v); used.add(f.id);
-    }
+    if (nameRe.test(label) && !prospect_name) { prospect_name = String(v); used.add(f.id); }
   }
-
   // Fallback name: first unused text_short.
   if (!prospect_name) {
     for (const f of ordered) {
@@ -178,10 +203,14 @@ function pickMapping(fields, answers) {
       if (f.type !== 'text_short') continue;
       const v = ansByField.get(f.id);
       if (v == null || v === '') continue;
-      prospect_name = String(v);
-      used.add(f.id);
-      break;
+      prospect_name = String(v); used.add(f.id); break;
     }
+  }
+
+  // Compose prospect_name from first/last when path 1 supplied them.
+  if (!prospect_name) {
+    const composed = [contact_first_name, contact_last_name].filter(Boolean).join(' ').trim();
+    if (composed) prospect_name = composed;
   }
 
   // Notes: every remaining field, formatted "Label: value". Multi-value
@@ -189,7 +218,6 @@ function pickMapping(fields, answers) {
   const notesLines = [];
   for (const f of ordered) {
     if (used.has(f.id)) continue;
-    if (f.type === 'appointment') continue; // calendar embed, no value to record
     const v = ansByField.get(f.id);
     if (v == null || v === '') continue;
     const printable = Array.isArray(v) ? v.join(', ') : String(v);
@@ -197,7 +225,11 @@ function pickMapping(fields, answers) {
   }
   const notes = notesLines.length ? notesLines.join('\n') : null;
 
-  return { prospect_email, prospect_phone, prospect_name, prospect_company, prospect_role, notes };
+  return {
+    contact_first_name, contact_last_name,
+    prospect_email, prospect_phone, prospect_name, prospect_company, prospect_role,
+    notes,
+  };
 }
 
 router.post('/:formId/submit', async (req, res) => {
@@ -246,7 +278,7 @@ router.post('/:formId/submit', async (req, res) => {
 
     // Load the field schema so we can map answers to referral columns.
     const { rows: fields } = await query(
-      `SELECT id, step, order_index, type, label, required FROM form_fields
+      `SELECT id, step, order_index, type, label, required, field_role FROM form_fields
         WHERE form_id = $1 ORDER BY step ASC, order_index ASC, created_at ASC`,
       [formId]
     );
@@ -256,7 +288,6 @@ router.post('/:formId/submit', async (req, res) => {
     const ansByField = new Map(answers.map(a => [a.fieldId, a.value]));
     for (const f of fields) {
       if (!f.required) continue;
-      if (f.type === 'appointment') continue;
       const v = ansByField.get(f.id);
       const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0);
       if (empty) return res.status(400).json({ error: 'missing_required', fieldId: f.id });
@@ -274,6 +305,8 @@ router.post('/:formId/submit', async (req, res) => {
     const prospect_company = map.prospect_company || prospect_name;
     const prospect_phone = map.prospect_phone || null;
     const prospect_role = map.prospect_role || null;
+    const contact_first_name = map.contact_first_name || null;
+    const contact_last_name = map.contact_last_name || null;
     const notes = map.notes || null;
 
     // System user owns submitted_by for form-originated rows. Lazy-
@@ -297,13 +330,15 @@ router.post('/:formId/submit', async (req, res) => {
       `INSERT INTO referrals
         (partner_id, submitted_by, prospect_name, prospect_email,
          prospect_phone, prospect_company, prospect_role,
+         contact_first_name, contact_last_name,
          recommendation_level, notes, tenant_id, stage_id, lead_handling,
          source, form_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'warm', $8, $9, $10, $11, 'form', $12)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'warm', $10, $11, $12, $13, 'form', $14)
        RETURNING id`,
       [
         partnerId, systemUserId, prospect_name, prospect_email,
         prospect_phone, prospect_company, prospect_role,
+        contact_first_name, contact_last_name,
         notes, tenantId, defaultStageId, leadHandling, formId,
       ]
     );

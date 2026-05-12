@@ -4,27 +4,42 @@ import {
   FileText, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Share2,
   Copy, Check, Globe, X, Eye, EyeOff, AlertTriangle, Link2,
   Type, Mail, Phone, ListChecks, CheckSquare, Circle, Calendar as CalendarIcon, Hash,
-  CalendarClock, AlignLeft, ChevronDown,
+  AlignLeft, ChevronDown, RotateCcw,
 } from 'lucide-react';
 import api from '../lib/api';
 import { showToast } from '../components/Dialogs.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import { FormPreview } from './PublicFormPage.jsx';
 
 // Per-type metadata that drives the field type picker + the rendered
 // badge on each row. Single source of truth so adding a type (V2) is
 // one entry, not a hunt across the file.
+// 'appointment' was removed from this list when appointment moved to a
+// form-level setting (forms.appointment_enabled + appointment_url,
+// see migration v50). The Rendez-vous section in the settings sidebar
+// now toggles the embed; the public page renders the iframe on the
+// thank-you screen instead of as a field.
 const FIELD_TYPES = [
-  { key: 'text_short',   icon: Type,         hasOptions: false, hasAppointment: false },
-  { key: 'text_long',    icon: AlignLeft,    hasOptions: false, hasAppointment: false },
-  { key: 'email',        icon: Mail,         hasOptions: false, hasAppointment: false },
-  { key: 'phone',        icon: Phone,        hasOptions: false, hasAppointment: false },
-  { key: 'dropdown',     icon: ChevronDown,  hasOptions: true,  hasAppointment: false },
-  { key: 'multi_select', icon: ListChecks,   hasOptions: true,  hasAppointment: false },
-  { key: 'radio',        icon: Circle,       hasOptions: true,  hasAppointment: false },
-  { key: 'date',         icon: CalendarIcon, hasOptions: false, hasAppointment: false },
-  { key: 'number',       icon: Hash,         hasOptions: false, hasAppointment: false },
-  { key: 'appointment',  icon: CalendarClock, hasOptions: false, hasAppointment: true },
+  { key: 'text_short',   icon: Type,         hasOptions: false },
+  { key: 'text_long',    icon: AlignLeft,    hasOptions: false },
+  { key: 'email',        icon: Mail,         hasOptions: false },
+  { key: 'phone',        icon: Phone,        hasOptions: false },
+  { key: 'dropdown',     icon: ChevronDown,  hasOptions: true  },
+  { key: 'multi_select', icon: ListChecks,   hasOptions: true  },
+  { key: 'radio',        icon: Circle,       hasOptions: true  },
+  { key: 'date',         icon: CalendarIcon, hasOptions: false },
+  { key: 'number',       icon: Hash,         hasOptions: false },
 ];
+
+// field_role values reserved for the 6 standard lead fields auto-
+// seeded at form creation. Deleting one triggers a stronger
+// confirmation modal because the corresponding referrals column will
+// stay empty on form-originated leads going forward.
+const STANDARD_ROLES = new Set([
+  'contact_first_name', 'contact_last_name',
+  'prospect_email', 'prospect_phone',
+  'prospect_company', 'prospect_role',
+]);
 
 const TYPE_META = Object.fromEntries(FIELD_TYPES.map(t => [t.key, t]));
 
@@ -57,6 +72,13 @@ export default function FormBuilderPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmRemoveStep, setConfirmRemoveStep] = useState(null); // { step, count, target } pending step removal
+  // Builder mode mirrors the Marketplace settings tab: default to a
+  // read-only preview, an "Éditer" button flips us into the edit UI.
+  // Local state — no URL sync (intentional: a refresh resets to
+  // preview, matching the user's "this is what visitors see" mental
+  // model).
+  const [mode, setMode] = useState('preview');
+  const [confirmRestoreDefaults, setConfirmRestoreDefaults] = useState(false);
 
   const load = async () => {
     try {
@@ -84,10 +106,35 @@ export default function FormBuilderPage() {
         title: t('forms.builder.default_title', 'Inscrivez-vous à notre programme'),
       });
       setForm(f);
-      setFields([]);
+      // The backend creates the 6 standard lead fields atomically with
+      // the form (étape 5), so re-fetch right away to surface them in
+      // the builder.
+      const { fields: fs } = await api.getFormFields(f.id);
+      setFields(fs || []);
+      // Open straight into the edit view — there's nothing to preview
+      // on a fresh form and the user almost certainly wants to tweak.
+      setMode('edit');
       showToast(t('forms.builder.created', 'Formulaire créé'), 'success', 3000);
     } catch (err) {
       showToast(err.message || 'Erreur', 'error', 4000);
+    }
+  };
+
+  const restoreDefaults = async () => {
+    if (!form) return;
+    try {
+      const r = await api.restoreFormDefaults(form.id);
+      const { fields: fs } = await api.getFormFields(form.id);
+      setFields(fs || []);
+      setConfirmRestoreDefaults(false);
+      if (r.added > 0) {
+        showToast(t('forms.builder.restore_done', { n: r.added, defaultValue: '{{n}} champ(s) ajouté(s)' }), 'success', 3000);
+      } else {
+        showToast(t('forms.builder.restore_nothing', 'Tous les champs standards sont déjà présents'), 'info', 3000);
+      }
+    } catch (err) {
+      showToast(err.message || 'Erreur', 'error', 4000);
+      setConfirmRestoreDefaults(false);
     }
   };
 
@@ -252,6 +299,15 @@ export default function FormBuilderPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Mirror the Marketplace settings pattern: pill toggle
+              between Aperçu (default) and Éditer. Live state is local
+              — refreshing the page resets to Aperçu, matching the
+              "this is what visitors see" mental model. */}
+          <button
+            onClick={() => setMode(mode === 'preview' ? 'edit' : 'preview')}
+            style={{ padding: '10px 16px', borderRadius: 999, background: '#fff', color: '#0f172a', border: '1.5px solid #e2e8f0', cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {mode === 'preview' ? <><Pencil size={14} /> {t('forms.builder.edit_mode', 'Éditer')}</> : <><Eye size={14} /> {t('forms.builder.preview_mode', 'Aperçu')}</>}
+          </button>
           <button
             onClick={() => setShareOpen(true)}
             disabled={!form.is_published}
@@ -274,6 +330,15 @@ export default function FormBuilderPage() {
           : <><AlertTriangle size={14} /> {t('forms.builder.status_draft', 'Brouillon. Le formulaire n\'est pas accessible publiquement.')}</>}
       </div>
 
+      {mode === 'preview' && (
+        <div style={{ background: '#f8fafc', borderRadius: 16, padding: '32px 16px', border: '1px solid #e2e8f0' }}>
+          <div style={{ maxWidth: 480, margin: '0 auto' }}>
+            <FormPreview form={form} fields={fields} onSubmit={undefined} t={t} />
+          </div>
+        </div>
+      )}
+
+      {mode === 'edit' && (
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 24, alignItems: 'start' }}>
         {/* ─── Steps + fields ─────────────────────────────────── */}
         <div>
@@ -362,8 +427,14 @@ export default function FormBuilderPage() {
         </div>
 
         {/* ─── Side panel: form settings ──────────────────────── */}
-        <SettingsPanel form={form} t={t} onPatch={patchForm} onReset={() => setConfirmReset(true)} />
+        <SettingsPanel
+          form={form} t={t}
+          onPatch={patchForm}
+          onReset={() => setConfirmReset(true)}
+          onRestoreDefaults={() => setConfirmRestoreDefaults(true)}
+        />
       </div>
+      )}
 
       {/* ─── Modals ────────────────────────────────────────────── */}
       {editingField && (
@@ -381,12 +452,26 @@ export default function FormBuilderPage() {
       <ConfirmModal
         isOpen={!!confirmDelete}
         title={t('forms.builder.delete_field_title', 'Supprimer ce champ ?')}
-        message={confirmDelete ? `« ${confirmDelete.label} »` : ''}
+        message={
+          confirmDelete && STANDARD_ROLES.has(confirmDelete.field_role)
+            ? t('forms.builder.delete_standard_warning', { label: confirmDelete.label, defaultValue: '« {{label}} »\n\nCe champ est utilisé pour pré-remplir la fiche prospect dans le pipeline. Si vous le supprimez, ce champ restera vide pour les leads issus de ce formulaire et ne pourra pas être automatiquement mis à jour.' })
+            : (confirmDelete ? `« ${confirmDelete.label} »` : '')
+        }
         confirmLabel={t('common.delete', 'Supprimer')}
         cancelLabel={t('common.cancel', 'Annuler')}
         variant="danger"
         onConfirm={deleteField}
         onCancel={() => setConfirmDelete(null)}
+      />
+      <ConfirmModal
+        isOpen={confirmRestoreDefaults}
+        title={t('forms.builder.restore_title', 'Restaurer les champs par défaut ?')}
+        message={t('forms.builder.restore_message', 'Cela va ajouter les champs standards manquants (Prénom, Nom, Email, Téléphone, Société, Poste). Les autres champs ne seront pas modifiés.')}
+        confirmLabel={t('forms.builder.restore_confirm', 'Restaurer')}
+        cancelLabel={t('common.cancel', 'Annuler')}
+        variant="default"
+        onConfirm={restoreDefaults}
+        onCancel={() => setConfirmRestoreDefaults(false)}
       />
       <ConfirmModal
         isOpen={confirmReset}
@@ -453,19 +538,22 @@ function SettingsField({ label, children }) {
   );
 }
 
-function SettingsPanel({ form, t, onPatch, onReset }) {
-  // Local-edit state for title/description/thank_you so the user can
-  // type without firing a PATCH on every keystroke; we PATCH on blur.
+function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
+  // Local-edit state for title/description/thank_you/appointment_url so
+  // the user can type without firing a PATCH on every keystroke;
+  // we PATCH on blur.
   const [local, setLocal] = useState({
     title: form.title || '',
     description: form.description || '',
     thank_you_message: form.thank_you_message || '',
+    appointment_url: form.appointment_url || '',
   });
   useEffect(() => {
     setLocal({
       title: form.title || '',
       description: form.description || '',
       thank_you_message: form.thank_you_message || '',
+      appointment_url: form.appointment_url || '',
     });
   }, [form.id]);
 
@@ -514,7 +602,36 @@ function SettingsPanel({ form, t, onPatch, onReset }) {
           );
         })}
       </SettingsField>
-      <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14, marginTop: 6 }}>
+
+      {/* Appointment moved here from "yet another field type" in v50.
+          The toggle flips forms.appointment_enabled; the URL input
+          drives forms.appointment_url. The public page embeds the
+          iframe under the thank-you message when both are set. */}
+      <SettingsField label={t('forms.builder.appointment_section', 'Rendez-vous')}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', cursor: 'pointer', marginBottom: form.appointment_enabled ? 8 : 0 }}>
+          <input type="checkbox" checked={!!form.appointment_enabled}
+            onChange={e => onPatch({ appointment_enabled: e.target.checked })}
+            style={{ width: 16, height: 16, cursor: 'pointer' }} />
+          <span style={{ fontSize: 13, color: '#0f172a', fontWeight: 500 }}>
+            {t('forms.builder.appointment_toggle', 'Proposer un rendez-vous après soumission')}
+          </span>
+        </label>
+        {form.appointment_enabled && (
+          <input type="url" value={local.appointment_url}
+            onChange={e => setLocal(s => ({ ...s, appointment_url: e.target.value }))}
+            onBlur={() => commit('appointment_url')}
+            placeholder={t('forms.builder.appointment_url_ph', 'https://calendly.com/…')}
+            style={{ ...SETTINGS_INPUT_STYLE, marginTop: 6 }} />
+        )}
+      </SettingsField>
+
+      <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+        {onRestoreDefaults && (
+          <button onClick={onRestoreDefaults}
+            style={{ background: 'transparent', border: 'none', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <RotateCcw size={12} /> {t('forms.builder.restore', 'Restaurer les champs par défaut')}
+          </button>
+        )}
         <button onClick={onReset}
           style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Trash2 size={12} /> {t('forms.builder.reset', 'Supprimer le formulaire')}
@@ -536,7 +653,6 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
   const [optionsText, setOptionsText] = useState(
     Array.isArray(initial.options) ? initial.options.join('\n') : ''
   );
-  const [appointmentUrl, setAppointmentUrl] = useState(initial.config?.appointment_url || '');
   const [saving, setSaving] = useState(false);
 
   const meta = TYPE_META[type];
@@ -548,16 +664,10 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
       type, label: label.trim(), placeholder: placeholder.trim() || null,
       required: !!required, step: Number(step),
     };
-    if (meta.hasOptions) {
+    if (meta && meta.hasOptions) {
       const opts = optionsText.split('\n').map(s => s.trim()).filter(Boolean);
       if (!opts.length) { showToast(t('forms.builder.options_required', 'Au moins une option requise'), 'error', 3000); setSaving(false); return; }
       payload.options = opts;
-    }
-    if (meta.hasAppointment) {
-      if (!appointmentUrl.trim()) { showToast(t('forms.builder.appointment_url_required', 'URL Calendly / Google requise'), 'error', 3000); setSaving(false); return; }
-      try { new URL(appointmentUrl.trim()); }
-      catch { showToast(t('forms.builder.appointment_url_invalid', 'URL invalide'), 'error', 3000); setSaving(false); return; }
-      payload.config = { appointment_url: appointmentUrl.trim() };
     }
     try {
       await onSave(payload);
@@ -609,17 +719,15 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
             style={inputStyle} autoFocus />
         </div>
 
-        {!meta.hasAppointment && (
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {t('forms.builder.placeholder_label', 'Placeholder (optionnel)')}
-            </label>
-            <input type="text" value={placeholder} onChange={e => setPlaceholder(e.target.value)}
-              style={inputStyle} />
-          </div>
-        )}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            {t('forms.builder.placeholder_label', 'Placeholder (optionnel)')}
+          </label>
+          <input type="text" value={placeholder} onChange={e => setPlaceholder(e.target.value)}
+            style={inputStyle} />
+        </div>
 
-        {meta.hasOptions && (
+        {meta && meta.hasOptions && (
           <div style={{ marginBottom: 14 }}>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('forms.builder.options_label', 'Options (une par ligne)')}
@@ -627,20 +735,6 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
             <textarea rows={4} value={optionsText} onChange={e => setOptionsText(e.target.value)}
               placeholder={t('forms.builder.options_ph', 'Option 1\nOption 2\nOption 3')}
               style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
-          </div>
-        )}
-
-        {meta.hasAppointment && (
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {t('forms.builder.appointment_url_label', 'URL Calendly / Google Calendar')}
-            </label>
-            <input type="url" value={appointmentUrl} onChange={e => setAppointmentUrl(e.target.value)}
-              placeholder="https://calendly.com/…"
-              style={inputStyle} />
-            <p style={{ margin: '6px 0 0', fontSize: 11, color: '#94a3b8' }}>
-              {t('forms.builder.appointment_hint', 'L\'iframe de prise de rendez-vous sera intégrée nativement dans le formulaire.')}
-            </p>
           </div>
         )}
 
