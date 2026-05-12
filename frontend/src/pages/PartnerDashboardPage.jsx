@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, TrendingUp, DollarSign, Search } from 'lucide-react';
+import { FileText, TrendingUp, DollarSign, Search, ClipboardList } from 'lucide-react';
 import api from '../lib/api';
 import { fmt } from '../lib/constants';
 import PageSkeleton from '../components/PageSkeleton.jsx';
@@ -14,11 +14,22 @@ export default function PartnerDashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [kpis, setKpis] = useState(null);
+  const [formStats, setFormStats] = useState(null); // null = no active form link
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getKPIs().catch(() => ({})).then(k => {
+    Promise.all([
+      api.getKPIs().catch(() => ({})),
+      // 30d window — matches the default in /partner/links so the
+      // two numbers line up for the same period the partner is
+      // likely to compare.
+      api.getPartnerFormStats('30d').catch(() => null),
+    ]).then(([k, fs]) => {
       setKpis(k);
+      // Only surface the tile when the partner actually has a form
+      // link active (i.e. the BE returned a non-null shape with a
+      // submissions count >= 0). Zero-traffic forms still show.
+      setFormStats(fs && (fs.submissions != null || fs.views != null) ? fs : null);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -35,6 +46,13 @@ export default function PartnerDashboardPage() {
         <PKPI icon={FileText} label={t('partnerReferrals.kpi_total')} value={kpis?.total_referrals || 0} color="var(--rb-primary, #059669)" />
         <PKPI icon={TrendingUp} label={t('partnerReferrals.kpi_won')} value={kpis?.won_count || 0} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
         <PKPI icon={DollarSign} label={t('partnerReferrals.kpi_commission')} value={fmt(kpis?.total_commission || 0)} color="var(--rb-accent, #f97316)" />
+        {formStats && (
+          <PKPI icon={ClipboardList}
+            label={t('partner_dashboard.form_submissions', 'Réponses formulaire')}
+            value={formStats.submissions || 0}
+            sub={t('partner_dashboard.form_submissions_sub', 'sur 30 jours')}
+            color="#6366f1" />
+        )}
       </div>
 
       <div

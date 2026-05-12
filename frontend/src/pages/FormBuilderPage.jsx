@@ -4,7 +4,7 @@ import {
   FileText, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Share2,
   Copy, Check, Globe, X, Eye, EyeOff, AlertTriangle, Link2,
   Type, Mail, Phone, ListChecks, CheckSquare, Circle, Calendar as CalendarIcon, Hash,
-  AlignLeft, ChevronDown, RotateCcw, Loader2,
+  AlignLeft, ChevronDown, RotateCcw, Loader2, BarChart2,
 } from 'lucide-react';
 import api from '../lib/api';
 import { showToast } from '../components/Dialogs.jsx';
@@ -323,6 +323,21 @@ export default function FormBuilderPage() {
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <SaveIndicator state={saveState} t={t} onRetry={() => setSaveState('idle')} />
+          {/* Stats mode sits next to the Edit/Preview toggle, per
+              the brief — same visual weight, third option. */}
+          <button
+            onClick={() => setMode(mode === 'stats' ? 'preview' : 'stats')}
+            style={{
+              padding: '6px 16px', borderRadius: 8,
+              background: mode === 'stats' ? '#0f172a' : '#fff',
+              border: mode === 'stats' ? 'none' : '1px solid #e2e8f0',
+              color: mode === 'stats' ? '#fff' : '#0f172a',
+              fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              boxShadow: mode === 'stats' ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
+            }}>
+            <BarChart2 size={13} /> {t('forms.builder.stats_mode', 'Statistiques')}
+          </button>
           {/* Mirror the MarketplaceEditorPage Édit/Fermer button style
               byte-for-byte (padding 6px 16px, radius 8, fontSize 13,
               fontWeight 500, green-fill in preview, white-bordered in
@@ -372,6 +387,10 @@ export default function FormBuilderPage() {
             <FormPreview form={form} fields={fields} onSubmit={undefined} t={t} />
           </div>
         </div>
+      )}
+
+      {mode === 'stats' && (
+        <StatsView formId={form.id} t={t} />
       )}
 
       {mode === 'edit' && (
@@ -570,6 +589,132 @@ function SaveIndicator({ state, t, onRetry }) {
         {cfg.text}
       </span>
     </>
+  );
+}
+
+// ─── Stats view ────────────────────────────────────────────────────
+// Third builder mode: pulls /api/forms/:id/stats and renders KPIs +
+// funnel bars + top abandoned fields. Period & partner_id filters
+// are state-only (no URL sync — refreshing the page resets to the
+// 30d default like the rest of the builder modes).
+function StatsView({ formId, t }) {
+  const [period, setPeriod] = useState('30d');
+  const [partnerId, setPartnerId] = useState('');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api.getFormStats(formId, { period, partner_id: partnerId || null })
+      .then(d => setData(d))
+      .catch(err => { setData(null); showToast(err.message || 'Erreur', 'error', 4000); })
+      .finally(() => setLoading(false));
+  }, [formId, period, partnerId]);
+
+  const k = data?.kpis || { views: 0, starts: 0, submissions: 0, conversion_rate: 0 };
+  const funnel = data?.funnel || [];
+  const abandons = data?.top_abandons || [];
+  const partners = data?.partners || [];
+  const maxFunnel = Math.max(1, ...funnel.map(f => f.count));
+  const fmtPct = (n) => Math.round((n || 0) * 100) + ' %';
+
+  const PERIODS = [
+    { val: '7d',  label: t('forms.stats.period_7d',  '7 j') },
+    { val: '30d', label: t('forms.stats.period_30d', '30 j') },
+    { val: '90d', label: t('forms.stats.period_90d', '90 j') },
+    { val: 'all', label: t('forms.stats.period_all', 'Tout') },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Filters row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'inline-flex', padding: 3, background: '#f1f5f9', borderRadius: 8 }}>
+          {PERIODS.map(p => {
+            const active = period === p.val;
+            return (
+              <button key={p.val} onClick={() => setPeriod(p.val)}
+                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0f172a' : '#64748b', fontWeight: 500, fontSize: 12, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+        {partners.length > 0 && (
+          <select value={partnerId} onChange={e => setPartnerId(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, background: '#fff', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <option value="">{t('forms.stats.all_partners', 'Tous les partenaires')}</option>
+            {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
+      </div>
+
+      {loading && !data && (
+        <div style={{ padding: 40, color: '#94a3b8', fontSize: 13, textAlign: 'center' }}>{t('common.loading', 'Chargement…')}</div>
+      )}
+
+      {data && (
+        <>
+          {/* KPI row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+            <StatCard label={t('forms.stats.kpi_views', 'Vues')} value={k.views} />
+            <StatCard label={t('forms.stats.kpi_submissions', 'Soumissions')} value={k.submissions} accent />
+            <StatCard label={t('forms.stats.kpi_conversion', 'Conversion globale')} value={fmtPct(k.conversion_rate)} />
+          </div>
+
+          {/* Funnel — bars are 100%-relative to the max step count so
+              the shape stays readable even with low absolute traffic. */}
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('forms.stats.funnel_title', 'Funnel')}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {funnel.map((row, i) => {
+                const w = Math.round((row.count / maxFunnel) * 100);
+                return (
+                  <div key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 110, fontSize: 12, color: '#64748b' }}>{row.label}</div>
+                    <div style={{ flex: 1, height: 28, position: 'relative', background: '#f8fafc', borderRadius: 6, overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', inset: 0, width: w + '%', background: i === funnel.length - 1 ? '#059669' : '#6366f1', opacity: 0.85, borderRadius: 6, transition: 'width 0.3s' }} />
+                      <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 10px', color: w > 30 ? '#fff' : '#0f172a', fontSize: 12, fontWeight: 600 }}>
+                        <span>{row.count}</span>
+                        {row.rate_from_prev != null && i > 0 && (
+                          <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>{fmtPct(row.rate_from_prev)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Top abandoned fields */}
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('forms.stats.abandons_title', 'Top des champs abandonnés')}</h3>
+            {abandons.length === 0 ? (
+              <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>{t('forms.stats.abandons_empty', 'Aucun champ abandonné sur la période.')}</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {abandons.map((a, i) => (
+                  <div key={a.field_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid #f1f5f9' }}>
+                    <span style={{ color: '#0f172a', fontSize: 13 }}>{a.label}</span>
+                    <span style={{ color: '#dc2626', fontWeight: 700, fontSize: 13 }}>{a.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '14px 18px' }}>
+      <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 6, letterSpacing: -0.5 }}>{value}</div>
+    </div>
   );
 }
 

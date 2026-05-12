@@ -3610,9 +3610,17 @@
       "strong": "Forte"
     }
   },
+  "partner_dashboard": {
+    "form_submissions": "Invii dal modulo",
+    "form_submissions_sub": "ultimi 30 giorni"
+  },
   "partner_links": {
     "title": "I miei link",
     "subtitle": "I tuoi link condivisibili per generare lead attribuiti al tuo account.",
+    "stats_title": "Performance",
+    "stats_views": "Visualizzazioni",
+    "stats_submissions": "Invii",
+    "stats_conversion": "Conversione",
     "form_title": "Link del modulo",
     "form_subtitle": "Condividi questo link: i visitatori compilano il modulo di iscrizione configurato da {{tenant}}.",
     "form_empty_title": "Link del modulo",
@@ -3649,6 +3657,7 @@
       "saving": "Salvataggio…",
       "saved": "Salvato",
       "save_error": "Errore, riprova",
+      "stats_mode": "Statistiche",
       "appointment_section": "Appuntamento",
       "appointment_toggle": "Proporre un appuntamento dopo l'invio",
       "appointment_url_ph": "https://calendly.com/…",
@@ -3714,6 +3723,19 @@
       "no_partners": "Nessun partner attivo da invitare.",
       "generate": "Genera link",
       "revoke": "Revoca"
+    },
+    "stats": {
+      "period_7d": "7 g",
+      "period_30d": "30 g",
+      "period_90d": "90 g",
+      "period_all": "Tutto",
+      "all_partners": "Tutti i partner",
+      "kpi_views": "Visualizzazioni",
+      "kpi_submissions": "Invii",
+      "kpi_conversion": "Conversione globale",
+      "funnel_title": "Funnel",
+      "abandons_title": "Top dei campi abbandonati",
+      "abandons_empty": "Nessun campo abbandonato nel periodo."
     }
   },
   "public_form": {

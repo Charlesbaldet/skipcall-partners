@@ -66,4 +66,61 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/partner/form-link/stats?period=30d
+// Aggregates the partner's own funnel events on whatever form their
+// tenant has published. Returns zeros when there's no published form
+// or no token yet — the FE renders the empty-state placeholder in
+// that case but the endpoint still 200s for symmetry.
+router.get('/stats', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'unauthenticated' });
+    const partnerId = req.user.partnerId;
+    const tenantId  = req.user.tenantId;
+    if (!partnerId || !tenantId) return res.json({ views: 0, submissions: 0, conversion_rate: 0 });
+
+    const period = ['7d', '30d', '90d', 'all'].includes(req.query.period) ? req.query.period : '30d';
+    const since = (() => {
+      const now = Date.now();
+      if (period === 'all') return null;
+      const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
+      return new Date(now - days * 24 * 3600 * 1000);
+    })();
+
+    // Resolve tokens this partner holds on the tenant's form(s).
+    const { rows: tokens } = await query(
+      `SELECT fpt.token
+         FROM form_partner_tokens fpt
+         JOIN forms f ON f.id = fpt.form_id
+        WHERE fpt.partner_id = $1 AND f.tenant_id = $2 AND f.deleted_at IS NULL`,
+      [partnerId, tenantId]
+    );
+    if (!tokens.length) return res.json({ period, views: 0, submissions: 0, conversion_rate: 0 });
+
+    const params = [tokens.map(r => r.token)];
+    let extra = '';
+    if (since) { params.push(since); extra = ' AND created_at >= $2'; }
+
+    const { rows: typeRows } = await query(
+      `SELECT event_type, COUNT(*)::int AS c
+         FROM form_events
+        WHERE partner_token = ANY($1::text[])${extra}
+        GROUP BY event_type`,
+      params
+    );
+    const counts = Object.fromEntries(typeRows.map(r => [r.event_type, r.c]));
+    const views = counts.form_view || 0;
+    const submissions = counts.form_submit || 0;
+
+    res.json({
+      period,
+      views,
+      submissions,
+      conversion_rate: views ? submissions / views : 0,
+    });
+  } catch (err) {
+    console.error('[partnerFormLink.stats] failed:', err.message);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
 module.exports = router;

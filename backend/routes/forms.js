@@ -707,4 +707,135 @@ router.delete('/:id/partner-tokens/:tokenId', async (req, res) => {
   }
 });
 
+// ─── Funnel stats ────────────────────────────────────────────────
+//
+// GET /api/forms/:id/stats?period=30d&partner_id=<uuid>
+// Returns KPIs + per-step funnel + top abandoned fields for a form.
+// Optional partner_id filter narrows results to events carrying any
+// of that partner's tokens for this form.
+function lowerBoundFor(period) {
+  const now = Date.now();
+  switch (period) {
+    case '7d':  return new Date(now - 7  * 24 * 3600 * 1000);
+    case '90d': return new Date(now - 90 * 24 * 3600 * 1000);
+    case 'all': return null;
+    case '30d':
+    default:    return new Date(now - 30 * 24 * 3600 * 1000);
+  }
+}
+
+router.get('/:id/stats', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+
+    const period = ['7d', '30d', '90d', 'all'].includes(req.query.period) ? req.query.period : '30d';
+    const since = lowerBoundFor(period);
+    const partnerId = (typeof req.query.partner_id === 'string' && /^[0-9a-f-]{36}$/i.test(req.query.partner_id))
+      ? req.query.partner_id : null;
+
+    // Resolve partner_id → tokens. Empty list means "this partner
+    // never had a token on this form" → every aggregate returns 0.
+    let tokenWhere = '';
+    const params = [req.params.id];
+    if (since) { params.push(since); tokenWhere += ' AND created_at >= $' + params.length; }
+    if (partnerId) {
+      const { rows: tk } = await query(
+        `SELECT token FROM form_partner_tokens WHERE form_id = $1 AND partner_id = $2`,
+        [req.params.id, partnerId]
+      );
+      const tokens = tk.map(r => r.token);
+      if (!tokens.length) {
+        return res.json({
+          period, partner_id: partnerId,
+          kpis: { views: 0, starts: 0, submissions: 0, conversion_rate: 0 },
+          funnel: [],
+          top_abandons: [],
+          partners: [],
+        });
+      }
+      params.push(tokens);
+      tokenWhere += ' AND partner_token = ANY($' + params.length + '::text[])';
+    }
+
+    // Aggregate counts per event type.
+    const { rows: typeRows } = await query(
+      `SELECT event_type, COUNT(*)::int AS c
+         FROM form_events
+        WHERE form_id = $1${tokenWhere}
+        GROUP BY event_type`,
+      params
+    );
+    const counts = Object.fromEntries(typeRows.map(r => [r.event_type, r.c]));
+
+    // Per-step completion counts.
+    const { rows: stepRows } = await query(
+      `SELECT step_index, COUNT(*)::int AS c
+         FROM form_events
+        WHERE form_id = $1 AND event_type = 'step_complete'${tokenWhere}
+        GROUP BY step_index
+        ORDER BY step_index ASC`,
+      params
+    );
+    const stepCounts = Object.fromEntries(stepRows.map(r => [r.step_index, r.c]));
+
+    // Top abandoned fields (join to surface labels).
+    const { rows: abandonRows } = await query(
+      `SELECT fe.field_id, ff.label, COUNT(*)::int AS c
+         FROM form_events fe
+         JOIN form_fields ff ON ff.id = fe.field_id
+        WHERE fe.form_id = $1 AND fe.event_type = 'field_abandon'${tokenWhere.replace(/created_at/g, 'fe.created_at').replace(/partner_token/g, 'fe.partner_token')}
+        GROUP BY fe.field_id, ff.label
+        ORDER BY c DESC
+        LIMIT 10`,
+      params
+    );
+
+    // Build funnel rows: view → start → step1 → step2 ... → submit.
+    const views = counts.form_view || 0;
+    const starts = counts.form_start || 0;
+    const submissions = counts.form_submit || 0;
+    const stepCount = form.step_count || 1;
+    const funnel = [
+      { key: 'views',  label: 'Vues',        count: views,  rate_from_prev: null },
+      { key: 'starts', label: 'Démarrages', count: starts, rate_from_prev: views ? starts / views : 0 },
+    ];
+    for (let s = 1; s <= stepCount; s++) {
+      const c = stepCounts[s] || 0;
+      const prev = funnel[funnel.length - 1].count;
+      funnel.push({ key: 'step_' + s, label: 'Étape ' + s, count: c, rate_from_prev: prev ? c / prev : 0 });
+    }
+    const lastStepCount = funnel[funnel.length - 1].count;
+    funnel.push({ key: 'submit', label: 'Soumissions', count: submissions, rate_from_prev: lastStepCount ? submissions / lastStepCount : 0 });
+
+    // Partner list for the filter dropdown — every partner who has a
+    // token on this form, ordered by name.
+    const { rows: partnerRows } = await query(
+      `SELECT p.id, p.name
+         FROM form_partner_tokens fpt
+         JOIN partners p ON p.id = fpt.partner_id
+        WHERE fpt.form_id = $1 AND p.deleted_at IS NULL
+        ORDER BY p.name ASC`,
+      [req.params.id]
+    );
+
+    res.json({
+      period,
+      partner_id: partnerId,
+      kpis: {
+        views,
+        starts,
+        submissions,
+        conversion_rate: views ? submissions / views : 0,
+      },
+      funnel,
+      top_abandons: abandonRows.map(r => ({ field_id: r.field_id, label: r.label, count: r.c })),
+      partners: partnerRows,
+    });
+  } catch (err) {
+    console.error('[forms.stats] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

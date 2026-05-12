@@ -471,6 +471,12 @@ class ApiClient {
   // Referral links
   getPartnerReferralLink(partnerId) { return this.request('/referral-links/partners/' + partnerId); }
   getPartnerFormLink() { return this.request('/partner/form-link'); }
+  getPartnerFormStats(period = '30d') { return this.request('/partner/form-link/stats?period=' + encodeURIComponent(period)); }
+  getFormStats(formId, { period = '30d', partner_id = null } = {}) {
+    const qs = new URLSearchParams({ period });
+    if (partner_id) qs.set('partner_id', partner_id);
+    return this.request('/forms/' + formId + '/stats?' + qs.toString());
+  }
   regenerateReferralCode(partnerId) { return this.request('/referral-links/partners/' + partnerId + '/regenerate', { method: 'POST' }); }
   getReferralClickStats() { return this.request('/referral-links/click-stats'); }
   getReferralSourceBreakdown() { return this.request('/referral-links/source-breakdown'); }

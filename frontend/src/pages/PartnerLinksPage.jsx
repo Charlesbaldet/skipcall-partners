@@ -140,6 +140,16 @@ function LinkStat({ label, value, accent }) {
 function FormLinkCard({ link, t }) {
   const [mode, setMode] = useState('url'); // 'url' | 'embed'
   const [copied, setCopied] = useState(false);
+  const [period, setPeriod] = useState('30d');
+  const [stats, setStats] = useState(null);
+  // Load funnel stats when we have a token. Period changes refresh
+  // in place; nothing to clean up because the request is short-lived.
+  useEffect(() => {
+    if (!link) { setStats(null); return; }
+    api.getPartnerFormStats(period)
+      .then(setStats)
+      .catch(() => setStats(null));
+  }, [link, period]);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const url = link ? origin + '/f/' + link.form_id + '?p=' + link.token : '';
@@ -238,6 +248,45 @@ function FormLinkCard({ link, t }) {
           </div>
         </div>
       )}
+
+      {/* Funnel KPIs scoped to this partner's token(s). Hidden if
+          there's no traffic yet AND no stats response, to avoid
+          showing a row of "0 / 0 / 0 %" before the first visit. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 18, marginBottom: 10, flexWrap: 'wrap' }}>
+        <h4 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {t('partner_links.stats_title', 'Performances')}
+        </h4>
+        <div style={{ display: 'inline-flex', padding: 2, background: '#f1f5f9', borderRadius: 7 }}>
+          {[
+            { v: '7d',  l: t('forms.stats.period_7d',  '7 j') },
+            { v: '30d', l: t('forms.stats.period_30d', '30 j') },
+            { v: '90d', l: t('forms.stats.period_90d', '90 j') },
+            { v: 'all', l: t('forms.stats.period_all', 'Tout') },
+          ].map(p => {
+            const active = period === p.v;
+            return (
+              <button key={p.v} onClick={() => setPeriod(p.v)}
+                style={{ padding: '4px 10px', borderRadius: 5, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0f172a' : '#64748b', fontWeight: 500, fontSize: 11, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
+                {p.l}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <PartnerStat label={t('partner_links.stats_views',       'Vues')}       value={stats?.views ?? 0} />
+        <PartnerStat label={t('partner_links.stats_submissions', 'Soumissions')} value={stats?.submissions ?? 0} accent />
+        <PartnerStat label={t('partner_links.stats_conversion',  'Conversion')}  value={Math.round(((stats?.conversion_rate) || 0) * 100) + ' %'} />
+      </div>
+    </div>
+  );
+}
+
+function PartnerStat({ label, value, accent }) {
+  return (
+    <div style={{ background: accent ? '#f0fdf4' : '#f8fafc', borderRadius: 10, padding: '10px 12px', border: '1px solid ' + (accent ? '#bbf7d0' : '#e2e8f0') }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 4 }}>{value}</div>
     </div>
   );
 }

@@ -3610,9 +3610,17 @@
       "strong": "Strong"
     }
   },
+  "partner_dashboard": {
+    "form_submissions": "Form submissions",
+    "form_submissions_sub": "last 30 days"
+  },
   "partner_links": {
     "title": "My links",
     "subtitle": "Your shareable links to bring in leads attributed to your account.",
+    "stats_title": "Performance",
+    "stats_views": "Views",
+    "stats_submissions": "Submissions",
+    "stats_conversion": "Conversion",
     "form_title": "Form link",
     "form_subtitle": "Share this link: visitors will fill in the registration form configured by {{tenant}}.",
     "form_empty_title": "Form link",
@@ -3649,6 +3657,7 @@
       "saving": "Saving…",
       "saved": "Saved",
       "save_error": "Error, retry",
+      "stats_mode": "Statistics",
       "appointment_section": "Appointment",
       "appointment_toggle": "Offer an appointment after submission",
       "appointment_url_ph": "https://calendly.com/…",
@@ -3714,6 +3723,19 @@
       "no_partners": "No active partners to invite.",
       "generate": "Generate link",
       "revoke": "Revoke"
+    },
+    "stats": {
+      "period_7d": "7d",
+      "period_30d": "30d",
+      "period_90d": "90d",
+      "period_all": "All",
+      "all_partners": "All partners",
+      "kpi_views": "Views",
+      "kpi_submissions": "Submissions",
+      "kpi_conversion": "Overall conversion",
+      "funnel_title": "Funnel",
+      "abandons_title": "Top abandoned fields",
+      "abandons_empty": "No abandoned fields in the period."
     }
   },
   "public_form": {
