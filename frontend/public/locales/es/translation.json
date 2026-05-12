@@ -901,6 +901,7 @@
   },
   "commissions": {
     "title": "Comisiones",
+    "subtitle_counts": "{{pending}} en curso, {{paid}} pagadas",
     "subtitle": "Seguimiento de comisiones de socios",
     "kpi_total": "Total Comisiones",
     "kpi_pending": "Pendientes",
@@ -1356,6 +1357,8 @@
     "results_for": "para",
     "learn_more": "Saber más",
     "editor": {
+      "page_title": "Marketplace",
+      "page_subtitle": "Presentación de su programa",
       "publish_toggle": "Publicar en la marketplace",
       "preview": "Vista previa",
       "save": "Guardar",
@@ -3642,7 +3645,9 @@
     },
     "builder": {
       "title": "Formulario de inscripción",
+      "title_short": "Formulario",
       "subtitle": "Configure el formulario que sus socios compartirán para captar nuevos leads.",
+      "subtitle_short": "Configuración del formulario de leads",
       "default_title": "Únase a nuestro programa",
       "created": "Formulario creado",
       "deleted": "Formulario eliminado",

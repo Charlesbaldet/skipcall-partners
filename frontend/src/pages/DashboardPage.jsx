@@ -143,8 +143,8 @@ export default function DashboardPage() {
       {showWizard && <OnboardingWizard onClose={() => setShowWizard(false)} />}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('dashboard.title')}</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{t('dashboard.subtitle')}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('dashboard.title')}</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{t('dashboard.subtitle')}</p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

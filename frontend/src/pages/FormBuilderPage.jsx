@@ -314,11 +314,11 @@ export default function FormBuilderPage() {
       {/* ─── Header ──────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 280 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: -0.4 }}>
-            {t('forms.builder.title', 'Formulaire d\'inscription')}
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2 }}>
+            {t('forms.builder.title_short', 'Formulaire')}
           </h1>
-          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#64748b' }}>
-            {t('forms.builder.subtitle', 'Configurez le formulaire que vos partenaires partageront pour recruter de nouveaux leads.')}
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+            {t('forms.builder.subtitle_short', 'Configuration du formulaire de leads')}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>

@@ -650,8 +650,14 @@ export default function CommissionsPage() {
       <style>{`@keyframes rb-spin{to{transform:rotate(360deg)}}.rb-spin{animation:rb-spin 1s linear infinite}@keyframes rb-pulse{0%,100%{opacity:1}50%{opacity:.4}}.rb-pulse{animation:rb-pulse 1.4s ease-in-out infinite}`}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('commissions.title')}</h1>
-          <p style={{ color: '#64748b' }}>{t('commissions.subtitle')}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('commissions.title')}</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
+            {t('commissions.subtitle_counts', {
+              pending: fmt(totals.pending),
+              paid: fmt(totals.paid),
+              defaultValue: '{{pending}} en cours, {{paid}} payées',
+            })}
+          </p>
         </div>
         <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           <Download size={14} /> {t('commissions.export')}

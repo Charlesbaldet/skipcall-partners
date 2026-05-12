@@ -676,10 +676,16 @@ export default function MarketplaceEditorPage() {
         flexWrap: 'wrap',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flexWrap: 'wrap' }}>
-          <span style={{ color: C.m, fontSize: 13 }}>Marketplace /</span>
-          <span style={{ color: C.s, fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {tenant.company_name}
-          </span>
+          {/* Standardised title block — 22/500 + 13 sub-title, matches
+              Dashboard / Pipeline / Partenaires / Commissions. */}
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: C.s, letterSpacing: -0.2 }}>
+              {t('marketplace.editor.page_title', 'Marketplace')}
+            </h1>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: C.m }}>
+              {t('marketplace.editor.page_subtitle', 'Présentation de votre programme')}
+            </p>
+          </div>
           <StatusBadge visible={!!tenant.marketplace_visible} t={t} />
           {saving && <span style={{ color: C.m, fontSize: 12 }}>{t('marketplace.editor.saving', 'Enregistrement…')}</span>}
           {hasUnsavedChanges && !saving && (

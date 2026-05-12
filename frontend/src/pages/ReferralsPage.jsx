@@ -181,8 +181,8 @@ export default function ReferralsPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('referrals.title')}</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{total} {t('referrals.count')}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('referrals.title')}</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{total} {t('referrals.count')}</p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {/* View toggle */}

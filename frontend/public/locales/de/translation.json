@@ -901,6 +901,7 @@
   },
   "commissions": {
     "title": "Provisionen",
+    "subtitle_counts": "{{pending}} offen, {{paid}} bezahlt",
     "subtitle": "Partner-Provisionen verfolgen",
     "kpi_total": "Gesamt Provisionen",
     "kpi_pending": "Ausstehend",
@@ -1356,6 +1357,8 @@
     "results_for": "für",
     "learn_more": "Mehr erfahren",
     "editor": {
+      "page_title": "Marketplace",
+      "page_subtitle": "So erscheint Ihr Programm",
       "publish_toggle": "Im Marketplace veröffentlichen",
       "preview": "Vorschau",
       "save": "Speichern",
@@ -3642,7 +3645,9 @@
     },
     "builder": {
       "title": "Anmeldeformular",
+      "title_short": "Formular",
       "subtitle": "Konfigurieren Sie das Formular, das Ihre Partner teilen werden, um neue Leads zu gewinnen.",
+      "subtitle_short": "Konfiguration des Lead-Formulars",
       "default_title": "Treten Sie unserem Programm bei",
       "created": "Formular erstellt",
       "deleted": "Formular gelöscht",

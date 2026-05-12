@@ -901,6 +901,7 @@
   },
   "commissions": {
     "title": "Commissies",
+    "subtitle_counts": "{{pending}} lopend, {{paid}} betaald",
     "subtitle": "Commissies van partners bijhouden",
     "kpi_total": "Totale Commissies",
     "kpi_pending": "In behandeling",
@@ -1356,6 +1357,8 @@
     "results_for": "voor",
     "learn_more": "Meer informatie",
     "editor": {
+      "page_title": "Marketplace",
+      "page_subtitle": "Hoe je programma verschijnt",
       "publish_toggle": "Publiceren op de marketplace",
       "preview": "Voorbeeld",
       "save": "Opslaan",
@@ -3642,7 +3645,9 @@
     },
     "builder": {
       "title": "Aanmeldformulier",
+      "title_short": "Formulier",
       "subtitle": "Configureer het formulier dat je partners zullen delen om nieuwe leads aan te trekken.",
+      "subtitle_short": "Configuratie van het leadformulier",
       "default_title": "Schrijf je in voor ons programma",
       "created": "Formulier aangemaakt",
       "deleted": "Formulier verwijderd",

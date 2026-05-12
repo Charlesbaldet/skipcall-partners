@@ -901,6 +901,7 @@
   },
   "commissions": {
     "title": "Commissions",
+    "subtitle_counts": "{{pending}} pending, {{paid}} paid",
     "subtitle": "Partner commission tracking",
     "kpi_total": "Total Commissions",
     "kpi_pending": "Pending",
@@ -1356,6 +1357,8 @@
     "results_for": "for",
     "learn_more": "Learn more",
     "editor": {
+      "page_title": "Marketplace",
+      "page_subtitle": "How your programme appears",
       "publish_toggle": "Publish on the marketplace",
       "preview": "Preview",
       "save": "Save",
@@ -3642,7 +3645,9 @@
     },
     "builder": {
       "title": "Registration form",
+      "title_short": "Form",
       "subtitle": "Configure the form your partners will share to bring in new leads.",
+      "subtitle_short": "Configure the lead form",
       "default_title": "Join our programme",
       "created": "Form created",
       "deleted": "Form deleted",

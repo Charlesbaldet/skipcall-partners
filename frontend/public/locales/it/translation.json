@@ -901,6 +901,7 @@
   },
   "commissions": {
     "title": "Commissioni",
+    "subtitle_counts": "{{pending}} in corso, {{paid}} pagate",
     "subtitle": "Monitoraggio commissioni partner",
     "kpi_total": "Totale Commissioni",
     "kpi_pending": "In attesa",
@@ -1356,6 +1357,8 @@
     "results_for": "per",
     "learn_more": "Scopri di più",
     "editor": {
+      "page_title": "Marketplace",
+      "page_subtitle": "Presentazione del tuo programma",
       "publish_toggle": "Pubblica sulla marketplace",
       "preview": "Anteprima",
       "save": "Salva",
@@ -3642,7 +3645,9 @@
     },
     "builder": {
       "title": "Modulo di iscrizione",
+      "title_short": "Modulo",
       "subtitle": "Configura il modulo che i tuoi partner condivideranno per acquisire nuovi lead.",
+      "subtitle_short": "Configurazione del modulo lead",
       "default_title": "Iscriviti al nostro programma",
       "created": "Modulo creato",
       "deleted": "Modulo eliminato",
