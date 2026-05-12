@@ -57,7 +57,7 @@ router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
     });
 
     const [
-      tenantR, usersR, partnersR, referralsR, commissionsR, invoicesR, formSubmissionsR, auditR,
+      tenantR, usersR, partnersR, referralsR, commissionsR, formSubmissionsR, auditR,
     ] = await Promise.all([
       safe('tenant', query(`SELECT id, name, slug, domain, primary_color, secondary_color, accent_color,
                     plan, revenue_model, is_active, created_at, updated_at
@@ -77,9 +77,6 @@ router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
       safe('commissions', query(`SELECT id, partner_id, referral_id, amount, status, approval_status,
                     paid_at, deleted_at, created_at
                FROM commissions WHERE tenant_id = $1`, [tenantId])),
-      // Best-effort — invoices table may not exist on every deploy.
-      safe('invoices', query(`SELECT id, partner_id, amount_ttc, status, created_at
-               FROM partner_invoices WHERE tenant_id = $1`, [tenantId])),
       safe('form_submissions', query(`SELECT id, form_id, partner_id, prospect_name, prospect_email,
                     prospect_company, created_at
                FROM referrals WHERE tenant_id = $1 AND source = 'form'`, [tenantId])),
@@ -109,7 +106,6 @@ router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
     const PARTNER_COLS = ['id', 'name', 'contact_name', 'email', 'phone', 'company_website', 'commission_rate', 'is_active', 'deleted_at', 'created_at', 'updated_at'];
     const REFERRAL_COLS = ['id', 'partner_id', 'prospect_name', 'prospect_email', 'prospect_phone', 'prospect_company', 'prospect_role', 'status', 'stage_id', 'deal_value', 'recommendation_level', 'source', 'form_id', 'notes', 'deleted_at', 'created_at', 'updated_at', 'closed_at'];
     const COMMISSION_COLS = ['id', 'partner_id', 'referral_id', 'amount', 'status', 'approval_status', 'paid_at', 'deleted_at', 'created_at'];
-    const INVOICE_COLS = ['id', 'partner_id', 'amount_ttc', 'status', 'created_at'];
     const FORM_SUBMISSION_COLS = ['id', 'form_id', 'partner_id', 'prospect_name', 'prospect_email', 'prospect_company', 'created_at'];
     const AUDIT_COLS = ['id', 'user_id', 'user_email', 'action', 'resource_type', 'resource_id', 'ip_address', 'created_at'];
 
@@ -118,7 +114,6 @@ router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
     archive.append(rowsToCsv(partnersR.rows, PARTNER_COLS), { name: 'partners.csv' });
     archive.append(rowsToCsv(referralsR.rows, REFERRAL_COLS), { name: 'referrals.csv' });
     archive.append(rowsToCsv(commissionsR.rows, COMMISSION_COLS), { name: 'commissions.csv' });
-    archive.append(rowsToCsv(invoicesR.rows, INVOICE_COLS), { name: 'invoices.csv' });
     archive.append(rowsToCsv(formSubmissionsR.rows, FORM_SUBMISSION_COLS), { name: 'form_submissions.csv' });
     archive.append(rowsToCsv(auditR.rows, AUDIT_COLS), { name: 'audit_logs.csv' });
     // Manifest so an admin opening the ZIP sees what's inside without
@@ -133,7 +128,6 @@ router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
       `partners.csv        — ${partnersR.rows.length} rows`,
       `referrals.csv       — ${referralsR.rows.length} rows`,
       `commissions.csv     — ${commissionsR.rows.length} rows`,
-      `invoices.csv        — ${invoicesR.rows.length} rows`,
       `form_submissions.csv — ${formSubmissionsR.rows.length} rows`,
       `audit_logs.csv      — ${auditR.rows.length} rows (last 12 months)`,
     ].join('\n') + '\n';
