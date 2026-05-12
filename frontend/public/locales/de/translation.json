@@ -3687,6 +3687,26 @@
       "revoke": "Widerrufen"
     }
   },
+  "public_form": {
+    "loading": "Wird geladen…",
+    "error_title": "Ups",
+    "error_invalid_link": "Ungültiger oder abgelaufener Link.",
+    "error_not_available": "Dieses Formular ist nicht verfügbar.",
+    "error_not_found": "Dieses Formular wurde nicht gefunden.",
+    "error_generic": "Ein Fehler ist aufgetreten.",
+    "error_rate_limited": "Zu viele Einsendungen. Versuchen Sie es in einer Stunde erneut.",
+    "error_submit": "Übermittlung fehlgeschlagen. Bitte erneut versuchen.",
+    "step_label": "Schritt",
+    "takes_30s": "Dauert 30 Sekunden",
+    "next": "Weiter",
+    "submit": "Absenden",
+    "submitting": "Wird gesendet…",
+    "thanks_title": "Vielen Dank!",
+    "thanks_default": "Wir haben Ihre Anfrage erhalten. Wir melden uns in Kürze.",
+    "choose": "Auswählen…",
+    "required_error": "Dieses Feld ist erforderlich.",
+    "no_fields_step": "Dieser Schritt enthält keine Felder."
+  },
   "super_admin": {
     "stats": {
       "title": "Statistiken",

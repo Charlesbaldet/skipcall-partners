@@ -3687,6 +3687,26 @@
       "revoke": "Révoquer"
     }
   },
+  "public_form": {
+    "loading": "Chargement…",
+    "error_title": "Oups",
+    "error_invalid_link": "Lien invalide ou expiré.",
+    "error_not_available": "Ce formulaire n'est pas disponible.",
+    "error_not_found": "Ce formulaire est introuvable.",
+    "error_generic": "Une erreur est survenue.",
+    "error_rate_limited": "Trop de soumissions. Réessayez dans une heure.",
+    "error_submit": "L'envoi a échoué. Veuillez réessayer.",
+    "step_label": "Étape",
+    "takes_30s": "Prend 30 secondes",
+    "next": "Suivant",
+    "submit": "Envoyer",
+    "submitting": "Envoi…",
+    "thanks_title": "Merci !",
+    "thanks_default": "Nous avons bien reçu votre demande. Nous vous recontactons rapidement.",
+    "choose": "Choisir…",
+    "required_error": "Ce champ est obligatoire.",
+    "no_fields_step": "Cette étape ne contient aucun champ."
+  },
   "super_admin": {
     "stats": {
       "title": "Statistiques",

@@ -57,6 +57,7 @@ const PartnerNewsPage      = lazy(() => import('./pages/PartnerNewsPage.jsx'));
 const NotificationsPage    = lazy(() => import('./pages/NotificationsPage.jsx'));
 const SearchPage           = lazy(() => import('./pages/SearchPage.jsx'));
 const FormBuilderPage      = lazy(() => import('./pages/FormBuilderPage.jsx'));
+const PublicFormPage       = lazy(() => import('./pages/PublicFormPage.jsx'));
 
 const PublicApplyPage             = lazy(() => import('./pages/PublicApplyPage.jsx'));
 const PublicReferralRedirectPage  = lazy(() => import('./pages/PublicReferralRedirectPage.jsx'));
@@ -301,6 +302,7 @@ function AppRoutes() {
       <Route path="/" element={user ? <Navigate to={user.role === 'partner' ? '/partner/dashboard' : user.role === 'superadmin' ? '/super-admin' : '/dashboard'} /> : <LandingPage />} />
       <Route path="/ref/:code" element={suspend(PublicTrackingPage)} />
       <Route path="/apply" element={suspend(PublicApplyPage)} />
+      <Route path="/f/:formId" element={suspend(PublicFormPage)} />
       {/* /apply/:slug is what the marketplace "Postuler au programme"
           buttons link to. PublicApplyPage already reads :slug via
           useParams; we just need the parameterized route registered

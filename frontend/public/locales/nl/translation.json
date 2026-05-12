@@ -3687,6 +3687,26 @@
       "revoke": "Intrekken"
     }
   },
+  "public_form": {
+    "loading": "Laden…",
+    "error_title": "Oeps",
+    "error_invalid_link": "Ongeldige of verlopen link.",
+    "error_not_available": "Dit formulier is niet beschikbaar.",
+    "error_not_found": "Formulier niet gevonden.",
+    "error_generic": "Er is iets misgegaan.",
+    "error_rate_limited": "Te veel inzendingen. Probeer over een uur opnieuw.",
+    "error_submit": "Verzenden mislukt. Probeer opnieuw.",
+    "step_label": "Stap",
+    "takes_30s": "Duurt 30 seconden",
+    "next": "Volgende",
+    "submit": "Verzenden",
+    "submitting": "Verzenden…",
+    "thanks_title": "Bedankt!",
+    "thanks_default": "We hebben je inzending ontvangen. We nemen snel contact op.",
+    "choose": "Kies…",
+    "required_error": "Dit veld is verplicht.",
+    "no_fields_step": "Deze stap bevat geen velden."
+  },
   "super_admin": {
     "stats": {
       "title": "Statistieken",

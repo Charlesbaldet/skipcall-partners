@@ -3687,6 +3687,26 @@
       "revoke": "Revoca"
     }
   },
+  "public_form": {
+    "loading": "Caricamento…",
+    "error_title": "Ops",
+    "error_invalid_link": "Link non valido o scaduto.",
+    "error_not_available": "Questo modulo non è disponibile.",
+    "error_not_found": "Modulo non trovato.",
+    "error_generic": "Si è verificato un errore.",
+    "error_rate_limited": "Troppi invii. Riprova tra un'ora.",
+    "error_submit": "Invio non riuscito. Riprova.",
+    "step_label": "Passaggio",
+    "takes_30s": "Bastano 30 secondi",
+    "next": "Avanti",
+    "submit": "Invia",
+    "submitting": "Invio in corso…",
+    "thanks_title": "Grazie!",
+    "thanks_default": "Abbiamo ricevuto la tua richiesta. Ti ricontatteremo a breve.",
+    "choose": "Seleziona…",
+    "required_error": "Questo campo è obbligatorio.",
+    "no_fields_step": "Questo passaggio non contiene campi."
+  },
   "super_admin": {
     "stats": {
       "title": "Statistiche",

@@ -567,6 +567,10 @@ class ApiClient {
   reorderFormFields(formId, items) { return this.request('/forms/' + formId + '/fields/reorder', { method: 'POST', body: JSON.stringify({ items }) }); }
   addFormStep(formId) { return this.request('/forms/' + formId + '/steps/add', { method: 'POST' }); }
   removeFormStep(formId, step) { return this.request('/forms/' + formId + '/steps/remove', { method: 'POST', body: JSON.stringify({ step }) }); }
+  // Public form endpoints (no auth). The token is passed as a query
+  // param on GET and in the body on POST.
+  getPublicForm(formId, token) { return this.request('/f/' + formId + '?p=' + encodeURIComponent(token)); }
+  submitPublicForm(formId, payload) { return this.request('/f/' + formId + '/submit', { method: 'POST', body: JSON.stringify(payload) }); }
   getFormPartnerTokens(formId) { return this.request('/forms/' + formId + '/partner-tokens'); }
   createFormPartnerToken(formId, partner_id) { return this.request('/forms/' + formId + '/partner-tokens', { method: 'POST', body: JSON.stringify({ partner_id }) }); }
   deleteFormPartnerToken(formId, tokenId) { return this.request('/forms/' + formId + '/partner-tokens/' + tokenId, { method: 'DELETE' }); }

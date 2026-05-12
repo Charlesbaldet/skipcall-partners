@@ -272,6 +272,9 @@ app.use('/api/pennylane', pennylaneRoutes);
 app.use('/api/audit-logs', auditLogsRoutes);
 app.use('/api/admin/compliance', complianceRoutes);
 app.use('/api/forms', require('./routes/forms'));
+// Public form endpoints (no auth). Mounted at /api/f to match the
+// public URL pattern /f/:formId the partners share.
+app.use('/api/f', require('./routes/formsPublic'));
 // Public referral-link short URL (mounted at app root, not /api).
 // Vercel rewrites /r/:path* to this service.
 app.use('/r', referralRedirectRoutes);

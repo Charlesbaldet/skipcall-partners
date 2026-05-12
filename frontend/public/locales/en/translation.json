@@ -3687,6 +3687,26 @@
       "revoke": "Revoke"
     }
   },
+  "public_form": {
+    "loading": "Loading…",
+    "error_title": "Oops",
+    "error_invalid_link": "Invalid or expired link.",
+    "error_not_available": "This form is not available.",
+    "error_not_found": "This form was not found.",
+    "error_generic": "Something went wrong.",
+    "error_rate_limited": "Too many submissions. Try again in an hour.",
+    "error_submit": "Submission failed. Please try again.",
+    "step_label": "Step",
+    "takes_30s": "Takes 30 seconds",
+    "next": "Next",
+    "submit": "Submit",
+    "submitting": "Sending…",
+    "thanks_title": "Thank you!",
+    "thanks_default": "We've received your submission. We'll get back to you shortly.",
+    "choose": "Choose…",
+    "required_error": "This field is required.",
+    "no_fields_step": "This step has no fields."
+  },
   "super_admin": {
     "stats": {
       "title": "Statistics",

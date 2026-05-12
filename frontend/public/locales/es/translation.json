@@ -3687,6 +3687,26 @@
       "revoke": "Revocar"
     }
   },
+  "public_form": {
+    "loading": "Cargando…",
+    "error_title": "Vaya",
+    "error_invalid_link": "Enlace inválido o caducado.",
+    "error_not_available": "Este formulario no está disponible.",
+    "error_not_found": "Formulario no encontrado.",
+    "error_generic": "Se produjo un error.",
+    "error_rate_limited": "Demasiados envíos. Vuelva a intentarlo en una hora.",
+    "error_submit": "El envío falló. Inténtelo de nuevo.",
+    "step_label": "Paso",
+    "takes_30s": "Tarda 30 segundos",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "submitting": "Enviando…",
+    "thanks_title": "¡Gracias!",
+    "thanks_default": "Hemos recibido su envío. Le responderemos en breve.",
+    "choose": "Elegir…",
+    "required_error": "Este campo es obligatorio.",
+    "no_fields_step": "Este paso no tiene campos."
+  },
   "super_admin": {
     "stats": {
       "title": "Estadísticas",

@@ -1234,6 +1234,26 @@ async function runMigrations() {
     console.error('[migrate.v48] failed:', err.message);
   }
 
+  // v49: per-IP rate limit table for the public form-submit endpoint.
+  // Modelled after apply_rate_limits (the partner-application limiter)
+  // but kept in its own table so the two surfaces don't share a
+  // counter — a bot hitting /api/applications/apply shouldn't deplete
+  // the quota a real prospect would later hit on /api/f/<id>/submit.
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS form_submit_rate_limits (
+      ip VARCHAR(45) PRIMARY KEY,
+      attempt_count INTEGER NOT NULL DEFAULT 1,
+      reset_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_submit_rate_limits_reset
+                   ON form_submit_rate_limits(reset_at)`);
+    console.log('[forms] v49 form_submit_rate_limits ready');
+  } catch (err) {
+    console.error('[migrate.v49] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
