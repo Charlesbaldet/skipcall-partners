@@ -1769,7 +1769,8 @@
         "cancel": "Cancelar",
         "confirm_invalidate": "Encerrar em todos",
         "toast_invalidated": "Sessões invalidadas",
-        "empty": "Sem acessos recentes"
+        "empty": "Sem acessos recentes",
+        "see_more": "Ver mais {{count}}"
       }
     }
   },

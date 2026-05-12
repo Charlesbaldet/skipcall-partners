@@ -1769,7 +1769,8 @@
         "cancel": "Annulla",
         "confirm_invalidate": "Disconnetti ovunque",
         "toast_invalidated": "Sessioni invalidate",
-        "empty": "Nessun accesso recente"
+        "empty": "Nessun accesso recente",
+        "see_more": "Mostra altri {{count}}"
       }
     }
   },

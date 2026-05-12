@@ -634,6 +634,13 @@ function LoginHistoryCard() {
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Initial slice — "Voir plus" reveals 10 more per click instead of
+  // dumping the full ~50 rows the BE returns. Resets when the data
+  // refetches.
+  const LOGIN_PAGE_STEP = 10;
+  const [visibleCount, setVisibleCount] = useState(LOGIN_PAGE_STEP);
+  useEffect(() => { setVisibleCount(LOGIN_PAGE_STEP); }, [logins.length]);
+  const visibleLogins = logins.slice(0, visibleCount);
 
   useEffect(() => {
     let cancelled = false;
@@ -715,7 +722,7 @@ function LoginHistoryCard() {
                 {t('settings.profile.login_history.empty', 'Aucune connexion récente')}
               </td></tr>
             )}
-            {!loading && logins.map((row, idx) => {
+            {!loading && visibleLogins.map((row, idx) => {
               const ua = parseUserAgent(row.user_agent);
               return (
                 <tr key={idx} style={{ borderTop: '1px solid #f1f5f9' }}>
@@ -728,6 +735,21 @@ function LoginHistoryCard() {
             })}
           </tbody>
         </table>
+        {!loading && visibleCount < logins.length && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', borderTop: '1px solid #f1f5f9' }}>
+            <button
+              type="button"
+              onClick={() => setVisibleCount(c => c + LOGIN_PAGE_STEP)}
+              style={{
+                padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0',
+                background: '#fff', color: '#475569', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {t('settings.profile.login_history.see_more', { count: Math.min(LOGIN_PAGE_STEP, logins.length - visibleCount), defaultValue: 'Voir {{count}} de plus' })}
+            </button>
+          </div>
+        )}
       </div>
 
       {confirmOpen && (

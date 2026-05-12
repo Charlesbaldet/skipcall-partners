@@ -1769,7 +1769,8 @@
         "cancel": "Annuleren",
         "confirm_invalidate": "Overal afmelden",
         "toast_invalidated": "Sessies ongeldig gemaakt",
-        "empty": "Geen recente aanmeldingen"
+        "empty": "Geen recente aanmeldingen",
+        "see_more": "{{count}} meer tonen"
       }
     }
   },

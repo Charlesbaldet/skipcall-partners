@@ -102,6 +102,13 @@ router.get('/social', authorize('admin', 'superadmin'), async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const showAll = req.query.show === 'all';
+    // Optional server-side pagination. The page UI requests
+    // ?page=N&pageSize=12; callers without query params get the
+    // legacy unpaged response (capped at 1000) so internal
+    // consumers — search, share modal, etc. — keep working untouched.
+    const paginated = req.query.page !== undefined || req.query.pageSize !== undefined;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize) || 12));
 
     let where = [];
     let params = [];
@@ -117,7 +124,45 @@ router.get('/', async (req, res) => {
       params.push(req.tenantId);
     }
 
+    // Optional category filter, server-side so the paged total stays
+    // in lock-step with what the FE displays.
+    if (typeof req.query.category_id === 'string' && /^[0-9a-f-]{36}$/i.test(req.query.category_id)) {
+      where.push(`p.category_id = $${i++}`);
+      params.push(req.query.category_id);
+    }
+
     const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+
+    if (paginated) {
+      // total counts the WHOLE filtered set so the page header can
+      // show "X partenaires actifs" with no off-by-one.
+      const { rows: countRows } = await query(
+        `SELECT COUNT(*)::int AS c FROM partners p ${whereClause}`,
+        params
+      );
+      const offset = (page - 1) * pageSize;
+      const { rows } = await query(
+        `SELECT p.*,
+                pc.name  AS category_name,
+                pc.slug  AS category_slug,
+                pc.color AS category_color,
+                COUNT(r.id) as total_referrals,
+                COUNT(CASE WHEN r.status = 'won' THEN 1 END) as won_deals,
+                COALESCE(SUM(CASE WHEN r.status = 'won' THEN r.deal_value END), 0) as total_revenue
+         FROM partners p
+         LEFT JOIN partner_categories pc ON pc.id = p.category_id
+         LEFT JOIN referrals r ON p.id = r.partner_id AND r.deleted_at IS NULL
+         ${whereClause}
+         GROUP BY p.id, pc.name, pc.slug, pc.color
+         ORDER BY p.is_active DESC, p.name
+         LIMIT ${pageSize} OFFSET ${offset}`,
+        params
+      );
+      for (const p of rows) {
+        if (p.tax_subject && !p.tax_country) p.tax_country = 'OTHER';
+      }
+      return res.json({ partners: rows, total: countRows[0].c, page, pageSize });
+    }
 
     const { rows } = await query(
       `SELECT p.*,
@@ -137,10 +182,7 @@ router.get('/', async (req, res) => {
       params
     );
     // Hard cap at 1000. Same reasoning as the commissions list cap:
-    // the FE paginates client-side and the JOIN+GROUP BY aggregations
-    // here scale O(n*m) with referrals. 1000 partners is well above
-    // any current tenant's headcount; bigger tenants need true
-    // server-side pagination, which is a separate refactor.
+    // the JOIN+GROUP BY aggregations here scale O(n*m) with referrals.
     // Normalise NULL country + subject=true → "OTHER" so the admin
     // dropdown matches what the partner saw in their own settings.
     for (const p of rows) {

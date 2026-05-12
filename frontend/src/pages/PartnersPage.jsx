@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import UpgradeModal from '../components/UpgradeModal.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import PageSkeleton from '../components/PageSkeleton.jsx';
+import Pagination from '../components/Pagination.jsx';
 
 export default function PartnersPage() {
   const { t } = useTranslation();
@@ -17,6 +18,10 @@ export default function PartnersPage() {
   const [tab, setTab] = useState('partners');
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Server-side pagination — 12 per page, numbered footer.
+  const PARTNERS_PAGE_SIZE = 12;
+  const [partnersPage, setPartnersPage] = useState(1);
+  const [partnersTotal, setPartnersTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     name: '', contact_name: '', email: '', phone: '', company_website: '',
@@ -48,8 +53,24 @@ export default function PartnersPage() {
   // Shape: { kind: 'archivePartner'|'deletePartner'|'deleteApplication', id, name? }
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const loadPartners = async (showAll) => {
-    try { const qs = showAll ? '?show=all' : ''; const d = await api.request('/partners' + qs); setPartners(d.partners); } catch(e) { console.error(e); }
+  // Loads one page from the server. `page` defaults to 1 because most
+  // callers want a fresh slice — the few that explicitly want page-
+  // preservation pass the current value in.
+  // Loads one page from the server. Pulls in the current filter state
+  // (archived, category) so totals match what the UI actually shows.
+  const loadPartners = async (overrides = {}) => {
+    const showAll  = overrides.showAll  !== undefined ? overrides.showAll  : showArchived;
+    const catId    = overrides.catId    !== undefined ? overrides.catId    : categoryFilter;
+    const page     = overrides.page     !== undefined ? overrides.page     : partnersPage;
+    try {
+      const d = await api.getPartnersPaged({
+        page, pageSize: PARTNERS_PAGE_SIZE, showAll,
+        categoryId: catId && catId !== 'all' ? catId : null,
+      });
+      setPartners(d.partners || []);
+      setPartnersTotal(d.total ?? (d.partners || []).length);
+      setPartnersPage(page);
+    } catch(e) { console.error(e); }
   };
 
   const loadApplications = async (filter) => {
@@ -58,7 +79,7 @@ export default function PartnersPage() {
     setAppLoading(false);
   };
 
-  useEffect(() => { loadPartners(false).finally(() => setLoading(false)); }, []);
+  useEffect(() => { loadPartners({ showAll: false, page: 1 }).finally(() => setLoading(false)); /* eslint-disable-next-line */ }, []);
 
   // Deep-link from /search: open the matching partner in the existing
   // edit modal. Wait until the partner list has loaded so startEdit
@@ -105,14 +126,14 @@ export default function PartnersPage() {
     try {
       if (kind === 'archivePartner') {
         await api.archivePartner(id);
-        await loadPartners(showArchived);
+        await loadPartners();
       } else if (kind === 'deletePartner') {
         await api.deletePartner(id);
-        setPartners(prev => prev.filter(p => p.id !== id));
+        await loadPartners();
       } else if (kind === 'deleteApplication') {
         await api.deleteApplication(id);
         loadApplications();
-        loadPartners(showArchived);
+        loadPartners();
       }
     } catch (e) {
       showToast.error(e.message);
@@ -153,7 +174,7 @@ export default function PartnersPage() {
       };
       await api.updatePartner(editingId, payload);
       setEditingId(null);
-      await loadPartners(showArchived);
+      await loadPartners();
     } catch (e) { showToast.error(e.message); }
   };
   // VAT defaults — kept in sync with the partner-side picker in
@@ -166,7 +187,11 @@ export default function PartnersPage() {
     e.preventDefault(); setSaving(true);
     try {
       const data = await api.createPartner(form);
-      setPartners(prev => [...prev, { ...data.partner, total_referrals: '0', won_deals: '0', total_revenue: '0' }]);
+      // Refetch the page so the new partner appears in its proper
+      // alphabetical slot + the total counter stays accurate. The
+      // create modal stays open with the temp password, so the user
+      // doesn't see a list flash.
+      await loadPartners({ page: 1 });
       setCreatedEmail(data.partner.email || form.email);
       setTempPwd(data.partner.temp_password || null);
             setForm({ name: '', contact_name: '', email: '', phone: '', company_website: '', commission_rate: 10 });
@@ -197,9 +222,11 @@ export default function PartnersPage() {
     try { await api.rejectApplication(selectedApp.id, rejectReason); setSelectedApp(null); setRejectReason(''); loadApplications(); } catch(e) { showToast.error(e.message); }
   };
 
-  const categoryMatches = (p) => categoryFilter === 'all' || p.category_id === categoryFilter;
-  const activePartners = partners.filter(p => p.is_active !== false && categoryMatches(p));
-  const archivedPartners = partners.filter(p => p.is_active === false && categoryMatches(p));
+  // Server already applies category + active filters, so the local
+  // arrays are just an active/archived split of the page slice. The
+  // visible counter uses partnersTotal which IS server-authoritative.
+  const activePartners = partners.filter(p => p.is_active !== false);
+  const archivedPartners = partners.filter(p => p.is_active === false);
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
   if (loading) return <PageSkeleton />;
@@ -399,13 +426,13 @@ export default function PartnersPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('partners.title')}</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{t('partners.active_count', { count: activePartners.length })}</p>
+          <p style={{ color: '#64748b', marginTop: 4 }}>{t('partners.active_count', { count: partnersTotal })}</p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {tab === 'partners' && categories.length > 0 && (
             <select
               value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
+              onChange={e => { setCategoryFilter(e.target.value); loadPartners({ catId: e.target.value, page: 1 }); }}
               style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontSize: 13, fontWeight: 600, color: '#334155', cursor: 'pointer' }}
             >
               <option value="all">{t('partner_category.filter')}</option>
@@ -416,7 +443,7 @@ export default function PartnersPage() {
           )}
           {tab === 'partners' && (
             <>
-              <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners(next); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners({ showAll: next, page: 1 }); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Archive size={14} /> {showArchived ? `${t('partners.archived')} (${archivedPartners.length})` : t('partners.see_archived')}
               </button>
               <button onClick={() => { setShowForm(!showForm); setCreatedEmail(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
@@ -545,6 +572,18 @@ export default function PartnersPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
             {activePartners.map(p => <PartnerCard key={p.id} partner={p} onEdit={startEdit} onArchive={handleArchive} onDelete={handleDeletePartner} />)}
           </div>
+
+          {/* Numbered pagination — 12 partners per page server-side.
+              Footer hidden when the whole list fits a single page. */}
+          {partnersTotal > PARTNERS_PAGE_SIZE && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+              <Pagination
+                currentPage={partnersPage}
+                totalPages={Math.ceil(partnersTotal / PARTNERS_PAGE_SIZE)}
+                onPageChange={(p) => { loadPartners({ page: p }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              />
+            </div>
+          )}
 
           {/* Archived */}
           {showArchived && archivedPartners.length > 0 && (

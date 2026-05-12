@@ -225,6 +225,14 @@ class ApiClient {
 
   // Partners
   getPartners() { return this.request('/partners'); }
+  // Paginated variant: server-side LIMIT/OFFSET so the wide admin
+  // list scales past the legacy 1000-row cap.
+  getPartnersPaged({ page = 1, pageSize = 12, showAll = false, categoryId = null } = {}) {
+    const qs = new URLSearchParams({ page, pageSize });
+    if (showAll) qs.set('show', 'all');
+    if (categoryId) qs.set('category_id', categoryId);
+    return this.request('/partners?' + qs.toString());
+  }
   getPartner(id) { return this.request(`/partners/${id}`); }
   createPartner(data) { return this.request('/partners', { method: 'POST', body: JSON.stringify(data) }); }
   updatePartner(id, data) { return this.request(`/partners/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }

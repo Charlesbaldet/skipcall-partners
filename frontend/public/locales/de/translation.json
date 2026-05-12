@@ -1769,7 +1769,8 @@
         "cancel": "Abbrechen",
         "confirm_invalidate": "Überall abmelden",
         "toast_invalidated": "Sitzungen ungültig gemacht",
-        "empty": "Keine letzten Anmeldungen"
+        "empty": "Keine letzten Anmeldungen",
+        "see_more": "{{count}} mehr anzeigen"
       }
     }
   },

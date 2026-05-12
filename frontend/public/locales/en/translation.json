@@ -1769,7 +1769,8 @@
         "cancel": "Cancel",
         "confirm_invalidate": "Sign out everywhere",
         "toast_invalidated": "Sessions invalidated",
-        "empty": "No recent sign-ins"
+        "empty": "No recent sign-ins",
+        "see_more": "Show {{count}} more"
       }
     }
   },
