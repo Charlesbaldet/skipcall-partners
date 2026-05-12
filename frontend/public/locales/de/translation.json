@@ -395,6 +395,7 @@
       "my_referrals": "Meine Referrals",
       "submit": "Einreichen",
       "my_payments": "Meine Zahlungen",
+      "my_links": "Meine Links",
       "clients": "Kunden",
       "statistics": "Statistiken",
       "audit_logs": "Audit-Protokolle",
@@ -672,7 +673,7 @@
       }
     },
     "tracking_title": "Tracking-Funktionen",
-    "referral_links": "Empfehlungslinks",
+    "referral_links": "Weiterleitungslinks",
     "referral_links_desc": "Jeder Partner erhält einen eindeutigen Link, um die übermittelten Interessenten zu verfolgen",
     "promo_codes": "Gutscheincodes",
     "promo_codes_desc": "Erlaube Partnern, Gutscheincodes für ihre Interessenten zu erstellen",
@@ -1287,7 +1288,7 @@
   },
   "publicTracking": {
     "loading": "Laden...",
-    "invalid": "Dieser Referral-Link ist ungültig.",
+    "invalid": "Dieser Weiterleitungslink ist ungültig.",
     "thank_you": "Vielen Dank für Ihr Interesse!",
     "team_contact": "Unser Team wird Sie sehr bald kontaktieren.",
     "fill_form": "Füllen Sie dieses Formular aus und wir melden uns.",
@@ -2588,7 +2589,7 @@
     }
   },
   "referral_link": {
-    "title": "Mein Empfehlungslink",
+    "title": "Mein Weiterleitungslink",
     "subtitle": "Teile diesen Link, damit Leads dir automatisch zugeordnet werden.",
     "copy": "Link kopieren",
     "copied": "Link kopiert!",
@@ -2620,14 +2621,14 @@
   "tracking": {
     "title": "Tracking-Konfiguration",
     "redirect_url": "Weiterleitungs-URL",
-    "redirect_url_hint": "Wohin Empfehlungslinks Besucher schicken (z. B. https://meineseite.de/signup)",
+    "redirect_url_hint": "Wohin Weiterleitungslinks Besucher schicken (z. B. https://meineseite.de/signup)",
     "cookie_duration": "Cookie-Dauer (Tage)",
     "script": "Tracking-Skript",
     "script_instructions": "Füge dieses Skript auf deiner Website ein, um Empfehlungen automatisch zu erfassen",
     "copy_script": "Skript kopieren",
     "source": "Quelle",
     "manual": "Manuell",
-    "referral_link": "Empfehlungslink",
+    "referral_link": "Weiterleitungslink",
     "promo_code": "Gutscheincode",
     "breakdown_title": "Referral-Quellen"
   },
@@ -3608,6 +3609,14 @@
       "good": "Gut",
       "strong": "Stark"
     }
+  },
+  "partner_links": {
+    "title": "Meine Links",
+    "subtitle": "Ihre teilbaren Links, um Leads zu Ihrem Konto zu generieren.",
+    "form_title": "Formularlink",
+    "form_subtitle": "Teilen Sie diesen Link: Besucher füllen das von {{tenant}} konfigurierte Anmeldeformular aus.",
+    "form_empty_title": "Formularlink",
+    "form_empty_hint": "Bitten Sie Ihren Kunden, ein Formular zu erstellen, um Leads über Ihre Website zu generieren."
   },
   "forms": {
     "empty": {

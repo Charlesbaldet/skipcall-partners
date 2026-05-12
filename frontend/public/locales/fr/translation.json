@@ -395,6 +395,7 @@
       "my_referrals": "Mes Referrals",
       "submit": "Soumettre",
       "my_payments": "Mes Paiements",
+      "my_links": "Mes liens",
       "clients": "Clients",
       "statistics": "Statistiques",
       "audit_logs": "Audit Logs",
@@ -672,7 +673,7 @@
       }
     },
     "tracking_title": "Fonctionnalités de tracking",
-    "referral_links": "Liens de parrainage",
+    "referral_links": "Liens de redirection",
     "referral_links_desc": "Chaque partenaire reçoit un lien unique. Les clics sont comptabilisés et les visiteurs sont redirigés vers votre site web.",
     "promo_codes": "Codes promo",
     "promo_codes_desc": "Permettre aux partenaires de créer des codes promo à partager avec leurs prospects",
@@ -1287,7 +1288,7 @@
   },
   "publicTracking": {
     "loading": "Chargement...",
-    "invalid": "Ce lien de recommandation n'est pas valide.",
+    "invalid": "Ce lien de redirection n'est pas valide.",
     "thank_you": "Merci pour votre intérêt !",
     "team_contact": "Notre équipe vous contactera très prochainement.",
     "fill_form": "Remplissez ce formulaire pour qu'on vous recontacte.",
@@ -2588,7 +2589,7 @@
     }
   },
   "referral_link": {
-    "title": "Mon lien de recommandation",
+    "title": "Mon lien de redirection",
     "subtitle": "Partagez ce lien: les clics sont trackés et les prospects atterrissent sur notre site.",
     "copy": "Copier le lien",
     "copied": "Lien copié !",
@@ -2620,14 +2621,14 @@
   "tracking": {
     "title": "Configuration du tracking",
     "redirect_url": "URL de redirection",
-    "redirect_url_hint": "Où vos liens de parrainage envoient les visiteurs (ex : https://monsite.com/signup)",
+    "redirect_url_hint": "Où vos liens de redirection envoient les visiteurs (ex : https://monsite.com/signup)",
     "cookie_duration": "Durée du cookie (jours)",
     "script": "Script de tracking",
     "script_instructions": "Ajoutez ce script à votre site pour tracker automatiquement les referrals",
     "copy_script": "Copier le script",
     "source": "Source",
     "manual": "Manuel",
-    "referral_link": "Lien de parrainage",
+    "referral_link": "Lien de redirection",
     "promo_code": "Code promo",
     "breakdown_title": "Sources des referrals"
   },
@@ -3608,6 +3609,14 @@
       "good": "Bon",
       "strong": "Fort"
     }
+  },
+  "partner_links": {
+    "title": "Mes liens",
+    "subtitle": "Vos liens à partager pour générer des leads attribués à votre compte.",
+    "form_title": "Lien du formulaire",
+    "form_subtitle": "Partagez ce lien : les visiteurs remplissent le formulaire d'inscription configuré par {{tenant}}.",
+    "form_empty_title": "Lien du formulaire",
+    "form_empty_hint": "Demandez à votre client de créer un formulaire pour générer des leads via votre site."
   },
   "forms": {
     "empty": {

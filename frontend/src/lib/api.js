@@ -470,6 +470,7 @@ class ApiClient {
 
   // Referral links
   getPartnerReferralLink(partnerId) { return this.request('/referral-links/partners/' + partnerId); }
+  getPartnerFormLink() { return this.request('/partner/form-link'); }
   regenerateReferralCode(partnerId) { return this.request('/referral-links/partners/' + partnerId + '/regenerate', { method: 'POST' }); }
   getReferralClickStats() { return this.request('/referral-links/click-stats'); }
   getReferralSourceBreakdown() { return this.request('/referral-links/source-breakdown'); }

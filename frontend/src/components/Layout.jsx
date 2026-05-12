@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2, ListChecks, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2, ListChecks, ClipboardList, Link2 } from 'lucide-react';
 import OnboardingChecklist from './OnboardingChecklist.jsx';
 
 const C = {
@@ -90,6 +90,7 @@ export default function Layout({ children }) {
     { to: '/partner/news', icon: Newspaper, label: t('layout.nav.news'), notifyKeys: ['news', 'promo', 'kit', 'event'] },
 
     { section: t('layout.section.gestion') },
+    { to: '/partner/links', icon: Link2, label: t('layout.nav.my_links', 'Mes liens') },
     { to: '/settings', icon: Settings, label: t('layout.nav.settings') },
 
     { bottom: true, to: '/notifications', icon: Bell, label: t('layout.nav.notifications'), notifyKeys: ALL_NOTIFY_KEYS },

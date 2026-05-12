@@ -395,6 +395,7 @@
       "my_referrals": "Mis Referidos",
       "submit": "Enviar",
       "my_payments": "Mis Pagos",
+      "my_links": "Mis enlaces",
       "clients": "Clientes",
       "statistics": "Estadísticas",
       "audit_logs": "Logs de Auditoría",
@@ -672,7 +673,7 @@
       }
     },
     "tracking_title": "Funciones de seguimiento",
-    "referral_links": "Enlaces de referido",
+    "referral_links": "Enlaces de redirección",
     "referral_links_desc": "Cada partner recibe un enlace único para rastrear los prospectos que te envía",
     "promo_codes": "Códigos promocionales",
     "promo_codes_desc": "Permite a los partners crear códigos promocionales para compartir con sus prospectos",
@@ -1287,7 +1288,7 @@
   },
   "publicTracking": {
     "loading": "Cargando...",
-    "invalid": "Este enlace de referido no es válido.",
+    "invalid": "Este enlace de redirección no es válido.",
     "thank_you": "¡Gracias por tu interés!",
     "team_contact": "Nuestro equipo te contactará muy pronto.",
     "fill_form": "Rellena este formulario y te contactaremos.",
@@ -2588,7 +2589,7 @@
     }
   },
   "referral_link": {
-    "title": "Mi enlace de referido",
+    "title": "Mi enlace de redirección",
     "subtitle": "Comparte este enlace para que los leads se te atribuyan automáticamente.",
     "copy": "Copiar enlace",
     "copied": "¡Enlace copiado!",
@@ -2627,7 +2628,7 @@
     "copy_script": "Copiar script",
     "source": "Origen",
     "manual": "Manual",
-    "referral_link": "Enlace de referido",
+    "referral_link": "Enlace de redirección",
     "promo_code": "Código promocional",
     "breakdown_title": "Fuentes de referidos"
   },
@@ -3608,6 +3609,14 @@
       "good": "Buena",
       "strong": "Fuerte"
     }
+  },
+  "partner_links": {
+    "title": "Mis enlaces",
+    "subtitle": "Sus enlaces para compartir y captar leads atribuidos a su cuenta.",
+    "form_title": "Enlace del formulario",
+    "form_subtitle": "Comparta este enlace: los visitantes rellenan el formulario de inscripción configurado por {{tenant}}.",
+    "form_empty_title": "Enlace del formulario",
+    "form_empty_hint": "Pida a su cliente que cree un formulario para generar leads desde su sitio."
   },
   "forms": {
     "empty": {

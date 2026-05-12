@@ -43,6 +43,7 @@ const PartnersPage         = lazy(() => import('./pages/PartnersPage.jsx'));
 const PartnerMyReferrals   = lazy(() => import('./pages/PartnerMyReferrals.jsx'));
 const PartnerDashboardPage = lazy(() => import('./pages/PartnerDashboardPage.jsx'));
 const PartnerPaymentsPage  = lazy(() => import('./pages/PartnerPaymentsPage.jsx'));
+const PartnerLinksPage     = lazy(() => import('./pages/PartnerLinksPage.jsx'));
 const MessagingPage        = lazy(() => import('./pages/MessagingPage.jsx'));
 const SettingsPage         = lazy(() => import('./pages/SettingsPage.jsx'));
 const MarketplaceEditorPage = lazy(() => import('./pages/MarketplaceEditorPage.jsx'));
@@ -386,6 +387,7 @@ function AppRoutes() {
         <Route path="/partner/dashboard" element={<RoleGate roles={['partner']}>{suspend(PartnerDashboardPage)}</RoleGate>} />
         <Route path="/partner/referrals" element={<RoleGate roles={['partner']}>{suspend(PartnerMyReferrals)}</RoleGate>} />
         <Route path="/partner/payments"  element={<RoleGate roles={['partner']}>{suspend(PartnerPaymentsPage)}</RoleGate>} />
+        <Route path="/partner/links"     element={<RoleGate roles={['partner']}>{suspend(PartnerLinksPage)}</RoleGate>} />
         <Route path="/partner/news"      element={<RoleGate roles={['partner']}>{suspend(PartnerNewsPage)}</RoleGate>} />
       </Route>
               <Route path="/fonctionnalites/pipeline" element={suspend(FeaturePipelinePage)} />

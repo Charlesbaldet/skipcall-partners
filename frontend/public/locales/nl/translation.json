@@ -395,6 +395,7 @@
       "my_referrals": "Mijn Referrals",
       "submit": "Indienen",
       "my_payments": "Mijn Betalingen",
+      "my_links": "Mijn links",
       "clients": "Klanten",
       "statistics": "Statistieken",
       "audit_logs": "Auditlogboeken",
@@ -672,7 +673,7 @@
       }
     },
     "tracking_title": "Trackingfuncties",
-    "referral_links": "Referral-links",
+    "referral_links": "Doorverwijslinks",
     "referral_links_desc": "Elke partner krijgt een unieke link om de doorverwezen prospects te volgen",
     "promo_codes": "Promocodes",
     "promo_codes_desc": "Laat partners promocodes aanmaken om met hun prospects te delen",
@@ -1287,7 +1288,7 @@
   },
   "publicTracking": {
     "loading": "Laden...",
-    "invalid": "Deze referrallink is niet geldig.",
+    "invalid": "Deze doorverwijslink is niet geldig.",
     "thank_you": "Bedankt voor uw interesse!",
     "team_contact": "Ons team neemt zeer binnenkort contact met u op.",
     "fill_form": "Vul dit formulier in en we nemen contact op.",
@@ -2588,7 +2589,7 @@
     }
   },
   "referral_link": {
-    "title": "Mijn referral-link",
+    "title": "Mijn doorverwijslink",
     "subtitle": "Deel deze link zodat leads automatisch aan jou worden toegewezen.",
     "copy": "Link kopiëren",
     "copied": "Link gekopieerd!",
@@ -2620,14 +2621,14 @@
   "tracking": {
     "title": "Trackingconfiguratie",
     "redirect_url": "Redirect-URL",
-    "redirect_url_hint": "Waar referral-links bezoekers naartoe sturen (bijv. https://mijnsite.nl/signup)",
+    "redirect_url_hint": "Waar doorverwijslinks bezoekers naartoe sturen (bijv. https://mijnsite.nl/signup)",
     "cookie_duration": "Cookieduur (dagen)",
     "script": "Trackingscript",
     "script_instructions": "Voeg dit script toe aan je site om referrals automatisch te tracken",
     "copy_script": "Script kopiëren",
     "source": "Bron",
     "manual": "Handmatig",
-    "referral_link": "Referral-link",
+    "referral_link": "Doorverwijslink",
     "promo_code": "Promocode",
     "breakdown_title": "Referral-bronnen"
   },
@@ -3608,6 +3609,14 @@
       "good": "Goed",
       "strong": "Sterk"
     }
+  },
+  "partner_links": {
+    "title": "Mijn links",
+    "subtitle": "Je deelbare links om leads aan jouw account toe te wijzen.",
+    "form_title": "Formulierlink",
+    "form_subtitle": "Deel deze link: bezoekers vullen het aanmeldformulier in dat door {{tenant}} is opgesteld.",
+    "form_empty_title": "Formulierlink",
+    "form_empty_hint": "Vraag je klant om een formulier te maken om leads via jouw site te genereren."
   },
   "forms": {
     "empty": {

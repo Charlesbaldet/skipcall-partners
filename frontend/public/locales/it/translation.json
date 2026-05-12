@@ -395,6 +395,7 @@
       "my_referrals": "I Miei Referral",
       "submit": "Invia",
       "my_payments": "I Miei Pagamenti",
+      "my_links": "I miei link",
       "clients": "Clienti",
       "statistics": "Statistiche",
       "audit_logs": "Log Audit",
@@ -672,7 +673,7 @@
       }
     },
     "tracking_title": "Funzionalità di tracciamento",
-    "referral_links": "Link di affiliazione",
+    "referral_links": "Link di reindirizzamento",
     "referral_links_desc": "Ogni partner riceve un link univoco per tracciare i prospect inviati",
     "promo_codes": "Codici promo",
     "promo_codes_desc": "Consenti ai partner di creare codici promo da condividere con i loro prospect",
@@ -1287,7 +1288,7 @@
   },
   "publicTracking": {
     "loading": "Caricamento...",
-    "invalid": "Questo link di referral non è valido.",
+    "invalid": "Questo link di reindirizzamento non è valido.",
     "thank_you": "Grazie per il tuo interesse!",
     "team_contact": "Il nostro team ti contatterà molto presto.",
     "fill_form": "Compila questo modulo e ti ricontatteremo.",
@@ -2588,7 +2589,7 @@
     }
   },
   "referral_link": {
-    "title": "Il mio link di affiliazione",
+    "title": "Il mio link di reindirizzamento",
     "subtitle": "Condividi questo link: i lead ti verranno attribuiti automaticamente.",
     "copy": "Copia link",
     "copied": "Link copiato!",
@@ -2627,7 +2628,7 @@
     "copy_script": "Copia script",
     "source": "Origine",
     "manual": "Manuale",
-    "referral_link": "Link di affiliazione",
+    "referral_link": "Link di reindirizzamento",
     "promo_code": "Codice promo",
     "breakdown_title": "Origini dei referral"
   },
@@ -3608,6 +3609,14 @@
       "good": "Buona",
       "strong": "Forte"
     }
+  },
+  "partner_links": {
+    "title": "I miei link",
+    "subtitle": "I tuoi link condivisibili per generare lead attribuiti al tuo account.",
+    "form_title": "Link del modulo",
+    "form_subtitle": "Condividi questo link: i visitatori compilano il modulo di iscrizione configurato da {{tenant}}.",
+    "form_empty_title": "Link del modulo",
+    "form_empty_hint": "Chiedi al tuo cliente di creare un modulo per generare lead dal tuo sito."
   },
   "forms": {
     "empty": {

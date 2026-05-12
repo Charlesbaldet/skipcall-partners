@@ -395,6 +395,7 @@
       "my_referrals": "Minhas Indicações",
       "submit": "Enviar",
       "my_payments": "Meus Pagamentos",
+      "my_links": "Os meus links",
       "clients": "Clientes",
       "statistics": "Estatísticas",
       "audit_logs": "Logs de Auditoria",
@@ -672,7 +673,7 @@
       }
     },
     "tracking_title": "Funcionalidades de rastreio",
-    "referral_links": "Links de referência",
+    "referral_links": "Links de redirecionamento",
     "referral_links_desc": "Cada parceiro recebe um link único para rastrear os prospetos enviados",
     "promo_codes": "Códigos promocionais",
     "promo_codes_desc": "Permite aos parceiros criarem códigos promocionais para partilharem com os seus prospetos",
@@ -1287,7 +1288,7 @@
   },
   "publicTracking": {
     "loading": "Carregando...",
-    "invalid": "Este link de indicação não é válido.",
+    "invalid": "Este link de redirecionamento não é válido.",
     "thank_you": "Obrigado pelo seu interesse!",
     "team_contact": "Nossa equipe entrará em contato muito em breve.",
     "fill_form": "Preencha este formulário e entraremos em contato.",
@@ -2588,7 +2589,7 @@
     }
   },
   "referral_link": {
-    "title": "O meu link de referência",
+    "title": "O meu link de redirecionamento",
     "subtitle": "Partilha este link para que os leads sejam automaticamente atribuídos a ti.",
     "copy": "Copiar link",
     "copied": "Link copiado!",
@@ -2627,7 +2628,7 @@
     "copy_script": "Copiar script",
     "source": "Origem",
     "manual": "Manual",
-    "referral_link": "Link de referência",
+    "referral_link": "Link de redirecionamento",
     "promo_code": "Código promocional",
     "breakdown_title": "Origens dos referrals"
   },
@@ -3608,6 +3609,14 @@
       "good": "Boa",
       "strong": "Forte"
     }
+  },
+  "partner_links": {
+    "title": "Os meus links",
+    "subtitle": "Os seus links partilháveis para gerar leads atribuídos à sua conta.",
+    "form_title": "Link do formulário",
+    "form_subtitle": "Partilhe este link: os visitantes preenchem o formulário de inscrição configurado por {{tenant}}.",
+    "form_empty_title": "Link do formulário",
+    "form_empty_hint": "Peça ao seu cliente para criar um formulário para gerar leads a partir do seu site."
   },
   "forms": {
     "empty": {

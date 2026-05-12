@@ -275,6 +275,10 @@ app.use('/api/forms', require('./routes/forms'));
 // Public form endpoints (no auth). Mounted at /api/f to match the
 // public URL pattern /f/:formId the partners share.
 app.use('/api/f', require('./routes/formsPublic'));
+// Partner-facing read of "their" form share link. Auth required,
+// scoped to req.user.partnerId — admin routes for the same data
+// live under /api/forms/:id/partner-tokens.
+app.use('/api/partner/form-link', require('./routes/partnerFormLink'));
 // Public referral-link short URL (mounted at app root, not /api).
 // Vercel rewrites /r/:path* to this service.
 app.use('/r', referralRedirectRoutes);
