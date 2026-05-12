@@ -165,6 +165,12 @@ class ApiClient {
   // Content-Disposition: attachment so the response IS the file;
   // we fetch as a Blob (NOT JSON) so the browser preserves the
   // exact byte stream for the download trigger.
+  //
+  // Bug fix (item 4 of the post-form-feature cycle): the anchor MUST
+  // live in the DOM when .click() fires. Firefox and some Chromium
+  // policies silently no-op a detached anchor's download trigger,
+  // which is exactly what users were reporting ("le bouton ne fait
+  // rien"). Mirrors the working pattern used by exportAuditLogsCsv.
   async exportData() {
     const headers = {};
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
@@ -186,7 +192,11 @@ class ApiClient {
     const filename = match ? match[1] : `refboost-export-${today}.json`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     return { ok: true, filename };
   }
