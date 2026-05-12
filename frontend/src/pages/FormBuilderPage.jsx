@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FileText, Plus, Pencil, Trash2, ArrowUp, ArrowDown, Share2,
   Copy, Check, Globe, X, Eye, EyeOff, AlertTriangle, Link2,
   Type, Mail, Phone, ListChecks, CheckSquare, Circle, Calendar as CalendarIcon, Hash,
-  AlignLeft, ChevronDown, RotateCcw,
+  AlignLeft, ChevronDown, RotateCcw, Loader2,
 } from 'lucide-react';
 import api from '../lib/api';
 import { showToast } from '../components/Dialogs.jsx';
@@ -79,6 +79,11 @@ export default function FormBuilderPage() {
   // model).
   const [mode, setMode] = useState('preview');
   const [confirmRestoreDefaults, setConfirmRestoreDefaults] = useState(false);
+  // Autosave indicator state. Every API operation that mutates the
+  // form transits through `wrapSave` which flips this state. UI
+  // chrome lives next to the mode toggle. Auto-fades 'saved' back to
+  // 'idle' after 2s; 'error' stays sticky until the user retries.
+  const [saveState, setSaveState] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
 
   const load = async () => {
     try {
@@ -98,6 +103,23 @@ export default function FormBuilderPage() {
     }
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+
+  // Single funnel for every mutating API call. Drives saveState
+  // ('idle' → 'saving' → 'saved' → fade back to 'idle' after 2s).
+  // Errors bubble up so callers can revert optimistic UI; the
+  // indicator stays in 'error' state until the next attempt.
+  const wrapSave = async (fn) => {
+    setSaveState('saving');
+    try {
+      const r = await fn();
+      setSaveState('saved');
+      setTimeout(() => setSaveState(s => s === 'saved' ? 'idle' : s), 2000);
+      return r;
+    } catch (err) {
+      setSaveState('error');
+      throw err;
+    }
+  };
 
   // ─── Form-level actions ──────────────────────────────────────────
   const createForm = async () => {
@@ -123,7 +145,7 @@ export default function FormBuilderPage() {
   const restoreDefaults = async () => {
     if (!form) return;
     try {
-      const r = await api.restoreFormDefaults(form.id);
+      const r = await wrapSave(() => api.restoreFormDefaults(form.id));
       const { fields: fs } = await api.getFormFields(form.id);
       setFields(fs || []);
       setConfirmRestoreDefaults(false);
@@ -143,11 +165,10 @@ export default function FormBuilderPage() {
     const prev = form;
     setForm({ ...form, ...patch });
     try {
-      const { form: f } = await api.updateForm(form.id, patch);
+      const { form: f } = await wrapSave(() => api.updateForm(form.id, patch));
       setForm(f);
     } catch (err) {
       setForm(prev);
-      showToast(err.message || 'Erreur', 'error', 4000);
     }
   };
 
@@ -170,11 +191,13 @@ export default function FormBuilderPage() {
   const saveField = async (payload) => {
     if (!form) return;
     try {
-      if (editingField?.__new) {
-        await api.createFormField(form.id, payload);
-      } else if (editingField?.id) {
-        await api.updateFormField(form.id, editingField.id, payload);
-      }
+      await wrapSave(async () => {
+        if (editingField?.__new) {
+          await api.createFormField(form.id, payload);
+        } else if (editingField?.id) {
+          await api.updateFormField(form.id, editingField.id, payload);
+        }
+      });
       setEditingField(null);
       const { fields: fs } = await api.getFormFields(form.id);
       setFields(fs || []);
@@ -186,7 +209,7 @@ export default function FormBuilderPage() {
   const deleteField = async () => {
     if (!form || !confirmDelete) return;
     try {
-      await api.deleteFormField(form.id, confirmDelete.id);
+      await wrapSave(() => api.deleteFormField(form.id, confirmDelete.id));
       setConfirmDelete(null);
       const { fields: fs } = await api.getFormFields(form.id);
       setFields(fs || []);
@@ -212,7 +235,7 @@ export default function FormBuilderPage() {
       return r ? { ...f, order_index: r.order_index } : f;
     }));
     try {
-      await api.reorderFormFields(form.id, items);
+      await wrapSave(() => api.reorderFormFields(form.id, items));
     } catch (err) {
       showToast(err.message || 'Erreur', 'error', 4000);
       load();
@@ -224,7 +247,7 @@ export default function FormBuilderPage() {
     if (!form) return;
     if ((form.step_count || 3) >= MAX_STEPS) return;
     try {
-      const { form: f } = await api.addFormStep(form.id);
+      const { form: f } = await wrapSave(() => api.addFormStep(form.id));
       setForm(f);
       setActiveStep(f.step_count);
     } catch (err) {
@@ -250,7 +273,7 @@ export default function FormBuilderPage() {
     if (!form || !confirmRemoveStep) return;
     const { step } = confirmRemoveStep;
     try {
-      const { form: f } = await api.removeFormStep(form.id, step);
+      const { form: f } = await wrapSave(() => api.removeFormStep(form.id, step));
       setForm(f);
       // Clamp activeStep into the new range so we don't end up on a
       // ghost tab. If the removed step was before the active one, we
@@ -299,14 +322,27 @@ export default function FormBuilderPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Mirror the Marketplace settings pattern: pill toggle
-              between Aperçu (default) and Éditer. Live state is local
-              — refreshing the page resets to Aperçu, matching the
-              "this is what visitors see" mental model. */}
+          <SaveIndicator state={saveState} t={t} onRetry={() => setSaveState('idle')} />
+          {/* Mirror the MarketplaceEditorPage Édit/Fermer button style
+              byte-for-byte (padding 6px 16px, radius 8, fontSize 13,
+              fontWeight 500, green-fill in preview, white-bordered in
+              edit). Position is inline rather than absolute because
+              the builder's header layout already groups action
+              buttons together. */}
           <button
             onClick={() => setMode(mode === 'preview' ? 'edit' : 'preview')}
-            style={{ padding: '10px 16px', borderRadius: 999, background: '#fff', color: '#0f172a', border: '1.5px solid #e2e8f0', cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            {mode === 'preview' ? <><Pencil size={14} /> {t('forms.builder.edit_mode', 'Éditer')}</> : <><Eye size={14} /> {t('forms.builder.preview_mode', 'Aperçu')}</>}
+            style={{
+              padding: '6px 16px', borderRadius: 8,
+              background: mode === 'edit' ? '#fff' : '#059669',
+              border: mode === 'edit' ? '1px solid #e2e8f0' : 'none',
+              color: mode === 'edit' ? '#0f172a' : '#fff',
+              fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              boxShadow: mode === 'edit' ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
+            }}>
+            {mode === 'edit'
+              ? <><X size={13} /> {t('forms.builder.close_editor', "Fermer l'éditeur")}</>
+              : <><Pencil size={13} /> {t('forms.builder.edit_mode', 'Éditer')}</>}
           </button>
           <button
             onClick={() => setShareOpen(true)}
@@ -501,6 +537,42 @@ export default function FormBuilderPage() {
   );
 }
 
+// ─── Save indicator ───────────────────────────────────────────────
+// Three-state pill rendered next to the mode toggle:
+//   idle    → nothing (no DOM cost, no visual noise on a clean form)
+//   saving  → gray spinner + "Sauvegarde…"
+//   saved   → green check + "Enregistré" (auto-fades after 2s upstream)
+//   error   → red alert + "Erreur, réessayez" (click = clear state,
+//             user can re-trigger the action manually)
+// Spinner uses a one-shot keyframe injected via a <style> tag so we
+// don't depend on global CSS being loaded.
+function SaveIndicator({ state, t, onRetry }) {
+  if (state === 'idle') return null;
+  const cfg = state === 'saving'
+    ? { bg: '#f1f5f9', fg: '#64748b', icon: <Loader2 size={12} className="rb-spin" />, text: t('forms.builder.saving', 'Sauvegarde…') }
+    : state === 'saved'
+      ? { bg: '#f0fdf4', fg: '#15803d', icon: <Check size={12} />, text: t('forms.builder.saved', 'Enregistré') }
+      : { bg: '#fef2f2', fg: '#dc2626', icon: <AlertTriangle size={12} />, text: t('forms.builder.save_error', 'Erreur, réessayez') };
+  return (
+    <>
+      <style>{`@keyframes rb-spin { to { transform: rotate(360deg); } } .rb-spin { animation: rb-spin 1s linear infinite; }`}</style>
+      <span
+        onClick={state === 'error' ? onRetry : undefined}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '4px 10px', borderRadius: 999,
+          background: cfg.bg, color: cfg.fg, fontSize: 12, fontWeight: 500,
+          cursor: state === 'error' ? 'pointer' : 'default',
+          transition: 'opacity 0.3s',
+        }}
+      >
+        {cfg.icon}
+        {cfg.text}
+      </span>
+    </>
+  );
+}
+
 // ─── Empty state ───────────────────────────────────────────────────
 function EmptyState({ t, onCreate }) {
   return (
@@ -539,9 +611,10 @@ function SettingsField({ label, children }) {
 }
 
 function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
-  // Local-edit state for title/description/thank_you/appointment_url so
-  // the user can type without firing a PATCH on every keystroke;
-  // we PATCH on blur.
+  // Local-edit state for title/description/thank_you/appointment_url
+  // so the user can type without firing a PATCH on every keystroke.
+  // 600ms debounce autosaves after the last change; blur still
+  // commits eagerly to flush before the user navigates away.
   const [local, setLocal] = useState({
     title: form.title || '',
     description: form.description || '',
@@ -561,6 +634,27 @@ function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
     if (local[key] !== (form[key] || '')) onPatch({ [key]: local[key] });
   };
 
+  // Debounced autosave. One shared timer for the panel — keystrokes
+  // on any field reset it. Closure pitfall: we capture `local` at
+  // setTimeout creation, so we read fresh values via the functional
+  // pattern below.
+  const debounceTimer = useRef(null);
+  const scheduleSave = (nextLocal) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      const diff = {};
+      for (const k of ['title', 'description', 'thank_you_message', 'appointment_url']) {
+        if ((nextLocal[k] || '') !== (form[k] || '')) diff[k] = nextLocal[k];
+      }
+      if (Object.keys(diff).length) onPatch(diff);
+    }, 600);
+  };
+  // Clear the pending timer on unmount so a half-typed value doesn't
+  // PATCH after the user navigates away from /forms.
+  useEffect(() => () => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+  }, []);
+
   return (
     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20, position: 'sticky', top: 16 }}>
       <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
@@ -568,19 +662,19 @@ function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
       </h3>
       <SettingsField label={t('forms.builder.field_title', 'Titre')}>
         <input type="text" value={local.title}
-          onChange={e => setLocal(s => ({ ...s, title: e.target.value }))}
+          onChange={e => { const v = e.target.value; setLocal(s => { const n = { ...s, title: v }; scheduleSave(n); return n; }); }}
           onBlur={() => commit('title')}
           style={SETTINGS_INPUT_STYLE} />
       </SettingsField>
       <SettingsField label={t('forms.builder.field_description', 'Description (optionnelle)')}>
         <textarea rows={3} value={local.description}
-          onChange={e => setLocal(s => ({ ...s, description: e.target.value }))}
+          onChange={e => { const v = e.target.value; setLocal(s => { const n = { ...s, description: v }; scheduleSave(n); return n; }); }}
           onBlur={() => commit('description')}
           style={{ ...SETTINGS_INPUT_STYLE, resize: 'vertical' }} />
       </SettingsField>
       <SettingsField label={t('forms.builder.field_thank_you', 'Message de remerciement')}>
         <textarea rows={3} value={local.thank_you_message}
-          onChange={e => setLocal(s => ({ ...s, thank_you_message: e.target.value }))}
+          onChange={e => { const v = e.target.value; setLocal(s => { const n = { ...s, thank_you_message: v }; scheduleSave(n); return n; }); }}
           onBlur={() => commit('thank_you_message')}
           placeholder={t('forms.builder.thank_you_ph', 'Merci ! Nous vous recontactons sous 24h.')}
           style={{ ...SETTINGS_INPUT_STYLE, resize: 'vertical' }} />
@@ -618,7 +712,7 @@ function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
         </label>
         {form.appointment_enabled && (
           <input type="url" value={local.appointment_url}
-            onChange={e => setLocal(s => ({ ...s, appointment_url: e.target.value }))}
+            onChange={e => { const v = e.target.value; setLocal(s => { const n = { ...s, appointment_url: v }; scheduleSave(n); return n; }); }}
             onBlur={() => commit('appointment_url')}
             placeholder={t('forms.builder.appointment_url_ph', 'https://calendly.com/…')}
             style={{ ...SETTINGS_INPUT_STYLE, marginTop: 6 }} />
