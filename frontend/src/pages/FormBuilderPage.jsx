@@ -321,68 +321,107 @@ export default function FormBuilderPage() {
             {t('forms.builder.subtitle_short', 'Configuration du formulaire de leads')}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
           <SaveIndicator state={saveState} t={t} onRetry={() => setSaveState('idle')} />
-          {/* Stats mode sits next to the Edit/Preview toggle, per
-              the brief — same visual weight, third option. */}
+          {/* Stats opens a dedicated mode — kept as a button (not a
+              tab) per the brief so it sits visually next to the
+              publish toggle rather than in the 4-tab strip. */}
           <button
             onClick={() => setMode(mode === 'stats' ? 'preview' : 'stats')}
             style={{
-              padding: '6px 16px', borderRadius: 8,
-              background: mode === 'stats' ? '#0f172a' : '#fff',
-              border: mode === 'stats' ? 'none' : '1px solid #e2e8f0',
-              color: mode === 'stats' ? '#fff' : '#0f172a',
+              padding: '6px 14px', borderRadius: 8,
+              background: mode === 'stats' ? '#0f172a' : 'transparent',
+              border: '0.5px solid ' + (mode === 'stats' ? '#0f172a' : '#e2e8f0'),
+              color: mode === 'stats' ? '#fff' : '#475569',
               fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              boxShadow: mode === 'stats' ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
             }}>
             <BarChart2 size={13} /> {t('forms.builder.stats_mode', 'Statistiques')}
           </button>
-          {/* Mirror the MarketplaceEditorPage Édit/Fermer button style
-              byte-for-byte (padding 6px 16px, radius 8, fontSize 13,
-              fontWeight 500, green-fill in preview, white-bordered in
-              edit). Position is inline rather than absolute because
-              the builder's header layout already groups action
-              buttons together. */}
-          <button
-            onClick={() => setMode(mode === 'preview' ? 'edit' : 'preview')}
-            style={{
-              padding: '6px 16px', borderRadius: 8,
-              background: mode === 'edit' ? '#fff' : '#059669',
-              border: mode === 'edit' ? '1px solid #e2e8f0' : 'none',
-              color: mode === 'edit' ? '#0f172a' : '#fff',
-              fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              boxShadow: mode === 'edit' ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-            }}>
-            {mode === 'edit'
-              ? <><X size={13} /> {t('forms.builder.close_editor', "Fermer l'éditeur")}</>
-              : <><Pencil size={13} /> {t('forms.builder.edit_mode', 'Éditer')}</>}
-          </button>
-          <button
-            onClick={() => setShareOpen(true)}
-            disabled={!form.is_published}
-            title={form.is_published ? '' : t('forms.builder.publish_first', 'Publiez le formulaire pour générer des liens')}
-            style={{ padding: '10px 16px', borderRadius: 10, background: form.is_published ? '#fff' : '#f8fafc', color: form.is_published ? '#0f172a' : '#94a3b8', border: '1.5px solid #e2e8f0', cursor: form.is_published ? 'pointer' : 'not-allowed', fontWeight: 600, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <Share2 size={14} /> {t('forms.builder.share', 'Partager')}
-          </button>
-          <button
-            onClick={togglePublish}
-            style={{ padding: '10px 18px', borderRadius: 10, background: form.is_published ? '#fef2f2' : 'var(--rb-primary, #059669)', color: form.is_published ? '#dc2626' : '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            {form.is_published ? <><EyeOff size={14} /> {t('forms.builder.unpublish', 'Dépublier')}</> : <><Eye size={14} /> {t('forms.builder.publish', 'Publier')}</>}
-          </button>
+          {/* Publish toggle replaces the old Publier/Dépublier pair.
+              Same visual as the Marketplace publish switch. */}
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 13, color: '#0f172a' }}>
+            <span style={{ fontWeight: 500 }}>{t('forms.builder.publish_label', 'Publier le formulaire')}</span>
+            <button onClick={togglePublish} aria-pressed={!!form.is_published}
+              style={{
+                width: 44, height: 24, borderRadius: 999,
+                background: form.is_published ? '#059669' : '#cbd5e1',
+                border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
+              }}>
+              <span style={{
+                position: 'absolute', top: 2, left: form.is_published ? 22 : 2,
+                width: 20, height: 20, borderRadius: '50%', background: '#fff',
+                transition: 'left 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              }} />
+            </button>
+          </label>
         </div>
       </div>
 
-      {/* ─── Status banner ─────────────────────────────────────── */}
-      <div style={{ marginBottom: 20, padding: '10px 14px', borderRadius: 10, background: form.is_published ? '#f0fdf4' : '#fffbeb', border: '1px solid ' + (form.is_published ? '#bbf7d0' : '#fde68a'), color: form.is_published ? '#15803d' : '#a16207', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-        {form.is_published
-          ? <><Globe size={14} /> {t('forms.builder.status_published', 'Formulaire publié. Visible publiquement aux partenaires invités.')}</>
-          : <><AlertTriangle size={14} /> {t('forms.builder.status_draft', 'Brouillon. Le formulaire n\'est pas accessible publiquement.')}</>}
-      </div>
+      {/* ─── Centered tab strip — Marketplace pattern ───────────── */}
+      {mode !== 'stats' && (
+        <div style={{ display: 'flex', justifyContent: 'center', borderBottom: '1px solid #e2e8f0', marginBottom: 24 }}>
+          <div style={{ display: 'inline-flex', gap: 28 }}>
+            {[
+              { id: 'preview',  label: t('forms.builder.tab_preview',  'Aperçu') },
+              { id: 'fields',   label: t('forms.builder.tab_fields',   'Champs') },
+              { id: 'settings', label: t('forms.builder.tab_settings', 'Paramètres') },
+              { id: 'share',    label: t('forms.builder.tab_share',    'Partager') },
+            ].map(tab => {
+              const active = mode === tab.id;
+              return (
+                <button key={tab.id} onClick={() => setMode(tab.id)}
+                  style={{
+                    padding: '10px 4px', background: 'transparent', border: 'none', cursor: 'pointer',
+                    fontFamily: 'inherit', fontSize: 14,
+                    fontWeight: active ? 500 : 400,
+                    color: active ? '#059669' : '#64748b',
+                    borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
+                    marginBottom: -1,
+                  }}>
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Status banner replaced by the Publish toggle in the header
+          + a soft inline note when in draft mode, shown only on the
+          preview tab so it doesn't repeat across every tab. */}
+      {mode === 'preview' && !form.is_published && (
+        <div style={{ marginBottom: 20, padding: '8px 14px', borderRadius: 8, background: '#fffbeb', border: '1px solid #fde68a', color: '#a16207', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <AlertTriangle size={12} /> {t('forms.builder.status_draft', 'Brouillon. Le formulaire n\'est pas accessible publiquement.')}
+        </div>
+      )}
 
       {mode === 'preview' && (
-        <div style={{ background: '#f8fafc', borderRadius: 16, padding: '32px 16px', border: '1px solid #e2e8f0' }}>
+        <div style={{ position: 'relative', background: '#f8fafc', borderRadius: 16, padding: '32px 16px', border: '1px solid #e2e8f0' }}>
+          {/* APERÇU header label + Éditer pill anchored top-right —
+              mirrors the Marketplace editor's floating button (same
+              padding, radius, font, color #0f6e56). Clicking jumps
+              to the Champs tab where the real editing happens. */}
+          <button
+            onClick={() => setMode('fields')}
+            style={{
+              position: 'absolute', top: 16, right: 16, zIndex: 5,
+              padding: '6px 16px', borderRadius: 999,
+              background: '#0f6e56', color: '#fff', border: 'none',
+              fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+            }}>
+            <Pencil size={13} /> {t('forms.builder.edit_mode', 'Éditer')}
+          </button>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600, marginBottom: 6 }}>
+              {t('forms.builder.preview_label', 'Aperçu formulaire')}
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 500, color: '#0f172a' }}>
+              {t('forms.builder.preview_caption', 'Ce que vos partenaires partageront avec leurs visiteurs')}
+            </div>
+          </div>
           <div style={{ maxWidth: 480, margin: '0 auto' }}>
             <FormPreview form={form} fields={fields} onSubmit={undefined} t={t} />
           </div>
@@ -393,8 +432,23 @@ export default function FormBuilderPage() {
         <StatsView formId={form.id} t={t} />
       )}
 
-      {mode === 'edit' && (
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 24, alignItems: 'start' }}>
+      {mode === 'share' && (
+        <ShareModal t={t} form={form} embedded={true} onClose={() => setMode('preview')} />
+      )}
+
+      {mode === 'settings' && (
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <SettingsPanel
+            form={form} t={t}
+            onPatch={patchForm}
+            onReset={() => setConfirmReset(true)}
+            onRestoreDefaults={() => setConfirmRestoreDefaults(true)}
+          />
+        </div>
+      )}
+
+      {mode === 'fields' && (
+      <div>
         {/* ─── Steps + fields ─────────────────────────────────── */}
         <div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: '#f1f5f9', borderRadius: 12, width: 'fit-content', flexWrap: 'wrap' }}>
@@ -481,13 +535,8 @@ export default function FormBuilderPage() {
           </div>
         </div>
 
-        {/* ─── Side panel: form settings ──────────────────────── */}
-        <SettingsPanel
-          form={form} t={t}
-          onPatch={patchForm}
-          onReset={() => setConfirmReset(true)}
-          onRestoreDefaults={() => setConfirmRestoreDefaults(true)}
-        />
+        {/* Settings moved into its own "Paramètres" tab (rendered
+            above when mode === 'settings'). */}
       </div>
       )}
 
@@ -501,9 +550,9 @@ export default function FormBuilderPage() {
           onSave={saveField}
         />
       )}
-      {shareOpen && form && (
-        <ShareModal t={t} form={form} onClose={() => setShareOpen(false)} />
-      )}
+      {/* shareOpen modal kept off — Partager is now a tab. The
+          ShareModal component still supports modal mode if a future
+          caller needs it. */}
       <ConfirmModal
         isOpen={!!confirmDelete}
         title={t('forms.builder.delete_field_title', 'Supprimer ce champ ?')}
@@ -1007,7 +1056,10 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
 }
 
 // ─── Share modal ───────────────────────────────────────────────────
-function ShareModal({ t, form, onClose }) {
+// Used both as a floating modal (legacy callers) and inline inside
+// the Partager tab. When `embedded` is true we drop the fixed-position
+// overlay + close button — the tab strip handles navigation away.
+function ShareModal({ t, form, onClose, embedded = false }) {
   const [partners, setPartners] = useState([]);
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1067,34 +1119,35 @@ function ShareModal({ t, form, onClose }) {
     });
   };
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
-      <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 20, padding: 28, width: 640, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
-              {t('forms.share.title', 'Partager le formulaire')}
-            </h3>
-            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>
-              {t('forms.share.subtitle', 'Générez un lien unique par partenaire. Chaque soumission sera attribuée automatiquement.')}
-            </p>
-          </div>
+  // The body is identical for both modes; the wrapper differs.
+  const body = (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+            {t('forms.share.title', 'Partager le formulaire')}
+          </h3>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>
+            {t('forms.share.subtitle', 'Générez un lien unique par partenaire. Chaque soumission sera attribuée automatiquement.')}
+          </p>
+        </div>
+        {!embedded && (
           <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
             <X size={16} color="#64748b" />
           </button>
-        </div>
+        )}
+      </div>
 
-        {loading ? (
-          <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
-            {t('common.loading', 'Chargement…')}
-          </div>
-        ) : partners.length === 0 ? (
-          <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
-            {t('forms.share.no_partners', 'Aucun partenaire actif à inviter.')}
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {loading ? (
+        <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+          {t('common.loading', 'Chargement…')}
+        </div>
+      ) : partners.length === 0 ? (
+        <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+          {t('forms.share.no_partners', 'Aucun partenaire actif à inviter.')}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {partners.map(p => {
               const tk = tokenByPartner[p.id];
               const url = tk ? publicFormUrl(form.id, tk.token) : '';
@@ -1129,8 +1182,23 @@ function ShareModal({ t, form, onClose }) {
                 </div>
               );
             })}
-          </div>
-        )}
+        </div>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 28 }}>
+        {body}
+      </div>
+    );
+  }
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+      <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 20, padding: 28, width: 640, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+        {body}
       </div>
     </div>
   );
