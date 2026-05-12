@@ -1,8 +1,58 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Check, Clock, ArrowRight } from 'lucide-react';
 import api from '../lib/api';
+
+// ─── Funnel instrumentation ────────────────────────────────────────
+// Tiny fire-and-forget client. Each event posts to /api/f/:id/event
+// with { session_id, event_type, ... } and we deliberately swallow
+// every failure: the prospect's UX is never blocked or even aware
+// that tracking is happening.
+//
+// session_id is generated once per visit and stashed in
+// sessionStorage under refboost_form_session_<formId>. A page reload
+// in the same tab keeps the session; a fresh tab gets a fresh
+// session (matches the brief).
+function sessionIdFor(formId) {
+  if (typeof window === 'undefined') return '';
+  const key = 'refboost_form_session_' + formId;
+  try {
+    let s = window.sessionStorage.getItem(key);
+    if (!s) {
+      s = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+      window.sessionStorage.setItem(key, s);
+    }
+    return s;
+  } catch { return ''; }
+}
+
+function emitEvent(formId, partnerToken, eventType, extra) {
+  if (!formId || typeof window === 'undefined') return;
+  try {
+    const session_id = sessionIdFor(formId);
+    if (!session_id) return;
+    const body = JSON.stringify({
+      event_type: eventType,
+      session_id,
+      partner_token: partnerToken || null,
+      ...(extra || {}),
+    });
+    // Prefer sendBeacon — survives navigation, doesn't block UI.
+    // Falls back to fetch with keepalive for browsers without it.
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: 'application/json' });
+      navigator.sendBeacon('/api/f/' + encodeURIComponent(formId) + '/event', blob);
+      return;
+    }
+    fetch('/api/f/' + encodeURIComponent(formId) + '/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+}
 
 // Public partner-registration form. Rendered at /f/:formId?p=<token>.
 //
@@ -49,6 +99,17 @@ export default function PublicFormPage() {
       .then(data => setState({ phase: 'ok', payload: data, error: null }))
       .catch(err => setState({ phase: 'error', error: err?.data?.error || 'server_error' }));
   }, [formId, token]);
+
+  // form_view fires once per visit (session_id is idempotent in
+  // sessionStorage, but we still gate on the formId here to avoid
+  // re-emitting on re-renders triggered by query-param tweaks).
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (!formId || viewedRef.current) return;
+    if (state.phase !== 'ok') return;
+    viewedRef.current = true;
+    emitEvent(formId, token, 'form_view');
+  }, [formId, token, state.phase]);
 
   // Iframe height autosync. Sends { type: 'refboost-resize', height }
   // to window.parent on first paint, then on every ResizeObserver
@@ -110,9 +171,16 @@ export default function PublicFormPage() {
     );
   }
 
+  // Per-render emitter that closes over the current formId + token so
+  // FormPreview can fire start / step / submit / abandon without
+  // knowing where it lives. Builder preview mode passes no onEvent
+  // and so emits nothing — same component, different surface.
+  const onEvent = (type, extra) => emitEvent(formId, token, type, extra);
+
   return (
     <PageShell embed={embed}>
-      <FormPreview form={state.payload.form} fields={state.payload.fields} onSubmit={handleSubmit} t={t} embed={embed} />
+      <FormPreview form={state.payload.form} fields={state.payload.fields}
+        onSubmit={handleSubmit} t={t} embed={embed} onEvent={onEvent} />
     </PageShell>
   );
 }
@@ -167,7 +235,8 @@ function CenteredCard({ children }) {
 // onSubmit prop) and inside the builder's preview tab (onSubmit
 // omitted → button is a visual no-op and shows a toast-style hint on
 // click).
-export function FormPreview({ form, fields, onSubmit, t }) {
+export function FormPreview({ form, fields, onSubmit, t, embed, onEvent }) {
+  const fire = onEvent || (() => {});
   const stepCount = form?.step_count || 1;
 
   const fieldsByStep = useMemo(() => {
@@ -188,12 +257,16 @@ export function FormPreview({ form, fields, onSubmit, t }) {
   const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [previewToast, setPreviewToast] = useState(false);
+  // Dedup flag for form_start — only fires on the very first
+  // interaction across the whole visit.
+  const startedRef = useRef(false);
 
   // Reset whenever the underlying form changes (preview tab toggles,
   // builder swaps the active form).
   useEffect(() => {
     setStepIdx(0); setAnswers({}); setTouched({});
     setWebsite(''); setSubmitError(''); setSubmitted(false);
+    startedRef.current = false;
   }, [form?.id]);
 
   const isPreviewMode = !onSubmit;
@@ -240,6 +313,11 @@ export function FormPreview({ form, fields, onSubmit, t }) {
       setTouched(p => ({ ...p, ...Object.fromEntries(missingRequired.map(f => [f.id, true])) }));
       return;
     }
+    // Emit step_complete for the step the user is leaving (1-indexed
+    // per the brief). The brief gives no event for the final submit
+    // beyond form_submit, so the last step's complete only fires when
+    // there is a "Suivant" press, not on submit.
+    fire('step_complete', { step_index: stepIdx + 1 });
     setStepIdx(i => Math.min(stepCount - 1, i + 1));
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -258,6 +336,9 @@ export function FormPreview({ form, fields, onSubmit, t }) {
     setSubmitError('');
     const res = await onSubmit(answers, website);
     if (res.ok) {
+      // form_submit lands AFTER the BE accepted the referral so we
+      // don't double-count failed POSTs that the prospect retries.
+      fire('form_submit');
       setSubmitted(true);
     } else {
       setSubmitError(res.message || '');
@@ -287,8 +368,24 @@ export function FormPreview({ form, fields, onSubmit, t }) {
             field={f}
             value={answers[f.id]}
             touched={!!touched[f.id]}
-            onChange={(val) => setAnswers(a => ({ ...a, [f.id]: val }))}
-            onBlur={() => setTouched(p => ({ ...p, [f.id]: true }))}
+            onChange={(val) => {
+              // form_start fires on the very first interaction across
+              // the entire visit. Idempotent via startedRef.
+              if (!startedRef.current) {
+                startedRef.current = true;
+                fire('form_start');
+              }
+              setAnswers(a => ({ ...a, [f.id]: val }));
+            }}
+            onBlur={() => {
+              setTouched(p => ({ ...p, [f.id]: true }));
+              // field_abandon: blur with empty value AFTER the user
+              // already started the form. Skips the noisy case of
+              // tab-cycling through untouched fields on initial load.
+              const v = answers[f.id];
+              const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0);
+              if (empty && startedRef.current) fire('field_abandon', { field_id: f.id });
+            }}
             t={t}
           />
         ))}

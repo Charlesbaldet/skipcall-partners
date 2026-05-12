@@ -26,6 +26,34 @@ const router = express.Router();
 const SUBMIT_LIMIT = 5;
 const SUBMIT_WINDOW_MS = 60 * 60 * 1000;
 
+// Event-endpoint rate limit. Permissive (60 events/min) because a
+// normal funnel completion legitimately emits ~10 events; we want
+// headroom for retries + the auto-resize tracking on slow networks.
+// Reuses the SUBMIT_WINDOW_MS pattern in its own table so the two
+// counters don't compete.
+const EVENT_LIMIT = 60;
+const EVENT_WINDOW_MS = 60 * 1000;
+
+async function checkEventRateLimit(ip) {
+  const newResetAt = new Date(Date.now() + EVENT_WINDOW_MS);
+  const { rows: [row] } = await query(
+    `INSERT INTO form_event_rate_limits (ip, attempt_count, reset_at)
+     VALUES ($1, 1, $2)
+     ON CONFLICT (ip) DO UPDATE
+       SET attempt_count = CASE
+             WHEN form_event_rate_limits.reset_at < NOW() THEN 1
+             ELSE form_event_rate_limits.attempt_count + 1
+           END,
+           reset_at = CASE
+             WHEN form_event_rate_limits.reset_at < NOW() THEN $2
+             ELSE form_event_rate_limits.reset_at
+           END
+     RETURNING attempt_count`,
+    [ip, newResetAt]
+  );
+  return { allowed: row.attempt_count <= EVENT_LIMIT };
+}
+
 async function checkSubmitRateLimit(ip) {
   const nowMs = Date.now();
   const newResetAt = new Date(nowMs + SUBMIT_WINDOW_MS);
@@ -347,6 +375,63 @@ router.post('/:formId/submit', async (req, res) => {
   } catch (err) {
     console.error('[formsPublic.submit] failed:', err.message);
     res.status(500).json({ error: 'server_error' });
+  }
+});
+
+// POST /api/f/:formId/event — funnel instrumentation.
+//
+// Fire-and-forget from the FE: returns 204 with no body. The client
+// doesn't wait or retry. We accept the loss of an event when the
+// rate limiter / a transient PG hiccup hits — better than blocking
+// the prospect's UX. Tenant is resolved via form_id → forms.tenant_id
+// rather than the auth context (this endpoint has no auth at all).
+const VALID_EVENT_TYPES = new Set(['form_view', 'form_start', 'step_complete', 'field_abandon', 'form_submit']);
+const SESSION_ID_RE = /^[a-zA-Z0-9_-]{8,64}$/;
+
+router.post('/:formId/event', async (req, res) => {
+  try {
+    // Rate limit first so we drop bursty bots before touching the
+    // forms table.
+    try {
+      const { allowed } = await checkEventRateLimit(clientIp(req));
+      if (!allowed) return res.status(204).end();
+    } catch (rlErr) {
+      console.error('[formsPublic.event] rate-limit check failed:', rlErr.message);
+      // Fail-open: continue with the insert below.
+    }
+
+    const formId = req.params.formId;
+    const { event_type, session_id, partner_token, step_index, field_id } = req.body || {};
+
+    if (!VALID_EVENT_TYPES.has(event_type)) return res.status(204).end();
+    if (typeof session_id !== 'string' || !SESSION_ID_RE.test(session_id)) return res.status(204).end();
+
+    // Resolve tenant via form_id (no auth, no Host trust).
+    const { rows: formRows } = await query(
+      `SELECT tenant_id FROM forms WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [formId]
+    );
+    if (!formRows.length) return res.status(204).end();
+    const tenantId = formRows[0].tenant_id;
+
+    const safeStep = Number.isInteger(step_index) && step_index >= 1 && step_index <= 5 ? step_index : null;
+    const safeField = typeof field_id === 'string' && /^[0-9a-f-]{36}$/i.test(field_id) ? field_id : null;
+    const safeToken = typeof partner_token === 'string' && partner_token.length <= 64 ? partner_token : null;
+    const userAgent = (req.headers['user-agent'] || '').slice(0, 1000) || null;
+    const ip = clientIp(req);
+
+    await query(
+      `INSERT INTO form_events
+        (form_id, tenant_id, partner_token, session_id, event_type, step_index, field_id, user_agent, ip)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::inet)`,
+      [formId, tenantId, safeToken, session_id, event_type, safeStep, safeField, userAgent, ip]
+    );
+
+    res.status(204).end();
+  } catch (err) {
+    // Best-effort: log + 204 so the FE never sees a failure code.
+    console.error('[formsPublic.event] failed:', err.message);
+    res.status(204).end();
   }
 });
 

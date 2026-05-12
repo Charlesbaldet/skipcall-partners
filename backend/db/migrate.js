@@ -1307,6 +1307,76 @@ async function runMigrations() {
     console.error('[migrate.v50] failed:', err.message);
   }
 
+  // v51: funnel instrumentation for the public form. One row per
+  // event (form_view / form_start / step_complete / field_abandon /
+  // form_submit). session_id is generated client-side and persisted
+  // to sessionStorage so every event from the same visit can be
+  // stitched together. partner_token captures attribution; field_id
+  // is set on field_abandon. tenant_id is denormalised so the v44
+  // RLS pattern applies without traversing form_id.
+  //
+  // Volume note: we expect order-of-magnitude < 1k events / form /
+  // day at MVP scale. Direct GROUP BY queries are fine; pre-
+  // aggregation can come if a tenant hits five-digit daily traffic.
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS form_events (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      form_id UUID NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
+      tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      partner_token VARCHAR(64),
+      session_id VARCHAR(64) NOT NULL,
+      event_type VARCHAR(32) NOT NULL CHECK (event_type IN (
+        'form_view', 'form_start', 'step_complete', 'field_abandon', 'form_submit'
+      )),
+      step_index INTEGER,
+      field_id UUID REFERENCES form_fields(id) ON DELETE SET NULL,
+      user_agent TEXT,
+      ip INET,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_events_form_created
+                   ON form_events(form_id, created_at DESC)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_events_session
+                   ON form_events(session_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_events_form_partner_type
+                   ON form_events(form_id, partner_token, event_type)`);
+    // RLS — same pattern as v47b. Owner connection bypasses unless
+    // RLS_ENABLED is set; auth-driven app.current_tenant_id gates
+    // reads to the form's tenant; superadmin bypasses everything.
+    try {
+      await query(`ALTER TABLE form_events ENABLE ROW LEVEL SECURITY`);
+      await query(`DROP POLICY IF EXISTS tenant_isolation ON form_events`);
+      await query(`CREATE POLICY tenant_isolation ON form_events
+        USING (tenant_id::text = current_setting('app.current_tenant_id', true))`);
+      await query(`DROP POLICY IF EXISTS superadmin_bypass ON form_events`);
+      await query(`CREATE POLICY superadmin_bypass ON form_events
+        USING (current_setting('app.current_role', true) = 'superadmin')`);
+    } catch (rlsErr) {
+      console.error('[migrate.v51.rls] failed:', rlsErr.message);
+    }
+    console.log('[forms] v51 form_events table ready');
+  } catch (err) {
+    console.error('[migrate.v51] failed:', err.message);
+  }
+
+  // v51b: dedicated per-IP rate-limit table for the event endpoint.
+  // Separate from form_submit_rate_limits (5/h) because events are
+  // expected to burst at 60/min during a normal funnel completion.
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS form_event_rate_limits (
+      ip VARCHAR(45) PRIMARY KEY,
+      attempt_count INTEGER NOT NULL DEFAULT 1,
+      reset_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_event_rate_limits_reset
+                   ON form_event_rate_limits(reset_at)`);
+    console.log('[forms] v51b form_event_rate_limits ready');
+  } catch (err) {
+    console.error('[migrate.v51b] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
