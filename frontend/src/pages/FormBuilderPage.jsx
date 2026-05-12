@@ -509,7 +509,7 @@ export default function FormBuilderPage() {
         title={t('forms.builder.delete_field_title', 'Supprimer ce champ ?')}
         message={
           confirmDelete && STANDARD_ROLES.has(confirmDelete.field_role)
-            ? t('forms.builder.delete_standard_warning', { label: confirmDelete.label, defaultValue: '« {{label}} »\n\nCe champ est utilisé pour pré-remplir la fiche prospect dans le pipeline. Si vous le supprimez, ce champ restera vide pour les leads issus de ce formulaire et ne pourra pas être automatiquement mis à jour.' })
+            ? t('forms.builder.delete_standard_warning', { label: confirmDelete.label, defaultValue: '« {{label}} »\n\nCe champ est utilisé pour pré-remplir la fiche prospect dans le pipeline. Si vous le supprimez, ce champ restera vide pour les leads issus de ce formulaire et ne pourra pas être automatiquement mis à jour.\n\nDe plus, ce champ ne sera plus synchronisé avec vos CRM connectés (HubSpot, Salesforce, etc.) pour les leads issus de ce formulaire.' })
             : (confirmDelete ? `« ${confirmDelete.label} »` : '')
         }
         confirmLabel={t('common.delete', 'Supprimer')}

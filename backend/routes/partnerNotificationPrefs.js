@@ -30,6 +30,11 @@ const DEFAULTS = {
   email_news: false,
   email_tier_change: true,
   email_access_revoked: true,
+  // Form-originated leads: opt-in by default. Strictly scoped to the
+  // partner whose token captured the submission — no cross-partner
+  // leak ever flows through this pref (see formsPublic.submit
+  // side-effects for the user-id lookup).
+  email_new_form_lead: true,
 };
 const KEYS = Object.keys(DEFAULTS);
 

@@ -32,6 +32,9 @@ const KNOWN_EVENTS = new Set([
   'payment_failed',
   'marketplace_application',
   'tier_change',
+  // Form-originated leads — separate from new_referral so admins can
+  // mute the noisier form firehose without losing manual referrals.
+  'new_form_lead',
 ]);
 
 // Cache a tenant's preferences in memory for a few seconds to avoid

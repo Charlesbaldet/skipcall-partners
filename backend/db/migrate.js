@@ -598,7 +598,8 @@ async function runMigrations() {
         ('invoice_submitted',      TRUE),
         ('commission_deleted',     TRUE),
         ('marketplace_application',TRUE),
-        ('tier_change',            TRUE)
+        ('tier_change',            TRUE),
+        ('new_form_lead',          TRUE)
       ) AS ev(event_type, email_default)
     ON CONFLICT (tenant_id, event_type) DO NOTHING
   `);

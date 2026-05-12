@@ -17,6 +17,15 @@ const express = require('express');
 const crypto = require('crypto');
 const { query } = require('../db');
 const { ensureSystemUser } = require('../services/systemUser');
+// Side-effects parity with manual referral creation: CRM push,
+// Notion push, outgoing webhook, in-app + email notifications.
+// Form submissions used to bypass all four — fixed in item 1.
+const crmService = require('../services/crmService');
+const notionService = require('../services/notionService');
+const { sendWebhookEvent } = require('../services/webhookService');
+const notify = require('../services/notifyService');
+const resend = require('../services/resend');
+const templates = require('../services/email-templates');
 
 const router = express.Router();
 
@@ -362,7 +371,7 @@ router.post('/:formId/submit', async (req, res) => {
          recommendation_level, notes, tenant_id, stage_id, lead_handling,
          source, form_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'warm', $10, $11, $12, $13, 'form', $14)
-       RETURNING id`,
+       RETURNING *`,
       [
         partnerId, systemUserId, prospect_name, prospect_email,
         prospect_phone, prospect_company, prospect_role,
@@ -370,13 +379,165 @@ router.post('/:formId/submit', async (req, res) => {
         notes, tenantId, defaultStageId, leadHandling, formId,
       ]
     );
+    const referral = refRows[0];
 
-    res.status(201).json({ ok: true, referral_id: refRows[0].id });
+    res.status(201).json({ ok: true, referral_id: referral.id });
+
+    // ─── Side-effects (fire-and-forget) ────────────────────────────
+    // Pulled out of the response path so the prospect always sees
+    // success even if a CRM or partner SMTP is down. Each block
+    // swallows its own errors; we never log to the prospect.
+    runFormSubmissionSideEffects(referral, { partnerId, tenantId, formId }).catch(err => {
+      console.error('[formsPublic.submit.sideEffects]', err.message);
+    });
   } catch (err) {
     console.error('[formsPublic.submit] failed:', err.message);
     res.status(500).json({ error: 'server_error' });
   }
 });
+
+// Hooks every channel that a manual /api/referrals POST hits. Same
+// CRM/Notion/webhook fan-out, plus dedicated `new_form_lead` admin
+// notifications (so admins can mute form leads independently from
+// manual referrals) and a partner notification scoped to the OWNING
+// partner only (never fanoutPartnerNotification — that broadcasts
+// to every partner of the tenant and would leak the form lead's
+// existence to competitors).
+async function runFormSubmissionSideEffects(referral, { partnerId, tenantId, formId }) {
+  // Resolve partner name + form title once, both used in the email
+  // bodies and the webhook payload.
+  const { rows: [partner] } = await query(
+    `SELECT id, name, email FROM partners WHERE id = $1`,
+    [partnerId]
+  );
+  const { rows: [form] } = await query(
+    `SELECT id, title FROM forms WHERE id = $1`,
+    [formId]
+  );
+
+  // 1. CRM push (HubSpot / Salesforce). Wrapped in catch so a CRM
+  //    outage never propagates here.
+  crmService.pushReferralToCRM({ ...referral, partner_name: partner?.name || null }, tenantId).catch(() => {});
+  // 2. Notion push. Short-circuits internally when notion_connected=false.
+  notionService.pushReferralToNotion({ ...referral, partner_name: partner?.name || null }, tenantId).catch(() => {});
+  // 3. Outgoing webhook — same shape as manual referrals so customers
+  //    have a single subscription contract regardless of source.
+  sendWebhookEvent(tenantId, 'referral.created', {
+    referral_id: referral.id,
+    partner_id: partnerId,
+    partner_name: partner?.name || null,
+    partner_email: partner?.email || null,
+    prospect_name: referral.prospect_name,
+    prospect_company: referral.prospect_company,
+    prospect_email: referral.prospect_email,
+    prospect_phone: referral.prospect_phone,
+    notes: referral.notes,
+    source: 'form',
+    form_id: formId,
+    created_at: referral.created_at,
+  });
+
+  // 4. Admin in-app + email — gated by the tenant's new_form_lead pref.
+  const dashUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/referrals';
+  const formLabel = form?.title || 'Formulaire d\'inscription';
+  const prospectLabel = referral.prospect_name || 'Nouveau prospect';
+  const adminMessage = `Un prospect a rempli votre formulaire « ${formLabel} »${referral.prospect_company ? ' — ' + referral.prospect_company : ''}.`;
+
+  notify.fanoutAdminNotification(tenantId, 'new_form_lead', {
+    title: `Nouveau lead via formulaire — ${prospectLabel}`,
+    message: adminMessage,
+    link: '/referrals',
+  }, { includeCommercial: true }).catch(() => {});
+
+  notify.shouldNotify(tenantId, 'new_form_lead').then(async pref => {
+    if (!pref.email) return;
+    const admins = await notify.adminEmails(tenantId).catch(() => []);
+    for (const admin of admins) {
+      const bodyHtml = `
+        <p style="margin:0 0 16px;">Bonjour ${admin.full_name || ''},</p>
+        <p style="margin:0 0 16px;">Un nouveau prospect a rempli votre formulaire d'inscription :</p>
+        <div style="margin:16px 0;padding:16px;background:#eef2ff;border-radius:10px;border-left:4px solid #6366f1;">
+          <div style="font-weight:700;font-size:16px;color:#1f2937;">${prospectLabel}</div>
+          ${referral.prospect_company ? `<div style="color:#6b7280;font-size:14px;">${referral.prospect_company}</div>` : ''}
+          ${referral.prospect_email ? `<div style="color:#6b7280;font-size:13px;margin-top:4px;">${referral.prospect_email}</div>` : ''}
+          <div style="margin-top:8px;font-size:12px;color:#6b7280;">Via le lien du partenaire <strong>${partner?.name || ''}</strong>.</div>
+        </div>`;
+      const html = templates.baseLayout({
+        title: 'Nouveau lead via formulaire',
+        preheader: `Un prospect a rempli votre formulaire : ${prospectLabel}`,
+        bodyHtml,
+        ctaLabel: 'Voir dans le pipeline',
+        ctaUrl: dashUrl,
+      });
+      resend.sendAndLog({
+        to: admin.email,
+        subject: `Nouveau lead via formulaire : ${prospectLabel}`,
+        html,
+        text: `Nouveau lead via formulaire : ${prospectLabel}. Voir : ${dashUrl}`,
+        template: 'new_form_lead',
+        payload: { recipient_name: admin.full_name, prospect_name: prospectLabel, form_title: formLabel, referral_id: referral.id, partner_name: partner?.name },
+        query,
+      }).catch(() => {});
+    }
+  }).catch(() => {});
+
+  // 5. Partner notification — STRICTLY scoped to the owning partner.
+  //    Do NOT use notify.fanoutPartnerNotification: that broadcasts
+  //    to every partner of the tenant and would leak the lead's
+  //    existence to competitors. We query users where partner_id =
+  //    THIS partner_id only, then loop to createNotification + email.
+  //    Email is per-partner-pref gated via partners.notification_preferences.email_new_form_lead.
+  try {
+    const { rows: partnerUsers } = await query(
+      `SELECT id, email, full_name
+         FROM users
+        WHERE partner_id = $1 AND is_active = TRUE`,
+      [partnerId]
+    );
+    if (partnerUsers.length) {
+      const partnerPref = await notify.shouldNotifyPartner(partnerId, 'email_new_form_lead').catch(() => ({ email: true }));
+      for (const pu of partnerUsers) {
+        // In-app: always on (per the partner notif model — see notes
+        // in services/notifyService.js fanoutPartnerNotification).
+        notify.createNotification(pu.id, 'new_form_lead', {
+          title: `Nouveau lead via votre lien — ${prospectLabel}`,
+          message: `Un prospect a rempli votre formulaire d'inscription.`,
+          link: '/partner/referrals',
+          tenantId,
+        }, { skipPreferenceCheck: true }).catch(() => {});
+        // Email: per-partner pref.
+        if (partnerPref.email !== false) {
+          const bodyHtml = `
+            <p style="margin:0 0 16px;">Bonjour ${pu.full_name || ''},</p>
+            <p style="margin:0 0 16px;">Un nouveau prospect a rempli votre formulaire d'inscription. Le lead vous est attribué automatiquement.</p>
+            <div style="margin:16px 0;padding:16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #059669;">
+              <div style="font-weight:700;font-size:16px;color:#1f2937;">${prospectLabel}</div>
+              ${referral.prospect_company ? `<div style="color:#6b7280;font-size:14px;">${referral.prospect_company}</div>` : ''}
+              ${referral.prospect_email ? `<div style="color:#6b7280;font-size:13px;margin-top:4px;">${referral.prospect_email}</div>` : ''}
+            </div>`;
+          const html = templates.baseLayout({
+            title: 'Nouveau lead via votre lien',
+            preheader: `Nouveau lead : ${prospectLabel}`,
+            bodyHtml,
+            ctaLabel: 'Voir le lead',
+            ctaUrl: (process.env.FRONTEND_URL || 'https://refboost.io') + '/partner/referrals',
+          });
+          resend.sendAndLog({
+            to: pu.email,
+            subject: `Nouveau lead via votre lien : ${prospectLabel}`,
+            html,
+            text: `Nouveau lead via votre lien : ${prospectLabel}.`,
+            template: 'new_form_lead_partner',
+            payload: { recipient_name: pu.full_name, prospect_name: prospectLabel, referral_id: referral.id },
+            query,
+          }).catch(() => {});
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[formsPublic.submit.partnerNotify]', e.message);
+  }
+}
 
 // POST /api/f/:formId/event — funnel instrumentation.
 //

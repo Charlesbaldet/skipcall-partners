@@ -2694,7 +2694,7 @@ function ProgramTab() {
 // Order inside each group reflects the natural lifecycle (status
 // change before payment outcome before deletion).
 const NOTIFICATION_GROUPS = [
-  { id: 'pipeline',       events: ['new_referral', 'deal_won', 'referral_update'] },
+  { id: 'pipeline',       events: ['new_referral', 'new_form_lead', 'deal_won', 'referral_update'] },
   { id: 'commissions',    events: ['commission_approved', 'commission', 'invoice_submitted', 'payment_completed', 'payment_failed', 'commission_deleted'] },
   { id: 'partners',       events: ['new_application', 'access_revoked', 'tier_change'] },
   { id: 'marketplace',    events: ['marketplace_application'] },
@@ -2707,7 +2707,7 @@ const NOTIFICATION_GROUPS = [
 // hidden — sales doesn't need to manage transfer failures or partner
 // lifecycle from this panel.
 const COMMERCIAL_EVENTS = new Set([
-  'new_referral', 'referral_update', 'deal_won',
+  'new_referral', 'new_form_lead', 'referral_update', 'deal_won',
   'commission_approved', 'commission', 'payment_completed',
   'new_application',
   'news',
@@ -3534,6 +3534,7 @@ const PARTNER_NOTIF_GROUPS = [
   {
     id: 'mes_referrals',
     keys: [
+      { key: 'email_new_form_lead',   label: 'partner_notifications.new_form_lead',   defaultLabel: 'Nouveau lead via mon lien de formulaire' },
       { key: 'email_referral_status', label: 'partner_notifications.referral_status', defaultLabel: "Changement de statut d'un referral" },
       { key: 'email_referral_won',    label: 'partner_notifications.referral_won',    defaultLabel: 'Deal gagné' },
     ],
