@@ -1487,6 +1487,7 @@
       "filter_all": "Todas",
       "filter_crm": "CRM",
       "filter_payments": "Pagamentos",
+      "filter_accounting": "Contabilidade",
       "filter_auth": "Auth",
       "filter_webhooks": "Webhooks",
       "filter_history": "Histórico",

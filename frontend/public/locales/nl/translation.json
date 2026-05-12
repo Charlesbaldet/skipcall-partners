@@ -1487,6 +1487,7 @@
       "filter_all": "Alle",
       "filter_crm": "CRM",
       "filter_payments": "Betalingen",
+      "filter_accounting": "Boekhouding",
       "filter_auth": "Auth",
       "filter_webhooks": "Webhooks",
       "filter_history": "Geschiedenis",
