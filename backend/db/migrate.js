@@ -1216,6 +1216,24 @@ async function runMigrations() {
     }
   }
 
+  // v48: dynamic step count on forms. The original v47 design hard-
+  // capped step at 3 via a CHECK constraint on form_fields.step; users
+  // pushed back almost immediately because some flows want a single
+  // step (lightweight lead capture) and others want up to 5 (qualifying
+  // questionnaires). We add a per-form step_count column (default 3 so
+  // existing forms stay where they are) and widen form_fields.step's
+  // CHECK to allow 1..5.
+  try {
+    await query(`ALTER TABLE forms ADD COLUMN IF NOT EXISTS step_count INTEGER NOT NULL DEFAULT 3`);
+    await query(`ALTER TABLE forms DROP CONSTRAINT IF EXISTS forms_step_count_check`);
+    await query(`ALTER TABLE forms ADD CONSTRAINT forms_step_count_check CHECK (step_count BETWEEN 1 AND 5)`);
+    await query(`ALTER TABLE form_fields DROP CONSTRAINT IF EXISTS form_fields_step_check`);
+    await query(`ALTER TABLE form_fields ADD CONSTRAINT form_fields_step_check CHECK (step BETWEEN 1 AND 5)`);
+    console.log('[forms] v48 forms.step_count + step range expanded to 1..5');
+  } catch (err) {
+    console.error('[migrate.v48] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

@@ -28,7 +28,14 @@ const FIELD_TYPES = [
 
 const TYPE_META = Object.fromEntries(FIELD_TYPES.map(t => [t.key, t]));
 
-const STEPS = [1, 2, 3];
+const MIN_STEPS = 1;
+const MAX_STEPS = 5;
+
+function stepsArray(n) {
+  const out = [];
+  for (let i = 1; i <= (n || 3); i++) out.push(i);
+  return out;
+}
 
 // Public form URL pattern. The actual public route lands in étape 3
 // but we already build the partner share link here because that's the
@@ -49,6 +56,7 @@ export default function FormBuilderPage() {
   const [confirmDelete, setConfirmDelete] = useState(null);   // field row pending delete
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmRemoveStep, setConfirmRemoveStep] = useState(null); // { step, count, target } pending step removal
 
   const load = async () => {
     try {
@@ -164,6 +172,58 @@ export default function FormBuilderPage() {
     }
   };
 
+  // ─── Step add/remove ─────────────────────────────────────────────
+  const addStep = async () => {
+    if (!form) return;
+    if ((form.step_count || 3) >= MAX_STEPS) return;
+    try {
+      const { form: f } = await api.addFormStep(form.id);
+      setForm(f);
+      setActiveStep(f.step_count);
+    } catch (err) {
+      showToast(err.message || 'Erreur', 'error', 4000);
+    }
+  };
+
+  // Click on the X icon of a step header. If the step holds fields we
+  // intercept with a confirm modal that names how many fields will be
+  // moved and where (mirroring the backend's fallback logic).
+  const requestRemoveStep = (step) => {
+    if (!form || (form.step_count || 3) <= MIN_STEPS) return;
+    const count = fields.filter(f => f.step === step).length;
+    const target = step === 1 ? 1 : step - 1;
+    // Step 1 is the only case where fields move "forward" (to what was
+    // step 2 and will renumber down to step 1); for any other step,
+    // they move to step-1 which keeps its number. We just surface the
+    // resulting *visible* target step number to the user.
+    setConfirmRemoveStep({ step, count, target });
+  };
+
+  const doRemoveStep = async () => {
+    if (!form || !confirmRemoveStep) return;
+    const { step } = confirmRemoveStep;
+    try {
+      const { form: f } = await api.removeFormStep(form.id, step);
+      setForm(f);
+      // Clamp activeStep into the new range so we don't end up on a
+      // ghost tab. If the removed step was before the active one, we
+      // shift; if it was the active one, we land on the merged target.
+      setActiveStep(prev => {
+        const newCount = f.step_count;
+        if (prev > newCount) return newCount;
+        if (prev > step) return prev - 1;
+        return prev;
+      });
+      // Re-fetch fields because the backend renumbered them in a tx.
+      const { fields: fs } = await api.getFormFields(form.id);
+      setFields(fs || []);
+      setConfirmRemoveStep(null);
+    } catch (err) {
+      showToast(err.message || 'Erreur', 'error', 4000);
+      setConfirmRemoveStep(null);
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -217,18 +277,35 @@ export default function FormBuilderPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 24, alignItems: 'start' }}>
         {/* ─── Steps + fields ─────────────────────────────────── */}
         <div>
-          <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: '#f1f5f9', borderRadius: 12, width: 'fit-content' }}>
-            {STEPS.map(s => {
+          <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: '#f1f5f9', borderRadius: 12, width: 'fit-content', flexWrap: 'wrap' }}>
+            {stepsArray(form.step_count).map(s => {
               const active = activeStep === s;
               const count = fields.filter(f => f.step === s).length;
+              const canRemove = (form.step_count || 3) > MIN_STEPS;
               return (
-                <button key={s} onClick={() => setActiveStep(s)}
-                  style={{ padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0f172a' : '#64748b', fontWeight: active ? 700 : 600, fontSize: 13, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none' }}>
-                  {t('forms.builder.step', 'Étape')} {s}/3
-                  <span style={{ marginLeft: 8, fontSize: 11, color: '#94a3b8' }}>{count}</span>
-                </button>
+                <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 6px 4px 12px', borderRadius: 8, background: active ? '#fff' : 'transparent', boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none' }}>
+                  <button onClick={() => setActiveStep(s)}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: active ? '#0f172a' : '#64748b', fontWeight: active ? 700 : 600, fontSize: 13, padding: '4px 0', fontFamily: 'inherit' }}>
+                    {t('forms.builder.step', 'Étape')} {s}/{form.step_count}
+                    <span style={{ marginLeft: 8, fontSize: 11, color: '#94a3b8' }}>{count}</span>
+                  </button>
+                  {canRemove && (
+                    <button onClick={() => requestRemoveStep(s)}
+                      title={t('forms.builder.remove_step', 'Supprimer cette étape')}
+                      style={{ background: 'transparent', border: 'none', borderRadius: 6, padding: 3, cursor: 'pointer', display: 'flex', color: '#94a3b8' }}>
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
               );
             })}
+            {(form.step_count || 3) < MAX_STEPS && (
+              <button onClick={addStep}
+                title={t('forms.builder.add_step', 'Ajouter une étape')}
+                style={{ padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'transparent', color: '#64748b', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Plus size={14} /> {t('forms.builder.add_step_short', 'Étape')}
+              </button>
+            )}
           </div>
 
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 8 }}>
@@ -292,6 +369,7 @@ export default function FormBuilderPage() {
       {editingField && (
         <FieldModal
           t={t}
+          stepCount={form.step_count || 3}
           initial={editingField.__new ? { step: editingField.step, type: 'text_short', label: '', required: false } : editingField}
           onClose={() => setEditingField(null)}
           onSave={saveField}
@@ -319,6 +397,20 @@ export default function FormBuilderPage() {
         variant="danger"
         onConfirm={resetForm}
         onCancel={() => setConfirmReset(false)}
+      />
+      <ConfirmModal
+        isOpen={!!confirmRemoveStep}
+        title={t('forms.builder.remove_step_title', 'Supprimer cette étape ?')}
+        message={confirmRemoveStep ? (
+          confirmRemoveStep.count === 0
+            ? t('forms.builder.remove_step_empty', 'Cette étape est vide.')
+            : t('forms.builder.remove_step_with_fields', { n: confirmRemoveStep.count, target: confirmRemoveStep.target, defaultValue: '{{n}} champ(s) seront déplacés vers l\'étape {{target}}.' })
+        ) : ''}
+        confirmLabel={t('common.delete', 'Supprimer')}
+        cancelLabel={t('common.cancel', 'Annuler')}
+        variant="danger"
+        onConfirm={doRemoveStep}
+        onCancel={() => setConfirmRemoveStep(null)}
       />
     </div>
   );
@@ -433,7 +525,7 @@ function SettingsPanel({ form, t, onPatch, onReset }) {
 }
 
 // ─── Field modal (create/edit) ─────────────────────────────────────
-function FieldModal({ t, initial, onClose, onSave }) {
+function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
   const [type, setType] = useState(initial.type || 'text_short');
   const [label, setLabel] = useState(initial.label || '');
   const [placeholder, setPlaceholder] = useState(initial.placeholder || '');
@@ -562,7 +654,7 @@ function FieldModal({ t, initial, onClose, onSave }) {
             <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{t('forms.builder.step', 'Étape')}</span>
             <select value={step} onChange={e => setStep(Number(e.target.value))}
               style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, background: '#fff', cursor: 'pointer' }}>
-              {STEPS.map(s => <option key={s} value={s}>{s}/3</option>)}
+              {stepsArray(stepCount).map(s => <option key={s} value={s}>{s}/{stepCount}</option>)}
             </select>
           </div>
         </div>

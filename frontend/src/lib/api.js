@@ -565,6 +565,8 @@ class ApiClient {
   updateFormField(formId, fieldId, payload) { return this.request('/forms/' + formId + '/fields/' + fieldId, { method: 'PATCH', body: JSON.stringify(payload) }); }
   deleteFormField(formId, fieldId) { return this.request('/forms/' + formId + '/fields/' + fieldId, { method: 'DELETE' }); }
   reorderFormFields(formId, items) { return this.request('/forms/' + formId + '/fields/reorder', { method: 'POST', body: JSON.stringify({ items }) }); }
+  addFormStep(formId) { return this.request('/forms/' + formId + '/steps/add', { method: 'POST' }); }
+  removeFormStep(formId, step) { return this.request('/forms/' + formId + '/steps/remove', { method: 'POST', body: JSON.stringify({ step }) }); }
   getFormPartnerTokens(formId) { return this.request('/forms/' + formId + '/partner-tokens'); }
   createFormPartnerToken(formId, partner_id) { return this.request('/forms/' + formId + '/partner-tokens', { method: 'POST', body: JSON.stringify({ partner_id }) }); }
   deleteFormPartnerToken(formId, tokenId) { return this.request('/forms/' + formId + '/partner-tokens/' + tokenId, { method: 'DELETE' }); }

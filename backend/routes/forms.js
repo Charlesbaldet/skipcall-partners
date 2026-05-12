@@ -44,7 +44,7 @@ function badRequest(res, error) {
   return res.status(400).json({ error });
 }
 
-function validateFieldPayload(body, { partial = false } = {}) {
+function validateFieldPayload(body, { partial = false, maxStep = 5 } = {}) {
   const errs = [];
   if (!partial || body.type !== undefined) {
     if (!FIELD_TYPES.includes(body.type)) errs.push('type invalide');
@@ -54,7 +54,8 @@ function validateFieldPayload(body, { partial = false } = {}) {
     else if (body.label.length > 500) errs.push('label trop long (max 500)');
   }
   if (!partial || body.step !== undefined) {
-    if (![1, 2, 3].includes(Number(body.step))) errs.push('step doit être 1, 2 ou 3');
+    const s = Number(body.step);
+    if (!Number.isInteger(s) || s < 1 || s > maxStep) errs.push(`step doit être entre 1 et ${maxStep}`);
   }
   if (body.placeholder !== undefined && body.placeholder !== null) {
     if (typeof body.placeholder !== 'string') errs.push('placeholder doit être une string');
@@ -239,7 +240,7 @@ router.post('/:id/fields', async (req, res) => {
   try {
     const form = await loadOwnedForm(req.tenantId, req.params.id);
     if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
-    const errs = validateFieldPayload(req.body);
+    const errs = validateFieldPayload(req.body, { maxStep: form.step_count || 3 });
     if (errs.length) return badRequest(res, errs.join(', '));
 
     const { type, label, placeholder = null, required = false, options = null, config = null } = req.body;
@@ -298,7 +299,7 @@ router.patch('/:id/fields/:fieldId', async (req, res) => {
       options: req.body.options !== undefined ? req.body.options : existing[0].options,
       config: req.body.config !== undefined ? req.body.config : existing[0].config,
     };
-    const errs = validateFieldPayload(merged, { partial: false });
+    const errs = validateFieldPayload(merged, { partial: false, maxStep: form.step_count || 3 });
     if (errs.length) return badRequest(res, errs.join(', '));
 
     const sets = [];
@@ -371,7 +372,6 @@ router.post('/:id/fields/reorder', async (req, res) => {
   for (const it of items) {
     if (!it || typeof it !== 'object') return badRequest(res, 'item invalide');
     if (!it.id || typeof it.id !== 'string') return badRequest(res, 'item.id requis');
-    if (![1, 2, 3].includes(Number(it.step))) return badRequest(res, 'item.step doit être 1, 2 ou 3');
     if (!Number.isInteger(it.order_index)) return badRequest(res, 'item.order_index doit être un entier');
   }
   const { pool } = require('../db');
@@ -381,6 +381,14 @@ router.post('/:id/fields/reorder', async (req, res) => {
     if (!form) {
       client.release();
       return res.status(404).json({ error: 'Formulaire introuvable' });
+    }
+    const maxStep = form.step_count || 3;
+    for (const it of items) {
+      const s = Number(it.step);
+      if (!Number.isInteger(s) || s < 1 || s > maxStep) {
+        client.release();
+        return badRequest(res, `item.step doit être entre 1 et ${maxStep}`);
+      }
     }
     await client.query('BEGIN');
     for (const it of items) {
@@ -400,6 +408,93 @@ router.post('/:id/fields/reorder', async (req, res) => {
   } catch (err) {
     try { await client.query('ROLLBACK'); } catch {}
     console.error('[forms.fields.reorder] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    try { client.release(); } catch {}
+  }
+});
+
+// POST /api/forms/:id/steps/add — increment step_count (cap at 5).
+// New step starts empty; fields stay where they are.
+router.post('/:id/steps/add', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const current = form.step_count || 3;
+    if (current >= 5) return badRequest(res, 'Maximum 5 étapes atteint');
+    const { rows } = await query(
+      `UPDATE forms SET step_count = step_count + 1, updated_at = NOW()
+        WHERE id = $1 AND tenant_id = $2 RETURNING *`,
+      [req.params.id, req.tenantId]
+    );
+    res.json({ form: rows[0] });
+  } catch (err) {
+    console.error('[forms.steps.add] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/forms/:id/steps/remove — body: { step: N }.
+// Atomic: in one tx, move any fields currently on step N to the
+// target step (N-1 if N > 1, otherwise N+1 then becomes 1 after the
+// shift), then renumber every step > N down by one to fill the gap,
+// then decrement step_count.
+router.post('/:id/steps/remove', async (req, res) => {
+  const stepToRemove = Number(req.body?.step);
+  if (!Number.isInteger(stepToRemove) || stepToRemove < 1) {
+    return badRequest(res, 'step doit être un entier ≥ 1');
+  }
+  const { pool } = require('../db');
+  const client = await pool.connect();
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) { client.release(); return res.status(404).json({ error: 'Formulaire introuvable' }); }
+    const current = form.step_count || 3;
+    if (current <= 1) { client.release(); return badRequest(res, 'Le formulaire doit conserver au moins une étape'); }
+    if (stepToRemove > current) { client.release(); return badRequest(res, `step ${stepToRemove} hors plage (max ${current})`); }
+
+    // Target step the orphaned fields fall back to. If the removed
+    // step is the first, fields go to what was step 2 (which will
+    // become step 1 after the renumber). For any other step N, fields
+    // go to N-1 (the step that visually sits just before, and which
+    // keeps its number after the shift).
+    const fallbackBeforeShift = stepToRemove === 1 ? 2 : stepToRemove - 1;
+
+    await client.query('BEGIN');
+    // 1. Determine the next free order_index in the fallback step so
+    //    the moved fields land after any existing ones rather than
+    //    overlapping.
+    const { rows: maxR } = await client.query(
+      `SELECT COALESCE(MAX(order_index), -1) AS m FROM form_fields
+        WHERE form_id = $1 AND step = $2`,
+      [req.params.id, fallbackBeforeShift]
+    );
+    const baseIdx = (maxR[0]?.m ?? -1) + 1;
+    // 2. Move fields of the removed step, preserving their relative
+    //    order via order_index = baseIdx + their current order_index.
+    await client.query(
+      `UPDATE form_fields
+          SET step = $1, order_index = order_index + $2
+        WHERE form_id = $3 AND tenant_id = $4 AND step = $5`,
+      [fallbackBeforeShift, baseIdx, req.params.id, req.tenantId, stepToRemove]
+    );
+    // 3. Renumber every step > removed step down by one.
+    await client.query(
+      `UPDATE form_fields SET step = step - 1
+        WHERE form_id = $1 AND tenant_id = $2 AND step > $3`,
+      [req.params.id, req.tenantId, stepToRemove]
+    );
+    // 4. Decrement step_count.
+    const { rows: formRows } = await client.query(
+      `UPDATE forms SET step_count = step_count - 1, updated_at = NOW()
+        WHERE id = $1 AND tenant_id = $2 RETURNING *`,
+      [req.params.id, req.tenantId]
+    );
+    await client.query('COMMIT');
+    res.json({ form: formRows[0] });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error('[forms.steps.remove] failed:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     try { client.release(); } catch {}
