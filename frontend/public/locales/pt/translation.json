@@ -3616,7 +3616,11 @@
     "form_title": "Link do formulário",
     "form_subtitle": "Partilhe este link: os visitantes preenchem o formulário de inscrição configurado por {{tenant}}.",
     "form_empty_title": "Link do formulário",
-    "form_empty_hint": "Peça ao seu cliente para criar um formulário para gerar leads a partir do seu site."
+    "form_empty_hint": "Peça ao seu cliente para criar um formulário para gerar leads a partir do seu site.",
+    "mode_direct": "Link direto",
+    "mode_embed": "Integrar no meu site",
+    "copy_code": "Copiar código",
+    "embed_hint": "Copie este código e cole-o no HTML do seu site, onde quer que o formulário apareça."
   },
   "forms": {
     "empty": {

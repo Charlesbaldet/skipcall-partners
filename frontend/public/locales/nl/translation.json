@@ -3616,7 +3616,11 @@
     "form_title": "Formulierlink",
     "form_subtitle": "Deel deze link: bezoekers vullen het aanmeldformulier in dat door {{tenant}} is opgesteld.",
     "form_empty_title": "Formulierlink",
-    "form_empty_hint": "Vraag je klant om een formulier te maken om leads via jouw site te genereren."
+    "form_empty_hint": "Vraag je klant om een formulier te maken om leads via jouw site te genereren.",
+    "mode_direct": "Directe link",
+    "mode_embed": "Op mijn site insluiten",
+    "copy_code": "Code kopiëren",
+    "embed_hint": "Kopieer deze code en plak hem in de HTML van je site, op de plek waar het formulier moet verschijnen."
   },
   "forms": {
     "empty": {

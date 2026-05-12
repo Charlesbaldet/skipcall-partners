@@ -3616,7 +3616,11 @@
     "form_title": "Formularlink",
     "form_subtitle": "Teilen Sie diesen Link: Besucher füllen das von {{tenant}} konfigurierte Anmeldeformular aus.",
     "form_empty_title": "Formularlink",
-    "form_empty_hint": "Bitten Sie Ihren Kunden, ein Formular zu erstellen, um Leads über Ihre Website zu generieren."
+    "form_empty_hint": "Bitten Sie Ihren Kunden, ein Formular zu erstellen, um Leads über Ihre Website zu generieren.",
+    "mode_direct": "Direkter Link",
+    "mode_embed": "Auf meiner Website einbetten",
+    "copy_code": "Code kopieren",
+    "embed_hint": "Kopieren Sie diesen Code und fügen Sie ihn in den HTML-Code Ihrer Website ein, wo das Formular erscheinen soll."
   },
   "forms": {
     "empty": {

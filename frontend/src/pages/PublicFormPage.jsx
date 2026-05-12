@@ -35,6 +35,11 @@ export default function PublicFormPage() {
   const { formId } = useParams();
   const [search] = useSearchParams();
   const token = search.get('p') || '';
+  // ?embed=1 flips two things: the "Propulsé par RefBoost" footer
+  // is dropped (partner is integrating, branding stays discreet) and
+  // the page posts its document height to the parent window so the
+  // embed.js script can resize the iframe to match.
+  const embed = search.get('embed') === '1';
 
   const [state, setState] = useState({ phase: 'loading', payload: null, error: null });
 
@@ -44,6 +49,29 @@ export default function PublicFormPage() {
       .then(data => setState({ phase: 'ok', payload: data, error: null }))
       .catch(err => setState({ phase: 'error', error: err?.data?.error || 'server_error' }));
   }, [formId, token]);
+
+  // Iframe height autosync. Sends { type: 'refboost-resize', height }
+  // to window.parent on first paint, then on every ResizeObserver
+  // tick so step transitions and field-error messages also reflow.
+  // No-op outside embed mode so non-iframed loads don't spam
+  // messages into nothing.
+  useEffect(() => {
+    if (!embed || typeof window === 'undefined') return;
+    const post = () => {
+      try {
+        const h = Math.max(
+          document.documentElement.scrollHeight,
+          document.body?.scrollHeight || 0
+        );
+        window.parent && window.parent.postMessage({ type: 'refboost-resize', height: h }, '*');
+      } catch {}
+    };
+    post();
+    const ro = new ResizeObserver(post);
+    if (document.body) ro.observe(document.body);
+    window.addEventListener('load', post);
+    return () => { ro.disconnect(); window.removeEventListener('load', post); };
+  }, [embed, state.phase, state.payload]);
 
   const handleSubmit = async (answers, website) => {
     try {
@@ -83,8 +111,8 @@ export default function PublicFormPage() {
   }
 
   return (
-    <PageShell>
-      <FormPreview form={state.payload.form} fields={state.payload.fields} onSubmit={handleSubmit} t={t} />
+    <PageShell embed={embed}>
+      <FormPreview form={state.payload.form} fields={state.payload.fields} onSubmit={handleSubmit} t={t} embed={embed} />
     </PageShell>
   );
 }
@@ -94,7 +122,20 @@ export default function PublicFormPage() {
 // outside the card. Used by the public route. Builder preview mode
 // renders FormPreview directly without this wrapper (the builder
 // already has its own page chrome).
-function PageShell({ children }) {
+function PageShell({ children, embed = false }) {
+  // Embed mode: skip the outer gray frame + the "Propulsé par"
+  // footer so the partner controls the surrounding chrome on their
+  // own page. The iframe height is driven by document height, so a
+  // transparent background and zero padding hand control back.
+  if (embed) {
+    return (
+      <div style={{ background: 'transparent', padding: 0 }}>
+        <div style={{ width: '100%', maxWidth: 480, margin: '0 auto' }}>
+          {children}
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ minHeight: '100vh', background: C.bg, padding: '32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: 480 }}>

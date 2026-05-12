@@ -4,6 +4,16 @@
       "dependabot/npm_and_yarn/**": false
     }
   },
+  "headers": [
+    {
+      "source": "/embed.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap.xml",

@@ -3616,7 +3616,11 @@
     "form_title": "Link del modulo",
     "form_subtitle": "Condividi questo link: i visitatori compilano il modulo di iscrizione configurato da {{tenant}}.",
     "form_empty_title": "Link del modulo",
-    "form_empty_hint": "Chiedi al tuo cliente di creare un modulo per generare lead dal tuo sito."
+    "form_empty_hint": "Chiedi al tuo cliente di creare un modulo per generare lead dal tuo sito.",
+    "mode_direct": "Link diretto",
+    "mode_embed": "Integra sul mio sito",
+    "copy_code": "Copia codice",
+    "embed_hint": "Copia questo codice e incollalo nell'HTML del tuo sito, dove vuoi che appaia il modulo."
   },
   "forms": {
     "empty": {

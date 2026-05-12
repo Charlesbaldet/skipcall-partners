@@ -138,15 +138,23 @@ function LinkStat({ label, value, accent }) {
 // KPIs are intentionally absent for V1 — they'll come with the
 // funnel-instrumentation étape per Charles' plan.
 function FormLinkCard({ link, t }) {
+  const [mode, setMode] = useState('url'); // 'url' | 'embed'
   const [copied, setCopied] = useState(false);
 
-  const url = link
-    ? (typeof window !== 'undefined' ? window.location.origin : '') + '/f/' + link.form_id + '?p=' + link.token
-    : '';
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const url = link ? origin + '/f/' + link.form_id + '?p=' + link.token : '';
+  // The snippet matches what /embed.js parses: data-form-id and
+  // data-partner-token are read off the <script> tag, the placeholder
+  // <div> is found by id. Keep it copy-pasteable and minimal.
+  const snippet = link ? (
+`<div id="refboost-form-${link.form_id}"></div>
+<script src="${origin}/embed.js" data-form-id="${link.form_id}" data-partner-token="${link.token}" async></script>`
+  ) : '';
+  const currentText = mode === 'embed' ? snippet : url;
 
   const copy = () => {
-    if (!url) return;
-    navigator.clipboard.writeText(url);
+    if (!currentText) return;
+    navigator.clipboard.writeText(currentText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -185,17 +193,51 @@ function FormLinkCard({ link, t }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          readOnly
-          value={url}
-          style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'ui-monospace, monospace', color: '#334155', background: '#f8fafc', boxSizing: 'border-box' }}
-          onFocus={e => e.target.select()}
-        />
-        <button onClick={copy} style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Copy size={14} /> {copied ? t('referral_link.copied') : t('referral_link.copy')}
-        </button>
+      {/* Mode toggle: direct URL vs HTML/JS snippet for an iframe
+          embed. The partner can pick whichever fits their site. Both
+          carry the same partner_token so attribution is identical. */}
+      <div style={{ display: 'inline-flex', padding: 3, marginBottom: 12, background: '#f1f5f9', borderRadius: 8 }}>
+        {[
+          { val: 'url',   label: t('partner_links.mode_direct',  'Lien direct') },
+          { val: 'embed', label: t('partner_links.mode_embed',   'Intégrer sur mon site') },
+        ].map(opt => {
+          const active = mode === opt.val;
+          return (
+            <button key={opt.val} onClick={() => setMode(opt.val)}
+              style={{ padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0f172a' : '#64748b', fontWeight: 500, fontSize: 12, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
+
+      {mode === 'url' ? (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            readOnly
+            value={url}
+            style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'ui-monospace, monospace', color: '#334155', background: '#f8fafc', boxSizing: 'border-box' }}
+            onFocus={e => e.target.select()}
+          />
+          <button onClick={copy} style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Copy size={14} /> {copied ? t('referral_link.copied') : t('referral_link.copy')}
+          </button>
+        </div>
+      ) : (
+        <div>
+          <pre style={{ margin: 0, padding: '12px 14px', borderRadius: 10, border: '2px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: 12, fontFamily: 'ui-monospace, monospace', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            <code>{snippet}</code>
+          </pre>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+            <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
+              {t('partner_links.embed_hint', 'Copiez ce code et collez-le dans le HTML de votre site, là où vous voulez afficher le formulaire.')}
+            </p>
+            <button onClick={copy} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+              <Copy size={12} /> {copied ? t('referral_link.copied') : t('partner_links.copy_code', 'Copier le code')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

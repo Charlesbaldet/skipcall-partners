@@ -3616,7 +3616,11 @@
     "form_title": "Form link",
     "form_subtitle": "Share this link: visitors will fill in the registration form configured by {{tenant}}.",
     "form_empty_title": "Form link",
-    "form_empty_hint": "Ask your client to create a form to generate leads from your site."
+    "form_empty_hint": "Ask your client to create a form to generate leads from your site.",
+    "mode_direct": "Direct link",
+    "mode_embed": "Embed on my site",
+    "copy_code": "Copy code",
+    "embed_hint": "Copy this code and paste it into your site's HTML where you want the form to appear."
   },
   "forms": {
     "empty": {
