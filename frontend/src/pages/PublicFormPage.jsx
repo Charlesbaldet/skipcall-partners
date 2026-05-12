@@ -46,6 +46,27 @@ export default function PublicFormPage() {
       });
   }, [formId, token]);
 
+  // Derive form metadata + fields defensively (payload is null while
+  // loading / on error). Done BEFORE any early return so the useMemo
+  // below sees a consistent hook count across phase transitions —
+  // React error #310 fires the moment a hook is conditionally
+  // skipped, which the original draft tripped by placing useMemo
+  // after the loading/error returns.
+  const payload = state.payload;
+  const form = payload?.form || null;
+  const fields = payload?.fields || [];
+  const stepCount = form?.step_count || 3;
+
+  const fieldsByStep = useMemo(() => {
+    const buckets = Array.from({ length: stepCount }, () => []);
+    for (const f of fields) {
+      const idx = Math.max(0, Math.min(stepCount - 1, (f.step || 1) - 1));
+      buckets[idx].push(f);
+    }
+    for (const b of buckets) b.sort((a, b) => a.order_index - b.order_index);
+    return buckets;
+  }, [fields, stepCount]);
+
   // ─── Loading / error screens ─────────────────────────────────────
   if (state.phase === 'loading') {
     return <CenteredCard><p style={{ color: C.muted }}>{t('public_form.loading', 'Chargement…')}</p></CenteredCard>;
@@ -65,20 +86,6 @@ export default function PublicFormPage() {
       </CenteredCard>
     );
   }
-
-  const { form, fields } = state.payload;
-  const stepCount = form.step_count || 3;
-
-  // Build per-step field lists once.
-  const fieldsByStep = useMemo(() => {
-    const buckets = Array.from({ length: stepCount }, () => []);
-    for (const f of fields) {
-      const idx = Math.max(0, Math.min(stepCount - 1, (f.step || 1) - 1));
-      buckets[idx].push(f);
-    }
-    for (const b of buckets) b.sort((a, b) => a.order_index - b.order_index);
-    return buckets;
-  }, [fields, stepCount]);
 
   // ─── Thank-you screen ────────────────────────────────────────────
   if (submitted) {
