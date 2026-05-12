@@ -3670,6 +3670,8 @@
       "title_short": "Formulier",
       "subtitle": "Configureer het formulier dat je partners zullen delen om nieuwe leads aan te trekken.",
       "subtitle_short": "Configuratie van het leadformulier",
+      "published": "Gepubliceerd",
+      "draft": "Concept",
       "default_title": "Schrijf je in voor ons programma",
       "created": "Formulier aangemaakt",
       "deleted": "Formulier verwijderd",

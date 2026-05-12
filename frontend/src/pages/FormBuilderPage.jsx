@@ -11,6 +11,7 @@ import { showToast } from '../components/Dialogs.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import Pagination from '../components/Pagination.jsx';
 import { FormPreview } from './PublicFormPage.jsx';
+import { StatusBadge, EditPill } from '../components/EditorChrome.jsx';
 
 // Per-type metadata that drives the field type picker + the rendered
 // badge on each row. Single source of truth so adding a type (V2) is
@@ -312,18 +313,31 @@ export default function FormBuilderPage() {
 
   return (
     <div className="fade-in">
-      {/* ─── Header ──────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 280 }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2 }}>
-            {t('forms.builder.title_short', 'Formulaire')}
-          </h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
-            {t('forms.builder.subtitle_short', 'Configuration du formulaire de leads')}
-          </p>
+      {/* ─── Sticky top bar — Marketplace pattern ─────────────── */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        background: '#fff', borderBottom: '1px solid #e2e8f0',
+        padding: '14px 28px', marginBottom: 24,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 16, flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2 }}>
+              {t('forms.builder.title_short', 'Formulaire')}
+            </h1>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+              {t('forms.builder.subtitle_short', 'Configuration du formulaire de leads')}
+            </p>
+          </div>
+          <StatusBadge
+            published={!!form.is_published}
+            publishedLabel={t('forms.builder.published', 'Publié')}
+            draftLabel={t('forms.builder.draft', 'Brouillon')}
+          />
+          <SaveIndicator state={saveState} t={t} onRetry={() => setSaveState('idle')} />
         </div>
         <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-          <SaveIndicator state={saveState} t={t} onRetry={() => setSaveState('idle')} />
           {/* Stats opens a dedicated mode — kept as a button (not a
               tab) per the brief so it sits visually next to the
               publish toggle rather than in the 4-tab strip. */}
@@ -339,10 +353,8 @@ export default function FormBuilderPage() {
             }}>
             <BarChart2 size={13} /> {t('forms.builder.stats_mode', 'Statistiques')}
           </button>
-          {/* Publish toggle replaces the old Publier/Dépublier pair.
-              Same visual as the Marketplace publish switch. */}
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 13, color: '#0f172a' }}>
-            <span style={{ fontWeight: 500 }}>{t('forms.builder.publish_label', 'Publier le formulaire')}</span>
+            <span style={{ fontWeight: 600 }}>{t('forms.builder.publish_label', 'Publier le formulaire')}</span>
             <button onClick={togglePublish} aria-pressed={!!form.is_published}
               style={{
                 width: 44, height: 24, borderRadius: 999,
@@ -361,8 +373,8 @@ export default function FormBuilderPage() {
 
       {/* ─── Centered tab strip — Marketplace pattern ───────────── */}
       {mode !== 'stats' && (
-        <div style={{ display: 'flex', justifyContent: 'center', borderBottom: '1px solid #e2e8f0', marginBottom: 24 }}>
-          <div style={{ display: 'inline-flex', gap: 28 }}>
+        <>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, paddingTop: 16 }}>
             {[
               { id: 'preview',  label: t('forms.builder.tab_preview',  'Aperçu') },
               { id: 'fields',   label: t('forms.builder.tab_fields',   'Champs') },
@@ -373,55 +385,36 @@ export default function FormBuilderPage() {
               return (
                 <button key={tab.id} onClick={() => setMode(tab.id)}
                   style={{
-                    padding: '10px 4px', background: 'transparent', border: 'none', cursor: 'pointer',
+                    padding: '10px 20px', background: 'transparent', border: 'none', cursor: 'pointer',
                     fontFamily: 'inherit', fontSize: 14,
-                    fontWeight: active ? 500 : 400,
+                    fontWeight: active ? 600 : 500,
                     color: active ? '#059669' : '#64748b',
                     borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
                     marginBottom: -1,
+                    transition: 'color .15s, border-color .15s',
                   }}>
                   {tab.label}
                 </button>
               );
             })}
           </div>
-        </div>
-      )}
-
-      {/* Status banner replaced by the Publish toggle in the header
-          + a soft inline note when in draft mode, shown only on the
-          preview tab so it doesn't repeat across every tab. */}
-      {mode === 'preview' && !form.is_published && (
-        <div style={{ marginBottom: 20, padding: '8px 14px', borderRadius: 8, background: '#fffbeb', border: '1px solid #fde68a', color: '#a16207', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <AlertTriangle size={12} /> {t('forms.builder.status_draft', 'Brouillon. Le formulaire n\'est pas accessible publiquement.')}
-        </div>
+          <div style={{ borderBottom: '1px solid #e2e8f0', marginBottom: 24 }} />
+        </>
       )}
 
       {mode === 'preview' && (
-        <div style={{ position: 'relative', background: '#f8fafc', borderRadius: 16, padding: '32px 16px', border: '1px solid #e2e8f0' }}>
-          {/* APERÇU header label + Éditer pill anchored top-right —
-              mirrors the Marketplace editor's floating button (same
-              padding, radius, font, color #0f6e56). Clicking jumps
-              to the Champs tab where the real editing happens. */}
-          <button
+        <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: '24px 24px 48px' }}>
+          <EditPill
             onClick={() => setMode('fields')}
-            style={{
-              position: 'absolute', top: 16, right: 16, zIndex: 5,
-              padding: '6px 16px', borderRadius: 999,
-              background: '#0f6e56', color: '#fff', border: 'none',
-              fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-            }}>
-            <Pencil size={13} /> {t('forms.builder.edit_mode', 'Éditer')}
-          </button>
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600, marginBottom: 6 }}>
+            openLabel={t('forms.builder.edit_mode', 'Éditer')}
+          />
+          <div style={{ marginBottom: 24 }}>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#0f172a' }}>
               {t('forms.builder.preview_label', 'Aperçu formulaire')}
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 500, color: '#0f172a' }}>
+            </h2>
+            <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 400, color: '#64748b' }}>
               {t('forms.builder.preview_caption', 'Ce que vos partenaires partageront avec leurs visiteurs')}
-            </div>
+            </p>
           </div>
           <div style={{ maxWidth: 480, margin: '0 auto' }}>
             <FormPreview form={form} fields={fields} onSubmit={undefined} t={t} />

@@ -3670,6 +3670,8 @@
       "title_short": "Formulário",
       "subtitle": "Configure o formulário que os seus parceiros vão partilhar para captar novos leads.",
       "subtitle_short": "Configuração do formulário de leads",
+      "published": "Publicado",
+      "draft": "Rascunho",
       "default_title": "Junte-se ao nosso programa",
       "created": "Formulário criado",
       "deleted": "Formulário eliminado",

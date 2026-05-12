@@ -3670,6 +3670,8 @@
       "title_short": "Form",
       "subtitle": "Configure the form your partners will share to bring in new leads.",
       "subtitle_short": "Configure the lead form",
+      "published": "Published",
+      "draft": "Draft",
       "default_title": "Join our programme",
       "created": "Form created",
       "deleted": "Form deleted",

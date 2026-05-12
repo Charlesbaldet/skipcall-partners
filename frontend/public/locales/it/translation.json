@@ -3670,6 +3670,8 @@
       "title_short": "Modulo",
       "subtitle": "Configura il modulo che i tuoi partner condivideranno per acquisire nuovi lead.",
       "subtitle_short": "Configurazione del modulo lead",
+      "published": "Pubblicato",
+      "draft": "Bozza",
       "default_title": "Iscriviti al nostro programma",
       "created": "Modulo creato",
       "deleted": "Modulo eliminato",

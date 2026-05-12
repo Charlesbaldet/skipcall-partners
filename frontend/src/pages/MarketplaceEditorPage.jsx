@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Save, Languages, ExternalLink, GripVertical, Tag, Users, ArrowRight, Upload, Pencil, X as XIcon } from 'lucide-react';
+import { Eye, EyeOff, Save, Languages, ExternalLink, GripVertical, Tag, Users, ArrowRight, Upload } from 'lucide-react';
 import api from '../lib/api';
 import { showToast, showConfirm } from '../components/Dialogs.jsx';
 import PageSkeleton from '../components/PageSkeleton.jsx';
 import { BLOCK_COMPONENTS } from './marketplaceBlocks/MarketplaceEditorBlocks.jsx';
+import { StatusBadge, EditPill } from '../components/EditorChrome.jsx';
 
 // Sector list mirrors the public /marketplace filter so admins can
 // only pick a value the listing already filters by.
@@ -26,16 +27,6 @@ const SECTORS = [
 // inside contenteditable from accidentally starting a block drag.
 
 const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
-
-function StatusBadge({ visible, t }) {
-  return (
-    <span style={{
-      fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
-      background: visible ? '#f0fdf4' : '#f1f5f9',
-      color: visible ? '#059669' : '#64748b',
-    }}>{visible ? t('marketplace.editor.published', 'Publié') : t('marketplace.editor.draft', 'Brouillon')}</span>
-  );
-}
 
 function Toggle({ value, onChange, disabled }) {
   return (
@@ -686,7 +677,11 @@ export default function MarketplaceEditorPage() {
               {t('marketplace.editor.page_subtitle', 'Présentation de votre programme')}
             </p>
           </div>
-          <StatusBadge visible={!!tenant.marketplace_visible} t={t} />
+          <StatusBadge
+            published={!!tenant.marketplace_visible}
+            publishedLabel={t('marketplace.editor.published', 'Publié')}
+            draftLabel={t('marketplace.editor.draft', 'Brouillon')}
+          />
           {saving && <span style={{ color: C.m, fontSize: 12 }}>{t('marketplace.editor.saving', 'Enregistrement…')}</span>}
           {hasUnsavedChanges && !saving && (
             <span style={{
@@ -812,24 +807,14 @@ export default function MarketplaceEditorPage() {
       {/* Content area — position:relative so the floating Edit
           button (top-right) anchors here. */}
       <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: '24px 24px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <button
+        <EditPill
           onClick={handleToggleEdit}
-          style={{
-            position: 'absolute', top: 16, right: 24, zIndex: 10,
-            padding: '6px 16px', borderRadius: 8,
-            background: editMode ? '#fff' : C.p,
-            border: editMode ? `1px solid ${C.border}` : 'none',
-            color: editMode ? C.s : '#fff',
-            fontWeight: 500, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            boxShadow: editMode ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-          }}
-        >
-          {editMode ? <XIcon size={13} /> : <Pencil size={13} />}
-          {editMode
-            ? t('marketplace.editor.close_editor', "Fermer l'éditeur")
-            : t('marketplace.editor.edit_button', 'Éditer')}
-        </button>
+          isOpen={editMode}
+          openLabel={t('marketplace.editor.edit_button', 'Éditer')}
+          closeLabel={t('marketplace.editor.close_editor', "Fermer l'éditeur")}
+          primary={C.p}
+          border={C.border}
+        />
 
         {activeSubTab === 'card' ? (
           // editable={editMode} disables the form fields and hides the

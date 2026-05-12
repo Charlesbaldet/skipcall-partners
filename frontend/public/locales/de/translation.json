@@ -3670,6 +3670,8 @@
       "title_short": "Formular",
       "subtitle": "Konfigurieren Sie das Formular, das Ihre Partner teilen werden, um neue Leads zu gewinnen.",
       "subtitle_short": "Konfiguration des Lead-Formulars",
+      "published": "Veröffentlicht",
+      "draft": "Entwurf",
       "default_title": "Treten Sie unserem Programm bei",
       "created": "Formular erstellt",
       "deleted": "Formular gelöscht",
