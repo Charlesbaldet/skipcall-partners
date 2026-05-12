@@ -1700,7 +1700,26 @@
     "configure": "Configurer",
     "tab_privacy": "Confidentialité",
     "privacy": {
-      "subtitle": "Vos droits RGPD : exportez vos données ou supprimez votre compte à tout moment."
+      "title": "Confidentialité",
+      "subtitle": "Vos droits RGPD : exportez vos données ou supprimez votre compte à tout moment.",
+      "export_cta": "Exporter mes données",
+      "delete_account_cta": "Supprimer mon compte",
+      "delete_tenant_cta": "Supprimer mon compte entreprise",
+      "feedback_title": "Nous sommes désolés de vous voir partir",
+      "feedback_body": "Pouvez-vous nous dire pourquoi ? Cela nous aide à améliorer RefBoost.",
+      "feedback_free_label": "Commentaire (optionnel)",
+      "reason_price": "Prix trop élevé",
+      "reason_features": "Manque de fonctionnalités",
+      "reason_competitor": "Je passe à un concurrent",
+      "reason_no_need": "Je n'en ai plus besoin",
+      "reason_other": "Autre",
+      "continue": "Continuer",
+      "confirm_title": "Confirmer la suppression définitive",
+      "confirm_body_tenant": "Cette action supprimera définitivement votre compte entreprise, vos partenaires, vos referrals, vos commissions, et toutes les données associées. Vos accès partenaires chez d'autres clients RefBoost ne seront PAS affectés. Cette opération est irréversible.",
+      "confirm_body_partner": "Cette action supprimera définitivement votre compte. Cette opération est irréversible.",
+      "confirm_name_label": "Pour confirmer, tapez le nom de votre entreprise (ex : {{name}}) :",
+      "tenant_name_mismatch": "Le nom saisi ne correspond pas.",
+      "delete_definitive": "Supprimer définitivement"
     },
     "export": {
       "title": "Exporter mes données",

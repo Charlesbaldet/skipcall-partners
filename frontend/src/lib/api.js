@@ -160,7 +160,33 @@ class ApiClient {
   // deletes the user + partner row, schedules a 30-day purge, and
   // sends a confirmation email. The frontend immediately clears the
   // local session and redirects.
-  deleteAccount() { return this.request('/auth/delete-account', { method: 'POST' }); }
+  deleteAccount(body = {}) { return this.request('/auth/delete-account', { method: 'POST', body: JSON.stringify(body) }); }
+  deleteTenant(body) { return this.request('/auth/delete-tenant', { method: 'POST', body: JSON.stringify(body) }); }
+  getAccountInfo() { return this.request('/auth/account-info'); }
+  // Tenant-wide ZIP export. Same anchor-in-DOM pattern as the
+  // partner export so Firefox + locked-down Chromium don't no-op
+  // the click() on a detached <a>.
+  async exportAccountData() {
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/account/export-data`, { headers });
+    if (!res.ok) {
+      let msg = 'Erreur export';
+      try { const b = await res.clone().json(); if (b && b.error) msg = b.error; } catch {}
+      const err = new Error(msg); err.status = res.status; throw err;
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('Content-Disposition') || '';
+    const match = /filename="?([^";]+)"?/.exec(cd);
+    const today = new Date().toISOString().slice(0, 10);
+    const filename = match ? match[1] : `refboost-export-${today}.zip`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    return { ok: true, filename };
+  }
   // GDPR Article 20 — partner data portability. The endpoint sets
   // Content-Disposition: attachment so the response IS the file;
   // we fetch as a Blob (NOT JSON) so the browser preserves the

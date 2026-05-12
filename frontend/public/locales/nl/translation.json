@@ -1700,7 +1700,26 @@
     "configure": "Instellen",
     "tab_privacy": "Privacy",
     "privacy": {
-      "subtitle": "Uw AVG-rechten: exporteer uw gegevens of verwijder uw account op elk moment."
+      "title": "Privacy",
+      "subtitle": "Uw AVG-rechten: exporteer uw gegevens of verwijder uw account op elk moment.",
+      "export_cta": "Mijn gegevens exporteren",
+      "delete_account_cta": "Mijn account verwijderen",
+      "delete_tenant_cta": "Mijn bedrijfsaccount verwijderen",
+      "feedback_title": "Jammer dat je weggaat",
+      "feedback_body": "Kun je ons vertellen waarom? Het helpt ons RefBoost te verbeteren.",
+      "feedback_free_label": "Opmerking (optioneel)",
+      "reason_price": "Prijs te hoog",
+      "reason_features": "Ontbrekende functies",
+      "reason_competitor": "Ik stap over naar een concurrent",
+      "reason_no_need": "Niet meer nodig",
+      "reason_other": "Anders",
+      "continue": "Doorgaan",
+      "confirm_title": "Permanente verwijdering bevestigen",
+      "confirm_body_tenant": "Deze actie verwijdert je bedrijfsaccount, je partners, je referrals, je commissies en alle bijbehorende gegevens permanent. Je partnertoegang bij andere RefBoost-klanten wordt NIET beïnvloed. Deze actie is onomkeerbaar.",
+      "confirm_body_partner": "Deze actie verwijdert je account permanent. Deze actie is onomkeerbaar.",
+      "confirm_name_label": "Typ ter bevestiging de naam van je bedrijf (bijv. {{name}}):",
+      "tenant_name_mismatch": "De ingevoerde naam komt niet overeen.",
+      "delete_definitive": "Permanent verwijderen"
     },
     "export": {
       "title": "Mijn gegevens exporteren",

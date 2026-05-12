@@ -1378,6 +1378,36 @@ async function runMigrations() {
     console.error('[migrate.v51b] failed:', err.message);
   }
 
+  // v52: GDPR Article 17 — extend self-deletion from partners-only
+  // (already shipped in v41) to admin owners of a tenant client. Two
+  // moving pieces:
+  //   - tenants.deleted_at: soft-delete column. Read paths already
+  //     filter by tenant_id matching the authenticated user, so a
+  //     soft-deleted tenant just disappears from view; the daily
+  //     purge worker will hard-delete past the 30-day window.
+  //   - account_deletion_feedback: structured reason + free-text
+  //     captured at deletion time. Surfaced in super-admin later.
+  try {
+    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`);
+    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES users(id) ON DELETE SET NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_tenants_deleted_at ON tenants(deleted_at) WHERE deleted_at IS NOT NULL`);
+
+    await query(`CREATE TABLE IF NOT EXISTS account_deletion_feedback (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL,
+      partner_id UUID REFERENCES partners(id) ON DELETE SET NULL,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reason_code VARCHAR(32) NOT NULL CHECK (reason_code IN ('price', 'features', 'competitor', 'no_need', 'other')),
+      free_text TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_account_deletion_feedback_created
+                   ON account_deletion_feedback(created_at DESC)`);
+    console.log('[gdpr] v52 tenants.deleted_at + account_deletion_feedback ready');
+  } catch (err) {
+    console.error('[migrate.v52] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

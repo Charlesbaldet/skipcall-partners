@@ -1700,7 +1700,26 @@
     "configure": "Configurar",
     "tab_privacy": "Privacidade",
     "privacy": {
-      "subtitle": "Seus direitos RGPD: exporte os seus dados ou elimine a sua conta a qualquer momento."
+      "title": "Privacidade",
+      "subtitle": "Seus direitos RGPD: exporte os seus dados ou elimine a sua conta a qualquer momento.",
+      "export_cta": "Exportar os meus dados",
+      "delete_account_cta": "Eliminar a minha conta",
+      "delete_tenant_cta": "Eliminar a minha conta empresarial",
+      "feedback_title": "Lamentamos vê-lo partir",
+      "feedback_body": "Pode dizer-nos porquê? Ajuda-nos a melhorar o RefBoost.",
+      "feedback_free_label": "Comentário (opcional)",
+      "reason_price": "Preço demasiado alto",
+      "reason_features": "Funcionalidades em falta",
+      "reason_competitor": "Vou para um concorrente",
+      "reason_no_need": "Já não preciso",
+      "reason_other": "Outro",
+      "continue": "Continuar",
+      "confirm_title": "Confirmar eliminação definitiva",
+      "confirm_body_tenant": "Esta ação eliminará permanentemente a sua conta empresarial, os seus parceiros, os seus referrals, as suas comissões e todos os dados associados. Os seus acessos como parceiro em outros clientes RefBoost NÃO serão afetados. Esta operação é irreversível.",
+      "confirm_body_partner": "Esta ação eliminará permanentemente a sua conta. Esta operação é irreversível.",
+      "confirm_name_label": "Para confirmar, escreva o nome da sua empresa (ex.: {{name}}):",
+      "tenant_name_mismatch": "O nome introduzido não corresponde.",
+      "delete_definitive": "Eliminar definitivamente"
     },
     "export": {
       "title": "Exportar os meus dados",

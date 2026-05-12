@@ -258,6 +258,8 @@ app.use('/api/crm/notion', notionRoutes);
 app.use('/api/partner/notification-preferences', partnerNotificationPrefsRoutes);
 app.use('/api/partner/bank-info', partnerBankInfoRoutes);
 app.use('/api/partner/export-data', partnerDataExportRoutes);
+// Tenant-wide ZIP export for the admin owner (GDPR Article 20).
+app.use('/api/account/export-data', require('./routes/accountExport'));
 app.use('/api/integrations/qonto', qontoRoutes);
 app.use('/api/pipeline-stages', pipelineStagesRoutes);
 app.use('/api/search', searchRoutes);

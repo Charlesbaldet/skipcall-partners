@@ -1700,7 +1700,26 @@
     "configure": "Einrichten",
     "tab_privacy": "Datenschutz",
     "privacy": {
-      "subtitle": "Ihre DSGVO-Rechte: Daten exportieren oder Konto jederzeit löschen."
+      "title": "Datenschutz",
+      "subtitle": "Ihre DSGVO-Rechte: Daten exportieren oder Konto jederzeit löschen.",
+      "export_cta": "Meine Daten exportieren",
+      "delete_account_cta": "Mein Konto löschen",
+      "delete_tenant_cta": "Mein Unternehmenskonto löschen",
+      "feedback_title": "Schade, dass Sie gehen",
+      "feedback_body": "Können Sie uns sagen, warum? Das hilft uns, RefBoost zu verbessern.",
+      "feedback_free_label": "Kommentar (optional)",
+      "reason_price": "Preis zu hoch",
+      "reason_features": "Fehlende Funktionen",
+      "reason_competitor": "Wechsel zu einem Wettbewerber",
+      "reason_no_need": "Nicht mehr benötigt",
+      "reason_other": "Sonstiges",
+      "continue": "Weiter",
+      "confirm_title": "Endgültige Löschung bestätigen",
+      "confirm_body_tenant": "Dies löscht dauerhaft Ihr Unternehmenskonto, Ihre Partner, Referrals, Provisionen und alle zugehörigen Daten. Ihr Partnerzugang bei anderen RefBoost-Kunden ist NICHT betroffen. Diese Aktion ist unumkehrbar.",
+      "confirm_body_partner": "Dies löscht Ihr Konto dauerhaft. Diese Aktion ist unumkehrbar.",
+      "confirm_name_label": "Geben Sie zur Bestätigung den Namen Ihres Unternehmens ein (z. B. {{name}}):",
+      "tenant_name_mismatch": "Der eingegebene Name stimmt nicht überein.",
+      "delete_definitive": "Endgültig löschen"
     },
     "export": {
       "title": "Meine Daten exportieren",

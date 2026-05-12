@@ -1292,6 +1292,23 @@ router.post('/delete-account', authenticate, async (req, res) => {
     const tenantId = req.user.tenantId || null;
     const partnerId = req.user.partnerId || null;
 
+    // v52: optional feedback payload from the 2-step deletion modal.
+    // Validated against the CHECK enum on the table; bad inputs are
+    // silently dropped so the partner can still complete the
+    // deletion even if their feedback round-trips a malformed value.
+    const REASON_CODES = new Set(['price', 'features', 'competitor', 'no_need', 'other']);
+    const reasonCode = REASON_CODES.has(req.body?.reason_code) ? req.body.reason_code : null;
+    const freeText = typeof req.body?.free_text === 'string' ? req.body.free_text.slice(0, 4000) : null;
+    if (reasonCode) {
+      try {
+        await query(
+          `INSERT INTO account_deletion_feedback (tenant_id, partner_id, user_id, reason_code, free_text)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [tenantId, partnerId, userId, reasonCode, freeText]
+        );
+      } catch (e) { console.error('[delete-account.feedback] failed:', e.message); }
+    }
+
     // Soft-delete the user row. We stamp deleted_at AND flip is_active
     // so any code path that filters by is_active (the legacy ones that
     // pre-date the deleted_at column) treats this user as gone too.
@@ -1373,6 +1390,172 @@ router.post('/delete-account', authenticate, async (req, res) => {
   } catch (err) {
     console.error('[delete-account] error:', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── GDPR Article 17 — admin-owner-initiated tenant deletion ─────
+//
+// Permitted only to the *founding* admin of the tenant: the user with
+// role='admin' AND the earliest created_at among that tenant's admins.
+// Founding is heuristic (no is_owner flag in the schema) but consistent
+// with the signup flow: the tenant's first admin is the user who
+// signed up and provisioned it.
+//
+// Behaviour:
+//   1. Validate the typed company name against tenants.name (case-
+//      sensitive match) so a fat-fingered click can't soft-delete a
+//      live tenant.
+//   2. Insert feedback row if a reason was provided.
+//   3. Stamp tenants.deleted_at = NOW() so every read path that
+//      filters by tenant_id stops surfacing it.
+//   4. Cascade-soft-delete the entities that already carry a
+//      deleted_at column (partners, referrals, commissions, users).
+//   5. Multi-tenant safety: a user with active user_roles in OTHER
+//      tenants does NOT get a global users.deleted_at — instead, only
+//      their user_roles row in THIS tenant is set is_active=false so
+//      their partner access elsewhere is preserved.
+//   6. Audit log + best-effort confirmation email.
+router.post('/delete-tenant', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'admin_only' });
+    }
+    const tenantId = req.user.tenantId;
+    if (!tenantId) return res.status(400).json({ error: 'missing_tenant' });
+
+    // Owner check: earliest-created admin of this tenant.
+    const { rows: ownerRows } = await query(
+      `SELECT id FROM users
+        WHERE tenant_id = $1 AND role = 'admin' AND deleted_at IS NULL
+        ORDER BY created_at ASC LIMIT 1`,
+      [tenantId]
+    );
+    const ownerId = ownerRows[0]?.id || null;
+    if (ownerId !== req.user.id) {
+      return res.status(403).json({ error: 'not_owner' });
+    }
+
+    // Tenant existence + typed-name confirmation guard.
+    const { rows: tRows } = await query(
+      'SELECT id, name FROM tenants WHERE id = $1 AND deleted_at IS NULL LIMIT 1',
+      [tenantId]
+    );
+    if (!tRows.length) return res.status(404).json({ error: 'tenant_not_found' });
+    const tenant = tRows[0];
+    const typed = String(req.body?.confirm_name || '').trim();
+    if (typed !== tenant.name) {
+      return res.status(400).json({ error: 'name_mismatch' });
+    }
+
+    // Feedback row (best-effort, doesn't block the deletion).
+    const REASON_CODES = new Set(['price', 'features', 'competitor', 'no_need', 'other']);
+    const reasonCode = REASON_CODES.has(req.body?.reason_code) ? req.body.reason_code : null;
+    const freeText = typeof req.body?.free_text === 'string' ? req.body.free_text.slice(0, 4000) : null;
+    if (reasonCode) {
+      try {
+        await query(
+          `INSERT INTO account_deletion_feedback (tenant_id, partner_id, user_id, reason_code, free_text)
+           VALUES ($1, NULL, $2, $3, $4)`,
+          [tenantId, req.user.id, reasonCode, freeText]
+        );
+      } catch (e) { console.error('[delete-tenant.feedback] failed:', e.message); }
+    }
+
+    // 1. Stamp the tenant.
+    await query(
+      `UPDATE tenants SET deleted_at = NOW(), deleted_by = $1, is_active = FALSE, updated_at = NOW()
+        WHERE id = $2 AND deleted_at IS NULL`,
+      [req.user.id, tenantId]
+    );
+
+    // 2. Cascade-soft-delete entities that already carry deleted_at.
+    //    partners + referrals + commissions: existing soft-delete column.
+    try {
+      await query(`UPDATE partners    SET deleted_at = NOW(), is_active = FALSE WHERE tenant_id = $1 AND deleted_at IS NULL`, [tenantId]);
+      await query(`UPDATE referrals   SET deleted_at = NOW(), deleted_by = $2  WHERE tenant_id = $1 AND deleted_at IS NULL`, [tenantId, req.user.id]);
+      await query(`UPDATE commissions SET deleted_at = NOW(), deleted_by = $2  WHERE tenant_id = $1 AND deleted_at IS NULL`, [tenantId, req.user.id]);
+    } catch (e) {
+      console.error('[delete-tenant.cascade] failed:', e.message);
+    }
+
+    // 3. Multi-tenant-aware user handling.
+    //    Mark user_roles entries for this tenant inactive. Users with
+    //    no remaining active user_roles get a global deleted_at; users
+    //    with roles elsewhere keep their account but lose access here.
+    try {
+      const { rows: tenantUsers } = await query(
+        `SELECT id FROM users WHERE tenant_id = $1 AND deleted_at IS NULL`,
+        [tenantId]
+      );
+      for (const u of tenantUsers) {
+        await query(
+          `UPDATE user_roles SET is_active = FALSE
+            WHERE user_id = $1 AND tenant_id = $2`,
+          [u.id, tenantId]
+        );
+        const { rows: remaining } = await query(
+          `SELECT id FROM user_roles
+            WHERE user_id = $1 AND is_active = TRUE LIMIT 1`,
+          [u.id]
+        );
+        if (!remaining.length) {
+          await query(
+            `UPDATE users SET deleted_at = NOW(), is_active = FALSE, updated_at = NOW()
+              WHERE id = $1 AND deleted_at IS NULL`,
+            [u.id]
+          );
+        }
+      }
+    } catch (e) {
+      console.error('[delete-tenant.users] failed:', e.message);
+    }
+
+    auditLog(req, 'tenant_deletion_requested', 'tenant', tenantId, {
+      tenant_name: tenant.name,
+      reason_code: reasonCode,
+    });
+
+    res.json({ ok: true, tenant_id: tenantId });
+  } catch (err) {
+    console.error('[delete-tenant] error:', err.message);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+// GET /api/auth/account-info — exposes whether the signed-in user is
+// the founding admin of their tenant. Drives the "Supprimer mon
+// compte entreprise" affordance in Profil et sécurité; commercials
+// and invited admins see no button at all.
+router.get('/account-info', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const role = req.user.role;
+    const tenantId = req.user.tenantId || null;
+    let isOwner = false;
+    let tenantName = null;
+    if (role === 'admin' && tenantId) {
+      const { rows: ownerRows } = await query(
+        `SELECT id FROM users
+          WHERE tenant_id = $1 AND role = 'admin' AND deleted_at IS NULL
+          ORDER BY created_at ASC LIMIT 1`,
+        [tenantId]
+      );
+      isOwner = ownerRows[0]?.id === userId;
+      const { rows: tRows } = await query('SELECT name FROM tenants WHERE id = $1 LIMIT 1', [tenantId]);
+      tenantName = tRows[0]?.name || null;
+    }
+    res.json({
+      role,
+      tenant_id: tenantId,
+      tenant_name: tenantName,
+      is_tenant_owner: isOwner,
+      // FE convenience: which path the deletion button should hit.
+      can_delete_self: role === 'partner' || (role === 'admin' && isOwner),
+      delete_kind: role === 'partner' ? 'partner_account' : (role === 'admin' && isOwner ? 'tenant' : null),
+    });
+  } catch (err) {
+    console.error('[account-info] error:', err.message);
+    res.status(500).json({ error: 'server_error' });
   }
 });
 

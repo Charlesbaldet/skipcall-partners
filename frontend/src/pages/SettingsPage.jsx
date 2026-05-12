@@ -90,7 +90,10 @@ export default function SettingsPage() {
       { id: 'bank', icon: Banknote, label: t('settings.tab_bank_info', 'Informations bancaires') },
       { section: t('layout.section.preferences') },
       { id: 'partner-notifications', icon: Bell, label: t('partner_notifications.tab', 'Notifications') },
-      { id: 'privacy', icon: Shield, label: t('settings.tab_privacy', 'Confidentialité') },
+      // Confidentialité tab removed for partners (item 1 of the UX
+      // lot) — its content is now a section inside "Profil et
+      // sécurité". The /settings?tab=privacy URL is rerouted to
+      // ?tab=profile in the body below so old bookmarks still land.
     ] : []),
     // Sales (commercial) gets the same notifications panel as
     // admin, scoped server-side to the per-tenant table they share
@@ -155,7 +158,10 @@ export default function SettingsPage() {
             {tab === 'notifications' && (isAdmin || isCommercial) && <NotificationsTab forCommercial={isCommercial} />}
             {tab === 'partner-notifications' && isPartner && <PartnerNotificationsTab />}
             {tab === 'bank' && isPartner && <PartnerBankInfoTab />}
-            {tab === 'privacy' && isPartner && <PartnerPrivacyTab user={user} />}
+            {/* Legacy /settings?tab=privacy URL: the Confidentialité
+                content moved into the Profile tab. Render the same
+                AccountTab so bookmarks keep working without a 404. */}
+            {tab === 'privacy' && isPartner && <AccountTab user={user} />}
             {tab === 'integrations' && isAdmin && <IntegrationsTab />}
             {tab === 'company' && isAdmin && <CompanyBillingTab />}
             {tab === 'branding' && isAdmin && <AppearanceTab />}
@@ -583,6 +589,16 @@ function AccountTab({ user }) {
       {/* MFA / 2FA section */}
       <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
         <MfaSection />
+      </div>
+
+      {/* Confidentialité — GDPR Article 17 + 20. Moved here from the
+          standalone partner "Confidentialité" tab; admin owners see
+          the same section with a tenant-deletion CTA instead of the
+          per-user one. The section itself decides via /account-info
+          whether to render anything (commercials + invited admins
+          get nothing). */}
+      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+        <PrivacySection user={user} />
       </div>
 
       {/* Language — moved out of the sidebar so the only language entry
@@ -4106,6 +4122,197 @@ function PartnerBankInfoTab() {
               <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
               </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══ CONFIDENTIALITÉ — inline in Profil et sécurité ═══
+//
+// Replaces the old standalone "Confidentialité" tab. Decides visibility
+// via /api/auth/account-info:
+//
+//   - partner            → export-data (JSON) + delete-account
+//   - admin owner        → export-data (ZIP)  + delete-tenant
+//   - admin invited / commercial / superadmin → nothing rendered
+//
+// The deletion modal is a 2-step flow: feedback radio + free text on
+// step 1, then a typed-name confirmation on step 2. Step 1 is optional
+// for partners (their tenant deletion requires a tenant-name match;
+// partners just confirm with their email like before).
+function PrivacySection({ user }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [info, setInfo] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [step, setStep] = useState(0); // 0 = closed, 1 = feedback, 2 = confirm
+  const [reasonCode, setReasonCode] = useState('');
+  const [freeText, setFreeText] = useState('');
+  const [confirmInput, setConfirmInput] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    api.getAccountInfo()
+      .then(d => setInfo(d))
+      .catch(() => setInfo({ can_delete_self: false }));
+  }, []);
+
+  if (!info) return null;
+  if (!info.can_delete_self) return null;
+
+  const isTenantOwner = info.delete_kind === 'tenant';
+  const expectedConfirm = isTenantOwner ? (info.tenant_name || '') : (user?.email || '');
+  const confirmValid = confirmInput.trim() === expectedConfirm;
+
+  const REASONS = [
+    { code: 'price',      label: t('settings.privacy.reason_price',     'Prix trop élevé') },
+    { code: 'features',   label: t('settings.privacy.reason_features',  'Manque de fonctionnalités') },
+    { code: 'competitor', label: t('settings.privacy.reason_competitor', 'Je passe à un concurrent') },
+    { code: 'no_need',    label: t('settings.privacy.reason_no_need',   "Je n'en ai plus besoin") },
+    { code: 'other',      label: t('settings.privacy.reason_other',     'Autre') },
+  ];
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      if (isTenantOwner) await api.exportAccountData();
+      else await api.exportData();
+      showToast(t('settings.export.toast_success', 'Export téléchargé'), 'success');
+    } catch (e) {
+      showToast(e.message || 'Erreur', 'error');
+    }
+    setExporting(false);
+  };
+
+  const handleDelete = async () => {
+    setErr('');
+    if (!confirmValid) {
+      setErr(isTenantOwner
+        ? t('settings.privacy.tenant_name_mismatch', 'Le nom saisi ne correspond pas.')
+        : t('settings.delete_account.confirm_email_mismatch', "L'email saisi ne correspond pas à votre compte."));
+      return;
+    }
+    setDeleting(true);
+    try {
+      const body = {
+        reason_code: reasonCode || undefined,
+        free_text: freeText || undefined,
+      };
+      if (isTenantOwner) {
+        body.confirm_name = confirmInput.trim();
+        await api.deleteTenant(body);
+      } else {
+        await api.deleteAccount(body);
+      }
+      showToast(t('settings.delete_account.toast_success', 'Demande de suppression enregistrée.'), 'success');
+      api.logout();
+      navigate('/', { replace: true });
+      setTimeout(() => window.location.reload(), 100);
+    } catch (e) {
+      setErr(e.message || 'Erreur');
+      setDeleting(false);
+    }
+  };
+
+  const deleteLabel = isTenantOwner
+    ? t('settings.privacy.delete_tenant_cta', 'Supprimer mon compte entreprise')
+    : t('settings.privacy.delete_account_cta', 'Supprimer mon compte');
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <Shield size={16} color="#6366f1" />
+        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+          {t('settings.privacy.title', 'Confidentialité')}
+        </h4>
+      </div>
+      <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 16px', lineHeight: 1.55 }}>
+        {t('settings.privacy.subtitle', 'Vos droits RGPD : exportez vos données ou supprimez votre compte à tout moment.')}
+      </p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button onClick={handleExport} disabled={exporting}
+          style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, opacity: exporting ? 0.6 : 1 }}>
+          <Download size={14} /> {exporting ? t('common.loading', 'Chargement…') : t('settings.privacy.export_cta', 'Exporter mes données')}
+        </button>
+        <button onClick={() => { setStep(1); setReasonCode(''); setFreeText(''); setConfirmInput(''); setErr(''); }}
+          style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #fecaca', background: '#fff', color: '#dc2626', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Trash2 size={14} /> {deleteLabel}
+        </button>
+      </div>
+
+      {step > 0 && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={() => !deleting && setStep(0)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 520, maxWidth: '100%', padding: 28, boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+            {step === 1 && (
+              <>
+                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+                  {t('settings.privacy.feedback_title', 'Nous sommes désolés de vous voir partir')}
+                </h3>
+                <p style={{ margin: '0 0 18px', color: '#475569', fontSize: 14 }}>
+                  {t('settings.privacy.feedback_body', 'Pouvez-vous nous dire pourquoi ? Cela nous aide à améliorer RefBoost.')}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                  {REASONS.map(r => (
+                    <label key={r.code} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid ' + (reasonCode === r.code ? '#0f172a' : '#e2e8f0'), background: reasonCode === r.code ? '#f8fafc' : '#fff', cursor: 'pointer' }}>
+                      <input type="radio" name="delete_reason" checked={reasonCode === r.code} onChange={() => setReasonCode(r.code)} />
+                      <span style={{ fontSize: 14, color: '#0f172a' }}>{r.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 600, marginBottom: 6 }}>
+                  {t('settings.privacy.feedback_free_label', 'Commentaire (optionnel)')}
+                </label>
+                <textarea rows={3} value={freeText} onChange={e => setFreeText(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+                  <button onClick={() => setStep(0)} style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {t('common.cancel', 'Annuler')}
+                  </button>
+                  <button onClick={() => setStep(2)}
+                    style={{ padding: '9px 16px', borderRadius: 10, background: '#0f172a', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {t('settings.privacy.continue', 'Continuer')}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+                  {t('settings.privacy.confirm_title', 'Confirmer la suppression définitive')}
+                </h3>
+                <p style={{ margin: '0 0 16px', color: '#475569', fontSize: 14, lineHeight: 1.5 }}>
+                  {isTenantOwner
+                    ? t('settings.privacy.confirm_body_tenant', 'Cette action supprimera définitivement votre compte entreprise, vos partenaires, vos referrals, vos commissions, et toutes les données associées. Vos accès partenaires chez d\'autres clients RefBoost ne seront PAS affectés. Cette opération est irréversible.')
+                    : t('settings.privacy.confirm_body_partner', 'Cette action supprimera définitivement votre compte. Cette opération est irréversible.')
+                  }
+                </p>
+                <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>
+                  {isTenantOwner
+                    ? t('settings.privacy.confirm_name_label', { name: info.tenant_name, defaultValue: 'Pour confirmer, tapez le nom de votre entreprise (ex : {{name}}) :' })
+                    : t('settings.delete_account.confirm_email_label', 'Confirmez en saisissant votre email')
+                  }
+                </label>
+                <input type="text" value={confirmInput} onChange={e => setConfirmInput(e.target.value)}
+                  placeholder={expectedConfirm}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid ' + (err ? '#dc2626' : '#e2e8f0'), fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                {err && <div style={{ color: '#dc2626', fontSize: 12, marginTop: 6 }}>{err}</div>}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+                  <button onClick={() => setStep(0)} disabled={deleting}
+                    style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {t('common.cancel', 'Annuler')}
+                  </button>
+                  <button onClick={handleDelete} disabled={deleting || !confirmValid}
+                    style={{ padding: '9px 16px', borderRadius: 10, background: confirmValid ? '#dc2626' : '#e2e8f0', color: confirmValid ? '#fff' : '#94a3b8', border: 'none', fontWeight: 600, fontSize: 13, cursor: confirmValid && !deleting ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+                    {deleting ? t('common.loading', 'Chargement…') : t('settings.privacy.delete_definitive', 'Supprimer définitivement')}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

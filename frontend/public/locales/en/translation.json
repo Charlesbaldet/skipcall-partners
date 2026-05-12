@@ -1700,7 +1700,26 @@
     "configure": "Configure",
     "tab_privacy": "Privacy",
     "privacy": {
-      "subtitle": "Your GDPR rights: export your data or delete your account at any time."
+      "title": "Privacy",
+      "subtitle": "Your GDPR rights: export your data or delete your account at any time.",
+      "export_cta": "Export my data",
+      "delete_account_cta": "Delete my account",
+      "delete_tenant_cta": "Delete my company account",
+      "feedback_title": "Sorry to see you go",
+      "feedback_body": "Could you tell us why? It helps us improve RefBoost.",
+      "feedback_free_label": "Comment (optional)",
+      "reason_price": "Price too high",
+      "reason_features": "Missing features",
+      "reason_competitor": "Switching to a competitor",
+      "reason_no_need": "No longer needed",
+      "reason_other": "Other",
+      "continue": "Continue",
+      "confirm_title": "Confirm permanent deletion",
+      "confirm_body_tenant": "This will permanently delete your company account, partners, referrals, commissions, and all associated data. Your partner access at other RefBoost clients will NOT be affected. This action is irreversible.",
+      "confirm_body_partner": "This will permanently delete your account. This action is irreversible.",
+      "confirm_name_label": "To confirm, type your company name (e.g. {{name}}):",
+      "tenant_name_mismatch": "The name you entered does not match.",
+      "delete_definitive": "Delete permanently"
     },
     "export": {
       "title": "Export my data",
