@@ -1,0 +1,502 @@
+// Partner-registration forms — étape 1B/6.
+//
+// CRUD over the per-tenant form, its fields, and the per-partner share
+// tokens. The builder UI (étape 2) drives every endpoint here; the
+// public form, embed, and funnel instrumentation are étapes 3/4/5/6
+// and don't live in this file.
+//
+// V1 invariant: one active form per tenant. Enforced both at the DB
+// level (partial UNIQUE index on forms(tenant_id) WHERE deleted_at IS
+// NULL, see migrate.js v47) and here in the route layer with a 409.
+//
+// Authorisation: admin or superadmin in the tenant. Commercials don't
+// need to touch the form schema, and partners certainly don't.
+//
+// Cross-tenant isolation: every query that touches a form row also
+// checks tenant_id = req.tenantId. The RLS policies from v47b are
+// belt-and-braces — if RLS_ENABLED is unset on Railway, these guards
+// are the only line of defence.
+const express = require('express');
+const crypto = require('crypto');
+const { body, validationResult } = require('express-validator');
+const { query } = require('../db');
+const { authenticate, tenantScope, authorize } = require('../middleware/auth');
+
+const router = express.Router();
+
+router.use(authenticate);
+router.use(tenantScope);
+router.use(authorize('admin', 'superadmin'));
+
+const FIELD_TYPES = [
+  'text_short', 'text_long', 'email', 'phone', 'dropdown',
+  'multi_select', 'radio', 'date', 'number', 'appointment',
+];
+
+const LEAD_HANDLING_VALUES = ['partner_managed', 'client_prospect'];
+
+// Builder convenience: types that surface a list of choices in the
+// UI. We require options to be a non-empty array of strings for these
+// so the rendered form is actually usable.
+const TYPES_WITH_OPTIONS = new Set(['dropdown', 'multi_select', 'radio']);
+
+function badRequest(res, error) {
+  return res.status(400).json({ error });
+}
+
+function validateFieldPayload(body, { partial = false } = {}) {
+  const errs = [];
+  if (!partial || body.type !== undefined) {
+    if (!FIELD_TYPES.includes(body.type)) errs.push('type invalide');
+  }
+  if (!partial || body.label !== undefined) {
+    if (typeof body.label !== 'string' || !body.label.trim()) errs.push('label requis');
+    else if (body.label.length > 500) errs.push('label trop long (max 500)');
+  }
+  if (!partial || body.step !== undefined) {
+    if (![1, 2, 3].includes(Number(body.step))) errs.push('step doit être 1, 2 ou 3');
+  }
+  if (body.placeholder !== undefined && body.placeholder !== null) {
+    if (typeof body.placeholder !== 'string') errs.push('placeholder doit être une string');
+    else if (body.placeholder.length > 500) errs.push('placeholder trop long (max 500)');
+  }
+  if (body.required !== undefined && typeof body.required !== 'boolean') {
+    errs.push('required doit être un booléen');
+  }
+  if (body.order_index !== undefined && !Number.isInteger(body.order_index)) {
+    errs.push('order_index doit être un entier');
+  }
+  // Type-specific shape checks. We only enforce on the final type
+  // (i.e. after applying the PATCH) so the caller may need to handle
+  // re-validation themselves when type changes.
+  const effectiveType = body.type;
+  if (TYPES_WITH_OPTIONS.has(effectiveType)) {
+    if (!Array.isArray(body.options) || body.options.length === 0) {
+      errs.push('options requis (tableau non vide) pour ' + effectiveType);
+    } else if (!body.options.every(o => typeof o === 'string' && o.trim())) {
+      errs.push('chaque option doit être une string non vide');
+    }
+  }
+  if (effectiveType === 'appointment') {
+    if (!body.config || typeof body.config !== 'object') {
+      errs.push('config requis pour appointment');
+    } else if (typeof body.config.appointment_url !== 'string' || !body.config.appointment_url.trim()) {
+      errs.push('config.appointment_url requis pour appointment');
+    } else {
+      try { new URL(body.config.appointment_url); }
+      catch { errs.push('config.appointment_url doit être une URL valide'); }
+    }
+  }
+  return errs;
+}
+
+// ─── Form CRUD ───────────────────────────────────────────────────
+
+// GET /api/forms — return the tenant's single active form, or null.
+router.get('/', async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT * FROM forms
+        WHERE tenant_id = $1 AND deleted_at IS NULL
+        LIMIT 1`,
+      [req.tenantId]
+    );
+    res.json({ form: rows[0] || null });
+  } catch (err) {
+    console.error('[forms.GET] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/forms — create the tenant's form. Refuses if one already
+// exists (active). The partial UNIQUE index is the DB-level guard;
+// the explicit SELECT here gives a friendlier 409 with the existing
+// form id so the FE can redirect to the edit screen.
+router.post('/', [
+  body('title').trim().notEmpty().isLength({ max: 255 }),
+  body('description').optional({ nullable: true }).isString(),
+  body('thank_you_message').optional({ nullable: true }).isString(),
+  body('default_lead_handling').optional().isIn(LEAD_HANDLING_VALUES),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return badRequest(res, errors.array().map(e => e.msg).join(', '));
+  try {
+    const { rows: existing } = await query(
+      `SELECT id FROM forms WHERE tenant_id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [req.tenantId]
+    );
+    if (existing.length) {
+      return res.status(409).json({ error: 'Un formulaire existe déjà pour ce tenant', form_id: existing[0].id });
+    }
+    const { title, description, thank_you_message } = req.body;
+    const leadHandling = req.body.default_lead_handling || 'partner_managed';
+    const { rows } = await query(
+      `INSERT INTO forms (tenant_id, title, description, thank_you_message, default_lead_handling)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [req.tenantId, title.trim(), description || null, thank_you_message || null, leadHandling]
+    );
+    res.status(201).json({ form: rows[0] });
+  } catch (err) {
+    // 23505 = unique violation. Race-condition fallback for the
+    // SELECT/INSERT window above.
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Un formulaire existe déjà pour ce tenant' });
+    }
+    console.error('[forms.POST] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Loads the form by id and asserts tenant ownership in one go. Used
+// by every nested route that needs to confirm the URL :id belongs to
+// the caller's tenant before doing anything else.
+async function loadOwnedForm(tenantId, formId) {
+  const { rows } = await query(
+    `SELECT * FROM forms WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL LIMIT 1`,
+    [formId, tenantId]
+  );
+  return rows[0] || null;
+}
+
+// PATCH /api/forms/:id — partial update of the form metadata.
+router.patch('/:id', [
+  body('title').optional().trim().isLength({ min: 1, max: 255 }),
+  body('description').optional({ nullable: true }).isString(),
+  body('thank_you_message').optional({ nullable: true }).isString(),
+  body('default_lead_handling').optional().isIn(LEAD_HANDLING_VALUES),
+  body('is_published').optional().isBoolean(),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return badRequest(res, errors.array().map(e => e.msg).join(', '));
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const sets = [];
+    const params = [];
+    let i = 1;
+    for (const k of ['title', 'description', 'thank_you_message', 'default_lead_handling', 'is_published']) {
+      if (req.body[k] !== undefined) {
+        sets.push(`${k} = $${i++}`);
+        params.push(k === 'title' ? String(req.body[k]).trim() : req.body[k]);
+      }
+    }
+    if (!sets.length) return res.json({ form });
+    sets.push(`updated_at = NOW()`);
+    params.push(req.params.id, req.tenantId);
+    const { rows } = await query(
+      `UPDATE forms SET ${sets.join(', ')} WHERE id = $${i++} AND tenant_id = $${i++} RETURNING *`,
+      params
+    );
+    res.json({ form: rows[0] });
+  } catch (err) {
+    console.error('[forms.PATCH] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// DELETE /api/forms/:id — soft delete. The partial UNIQUE index uses
+// `deleted_at IS NULL`, so soft-deleting frees the slot for a new
+// form. Existing referrals.form_id rows are kept intact (FK with ON
+// DELETE SET NULL would only fire on a hard delete).
+router.delete('/:id', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    await query(
+      `UPDATE forms SET deleted_at = NOW(), is_published = FALSE, updated_at = NOW()
+        WHERE id = $1 AND tenant_id = $2`,
+      [req.params.id, req.tenantId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[forms.DELETE] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Form fields ─────────────────────────────────────────────────
+
+// GET /api/forms/:id/fields — ordered by step then order_index.
+router.get('/:id/fields', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const { rows } = await query(
+      `SELECT * FROM form_fields
+        WHERE form_id = $1 AND tenant_id = $2
+        ORDER BY step ASC, order_index ASC, created_at ASC`,
+      [req.params.id, req.tenantId]
+    );
+    res.json({ fields: rows });
+  } catch (err) {
+    console.error('[forms.fields.GET] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/:id/fields', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const errs = validateFieldPayload(req.body);
+    if (errs.length) return badRequest(res, errs.join(', '));
+
+    const { type, label, placeholder = null, required = false, options = null, config = null } = req.body;
+    const step = Number(req.body.step);
+    // Default order_index to the next slot in the target step so the
+    // builder doesn't have to compute it. The FE may still override.
+    let orderIndex = req.body.order_index;
+    if (orderIndex === undefined) {
+      const { rows: maxRows } = await query(
+        `SELECT COALESCE(MAX(order_index), -1) + 1 AS next FROM form_fields
+          WHERE form_id = $1 AND step = $2`,
+        [req.params.id, step]
+      );
+      orderIndex = maxRows[0].next;
+    }
+    const { rows } = await query(
+      `INSERT INTO form_fields
+        (form_id, tenant_id, step, order_index, type, label, placeholder, required, options, config)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [
+        req.params.id, req.tenantId, step, orderIndex, type,
+        label.trim(), placeholder, required,
+        options ? JSON.stringify(options) : null,
+        config ? JSON.stringify(config) : null,
+      ]
+    );
+    res.status(201).json({ field: rows[0] });
+  } catch (err) {
+    console.error('[forms.fields.POST] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.patch('/:id/fields/:fieldId', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const { rows: existing } = await query(
+      `SELECT * FROM form_fields WHERE id = $1 AND form_id = $2 AND tenant_id = $3 LIMIT 1`,
+      [req.params.fieldId, req.params.id, req.tenantId]
+    );
+    if (!existing.length) return res.status(404).json({ error: 'Champ introuvable' });
+
+    // Merge the incoming patch onto the existing row so the type/option
+    // coherence check sees the post-update state. Required because a
+    // PATCH that only sets options shouldn't be rejected for "type is
+    // not in enum".
+    const merged = {
+      type: req.body.type !== undefined ? req.body.type : existing[0].type,
+      label: req.body.label !== undefined ? req.body.label : existing[0].label,
+      step: req.body.step !== undefined ? req.body.step : existing[0].step,
+      placeholder: req.body.placeholder,
+      required: req.body.required,
+      order_index: req.body.order_index,
+      options: req.body.options !== undefined ? req.body.options : existing[0].options,
+      config: req.body.config !== undefined ? req.body.config : existing[0].config,
+    };
+    const errs = validateFieldPayload(merged, { partial: false });
+    if (errs.length) return badRequest(res, errs.join(', '));
+
+    const sets = [];
+    const params = [];
+    let i = 1;
+    const stringFields = ['type', 'label', 'placeholder'];
+    for (const k of stringFields) {
+      if (req.body[k] !== undefined) {
+        sets.push(`${k} = $${i++}`);
+        params.push(k === 'label' ? String(req.body[k]).trim() : req.body[k]);
+      }
+    }
+    if (req.body.step !== undefined) {
+      sets.push(`step = $${i++}`);
+      params.push(Number(req.body.step));
+    }
+    if (req.body.order_index !== undefined) {
+      sets.push(`order_index = $${i++}`);
+      params.push(req.body.order_index);
+    }
+    if (req.body.required !== undefined) {
+      sets.push(`required = $${i++}`);
+      params.push(!!req.body.required);
+    }
+    if (req.body.options !== undefined) {
+      sets.push(`options = $${i++}`);
+      params.push(req.body.options ? JSON.stringify(req.body.options) : null);
+    }
+    if (req.body.config !== undefined) {
+      sets.push(`config = $${i++}`);
+      params.push(req.body.config ? JSON.stringify(req.body.config) : null);
+    }
+    if (!sets.length) return res.json({ field: existing[0] });
+    params.push(req.params.fieldId, req.params.id, req.tenantId);
+    const { rows } = await query(
+      `UPDATE form_fields SET ${sets.join(', ')}
+        WHERE id = $${i++} AND form_id = $${i++} AND tenant_id = $${i++}
+        RETURNING *`,
+      params
+    );
+    res.json({ field: rows[0] });
+  } catch (err) {
+    console.error('[forms.fields.PATCH] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.delete('/:id/fields/:fieldId', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const { rowCount } = await query(
+      `DELETE FROM form_fields WHERE id = $1 AND form_id = $2 AND tenant_id = $3`,
+      [req.params.fieldId, req.params.id, req.tenantId]
+    );
+    if (!rowCount) return res.status(404).json({ error: 'Champ introuvable' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[forms.fields.DELETE] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/forms/:id/fields/reorder — bulk update of order_index +
+// step in a single transaction. Body: { items: [{ id, step,
+// order_index }, ...] }. Every id must belong to the form & tenant.
+router.post('/:id/fields/reorder', async (req, res) => {
+  const { items } = req.body || {};
+  if (!Array.isArray(items) || !items.length) return badRequest(res, 'items requis (tableau non vide)');
+  for (const it of items) {
+    if (!it || typeof it !== 'object') return badRequest(res, 'item invalide');
+    if (!it.id || typeof it.id !== 'string') return badRequest(res, 'item.id requis');
+    if (![1, 2, 3].includes(Number(it.step))) return badRequest(res, 'item.step doit être 1, 2 ou 3');
+    if (!Number.isInteger(it.order_index)) return badRequest(res, 'item.order_index doit être un entier');
+  }
+  const { pool } = require('../db');
+  const client = await pool.connect();
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) {
+      client.release();
+      return res.status(404).json({ error: 'Formulaire introuvable' });
+    }
+    await client.query('BEGIN');
+    for (const it of items) {
+      const r = await client.query(
+        `UPDATE form_fields SET step = $1, order_index = $2
+          WHERE id = $3 AND form_id = $4 AND tenant_id = $5`,
+        [Number(it.step), it.order_index, it.id, req.params.id, req.tenantId]
+      );
+      if (!r.rowCount) {
+        await client.query('ROLLBACK');
+        client.release();
+        return res.status(404).json({ error: 'Champ introuvable: ' + it.id });
+      }
+    }
+    await client.query('COMMIT');
+    res.json({ ok: true, count: items.length });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error('[forms.fields.reorder] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    try { client.release(); } catch {}
+  }
+});
+
+// ─── Partner tokens ──────────────────────────────────────────────
+
+// 'prt_' prefix (per Charles' brief) + 32 hex chars = 36 chars, well
+// under the VARCHAR(64) ceiling. crypto.randomBytes(16) gives 128 bits
+// of entropy — overkill for a public-but-not-secret share token,
+// matches what we use elsewhere (api_keys / partner referral codes).
+function generateToken() {
+  return 'prt_' + crypto.randomBytes(16).toString('hex');
+}
+
+router.get('/:id/partner-tokens', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const { rows } = await query(
+      `SELECT fpt.id, fpt.form_id, fpt.partner_id, fpt.token, fpt.created_at,
+              p.name AS partner_name, p.email AS partner_email
+         FROM form_partner_tokens fpt
+         JOIN partners p ON p.id = fpt.partner_id
+        WHERE fpt.form_id = $1 AND fpt.tenant_id = $2
+        ORDER BY fpt.created_at DESC`,
+      [req.params.id, req.tenantId]
+    );
+    res.json({ tokens: rows });
+  } catch (err) {
+    console.error('[forms.tokens.GET] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/:id/partner-tokens', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const { partner_id } = req.body || {};
+    if (!partner_id || typeof partner_id !== 'string') return badRequest(res, 'partner_id requis');
+
+    // Verify the partner belongs to the caller's tenant. A partner_id
+    // from another tenant would otherwise be silently wired up — small
+    // window, but plug it explicitly.
+    const { rows: pRows } = await query(
+      `SELECT id FROM partners WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL LIMIT 1`,
+      [partner_id, req.tenantId]
+    );
+    if (!pRows.length) return res.status(404).json({ error: 'Partenaire introuvable' });
+
+    // Idempotency: if a token already exists for (form_id, partner_id)
+    // we surface it instead of creating a duplicate. The UNIQUE
+    // constraint would reject it anyway, but a 200 here gives the FE
+    // a smoother "copy link" flow.
+    const { rows: existing } = await query(
+      `SELECT id, token FROM form_partner_tokens
+        WHERE form_id = $1 AND partner_id = $2 LIMIT 1`,
+      [req.params.id, partner_id]
+    );
+    if (existing.length) {
+      return res.status(409).json({ error: 'Token déjà existant pour ce partenaire', token: existing[0] });
+    }
+
+    const token = generateToken();
+    const { rows } = await query(
+      `INSERT INTO form_partner_tokens (form_id, tenant_id, partner_id, token)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [req.params.id, req.tenantId, partner_id, token]
+    );
+    res.status(201).json({ token: rows[0] });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Token déjà existant' });
+    }
+    console.error('[forms.tokens.POST] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.delete('/:id/partner-tokens/:tokenId', async (req, res) => {
+  try {
+    const form = await loadOwnedForm(req.tenantId, req.params.id);
+    if (!form) return res.status(404).json({ error: 'Formulaire introuvable' });
+    const { rowCount } = await query(
+      `DELETE FROM form_partner_tokens
+        WHERE id = $1 AND form_id = $2 AND tenant_id = $3`,
+      [req.params.tokenId, req.params.id, req.tenantId]
+    );
+    if (!rowCount) return res.status(404).json({ error: 'Token introuvable' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[forms.tokens.DELETE] failed:', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+module.exports = router;
