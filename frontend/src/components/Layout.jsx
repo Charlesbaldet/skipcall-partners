@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2, ListChecks, ClipboardList, Link2, User } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, ChevronsUpDown, Check, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2, ListChecks, ClipboardList, Link2, User } from 'lucide-react';
 import OnboardingChecklist from './OnboardingChecklist.jsx';
 
 const C = {
@@ -449,13 +449,12 @@ export default function Layout({ children }) {
               </>
             )}
             {hasMultipleSpaces && (
-              <ChevronDown
+              <ChevronsUpDown
                 size={14}
                 color="#94a3b8"
                 style={{
                   flexShrink: 0,
                   transition: 'transform .15s ease',
-                  transform: spaceSwitcherOpen ? 'rotate(180deg)' : 'rotate(0)',
                 }}
               />
             )}
@@ -483,95 +482,123 @@ export default function Layout({ children }) {
             </div>
           )}
 
-          {/* ─── Space switcher dropdown (spaces only — no external links) ───
-               Width: anchored at left:12 with min/maxWidth so the dropdown can
-               extend past the (narrow) sidebar to fit full tenant names without
-               truncation. Each row prefers tenant_name over partner_name so a
-               user who is a partner-of-X under their own first name still sees
-               "X" (the tenant), not "Charles" (the partner row). The role pill
-               communicates the access type. */}
-          {spaceSwitcherOpen && hasMultipleSpaces && (
-            <div
-              role="menu"
-              style={{
-                position: 'absolute', top: '100%', left: 12,
-                marginTop: 4, zIndex: 60,
-                minWidth: 240, maxWidth: 320, width: 'max-content',
-                background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 10, padding: 6,
-                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-                maxHeight: '60vh', overflowY: 'auto',
-              }}
-            >
-              {spaces.map((space) => {
-                const isActive = currentSpace
-                  && currentSpace.tenant_id === space.tenant_id
-                  && currentSpace.role === space.role
-                  && (currentSpace.partner_id || null) === (space.partner_id || null);
-                // Always prefer tenant_name (the company / programme) over
-                // partner_name (which is the partners row's `name` field —
-                // often a personal first-name when the partner is a single
-                // contractor signed up under their own name). The role pill
-                // below handles the admin-vs-partner distinction.
-                const label = space.tenant_name
-                  || space.partner_name
-                  || t('layout_extra.space_space');
-                const initials = (label || '??').slice(0, 2).toUpperCase();
-                const roleLabel = space.role === 'partner'
-                  ? t('layout_extra.space_partner')
-                  : (t('layout_extra.space_admin') || space.role);
-                return (
-                  <button
-                    key={`sw-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
-                    onClick={() => {
-                      setSpaceSwitcherOpen(false);
-                      if (!isActive) switchSpace(space).then(() => window.location.reload());
-                    }}
-                    style={{
-                      width: '100%', padding: '10px 12px',
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      borderRadius: 8, border: 'none',
-                      background: isActive ? `linear-gradient(135deg, ${C.p}33, ${C.pl}26)` : 'transparent',
-                      color: '#fff', cursor: isActive ? 'default' : 'pointer',
-                      textAlign: 'left', marginBottom: 2,
-                    }}
-                  >
-                    {space.tenant_logo_url ? (
-                      <img
-                        src={space.tenant_logo_url}
-                        alt={label}
-                        style={{
-                          width: 28, height: 28, flexShrink: 0,
-                          borderRadius: 8, objectFit: 'contain',
-                          background: '#fff', padding: 2,
-                        }}
-                        onError={e => { e.target.style.display = 'none'; }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                        background: space.role === 'partner'
-                          ? `linear-gradient(135deg, ${C.a}, ${C.al})`
-                          : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 800, color: '#fff',
-                      }}>{initials}</div>
-                    )}
-                    <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-                    </div>
-                    <span style={{
-                      fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
-                      textTransform: 'uppercase', letterSpacing: 0.4,
-                      background: space.role === 'partner' ? `${C.a}22` : `${C.p}22`,
-                      color: space.role === 'partner' ? C.al : C.pl,
-                    }}>{roleLabel}</span>
-                    {isActive && <span style={{ color: '#10b981', fontSize: 12 }}></span>}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {/* ─── Space switcher panel — white, split into two sections:
+               "Mes entreprises" (admin/commercial roles) and "Mes
+               partenariats" (partner role). Each item shows the tenant
+               avatar + name + a coloured role badge. Active space gets
+               a light green wash + check. Clicking another space switches
+               + reloads to the role-appropriate dashboard. Sections with
+               no items are hidden so the panel doesn't show empty headers. */}
+          {spaceSwitcherOpen && hasMultipleSpaces && (() => {
+            const adminSpaces = spaces.filter(s => s.role !== 'partner');
+            const partnerSpaces = spaces.filter(s => s.role === 'partner');
+            const renderSpaceItem = (space) => {
+              const isActive = currentSpace
+                && currentSpace.tenant_id === space.tenant_id
+                && currentSpace.role === space.role
+                && (currentSpace.partner_id || null) === (space.partner_id || null);
+              const label = space.tenant_name
+                || space.partner_name
+                || t('layout_extra.space_space');
+              const initials = (label || '??').slice(0, 2).toUpperCase();
+              const isPartnerRow = space.role === 'partner';
+              const badgeBg = isPartnerRow ? 'rgba(96,165,250,0.15)' : 'rgba(34,197,94,0.15)';
+              const badgeFg = isPartnerRow ? '#2563eb' : '#15803d';
+              const badgeLabel = isPartnerRow
+                ? t('layout_extra.space_partner')
+                : (t('layout_extra.space_admin') || space.role);
+              return (
+                <button
+                  key={`sw-${space.tenant_id}-${space.role}-${space.partner_id || 'none'}`}
+                  onClick={() => {
+                    setSpaceSwitcherOpen(false);
+                    if (isActive) return;
+                    switchSpace(space).then(() => {
+                      // Redirect to the role-appropriate landing page —
+                      // an admin lands on /dashboard, a partner on
+                      // /partner/dashboard. window.location.assign so the
+                      // app re-bootstraps with the new auth state.
+                      const target = isPartnerRow ? '/partner/dashboard' : '/dashboard';
+                      window.location.assign(target);
+                    });
+                  }}
+                  style={{
+                    width: '100%', padding: '6px 8px',
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    borderRadius: 4, border: 'none',
+                    background: isActive ? '#f0fdf4' : 'transparent',
+                    color: '#0f172a', cursor: isActive ? 'default' : 'pointer',
+                    textAlign: 'left', fontFamily: 'inherit',
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  {space.tenant_logo_url ? (
+                    <img
+                      src={space.tenant_logo_url}
+                      alt={label}
+                      style={{
+                        width: 22, height: 22, flexShrink: 0,
+                        borderRadius: 6, objectFit: 'contain',
+                        background: '#fff', padding: 1,
+                        border: '1px solid #f1f5f9',
+                      }}
+                      onError={e => { e.target.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                      background: isPartnerRow
+                        ? `linear-gradient(135deg, ${C.a}, ${C.al})`
+                        : `linear-gradient(135deg, ${C.p}, ${C.pl})`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 9, fontWeight: 700, color: '#fff',
+                    }}>{initials}</div>
+                  )}
+                  <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                  </div>
+                  <span style={{
+                    fontSize: 9, fontWeight: 500, padding: '1px 6px', borderRadius: 999,
+                    background: badgeBg, color: badgeFg, flexShrink: 0,
+                  }}>{badgeLabel}</span>
+                  {isActive && <Check size={12} color="#15803d" style={{ flexShrink: 0 }} />}
+                </button>
+              );
+            };
+            const sectionHeader = (label) => (
+              <div style={{
+                padding: '8px 8px 4px', fontSize: 10, fontWeight: 500,
+                color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5,
+              }}>{label}</div>
+            );
+            return (
+              <div
+                role="menu"
+                style={{
+                  position: 'absolute', top: '100%', left: 12, right: 12,
+                  marginTop: 6, zIndex: 60,
+                  background: '#fff', border: '1px solid #e2e8f0',
+                  borderRadius: 8, padding: 6,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                  maxHeight: '60vh', overflowY: 'auto',
+                }}
+              >
+                {adminSpaces.length > 0 && (
+                  <>
+                    {sectionHeader(t('layout_extra.my_companies', 'Mes entreprises'))}
+                    {adminSpaces.map(renderSpaceItem)}
+                  </>
+                )}
+                {partnerSpaces.length > 0 && (
+                  <>
+                    {sectionHeader(t('layout_extra.my_partnerships', 'Mes partenariats'))}
+                    {partnerSpaces.map(renderSpaceItem)}
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* ─── Main nav (sections + items) ─── */}

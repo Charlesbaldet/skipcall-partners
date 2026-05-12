@@ -2129,7 +2129,9 @@
     "close": "Cerrar",
     "space_admin": "Admin",
     "space_partner_long": "Espacio de socio",
-    "space_admin_long": "Espacio de administrador"
+    "space_admin_long": "Espacio de administrador",
+    "my_companies": "Mis empresas",
+    "my_partnerships": "Mis colaboraciones"
   },
   "news": {
     "title": "Noticias y novedades",

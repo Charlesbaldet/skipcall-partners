@@ -2129,7 +2129,9 @@
     "close": "Sluiten",
     "space_admin": "Admin",
     "space_partner_long": "Partnerruimte",
-    "space_admin_long": "Beheerdersruimte"
+    "space_admin_long": "Beheerdersruimte",
+    "my_companies": "Mijn bedrijven",
+    "my_partnerships": "Mijn partnerschappen"
   },
   "news": {
     "title": "Nieuws & updates",
