@@ -614,19 +614,24 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
       {leaderboard.length > 3 && (
       <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+          {/* Per-column alignment: # and level are centred (badge / rank
+              symbol), partner left (textual), numeric columns right
+              with tabular-nums so digit widths stay aligned row-to-row.
+              Header alignment matches the cell alignment exactly so the
+              eye doesn't have to jump. */}
           <thead>
             <tr style={{ background: '#f8fafc' }}>
               {[
-                t('dashboard.tbl_rank'),
-                t('dashboard.tbl_partner'),
-                t('dashboard.tbl_level'),
-                t('dashboard.tbl_won'),
-                `${rLabel} ${t('dashboard.tbl_generated')}`,
-                t('dashboard.tbl_commissions'),
-                t('dashboard.tbl_conversion'),
-                t('dashboard.tbl_progression'),
+                { label: t('dashboard.tbl_rank'),                                  align: 'center' },
+                { label: t('dashboard.tbl_partner'),                               align: 'left'   },
+                { label: t('dashboard.tbl_level'),                                 align: 'center' },
+                { label: t('dashboard.tbl_won'),                                   align: 'right'  },
+                { label: `${rLabel} ${t('dashboard.tbl_generated')}`,              align: 'right'  },
+                { label: t('dashboard.tbl_commissions'),                           align: 'right'  },
+                { label: t('dashboard.tbl_conversion'),                            align: 'right'  },
+                { label: t('dashboard.tbl_progression'),                           align: 'right'  },
               ].map((h, i) => (
-                <th key={i} style={{ padding: '13px 14px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                <th key={i} style={{ padding: '13px 14px', textAlign: h.align, fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h.label}</th>
               ))}
             </tr>
           </thead>
@@ -639,34 +644,34 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
               const lc = LEVEL_COLORS[p.level] || LEVEL_COLORS.Bronze;
               return (
                 <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  <td style={{ padding: '13px 14px', fontWeight: 800, color: p.rank <= 3 ? '#f59e0b' : '#94a3b8', fontSize: 16 }}>
+                  <td style={{ padding: '13px 14px', fontWeight: 800, color: p.rank <= 3 ? '#f59e0b' : '#94a3b8', fontSize: 16, textAlign: 'center' }}>
                     {p.rank <= 3 ? ['', '', ''][p.rank - 1] : p.rank}
                   </td>
-                  <td style={{ padding: '13px 14px' }}>
+                  <td style={{ padding: '13px 14px', textAlign: 'left' }}>
                     <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div>
                     <div style={{ color: '#94a3b8', fontSize: 12 }}>{p.contact_name}</div>
                   </td>
-                  <td style={{ padding: '13px 14px' }}>
-                    <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: lc.bg, color: lc.color, border: `1px solid ${lc.border}` }}>
+                  <td style={{ padding: '13px 14px', textAlign: 'center' }}>
+                    <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: lc.bg, color: lc.color, border: `1px solid ${lc.border}`, display: 'inline-block' }}>
                       {p.level_icon} {p.level}
                     </span>
                   </td>
-                  <td style={{ padding: '13px 14px', fontWeight: 700, color: '#0f172a', fontSize: 16 }}>{p.won_deals}</td>
-                  <td style={{ padding: '13px 14px', fontWeight: 600 }}>{fmt(p.total_revenue)}</td>
-                  <td style={{ padding: '13px 14px', fontWeight: 600, color: '#16a34a' }}>{fmt(p.total_commissions)}</td>
-                  <td style={{ padding: '13px 14px' }}>
-                    <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+                  <td style={{ padding: '13px 14px', fontWeight: 700, color: '#0f172a', fontSize: 16, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{p.won_deals}</td>
+                  <td style={{ padding: '13px 14px', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.total_revenue)}</td>
+                  <td style={{ padding: '13px 14px', fontWeight: 600, color: '#16a34a', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.total_commissions)}</td>
+                  <td style={{ padding: '13px 14px', textAlign: 'right' }}>
+                    <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums', display: 'inline-block',
                       background: p.conversion_rate >= 50 ? '#f0fdf4' : p.conversion_rate >= 25 ? '#fffbeb' : '#fef2f2',
                       color: p.conversion_rate >= 50 ? '#16a34a' : p.conversion_rate >= 25 ? '#f59e0b' : '#dc2626',
                     }}>{p.conversion_rate}%</span>
                   </td>
-                  <td style={{ padding: '13px 14px', fontSize: 12, minWidth: 120 }}>
+                  <td style={{ padding: '13px 14px', fontSize: 12, minWidth: 120, textAlign: 'right' }}>
                     {p.next_level ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                        <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden', maxWidth: 80 }}>
                           <div style={{ height: '100%', borderRadius: 3, background: lc.color, width: `${Math.min(100, (p.won_deals / (p.won_deals + p.next_level.deals_needed)) * 100)}%` }} />
                         </div>
-                        <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{p.next_level.deals_needed} → {p.next_level.icon}</span>
+                        <span style={{ color: '#94a3b8', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{p.next_level.deals_needed} → {p.next_level.icon}</span>
                       </div>
                     ) : (
                       <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{t('dashboard.max')}</span>
