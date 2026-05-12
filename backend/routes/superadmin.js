@@ -63,7 +63,7 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
       plansBreakdown, conversionsTotalRow,
     ] = await Promise.all([
       query('SELECT COUNT(*) FROM tenants WHERE is_active = true'),
-      query('SELECT COUNT(*) FROM users'),
+      query("SELECT COUNT(*) FROM users WHERE role != 'system'"),
       query('SELECT COUNT(*) FROM users WHERE is_active = true'),
       query('SELECT COUNT(*) FROM partners'),
       query("SELECT COUNT(*) FROM partners WHERE is_active = true"),
@@ -128,7 +128,7 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
       const [newT, newP, newU, newL, vol, conv, mrrEndRow, tenantsEndRow] = await Promise.all([
         query(`SELECT COUNT(*)::int AS c FROM tenants WHERE ${where('created_at', !!lo)}`, params),
         query(`SELECT COUNT(*)::int AS c FROM partners WHERE ${where('created_at', !!lo)}`, params),
-        query(`SELECT COUNT(*)::int AS c FROM users WHERE ${where('created_at', !!lo)}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM users WHERE ${where('created_at', !!lo)} AND role != 'system'`, params),
         query(`SELECT COUNT(*)::int AS c FROM referrals WHERE deleted_at IS NULL AND ${where('created_at', !!lo)}`, params),
         query(`SELECT COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND ${where('closed_at', !!lo)}`, params),
         query(`SELECT COUNT(*)::int AS c FROM tenants WHERE plan IN ('pro','business') AND plan_started_at IS NOT NULL AND ${where('plan_started_at', !!lo)}`, params),
@@ -241,7 +241,7 @@ router.get('/tenants', authenticate, requireSuperAdmin, async (req, res) => {
              COUNT(DISTINCT u.id) FILTER (WHERE u.is_active = true) as active_user_count,
              COUNT(DISTINCT p.id) as partner_count
       FROM tenants t
-      LEFT JOIN users u ON u.tenant_id = t.id
+      LEFT JOIN users u ON u.tenant_id = t.id AND u.role != 'system'
       LEFT JOIN partners p ON p.tenant_id = t.id
       GROUP BY t.id
       ORDER BY t.created_at ASC
@@ -325,7 +325,7 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
     // Count what will be deleted (for the response)
     const { rows: [counts] } = await client.query(`
       SELECT
-        (SELECT COUNT(*) FROM users WHERE tenant_id = $1) as users,
+        (SELECT COUNT(*) FROM users WHERE tenant_id = $1 AND role != 'system') as users,
         (SELECT COUNT(*) FROM partners WHERE tenant_id = $1) as partners,
         (SELECT COUNT(*) FROM referrals r JOIN partners p ON r.partner_id = p.id WHERE p.tenant_id = $1) as referrals
     `, [req.params.id]);
@@ -635,7 +635,8 @@ router.get('/search', authenticate, requireSuperAdmin, async (req, res) => {
              t.name AS tenant_name
         FROM users u
    LEFT JOIN tenants t ON t.id = u.tenant_id
-       WHERE u.email ILIKE $1 OR COALESCE(u.full_name, '') ILIKE $1
+       WHERE u.role != 'system'
+         AND (u.email ILIKE $1 OR COALESCE(u.full_name, '') ILIKE $1)
        ORDER BY u.created_at DESC NULLS LAST
        LIMIT $2`;
 

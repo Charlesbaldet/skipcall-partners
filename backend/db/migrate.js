@@ -1097,6 +1097,125 @@ async function runMigrations() {
     console.error('[migrate.v46] failed:', err.message);
   }
 
+  // v47: partner-registration forms. Lets tenants create a single
+  // form that their partners share via per-partner tokens;
+  // submissions create a referral attributed to the right partner.
+  // This étape only lays down the schema — the builder UI, public
+  // form, embed, and funnel stats arrive in étapes 2-6.
+  //
+  //   forms                — one row per tenant (V1 cap, enforced by
+  //                          a partial UNIQUE index on tenant_id
+  //                          WHERE deleted_at IS NULL so a tenant can
+  //                          soft-delete and start over)
+  //   form_fields          — fields the builder created, scoped to a
+  //                          single form. tenant_id is denormalised
+  //                          so RLS policies can match without
+  //                          traversing the form_id FK chain.
+  //   form_partner_tokens  — random per-partner token ('prt_…') that
+  //                          identifies which partner a submission
+  //                          belongs to when the prospect lands on
+  //                          /f/<id>?p=<token>.
+  //   referrals.form_id    — nullable FK so form-originated referrals
+  //                          carry their source. ON DELETE SET NULL
+  //                          preserves referral history if a tenant
+  //                          ever hard-deletes its form.
+  //
+  // Also extends users.role to include 'system' for the lazy-created
+  // synthetic user that owns form-originated referrals (forms are
+  // anonymous, so referrals.submitted_by — NOT NULL — points to a
+  // per-tenant system user with is_active = FALSE). The 5
+  // super-admin counts that don't already filter on is_active get an
+  // explicit role != 'system' guard in routes/superadmin.js in the
+  // same commit.
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS forms (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      thank_you_message TEXT,
+      default_lead_handling VARCHAR(20) NOT NULL DEFAULT 'partner_managed'
+        CHECK (default_lead_handling IN ('partner_managed', 'client_prospect')),
+      is_published BOOLEAN NOT NULL DEFAULT FALSE,
+      deleted_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_forms_tenant_active
+                   ON forms(tenant_id) WHERE deleted_at IS NULL`);
+
+    await query(`CREATE TABLE IF NOT EXISTS form_fields (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      form_id UUID NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
+      tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      step INTEGER NOT NULL CHECK (step IN (1, 2, 3)),
+      order_index INTEGER NOT NULL DEFAULT 0,
+      type VARCHAR(30) NOT NULL CHECK (type IN (
+        'text_short', 'text_long', 'email', 'phone', 'dropdown',
+        'multi_select', 'radio', 'date', 'number', 'appointment'
+      )),
+      label VARCHAR(500) NOT NULL,
+      placeholder VARCHAR(500),
+      required BOOLEAN NOT NULL DEFAULT FALSE,
+      options JSONB,
+      config JSONB,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_fields_form_step
+                   ON form_fields(form_id, step, order_index)`);
+
+    await query(`CREATE TABLE IF NOT EXISTS form_partner_tokens (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      form_id UUID NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
+      tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      partner_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+      token VARCHAR(64) NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (form_id, partner_id)
+    )`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_form_partner_tokens_token
+                   ON form_partner_tokens(token)`);
+
+    await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS form_id UUID REFERENCES forms(id) ON DELETE SET NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_referrals_form_id
+                   ON referrals(form_id) WHERE form_id IS NOT NULL`);
+
+    // Extend users.role CHECK to allow 'system'. DROP-then-ADD
+    // because Postgres has no ALTER CHECK. The new constraint is a
+    // superset of the existing one (set by migrate-security.js with
+    // 'superadmin' included), so every existing row still passes —
+    // no data migration needed.
+    await query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
+    await query(`ALTER TABLE users ADD CONSTRAINT users_role_check
+      CHECK (role IN ('admin', 'commercial', 'partner', 'superadmin', 'system'))`);
+
+    console.log('[forms] v47 forms + form_fields + form_partner_tokens + referrals.form_id + users.role(system) ready');
+  } catch (err) {
+    console.error('[migrate.v47] failed:', err.message);
+  }
+
+  // v47b: RLS defence-in-depth on the new form tables. Same shape as
+  // v44 (ENABLE only — not FORCE — so the table-owner Railway
+  // connection continues to bypass when RLS_ENABLED is unset;
+  // tenant_isolation + superadmin_bypass policies). form_fields and
+  // form_partner_tokens carry a denormalised tenant_id specifically
+  // so the policy can match without joining through form_id.
+  const RLS_FORM_TABLES = ['forms', 'form_fields', 'form_partner_tokens'];
+  for (const table of RLS_FORM_TABLES) {
+    try {
+      await query(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY`);
+      await query(`DROP POLICY IF EXISTS tenant_isolation ON ${table}`);
+      await query(`CREATE POLICY tenant_isolation ON ${table}
+        USING (tenant_id::text = current_setting('app.current_tenant_id', true))`);
+      await query(`DROP POLICY IF EXISTS superadmin_bypass ON ${table}`);
+      await query(`CREATE POLICY superadmin_bypass ON ${table}
+        USING (current_setting('app.current_role', true) = 'superadmin')`);
+      console.log(`[rls] v47 ${table} policies ready`);
+    } catch (err) {
+      console.error(`[migrate.v47.${table}] failed:`, err.message);
+    }
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
