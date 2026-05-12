@@ -18,6 +18,17 @@ const LEVEL_COLORS = {
   Platinum: { bg: '#eef2ff', color: 'var(--rb-primary, #059669)', border: '#c7d2fe' },
 };
 
+// Fill colour for the "vers <next level>" progress bar. Distinct from
+// LEVEL_COLORS (which colours the badge background); this palette uses
+// the metallic/iconic hue commonly associated with each tier so the
+// next-level bar reads as a hint, not a duplicate of the current badge.
+// Unknown level names (custom tenant_levels) fall back to slate.
+const NEXT_LEVEL_BAR = {
+  Silver:   '#C0C0C0',
+  Gold:     '#FFD700',
+  Platinum: '#93c5fd',
+};
+
 export default function DashboardPage() {
   const { t } = useTranslation();
   const [kpis, setKpis] = useState(null);
@@ -30,6 +41,7 @@ export default function DashboardPage() {
   const [tab, setTab] = useState('overview');
   const [leaderboard, setLeaderboard] = useState([]);
   const [lbLevels, setLbLevels] = useState([]);
+  const [lbThresholdType, setLbThresholdType] = useState('deals');
   const [lbLoading, setLbLoading] = useState(false);
   const [copied, setCopied] = useState(null);
   const [myTenant, setMyTenant] = useState(null);
@@ -87,7 +99,11 @@ export default function DashboardPage() {
     if (leaderboard.length > 0) return;
     setLbLoading(true);
     api.getLeaderboard()
-      .then(data => { setLeaderboard(data.leaderboard); setLbLevels(data.levels); })
+      .then(data => {
+        setLeaderboard(data.leaderboard);
+        setLbLevels(data.levels);
+        if (data.threshold_type) setLbThresholdType(data.threshold_type);
+      })
       .catch(console.error)
       .finally(() => setLbLoading(false));
   };
@@ -184,6 +200,7 @@ export default function DashboardPage() {
       {tab === 'classement' && (
         <ClassementTab
           leaderboard={leaderboard} levels={lbLevels} loading={lbLoading}
+          thresholdType={lbThresholdType}
           copied={copied} copyLink={copyLink} myTenant={myTenant}
           features={features}
         />
@@ -556,7 +573,7 @@ function CycleDurationCard({ cycle }) {
 // ═══════════════════════════════════════
 // CLASSEMENT TAB
 // ═══════════════════════════════════════
-function ClassementTab({ leaderboard, levels, loading, myTenant }) {
+function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType = 'deals' }) {
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
@@ -585,9 +602,9 @@ function ClassementTab({ leaderboard, levels, loading, myTenant }) {
       {/* Podium */}
       {topThree.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: topThree.length === 1 ? '1fr' : topThree.length === 2 ? '1fr 1fr' : '1fr 1.2fr 1fr', gap: 16, marginBottom: 28, alignItems: 'end' }}>
-          {topThree.length >= 2 && <PodiumCard partner={topThree[1]} />}
-          {topThree.length >= 1 && <PodiumCard partner={topThree[0]} isFirst />}
-          {topThree.length >= 3 && <PodiumCard partner={topThree[2]} />}
+          {topThree.length >= 2 && <PodiumCard partner={topThree[1]} thresholdType={thresholdType} />}
+          {topThree.length >= 1 && <PodiumCard partner={topThree[0]} isFirst thresholdType={thresholdType} />}
+          {topThree.length >= 3 && <PodiumCard partner={topThree[2]} thresholdType={thresholdType} />}
         </div>
       )}
 
@@ -674,9 +691,23 @@ function ClassementTab({ leaderboard, levels, loading, myTenant }) {
 // ═══════════════════════════════════════
 // SHARED COMPONENTS
 // ═══════════════════════════════════════
-function PodiumCard({ partner: p, isFirst }) {
+function PodiumCard({ partner: p, isFirst, thresholdType = 'deals' }) {
   const { t } = useTranslation();
   const lc = LEVEL_COLORS[p.level] || LEVEL_COLORS.Bronze;
+  // Progress to next level — server already gives us deals_needed (a
+  // raw numeric delta, regardless of threshold_type). To draw the bar
+  // we also need the current value, so derive it from the same source
+  // the BE uses (won_deals for "deals", total_revenue for "volume").
+  // No level logic recreated here — just visual maths.
+  const currentValue = thresholdType === 'volume' ? (p.total_revenue || 0) : (p.won_deals || 0);
+  const nextLevelTotal = p.next_level ? currentValue + (p.next_level.deals_needed || 0) : 0;
+  const progressPct = nextLevelTotal > 0
+    ? Math.min(100, Math.max(0, (currentValue / nextLevelTotal) * 100))
+    : 0;
+  const barFill = (p.next_level && NEXT_LEVEL_BAR[p.next_level.name]) || '#94a3b8';
+  const remainingLabel = thresholdType === 'volume'
+    ? fmt(p.next_level?.deals_needed || 0)
+    : `${Math.round(p.next_level?.deals_needed || 0).toLocaleString('fr-FR')} ${t('dashboard.deals').toLowerCase()}`;
   return (
     <div style={{
       background: '#fff', borderRadius: 20, padding: isFirst ? 28 : 22, border: '1px solid #e2e8f0',
@@ -695,6 +726,29 @@ function PodiumCard({ partner: p, isFirst }) {
           <div style={{ fontSize: isFirst ? 24 : 20, fontWeight: 800, color: '#16a34a' }}>{fmt(p.total_commissions)}</div>
           <div style={{ color: '#94a3b8', fontSize: 11 }}>{t('dashboard.commissions_label')}</div>
         </div>
+      </div>
+      {/* Progress to next tier — only when a next tier exists. Top-of-
+          the-ladder partners get a "max level reached" hint instead. */}
+      <div style={{ borderTop: '0.5px solid #e2e8f0', marginTop: 16, paddingTop: 10 }}>
+        {p.next_level ? (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                {t('dashboard.to_next_level', 'Vers')} {p.next_level.name}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: '#0f172a' }}>
+                {remainingLabel}
+              </span>
+            </div>
+            <div style={{ height: 4, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progressPct}%`, background: barFill, borderRadius: 999, transition: 'width .3s' }} />
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
+            {t('dashboard.max_level_reached', 'Niveau maximum atteint')}
+          </div>
+        )}
       </div>
     </div>
   );

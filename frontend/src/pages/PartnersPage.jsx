@@ -568,22 +568,28 @@ export default function PartnersPage() {
             </div>
           )}
 
-          {/* Partners Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-            {activePartners.map(p => <PartnerCard key={p.id} partner={p} onEdit={startEdit} onArchive={handleArchive} onDelete={handleDeletePartner} />)}
-          </div>
-
-          {/* Numbered pagination — 12 partners per page server-side.
-              Footer hidden when the whole list fits a single page. */}
-          {partnersTotal > PARTNERS_PAGE_SIZE && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-              <Pagination
-                currentPage={partnersPage}
-                totalPages={Math.ceil(partnersTotal / PARTNERS_PAGE_SIZE)}
-                onPageChange={(p) => { loadPartners({ page: p }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              />
+          {/* Partners grid + pagination wrapped in a flex column with
+              a minHeight so the pagination footer keeps a stable
+              position when later pages render fewer cards. Without
+              the wrapper, page 2 with a single card had the
+              pagination bouncing up to sit right under the row. */}
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 360px)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, flex: 1, alignContent: 'start' }}>
+              {activePartners.map(p => <PartnerCard key={p.id} partner={p} onEdit={startEdit} onArchive={handleArchive} onDelete={handleDeletePartner} />)}
             </div>
-          )}
+
+            {/* Numbered pagination — 12 partners per page server-side.
+                Footer hidden when the whole list fits a single page. */}
+            {partnersTotal > PARTNERS_PAGE_SIZE && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'auto', paddingTop: 24 }}>
+                <Pagination
+                  currentPage={partnersPage}
+                  totalPages={Math.ceil(partnersTotal / PARTNERS_PAGE_SIZE)}
+                  onPageChange={(p) => { loadPartners({ page: p }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Archived */}
           {showArchived && archivedPartners.length > 0 && (

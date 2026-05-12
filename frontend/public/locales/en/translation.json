@@ -814,7 +814,9 @@
     "deals": "Deals",
     "commissions_label": "Commissions",
     "max": "Max",
-    "no_data": "No data"
+    "no_data": "No data",
+    "to_next_level": "To",
+    "max_level_reached": "Max level reached"
   },
   "referrals": {
     "title": "Pipeline",
@@ -2125,7 +2127,9 @@
     "super_admin": "Super Admin",
     "logo_alt": "Logo",
     "close": "Close",
-    "space_admin": "Admin"
+    "space_admin": "Admin",
+    "space_partner_long": "Partner space",
+    "space_admin_long": "Admin space"
   },
   "news": {
     "title": "News & Updates",
@@ -3641,7 +3645,12 @@
   },
   "partner_dashboard": {
     "form_submissions": "Form submissions",
-    "form_submissions_sub": "last 30 days"
+    "form_submissions_sub": "last 30 days",
+    "my_level": "My level",
+    "deals_since_start": "{{count}} deals won since you started",
+    "deals_to_go": "deals to win",
+    "to_go_volume": "to reach",
+    "max_level": "You've reached the top level"
   },
   "partner_links": {
     "title": "My links",

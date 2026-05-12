@@ -814,7 +814,9 @@
     "deals": "Deals",
     "commissions_label": "Commissies",
     "max": "Max",
-    "no_data": "Geen gegevens"
+    "no_data": "Geen gegevens",
+    "to_next_level": "Naar",
+    "max_level_reached": "Maximaal niveau bereikt"
   },
   "referrals": {
     "title": "Pipeline",
@@ -2125,7 +2127,9 @@
     "super_admin": "Super Admin",
     "logo_alt": "Logo",
     "close": "Sluiten",
-    "space_admin": "Admin"
+    "space_admin": "Admin",
+    "space_partner_long": "Partnerruimte",
+    "space_admin_long": "Beheerdersruimte"
   },
   "news": {
     "title": "Nieuws & updates",
@@ -3641,7 +3645,12 @@
   },
   "partner_dashboard": {
     "form_submissions": "Formulierinzendingen",
-    "form_submissions_sub": "laatste 30 dagen"
+    "form_submissions_sub": "laatste 30 dagen",
+    "my_level": "Mijn niveau",
+    "deals_since_start": "{{count}} deals gewonnen sinds het begin",
+    "deals_to_go": "deals te winnen",
+    "to_go_volume": "te genereren",
+    "max_level": "Je hebt het hoogste niveau bereikt"
   },
   "partner_links": {
     "title": "Mijn links",

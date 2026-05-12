@@ -1,10 +1,19 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, TrendingUp, DollarSign, Search, ClipboardList } from 'lucide-react';
+import { FileText, TrendingUp, DollarSign, Search, ClipboardList, Medal } from 'lucide-react';
 import api from '../lib/api';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { fmt } from '../lib/constants';
 import PageSkeleton from '../components/PageSkeleton.jsx';
+
+// Bar fill for "vers <next level>" — mirrors the admin podium so a
+// partner sees the same colour cue when looking at their progression.
+const NEXT_LEVEL_BAR = {
+  Silver:   '#C0C0C0',
+  Gold:     '#FFD700',
+  Platinum: '#93c5fd',
+};
 
 // Partner landing page. Three KPI tiles + (feature-gated) referral
 // link card + promo codes table. The Kanban lives on the dedicated
@@ -13,8 +22,11 @@ import PageSkeleton from '../components/PageSkeleton.jsx';
 export default function PartnerDashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [kpis, setKpis] = useState(null);
   const [formStats, setFormStats] = useState(null); // null = no active form link
+  const [myLevel, setMyLevel] = useState(null); // partner's own row from /leaderboard
+  const [thresholdType, setThresholdType] = useState('deals');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,14 +36,21 @@ export default function PartnerDashboardPage() {
       // two numbers line up for the same period the partner is
       // likely to compare.
       api.getPartnerFormStats('30d').catch(() => null),
-    ]).then(([k, fs]) => {
+      // Pull the public leaderboard — the partner is allowed to call
+      // it, and we use it as the single source of truth for level
+      // assignment (the BE applies the tenant_levels thresholds, we
+      // just read the result). Find the partner's own row by ID.
+      api.getLeaderboard().catch(() => ({ leaderboard: [], threshold_type: 'deals' })),
+    ]).then(([k, fs, lb]) => {
       setKpis(k);
-      // Only surface the tile when the partner actually has a form
-      // link active (i.e. the BE returned a non-null shape with a
-      // submissions count >= 0). Zero-traffic forms still show.
       setFormStats(fs && (fs.submissions != null || fs.views != null) ? fs : null);
+      if (lb && Array.isArray(lb.leaderboard)) {
+        const me = lb.leaderboard.find(p => p.id === user?.partnerId);
+        if (me) setMyLevel(me);
+        if (lb.threshold_type) setThresholdType(lb.threshold_type);
+      }
     }).finally(() => setLoading(false));
-  }, []);
+  }, [user?.partnerId]);
 
   if (loading) return <PageSkeleton />;
 
@@ -41,6 +60,8 @@ export default function PartnerDashboardPage() {
         <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('layout.nav.dashboard')}</h1>
         <p style={{ color: '#64748b' }}>{t('partnerReferrals.subtitle')}</p>
       </div>
+
+      {myLevel && <MyLevelCard partner={myLevel} thresholdType={thresholdType} t={t} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
         <PKPI icon={FileText} label={t('partnerReferrals.kpi_total')} value={kpis?.total_referrals || 0} color="var(--rb-primary, #059669)" />
@@ -85,6 +106,63 @@ export default function PartnerDashboardPage() {
         <span style={{ color: '#059669', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
           {t('partnerReferrals.explore_marketplace') || 'Explorer la marketplace'} →
         </span>
+      </div>
+    </div>
+  );
+}
+
+// "Mon niveau" card. Sits above the KPI grid on the partner dashboard.
+// Reads `partner.next_level.deals_needed` (computed server-side from
+// tenant_levels) — no local threshold logic.
+function MyLevelCard({ partner: p, thresholdType, t }) {
+  const currentValue = thresholdType === 'volume' ? (p.total_revenue || 0) : (p.won_deals || 0);
+  const nextLevelTotal = p.next_level ? currentValue + (p.next_level.deals_needed || 0) : 0;
+  const progressPct = nextLevelTotal > 0
+    ? Math.min(100, Math.max(0, (currentValue / nextLevelTotal) * 100))
+    : 0;
+  const barFill = (p.next_level && NEXT_LEVEL_BAR[p.next_level.name]) || '#94a3b8';
+  const remainingLabel = thresholdType === 'volume'
+    ? `${fmt(p.next_level?.deals_needed || 0)} ${t('partner_dashboard.to_go_volume', 'à générer')}`
+    : `${Math.round(p.next_level?.deals_needed || 0).toLocaleString('fr-FR')} ${t('partner_dashboard.deals_to_go', 'deals à gagner')}`;
+  return (
+    <div style={{
+      background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 16,
+      padding: 20, marginBottom: 20,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: 24, flexWrap: 'wrap',
+    }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ color: '#64748b', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+          {t('partner_dashboard.my_level', 'Mon niveau')}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Medal size={18} color="var(--rb-primary, #059669)" />
+          <span style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2 }}>
+            {p.level}
+          </span>
+        </div>
+        <div style={{ color: '#64748b', fontSize: 13, marginTop: 6 }}>
+          {t('partner_dashboard.deals_since_start', { count: p.won_deals || 0, defaultValue: '{{count}} deals gagnés depuis le début' })}
+        </div>
+      </div>
+      <div style={{ minWidth: 220, flex: 1, maxWidth: 360 }}>
+        {p.next_level ? (
+          <>
+            <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>
+              {t('dashboard.to_next_level', 'Vers')} {p.next_level.name}
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 500, color: '#0f172a', marginBottom: 8 }}>
+              {remainingLabel}
+            </div>
+            <div style={{ height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progressPct}%`, background: barFill, borderRadius: 999, transition: 'width .3s' }} />
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 14, fontWeight: 500, color: '#94a3b8', textAlign: 'right' }}>
+            {t('partner_dashboard.max_level', 'Vous avez atteint le niveau maximum')}
+          </div>
+        )}
       </div>
     </div>
   );

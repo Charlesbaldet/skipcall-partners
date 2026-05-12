@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from './ChangePasswordModal';
 import api from '../lib/api';
-import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2, ListChecks, ClipboardList, Link2 } from 'lucide-react';
+import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogOut, ChevronDown, Settings, Globe, Activity, BarChart2, Trophy, Shield, Newspaper, Bell, CreditCard, Search, Store, Trash2, ListChecks, ClipboardList, Link2, User } from 'lucide-react';
 import OnboardingChecklist from './OnboardingChecklist.jsx';
 
 const C = {
@@ -461,6 +461,28 @@ export default function Layout({ children }) {
             )}
           </button>
 
+          {/* ─── Role badge — surfaces "Espace administrateur" vs
+               "Espace partenaire" directly under the logo so the
+               current context is obvious at a glance. Hidden for
+               superadmin (their context is already self-evident from
+               the red shield avatar above). */}
+          {!isSuperAdmin && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '3px 10px', borderRadius: 999,
+                fontSize: 11, fontWeight: 500,
+                background: isPartner ? 'rgba(96,165,250,0.18)' : 'rgba(34,197,94,0.18)',
+                color: isPartner ? '#93c5fd' : '#86efac',
+              }}>
+                {isPartner ? <User size={11} /> : <Shield size={11} />}
+                {isPartner
+                  ? t('layout_extra.space_partner_long', 'Espace partenaire')
+                  : t('layout_extra.space_admin_long', 'Espace administrateur')}
+              </span>
+            </div>
+          )}
+
           {/* ─── Space switcher dropdown (spaces only — no external links) ───
                Width: anchored at left:12 with min/maxWidth so the dropdown can
                extend past the (narrow) sidebar to fit full tenant names without
@@ -671,9 +693,6 @@ export default function Layout({ children }) {
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <div style={{ fontWeight: 500, color: '#fff', fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user?.fullName}
-              </div>
-              <div style={{ color: '#475569', fontSize: 10, textTransform: 'capitalize' }}>
-                {isPartner ? (t('layout_extra.space_partner') || 'Partenaire') : user?.role}
               </div>
             </div>
             <button
