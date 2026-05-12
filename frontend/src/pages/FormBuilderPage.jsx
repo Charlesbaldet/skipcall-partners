@@ -9,6 +9,7 @@ import {
 import api from '../lib/api';
 import { showToast } from '../components/Dialogs.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import Pagination from '../components/Pagination.jsx';
 import { FormPreview } from './PublicFormPage.jsx';
 
 // Per-type metadata that drives the field type picker + the rendered
@@ -1064,6 +1065,25 @@ function ShareModal({ t, form, onClose, embedded = false }) {
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
+  // Client-side search + pagination. Partners list is small (capped
+  // at 1000) so we don't need a server-side trip; filter in memory
+  // and slice. 10 rows / page matches the brief.
+  const SHARE_PAGE_SIZE = 10;
+  const [shareQuery, setShareQuery] = useState('');
+  const [sharePage, setSharePage] = useState(1);
+  useEffect(() => { setSharePage(1); }, [shareQuery]);
+  const filteredPartners = useMemo(() => {
+    const q = shareQuery.trim().toLowerCase();
+    if (!q) return partners;
+    return partners.filter(p =>
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.email || '').toLowerCase().includes(q)
+    );
+  }, [partners, shareQuery]);
+  const pagedPartners = useMemo(() => {
+    const start = (sharePage - 1) * SHARE_PAGE_SIZE;
+    return filteredPartners.slice(start, start + SHARE_PAGE_SIZE);
+  }, [filteredPartners, sharePage]);
 
   const load = async () => {
     try {
@@ -1147,8 +1167,36 @@ function ShareModal({ t, form, onClose, embedded = false }) {
           {t('forms.share.no_partners', 'Aucun partenaire actif à inviter.')}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {partners.map(p => {
+        <>
+          {/* Search + total counter row. Search filters in-memory
+              against name + email; counter reflects the filtered set
+              so the user knows how many rows their query matched. */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+              <input
+                type="search"
+                value={shareQuery}
+                onChange={e => setShareQuery(e.target.value)}
+                placeholder={t('forms.share.search_placeholder', 'Rechercher un partenaire (nom, email)…')}
+                style={{
+                  width: '100%', padding: '9px 12px', borderRadius: 8,
+                  border: '1.5px solid #e2e8f0', fontSize: 13, color: '#0f172a',
+                  fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none',
+                }}
+              />
+            </div>
+            <span style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>
+              {t('forms.share.count', { count: filteredPartners.length, defaultValue: '{{count}} partenaires' })}
+            </span>
+          </div>
+
+          {filteredPartners.length === 0 ? (
+            <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+              {t('forms.share.no_match', 'Aucun partenaire trouvé')}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {pagedPartners.map(p => {
               const tk = tokenByPartner[p.id];
               const url = tk ? publicFormUrl(form.id, tk.token) : '';
               return (
@@ -1181,8 +1229,19 @@ function ShareModal({ t, form, onClose, embedded = false }) {
                   )}
                 </div>
               );
-            })}
-        </div>
+              })}
+            </div>
+          )}
+          {filteredPartners.length > SHARE_PAGE_SIZE && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+              <Pagination
+                currentPage={sharePage}
+                totalPages={Math.ceil(filteredPartners.length / SHARE_PAGE_SIZE)}
+                onPageChange={setSharePage}
+              />
+            </div>
+          )}
+        </>
       )}
     </>
   );

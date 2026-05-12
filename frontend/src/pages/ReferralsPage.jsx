@@ -5,8 +5,9 @@ import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import { STATUS_CONFIG, LEVEL_CONFIG, TEMPERATURE_CONFIG, STATUS_ORDER, fmt, fmtDate, fmtDateTime } from '../lib/constants';
 import { calculateCommissionAmount, decomposeAmountWithTax } from '../lib/commissionFormula';
-import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock, AlertTriangle } from 'lucide-react';
+import { X, ChevronRight, Clock, Trash2, List, LayoutGrid, GripVertical, Lock, AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import PartnerCombobox from '../components/PartnerCombobox.jsx';
 
 const KANBAN_STATUSES = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost', 'duplicate'];
 
@@ -40,26 +41,44 @@ export default function ReferralsPage() {
     ? Object.fromEntries(stages.map(s => [s.slug, { label: s.name, color: s.color, bg: s.color + '15' }]))
     : STATUS_CONFIG;
 
+  // URL-driven sort state. Default to date DESC (newest on top). Sort
+  // is shared with the BE via ?sort=&order= so a refresh restores the
+  // user's column choice and a link is shareable.
+  const [searchParamsState, setSearchParamsState] = useSearchParams();
+  const sortKey = ['prospect','partner','level','status','value','date'].includes(searchParamsState.get('sort'))
+    ? searchParamsState.get('sort') : 'date';
+  const sortOrder = searchParamsState.get('order') === 'asc' ? 'asc' : 'desc';
+  const setSort = (col) => {
+    const next = new URLSearchParams(searchParamsState);
+    if (sortKey === col) {
+      next.set('order', sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      next.set('sort', col);
+      next.set('order', col === 'date' || col === 'value' ? 'desc' : 'asc');
+    }
+    setSearchParamsState(next, { replace: true });
+  };
+
   const load = useCallback(async () => {
     try {
-      const params = {};
+      const params = { sort: sortKey, order: sortOrder };
       if (filters.status !== 'all') params.status = filters.status;
       if (filters.partner_id !== 'all') params.partner_id = filters.partner_id;
       const [refData, partData, mt] = await Promise.all([api.getReferrals(params), api.getPartners(), api.getMyTenant()]);
       setReferrals(refData.referrals); setMyTenant(mt && (mt.tenant || mt)); setTotal(refData.total); setPartners(partData.partners);
     } catch (err) { console.error(err); }
     setLoading(false);
-  }, [filters]);
+  }, [filters, sortKey, sortOrder]);
 
   useEffect(() => { load(); }, [load]);
 
   // Deep-link from /search: navigate('/referrals?open=<id>') opens
   // that referral in the existing detail modal. Strip the param after
   // we consume it so a refresh doesn't re-open the modal forever.
-  const [searchParams, setSearchParams] = useSearchParams();
+  // Reuses the same searchParams hook handle from the sort block above.
   const openIdRef = useRef(null);
   useEffect(() => {
-    const openId = searchParams.get('open');
+    const openId = searchParamsState.get('open');
     if (!openId || openIdRef.current === openId) return;
     openIdRef.current = openId;
     (async () => {
@@ -71,10 +90,10 @@ export default function ReferralsPage() {
         }
       } catch {}
     })();
-    const next = new URLSearchParams(searchParams);
+    const next = new URLSearchParams(searchParamsState);
     next.delete('open');
-    setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams]);
+    setSearchParamsState(next, { replace: true });
+  }, [searchParamsState, setSearchParamsState]);
 
   const openDetail = async (ref) => {
     setSelected(ref);
@@ -205,10 +224,12 @@ export default function ReferralsPage() {
               <option key={k} value={k}>{label}</option>
             ))}
           </Select>
-          <Select value={filters.partner_id} onChange={v => setFilters(f => ({ ...f, partner_id: v }))}>
-            <option value="all">{t('referrals.all_partners')}</option>
-            {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </Select>
+          <PartnerCombobox
+            value={filters.partner_id}
+            partners={partners}
+            onChange={(id) => setFilters(f => ({ ...f, partner_id: id }))}
+            allLabel={t('referrals.all_partners')}
+          />
         </div>
       </div>
 
@@ -220,9 +241,41 @@ export default function ReferralsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {[t('referrals.tbl_prospect'), t('referrals.tbl_partner'), t('referrals.tbl_level'), t('referrals.tbl_status'), t('referrals.tbl_value'), t('referrals.tbl_date'), ''].map((h, i) => (
-                  <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
-                ))}
+                {/* Per-column alignment + click-to-sort. align defaults
+                    to 'left'; numeric/date columns use 'right',
+                    badge columns use 'center'. Arrow icon mirrors
+                    sortKey + sortOrder. */}
+                {[
+                  { key: 'prospect', label: t('referrals.tbl_prospect'), align: 'left'   },
+                  { key: 'partner',  label: t('referrals.tbl_partner'),  align: 'left'   },
+                  { key: 'level',    label: t('referrals.tbl_level'),    align: 'center' },
+                  { key: 'status',   label: t('referrals.tbl_status'),   align: 'center' },
+                  { key: 'value',    label: t('referrals.tbl_value'),    align: 'right'  },
+                  { key: 'date',     label: t('referrals.tbl_date'),     align: 'right'  },
+                ].map((h) => {
+                  const active = sortKey === h.key;
+                  const ArrowIcon = !active ? ChevronsUpDown : (sortOrder === 'asc' ? ArrowUp : ArrowDown);
+                  return (
+                    <th key={h.key} onClick={() => setSort(h.key)}
+                      style={{
+                        padding: '13px 16px', textAlign: h.align,
+                        fontWeight: 600, color: active ? '#0f172a' : '#64748b',
+                        fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5,
+                        borderBottom: '1px solid #e2e8f0', cursor: 'pointer',
+                        whiteSpace: 'nowrap', userSelect: 'none',
+                      }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        // Centre/right alignment for the inline-flex container needs the
+                        // wrapper's text-align to push the chip the right way.
+                      }}>
+                        {h.label}
+                        <ArrowIcon size={11} color={active ? '#059669' : '#cbd5e1'} />
+                      </span>
+                    </th>
+                  );
+                })}
+                <th style={{ borderBottom: '1px solid #e2e8f0', padding: '13px 16px', width: 32 }} />
               </tr>
             </thead>
             <tbody>
@@ -231,19 +284,19 @@ export default function ReferralsPage() {
               ) : referrals.map(r => (
                 <tr key={r.id} onClick={() => openDetail(r)} style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background 0.1s' }}
                   onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'} onMouseLeave={e => e.currentTarget.style.background = ''}>
-                  <td style={{ padding: '13px 16px' }}>
+                  <td style={{ padding: '13px 16px', textAlign: 'left' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontWeight: 600, color: '#0f172a' }}>{r.prospect_name}</span>
                       <CrmSyncBadge referral={r}/>
                     </div>
                     <div style={{ color: '#94a3b8', fontSize: 12 }}>{r.prospect_company}</div>
                   </td>
-                  <td style={{ padding: '13px 16px', color: '#475569' }}>{r.partner_name}</td>
-                  <td style={{ padding: '13px 16px' }}><Badge config={TEMPERATURE_CONFIG} value={r.recommendation_level} /></td>
-                  <td style={{ padding: '13px 16px' }}><Badge config={stageStatusConfig} value={(stages.find(s => s.id === r.stage_id)?.slug) || r.status} /></td>
-                  <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
-                  <td style={{ padding: '13px 16px', color: '#94a3b8', fontSize: 13 }}>{fmtDate(r.created_at)}</td>
-                  <td style={{ padding: '13px 16px' }}><ChevronRight size={16} color="#94a3b8" /></td>
+                  <td style={{ padding: '13px 16px', color: '#475569', textAlign: 'left' }}>{r.partner_name}</td>
+                  <td style={{ padding: '13px 16px', textAlign: 'center' }}><Badge config={TEMPERATURE_CONFIG} value={r.recommendation_level} /></td>
+                  <td style={{ padding: '13px 16px', textAlign: 'center' }}><Badge config={stageStatusConfig} value={(stages.find(s => s.id === r.stage_id)?.slug) || r.status} /></td>
+                  <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
+                  <td style={{ padding: '13px 16px', color: '#94a3b8', fontSize: 13, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
+                  <td style={{ padding: '13px 16px', textAlign: 'right' }}><ChevronRight size={16} color="#94a3b8" /></td>
                 </tr>
               ))}
             </tbody>

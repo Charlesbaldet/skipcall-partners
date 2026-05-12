@@ -591,7 +591,10 @@ function ClassementTab({ leaderboard, levels, loading, myTenant }) {
         </div>
       )}
 
-      {/* Full ranking table */}
+      {/* Full ranking table — only when there's content beyond the
+          podium top 3. ≤ 3 partners or 0 partners are handled by the
+          podium itself + the no_partner empty state below. */}
+      {leaderboard.length > 3 && (
       <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
@@ -611,7 +614,11 @@ function ClassementTab({ leaderboard, levels, loading, myTenant }) {
             </tr>
           </thead>
           <tbody>
-            {leaderboard.map(p => {
+            {/* Top 3 already render as the podium above; the table
+                starts at #4 to avoid the duplicate. If the tenant has
+                ≤ 3 partners the .slice yields an empty array and the
+                empty-state row below picks it up. */}
+            {leaderboard.slice(3).map(p => {
               const lc = LEVEL_COLORS[p.level] || LEVEL_COLORS.Bronze;
               return (
                 <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
@@ -653,8 +660,13 @@ function ClassementTab({ leaderboard, levels, loading, myTenant }) {
             })}
           </tbody>
         </table>
-        {leaderboard.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('dashboard.no_partner')}</div>}
       </div>
+      )}
+      {leaderboard.length === 0 && (
+        <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+          {t('dashboard.no_partner')}
+        </div>
+      )}
     </>
   );
 }

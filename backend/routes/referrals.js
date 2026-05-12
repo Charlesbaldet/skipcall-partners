@@ -27,6 +27,22 @@ router.get('/', async (req, res) => {
     const { status, partner_id, level, page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
 
+    // Sort whitelist. The FE table view sends ?sort=<key>&order=<asc|desc>;
+    // unknown values fall back to created_at DESC. Each entry maps the
+    // FE-facing key to its SQL fragment so we never interpolate
+    // user input into the query string.
+    const SORT_MAP = {
+      prospect: 'r.prospect_name',
+      partner:  'p.name',
+      level:    'r.recommendation_level',
+      status:   'r.status',
+      value:    'r.deal_value',
+      date:     'r.created_at',
+    };
+    const sortKey = SORT_MAP[req.query.sort] ? req.query.sort : 'date';
+    const sortCol = SORT_MAP[sortKey];
+    const orderDir = String(req.query.order || '').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+
     // Hide soft-deleted referrals from every list query — they live
     // in the Corbeille for 30 days before purge.
     let where = ['r.deleted_at IS NULL'];
@@ -70,7 +86,7 @@ router.get('/', async (req, res) => {
        JOIN partners p ON r.partner_id = p.id
        LEFT JOIN users u ON r.assigned_to = u.id
        ${whereClause}
-       ORDER BY r.created_at DESC
+       ORDER BY ${sortCol} ${orderDir} NULLS LAST, r.id ${orderDir}
        LIMIT $${i++} OFFSET $${i++}`,
       [...params, limit, offset]
     );
