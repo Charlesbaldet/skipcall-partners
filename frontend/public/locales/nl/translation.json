@@ -404,7 +404,8 @@
       "billing": "Facturatie",
       "referrals": "Referrals",
       "explore_programs": "Programma's verkennen",
-      "search": "Zoeken"
+      "search": "Zoeken",
+      "forms": "Formulier"
     },
     "collapse": "Inklappen",
     "logout": "Uitloggen",
@@ -3606,6 +3607,78 @@
       "fair": "Redelijk",
       "good": "Goed",
       "strong": "Sterk"
+    }
+  },
+  "forms": {
+    "empty": {
+      "title": "Maak je aanmeldformulier",
+      "subtitle": "Een formulier in 3 stappen dat je partners op hun site delen om leads te werven, automatisch toegewezen.",
+      "cta": "Formulier maken"
+    },
+    "builder": {
+      "title": "Aanmeldformulier",
+      "subtitle": "Configureer het formulier dat je partners zullen delen om nieuwe leads aan te trekken.",
+      "default_title": "Schrijf je in voor ons programma",
+      "created": "Formulier aangemaakt",
+      "deleted": "Formulier verwijderd",
+      "share": "Delen",
+      "publish": "Publiceren",
+      "unpublish": "Depubliceren",
+      "publish_first": "Publiceer het formulier om links te genereren",
+      "status_published": "Formulier gepubliceerd. Zichtbaar voor uitgenodigde partners.",
+      "status_draft": "Concept. Het formulier is niet openbaar toegankelijk.",
+      "step": "Stap",
+      "no_fields": "Nog geen velden in deze stap. Voeg het eerste hieronder toe.",
+      "add_field": "Veld toevoegen",
+      "required": "verplicht",
+      "delete_field_title": "Dit veld verwijderen?",
+      "reset_title": "Formulier verwijderen?",
+      "reset_message": "Alle velden en partner-links worden gearchiveerd. Je kunt daarna een nieuw formulier aanmaken.",
+      "reset": "Formulier verwijderen",
+      "settings": "Instellingen",
+      "field_title": "Titel",
+      "field_description": "Beschrijving (optioneel)",
+      "field_thank_you": "Bedanktekst",
+      "thank_you_ph": "Bedankt! We nemen binnen 24 uur contact op.",
+      "field_lead_handling": "Bestemming van de leads",
+      "lh_partner_managed": "Beheerd door de partner",
+      "lh_partner_managed_sub": "De partner beheert de deal",
+      "lh_client_prospect": "Verkoopteam",
+      "lh_client_prospect_sub": "Jouw team neemt de lead over",
+      "add_field_title": "Veld toevoegen",
+      "edit_field_title": "Veld bewerken",
+      "type_label": "Veldtype",
+      "label": "Label",
+      "label_ph": "Bijv.: wat is je behoefte?",
+      "placeholder_label": "Placeholder (optioneel)",
+      "options_label": "Opties (één per regel)",
+      "options_ph": "Optie 1\nOptie 2\nOptie 3",
+      "appointment_url_label": "Calendly / Google Calendar URL",
+      "appointment_hint": "De afspraak-iframe wordt natively in het formulier ingebed.",
+      "required_label": "Verplicht veld",
+      "label_required": "Label vereist",
+      "options_required": "Minstens één optie vereist",
+      "appointment_url_required": "Calendly / Google URL vereist",
+      "appointment_url_invalid": "Ongeldige URL",
+      "type": {
+        "text_short": "Korte tekst",
+        "text_long": "Lange tekst",
+        "email": "E-mail",
+        "phone": "Telefoon",
+        "dropdown": "Keuzelijst",
+        "multi_select": "Meerkeuze",
+        "radio": "Enkele keuze",
+        "date": "Datum",
+        "number": "Nummer",
+        "appointment": "Afspraak"
+      }
+    },
+    "share": {
+      "title": "Formulier delen",
+      "subtitle": "Genereer een unieke link per partner. Elke inzending wordt automatisch toegewezen.",
+      "no_partners": "Geen actieve partners om uit te nodigen.",
+      "generate": "Link genereren",
+      "revoke": "Intrekken"
     }
   },
   "super_admin": {

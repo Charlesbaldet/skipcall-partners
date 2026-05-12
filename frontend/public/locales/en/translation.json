@@ -404,7 +404,8 @@
       "billing": "Billing",
       "referrals": "Referrals",
       "explore_programs": "Explore programs",
-      "search": "Search"
+      "search": "Search",
+      "forms": "Form"
     },
     "collapse": "Collapse",
     "logout": "Logout",
@@ -3606,6 +3607,78 @@
       "fair": "Fair",
       "good": "Good",
       "strong": "Strong"
+    }
+  },
+  "forms": {
+    "empty": {
+      "title": "Create your registration form",
+      "subtitle": "A 3-step form your partners share on their site to recruit leads, attributed automatically.",
+      "cta": "Create form"
+    },
+    "builder": {
+      "title": "Registration form",
+      "subtitle": "Configure the form your partners will share to bring in new leads.",
+      "default_title": "Join our programme",
+      "created": "Form created",
+      "deleted": "Form deleted",
+      "share": "Share",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "publish_first": "Publish the form to generate share links",
+      "status_published": "Form is published. Visible publicly to invited partners.",
+      "status_draft": "Draft. The form is not publicly accessible.",
+      "step": "Step",
+      "no_fields": "No fields on this step yet. Add the first one below.",
+      "add_field": "Add a field",
+      "required": "required",
+      "delete_field_title": "Delete this field?",
+      "reset_title": "Delete the form?",
+      "reset_message": "All fields and partner links will be archived. You'll be able to create a new form afterwards.",
+      "reset": "Delete the form",
+      "settings": "Settings",
+      "field_title": "Title",
+      "field_description": "Description (optional)",
+      "field_thank_you": "Thank-you message",
+      "thank_you_ph": "Thanks! We'll get back to you within 24h.",
+      "field_lead_handling": "Lead destination",
+      "lh_partner_managed": "Partner-managed",
+      "lh_partner_managed_sub": "The partner handles the deal",
+      "lh_client_prospect": "Sales team",
+      "lh_client_prospect_sub": "Your team takes over the lead",
+      "add_field_title": "Add a field",
+      "edit_field_title": "Edit field",
+      "type_label": "Field type",
+      "label": "Label",
+      "label_ph": "e.g. What's your need?",
+      "placeholder_label": "Placeholder (optional)",
+      "options_label": "Options (one per line)",
+      "options_ph": "Option 1\nOption 2\nOption 3",
+      "appointment_url_label": "Calendly / Google Calendar URL",
+      "appointment_hint": "The appointment booking iframe will be embedded natively in the form.",
+      "required_label": "Required field",
+      "label_required": "Label required",
+      "options_required": "At least one option required",
+      "appointment_url_required": "Calendly / Google URL required",
+      "appointment_url_invalid": "Invalid URL",
+      "type": {
+        "text_short": "Short text",
+        "text_long": "Long text",
+        "email": "Email",
+        "phone": "Phone",
+        "dropdown": "Dropdown",
+        "multi_select": "Multi-select",
+        "radio": "Single choice",
+        "date": "Date",
+        "number": "Number",
+        "appointment": "Appointment"
+      }
+    },
+    "share": {
+      "title": "Share the form",
+      "subtitle": "Generate a unique link per partner. Every submission is attributed automatically.",
+      "no_partners": "No active partners to invite.",
+      "generate": "Generate link",
+      "revoke": "Revoke"
     }
   },
   "super_admin": {

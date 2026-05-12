@@ -404,7 +404,8 @@
       "billing": "Faturação",
       "referrals": "Referrals",
       "explore_programs": "Explorar programas",
-      "search": "Pesquisa"
+      "search": "Pesquisa",
+      "forms": "Formulário"
     },
     "collapse": "Recolher",
     "logout": "Sair",
@@ -3606,6 +3607,78 @@
       "fair": "Razoável",
       "good": "Boa",
       "strong": "Forte"
+    }
+  },
+  "forms": {
+    "empty": {
+      "title": "Crie o seu formulário de inscrição",
+      "subtitle": "Um formulário em 3 etapas que os seus parceiros irão partilhar no site deles para captar leads, atribuídos automaticamente.",
+      "cta": "Criar formulário"
+    },
+    "builder": {
+      "title": "Formulário de inscrição",
+      "subtitle": "Configure o formulário que os seus parceiros vão partilhar para captar novos leads.",
+      "default_title": "Junte-se ao nosso programa",
+      "created": "Formulário criado",
+      "deleted": "Formulário eliminado",
+      "share": "Partilhar",
+      "publish": "Publicar",
+      "unpublish": "Despublicar",
+      "publish_first": "Publique o formulário para gerar links",
+      "status_published": "Formulário publicado. Visível publicamente aos parceiros convidados.",
+      "status_draft": "Rascunho. O formulário não está acessível publicamente.",
+      "step": "Etapa",
+      "no_fields": "Ainda não há campos nesta etapa. Adicione o primeiro abaixo.",
+      "add_field": "Adicionar um campo",
+      "required": "obrigatório",
+      "delete_field_title": "Eliminar este campo?",
+      "reset_title": "Eliminar o formulário?",
+      "reset_message": "Todos os campos e links de parceiros serão arquivados. Poderá criar um novo formulário depois.",
+      "reset": "Eliminar o formulário",
+      "settings": "Definições",
+      "field_title": "Título",
+      "field_description": "Descrição (opcional)",
+      "field_thank_you": "Mensagem de agradecimento",
+      "thank_you_ph": "Obrigado! Entraremos em contacto em 24h.",
+      "field_lead_handling": "Destino dos leads",
+      "lh_partner_managed": "Gerido pelo parceiro",
+      "lh_partner_managed_sub": "O parceiro gere o deal",
+      "lh_client_prospect": "Equipa comercial",
+      "lh_client_prospect_sub": "A sua equipa assume o lead",
+      "add_field_title": "Adicionar um campo",
+      "edit_field_title": "Editar campo",
+      "type_label": "Tipo de campo",
+      "label": "Etiqueta",
+      "label_ph": "Ex.: qual a sua necessidade?",
+      "placeholder_label": "Placeholder (opcional)",
+      "options_label": "Opções (uma por linha)",
+      "options_ph": "Opção 1\nOpção 2\nOpção 3",
+      "appointment_url_label": "URL Calendly / Google Calendar",
+      "appointment_hint": "O iframe de marcação de reunião será integrado nativamente no formulário.",
+      "required_label": "Campo obrigatório",
+      "label_required": "Etiqueta obrigatória",
+      "options_required": "Pelo menos uma opção é obrigatória",
+      "appointment_url_required": "URL Calendly / Google obrigatória",
+      "appointment_url_invalid": "URL inválida",
+      "type": {
+        "text_short": "Texto curto",
+        "text_long": "Texto longo",
+        "email": "Email",
+        "phone": "Telefone",
+        "dropdown": "Lista pendente",
+        "multi_select": "Seleção múltipla",
+        "radio": "Escolha única",
+        "date": "Data",
+        "number": "Número",
+        "appointment": "Marcação"
+      }
+    },
+    "share": {
+      "title": "Partilhar o formulário",
+      "subtitle": "Gere um link único por parceiro. Cada submissão será atribuída automaticamente.",
+      "no_partners": "Nenhum parceiro ativo para convidar.",
+      "generate": "Gerar link",
+      "revoke": "Revogar"
     }
   },
   "super_admin": {

@@ -56,6 +56,7 @@ const NewsPage             = lazy(() => import('./pages/NewsPage.jsx'));
 const PartnerNewsPage      = lazy(() => import('./pages/PartnerNewsPage.jsx'));
 const NotificationsPage    = lazy(() => import('./pages/NotificationsPage.jsx'));
 const SearchPage           = lazy(() => import('./pages/SearchPage.jsx'));
+const FormBuilderPage      = lazy(() => import('./pages/FormBuilderPage.jsx'));
 
 const PublicApplyPage             = lazy(() => import('./pages/PublicApplyPage.jsx'));
 const PublicReferralRedirectPage  = lazy(() => import('./pages/PublicReferralRedirectPage.jsx'));
@@ -364,6 +365,7 @@ function AppRoutes() {
         {/* admin / superadmin */}
         <Route path="/admin/settings"    element={<RoleGate roles={['admin', 'superadmin']}>{suspend(AdminSettingsPage)}</RoleGate>} />
         <Route path="/marketplace-admin" element={<RoleGate roles={['admin', 'superadmin']}>{suspend(MarketplaceEditorPage)}</RoleGate>} />
+        <Route path="/forms"             element={<RoleGate roles={['admin', 'superadmin']}>{suspend(FormBuilderPage)}</RoleGate>} />
         <Route path="/progression"       element={<RoleGate roles={['admin', 'superadmin']}>{suspend(ProgressionPage)}</RoleGate>} />
         <Route path="/news"              element={<RoleGate roles={['admin', 'superadmin']}>{suspend(NewsPage)}</RoleGate>} />
 

@@ -404,7 +404,8 @@
       "billing": "Abrechnung",
       "referrals": "Referrals",
       "explore_programs": "Programme erkunden",
-      "search": "Suche"
+      "search": "Suche",
+      "forms": "Formular"
     },
     "collapse": "Einklappen",
     "logout": "Abmelden",
@@ -3606,6 +3607,78 @@
       "fair": "Mittel",
       "good": "Gut",
       "strong": "Stark"
+    }
+  },
+  "forms": {
+    "empty": {
+      "title": "Erstellen Sie Ihr Anmeldeformular",
+      "subtitle": "Ein dreistufiges Formular, das Ihre Partner auf ihrer Website teilen, um Leads zu gewinnen — automatisch zugeordnet.",
+      "cta": "Formular erstellen"
+    },
+    "builder": {
+      "title": "Anmeldeformular",
+      "subtitle": "Konfigurieren Sie das Formular, das Ihre Partner teilen werden, um neue Leads zu gewinnen.",
+      "default_title": "Treten Sie unserem Programm bei",
+      "created": "Formular erstellt",
+      "deleted": "Formular gelöscht",
+      "share": "Teilen",
+      "publish": "Veröffentlichen",
+      "unpublish": "Zurückziehen",
+      "publish_first": "Veröffentlichen Sie das Formular, um Links zu generieren",
+      "status_published": "Formular ist veröffentlicht. Öffentlich für eingeladene Partner sichtbar.",
+      "status_draft": "Entwurf. Das Formular ist nicht öffentlich zugänglich.",
+      "step": "Schritt",
+      "no_fields": "Noch keine Felder in diesem Schritt. Fügen Sie das erste unten hinzu.",
+      "add_field": "Feld hinzufügen",
+      "required": "Pflicht",
+      "delete_field_title": "Dieses Feld löschen?",
+      "reset_title": "Formular löschen?",
+      "reset_message": "Alle Felder und Partnerlinks werden archiviert. Danach können Sie ein neues Formular erstellen.",
+      "reset": "Formular löschen",
+      "settings": "Einstellungen",
+      "field_title": "Titel",
+      "field_description": "Beschreibung (optional)",
+      "field_thank_you": "Dankesnachricht",
+      "thank_you_ph": "Danke! Wir melden uns innerhalb von 24 Std.",
+      "field_lead_handling": "Lead-Ziel",
+      "lh_partner_managed": "Partnerverwaltet",
+      "lh_partner_managed_sub": "Der Partner betreut den Deal",
+      "lh_client_prospect": "Vertriebsteam",
+      "lh_client_prospect_sub": "Ihr Team übernimmt den Lead",
+      "add_field_title": "Feld hinzufügen",
+      "edit_field_title": "Feld bearbeiten",
+      "type_label": "Feldtyp",
+      "label": "Bezeichnung",
+      "label_ph": "z. B. Was ist Ihr Anliegen?",
+      "placeholder_label": "Platzhalter (optional)",
+      "options_label": "Optionen (eine pro Zeile)",
+      "options_ph": "Option 1\nOption 2\nOption 3",
+      "appointment_url_label": "Calendly / Google Calendar URL",
+      "appointment_hint": "Der Terminbuchungs-Iframe wird nativ in das Formular eingebettet.",
+      "required_label": "Pflichtfeld",
+      "label_required": "Bezeichnung erforderlich",
+      "options_required": "Mindestens eine Option erforderlich",
+      "appointment_url_required": "Calendly / Google URL erforderlich",
+      "appointment_url_invalid": "Ungültige URL",
+      "type": {
+        "text_short": "Kurzer Text",
+        "text_long": "Langer Text",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "dropdown": "Auswahlliste",
+        "multi_select": "Mehrfachauswahl",
+        "radio": "Einzelauswahl",
+        "date": "Datum",
+        "number": "Zahl",
+        "appointment": "Termin"
+      }
+    },
+    "share": {
+      "title": "Formular teilen",
+      "subtitle": "Generieren Sie einen einzigartigen Link pro Partner. Jede Einsendung wird automatisch zugeordnet.",
+      "no_partners": "Keine aktiven Partner zum Einladen.",
+      "generate": "Link generieren",
+      "revoke": "Widerrufen"
     }
   },
   "super_admin": {

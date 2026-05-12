@@ -404,7 +404,8 @@
       "billing": "Facturación",
       "referrals": "Referrals",
       "explore_programs": "Explorar programas",
-      "search": "Buscar"
+      "search": "Buscar",
+      "forms": "Formulario"
     },
     "collapse": "Reducir",
     "logout": "Cerrar sesión",
@@ -3606,6 +3607,78 @@
       "fair": "Regular",
       "good": "Buena",
       "strong": "Fuerte"
+    }
+  },
+  "forms": {
+    "empty": {
+      "title": "Cree su formulario de inscripción",
+      "subtitle": "Un formulario de 3 pasos que sus socios compartirán en su sitio web para captar leads, atribuidos automáticamente.",
+      "cta": "Crear formulario"
+    },
+    "builder": {
+      "title": "Formulario de inscripción",
+      "subtitle": "Configure el formulario que sus socios compartirán para captar nuevos leads.",
+      "default_title": "Únase a nuestro programa",
+      "created": "Formulario creado",
+      "deleted": "Formulario eliminado",
+      "share": "Compartir",
+      "publish": "Publicar",
+      "unpublish": "Despublicar",
+      "publish_first": "Publique el formulario para generar enlaces",
+      "status_published": "Formulario publicado. Visible públicamente para los socios invitados.",
+      "status_draft": "Borrador. El formulario no es accesible públicamente.",
+      "step": "Paso",
+      "no_fields": "Aún no hay campos en este paso. Añada el primero abajo.",
+      "add_field": "Añadir un campo",
+      "required": "obligatorio",
+      "delete_field_title": "¿Eliminar este campo?",
+      "reset_title": "¿Eliminar el formulario?",
+      "reset_message": "Todos los campos y enlaces de socios serán archivados. Después podrá crear un nuevo formulario.",
+      "reset": "Eliminar el formulario",
+      "settings": "Configuración",
+      "field_title": "Título",
+      "field_description": "Descripción (opcional)",
+      "field_thank_you": "Mensaje de agradecimiento",
+      "thank_you_ph": "¡Gracias! Le contactaremos en 24h.",
+      "field_lead_handling": "Destino de los leads",
+      "lh_partner_managed": "Gestionado por el socio",
+      "lh_partner_managed_sub": "El socio gestiona el negocio",
+      "lh_client_prospect": "Equipo comercial",
+      "lh_client_prospect_sub": "Su equipo retoma el lead",
+      "add_field_title": "Añadir un campo",
+      "edit_field_title": "Editar campo",
+      "type_label": "Tipo de campo",
+      "label": "Etiqueta",
+      "label_ph": "p. ej.: ¿Cuál es su necesidad?",
+      "placeholder_label": "Placeholder (opcional)",
+      "options_label": "Opciones (una por línea)",
+      "options_ph": "Opción 1\nOpción 2\nOpción 3",
+      "appointment_url_label": "URL Calendly / Google Calendar",
+      "appointment_hint": "El iframe de reserva de cita se integrará de forma nativa en el formulario.",
+      "required_label": "Campo obligatorio",
+      "label_required": "Etiqueta requerida",
+      "options_required": "Se requiere al menos una opción",
+      "appointment_url_required": "URL Calendly / Google requerida",
+      "appointment_url_invalid": "URL inválida",
+      "type": {
+        "text_short": "Texto corto",
+        "text_long": "Texto largo",
+        "email": "Email",
+        "phone": "Teléfono",
+        "dropdown": "Lista desplegable",
+        "multi_select": "Selección múltiple",
+        "radio": "Selección única",
+        "date": "Fecha",
+        "number": "Número",
+        "appointment": "Cita"
+      }
+    },
+    "share": {
+      "title": "Compartir el formulario",
+      "subtitle": "Genere un enlace único por socio. Cada envío se atribuirá automáticamente.",
+      "no_partners": "Ningún socio activo para invitar.",
+      "generate": "Generar enlace",
+      "revoke": "Revocar"
     }
   },
   "super_admin": {

@@ -404,7 +404,8 @@
       "billing": "Facturation",
       "referrals": "Referrals",
       "explore_programs": "Explorer les programmes",
-      "search": "Recherche"
+      "search": "Recherche",
+      "forms": "Formulaire"
     },
     "collapse": "Réduire",
     "logout": "Déconnexion",
@@ -3606,6 +3607,78 @@
       "fair": "Moyen",
       "good": "Bon",
       "strong": "Fort"
+    }
+  },
+  "forms": {
+    "empty": {
+      "title": "Créez votre formulaire d'inscription",
+      "subtitle": "Un formulaire en 3 étapes que vos partenaires partageront sur leur site pour recruter des leads attribués automatiquement.",
+      "cta": "Créer le formulaire"
+    },
+    "builder": {
+      "title": "Formulaire d'inscription",
+      "subtitle": "Configurez le formulaire que vos partenaires partageront pour recruter de nouveaux leads.",
+      "default_title": "Inscrivez-vous à notre programme",
+      "created": "Formulaire créé",
+      "deleted": "Formulaire supprimé",
+      "share": "Partager",
+      "publish": "Publier",
+      "unpublish": "Dépublier",
+      "publish_first": "Publiez le formulaire pour générer des liens",
+      "status_published": "Formulaire publié. Visible publiquement aux partenaires invités.",
+      "status_draft": "Brouillon. Le formulaire n'est pas accessible publiquement.",
+      "step": "Étape",
+      "no_fields": "Aucun champ sur cette étape. Ajoutez le premier ci-dessous.",
+      "add_field": "Ajouter un champ",
+      "required": "obligatoire",
+      "delete_field_title": "Supprimer ce champ ?",
+      "reset_title": "Supprimer le formulaire ?",
+      "reset_message": "Tous les champs et liens partenaires seront archivés. Vous pourrez créer un nouveau formulaire ensuite.",
+      "reset": "Supprimer le formulaire",
+      "settings": "Paramètres",
+      "field_title": "Titre",
+      "field_description": "Description (optionnelle)",
+      "field_thank_you": "Message de remerciement",
+      "thank_you_ph": "Merci ! Nous vous recontactons sous 24h.",
+      "field_lead_handling": "Destination des leads",
+      "lh_partner_managed": "Partenaire direct",
+      "lh_partner_managed_sub": "Le partenaire gère le deal",
+      "lh_client_prospect": "Équipe commerciale",
+      "lh_client_prospect_sub": "Votre équipe reprend le lead",
+      "add_field_title": "Ajouter un champ",
+      "edit_field_title": "Modifier le champ",
+      "type_label": "Type de champ",
+      "label": "Libellé",
+      "label_ph": "Ex : Quel est votre besoin ?",
+      "placeholder_label": "Placeholder (optionnel)",
+      "options_label": "Options (une par ligne)",
+      "options_ph": "Option 1\nOption 2\nOption 3",
+      "appointment_url_label": "URL Calendly / Google Calendar",
+      "appointment_hint": "L'iframe de prise de rendez-vous sera intégrée nativement dans le formulaire.",
+      "required_label": "Champ obligatoire",
+      "label_required": "Libellé requis",
+      "options_required": "Au moins une option requise",
+      "appointment_url_required": "URL Calendly / Google requise",
+      "appointment_url_invalid": "URL invalide",
+      "type": {
+        "text_short": "Texte court",
+        "text_long": "Texte long",
+        "email": "Email",
+        "phone": "Téléphone",
+        "dropdown": "Liste déroulante",
+        "multi_select": "Choix multiples",
+        "radio": "Choix unique",
+        "date": "Date",
+        "number": "Nombre",
+        "appointment": "Rendez-vous"
+      }
+    },
+    "share": {
+      "title": "Partager le formulaire",
+      "subtitle": "Générez un lien unique par partenaire. Chaque soumission sera attribuée automatiquement.",
+      "no_partners": "Aucun partenaire actif à inviter.",
+      "generate": "Générer un lien",
+      "revoke": "Révoquer"
     }
   },
   "super_admin": {

@@ -554,6 +554,20 @@ class ApiClient {
   // Global search
   globalSearch(query) { return this.request('/search?q=' + encodeURIComponent(query)); }
   superAdminSearch(query) { return this.request('/super-admin/search?q=' + encodeURIComponent(query)); }
+
+  // ─── Partner-registration forms (admin builder) ───
+  getForm() { return this.request('/forms'); }
+  createForm(payload) { return this.request('/forms', { method: 'POST', body: JSON.stringify(payload) }); }
+  updateForm(id, payload) { return this.request('/forms/' + id, { method: 'PATCH', body: JSON.stringify(payload) }); }
+  deleteForm(id) { return this.request('/forms/' + id, { method: 'DELETE' }); }
+  getFormFields(formId) { return this.request('/forms/' + formId + '/fields'); }
+  createFormField(formId, payload) { return this.request('/forms/' + formId + '/fields', { method: 'POST', body: JSON.stringify(payload) }); }
+  updateFormField(formId, fieldId, payload) { return this.request('/forms/' + formId + '/fields/' + fieldId, { method: 'PATCH', body: JSON.stringify(payload) }); }
+  deleteFormField(formId, fieldId) { return this.request('/forms/' + formId + '/fields/' + fieldId, { method: 'DELETE' }); }
+  reorderFormFields(formId, items) { return this.request('/forms/' + formId + '/fields/reorder', { method: 'POST', body: JSON.stringify({ items }) }); }
+  getFormPartnerTokens(formId) { return this.request('/forms/' + formId + '/partner-tokens'); }
+  createFormPartnerToken(formId, partner_id) { return this.request('/forms/' + formId + '/partner-tokens', { method: 'POST', body: JSON.stringify({ partner_id }) }); }
+  deleteFormPartnerToken(formId, tokenId) { return this.request('/forms/' + formId + '/partner-tokens/' + tokenId, { method: 'DELETE' }); }
   getInvoices() { return this.request('/billing/invoices'); }
 
   // Audit logs (Settings → Historique tab; admin/superadmin only)

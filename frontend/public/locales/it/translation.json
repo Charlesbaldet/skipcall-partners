@@ -404,7 +404,8 @@
       "billing": "Fatturazione",
       "referrals": "Referrals",
       "explore_programs": "Esplora programmi",
-      "search": "Ricerca"
+      "search": "Ricerca",
+      "forms": "Modulo"
     },
     "collapse": "Comprimi",
     "logout": "Esci",
@@ -3606,6 +3607,78 @@
       "fair": "Discreta",
       "good": "Buona",
       "strong": "Forte"
+    }
+  },
+  "forms": {
+    "empty": {
+      "title": "Crea il tuo modulo di iscrizione",
+      "subtitle": "Un modulo in 3 passaggi che i tuoi partner condivideranno sul loro sito per acquisire lead, attribuiti automaticamente.",
+      "cta": "Crea il modulo"
+    },
+    "builder": {
+      "title": "Modulo di iscrizione",
+      "subtitle": "Configura il modulo che i tuoi partner condivideranno per acquisire nuovi lead.",
+      "default_title": "Iscriviti al nostro programma",
+      "created": "Modulo creato",
+      "deleted": "Modulo eliminato",
+      "share": "Condividi",
+      "publish": "Pubblica",
+      "unpublish": "Annulla pubblicazione",
+      "publish_first": "Pubblica il modulo per generare i link",
+      "status_published": "Modulo pubblicato. Visibile pubblicamente ai partner invitati.",
+      "status_draft": "Bozza. Il modulo non è accessibile pubblicamente.",
+      "step": "Passaggio",
+      "no_fields": "Nessun campo in questo passaggio. Aggiungi il primo qui sotto.",
+      "add_field": "Aggiungi un campo",
+      "required": "obbligatorio",
+      "delete_field_title": "Eliminare questo campo?",
+      "reset_title": "Eliminare il modulo?",
+      "reset_message": "Tutti i campi e i link partner saranno archiviati. Potrai creare un nuovo modulo in seguito.",
+      "reset": "Elimina il modulo",
+      "settings": "Impostazioni",
+      "field_title": "Titolo",
+      "field_description": "Descrizione (opzionale)",
+      "field_thank_you": "Messaggio di ringraziamento",
+      "thank_you_ph": "Grazie! Ti ricontatteremo entro 24h.",
+      "field_lead_handling": "Destinazione dei lead",
+      "lh_partner_managed": "Gestito dal partner",
+      "lh_partner_managed_sub": "Il partner gestisce il deal",
+      "lh_client_prospect": "Team commerciale",
+      "lh_client_prospect_sub": "Il tuo team prende in carico il lead",
+      "add_field_title": "Aggiungi un campo",
+      "edit_field_title": "Modifica campo",
+      "type_label": "Tipo di campo",
+      "label": "Etichetta",
+      "label_ph": "Es.: qual è la tua esigenza?",
+      "placeholder_label": "Placeholder (opzionale)",
+      "options_label": "Opzioni (una per riga)",
+      "options_ph": "Opzione 1\nOpzione 2\nOpzione 3",
+      "appointment_url_label": "URL Calendly / Google Calendar",
+      "appointment_hint": "L'iframe di prenotazione appuntamento sarà integrato nativamente nel modulo.",
+      "required_label": "Campo obbligatorio",
+      "label_required": "Etichetta richiesta",
+      "options_required": "Almeno un'opzione richiesta",
+      "appointment_url_required": "URL Calendly / Google richiesta",
+      "appointment_url_invalid": "URL non valido",
+      "type": {
+        "text_short": "Testo breve",
+        "text_long": "Testo lungo",
+        "email": "Email",
+        "phone": "Telefono",
+        "dropdown": "Menu a tendina",
+        "multi_select": "Selezione multipla",
+        "radio": "Scelta singola",
+        "date": "Data",
+        "number": "Numero",
+        "appointment": "Appuntamento"
+      }
+    },
+    "share": {
+      "title": "Condividi il modulo",
+      "subtitle": "Genera un link unico per partner. Ogni invio sarà attribuito automaticamente.",
+      "no_partners": "Nessun partner attivo da invitare.",
+      "generate": "Genera link",
+      "revoke": "Revoca"
     }
   },
   "super_admin": {
