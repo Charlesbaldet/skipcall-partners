@@ -80,7 +80,7 @@ router.get('/', async (req, res) => {
     // context so the export is self-contained.
     const { rows: commissions } = await query(
       `SELECT c.id, c.referral_id, c.amount, c.amount_ht, c.amount_tax, c.amount_ttc,
-              'EUR' AS currency, c.status, c.created_at, c.updated_at,
+              'EUR' AS currency, c.status, c.created_at,
               c.payment_initiated_at, c.payment_completed_at,
               r.prospect_name, r.prospect_company
          FROM commissions c

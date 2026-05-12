@@ -45,37 +45,50 @@ router.get('/', authorize('admin', 'superadmin'), async (req, res) => {
 
     // Fetch in parallel — the wires are independent and the queries
     // are tenant-scoped, so we don't gain anything from sequencing.
+    //
+    // Each query is individually .catch()-wrapped: if any one section
+    // hits a phantom column (e.g. a deployment that's behind on
+    // migrations) the export falls back to an empty CSV for that
+    // section rather than 500'ing the whole ZIP. The errors are
+    // logged so we can spot drift between code + schema.
+    const safe = (label, p) => p.catch(err => {
+      console.error('[accountExport.' + label + ']', err.message);
+      return { rows: [] };
+    });
+
     const [
       tenantR, usersR, partnersR, referralsR, commissionsR, invoicesR, formSubmissionsR, auditR,
     ] = await Promise.all([
-      query(`SELECT id, name, slug, domain, primary_color, secondary_color, accent_color,
+      safe('tenant', query(`SELECT id, name, slug, domain, primary_color, secondary_color, accent_color,
                     plan, revenue_model, is_active, created_at, updated_at
-               FROM tenants WHERE id = $1`, [tenantId]),
-      query(`SELECT id, email, full_name, role, is_active, created_at, updated_at
-               FROM users WHERE tenant_id = $1 AND role != 'system'`, [tenantId]),
-      query(`SELECT id, name, contact_name, email, phone, company_website, commission_rate,
+               FROM tenants WHERE id = $1`, [tenantId])),
+      safe('users', query(`SELECT id, email, full_name, role, is_active, created_at, updated_at
+               FROM users WHERE tenant_id = $1 AND role != 'system'`, [tenantId])),
+      safe('partners', query(`SELECT id, name, contact_name, email, phone, company_website, commission_rate,
                     is_active, deleted_at, created_at, updated_at
-               FROM partners WHERE tenant_id = $1`, [tenantId]),
-      query(`SELECT id, partner_id, prospect_name, prospect_email, prospect_phone,
+               FROM partners WHERE tenant_id = $1`, [tenantId])),
+      safe('referrals', query(`SELECT id, partner_id, prospect_name, prospect_email, prospect_phone,
                     prospect_company, prospect_role, status, stage_id, deal_value,
                     recommendation_level, source, form_id, notes, deleted_at,
                     created_at, updated_at, closed_at
-               FROM referrals WHERE tenant_id = $1`, [tenantId]),
-      query(`SELECT id, partner_id, referral_id, amount, status, approval_status,
+               FROM referrals WHERE tenant_id = $1`, [tenantId])),
+      // commissions doesn't have updated_at — leave it off (same root
+      // cause as the c.updated_at fix on partnerDataExport.js).
+      safe('commissions', query(`SELECT id, partner_id, referral_id, amount, status, approval_status,
                     paid_at, deleted_at, created_at
-               FROM commissions WHERE tenant_id = $1`, [tenantId]),
+               FROM commissions WHERE tenant_id = $1`, [tenantId])),
       // Best-effort — invoices table may not exist on every deploy.
-      query(`SELECT id, partner_id, amount_ttc, status, created_at
-               FROM partner_invoices WHERE tenant_id = $1`, [tenantId]).catch(() => ({ rows: [] })),
-      query(`SELECT id, form_id, partner_id, prospect_name, prospect_email,
+      safe('invoices', query(`SELECT id, partner_id, amount_ttc, status, created_at
+               FROM partner_invoices WHERE tenant_id = $1`, [tenantId])),
+      safe('form_submissions', query(`SELECT id, form_id, partner_id, prospect_name, prospect_email,
                     prospect_company, created_at
-               FROM referrals WHERE tenant_id = $1 AND source = 'form'`, [tenantId]),
+               FROM referrals WHERE tenant_id = $1 AND source = 'form'`, [tenantId])),
       // Audit log capped to 12 months to keep the ZIP reasonable.
-      query(`SELECT id, user_id, user_email, action, resource_type, resource_id,
+      safe('audit_logs', query(`SELECT id, user_id, user_email, action, resource_type, resource_id,
                     ip_address, created_at
                FROM audit_logs
               WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '12 months'
-              ORDER BY created_at DESC`, [tenantId]),
+              ORDER BY created_at DESC`, [tenantId])),
     ]);
 
     const today = new Date().toISOString().slice(0, 10);
