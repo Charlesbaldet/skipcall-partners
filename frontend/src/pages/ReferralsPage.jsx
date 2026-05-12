@@ -515,6 +515,16 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   const [tab, setTab] = useState('info');
   const [saveToast, setSaveToast] = useState(null);
 
+  // Inline contact-field patch. Used by the EditableInfoRow widgets
+  // on the Info tab. Returns the API promise so the widget can flip
+  // its busy state + show a success/error indicator. Errors bubble
+  // up so the row can revert the optimistic value.
+  const patchContact = async (patch) => {
+    await onUpdate(referral.id, patch);
+    setSaveToast({ type: 'success', text: t('referrals.saved_ok') });
+    setTimeout(() => setSaveToast(null), 1800);
+  };
+
   // Commission rate state. Initial value is the effective rate the
   // backend resolved (override → tier → legacy partner.commission_rate).
   // partner_tier carries the live tier so the badge + warning modal
@@ -649,11 +659,29 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
           {tab === 'info' && (
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginBottom: 24 }}>
-                <InfoRow label={t('referrals.field_first_name', { defaultValue: 'Prénom' })} value={referral.contact_first_name || '—'} />
-                <InfoRow label={t('referrals.field_last_name',  { defaultValue: 'Nom' })}    value={referral.contact_last_name  || '—'} />
-                <InfoRow label={t('referrals.field_role')} value={referral.prospect_role || '—'} />
-                <InfoRow label={t('referrals.field_email')} value={referral.prospect_email} />
-                <InfoRow label={t('referrals.field_phone')} value={referral.prospect_phone || '—'} />
+                {/* Five contact fields are inline-editable so a form
+                    lead (anonymous prospect, possibly synthetic email)
+                    or a hastily-entered manual lead can be corrected
+                    without round-tripping through a separate edit
+                    modal. partner_name / assigned_name / created_at
+                    stay read-only — they're system-managed. */}
+                <EditableInfoRow label={t('referrals.field_first_name', { defaultValue: 'Prénom' })}
+                  value={referral.contact_first_name || ''}
+                  onSave={v => patchContact({ contact_first_name: v })} />
+                <EditableInfoRow label={t('referrals.field_last_name',  { defaultValue: 'Nom' })}
+                  value={referral.contact_last_name || ''}
+                  onSave={v => patchContact({ contact_last_name: v })} />
+                <EditableInfoRow label={t('referrals.field_role')}
+                  value={referral.prospect_role || ''}
+                  onSave={v => patchContact({ prospect_role: v })} />
+                <EditableInfoRow label={t('referrals.field_email')}
+                  value={referral.prospect_email || ''}
+                  type="email" required
+                  onSave={v => patchContact({ prospect_email: v })} />
+                <EditableInfoRow label={t('referrals.field_phone')}
+                  value={referral.prospect_phone || ''}
+                  type="tel"
+                  onSave={v => patchContact({ prospect_phone: v })} />
                 <InfoRow label={t('referrals.field_partner')} value={referral.partner_name} />
                 <InfoRow label={t('referrals.field_assigned')} value={referral.assigned_name || t('referrals.not_assigned')} />
                 <InfoRow label={t('referrals.field_created')} value={fmtDate(referral.created_at)} />
@@ -986,6 +1014,79 @@ function Badge({ config, value }) {
 
 function InfoRow({ label, value }) {
   return (<div><div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{label}</div><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div></div>);
+}
+
+// Inline-editable variant of InfoRow. Click-to-edit, blur or Enter to
+// save. Optimistic — the value updates in-place; on save error we
+// revert and surface the message. Used on the Info tab of the
+// referral detail modal so contact fields are correctable for both
+// manual and form-sourced leads (étape 4 / item 6).
+function EditableInfoRow({ label, value, onSave, type = 'text', required = false }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value || '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  // Keep draft in sync if the parent's value updates outside our edit
+  // window (e.g. another save round-tripped a fresh row).
+  useEffect(() => { if (!editing) setDraft(value || ''); }, [value, editing]);
+
+  const commit = async () => {
+    setError('');
+    const next = (draft || '').trim();
+    if (required && !next) {
+      setError('Champ requis');
+      setDraft(value || '');
+      setEditing(false);
+      return;
+    }
+    if (next === (value || '')) { setEditing(false); return; }
+    setBusy(true);
+    try {
+      await onSave(next);
+      setEditing(false);
+    } catch (e) {
+      setError(e?.message || 'Erreur');
+      setDraft(value || '');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancel = () => {
+    setDraft(value || '');
+    setEditing(false);
+    setError('');
+  };
+
+  return (
+    <div>
+      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{label}</div>
+      {editing ? (
+        <input
+          autoFocus
+          type={type}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); else if (e.key === 'Escape') cancel(); }}
+          disabled={busy}
+          style={{ marginTop: 2, padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--rb-primary, #059669)', fontSize: 14, color: '#0f172a', fontWeight: 500, fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box', background: '#fff' }}
+        />
+      ) : (
+        <div
+          onClick={() => setEditing(true)}
+          title="Cliquer pour modifier"
+          style={{ marginTop: 2, padding: '3px 6px', marginLeft: -6, borderRadius: 6, color: '#0f172a', fontWeight: 500, fontSize: 14, cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+        >
+          {value || <span style={{ color: '#cbd5e1' }}>—</span>}
+        </div>
+      )}
+      {error && <div style={{ marginTop: 4, color: '#dc2626', fontSize: 11 }}>{error}</div>}
+    </div>
+  );
 }
 
 function Select({ value, onChange, children }) {

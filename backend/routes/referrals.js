@@ -425,6 +425,7 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
   try {
     let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement, engagement_periods,
           contact_first_name, contact_last_name,
+          prospect_name, prospect_email, prospect_phone, prospect_company, prospect_role,
           commission_rate_override, commission_overridden } = req.body;
 
     // Length caps on the free-text fields. Without these, an
@@ -480,6 +481,9 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       }
       // Strip admin-only fields out of the partner's payload so we
       // don't accidentally write them on a legitimate stage drop.
+      // Contact + prospect fields stay editable for the partner on
+      // their own partner_managed deals so they can correct/complete
+      // a lead (including one that came in via the public form).
       status = undefined;
       deal_value = undefined;
       assigned_to = undefined;
@@ -489,8 +493,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       engagement_periods = undefined;
       commission_rate_override = undefined;
       commission_overridden = undefined;
-      contact_first_name = undefined;
-      contact_last_name = undefined;
     }
 
     // Resolve stage_id → derive canonical status so all the legacy
@@ -663,15 +665,41 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       }
     }
 
-    // Contact person fields — optional, any non-undefined value
-    // (including explicit '') wins, so admins can clear a wrong
-    // entry. Partners can't write these (stripped above alongside
-    // the other admin-only fields).
+    // Contact + prospect fields — optional, any non-undefined value
+    // (including explicit '') wins, so the caller can clear a wrong
+    // entry. Editable by admin/commercial on every deal and by the
+    // partner on their own partner_managed deals (form leads need to
+    // be correctable just like manual ones — see étape 4 / item 6).
+    // The two NOT NULL columns (prospect_name + prospect_email) are
+    // guarded against being emptied: incoming '' is dropped silently
+    // so we never violate the existing schema invariants.
     if (contact_first_name !== undefined && contact_first_name !== current.contact_first_name) {
       updates.contact_first_name = (contact_first_name || '').trim() || null;
     }
     if (contact_last_name !== undefined && contact_last_name !== current.contact_last_name) {
       updates.contact_last_name = (contact_last_name || '').trim() || null;
+    }
+    if (prospect_name !== undefined) {
+      const v = String(prospect_name).trim();
+      if (v && v !== current.prospect_name) updates.prospect_name = v;
+    }
+    if (prospect_email !== undefined) {
+      const v = String(prospect_email).trim().toLowerCase();
+      // Minimal sanity: must contain @. Heavier validation would
+      // reject leads created via the public form's synthetic
+      // lead+<hex>@noemail.refboost.local fallback so we keep it
+      // permissive here.
+      if (v && v.includes('@') && v !== current.prospect_email) updates.prospect_email = v;
+    }
+    if (prospect_phone !== undefined && prospect_phone !== current.prospect_phone) {
+      updates.prospect_phone = (prospect_phone || '').trim() || null;
+    }
+    if (prospect_company !== undefined) {
+      const v = String(prospect_company).trim();
+      if (v && v !== current.prospect_company) updates.prospect_company = v;
+    }
+    if (prospect_role !== undefined && prospect_role !== current.prospect_role) {
+      updates.prospect_role = (prospect_role || '').trim() || null;
     }
 
     if (assigned_to && assigned_to !== current.assigned_to) {
