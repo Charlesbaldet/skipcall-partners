@@ -346,6 +346,21 @@ function EmptyState({ t, onCreate }) {
 }
 
 // ─── Settings side panel ───────────────────────────────────────────
+// IMPORTANT: SettingsField is intentionally declared at *module* scope.
+// Putting it inside SettingsPanel makes React see a fresh component
+// type every render, which unmounts every <input> wrapped by it on
+// each keystroke (focus loss bug). Same reason inputStyle lives here.
+const SETTINGS_INPUT_STYLE = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, color: '#0f172a', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' };
+
+function SettingsField({ label, children }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
 function SettingsPanel({ form, t, onPatch, onReset }) {
   // Local-edit state for title/description/thank_you so the user can
   // type without firing a PATCH on every keystroke; we PATCH on blur.
@@ -366,40 +381,31 @@ function SettingsPanel({ form, t, onPatch, onReset }) {
     if (local[key] !== (form[key] || '')) onPatch({ [key]: local[key] });
   };
 
-  const Field = ({ label, children }) => (
-    <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
-      {children}
-    </div>
-  );
-
-  const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, color: '#0f172a', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' };
-
   return (
     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20, position: 'sticky', top: 16 }}>
       <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
         {t('forms.builder.settings', 'Paramètres')}
       </h3>
-      <Field label={t('forms.builder.field_title', 'Titre')}>
+      <SettingsField label={t('forms.builder.field_title', 'Titre')}>
         <input type="text" value={local.title}
           onChange={e => setLocal(s => ({ ...s, title: e.target.value }))}
           onBlur={() => commit('title')}
-          style={inputStyle} />
-      </Field>
-      <Field label={t('forms.builder.field_description', 'Description (optionnelle)')}>
+          style={SETTINGS_INPUT_STYLE} />
+      </SettingsField>
+      <SettingsField label={t('forms.builder.field_description', 'Description (optionnelle)')}>
         <textarea rows={3} value={local.description}
           onChange={e => setLocal(s => ({ ...s, description: e.target.value }))}
           onBlur={() => commit('description')}
-          style={{ ...inputStyle, resize: 'vertical' }} />
-      </Field>
-      <Field label={t('forms.builder.field_thank_you', 'Message de remerciement')}>
+          style={{ ...SETTINGS_INPUT_STYLE, resize: 'vertical' }} />
+      </SettingsField>
+      <SettingsField label={t('forms.builder.field_thank_you', 'Message de remerciement')}>
         <textarea rows={3} value={local.thank_you_message}
           onChange={e => setLocal(s => ({ ...s, thank_you_message: e.target.value }))}
           onBlur={() => commit('thank_you_message')}
           placeholder={t('forms.builder.thank_you_ph', 'Merci ! Nous vous recontactons sous 24h.')}
-          style={{ ...inputStyle, resize: 'vertical' }} />
-      </Field>
-      <Field label={t('forms.builder.field_lead_handling', 'Destination des leads')}>
+          style={{ ...SETTINGS_INPUT_STYLE, resize: 'vertical' }} />
+      </SettingsField>
+      <SettingsField label={t('forms.builder.field_lead_handling', 'Destination des leads')}>
         {[
           { val: 'partner_managed', label: t('forms.builder.lh_partner_managed', 'Partenaire direct'),
             sub: t('forms.builder.lh_partner_managed_sub', 'Le partenaire gère le deal') },
@@ -415,7 +421,7 @@ function SettingsPanel({ form, t, onPatch, onReset }) {
             </button>
           );
         })}
-      </Field>
+      </SettingsField>
       <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14, marginTop: 6 }}>
         <button onClick={onReset}
           style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
