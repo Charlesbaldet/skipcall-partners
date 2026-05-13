@@ -1,11 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X as XIcon } from 'lucide-react';
+import { X as XIcon, Info } from 'lucide-react';
 import api from '../lib/api';
 import { showToast, showConfirm } from './Dialogs.jsx';
+import FieldCombobox from './FieldCombobox.jsx';
 
 // ─── Domain constants — mirrors backend pipedriveService.js ─────────
+// CANONICAL_STATUSES is the full RefBoost status set; STAGE_MAPPABLE
+// is the subset that's routable to a Pipedrive stage. 'won' and 'lost'
+// live in Pipedrive's `status` field (open/won/lost/deleted) — never
+// as stages — so the UI doesn't render rows for them and the backend
+// strips them silently if a stale client posts them.
 const CANONICAL_STATUSES = ['new', 'contacted', 'qualified', 'meeting', 'proposal', 'won', 'lost'];
+const STAGE_MAPPABLE_STATUSES = ['new', 'contacted', 'qualified', 'meeting', 'proposal'];
 
 // Each entity tab lists which RefBoost fields are allowed to map to a
 // Pipedrive {entity} field. The backend whitelist is broader (8 fields
@@ -144,9 +151,11 @@ export default function PipedriveConfigModal({ onClose }) {
         setAutoPush(!!statusResp?.auto_push);
 
         // Pre-fill the stage map from existing crm_stage_mappings.
+        // Only stage-mappable statuses survive — backend already
+        // filters won/lost on read, this is belt-and-suspenders.
         const incomingStageMap = Object.fromEntries(CANONICAL_STATUSES.map(s => [s, '']));
         for (const m of mappingsResp?.stage_mappings || []) {
-          if (CANONICAL_STATUSES.includes(m.refboost_status)) {
+          if (STAGE_MAPPABLE_STATUSES.includes(m.refboost_status)) {
             incomingStageMap[m.refboost_status] = String(m.crm_stage || '');
           }
         }
@@ -245,9 +254,10 @@ export default function PipedriveConfigModal({ onClose }) {
     if (saving) return;
     setSaving(true);
     try {
-      // Stage mappings: only persist non-empty entries, with the
-      // current pipeline id attached.
-      const stage_mappings = CANONICAL_STATUSES
+      // Stage mappings: only persist non-empty entries, scoped to the
+      // stage-mappable subset (won/lost are routed through Pipedrive's
+      // deal status field, not a stage — handled at push time in P3).
+      const stage_mappings = STAGE_MAPPABLE_STATUSES
         .filter(s => stageMap[s])
         .map(s => ({
           refboost_status: s,
@@ -288,19 +298,19 @@ export default function PipedriveConfigModal({ onClose }) {
   };
 
   // ─── Validation banners ───────────────────────────────────────────
+  // won/lost are intentionally NOT in the "incomplete mapping" check
+  // — they're status-overridden in Pipedrive (see the info block in
+  // the Statuses tab).
   const banners = useMemo(() => {
     const out = [];
     if (!selectedPipelineId) {
       out.push({ tone: 'warning', text: t('pipedrive.warning_no_pipeline', 'Sélectionnez un pipeline pour activer la synchronisation') });
     }
-    if (selectedPipelineId && !stageMap.won) {
-      out.push({ tone: 'warning', text: t('pipedrive.warning_no_won_mapping', "Sans mapping pour 'Gagné', les deals signés ne seront pas synchronisés") });
-    }
     if (pipelines.length === 0 && !loading && !loadError) {
       out.push({ tone: 'info', text: t('pipedrive.no_pipelines', 'Aucun pipeline trouvé. Créez un pipeline dans Pipedrive avant de configurer la synchronisation.') });
     }
     return out;
-  }, [selectedPipelineId, stageMap, pipelines.length, loading, loadError, t]);
+  }, [selectedPipelineId, pipelines.length, loading, loadError, t]);
 
   // ─── Render ───────────────────────────────────────────────────────
   return (
@@ -500,6 +510,9 @@ export default function PipedriveConfigModal({ onClose }) {
 }
 
 // ─── Statuses tab ────────────────────────────────────────────────────
+// Only renders rows for STAGE_MAPPABLE_STATUSES — won/lost get their
+// own explanatory block at the bottom because they're not stages in
+// Pipedrive (they're values of the deal's `status` field).
 function StatusesTab({ t, stageMap, setStageMap, stages, stagesLoading, pipelineSelected }) {
   return (
     <div>
@@ -511,7 +524,7 @@ function StatusesTab({ t, stageMap, setStageMap, stages, stagesLoading, pipeline
           {t('pipedrive.statuses_col_pipedrive', 'Stage Pipedrive')}
         </div>
       </div>
-      {CANONICAL_STATUSES.map(slug => {
+      {STAGE_MAPPABLE_STATUSES.map(slug => {
         const label = t(STATUS_LABEL_KEYS[slug], STATUS_FALLBACK[slug]);
         return (
           <div key={slug} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f8fafc' }}>
@@ -533,6 +546,20 @@ function StatusesTab({ t, stageMap, setStageMap, stages, stagesLoading, pipeline
       <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>
         {t('pipedrive.statuses_helper', 'Les referrals seront poussés vers le stage Pipedrive correspondant à leur statut RefBoost')}
       </p>
+
+      {/* Won / Lost are deal-level status flips in Pipedrive, not
+          stage moves. Explain that explicitly so the admin doesn't
+          wonder where those rows went. */}
+      <div style={{
+        marginTop: 12, padding: '10px 12px', borderRadius: 10,
+        background: '#f8fafc', border: '1px solid #e2e8f0',
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <Info size={14} color="#64748b" style={{ flexShrink: 0, marginTop: 2 }} />
+        <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+          {t('pipedrive.won_lost_auto_helper', "Les statuts 'Gagné' et 'Perdu' sont gérés automatiquement via le status Pipedrive — pas de mapping de stage nécessaire. Lors du push, les deals 'Gagné' seront marqués comme 'won' dans Pipedrive et les 'Perdu' comme 'lost'.")}
+        </div>
+      </div>
     </div>
   );
 }
@@ -567,19 +594,12 @@ function FieldsTab({ t, entity, fields, fieldMap, onChange }) {
         return (
           <div key={refField} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f8fafc' }}>
             <div style={{ fontSize: 13, color: '#0f172a' }}>{label}</div>
-            <select
+            <FieldCombobox
               value={fieldMap[refField] || ''}
-              onChange={e => onChange(refField, e.target.value)}
-              style={inp}
+              fields={fields}
+              onChange={(key) => onChange(refField, key)}
               disabled={fields.length === 0}
-            >
-              <option value="">{t('pipedrive.statuses_unmapped', '— Non mappé —')}</option>
-              {fields.map(f => (
-                <option key={f.key} value={f.key}>
-                  {f.name}{f.is_custom ? `  · ${t('pipedrive.custom_field_badge', 'personnalisé')}` : ''}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         );
       })}

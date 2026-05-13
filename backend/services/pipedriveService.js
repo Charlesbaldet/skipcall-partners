@@ -374,6 +374,22 @@ function startPipedriveRefreshWorker() {
 // from here.
 
 const CANONICAL_STATUSES = ['new', 'contacted', 'qualified', 'meeting', 'proposal', 'won', 'lost'];
+// Pipedrive separates the deal's pipeline stage (stage_id, an integer
+// pointing at a real stage row) from its lifecycle status
+// (status: 'open' | 'won' | 'lost' | 'deleted'). 'won' and 'lost' are
+// never stages — pushing a deal as won/lost is a PATCH on the status
+// field, not a stage move. We expose that contract to the push layer
+// (P3) via PIPEDRIVE_STATUS_OVERRIDE so the resolver doesn't have to
+// special-case those slugs at every call site.
+const PIPEDRIVE_STATUS_OVERRIDE = { won: 'won', lost: 'lost' };
+// Everything in CANONICAL_STATUSES that IS routable to a Pipedrive
+// stage — i.e. minus the two status-override slugs above. Used by
+// saveStageMappings to drop any 'won'/'lost' rows the FE might send
+// (defensive: the UI doesn't render them anymore but a stale client
+// could) and by the on-read getStageMappings filter.
+const STAGE_MAPPABLE_STATUSES = CANONICAL_STATUSES.filter(
+  s => !Object.prototype.hasOwnProperty.call(PIPEDRIVE_STATUS_OVERRIDE, s)
+);
 // Lookup table for the 8 RefBoost fields the admin can map onto a
 // Pipedrive Deal / Person / Organization. The lambda is the value
 // extractor used by the future push (P3); for P2 only the keys are
@@ -513,7 +529,23 @@ async function getStageMappings(tenantId) {
        FROM crm_stage_mappings WHERE integration_id = $1`,
     [integ.id]
   );
-  return rows;
+  // Defensive: a prior version (or stale FE) may have written 'won' /
+  // 'lost' rows. They're not stage-routable in Pipedrive, so drop them
+  // on read so the UI doesn't try to render a stage select for them.
+  return rows.filter(r => !Object.prototype.hasOwnProperty.call(PIPEDRIVE_STATUS_OVERRIDE, r.refboost_status));
+}
+
+// Resolver used by the P3 push layer. Maps a RefBoost status to one
+// of two shapes:
+//   - { status: 'won' | 'lost' }              for terminal statuses
+//   - { stage_id: <pipedrive_stage_id> | null } for everything else
+// The caller (push) merges this into the Pipedrive PATCH body.
+function resolvePushTarget(refboostStatus, stageMappings = []) {
+  if (Object.prototype.hasOwnProperty.call(PIPEDRIVE_STATUS_OVERRIDE, refboostStatus)) {
+    return { status: PIPEDRIVE_STATUS_OVERRIDE[refboostStatus] };
+  }
+  const match = stageMappings.find(m => m.refboost_status === refboostStatus);
+  return { stage_id: match && match.crm_stage ? match.crm_stage : null };
 }
 
 // Atomic replace: drop the rows we know about (those matching one of
@@ -523,12 +555,19 @@ async function getStageMappings(tenantId) {
 async function saveStageMappings(tenantId, list) {
   const integ = await getTenantPipedrive(tenantId);
   if (!integ) throw new Error('not_connected');
+  // Only persist stage-mappable statuses. won/lost are never stages
+  // in Pipedrive (they're a separate status field on the deal — see
+  // PIPEDRIVE_STATUS_OVERRIDE) so we silently strip them here even
+  // if a stale client sends them through.
   const cleaned = (Array.isArray(list) ? list : []).filter(m =>
-    isValidRefboostStatus(m.refboost_status) &&
+    STAGE_MAPPABLE_STATUSES.includes(m.refboost_status) &&
     typeof m.crm_stage === 'string' && m.crm_stage.trim()
   );
   await query('BEGIN');
   try {
+    // DELETE the full CANONICAL_STATUSES set (not just the mappable
+    // ones) so any leftover 'won' / 'lost' rows from a previous
+    // schema also get cleaned up. INSERTs only the routable subset.
     await query(
       `DELETE FROM crm_stage_mappings
         WHERE integration_id = $1 AND refboost_status = ANY($2::text[])`,
@@ -638,6 +677,8 @@ module.exports = {
   startPipedriveRefreshWorker,
   // P2
   CANONICAL_STATUSES,
+  STAGE_MAPPABLE_STATUSES,
+  PIPEDRIVE_STATUS_OVERRIDE,
   REFBOOST_FIELDS,
   isValidRefboostStatus,
   isValidRefboostField,
@@ -650,4 +691,5 @@ module.exports = {
   saveStageMappings,
   getFieldMappings,
   saveFieldMappings,
+  resolvePushTarget,
 };
