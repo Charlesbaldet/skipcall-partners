@@ -2691,6 +2691,22 @@
     "select_placeholder": "Selecteer je type...",
     "client": "Klant"
   },
+  "pipedrive": {
+    "title": "Pipedrive",
+    "description_short": "Synchroniseer je referrals met je Pipedrive pipeline",
+    "connect": "Verbinden",
+    "disconnect": "Verbinding verbreken",
+    "connected": "Verbonden",
+    "not_connected": "Niet verbonden",
+    "connection_error": "Synchronisatiefout, maak opnieuw verbinding.",
+    "connected_to": "Verbonden met {{domain}}",
+    "connect_success": "Pipedrive is succesvol verbonden",
+    "connect_error": "Verbinden met Pipedrive is mislukt: {{detail}}",
+    "disconnect_title": "Pipedrive ontkoppelen",
+    "disconnect_confirm": "Weet je zeker dat je Pipedrive wilt ontkoppelen? Je kunt op elk moment opnieuw verbinden.",
+    "not_configured": "Pipedrive is niet geconfigureerd op deze service. Neem contact op met de RefBoost-beheerder.",
+    "config_pending": "De mapping van pipelines, fasen en aangepaste velden komt in een volgende update."
+  },
   "notion": {
     "title": "Notion",
     "description": "Synchronize your referrals with a Notion database",

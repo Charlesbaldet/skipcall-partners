@@ -2691,6 +2691,22 @@
     "select_placeholder": "Select your type...",
     "client": "Client"
   },
+  "pipedrive": {
+    "title": "Pipedrive",
+    "description_short": "Sync your referrals with your Pipedrive pipeline",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connected": "Connected",
+    "not_connected": "Not connected",
+    "connection_error": "Sync error, please reconnect.",
+    "connected_to": "Connected to {{domain}}",
+    "connect_success": "Pipedrive was connected successfully",
+    "connect_error": "Connecting to Pipedrive failed: {{detail}}",
+    "disconnect_title": "Disconnect Pipedrive",
+    "disconnect_confirm": "Are you sure you want to disconnect Pipedrive? You can reconnect at any time.",
+    "not_configured": "Pipedrive is not configured on this service. Contact the RefBoost admin.",
+    "config_pending": "Mapping pipelines, stages and custom fields ships in an upcoming update."
+  },
   "notion": {
     "title": "Notion",
     "description": "Synchronize your referrals with a Notion database",

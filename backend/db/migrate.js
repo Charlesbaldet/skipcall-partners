@@ -1408,6 +1408,29 @@ async function runMigrations() {
     console.error('[migrate.v52] failed:', err.message);
   }
 
+  // v53: Pipedrive connector — id columns on referrals + partners so a
+  // pushed/upserted entity can be resolved deterministically on the
+  // next sync. The integration config itself (tokens, api_domain,
+  // pipeline_id, webhook auth) lives inside crm_integrations.settings
+  // under provider='pipedrive'; nothing new on tenants here. All
+  // ADD COLUMN IF NOT EXISTS — re-runnable. Brief called this "v48"
+  // but that slot is taken by forms.step_count from a prior cycle;
+  // bumped to v53 (the next free slot after the v52 GDPR block above).
+  try {
+    await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS pipedrive_deal_id VARCHAR(50)`);
+    await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS pipedrive_person_id VARCHAR(50)`);
+    await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS pipedrive_organization_id VARCHAR(50)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_referrals_pipedrive_deal_id
+                   ON referrals(pipedrive_deal_id) WHERE pipedrive_deal_id IS NOT NULL`);
+    await query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS pipedrive_organization_id VARCHAR(50)`);
+    await query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS pipedrive_person_id VARCHAR(50)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_partners_pipedrive_org_id
+                   ON partners(pipedrive_organization_id) WHERE pipedrive_organization_id IS NOT NULL`);
+    console.log('[pipedrive] v53 referrals/partners pipedrive_* columns + indexes ready');
+  } catch (err) {
+    console.error('[migrate.v53] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

@@ -1432,6 +1432,11 @@ function IntegrationsPanel() {
   const [pennylaneToken, setPennylaneToken] = useState('');
   const [pennylaneSubmitting, setPennylaneSubmitting] = useState(false);
 
+  // Pipedrive (P1 surface — OAuth connect/disconnect/status only;
+  // mapping + push land in later cycles).
+  const [pipedriveStatus, setPipedriveStatus] = useState(null);
+  const [pipedriveMsg, setPipedriveMsg] = useState('');
+
   // Filter pill + per-row expansion
   const [filter, setFilter] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
@@ -1451,6 +1456,8 @@ function IntegrationsPanel() {
       setQontoStatus(q);
       const pl = await api.getPennylaneStatus().catch(() => null);
       setPennylaneStatus(pl);
+      const pd = await api.getPipedriveStatus().catch(() => null);
+      setPipedriveStatus(pd);
     } catch (e) {
       setErr(e.message);
     } finally { setLoading(false); }
@@ -1471,6 +1478,32 @@ function IntegrationsPanel() {
     }
     if (flag) {
       u.searchParams.delete('qonto');
+      const cleanUrl = u.pathname + (u.searchParams.toString() ? '?' + u.searchParams.toString() : '');
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, [t]);
+
+  // Pipedrive OAuth callback handler — pipedrive_success=1 or
+  // pipedrive_error=<code>&detail=<text>. We strip both query params
+  // after surfacing so a refresh doesn't replay the toast.
+  useEffect(() => {
+    const u = new URL(window.location.href);
+    const success = u.searchParams.get('pipedrive_success');
+    const errorCode = u.searchParams.get('pipedrive_error');
+    const detail = u.searchParams.get('detail');
+    if (success === '1') {
+      setPipedriveMsg(t('pipedrive.connect_success', 'Pipedrive a été connecté avec succès'));
+      setTimeout(() => setPipedriveMsg(''), 5000);
+      // Refresh status so the card flips to "connected" without
+      // waiting for the next mount.
+      api.getPipedriveStatus().then(setPipedriveStatus).catch(() => {});
+    } else if (errorCode) {
+      setErr(t('pipedrive.connect_error', { detail: detail || errorCode, defaultValue: 'La connexion à Pipedrive a échoué : {{detail}}' }));
+    }
+    if (success || errorCode) {
+      u.searchParams.delete('pipedrive_success');
+      u.searchParams.delete('pipedrive_error');
+      u.searchParams.delete('detail');
       const cleanUrl = u.pathname + (u.searchParams.toString() ? '?' + u.searchParams.toString() : '');
       window.history.replaceState({}, '', cleanUrl);
     }
@@ -1565,6 +1598,33 @@ function IntegrationsPanel() {
     catch (e) { setErr(e.message); }
     setBusy(false);
   };
+
+  // ─── Pipedrive ─────────────────────────────────────────────────────
+  const connectPipedrive = async (e) => {
+    stopEv(e); setBusy(true); setErr('');
+    try {
+      const { authorize_url } = await api.connectPipedrive();
+      if (authorize_url) window.location.href = authorize_url;
+    } catch (e) {
+      if (e?.data?.error === 'plan_upgrade_required') setErr(t('crm.upgrade_required_body'));
+      else if (e?.data?.error === 'pipedrive_not_configured') setErr(t('pipedrive.not_configured', 'Pipedrive n\'est pas configuré sur ce service. Contactez l\'admin RefBoost.'));
+      else setErr(e.message);
+    } finally { setBusy(false); }
+  };
+  const disconnectPipedrive = async (e) => {
+    stopEv(e);
+    const ok = await showConfirm({
+      title: t('pipedrive.disconnect_title', 'Déconnecter Pipedrive'),
+      message: t('pipedrive.disconnect_confirm', 'Êtes-vous sûr de vouloir déconnecter Pipedrive ? Vous pourrez vous reconnecter à tout moment.'),
+      variant: 'danger',
+      confirmLabel: t('crm.disconnect', 'Déconnecter'),
+    });
+    if (!ok) return;
+    setBusy(true);
+    try { await api.disconnectPipedrive(); await load(); }
+    catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
   const openQontoPicker = async () => {
     setBusy(true); setErr('');
     try {
@@ -1643,6 +1703,26 @@ function IntegrationsPanel() {
       planRequired: !isBusiness,
     },
     {
+      id: 'pipedrive',
+      category: 'crm',
+      name: t('pipedrive.title', 'Pipedrive'),
+      description: t('pipedrive.description_short', 'Synchronisez vos referrals avec votre pipeline Pipedrive'),
+      letter: 'P',
+      color: '#1a1a1a',
+      logo: '/images/integrations/pipedrive-logo.svg',
+      connected: !!pipedriveStatus?.connected,
+      meta: pipedriveStatus?.connected
+        ? t('pipedrive.connected_to', {
+            domain: (pipedriveStatus.api_domain || '').replace(/^https?:\/\//, '') || '—',
+            defaultValue: 'Connecté à {{domain}}',
+          })
+        : null,
+      // The /status endpoint exposes plan_allowed so we don't have to
+      // duplicate the plan logic here. Falls back to isBusiness when
+      // the status hasn't loaded yet.
+      planRequired: pipedriveStatus ? !pipedriveStatus.plan_allowed : !isBusiness,
+    },
+    {
       id: 'qonto',
       category: 'payments',
       name: t('qonto.title', 'Qonto'),
@@ -1691,6 +1771,7 @@ function IntegrationsPanel() {
     if (id === 'notion') setShowNotionConnect(true);
     else if (id === 'hubspot') connectHubspot();
     else if (id === 'salesforce') connectSalesforce();
+    else if (id === 'pipedrive') connectPipedrive();
     else if (id === 'qonto') connectQonto();
     else if (id === 'pennylane') setExpandedId(prev => prev === 'pennylane' ? null : 'pennylane');
   };
@@ -1703,6 +1784,10 @@ function IntegrationsPanel() {
       setMappingFor(hubspot);
     } else if (id === 'salesforce') {
       setMappingFor(salesforce);
+    } else if (id === 'pipedrive') {
+      // P1: no mapping yet — expand inline so the admin sees the
+      // Disconnect action + the "Configuration arrive bientôt" hint.
+      setExpandedId(prev => prev === 'pipedrive' ? null : 'pipedrive');
     } else if (id === 'qonto') {
       setExpandedId(prev => prev === 'qonto' ? null : 'qonto');
     } else if (id === 'pennylane') {
@@ -1784,6 +1869,9 @@ function IntegrationsPanel() {
       {qontoMsg && (
         <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{qontoMsg}</div>
       )}
+      {pipedriveMsg && (
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{pipedriveMsg}</div>
+      )}
 
       {/* Filter pills */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
@@ -1824,6 +1912,7 @@ function IntegrationsPanel() {
                 integration.id === 'hubspot' ? disconnectHubspot
                 : integration.id === 'salesforce' ? disconnectSalesforce
                 : integration.id === 'notion' ? disconnectNotion
+                : integration.id === 'pipedrive' ? disconnectPipedrive
                 : integration.id === 'qonto' ? disconnectQonto
                 : integration.id === 'pennylane' ? disconnectPennylane
                 : null
@@ -1832,6 +1921,7 @@ function IntegrationsPanel() {
               notionMsg={integration.id === 'notion' ? notionMsg : null}
               qontoStatus={integration.id === 'qonto' ? qontoStatus : null}
               onQontoOpenPicker={integration.id === 'qonto' ? openQontoPicker : null}
+              pipedriveStatus={integration.id === 'pipedrive' ? pipedriveStatus : null}
               pennylaneStatus={integration.id === 'pennylane' ? pennylaneStatus : null}
               pennylaneToken={integration.id === 'pennylane' ? pennylaneToken : ''}
               onPennylaneTokenChange={integration.id === 'pennylane' ? setPennylaneToken : null}
@@ -1922,6 +2012,7 @@ function IntegrationRow({
   integration, t, busy, expanded,
   onConnect, onConfigure, onDisconnect, onUpgrade, onSync,
   notionMsg, qontoStatus, onQontoOpenPicker,
+  pipedriveStatus,
   pennylaneStatus, pennylaneToken, onPennylaneTokenChange, onPennylaneSubmit, onPennylaneToggle, pennylaneSubmitting,
 }) {
   const [hover, setHover] = useState(false);
@@ -2058,6 +2149,27 @@ function IntegrationRow({
           shortcut. Configure goes through the modal. */}
       {connected && (integration.id === 'hubspot' || integration.id === 'salesforce') && (
         <div style={{ borderTop: '1px solid #e5e7eb', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+            {t('crm.disconnect', 'Déconnecter')}
+          </button>
+        </div>
+      )}
+
+      {/* Pipedrive (P1): when connected, show Disconnect + a placeholder
+          telling the admin that mapping/push arrive in a later cycle.
+          When a token refresh has failed (last_error set on the row),
+          surface a red banner prompting reconnection — that's the most
+          actionable thing the admin can do until P2 lands. */}
+      {integration.id === 'pipedrive' && pipedriveStatus?.last_error && (
+        <div style={{ borderTop: '1px solid #fecaca', padding: '10px 14px', background: '#fef2f2', display: 'flex', alignItems: 'center', gap: 8, color: '#b91c1c', fontSize: 12 }}>
+          {t('pipedrive.connection_error', 'Erreur de synchronisation, reconnectez-vous.')}
+        </div>
+      )}
+      {expanded && integration.id === 'pipedrive' && pipedriveStatus?.connected && (
+        <div style={{ borderTop: '1px solid #e5e7eb', padding: 14, background: '#f9fafb' }}>
+          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10 }}>
+            {t('pipedrive.config_pending', 'Le mapping des pipelines, stages et champs personnalisés arrive dans une prochaine mise à jour.')}
+          </div>
           <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
             {t('crm.disconnect', 'Déconnecter')}
           </button>

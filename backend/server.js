@@ -56,6 +56,7 @@ const complianceRoutes = require('./routes/compliance');
 const { startNotificationWorker } = require('./services/emailService');
 const { startRetryWorker: startWebhookRetryWorker } = require('./services/webhookService');
 const { startScheduledPullWorker: startNotionNightlyPull } = require('./services/notionService');
+const { startPipedriveRefreshWorker } = require('./services/pipedriveService');
 const { runMigrations } = require('./db/migrate');
 const { runSecurityMigrations } = require('./db/migrate-security');
 const { tenantMiddleware } = require('./middleware/tenant');
@@ -255,6 +256,7 @@ app.use('/api/partner/program', newsProgramRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/crm/notion', notionRoutes);
+app.use('/api/crm/pipedrive', require('./routes/pipedrive'));
 app.use('/api/partner/notification-preferences', partnerNotificationPrefsRoutes);
 app.use('/api/partner/bank-info', partnerBankInfoRoutes);
 app.use('/api/partner/export-data', partnerDataExportRoutes);
@@ -405,6 +407,11 @@ app.listen(PORT, () => {
   // Europe/Paris, iterates every active Notion integration, and
   // fetches the delta since each tenant's last_pull_at watermark.
   startNotionNightlyPull();
+
+  // Pipedrive — proactive refresh of access tokens before the 60-min
+  // expiry. No-op when PIPEDRIVE_CLIENT_ID / PIPEDRIVE_CLIENT_SECRET
+  // aren't set (the worker logs a warning and stays armed-off).
+  startPipedriveRefreshWorker();
 
   // Qonto transfer polling — every 5 minutes the worker sweeps every
   // commission with a qonto_transfer_id but no payment_completed_at,

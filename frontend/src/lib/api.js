@@ -571,6 +571,11 @@ class ApiClient {
   getHubspotObjectMappings() { return this.request('/crm/hubspot/object-mappings'); }
   updateHubspotObjectMappings(data) { return this.request('/crm/hubspot/object-mappings', { method: 'PUT', body: JSON.stringify(data) }); }
 
+  // Pipedrive (OAuth — P1 surface: connect/disconnect/status only)
+  getPipedriveStatus() { return this.request('/crm/pipedrive/status'); }
+  connectPipedrive() { return this.request('/crm/pipedrive/connect'); }
+  disconnectPipedrive() { return this.request('/crm/pipedrive/disconnect', { method: 'POST' }); }
+
   // Notion (multi-database: transactions / contacts / companies)
   getNotionStatus() { return this.request('/crm/notion/status'); }
   connectNotion(data) { return this.request('/crm/notion/connect', { method: 'POST', body: JSON.stringify(data) }); }
