@@ -225,12 +225,46 @@ router.get(
 // a clean 400 so the FE shows the "reconnect-yourself" banner.
 
 function pipedriveHandlerErrors(err, res, label) {
-  console.error(`[pipedrive.${label}] error:`, err.message);
-  if (err.message === 'not_connected' || err.message === 'no_integration') {
+  // Log everything that could matter to debug a 4xx/5xx from Pipedrive:
+  // the error tag, the inner status (if we attached one in pdJson),
+  // the body excerpt, and the message. Useful when the FE just shows
+  // a toast and there's no other handhold.
+  const status = err.status || null;
+  const body = err.body || null;
+  console.error(
+    `[pipedrive.${label}] error message="${err.message}" status=${status || '-'} kind=${err.kind || '-'}`,
+    body ? `body=${typeof body === 'string' ? body.slice(0, 500) : JSON.stringify(body).slice(0, 500)}` : ''
+  );
+
+  if (err.message === 'not_connected' || err.message === 'no_integration' || err.message === 'no_refresh_token') {
     return res.status(400).json({ error: 'not_connected' });
   }
   if (err.message === 'pipedrive_not_configured') {
     return res.status(503).json({ error: 'pipedrive_not_configured' });
+  }
+  // Map known Pipedrive HTTP errors to clean codes so the FE can show
+  // a useful message. 403 with a body talking about scope is the
+  // common cause when the Marketplace app config doesn't include the
+  // contact-fields:* scope (which gates personFields + organizationFields).
+  if (err.kind === 'pipedrive_http' && status === 403) {
+    const detail = body && (body.error_info || body.error) || 'forbidden';
+    const looksLikeScope = /scope/i.test(String(detail));
+    return res.status(403).json({
+      error: looksLikeScope ? 'pipedrive_missing_scope' : 'pipedrive_forbidden',
+      detail: String(detail).slice(0, 200),
+    });
+  }
+  if (err.kind === 'pipedrive_http' && status === 401) {
+    return res.status(401).json({
+      error: 'pipedrive_unauthorized',
+      detail: (body && (body.error_info || body.error)) || 'unauthorized',
+    });
+  }
+  if (err.kind === 'pipedrive_http' && status === 404) {
+    return res.status(404).json({
+      error: 'pipedrive_not_found',
+      detail: (body && (body.error_info || body.error)) || 'not found',
+    });
   }
   res.status(500).json({ error: 'Erreur serveur', detail: err.message.slice(0, 200) });
 }

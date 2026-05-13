@@ -215,20 +215,47 @@ export default function PipedriveConfigModal({ onClose }) {
     return () => { cancelled = true; };
   }, [selectedPipelineId]);
 
-  // Lazy-load fields for an entity when the tab is first opened.
+  // Lazy-load fields for an entity when the tab is first opened. We
+  // capture per-entity errors so the tab can show a precise reason
+  // (missing scope, not connected, etc.) instead of an empty list.
   const fieldsLoadedRef = useRef(new Set());
+  const [fieldsError, setFieldsError] = useState({ deal: null, person: null, organization: null });
   useEffect(() => {
     if (activeTab === 'statuses') return;
     const entity = activeTab; // 'deal' | 'person' | 'organization'
     if (fieldsLoadedRef.current.has(entity)) return;
     fieldsLoadedRef.current.add(entity);
+    setFieldsError(prev => ({ ...prev, [entity]: null }));
     api.getPipedriveFields(entity)
       .then(r => setFields(prev => ({ ...prev, [entity]: r.fields || [] })))
       .catch(e => {
         console.error('[pipedrive.fields]', entity, e);
-        fieldsLoadedRef.current.delete(entity); // allow a retry on next tab open
+        // Keep the slot in the "loaded" set so the user can re-open
+        // the tab without a re-fetch storm; clear it to allow manual
+        // retry via the inline retry button rendered below.
+        fieldsLoadedRef.current.delete(entity);
+        const code = e?.data?.error || '';
+        const detail = e?.data?.detail || e?.message || '';
+        setFieldsError(prev => ({ ...prev, [entity]: { code, detail } }));
       });
   }, [activeTab]);
+
+  const retryFields = (entity) => {
+    fieldsLoadedRef.current.delete(entity);
+    setFieldsError(prev => ({ ...prev, [entity]: null }));
+    // Trigger the effect by toggling the active tab off and back on
+    // is overkill; just refetch inline.
+    api.getPipedriveFields(entity)
+      .then(r => {
+        setFields(prev => ({ ...prev, [entity]: r.fields || [] }));
+        fieldsLoadedRef.current.add(entity);
+      })
+      .catch(e => {
+        const code = e?.data?.error || '';
+        const detail = e?.data?.detail || e?.message || '';
+        setFieldsError(prev => ({ ...prev, [entity]: { code, detail } }));
+      });
+  };
 
   // ─── Pipeline change with prior mappings → warn + reset ───────────
   // Stage IDs are scoped to a single pipeline in Pipedrive, so when
@@ -450,6 +477,8 @@ export default function PipedriveConfigModal({ onClose }) {
                   entity={activeTab}
                   fields={fields[activeTab]}
                   fieldMap={fieldMap[activeTab]}
+                  error={fieldsError[activeTab]}
+                  onRetry={() => retryFields(activeTab)}
                   onChange={(refField, val) => setFieldMap(prev => ({
                     ...prev,
                     [activeTab]: { ...prev[activeTab], [refField]: val },
@@ -565,8 +594,50 @@ function StatusesTab({ t, stageMap, setStageMap, stages, stagesLoading, pipeline
 }
 
 // ─── Fields tab (Deal / Person / Organization) ──────────────────────
-function FieldsTab({ t, entity, fields, fieldMap, onChange }) {
+function FieldsTab({ t, entity, fields, fieldMap, error, onRetry, onChange }) {
   const fieldKeys = REFBOOST_FIELDS_BY_ENTITY[entity] || [];
+
+  // Surface upstream errors precisely. The most useful signal is the
+  // missing-scope case (Marketplace app config doesn't grant
+  // contact-fields:* → Pipedrive 403 on /personFields and
+  // /organizationFields). The route handler translates that to
+  // pipedrive_missing_scope so we can show a specific message.
+  if (error) {
+    const isScope = error.code === 'pipedrive_missing_scope';
+    const isAuth = error.code === 'pipedrive_unauthorized' || error.code === 'not_connected';
+    const tone = isScope || isAuth ? 'error' : 'warning';
+    const headline = isScope
+      ? t('pipedrive.error_missing_scope', 'Cette intégration Pipedrive n\'a pas le scope nécessaire pour lire les champs Person / Organization. Reconnectez Pipedrive en autorisant le scope « Contacts ».')
+      : isAuth
+        ? t('pipedrive.error_unauthorized', 'Session Pipedrive expirée. Reconnectez Pipedrive depuis la page Intégrations.')
+        : t('pipedrive.error_fields_load', 'Impossible de charger la liste des champs Pipedrive.');
+    return (
+      <div>
+        <div style={{
+          padding: '12px 14px', borderRadius: 10,
+          background: tone === 'error' ? '#fef2f2' : '#fffbeb',
+          border: '1px solid ' + (tone === 'error' ? '#fecaca' : '#fde68a'),
+          color: tone === 'error' ? '#b91c1c' : '#92400e',
+          fontSize: 13, marginBottom: 12,
+        }}>
+          <div style={{ fontWeight: 500, marginBottom: 4 }}>{headline}</div>
+          {error.detail && (
+            <div style={{ fontSize: 11, opacity: 0.8 }}>{error.detail}</div>
+          )}
+        </div>
+        <button
+          type="button" onClick={onRetry}
+          style={{
+            padding: '6px 14px', borderRadius: 8, border: '1px solid #e5e7eb',
+            background: '#fff', color: '#0f172a', fontWeight: 500, fontSize: 13,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          {t('common.retry', 'Réessayer')}
+        </button>
+      </div>
+    );
+  }
   const description = {
     deal:         t('pipedrive.deal_description', 'Mappez les informations de vos referrals (Deal Pipedrive)'),
     person:       t('pipedrive.person_description', 'Mappez le contact principal du deal (Person Pipedrive)'),

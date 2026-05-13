@@ -303,8 +303,24 @@ async function pipedriveFetch(tenantId, path, options = {}, _retryFlags = {}) {
       ...(options.headers || {}),
     },
   });
+  // Surface any non-2xx with the URL we hit. Helps debug missing-scope
+  // and api_domain-drift cases from the logs alone.
+  if (!r.ok) {
+    console.warn(`[pipedrive.fetch] non-2xx tenant=${tenantId} ${options.method || 'GET'} ${url} → ${r.status}${_retryFlags.refreshed ? ' (after token refresh)' : ''}`);
+  }
   if (r.status === 401 && !_retryFlags.refreshed) {
-    await refreshAccessToken(tenantId);
+    // Token might just be expired; a refresh attempt is cheap. If the
+    // refresh itself blows up (e.g. provider config went sideways), we
+    // surface a CLEAN propagation rather than letting the original
+    // 'pipedrive_not_configured' bubble up — the calling endpoint
+    // would otherwise return 503 to the FE, which is misleading when
+    // the actual cause is a missing OAuth scope.
+    try {
+      await refreshAccessToken(tenantId);
+    } catch (refreshErr) {
+      console.warn(`[pipedrive.fetch] refresh-after-401 failed tenant=${tenantId} reason=${refreshErr.message} — returning original 401`);
+      return r;
+    }
     return pipedriveFetch(tenantId, path, options, { ..._retryFlags, refreshed: true });
   }
   if (r.status === 404 && !_retryFlags.domainRefreshed) {
@@ -412,16 +428,43 @@ function isValidRefboostField(f)  { return Object.prototype.hasOwnProperty.call(
 // Pipedrive returns API responses wrapped in { success, data, ... }.
 // Helper that surfaces a clean error when the wrapper says failure but
 // the HTTP status was 200 (does happen on /v1 endpoints).
+//
+// On error, attaches `status`, `body` (truncated) and `kind` to the
+// thrown Error so the route handler can map them to clean HTTP codes
+// + log enough context to debug a missing-scope or wrong-path case
+// without having to repro from the browser.
 async function pdJson(r, label) {
   let body;
+  let rawText = '';
   try { body = await r.json(); }
-  catch { throw new Error(`pipedrive ${label} ${r.status} (non-json)`); }
+  catch {
+    // Try to capture the raw text body if JSON parse fails — useful
+    // for debugging proxy errors / HTML error pages from Pipedrive's
+    // edge layer.
+    try { rawText = await r.text(); } catch {}
+    const e = new Error(`pipedrive ${label} ${r.status} (non-json)`);
+    e.status = r.status;
+    e.body = rawText.slice(0, 500);
+    e.kind = 'pipedrive_http';
+    throw e;
+  }
   if (!r.ok) {
-    const err = body && (body.error || body.errorCode) || `${r.status}`;
-    throw new Error(`pipedrive ${label} ${r.status} ${err}`);
+    // Pipedrive error bodies vary: { success:false, error, error_info }
+    // for v1, { success:false, error } for v2. We extract whatever's
+    // readable.
+    const errMsg = (body && (body.error_info || body.error || body.errorCode)) || `${r.status}`;
+    const e = new Error(`pipedrive ${label} ${r.status} ${errMsg}`);
+    e.status = r.status;
+    e.body = body;
+    e.kind = 'pipedrive_http';
+    throw e;
   }
   if (body && body.success === false) {
-    throw new Error(`pipedrive ${label} api error: ${body.error || 'unknown'}`);
+    const e = new Error(`pipedrive ${label} api error: ${body.error || 'unknown'}`);
+    e.status = r.status;
+    e.body = body;
+    e.kind = 'pipedrive_api';
+    throw e;
   }
   return body;
 }
@@ -463,7 +506,9 @@ async function listFields(tenantId, entityType) {
   };
   const path = PATH_BY_ENTITY[entityType];
   if (!path) throw new Error('invalid_entity_type');
+  console.log(`[pipedrive.listFields] tenant=${tenantId} entity=${entityType} path=${path}`);
   const r = await pipedriveFetch(tenantId, path);
+  console.log(`[pipedrive.listFields] tenant=${tenantId} entity=${entityType} status=${r.status}`);
   const body = await pdJson(r, `${entityType}Fields`);
   return (body.data || []).map(f => {
     const out = {
