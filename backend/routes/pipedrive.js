@@ -218,4 +218,145 @@ router.get(
   }
 );
 
+// ─── P2: Pipeline / stages / fields read endpoints ───────────────────
+// Each route delegates to pipedriveService which handles token refresh
+// + 401/404/429 retry under the hood. If the integration isn't
+// connected the service throws 'not_connected'; we translate that to
+// a clean 400 so the FE shows the "reconnect-yourself" banner.
+
+function pipedriveHandlerErrors(err, res, label) {
+  console.error(`[pipedrive.${label}] error:`, err.message);
+  if (err.message === 'not_connected' || err.message === 'no_integration') {
+    return res.status(400).json({ error: 'not_connected' });
+  }
+  if (err.message === 'pipedrive_not_configured') {
+    return res.status(503).json({ error: 'pipedrive_not_configured' });
+  }
+  res.status(500).json({ error: 'Erreur serveur', detail: err.message.slice(0, 200) });
+}
+
+// GET /api/crm/pipedrive/pipelines
+router.get(
+  '/pipelines',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    try {
+      const pipelines = await pipedrive.listPipelines(req.tenantId);
+      res.json({ pipelines });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'pipelines');
+    }
+  }
+);
+
+// GET /api/crm/pipedrive/pipelines/:pipelineId/stages
+router.get(
+  '/pipelines/:pipelineId/stages',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    const id = parseInt(req.params.pipelineId, 10);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'invalid_pipeline_id' });
+    }
+    try {
+      const stages = await pipedrive.listStages(req.tenantId, id);
+      res.json({ stages });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'stages');
+    }
+  }
+);
+
+// GET /api/crm/pipedrive/fields/:entityType
+const ENTITY_TYPES = new Set(['deal', 'person', 'organization']);
+router.get(
+  '/fields/:entityType',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    const entityType = String(req.params.entityType || '').toLowerCase();
+    if (!ENTITY_TYPES.has(entityType)) {
+      return res.status(400).json({ error: 'invalid_entity_type' });
+    }
+    try {
+      const fields = await pipedrive.listFields(req.tenantId, entityType);
+      res.json({ fields });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'fields');
+    }
+  }
+);
+
+// PUT /api/crm/pipedrive/settings  (pipeline_id + auto_push)
+router.put(
+  '/settings',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    try {
+      const body = req.body || {};
+      const partial = {};
+      if (Object.prototype.hasOwnProperty.call(body, 'pipeline_id')) {
+        const raw = body.pipeline_id;
+        if (raw === null || raw === '') {
+          partial.pipeline_id = null;
+        } else {
+          const n = parseInt(raw, 10);
+          if (!Number.isInteger(n) || n <= 0) {
+            return res.status(400).json({ error: 'invalid_pipeline_id' });
+          }
+          partial.pipeline_id = n;
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(body, 'auto_push')) {
+        partial.auto_push = !!body.auto_push;
+      }
+      const next = await pipedrive.updateSettings(req.tenantId, partial);
+      await logAudit(req, 'crm.pipedrive.settings.update', 'crm_integration', null, partial);
+      res.json({ ok: true, settings: next });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'settings.put');
+    }
+  }
+);
+
+// GET /api/crm/pipedrive/mappings
+router.get(
+  '/mappings',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    try {
+      const [stage_mappings, field_mappings] = await Promise.all([
+        pipedrive.getStageMappings(req.tenantId),
+        pipedrive.getFieldMappings(req.tenantId),
+      ]);
+      res.json({ stage_mappings, field_mappings });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'mappings.get');
+    }
+  }
+);
+
+// PUT /api/crm/pipedrive/mappings
+router.put(
+  '/mappings',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    try {
+      const body = req.body || {};
+      const stage_mappings = Array.isArray(body.stage_mappings) ? body.stage_mappings : [];
+      const field_mappings = (body.field_mappings && typeof body.field_mappings === 'object')
+        ? body.field_mappings : {};
+
+      const stageCount = await pipedrive.saveStageMappings(req.tenantId, stage_mappings);
+      const fieldCounts = await pipedrive.saveFieldMappings(req.tenantId, field_mappings);
+      await logAudit(req, 'crm.pipedrive.mappings.update', 'crm_integration', null, {
+        stages: stageCount,
+        fields: fieldCounts,
+      });
+      res.json({ ok: true, stages: stageCount, fields: fieldCounts });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'mappings.put');
+    }
+  }
+);
+
 module.exports = router;

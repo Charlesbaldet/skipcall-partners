@@ -369,6 +369,259 @@ function startPipedriveRefreshWorker() {
   console.log('[pipedrive] refresh worker armed (10 min cadence)');
 }
 
+// ─── P2: Pipelines / Stages / Fields API wrappers ────────────────────
+// All read-only — push (P3) and webhooks (P5) plug onto pipedriveFetch
+// from here.
+
+const CANONICAL_STATUSES = ['new', 'contacted', 'qualified', 'meeting', 'proposal', 'won', 'lost'];
+// Lookup table for the 8 RefBoost fields the admin can map onto a
+// Pipedrive Deal / Person / Organization. The lambda is the value
+// extractor used by the future push (P3); for P2 only the keys are
+// consulted, but defining both here keeps the source of truth in one
+// spot for both cycles.
+const REFBOOST_FIELDS = {
+  prospect_name:    r => r.prospect_name,
+  email:            r => r.prospect_email || r.email,
+  phone:            r => r.prospect_phone || r.phone,
+  company:          r => r.prospect_company,
+  notes:            r => r.notes,
+  mrr:              r => r.deal_value,
+  partner_name:     r => r.partner_name,
+  role:             r => r.prospect_role,
+};
+
+function isValidRefboostStatus(s) { return CANONICAL_STATUSES.includes(s); }
+function isValidRefboostField(f)  { return Object.prototype.hasOwnProperty.call(REFBOOST_FIELDS, f); }
+
+// Pipedrive returns API responses wrapped in { success, data, ... }.
+// Helper that surfaces a clean error when the wrapper says failure but
+// the HTTP status was 200 (does happen on /v1 endpoints).
+async function pdJson(r, label) {
+  let body;
+  try { body = await r.json(); }
+  catch { throw new Error(`pipedrive ${label} ${r.status} (non-json)`); }
+  if (!r.ok) {
+    const err = body && (body.error || body.errorCode) || `${r.status}`;
+    throw new Error(`pipedrive ${label} ${r.status} ${err}`);
+  }
+  if (body && body.success === false) {
+    throw new Error(`pipedrive ${label} api error: ${body.error || 'unknown'}`);
+  }
+  return body;
+}
+
+async function listPipelines(tenantId) {
+  const r = await pipedriveFetch(tenantId, '/api/v2/pipelines');
+  const body = await pdJson(r, 'pipelines');
+  // v2 returns { success, data: [{ id, name, ... }] }
+  return (body.data || []).map(p => ({
+    id: p.id,
+    name: p.name,
+    is_default: !!(p.is_default || p.selected),
+    is_deleted_flag: !!p.is_deleted_flag,
+    order_nr: p.order_nr != null ? p.order_nr : 0,
+  }));
+}
+
+async function listStages(tenantId, pipelineId) {
+  const r = await pipedriveFetch(tenantId, `/api/v2/stages?pipeline_id=${encodeURIComponent(pipelineId)}`);
+  const body = await pdJson(r, 'stages');
+  return (body.data || []).map(s => ({
+    id: s.id,
+    name: s.name,
+    order_nr: s.order_nr != null ? s.order_nr : 0,
+    pipeline_id: s.pipeline_id,
+  }));
+}
+
+// entityType ∈ {deal, person, organization}. Pipedrive's *fields
+// endpoints are still on /v1 — v2 hasn't ported them yet. enum/set
+// fields ship their options inline, we normalise them to a uniform
+// {id,label} shape so the FE can render a select without conditional
+// logic.
+async function listFields(tenantId, entityType) {
+  const PATH_BY_ENTITY = {
+    deal: '/api/v1/dealFields',
+    person: '/api/v1/personFields',
+    organization: '/api/v1/organizationFields',
+  };
+  const path = PATH_BY_ENTITY[entityType];
+  if (!path) throw new Error('invalid_entity_type');
+  const r = await pipedriveFetch(tenantId, path);
+  const body = await pdJson(r, `${entityType}Fields`);
+  return (body.data || []).map(f => {
+    const out = {
+      key: f.key,
+      name: f.name,
+      field_type: f.field_type || null,
+      // edit_flag is true for custom fields, false/missing for stock
+      // fields. Surfacing it lets the FE put a "personnalisé" badge
+      // on custom rows without re-deriving from the key shape.
+      is_custom: !!f.edit_flag,
+    };
+    if ((f.field_type === 'enum' || f.field_type === 'set') && Array.isArray(f.options)) {
+      out.options = f.options.map(o => ({
+        id: o.id != null ? String(o.id) : String(o.value || ''),
+        label: o.label != null ? String(o.label) : String(o.value || ''),
+      }));
+    }
+    return out;
+  });
+}
+
+// ─── P2: Settings + mapping persistence ──────────────────────────────
+// Stage mappings live in crm_stage_mappings (existing) tied to the
+// pipedrive integration row's id. Field mappings live in
+// crm_field_mappings (existing) but since that table has no
+// entity_type column and adding one would mean a migration, we
+// namespace the crm_field value with "{entity}:{key}" — e.g.
+// "deal:title", "person:92f5dd33", "organization:name". On read we
+// split, on write we prefix. Safe because Pipedrive field keys are
+// either simple snake_case (no colon) or hex hashes (no colon).
+
+async function getSettings(tenantId) {
+  const integ = await getTenantPipedrive(tenantId);
+  if (!integ) return null;
+  return {
+    pipeline_id: integ.pipelineId != null ? String(integ.pipelineId) : null,
+    auto_push: !!integ.autoPush,
+  };
+}
+
+async function updateSettings(tenantId, partial) {
+  const current = (await readSettings(tenantId)) || {};
+  const next = { ...current };
+  if (Object.prototype.hasOwnProperty.call(partial, 'pipeline_id')) {
+    // Persist as string for JSONB stability — JS Number↔BigInt drift
+    // on Pipedrive integer IDs has bitten us elsewhere.
+    next.pipeline_id = partial.pipeline_id == null
+      ? null
+      : String(partial.pipeline_id);
+  }
+  if (Object.prototype.hasOwnProperty.call(partial, 'auto_push')) {
+    next.auto_push = !!partial.auto_push;
+  }
+  await writeSettings(tenantId, next);
+  return { pipeline_id: next.pipeline_id || null, auto_push: !!next.auto_push };
+}
+
+async function getStageMappings(tenantId) {
+  const integ = await getTenantPipedrive(tenantId);
+  if (!integ) return [];
+  const { rows } = await query(
+    `SELECT refboost_status, crm_stage, crm_pipeline_id
+       FROM crm_stage_mappings WHERE integration_id = $1`,
+    [integ.id]
+  );
+  return rows;
+}
+
+// Atomic replace: drop the rows we know about (those matching one of
+// CANONICAL_STATUSES) then INSERT the new set. Rows tied to legacy
+// status slugs are left alone so an existing tenant's prior config
+// doesn't get torched if we shipped a status rename in the meantime.
+async function saveStageMappings(tenantId, list) {
+  const integ = await getTenantPipedrive(tenantId);
+  if (!integ) throw new Error('not_connected');
+  const cleaned = (Array.isArray(list) ? list : []).filter(m =>
+    isValidRefboostStatus(m.refboost_status) &&
+    typeof m.crm_stage === 'string' && m.crm_stage.trim()
+  );
+  await query('BEGIN');
+  try {
+    await query(
+      `DELETE FROM crm_stage_mappings
+        WHERE integration_id = $1 AND refboost_status = ANY($2::text[])`,
+      [integ.id, CANONICAL_STATUSES]
+    );
+    for (const m of cleaned) {
+      await query(
+        `INSERT INTO crm_stage_mappings (integration_id, refboost_status, crm_stage, crm_pipeline_id)
+         VALUES ($1, $2, $3, $4)`,
+        [integ.id, m.refboost_status, String(m.crm_stage).slice(0, 100), m.crm_pipeline_id != null ? String(m.crm_pipeline_id).slice(0, 100) : null]
+      );
+    }
+    await query('COMMIT');
+  } catch (e) {
+    await query('ROLLBACK').catch(() => {});
+    throw e;
+  }
+  return cleaned.length;
+}
+
+// byEntity = { deal: [{refboost_field, crm_field}], person: [...], organization: [...] }
+// Persisted as crm_field row with crm_field = "{entity}:{key}".
+async function getFieldMappings(tenantId) {
+  const integ = await getTenantPipedrive(tenantId);
+  const empty = { deal: [], person: [], organization: [] };
+  if (!integ) return empty;
+  const { rows } = await query(
+    `SELECT refboost_field, crm_field, direction
+       FROM crm_field_mappings WHERE integration_id = $1`,
+    [integ.id]
+  );
+  const out = { deal: [], person: [], organization: [] };
+  for (const r of rows) {
+    const idx = String(r.crm_field || '').indexOf(':');
+    if (idx <= 0) continue; // not a pipedrive-prefixed row → ignore
+    const entity = r.crm_field.slice(0, idx);
+    const key = r.crm_field.slice(idx + 1);
+    if (out[entity] && key) out[entity].push({ refboost_field: r.refboost_field, crm_field: key });
+  }
+  return out;
+}
+
+const ENTITY_TYPES = ['deal', 'person', 'organization'];
+
+async function saveFieldMappings(tenantId, byEntity) {
+  const integ = await getTenantPipedrive(tenantId);
+  if (!integ) throw new Error('not_connected');
+  const cleaned = { deal: [], person: [], organization: [] };
+  for (const entity of ENTITY_TYPES) {
+    const list = byEntity && Array.isArray(byEntity[entity]) ? byEntity[entity] : [];
+    for (const m of list) {
+      if (!isValidRefboostField(m.refboost_field)) continue;
+      if (typeof m.crm_field !== 'string' || !m.crm_field.trim()) continue;
+      cleaned[entity].push({
+        refboost_field: m.refboost_field,
+        crm_field: m.crm_field.trim(),
+      });
+    }
+  }
+  await query('BEGIN');
+  try {
+    // Wipe every prefixed row for this integration in one go — saving
+    // is "replace the whole set" semantics, no per-entity surgery.
+    await query(
+      `DELETE FROM crm_field_mappings
+        WHERE integration_id = $1
+          AND (crm_field LIKE 'deal:%'
+               OR crm_field LIKE 'person:%'
+               OR crm_field LIKE 'organization:%')`,
+      [integ.id]
+    );
+    for (const entity of ENTITY_TYPES) {
+      for (const m of cleaned[entity]) {
+        const prefixed = `${entity}:${m.crm_field}`.slice(0, 100);
+        await query(
+          `INSERT INTO crm_field_mappings (integration_id, refboost_field, crm_field, direction)
+           VALUES ($1, $2, $3, 'push')`,
+          [integ.id, m.refboost_field, prefixed]
+        );
+      }
+    }
+    await query('COMMIT');
+  } catch (e) {
+    await query('ROLLBACK').catch(() => {});
+    throw e;
+  }
+  return {
+    deal: cleaned.deal.length,
+    person: cleaned.person.length,
+    organization: cleaned.organization.length,
+  };
+}
+
 module.exports = {
   isConfigured,
   signState,
@@ -383,4 +636,18 @@ module.exports = {
   ensureValidAccessToken,
   pipedriveFetch,
   startPipedriveRefreshWorker,
+  // P2
+  CANONICAL_STATUSES,
+  REFBOOST_FIELDS,
+  isValidRefboostStatus,
+  isValidRefboostField,
+  listPipelines,
+  listStages,
+  listFields,
+  getSettings,
+  updateSettings,
+  getStageMappings,
+  saveStageMappings,
+  getFieldMappings,
+  saveFieldMappings,
 };

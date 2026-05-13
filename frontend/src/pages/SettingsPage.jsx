@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import PipelineStagesEditor from '../components/PipelineStagesEditor.jsx';
 import WebhooksSection from '../components/WebhooksSection.jsx';
+import PipedriveConfigModal from '../components/PipedriveConfigModal.jsx';
 import BillingPage from './BillingPage.jsx';
 import { showConfirm, showPrompt, showToast } from '../components/Dialogs.jsx';
 import {
@@ -1432,10 +1433,10 @@ function IntegrationsPanel() {
   const [pennylaneToken, setPennylaneToken] = useState('');
   const [pennylaneSubmitting, setPennylaneSubmitting] = useState(false);
 
-  // Pipedrive (P1 surface — OAuth connect/disconnect/status only;
-  // mapping + push land in later cycles).
+  // Pipedrive (P1: OAuth ; P2: pipeline picker + mappings via modal).
   const [pipedriveStatus, setPipedriveStatus] = useState(null);
   const [pipedriveMsg, setPipedriveMsg] = useState('');
+  const [showPipedriveConfig, setShowPipedriveConfig] = useState(false);
 
   // Filter pill + per-row expansion
   const [filter, setFilter] = useState('all');
@@ -1785,9 +1786,9 @@ function IntegrationsPanel() {
     } else if (id === 'salesforce') {
       setMappingFor(salesforce);
     } else if (id === 'pipedrive') {
-      // P1: no mapping yet — expand inline so the admin sees the
-      // Disconnect action + the "Configuration arrive bientôt" hint.
-      setExpandedId(prev => prev === 'pipedrive' ? null : 'pipedrive');
+      // P2 surface: open the dedicated config modal (pipeline picker
+      // + status / deal / person / organization mappings).
+      setShowPipedriveConfig(true);
     } else if (id === 'qonto') {
       setExpandedId(prev => prev === 'qonto' ? null : 'qonto');
     } else if (id === 'pennylane') {
@@ -1954,6 +1955,12 @@ function IntegrationsPanel() {
       {showNotionMappings && (
         <NotionMappingModal
           onClose={() => { setShowNotionMappings(false); load(); }}
+        />
+      )}
+
+      {showPipedriveConfig && (
+        <PipedriveConfigModal
+          onClose={() => { setShowPipedriveConfig(false); load(); }}
         />
       )}
 

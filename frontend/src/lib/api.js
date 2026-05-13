@@ -571,10 +571,16 @@ class ApiClient {
   getHubspotObjectMappings() { return this.request('/crm/hubspot/object-mappings'); }
   updateHubspotObjectMappings(data) { return this.request('/crm/hubspot/object-mappings', { method: 'PUT', body: JSON.stringify(data) }); }
 
-  // Pipedrive (OAuth — P1 surface: connect/disconnect/status only)
+  // Pipedrive (P1: OAuth ; P2: pipelines + stages + fields + mappings)
   getPipedriveStatus() { return this.request('/crm/pipedrive/status'); }
   connectPipedrive() { return this.request('/crm/pipedrive/connect'); }
   disconnectPipedrive() { return this.request('/crm/pipedrive/disconnect', { method: 'POST' }); }
+  getPipedrivePipelines() { return this.request('/crm/pipedrive/pipelines'); }
+  getPipedriveStages(pipelineId) { return this.request('/crm/pipedrive/pipelines/' + encodeURIComponent(pipelineId) + '/stages'); }
+  getPipedriveFields(entityType) { return this.request('/crm/pipedrive/fields/' + encodeURIComponent(entityType)); }
+  savePipedriveSettings(data) { return this.request('/crm/pipedrive/settings', { method: 'PUT', body: JSON.stringify(data) }); }
+  getPipedriveMappings() { return this.request('/crm/pipedrive/mappings'); }
+  savePipedriveMappings(data) { return this.request('/crm/pipedrive/mappings', { method: 'PUT', body: JSON.stringify(data) }); }
 
   // Notion (multi-database: transactions / contacts / companies)
   getNotionStatus() { return this.request('/crm/notion/status'); }
