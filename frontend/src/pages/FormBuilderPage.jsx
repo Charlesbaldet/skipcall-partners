@@ -81,6 +81,17 @@ export default function FormBuilderPage() {
   // model).
   const [mode, setMode] = useState('preview');
   const [confirmRestoreDefaults, setConfirmRestoreDefaults] = useState(false);
+  // Viewport-based stacking for the preview tab (form + thank-you
+  // page side-by-side above 1100px, stacked below). Matches the
+  // mobile-flag pattern used elsewhere (LandingPage, SecurityPage).
+  const [previewStacked, setPreviewStacked] = useState(
+    typeof window !== 'undefined' && window.innerWidth < 1100
+  );
+  useEffect(() => {
+    const h = () => setPreviewStacked(window.innerWidth < 1100);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
   // Autosave indicator state. Every API operation that mutates the
   // form transits through `wrapSave` which flips this state. UI
   // chrome lives next to the mode toggle. Auto-fades 'saved' back to
@@ -402,9 +413,8 @@ export default function FormBuilderPage() {
             onClick={() => setMode('fields')}
             openLabel={t('forms.builder.edit_mode', 'Éditer')}
           />
-          {/* Title block centred above the preview card, sharing the
-              same horizontal midline as the card itself (480px wide,
-              auto-margined). */}
+          {/* Title block centred above both columns. Subtitle reflects
+              the two-pane preview (form + thank-you page). */}
           <div style={{ marginBottom: 24, textAlign: 'center' }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#0f172a' }}>
               {t('forms.builder.preview_label', 'Aperçu formulaire')}
@@ -413,8 +423,33 @@ export default function FormBuilderPage() {
               {t('forms.builder.preview_caption', 'Ce que vos partenaires partageront avec leurs visiteurs')}
             </p>
           </div>
-          <div style={{ maxWidth: 480, margin: '0 auto' }}>
-            <FormPreview form={form} fields={fields} onSubmit={undefined} t={t} />
+          {/* Side-by-side: form preview on the left, thank-you page on
+              the right. Stacks vertically below 1100px (the previewStacked
+              flag is recomputed on resize). gridTemplateColumns toggles
+              between 1fr / 1fr 1fr based on the flag rather than via a
+              media query — codebase is inline-styles only. */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: previewStacked ? '1fr' : '1fr 1fr',
+            gap: 24,
+            alignItems: 'flex-start',
+          }}>
+            <div>
+              <div style={previewColumnLabelStyle}>
+                {t('forms.builder.preview_form_label', 'Formulaire')}
+              </div>
+              <div style={previewColumnCardStyle}>
+                <FormPreview form={form} fields={fields} onSubmit={undefined} t={t} />
+              </div>
+            </div>
+            <div>
+              <div style={previewColumnLabelStyle}>
+                {t('forms.builder.preview_thankyou_label', 'Page de remerciement')}
+              </div>
+              <div style={previewColumnCardStyle}>
+                <ThankYouPreview form={form} t={t} />
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -737,6 +772,107 @@ function StatCard({ label, value, accent }) {
     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '14px 18px' }}>
       <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 6, letterSpacing: -0.5 }}>{value}</div>
+    </div>
+  );
+}
+
+// ─── Preview tab — column chrome ────────────────────────────────────
+// Both columns of the side-by-side preview share the same chrome
+// (label + card frame). Extracted to constants so the form and the
+// thank-you renderers stay visually identical.
+const previewColumnLabelStyle = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: '#64748b',
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+  marginBottom: 10,
+  textAlign: 'center',
+};
+
+const previewColumnCardStyle = {
+  background: '#fff',
+  border: '0.5px solid #e2e8f0',
+  borderRadius: 16,
+  padding: 22,
+};
+
+// ─── Thank-you page preview ─────────────────────────────────────────
+// Mirrors the public flow: title + admin-configured message + (when
+// the appointment toggle is on and the URL is valid) the Calendly
+// iframe. Reads form.thank_you_message / appointment_enabled /
+// appointment_url, which are the canonical column names since v50
+// (appointment-as-setting migration).
+//
+// The Calendly URL is validated against the calendly.com host before
+// being embedded — any other host falls through to the empty-state
+// placeholder rather than rendering an attacker-controlled iframe.
+function ThankYouPreview({ form, t }) {
+  const message = (form?.thank_you_message || '').trim();
+  const apptEnabled = !!form?.appointment_enabled;
+  const apptUrl = (form?.appointment_url || '').trim();
+
+  // Validation: must be a parseable URL on the calendly.com host
+  // (any subdomain accepted). Pipedrive's malformed inputs fall to
+  // the placeholder rather than embedding arbitrary URLs.
+  const isCalendlyUrl = (() => {
+    if (!apptUrl) return false;
+    try {
+      const u = new URL(apptUrl);
+      if (u.protocol !== 'https:') return false;
+      return u.hostname === 'calendly.com' || u.hostname.endsWith('.calendly.com');
+    } catch { return false; }
+  })();
+
+  return (
+    <div>
+      <h3 style={{
+        margin: 0, fontSize: 16, fontWeight: 500, color: '#0f172a',
+        textAlign: 'center', marginBottom: 14,
+      }}>
+        {t('forms.builder.preview_thankyou_title', 'Merci !')}
+      </h3>
+
+      {message ? (
+        <p style={{
+          margin: '0 0 16px', fontSize: 14, color: '#334155',
+          textAlign: 'center', lineHeight: 1.6, whiteSpace: 'pre-wrap',
+        }}>
+          {message}
+        </p>
+      ) : (
+        <p style={{
+          margin: '0 0 16px', fontSize: 13, color: '#94a3b8',
+          textAlign: 'center', fontStyle: 'italic',
+        }}>
+          {t('forms.builder.preview_thankyou_empty_message', 'Aucun message configuré')}
+        </p>
+      )}
+
+      {/* Three branches:
+            apptEnabled + valid URL → embed iframe
+            apptEnabled + URL invalid → placeholder
+            !apptEnabled → render nothing (matches the live public page) */}
+      {apptEnabled && isCalendlyUrl && (
+        <iframe
+          src={apptUrl}
+          title="Calendly"
+          style={{ width: '100%', height: 360, border: 'none', borderRadius: 8 }}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      )}
+      {apptEnabled && !isCalendlyUrl && (
+        <div style={{
+          padding: '24px 20px', borderRadius: 10,
+          background: '#f8fafc', border: '1px dashed #cbd5e1',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          gap: 8, color: '#64748b', fontSize: 13, textAlign: 'center',
+        }}>
+          <CalendarIcon size={20} color="#94a3b8" />
+          <span>{t('forms.builder.preview_thankyou_no_calendar', 'Agenda non configuré · Renseignez votre URL Calendly dans Paramètres')}</span>
+        </div>
+      )}
     </div>
   );
 }
