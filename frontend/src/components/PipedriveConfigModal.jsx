@@ -15,12 +15,17 @@ const CANONICAL_STATUSES = ['new', 'contacted', 'qualified', 'meeting', 'proposa
 const STAGE_MAPPABLE_STATUSES = ['new', 'contacted', 'qualified', 'meeting', 'proposal'];
 
 // Each entity tab lists which RefBoost fields are allowed to map to a
-// Pipedrive {entity} field. The backend whitelist is broader (8 fields
-// total); we expose only the subset that makes semantic sense per
-// entity. Adding extras later is one-line per entity.
+// Pipedrive {entity} field. The backend whitelist is broader; we
+// expose only the subset that makes semantic sense per entity.
+//
+// Person uses contact_first_name + contact_last_name (separate
+// referrals columns since v18d) rather than prospect_name — Pipedrive
+// Person has first_name / last_name fields natively, so the natural
+// mapping is field-to-field. prospect_name stays on Deal (it's the
+// deal/company header, not a personal name).
 const REFBOOST_FIELDS_BY_ENTITY = {
   deal:         ['prospect_name', 'mrr', 'notes'],
-  person:       ['prospect_name', 'email', 'phone', 'role'],
+  person:       ['contact_first_name', 'contact_last_name', 'email', 'phone', 'role'],
   organization: ['company'],
 };
 
@@ -35,14 +40,16 @@ const STATUS_LABEL_KEYS = {
 };
 
 const FIELD_LABEL_KEYS = {
-  prospect_name: 'pipedrive.field_prospect_name',
-  email:         'pipedrive.field_email',
-  phone:         'pipedrive.field_phone',
-  company:       'pipedrive.field_company',
-  notes:         'pipedrive.field_notes',
-  mrr:           'pipedrive.field_mrr',
-  partner_name:  'pipedrive.field_partner_name',
-  role:          'pipedrive.field_role',
+  prospect_name:      'pipedrive.field_prospect_name',
+  contact_first_name: 'pipedrive.field_contact_first_name',
+  contact_last_name:  'pipedrive.field_contact_last_name',
+  email:              'pipedrive.field_email',
+  phone:              'pipedrive.field_phone',
+  company:            'pipedrive.field_company',
+  notes:              'pipedrive.field_notes',
+  mrr:                'pipedrive.field_mrr',
+  partner_name:       'pipedrive.field_partner_name',
+  role:               'pipedrive.field_role',
 };
 
 // Status fallback labels used when the project doesn't carry a
@@ -55,6 +62,8 @@ const STATUS_FALLBACK = {
 
 const FIELD_FALLBACK = {
   prospect_name: 'Nom du prospect',
+  contact_first_name: 'Prénom du prospect',
+  contact_last_name: 'Nom du prospect',
   email: 'Email',
   phone: 'Téléphone',
   company: 'Entreprise',
@@ -227,7 +236,27 @@ export default function PipedriveConfigModal({ onClose }) {
     fieldsLoadedRef.current.add(entity);
     setFieldsError(prev => ({ ...prev, [entity]: null }));
     api.getPipedriveFields(entity)
-      .then(r => setFields(prev => ({ ...prev, [entity]: r.fields || [] })))
+      .then(r => {
+        const list = r.fields || [];
+        setFields(prev => ({ ...prev, [entity]: list }));
+        // Default mapping for Organization: when no "company" mapping
+        // is set yet and Pipedrive's standard "name" field exists,
+        // pre-select it. This is the universally-expected pairing —
+        // the admin can still override it via the combobox. Done in
+        // the load callback so the suggestion shows up the first time
+        // the tab is opened, never overwriting an existing choice.
+        if (entity === 'organization') {
+          setFieldMap(prev => {
+            if (prev.organization?.company) return prev;
+            const hasName = list.some(f => f.key === 'name');
+            if (!hasName) return prev;
+            return {
+              ...prev,
+              organization: { ...prev.organization, company: 'name' },
+            };
+          });
+        }
+      })
       .catch(e => {
         console.error('[pipedrive.fields]', entity, e);
         // Keep the slot in the "loaded" set so the user can re-open
@@ -662,15 +691,26 @@ function FieldsTab({ t, entity, fields, fieldMap, error, onRetry, onChange }) {
       </div>
       {fieldKeys.map(refField => {
         const label = t(FIELD_LABEL_KEYS[refField], FIELD_FALLBACK[refField]);
+        // Per-row inline helper. Organization → "company" lands on
+        // the Pipedrive standard "name" field 99% of the time, so we
+        // surface that hint right under the row to remove the guesswork.
+        const rowHelper = (entity === 'organization' && refField === 'company')
+          ? t('pipedrive.organization_company_hint', "Le nom de l'entreprise du prospect. Généralement mappé sur le champ « Name » de l'organisation Pipedrive.")
+          : null;
         return (
-          <div key={refField} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f8fafc' }}>
-            <div style={{ fontSize: 13, color: '#0f172a' }}>{label}</div>
-            <FieldCombobox
-              value={fieldMap[refField] || ''}
-              fields={fields}
-              onChange={(key) => onChange(refField, key)}
-              disabled={fields.length === 0}
-            />
+          <div key={refField} style={{ padding: '6px 0', borderBottom: '1px solid #f8fafc' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center' }}>
+              <div style={{ fontSize: 13, color: '#0f172a' }}>{label}</div>
+              <FieldCombobox
+                value={fieldMap[refField] || ''}
+                fields={fields}
+                onChange={(key) => onChange(refField, key)}
+                disabled={fields.length === 0}
+              />
+            </div>
+            {rowHelper && (
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#94a3b8' }}>{rowHelper}</p>
+            )}
           </div>
         );
       })}

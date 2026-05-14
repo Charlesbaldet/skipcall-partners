@@ -406,20 +406,28 @@ const PIPEDRIVE_STATUS_OVERRIDE = { won: 'won', lost: 'lost' };
 const STAGE_MAPPABLE_STATUSES = CANONICAL_STATUSES.filter(
   s => !Object.prototype.hasOwnProperty.call(PIPEDRIVE_STATUS_OVERRIDE, s)
 );
-// Lookup table for the 8 RefBoost fields the admin can map onto a
+// Lookup table for the RefBoost fields the admin can map onto a
 // Pipedrive Deal / Person / Organization. The lambda is the value
 // extractor used by the future push (P3); for P2 only the keys are
 // consulted, but defining both here keeps the source of truth in one
 // spot for both cycles.
+//
+// contact_first_name / contact_last_name come from the dedicated
+// referrals columns added in migrate.js v18d (the form-builder's
+// 'contact_first_name' / 'contact_last_name' field_roles feed them
+// straight through). prospect_name stays the deal/company header
+// (kanban card title) — it's NOT a person's name.
 const REFBOOST_FIELDS = {
-  prospect_name:    r => r.prospect_name,
-  email:            r => r.prospect_email || r.email,
-  phone:            r => r.prospect_phone || r.phone,
-  company:          r => r.prospect_company,
-  notes:            r => r.notes,
-  mrr:              r => r.deal_value,
-  partner_name:     r => r.partner_name,
-  role:             r => r.prospect_role,
+  prospect_name:       r => r.prospect_name,
+  contact_first_name:  r => r.contact_first_name,
+  contact_last_name:   r => r.contact_last_name,
+  email:               r => r.prospect_email || r.email,
+  phone:               r => r.prospect_phone || r.phone,
+  company:             r => r.prospect_company,
+  notes:               r => r.notes,
+  mrr:                 r => r.deal_value,
+  partner_name:        r => r.partner_name,
+  role:                r => r.prospect_role,
 };
 
 function isValidRefboostStatus(s) { return CANONICAL_STATUSES.includes(s); }
