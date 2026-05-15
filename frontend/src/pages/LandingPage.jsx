@@ -304,8 +304,10 @@ export default function LandingPage() {
             {[
               { name: 'Notion',     src: '/images/integrations/notion-logo.png',     href: '/integrations/notion' },
               { name: 'HubSpot',    src: '/images/integrations/hubspot-logo.svg',    href: '/integrations/hubspot' },
+              { name: 'Pipedrive',  src: '/images/integrations/pipedrive-logo.svg',  href: '/integrations/pipedrive' },
               { name: 'Salesforce', src: '/images/integrations/salesforce-logo.svg', href: '/integrations/salesforce' },
               { name: 'Qonto',      src: '/images/integrations/qonto-logo.svg',      href: '/integrations/qonto' },
+              { name: 'Pennylane',  src: '/images/integrations/pennylane-logo.svg',  href: '/integrations/pennylane' },
               { name: 'Google',     src: '/images/integrations/google-logo.svg',     href: '/integrations/google-sso' },
             ].map(item=>(
               <a key={item.href} href={item.href}

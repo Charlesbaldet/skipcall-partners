@@ -3350,6 +3350,83 @@
         }
       ]
     },
+    "pipedrive": {
+      "name": "Pipedrive",
+      "shortDescription": "Sincronizza i tuoi referral con la tua pipeline Pipedrive. Push automatico degli affari, mapping degli stati e dei campi personalizzati.",
+      "heroSubtitle": "Sincronizza automaticamente i tuoi referral con Pipedrive. Ogni affare RefBoost diventa un Deal Pipedrive con contatto, organizzazione e stage — nessun doppio inserimento.",
+      "features": [
+        {
+          "title": "Sync automatica degli affari",
+          "description": "Ogni referral approvato crea un Deal Pipedrive nella pipeline e nello stage configurati. Push alla creazione e a ogni aggiornamento."
+        },
+        {
+          "title": "Mapping stage personalizzato",
+          "description": "Associa gli stati RefBoost (Nuovo, Contattato, Qualificato, Appuntamento, Proposta) agli stage della tua pipeline Pipedrive. Gli stati Vinto e Perso aggiornano automaticamente lo status del Deal."
+        },
+        {
+          "title": "Campi personalizzati supportati",
+          "description": "Mappa qualsiasi campo Pipedrive (standard o personalizzato) con i dati RefBoost: nome del prospect, MRR, valore dell'affare, note, ruolo, email, telefono. Combobox di ricerca per le liste lunghe."
+        },
+        {
+          "title": "Persone e organizzazioni create",
+          "description": "Per ogni referral, RefBoost upserta l'organizzazione (azienda del prospect), la persona (contatto con nome e cognome separati) e il deal. Ricerca per email per evitare duplicati."
+        }
+      ],
+      "steps": [
+        {
+          "title": "Collega Pipedrive",
+          "description": "Vai in Impostazioni → Integrazioni, clicca Connetti su Pipedrive e autorizza l'accesso OAuth. Validazione immediata."
+        },
+        {
+          "title": "Configura il mapping",
+          "description": "Scegli la pipeline di destinazione, mappa gli stati agli stage e seleziona i campi Pipedrive corrispondenti ai dati RefBoost (4 tab: Stati, Affare, Persona, Organizzazione)."
+        },
+        {
+          "title": "Sincronizzazione automatica",
+          "description": "Attiva di default. Ogni nuovo referral o cambio di stato viene inviato all'istante. Pulsante di push manuale su ogni scheda per casi specifici."
+        }
+      ],
+      "faqs": [
+        {
+          "q": "Quali piani Pipedrive sono compatibili?",
+          "a": "Tutti i piani Pipedrive (Essential, Advanced, Professional, Power, Enterprise) sono supportati. L'integrazione usa OAuth standard e l'API Pipedrive v2."
+        },
+        {
+          "q": "Come funziona il mapping degli stage?",
+          "a": "Associa ogni stato RefBoost (Nuovo, Contattato, Qualificato, Appuntamento, Proposta) a uno stage della tua pipeline Pipedrive. Vinto e Perso sono gestiti automaticamente via lo status del Deal Pipedrive (won/lost), senza mapping di stage necessario."
+        },
+        {
+          "q": "Cosa succede se modifico un deal direttamente in Pipedrive?",
+          "a": "In arrivo: un pull bidirezionale sincronizzerà le modifiche Pipedrive verso RefBoost. Per ora il flusso è unidirezionale RefBoost → Pipedrive."
+        },
+        {
+          "q": "I miei campi personalizzati Pipedrive sono supportati?",
+          "a": "Sì. L'interfaccia di mapping elenca i tuoi campi standard E personalizzati, con un combobox di ricerca per filtrare rapidamente liste lunghe."
+        },
+        {
+          "q": "Posso disattivare l'integrazione senza perdere la cronologia?",
+          "a": "Sì. Disconnettere Pipedrive interrompe semplicemente la sync. I deal già creati in Pipedrive rimangono intatti, e gli ID di collegamento restano in DB nel caso in cui ricolleghi più tardi."
+        },
+        {
+          "q": "Quanto costa l'integrazione Pipedrive?",
+          "a": "Inclusa nel piano Business RefBoost. Nessun costo aggiuntivo lato Pipedrive (usa l'API standard, contata nelle tue quote API Pipedrive abituali)."
+        }
+      ],
+      "roi": [
+        {
+          "metric": "0 inserimento manuale",
+          "description": "I tuoi referral diventano automaticamente deal Pipedrive con i loro contatti e organizzazioni associati. Basta copia-incolla tra RefBoost e il tuo CRM."
+        },
+        {
+          "metric": "Tempo reale",
+          "description": "Lo stato di un referral cambia → lo stage Pipedrive viene sincronizzato all'istante."
+        },
+        {
+          "metric": "5 min",
+          "description": "OAuth + mapping in pochi clic, senza intervento IT."
+        }
+      ]
+    },
     "qonto": {
       "name": "Qonto",
       "shortDescription": "Bonifici SEPA automatizzati. Paga i tuoi partner in un clic con validazione SCA sicura.",

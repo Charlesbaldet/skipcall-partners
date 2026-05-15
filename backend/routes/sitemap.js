@@ -24,7 +24,9 @@ const STATIC_PAGES = [
   { path: '/integrations/notion',               changefreq: 'monthly', priority: '0.7' },
   { path: '/integrations/hubspot',              changefreq: 'monthly', priority: '0.7' },
   { path: '/integrations/salesforce',           changefreq: 'monthly', priority: '0.7' },
+  { path: '/integrations/pipedrive',            changefreq: 'monthly', priority: '0.7' },
   { path: '/integrations/qonto',                changefreq: 'monthly', priority: '0.7' },
+  { path: '/integrations/pennylane',            changefreq: 'monthly', priority: '0.7' },
   { path: '/integrations/google-sso',           changefreq: 'monthly', priority: '0.7' },
   // /fonctionnalites/* — same priority as /integrations because both
   // are top-level product feature pages. Each route is rendered by

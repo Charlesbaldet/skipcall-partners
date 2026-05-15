@@ -13,7 +13,7 @@ export const INTEGRATIONS = [
     logoSrc: '/images/integrations/notion-logo.png',
     seoTitle: 'Intégration Notion — RefBoost',
     seoDescription: "Synchronisez votre pipeline RefBoost avec Notion. Mapping bidirectionnel des statuts, contacts et entreprises avec détection de doublons.",
-    crossLinks: ['hubspot', 'salesforce', 'qonto'],
+    crossLinks: ['hubspot', 'pipedrive', 'salesforce'],
   },
   {
     slug: 'hubspot',
@@ -23,7 +23,7 @@ export const INTEGRATIONS = [
     logoSrc: '/images/integrations/hubspot-logo.svg',
     seoTitle: 'Intégration HubSpot — RefBoost',
     seoDescription: 'Connectez HubSpot CRM à RefBoost. Synchronisez automatiquement vos referrals, contacts et deals avec HubSpot via OAuth.',
-    crossLinks: ['notion', 'salesforce', 'qonto'],
+    crossLinks: ['notion', 'pipedrive', 'salesforce'],
   },
   {
     slug: 'salesforce',
@@ -33,7 +33,17 @@ export const INTEGRATIONS = [
     logoSrc: '/images/integrations/salesforce-logo.svg',
     seoTitle: 'Intégration Salesforce — RefBoost',
     seoDescription: 'Connectez Salesforce à RefBoost. Synchronisez vos Opportunities, Contacts et Accounts avec votre programme partenaires.',
-    crossLinks: ['notion', 'hubspot', 'qonto'],
+    crossLinks: ['notion', 'hubspot', 'pipedrive'],
+  },
+  {
+    slug: 'pipedrive',
+    category: 'crm',
+    available: true,
+    plan: 'business',
+    logoSrc: '/images/integrations/pipedrive-logo.svg',
+    seoTitle: 'Intégration Pipedrive — RefBoost',
+    seoDescription: "Synchronisez RefBoost avec Pipedrive. Push automatique des referrals vers vos deals, mapping bidirectionnel des stages et champs personnalisés. Configuration en 5 min.",
+    crossLinks: ['notion', 'hubspot', 'salesforce'],
   },
   {
     slug: 'qonto',
@@ -43,7 +53,7 @@ export const INTEGRATIONS = [
     logoSrc: '/images/integrations/qonto-logo.svg',
     seoTitle: 'Intégration Qonto — RefBoost',
     seoDescription: 'Automatisez le paiement de vos commissions partenaires via Qonto. Virements SEPA en un clic avec validation SCA sécurisée.',
-    crossLinks: ['notion', 'hubspot', 'pennylane'],
+    crossLinks: ['pennylane', 'pipedrive', 'notion'],
   },
   {
     slug: 'pennylane',
@@ -53,7 +63,7 @@ export const INTEGRATIONS = [
     logoSrc: '/images/integrations/pennylane-logo.svg',
     seoTitle: 'Intégration Pennylane — RefBoost',
     seoDescription: 'Automatisez la comptabilité de vos commissions partenaires. Chaque commission approuvée crée une facture fournisseur dans Pennylane, marquée payée dès le virement Qonto.',
-    crossLinks: ['qonto', 'notion', 'hubspot'],
+    crossLinks: ['qonto', 'pipedrive', 'notion'],
   },
   {
     slug: 'google-sso',

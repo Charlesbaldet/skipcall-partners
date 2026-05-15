@@ -3350,6 +3350,83 @@
         }
       ]
     },
+    "pipedrive": {
+      "name": "Pipedrive",
+      "shortDescription": "Sync your referrals with your Pipedrive pipeline. Automatic deal push, stage and custom-field mapping.",
+      "heroSubtitle": "Automatically sync your referrals with Pipedrive. Every RefBoost deal becomes a Pipedrive deal with its contact, organization and stage — no double entry.",
+      "features": [
+        {
+          "title": "Automatic deal sync",
+          "description": "Every approved referral creates a Pipedrive Deal in the pipeline and stage you've configured. Push on create and on every update."
+        },
+        {
+          "title": "Custom stage mapping",
+          "description": "Map RefBoost statuses (New, Contacted, Qualified, Meeting, Proposal) to your Pipedrive pipeline stages. Won and Lost statuses flip the deal status automatically."
+        },
+        {
+          "title": "Custom fields supported",
+          "description": "Map any Pipedrive field (standard or custom) to your RefBoost data: prospect name, MRR, deal value, notes, role, email, phone. Searchable combobox for long lists."
+        },
+        {
+          "title": "Persons & organizations created",
+          "description": "For every referral, RefBoost upserts the organization (prospect's company), the person (contact with first and last name split) and the deal. Email-based search prevents duplicates."
+        }
+      ],
+      "steps": [
+        {
+          "title": "Connect Pipedrive",
+          "description": "Go to Settings → Integrations, click Connect on Pipedrive and grant OAuth access. Instant validation."
+        },
+        {
+          "title": "Configure the mapping",
+          "description": "Pick your target pipeline, map statuses to stages, select the Pipedrive fields matching your RefBoost data (4 tabs: Statuses, Deal, Person, Organization)."
+        },
+        {
+          "title": "Automatic sync",
+          "description": "Enabled by default. Every new referral or status change is pushed instantly. A manual push button is available on each referral for ad-hoc cases."
+        }
+      ],
+      "faqs": [
+        {
+          "q": "Which Pipedrive plans are supported?",
+          "a": "Every Pipedrive plan (Essential, Advanced, Professional, Power, Enterprise) is supported. The integration uses standard OAuth and the Pipedrive v2 API."
+        },
+        {
+          "q": "How does stage mapping work?",
+          "a": "You map each RefBoost status (New, Contacted, Qualified, Meeting, Proposal) to a stage in your Pipedrive pipeline. Won and Lost are handled automatically via Pipedrive's deal status (won/lost), no stage mapping needed."
+        },
+        {
+          "q": "What happens if I edit a deal directly in Pipedrive?",
+          "a": "Coming soon: a two-way pull will sync Pipedrive changes back into RefBoost. For now the flow is one-way RefBoost → Pipedrive."
+        },
+        {
+          "q": "Are my Pipedrive custom fields supported?",
+          "a": "Yes. The mapping UI lists both standard and custom fields with a searchable combobox to filter long lists quickly."
+        },
+        {
+          "q": "Can I disable the integration without losing history?",
+          "a": "Yes. Disconnecting Pipedrive simply stops the sync. Deals already created in Pipedrive stay intact, and the link IDs are kept in the database in case you reconnect later."
+        },
+        {
+          "q": "How much does the Pipedrive integration cost?",
+          "a": "Included in the RefBoost Business plan. No extra cost on the Pipedrive side (uses the standard API, counted against your usual Pipedrive API quota)."
+        }
+      ],
+      "roi": [
+        {
+          "metric": "0 manual entry",
+          "description": "Your referrals automatically become Pipedrive deals with their contacts and organizations attached. No more copy-paste between RefBoost and your CRM."
+        },
+        {
+          "metric": "Real time",
+          "description": "Status changes on a referral propagate to the Pipedrive stage instantly."
+        },
+        {
+          "metric": "5 min",
+          "description": "OAuth + mapping in a few clicks, no IT involvement needed."
+        }
+      ]
+    },
     "qonto": {
       "name": "Qonto",
       "shortDescription": "Automated SEPA transfers. Pay your partners in one click with secure SCA validation.",

@@ -3350,6 +3350,83 @@
         }
       ]
     },
+    "pipedrive": {
+      "name": "Pipedrive",
+      "shortDescription": "Synchroniseer je referrals met je Pipedrive-pipeline. Automatische deal-push, mapping van statussen en aangepaste velden.",
+      "heroSubtitle": "Synchroniseer je referrals automatisch met Pipedrive. Elke RefBoost-deal wordt een Pipedrive-deal met contact, organisatie en fase — geen dubbele invoer.",
+      "features": [
+        {
+          "title": "Automatische deal-sync",
+          "description": "Elke goedgekeurde referral maakt een Pipedrive-deal aan in de pipeline en fase die je hebt geconfigureerd. Push bij aanmaken en bij elke update."
+        },
+        {
+          "title": "Aangepaste fase-mapping",
+          "description": "Map RefBoost-statussen (Nieuw, Gecontacteerd, Gekwalificeerd, Afspraak, Voorstel) op de fasen van je Pipedrive-pipeline. Gewonnen en Verloren wisselen de deal-status automatisch."
+        },
+        {
+          "title": "Aangepaste velden ondersteund",
+          "description": "Map elk Pipedrive-veld (standaard of aangepast) met RefBoost-data: prospectnaam, MRR, dealwaarde, notities, rol, e-mail, telefoon. Zoekbare combobox voor lange lijsten."
+        },
+        {
+          "title": "Personen & organisaties aangemaakt",
+          "description": "Voor elke referral upsert RefBoost de organisatie (bedrijf van de prospect), de persoon (contact met aparte voor- en achternaam) en de deal. E-mail-zoekopdracht voorkomt duplicaten."
+        }
+      ],
+      "steps": [
+        {
+          "title": "Verbind Pipedrive",
+          "description": "Ga naar Instellingen → Integraties, klik op Verbinden bij Pipedrive en geef OAuth-toegang. Onmiddellijke validatie."
+        },
+        {
+          "title": "Configureer de mapping",
+          "description": "Kies je doel-pipeline, map statussen op fasen en selecteer de Pipedrive-velden die met je RefBoost-data overeenkomen (4 tabs: Statussen, Deal, Persoon, Organisatie)."
+        },
+        {
+          "title": "Automatische synchronisatie",
+          "description": "Standaard ingeschakeld. Elke nieuwe referral of statuswijziging wordt direct gepusht. Een handmatige push-knop is beschikbaar op elke fiche voor specifieke gevallen."
+        }
+      ],
+      "faqs": [
+        {
+          "q": "Welke Pipedrive-abonnementen worden ondersteund?",
+          "a": "Alle Pipedrive-abonnementen (Essential, Advanced, Professional, Power, Enterprise) worden ondersteund. De integratie gebruikt standaard-OAuth en de Pipedrive v2 API."
+        },
+        {
+          "q": "Hoe werkt de fase-mapping?",
+          "a": "Je mapt elke RefBoost-status (Nieuw, Gecontacteerd, Gekwalificeerd, Afspraak, Voorstel) op een fase in je Pipedrive-pipeline. Gewonnen en Verloren worden automatisch beheerd via de Pipedrive-dealstatus (won/lost), geen fase-mapping nodig."
+        },
+        {
+          "q": "Wat gebeurt er als ik een deal rechtstreeks in Pipedrive bewerk?",
+          "a": "Binnenkort: een tweerichtings-pull synchroniseert Pipedrive-wijzigingen terug naar RefBoost. Voorlopig is de stroom eenrichting RefBoost → Pipedrive."
+        },
+        {
+          "q": "Worden mijn aangepaste Pipedrive-velden ondersteund?",
+          "a": "Ja. De mapping-UI toont zowel standaard- als aangepaste velden, met een zoekbare combobox om lange lijsten snel te filteren."
+        },
+        {
+          "q": "Kan ik de integratie uitschakelen zonder geschiedenis te verliezen?",
+          "a": "Ja. Pipedrive ontkoppelen stopt eenvoudigweg de synchronisatie. Reeds in Pipedrive aangemaakte deals blijven intact, en de koppel-ID's blijven in de DB voor het geval je later opnieuw verbindt."
+        },
+        {
+          "q": "Wat kost de Pipedrive-integratie?",
+          "a": "De integratie zit in het RefBoost Business-abonnement. Geen extra kosten aan Pipedrive-zijde (gebruikt de standaard-API, geteld in je gebruikelijke Pipedrive API-quota)."
+        }
+      ],
+      "roi": [
+        {
+          "metric": "0 handmatige invoer",
+          "description": "Je referrals worden automatisch Pipedrive-deals met de bijbehorende contacten en organisaties. Geen copy-paste meer tussen RefBoost en je CRM."
+        },
+        {
+          "metric": "Real-time",
+          "description": "Statuswijziging op een referral → de Pipedrive-fase wordt direct gesynchroniseerd."
+        },
+        {
+          "metric": "5 min",
+          "description": "OAuth + mapping in een paar klikken, zonder IT-ondersteuning."
+        }
+      ]
+    },
     "qonto": {
       "name": "Qonto",
       "shortDescription": "Geautomatiseerde SEPA-overschrijvingen. Betaal je partners met één klik via veilige SCA-validatie.",
