@@ -1924,7 +1924,7 @@
     "step_pipeline_desc": "Pipeline columns, partner categories",
     "step_marketplace": "Appear on the marketplace",
     "step_marketplace_desc": "Thumbnail, description, program page",
-    "step_banking": "Banking details",
+    "step_banking": "Connect your bank",
     "step_banking_desc": "Connect Qonto to pay partners",
     "step_first_partner": "Invite your first partner",
     "step_first_partner_desc": "Add a partner to get started"

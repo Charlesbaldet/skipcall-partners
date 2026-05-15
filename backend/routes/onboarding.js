@@ -58,7 +58,23 @@ router.get('/status', authenticate, authorize('admin', 'superadmin'), async (req
       },
       {
         id: 'branding',
-        completed: !!(t.logo_url && t.primary_color),
+        // Any single signal of customisation is enough — most admins
+        // never upload a logo (no asset ready, design done elsewhere)
+        // so a logo-required gate stranded the step at "incomplete"
+        // even when the admin had customised both colours. We accept:
+        //   - logo_url set, OR
+        //   - primary_color set and != signup default #6366f1, OR
+        //   - accent_color  set and != signup default #f97316, OR
+        //   - secondary_color set and != signup default #0f172a.
+        // revenue_model is excluded — its default is 'CA' and the
+        // signup flow doesn't force a choice, so it's not a reliable
+        // signal of intent.
+        completed: !!(
+          (t.logo_url && String(t.logo_url).trim()) ||
+          (t.primary_color   && String(t.primary_color).toLowerCase()   !== '#6366f1') ||
+          (t.accent_color    && String(t.accent_color).toLowerCase()    !== '#f97316') ||
+          (t.secondary_color && String(t.secondary_color).toLowerCase() !== '#0f172a')
+        ),
         link: '/settings?tab=branding',
         order: 3,
       },

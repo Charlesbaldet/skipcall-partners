@@ -1924,7 +1924,7 @@
     "step_pipeline_desc": "Colunas do pipeline, categorias de parceiros",
     "step_marketplace": "Aparecer no marketplace",
     "step_marketplace_desc": "Miniatura, descrição, página do programa",
-    "step_banking": "Dados bancários",
+    "step_banking": "Conectar o seu banco",
     "step_banking_desc": "Ligar o Qonto para pagar aos parceiros",
     "step_first_partner": "Convidar o primeiro parceiro",
     "step_first_partner_desc": "Adicione um parceiro para começar"
