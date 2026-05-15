@@ -102,9 +102,15 @@ async function exchangeCodeForTokens(code, redirectUri) {
 
 // ─── Persistence helpers ─────────────────────────────────────────────
 async function ensurePipedriveIntegrationRow(tenantId) {
+  // Brand-new Pipedrive integrations default to auto_push: true (the
+  // connector is useless without auto-sync — the admin connected
+  // specifically to mirror RefBoost into Pipedrive). ON CONFLICT
+  // intentionally does NOT touch settings, so a reconnect on an
+  // existing row preserves whatever the admin had configured
+  // (including auto_push: false if they deliberately turned it off).
   const { rows } = await query(
     `INSERT INTO crm_integrations (tenant_id, provider, is_active, settings, connected_at)
-     VALUES ($1, 'pipedrive', FALSE, '{}'::jsonb, NOW())
+     VALUES ($1, 'pipedrive', FALSE, '{"auto_push": true}'::jsonb, NOW())
      ON CONFLICT (tenant_id, provider)
      DO UPDATE SET provider = crm_integrations.provider
      RETURNING id`,
@@ -714,6 +720,430 @@ async function saveFieldMappings(tenantId, byEntity) {
   };
 }
 
+// ─── P3: Push (RefBoost → Pipedrive) ─────────────────────────────────
+// Fire-and-forget from every referral write path. Never throws to
+// the caller — failures land in crm_sync_log + a structured
+// {ok:false, reason, error} return so the route handler can decide
+// what to surface (manual push gets a toast; auto push stays silent).
+//
+// Flow:
+//   1. Load context: integration row, mappings (stages + fields per
+//      entity), and the pipeline's stages (used as a fallback when a
+//      status has no explicit mapping).
+//   2. Upsert Organization from referrals.prospect_company.
+//   3. Upsert Person from contact_first_name / contact_last_name /
+//      email, attached to the org.
+//   4. Upsert Deal: title from prospect_name, value from deal_value,
+//      person_id + org_id from above, stage_id or status from
+//      resolvePushTarget().
+//   5. Persist Pipedrive IDs back onto referrals.pipedrive_*_id so
+//      the next push PATCHes instead of POSTing.
+
+async function loadPipedriveContext(tenantId) {
+  const integ = await getTenantPipedrive(tenantId);
+  if (!integ || !integ.isActive) return null;
+  const [stageMappings, fieldMappings] = await Promise.all([
+    getStageMappings(tenantId),
+    getFieldMappings(tenantId),
+  ]);
+  let stages = [];
+  if (integ.pipelineId) {
+    try {
+      stages = await listStages(tenantId, integ.pipelineId);
+    } catch (e) {
+      console.warn('[pipedrive.push.context] stages fetch failed:', e.message);
+    }
+  }
+  return { integ, stageMappings, fieldMappings, stages };
+}
+
+// Walk a list of {refboost_field, crm_field} mappings and produce a
+// flat {pipedriveKey: value} payload, skipping null/undefined/empty
+// values. Standard and custom fields share the same shape in the
+// Pipedrive request body.
+function buildEntityPayload(mappings, referral) {
+  const out = {};
+  for (const m of mappings) {
+    const extractor = REFBOOST_FIELDS[m.refboost_field];
+    if (!extractor) continue;
+    const value = extractor(referral);
+    if (value === null || value === undefined || value === '') continue;
+    out[m.crm_field] = value;
+  }
+  return out;
+}
+
+// Pipedrive Person email and phone are array-of-objects ([{value,
+// primary, label}]) — flat string values produce a 400. Normalises
+// any string we receive from a buildEntityPayload pass into that
+// shape.
+function normalisePersonContactArrays(payload) {
+  for (const k of ['email', 'phone']) {
+    if (payload[k] && typeof payload[k] === 'string') {
+      payload[k] = [{ value: payload[k], primary: true, label: 'work' }];
+    }
+  }
+  return payload;
+}
+
+async function pipedriveJson(tenantId, path, options) {
+  // Thin wrapper around pipedriveFetch + pdJson so each upsert reads
+  // tighter.
+  const r = await pipedriveFetch(tenantId, path, options);
+  return pdJson(r, path);
+}
+
+// Upsert an Organization. Strategy:
+//   - referrals.pipedrive_organization_id present → PATCH that id
+//   - else search by exact name → reuse first match
+//   - else POST a new one
+// Returns the org id (string) or null if the referral has no company
+// to anchor on (Pipedrive Organisation requires a name; we skip
+// rather than create a "Sans nom" row).
+async function upsertOrganization(tenantId, referral, mappings) {
+  const companyName = (referral.prospect_company || '').trim();
+  // Build payload from mappings (custom fields + anything else the
+  // admin chose to map onto Organisation).
+  const extraFields = buildEntityPayload(mappings, referral);
+  // Existing link → PATCH
+  if (referral.pipedrive_organization_id) {
+    const body = { ...extraFields };
+    if (companyName) body.name = companyName;
+    if (Object.keys(body).length === 0) return referral.pipedrive_organization_id;
+    try {
+      await pipedriveJson(tenantId, `/api/v2/organizations/${encodeURIComponent(referral.pipedrive_organization_id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      });
+      return referral.pipedrive_organization_id;
+    } catch (e) {
+      // 404 — the org was deleted Pipedrive-side. Fall through to
+      // re-create.
+      if (e.status !== 404) throw e;
+    }
+  }
+  if (!companyName) return null;
+
+  // Search by name. v2 search accepts a `term` query string + `fields`
+  // filter. We use exact_match=true and the `name` field so we don't
+  // accidentally attach to a near-name match.
+  try {
+    const search = await pipedriveJson(
+      tenantId,
+      `/api/v2/organizations/search?term=${encodeURIComponent(companyName)}&fields=name&exact_match=true&limit=1`
+    );
+    const hit = search?.data?.items?.[0]?.item;
+    if (hit?.id) {
+      // Patch on top of the found org so custom fields stay in sync.
+      const patchBody = { ...extraFields };
+      if (Object.keys(patchBody).length > 0) {
+        try {
+          await pipedriveJson(tenantId, `/api/v2/organizations/${hit.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(patchBody),
+          });
+        } catch (e) {
+          console.warn('[pipedrive.push.org] post-search patch failed:', e.message);
+        }
+      }
+      return String(hit.id);
+    }
+  } catch (e) {
+    console.warn('[pipedrive.push.org] search failed (falling back to create):', e.message);
+  }
+
+  // Create new.
+  const created = await pipedriveJson(tenantId, '/api/v2/organizations', {
+    method: 'POST',
+    body: JSON.stringify({ name: companyName, ...extraFields }),
+  });
+  return created?.data?.id ? String(created.data.id) : null;
+}
+
+// Upsert a Person. Email is the strongest identity anchor so we
+// search by email when no link exists yet. If neither first/last
+// name nor email is available, we skip rather than create a Person
+// with a placeholder name.
+async function upsertPerson(tenantId, referral, mappings, orgId) {
+  // Build payload from explicit mappings — typically first_name,
+  // last_name, email, phone + custom fields.
+  const payload = normalisePersonContactArrays(buildEntityPayload(mappings, referral));
+  // Pipedrive Person requires a `name` field on create; v2 will
+  // synthesise it from first_name + last_name if both are sent. Add
+  // an explicit fallback when neither is mapped, so unnamed contacts
+  // still surface (prospect_name is the deal/company header — it's
+  // a decent last-resort identity).
+  const hasFirst = !!payload.first_name;
+  const hasLast = !!payload.last_name;
+  const hasEmail = Array.isArray(payload.email) && payload.email.length > 0;
+  if (!hasFirst && !hasLast && !hasEmail) return null;
+  if (orgId) payload.org_id = Number(orgId) || orgId;
+  if (!hasFirst && !hasLast && referral.prospect_name) {
+    payload.name = referral.prospect_name;
+  }
+
+  // Existing link → PATCH.
+  if (referral.pipedrive_person_id) {
+    try {
+      await pipedriveJson(tenantId, `/api/v2/persons/${encodeURIComponent(referral.pipedrive_person_id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      return referral.pipedrive_person_id;
+    } catch (e) {
+      if (e.status !== 404) throw e;
+    }
+  }
+
+  // Search by email if we have one. exact_match keeps us from
+  // attaching to a colleague with a typo'd address.
+  if (hasEmail) {
+    const emailRaw = payload.email[0]?.value;
+    if (emailRaw) {
+      try {
+        const search = await pipedriveJson(
+          tenantId,
+          `/api/v2/persons/search?term=${encodeURIComponent(emailRaw)}&fields=email&exact_match=true&limit=1`
+        );
+        const hit = search?.data?.items?.[0]?.item;
+        if (hit?.id) {
+          try {
+            await pipedriveJson(tenantId, `/api/v2/persons/${hit.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify(payload),
+            });
+          } catch (e) {
+            console.warn('[pipedrive.push.person] post-search patch failed:', e.message);
+          }
+          return String(hit.id);
+        }
+      } catch (e) {
+        console.warn('[pipedrive.push.person] search failed (falling back to create):', e.message);
+      }
+    }
+  }
+
+  // Create new.
+  const created = await pipedriveJson(tenantId, '/api/v2/persons', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return created?.data?.id ? String(created.data.id) : null;
+}
+
+// Upsert a Deal. Stage resolution rules:
+//   - status ∈ {won, lost} → status field on the deal, no stage move
+//   - status mapped → stage_id from the mapping
+//   - status unmapped, deal already exists → leave stage_id alone
+//   - status unmapped, brand-new deal → fall back to the pipeline's
+//     first stage (Pipedrive requires a stage_id on create)
+async function upsertDeal(tenantId, referral, mappings, personId, orgId, stageMappings, stages, pipelineId) {
+  const fieldsPayload = buildEntityPayload(mappings, referral);
+  // Pipedrive Deal needs a `title` on create. Default to prospect_name
+  // (the deal/company header) if no mapping sets it.
+  if (!fieldsPayload.title && referral.prospect_name) {
+    fieldsPayload.title = referral.prospect_name;
+  }
+  // Currency default (V1 hardcoded EUR per product decision).
+  if (fieldsPayload.value != null && !fieldsPayload.currency) {
+    fieldsPayload.currency = 'EUR';
+  }
+  if (personId) fieldsPayload.person_id = Number(personId) || personId;
+  if (orgId) fieldsPayload.org_id = Number(orgId) || orgId;
+
+  const target = resolvePushTarget(referral.status, stageMappings);
+  if (target.status) {
+    // won / lost — separate from stage_id, but we still need
+    // SOMETHING in stage_id when creating a brand-new deal.
+    fieldsPayload.status = target.status;
+  }
+  // Existing deal → PATCH (we only attach stage_id if explicitly
+  // mapped, to avoid yanking the deal back from a stage the admin
+  // moved it to manually in Pipedrive).
+  if (referral.pipedrive_deal_id) {
+    if (target.stage_id) fieldsPayload.stage_id = Number(target.stage_id) || target.stage_id;
+    try {
+      await pipedriveJson(tenantId, `/api/v2/deals/${encodeURIComponent(referral.pipedrive_deal_id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(fieldsPayload),
+      });
+      return referral.pipedrive_deal_id;
+    } catch (e) {
+      if (e.status !== 404) throw e;
+      // 404 → recreate.
+    }
+  }
+
+  // Brand-new deal — must have a stage_id. Mapped > pipeline-first.
+  let stageId = target.stage_id || null;
+  if (!stageId && stages.length > 0) {
+    const first = [...stages].sort((a, b) => (a.order_nr || 0) - (b.order_nr || 0))[0];
+    if (first) stageId = String(first.id);
+  }
+  if (stageId) fieldsPayload.stage_id = Number(stageId) || stageId;
+  else if (pipelineId) fieldsPayload.pipeline_id = Number(pipelineId) || pipelineId;
+  // Ensure title is present — Pipedrive 400s without one.
+  if (!fieldsPayload.title) fieldsPayload.title = 'Untitled deal';
+
+  const created = await pipedriveJson(tenantId, '/api/v2/deals', {
+    method: 'POST',
+    body: JSON.stringify(fieldsPayload),
+  });
+  return created?.data?.id ? String(created.data.id) : null;
+}
+
+// Main entry. opts.manual=true bypasses the auto_push check.
+// Never throws — every failure flows through crm_sync_log + a
+// structured return.
+async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
+  const manual = !!opts.manual;
+  let context = opts.context || null;
+  let integrationId = null;
+  try {
+    if (!context) context = await loadPipedriveContext(tenantId);
+    if (!context) return { ok: false, reason: 'not_configured' };
+    integrationId = context.integ.id;
+    if (!manual && !context.integ.autoPush) {
+      return { ok: false, reason: 'auto_push_disabled' };
+    }
+
+    const { rows } = await query(
+      `SELECT r.id, r.tenant_id, r.partner_id, r.prospect_name,
+              r.prospect_email, r.prospect_phone, r.prospect_company,
+              r.prospect_role, r.contact_first_name, r.contact_last_name,
+              r.notes, r.deal_value, r.status,
+              r.pipedrive_deal_id, r.pipedrive_person_id, r.pipedrive_organization_id,
+              p.name AS partner_name
+         FROM referrals r
+         LEFT JOIN partners p ON p.id = r.partner_id
+        WHERE r.id = $1 AND r.tenant_id = $2 AND r.deleted_at IS NULL
+        LIMIT 1`,
+      [referralId, tenantId]
+    );
+    const referral = rows[0];
+    if (!referral) return { ok: false, reason: 'referral_not_found' };
+
+    const { stageMappings, fieldMappings, stages, integ } = context;
+
+    const orgId = await upsertOrganization(tenantId, referral, fieldMappings.organization || []);
+    if (orgId !== referral.pipedrive_organization_id) {
+      referral.pipedrive_organization_id = orgId;
+    }
+
+    const personId = await upsertPerson(tenantId, referral, fieldMappings.person || [], orgId);
+    if (personId !== referral.pipedrive_person_id) {
+      referral.pipedrive_person_id = personId;
+    }
+
+    const dealId = await upsertDeal(
+      tenantId, referral, fieldMappings.deal || [],
+      personId, orgId, stageMappings, stages, integ.pipelineId
+    );
+
+    // Persist the three IDs back onto the referral so the next push
+    // PATCHes instead of POSTing.
+    await query(
+      `UPDATE referrals
+          SET pipedrive_deal_id         = COALESCE($1, pipedrive_deal_id),
+              pipedrive_person_id       = COALESCE($2, pipedrive_person_id),
+              pipedrive_organization_id = COALESCE($3, pipedrive_organization_id),
+              updated_at = updated_at
+        WHERE id = $4 AND tenant_id = $5`,
+      [dealId, personId, orgId, referralId, tenantId]
+    );
+
+    if (integrationId) {
+      try {
+        await query(
+          `INSERT INTO crm_sync_log (integration_id, referral_id, action, status, details)
+           VALUES ($1, $2, 'push', 'success', $3::jsonb)`,
+          [integrationId, referralId, JSON.stringify({
+            deal_id: dealId, person_id: personId, organization_id: orgId,
+            manual,
+          })]
+        );
+      } catch (e) {
+        console.error('[pipedrive.push.log.success]', e.message);
+      }
+    }
+
+    return { ok: true, deal_id: dealId, person_id: personId, organization_id: orgId };
+  } catch (err) {
+    // Map Pipedrive HTTP failures (attached on pdJson) to a stable
+    // shape so the caller can react. Side-effect: the integration is
+    // marked inactive on a 401 so the refresh worker has a clear
+    // signal to drop and the next manual reconnect surfaces the
+    // problem to the admin.
+    console.error('[pipedrive.push] error referral=' + referralId, err.message, err.status || '');
+    const kind = err.kind || 'internal';
+    let errorCode = 'internal';
+    let lastErrorReason = null;
+    if (err.status === 401) { errorCode = 'unauthorized'; lastErrorReason = 'token_expired'; }
+    else if (err.status === 403) {
+      errorCode = /scope/i.test(String(err.body && (err.body.error_info || err.body.error) || '')) ? 'missing_scope' : 'forbidden';
+      lastErrorReason = errorCode;
+    }
+    else if (err.status === 429) errorCode = 'rate_limited';
+    else if (kind === 'pipedrive_http') errorCode = `pipedrive_${err.status || 'http'}`;
+
+    if (lastErrorReason && context && context.integ) {
+      await markPipedriveIntegrationInactive(tenantId, lastErrorReason).catch(() => {});
+    }
+    if (integrationId) {
+      try {
+        await query(
+          `INSERT INTO crm_sync_log (integration_id, referral_id, action, status, details)
+           VALUES ($1, $2, 'push', 'error', $3::jsonb)`,
+          [integrationId, referralId, JSON.stringify({
+            error: errorCode,
+            message: String(err.message).slice(0, 500),
+            status: err.status || null,
+            body: err.body && (typeof err.body === 'string' ? err.body.slice(0, 500) : err.body),
+            manual,
+          })]
+        );
+      } catch (e) {
+        console.error('[pipedrive.push.log.error]', e.message);
+      }
+    }
+    return { ok: false, error: errorCode, detail: err.message };
+  }
+}
+
+// Bulk push — used by the "Pousser tous les referrals" rattrapage
+// button. Loads context once (one /stages call) and iterates
+// sequentially to stay well clear of Pipedrive rate limits. Each
+// referral failure is captured in the returned summary but does NOT
+// abort the run.
+async function pushAllReferralsToPipedrive(tenantId, opts = {}) {
+  const context = await loadPipedriveContext(tenantId);
+  if (!context) return { ok: false, reason: 'not_configured' };
+  if (!opts.manual && !context.integ.autoPush) {
+    return { ok: false, reason: 'auto_push_disabled' };
+  }
+  // Order: oldest first so the Pipedrive timeline reads naturally
+  // and any partial failure is easy to resume from.
+  const { rows } = await query(
+    `SELECT id FROM referrals
+      WHERE tenant_id = $1 AND deleted_at IS NULL
+      ORDER BY created_at ASC`,
+    [tenantId]
+  );
+  let pushed = 0, failed = 0;
+  const errors = [];
+  for (const r of rows) {
+    const res = await pushReferralToPipedrive(r.id, tenantId, { manual: true, context });
+    if (res.ok) pushed++;
+    else {
+      failed++;
+      errors.push({ id: r.id, error: res.error || res.reason || 'unknown' });
+      // Stop on auth errors — every subsequent push would 401 too.
+      if (res.error === 'unauthorized') break;
+    }
+  }
+  return { ok: true, total: rows.length, pushed, failed, errors: errors.slice(0, 20) };
+}
+
 module.exports = {
   isConfigured,
   signState,
@@ -745,4 +1175,8 @@ module.exports = {
   getFieldMappings,
   saveFieldMappings,
   resolvePushTarget,
+  // P3
+  pushReferralToPipedrive,
+  pushAllReferralsToPipedrive,
+  loadPipedriveContext,
 };

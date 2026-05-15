@@ -1433,9 +1433,13 @@ function IntegrationsPanel() {
   const [pennylaneToken, setPennylaneToken] = useState('');
   const [pennylaneSubmitting, setPennylaneSubmitting] = useState(false);
 
-  // Pipedrive (P1: OAuth ; P2: pipeline picker + mappings via modal).
+  // Pipedrive (P1: OAuth ; P2: pipeline picker + mappings via modal ;
+  // P3: push referrals → Pipedrive, auto on every create/update plus
+  // a manual "Pousser tous les referrals" rattrapage button).
   const [pipedriveStatus, setPipedriveStatus] = useState(null);
   const [pipedriveMsg, setPipedriveMsg] = useState('');
+  const [pipedrivePushMsg, setPipedrivePushMsg] = useState(null); // {tone, text}
+  const [pipedrivePushing, setPipedrivePushing] = useState(false);
   const [showPipedriveConfig, setShowPipedriveConfig] = useState(false);
 
   // Filter pill + per-row expansion
@@ -1612,6 +1616,27 @@ function IntegrationsPanel() {
       else setErr(e.message);
     } finally { setBusy(false); }
   };
+  const pushAllPipedrive = async (e) => {
+    stopEv(e);
+    if (pipedrivePushing) return;
+    setPipedrivePushing(true);
+    setPipedrivePushMsg(null);
+    try {
+      const r = await api.pushAllToPipedrive();
+      const summary = t('pipedrive.push_all_done', {
+        pushed: r.pushed ?? 0,
+        total: r.total ?? 0,
+        failed: r.failed ?? 0,
+        defaultValue: '{{pushed}}/{{total}} referrals poussés ({{failed}} échec(s))',
+      });
+      setPipedrivePushMsg({ tone: r.failed ? 'warning' : 'success', text: summary });
+    } catch (err) {
+      setPipedrivePushMsg({ tone: 'error', text: err?.message || t('pipedrive.push_all_error', 'Échec du push Pipedrive') });
+    } finally {
+      setPipedrivePushing(false);
+    }
+  };
+
   const disconnectPipedrive = async (e) => {
     stopEv(e);
     const ok = await showConfirm({
@@ -1923,6 +1948,9 @@ function IntegrationsPanel() {
               qontoStatus={integration.id === 'qonto' ? qontoStatus : null}
               onQontoOpenPicker={integration.id === 'qonto' ? openQontoPicker : null}
               pipedriveStatus={integration.id === 'pipedrive' ? pipedriveStatus : null}
+              pipedrivePushMsg={integration.id === 'pipedrive' ? pipedrivePushMsg : null}
+              pipedrivePushing={integration.id === 'pipedrive' ? pipedrivePushing : false}
+              onPipedrivePushAll={integration.id === 'pipedrive' ? pushAllPipedrive : null}
               pennylaneStatus={integration.id === 'pennylane' ? pennylaneStatus : null}
               pennylaneToken={integration.id === 'pennylane' ? pennylaneToken : ''}
               onPennylaneTokenChange={integration.id === 'pennylane' ? setPennylaneToken : null}
@@ -2019,7 +2047,7 @@ function IntegrationRow({
   integration, t, busy, expanded,
   onConnect, onConfigure, onDisconnect, onUpgrade, onSync,
   notionMsg, qontoStatus, onQontoOpenPicker,
-  pipedriveStatus,
+  pipedriveStatus, pipedrivePushMsg, pipedrivePushing, onPipedrivePushAll,
   pennylaneStatus, pennylaneToken, onPennylaneTokenChange, onPennylaneSubmit, onPennylaneToggle, pennylaneSubmitting,
 }) {
   const [hover, setHover] = useState(false);
@@ -2172,14 +2200,37 @@ function IntegrationRow({
           {t('pipedrive.connection_error', 'Erreur de synchronisation, reconnectez-vous.')}
         </div>
       )}
-      {expanded && integration.id === 'pipedrive' && pipedriveStatus?.connected && (
-        <div style={{ borderTop: '1px solid #e5e7eb', padding: 14, background: '#f9fafb' }}>
-          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10 }}>
-            {t('pipedrive.config_pending', 'Le mapping des pipelines, stages et champs personnalisés arrive dans une prochaine mise à jour.')}
-          </div>
+      {/* Pipedrive: when connected, expose Pousser tous les referrals
+          + Déconnecter inline under the card (same posture as Notion's
+          actions row). Mapping config is opened via the dedicated
+          modal — no inline expansion needed any more. */}
+      {pipedriveStatus?.connected && integration.id === 'pipedrive' && (
+        <div style={{ borderTop: '1px solid #e5e7eb', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            type="button" onClick={onPipedrivePushAll} disabled={busy || pipedrivePushing}
+            style={btnSecondary}
+          >
+            {pipedrivePushing
+              ? t('pipedrive.push_all_running', 'Synchronisation…')
+              : t('pipedrive.push_all', 'Pousser tous les referrals')}
+          </button>
           <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
             {t('crm.disconnect', 'Déconnecter')}
           </button>
+          {pipedrivePushMsg && (
+            <div style={{
+              padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+              background: pipedrivePushMsg.tone === 'success' ? '#ecfdf5'
+                        : pipedrivePushMsg.tone === 'warning' ? '#fffbeb'
+                        : '#fef2f2',
+              border: '1px solid ' + (pipedrivePushMsg.tone === 'success' ? '#6ee7b7'
+                                    : pipedrivePushMsg.tone === 'warning' ? '#fde68a'
+                                    : '#fecaca'),
+              color: pipedrivePushMsg.tone === 'success' ? '#047857'
+                   : pipedrivePushMsg.tone === 'warning' ? '#92400e'
+                   : '#b91c1c',
+            }}>{pipedrivePushMsg.text}</div>
+          )}
         </div>
       )}
 

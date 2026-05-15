@@ -581,6 +581,9 @@ class ApiClient {
   savePipedriveSettings(data) { return this.request('/crm/pipedrive/settings', { method: 'PUT', body: JSON.stringify(data) }); }
   getPipedriveMappings() { return this.request('/crm/pipedrive/mappings'); }
   savePipedriveMappings(data) { return this.request('/crm/pipedrive/mappings', { method: 'PUT', body: JSON.stringify(data) }); }
+  // P3 — push
+  syncReferralToPipedrive(referralId) { return this.request('/crm/pipedrive/sync/' + encodeURIComponent(referralId), { method: 'POST' }); }
+  pushAllToPipedrive() { return this.request('/crm/pipedrive/push?force=1', { method: 'POST' }); }
 
   // Notion (multi-database: transactions / contacts / companies)
   getNotionStatus() { return this.request('/crm/notion/status'); }

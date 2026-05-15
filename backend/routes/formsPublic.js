@@ -22,6 +22,7 @@ const { ensureSystemUser } = require('../services/systemUser');
 // Form submissions used to bypass all four — fixed in item 1.
 const crmService = require('../services/crmService');
 const notionService = require('../services/notionService');
+const pipedriveService = require('../services/pipedriveService');
 const { sendWebhookEvent } = require('../services/webhookService');
 const notify = require('../services/notifyService');
 const resend = require('../services/resend');
@@ -389,6 +390,14 @@ router.post('/:formId/submit', async (req, res) => {
     // swallows its own errors; we never log to the prospect.
     runFormSubmissionSideEffects(referral, { partnerId, tenantId, formId }).catch(err => {
       console.error('[formsPublic.submit.sideEffects]', err.message);
+    });
+    // Pipedrive auto-push (P3). Isolated from runFormSubmissionSideEffects
+    // so a Pipedrive 4xx never trips an unrelated side-effect; the
+    // service logs its own failures into crm_sync_log.
+    setImmediate(() => {
+      pipedriveService.pushReferralToPipedrive(referral.id, tenantId).catch(e => {
+        console.error('[pipedrive.autopush.formSubmit]', referral.id, e.message);
+      });
     });
   } catch (err) {
     console.error('[formsPublic.submit] failed:', err.message);

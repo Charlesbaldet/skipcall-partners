@@ -393,4 +393,79 @@ router.put(
   }
 );
 
+// ─── P3: Push endpoints ──────────────────────────────────────────────
+// /sync/:referralId — manual single-deal push (button on a referral
+//                     card or detail view). Always bypasses auto_push.
+// /push             — bulk rattrapage. Auto_push aware: respects the
+//                     toggle unless the FE explicitly opts in via
+//                     ?force=1 (or { force: true } in the body).
+//
+// Both are admin-only + Business-gated. Errors come back through
+// pipedriveHandlerErrors so the FE gets a clean code (missing_scope,
+// unauthorized, etc.) when the underlying push 4xx'd.
+
+router.post(
+  '/sync/:referralId',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    try {
+      const result = await pipedrive.pushReferralToPipedrive(
+        req.params.referralId, req.tenantId, { manual: true }
+      );
+      if (!result.ok) {
+        if (result.reason === 'not_configured') {
+          return res.status(400).json({ error: 'not_connected' });
+        }
+        if (result.reason === 'referral_not_found') {
+          return res.status(404).json({ error: 'referral_not_found' });
+        }
+        // result.error is one of: unauthorized | missing_scope | forbidden |
+        // rate_limited | pipedrive_<status> | internal — same vocabulary
+        // the FE already speaks for the fields endpoints.
+        return res.status(result.error === 'unauthorized' ? 401 :
+                          result.error === 'missing_scope' ? 403 :
+                          result.error === 'forbidden' ? 403 :
+                          result.error === 'rate_limited' ? 429 : 500)
+          .json({ error: result.error || 'push_failed', detail: result.detail });
+      }
+      res.json({
+        ok: true,
+        deal_id: result.deal_id,
+        person_id: result.person_id,
+        organization_id: result.organization_id,
+      });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'sync');
+    }
+  }
+);
+
+router.post(
+  '/push',
+  authenticate, tenantScope, authorize('admin', 'superadmin'), requireBusiness,
+  async (req, res) => {
+    try {
+      const force = req.query.force === '1' || req.body?.force === true;
+      const result = await pipedrive.pushAllReferralsToPipedrive(
+        req.tenantId, { manual: force }
+      );
+      if (!result.ok && result.reason === 'not_configured') {
+        return res.status(400).json({ error: 'not_connected' });
+      }
+      if (!result.ok && result.reason === 'auto_push_disabled') {
+        return res.status(400).json({ error: 'auto_push_disabled' });
+      }
+      res.json({
+        ok: true,
+        total: result.total,
+        pushed: result.pushed,
+        failed: result.failed,
+        errors: result.errors || [],
+      });
+    } catch (err) {
+      pipedriveHandlerErrors(err, res, 'push');
+    }
+  }
+);
+
 module.exports = router;

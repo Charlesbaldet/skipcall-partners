@@ -8,6 +8,7 @@ const { bulkResolveTiers, resolveTierForPartner, effectiveRate } = require('../u
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
 const notify = require('../services/notifyService');
+const pipedriveService = require('../services/pipedriveService');
 const { sendEmail, referralStatusChangedTpl, newCommissionAvailableTpl, dealWonTpl } = require('../services/emailService');
 const crmService = require('../services/crmService');
 const notionService = require('../services/notionService');
@@ -429,6 +430,16 @@ Voir : ${_dashUrl}`,
         created_at: referral.created_at,
       });
     })().catch(() => {});
+
+    // ─── Pipedrive auto-push (fire-and-forget) ────────────────────────
+    // Defer via setImmediate so the response ships before we touch
+    // Pipedrive. The service swallows its own errors (logged to
+    // crm_sync_log) so no Pipedrive outage can break referral creation.
+    setImmediate(() => {
+      pipedriveService.pushReferralToPipedrive(referral.id, req.tenantId).catch(e => {
+        console.error('[pipedrive.autopush.create]', referral.id, e.message);
+      });
+    });
   } catch (err) {
     console.error('Create referral error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -1074,6 +1085,17 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
         to: status,
       });
     }
+
+    // ─── Pipedrive auto-push (fire-and-forget) ────────────────────────
+    // Same posture as the create path — setImmediate so the response
+    // flushes first, errors swallowed and logged to crm_sync_log.
+    // The push picks up the status flip too, so won/lost transitions
+    // mirror back into Pipedrive automatically.
+    setImmediate(() => {
+      pipedriveService.pushReferralToPipedrive(req.params.id, req.tenantId).catch(e => {
+        console.error('[pipedrive.autopush.update]', req.params.id, e.message);
+      });
+    });
 
     res.json({ referral: updated });
 
