@@ -1439,6 +1439,8 @@ function IntegrationsPanel() {
   const [pipedriveStatus, setPipedriveStatus] = useState(null);
   const [pipedriveMsg, setPipedriveMsg] = useState('');
   const [pipedrivePushMsg, setPipedrivePushMsg] = useState(null); // {tone, text}
+  const [pipedrivePushErrors, setPipedrivePushErrors] = useState([]); // detailed errors from last push
+  const [pipedrivePushDetailsOpen, setPipedrivePushDetailsOpen] = useState(false);
   const [pipedrivePushing, setPipedrivePushing] = useState(false);
   const [showPipedriveConfig, setShowPipedriveConfig] = useState(false);
 
@@ -1621,6 +1623,7 @@ function IntegrationsPanel() {
     if (pipedrivePushing) return;
     setPipedrivePushing(true);
     setPipedrivePushMsg(null);
+    setPipedrivePushErrors([]);
     try {
       const r = await api.pushAllToPipedrive();
       const summary = t('pipedrive.push_all_done', {
@@ -1630,8 +1633,10 @@ function IntegrationsPanel() {
         defaultValue: '{{pushed}}/{{total}} referrals poussés ({{failed}} échec(s))',
       });
       setPipedrivePushMsg({ tone: r.failed ? 'warning' : 'success', text: summary });
+      setPipedrivePushErrors(Array.isArray(r.errors) ? r.errors : []);
     } catch (err) {
       setPipedrivePushMsg({ tone: 'error', text: err?.message || t('pipedrive.push_all_error', 'Échec du push Pipedrive') });
+      setPipedrivePushErrors([]);
     } finally {
       setPipedrivePushing(false);
     }
@@ -1951,6 +1956,8 @@ function IntegrationsPanel() {
               pipedrivePushMsg={integration.id === 'pipedrive' ? pipedrivePushMsg : null}
               pipedrivePushing={integration.id === 'pipedrive' ? pipedrivePushing : false}
               onPipedrivePushAll={integration.id === 'pipedrive' ? pushAllPipedrive : null}
+              pipedriveErrorCount={integration.id === 'pipedrive' ? pipedrivePushErrors.length : 0}
+              onPipedriveOpenDetails={integration.id === 'pipedrive' ? (() => setPipedrivePushDetailsOpen(true)) : null}
               pennylaneStatus={integration.id === 'pennylane' ? pennylaneStatus : null}
               pennylaneToken={integration.id === 'pennylane' ? pennylaneToken : ''}
               onPennylaneTokenChange={integration.id === 'pennylane' ? setPennylaneToken : null}
@@ -1989,6 +1996,14 @@ function IntegrationsPanel() {
       {showPipedriveConfig && (
         <PipedriveConfigModal
           onClose={() => { setShowPipedriveConfig(false); load(); }}
+        />
+      )}
+
+      {pipedrivePushDetailsOpen && (
+        <PipedrivePushErrorsModal
+          errors={pipedrivePushErrors}
+          onClose={() => setPipedrivePushDetailsOpen(false)}
+          t={t}
         />
       )}
 
@@ -2048,6 +2063,7 @@ function IntegrationRow({
   onConnect, onConfigure, onDisconnect, onUpgrade, onSync,
   notionMsg, qontoStatus, onQontoOpenPicker,
   pipedriveStatus, pipedrivePushMsg, pipedrivePushing, onPipedrivePushAll,
+  pipedriveErrorCount, onPipedriveOpenDetails,
   pennylaneStatus, pennylaneToken, onPennylaneTokenChange, onPennylaneSubmit, onPennylaneToggle, pennylaneSubmitting,
 }) {
   const [hover, setHover] = useState(false);
@@ -2217,20 +2233,34 @@ function IntegrationRow({
           <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
             {t('crm.disconnect', 'Déconnecter')}
           </button>
-          {pipedrivePushMsg && (
-            <div style={{
-              padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500,
-              background: pipedrivePushMsg.tone === 'success' ? '#ecfdf5'
-                        : pipedrivePushMsg.tone === 'warning' ? '#fffbeb'
-                        : '#fef2f2',
-              border: '1px solid ' + (pipedrivePushMsg.tone === 'success' ? '#6ee7b7'
-                                    : pipedrivePushMsg.tone === 'warning' ? '#fde68a'
-                                    : '#fecaca'),
-              color: pipedrivePushMsg.tone === 'success' ? '#047857'
-                   : pipedrivePushMsg.tone === 'warning' ? '#92400e'
-                   : '#b91c1c',
-            }}>{pipedrivePushMsg.text}</div>
-          )}
+          {pipedrivePushMsg && (() => {
+            const clickable = pipedriveErrorCount > 0 && onPipedriveOpenDetails;
+            return (
+              <button
+                type="button"
+                onClick={clickable ? onPipedriveOpenDetails : undefined}
+                disabled={!clickable}
+                style={{
+                  padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                  background: pipedrivePushMsg.tone === 'success' ? '#ecfdf5'
+                            : pipedrivePushMsg.tone === 'warning' ? '#fffbeb'
+                            : '#fef2f2',
+                  border: '1px solid ' + (pipedrivePushMsg.tone === 'success' ? '#6ee7b7'
+                                        : pipedrivePushMsg.tone === 'warning' ? '#fde68a'
+                                        : '#fecaca'),
+                  color: pipedrivePushMsg.tone === 'success' ? '#047857'
+                       : pipedrivePushMsg.tone === 'warning' ? '#92400e'
+                       : '#b91c1c',
+                  cursor: clickable ? 'pointer' : 'default',
+                  fontFamily: 'inherit',
+                  textDecoration: clickable ? 'underline dotted' : 'none',
+                }}
+                title={clickable ? t('pipedrive.push_all_view_details', 'Voir le détail des erreurs') : undefined}
+              >
+                {pipedrivePushMsg.text}
+              </button>
+            );
+          })()}
         </div>
       )}
 
@@ -3494,6 +3524,108 @@ function PartnerCategoriesTab() {
   );
 }
 
+
+// ═══ Pipedrive push errors detail modal ═══
+// Opened from the "X/Y referrals poussés (Z échec(s))" pill. Lists
+// every failed referral with its prospect name, the step that blew
+// up (organization / person / deal / load), the Pipedrive HTTP
+// status, and the truncated body so the admin can fix the underlying
+// data or scope without re-running the push.
+function PipedrivePushErrorsModal({ errors, onClose, t }) {
+  const list = Array.isArray(errors) ? errors : [];
+  const STEP_LABEL = {
+    organization: t('pipedrive.step_organization', 'Organisation'),
+    person:       t('pipedrive.step_person', 'Personne'),
+    deal:         t('pipedrive.step_deal', 'Affaire'),
+    load:         t('pipedrive.step_load', 'Chargement'),
+  };
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#fff', borderRadius: 16,
+          width: '100%', maxWidth: 720, maxHeight: '88vh',
+          display: 'flex', flexDirection: 'column',
+          boxShadow: '0 25px 80px rgba(15,23,42,0.25)',
+        }}
+      >
+        <div style={{ padding: '20px 24px 12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+              {t('pipedrive.push_errors_title', 'Détail des échecs Pipedrive')}
+            </h3>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+              {t('pipedrive.push_errors_subtitle', { count: list.length, defaultValue: '{{count}} referral(s) en échec' })}
+            </p>
+          </div>
+          <button
+            type="button" onClick={onClose}
+            style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >×</button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 24px 24px' }}>
+          {list.length === 0 ? (
+            <div style={{ padding: 16, color: '#64748b', fontSize: 13, textAlign: 'center' }}>
+              {t('pipedrive.push_errors_empty', 'Aucune erreur à afficher.')}
+            </div>
+          ) : list.map((e, i) => (
+            <div key={e.referralId || i} style={{
+              padding: '12px 14px', marginBottom: 10,
+              border: '1px solid #fecaca', background: '#fef2f2',
+              borderRadius: 10, color: '#7f1d1d',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 6 }}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: '#7f1d1d' }}>
+                  {e.prospect_name || e.referralId || '—'}
+                </span>
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+                  background: '#fff', border: '1px solid #fecaca', color: '#b91c1c',
+                }}>
+                  {STEP_LABEL[e.step] || e.step || t('pipedrive.step_unknown', 'Inconnu')}
+                  {e.pipedrive_status ? ` · ${e.pipedrive_status}` : ''}
+                </span>
+              </div>
+              {e.error_message && (
+                <div style={{ fontSize: 12, marginBottom: 4 }}>{e.error_message}</div>
+              )}
+              {e.pipedrive_body && (
+                <details style={{ marginTop: 4 }}>
+                  <summary style={{ fontSize: 11, color: '#9f1239', cursor: 'pointer' }}>
+                    {t('pipedrive.push_errors_show_body', 'Voir la réponse Pipedrive')}
+                  </summary>
+                  <pre style={{
+                    margin: '6px 0 0', padding: 10, background: '#fff',
+                    border: '1px solid #fecaca', borderRadius: 6,
+                    fontSize: 11, color: '#7f1d1d',
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    maxHeight: 160, overflowY: 'auto',
+                  }}>
+                    {typeof e.pipedrive_body === 'string' ? e.pipedrive_body : JSON.stringify(e.pipedrive_body, null, 2)}
+                  </pre>
+                </details>
+              )}
+              {e.referralId && (
+                <div style={{ fontSize: 10, color: '#9f1239', marginTop: 6, fontFamily: 'monospace' }}>
+                  {e.referralId}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ═══ Notion connect modal — 3 databases ═══
 // Token + up to three database IDs (Transactions required, Contacts

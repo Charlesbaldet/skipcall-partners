@@ -984,6 +984,11 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               {/* Separator before the footer buttons. */}
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
 
+              {/* Pipedrive sync action — visible only when the tenant
+                  has Pipedrive connected. Label adapts to whether the
+                  referral already has a deal id in Pipedrive. */}
+              <PipedrivePushButton referral={referral} t={t} />
+
               {saveToast && (
                 <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 600, background: saveToast.type === 'success' ? '#f0fdf4' : '#fef2f2', color: saveToast.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${saveToast.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
                   {saveToast.text}
@@ -1063,6 +1068,93 @@ function Badge({ config, value }) {
   const c = config[value];
   if (!c) return <span>{value}</span>;
   return <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: c.bg, color: c.color, whiteSpace: 'nowrap' }}>{c.label}</span>;
+}
+
+// ═══ Pipedrive push action on a single referral ═══
+// Surfaces a green button on the referral's Info tab. Self-fetches
+// /crm/pipedrive/status so it stays hidden for tenants that haven't
+// connected Pipedrive (we don't want a blank button confusing
+// non-CRM tenants). Label adapts:
+//   - never pushed  → "Pousser vers Pipedrive"
+//   - already linked → "Mettre à jour dans Pipedrive" + external link
+function PipedrivePushButton({ referral, t }) {
+  const [pdStatus, setPdStatus] = useState(null);
+  const [pushing, setPushing] = useState(false);
+  const [msg, setMsg] = useState(null); // { tone, text }
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getPipedriveStatus().then(s => { if (!cancelled) setPdStatus(s); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!pdStatus || !pdStatus.connected) return null;
+
+  const dealId = referral.pipedrive_deal_id || null;
+  const apiDomain = pdStatus.api_domain || '';
+  const dealUrl = dealId && apiDomain ? `${apiDomain.replace(/\/$/, '')}/deal/${dealId}` : null;
+
+  const handleClick = async () => {
+    if (pushing) return;
+    setPushing(true);
+    setMsg(null);
+    try {
+      const res = await api.syncReferralToPipedrive(referral.id);
+      setMsg({ tone: 'success', text: t('pipedrive.push_one_ok', { dealId: res.deal_id || dealId || '?', defaultValue: 'Synchronisé avec Pipedrive · Deal #{{dealId}}' }) });
+    } catch (err) {
+      const detail = err?.data?.detail || err?.message || '';
+      setMsg({ tone: 'error', text: t('pipedrive.push_one_error', { detail, defaultValue: 'Échec du push : {{detail}}' }) });
+    } finally {
+      setPushing(false);
+    }
+  };
+
+  return (
+    <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Pipedrive</div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>
+            {dealId
+              ? t('pipedrive.push_one_linked', { dealId, defaultValue: 'Lié au deal #{{dealId}}' })
+              : t('pipedrive.push_one_unlinked', 'Pas encore synchronisé')}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {dealUrl && (
+            <a href={dealUrl} target="_blank" rel="noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{ fontSize: 12, color: '#0f172a', textDecoration: 'underline' }}>
+              {t('pipedrive.push_one_open', 'Ouvrir')}
+            </a>
+          )}
+          <button
+            type="button" onClick={handleClick} disabled={pushing}
+            style={{
+              padding: '8px 14px', borderRadius: 8, border: 'none',
+              background: '#059669', color: '#fff',
+              fontSize: 13, fontWeight: 600, cursor: pushing ? 'wait' : 'pointer',
+              fontFamily: 'inherit', opacity: pushing ? 0.7 : 1,
+            }}
+          >
+            {pushing
+              ? t('pipedrive.push_one_running', 'Synchronisation…')
+              : dealId
+                ? t('pipedrive.push_one_update', 'Mettre à jour dans Pipedrive')
+                : t('pipedrive.push_one', 'Pousser vers Pipedrive')}
+          </button>
+        </div>
+      </div>
+      {msg && (
+        <div style={{
+          marginTop: 10, padding: '6px 10px', borderRadius: 8, fontSize: 12,
+          background: msg.tone === 'success' ? '#ecfdf5' : '#fef2f2',
+          border: '1px solid ' + (msg.tone === 'success' ? '#6ee7b7' : '#fecaca'),
+          color: msg.tone === 'success' ? '#047857' : '#b91c1c',
+        }}>{msg.text}</div>
+      )}
+    </div>
+  );
 }
 
 function InfoRow({ label, value }) {
@@ -1158,6 +1250,7 @@ function CrmSyncBadge({ referral }) {
   const hubspotLinked   = !!referral.hubspot_deal_id;
   const salesforceLinked = !!referral.salesforce_opportunity_id;
   const notionLinked    = !!(referral.notion_page_id || referral.notion_transaction_id);
+  const pipedriveLinked = !!referral.pipedrive_deal_id;
   // Legacy `crm_deal_id` with no provider-specific column populated —
   // treat it as a generic sync so pre-migration rows still get a
   // badge.
@@ -1196,6 +1289,12 @@ function CrmSyncBadge({ referral }) {
     badges.push(
       <span key="sf" title={`Salesforce${suffix}${date ? ' — ' + date : ''}`} aria-label="Salesforce synced"
         style={circle('#00a1e0', '#fff', 'S')}>S</span>
+    );
+  }
+  if (pipedriveLinked) {
+    badges.push(
+      <span key="pd" title="Pipedrive synced" aria-label="Pipedrive synced"
+        style={circle('#1a1a1a', '#fff', 'P')}>P</span>
     );
   }
   if (legacyLinked) {

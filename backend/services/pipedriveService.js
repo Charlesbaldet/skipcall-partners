@@ -773,15 +773,31 @@ function buildEntityPayload(mappings, referral) {
   return out;
 }
 
-// Pipedrive Person email and phone are array-of-objects ([{value,
-// primary, label}]) — flat string values produce a 400. Normalises
-// any string we receive from a buildEntityPayload pass into that
-// shape.
+// Pipedrive **v2** /persons renamed the contact fields:
+//   v1: email  / phone  (singular, also accepts array-of-objects)
+//   v2: emails / phones (plural, REQUIRED array-of-objects)
+// Sending `email` to /api/v2/persons returns
+//   400 Validation failed: email: Parameter 'email' is not allowed for this request
+//
+// The admin's mapping picks the field by key from /api/v1/personFields
+// (which still uses the singular names), so the buildEntityPayload
+// output carries `email`/`phone` — we rename + wrap them here before
+// the v2 request body goes out. ItemSearch's `fields=email` query
+// string is unchanged (that's a separate v2 contract).
 function normalisePersonContactArrays(payload) {
-  for (const k of ['email', 'phone']) {
-    if (payload[k] && typeof payload[k] === 'string') {
-      payload[k] = [{ value: payload[k], primary: true, label: 'work' }];
-    }
+  if (payload.email != null && payload.email !== '') {
+    const v = payload.email;
+    payload.emails = Array.isArray(v)
+      ? v
+      : [{ value: String(v), primary: true, label: 'work' }];
+    delete payload.email;
+  }
+  if (payload.phone != null && payload.phone !== '') {
+    const v = payload.phone;
+    payload.phones = Array.isArray(v)
+      ? v
+      : [{ value: String(v), primary: true, label: 'work' }];
+    delete payload.phone;
   }
   return payload;
 }
@@ -992,6 +1008,37 @@ async function upsertDeal(tenantId, referral, mappings, personId, orgId, stageMa
   return created?.data?.id ? String(created.data.id) : null;
 }
 
+// Best-effort write of a referral_activities row so the deal's
+// History tab carries a trace of every push attempt — admins
+// shouldn't have to dig into Railway logs to know if a push failed.
+// referral_activities.user_id is NOT NULL so we use the tenant's
+// system user (ensureSystemUser creates it on first call).
+async function logActivity(tenantId, referralId, action, comment) {
+  try {
+    const { ensureSystemUser } = require('./systemUser');
+    const sys = await ensureSystemUser(tenantId);
+    const systemUserId = sys?.id;
+    if (!systemUserId) return;
+    await query(
+      `INSERT INTO referral_activities (referral_id, user_id, action, new_value, comment)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [referralId, systemUserId, action, action, String(comment || '').slice(0, 500)]
+    );
+  } catch (e) {
+    // Activity logging is best-effort — don't propagate.
+    console.warn('[pipedrive.push.activity]', e.message);
+  }
+}
+
+// Tag the step that exploded so the structured error response can
+// show "échec à l'étape Person" in the FE drawer.
+function tagStep(stepLabel) {
+  return (err) => {
+    if (err && !err._pipedriveStep) err._pipedriveStep = stepLabel;
+    throw err;
+  };
+}
+
 // Main entry. opts.manual=true bypasses the auto_push check.
 // Never throws — every failure flows through crm_sync_log + a
 // structured return.
@@ -999,11 +1046,17 @@ async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
   const manual = !!opts.manual;
   let context = opts.context || null;
   let integrationId = null;
+  let prospectNameSnapshot = null;
+  console.log(`[pipedrive.push] start referralId=${referralId} tenant=${tenantId} manual=${manual}`);
   try {
     if (!context) context = await loadPipedriveContext(tenantId);
-    if (!context) return { ok: false, reason: 'not_configured' };
+    if (!context) {
+      console.log(`[pipedrive.push] skipped referralId=${referralId} reason=not_configured`);
+      return { ok: false, reason: 'not_configured' };
+    }
     integrationId = context.integ.id;
     if (!manual && !context.integ.autoPush) {
+      console.log(`[pipedrive.push] skipped referralId=${referralId} reason=auto_push_disabled`);
       return { ok: false, reason: 'auto_push_disabled' };
     }
 
@@ -1021,16 +1074,22 @@ async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
       [referralId, tenantId]
     );
     const referral = rows[0];
-    if (!referral) return { ok: false, reason: 'referral_not_found' };
+    if (!referral) {
+      console.log(`[pipedrive.push] skipped referralId=${referralId} reason=referral_not_found`);
+      return { ok: false, reason: 'referral_not_found' };
+    }
+    prospectNameSnapshot = referral.prospect_name || null;
 
     const { stageMappings, fieldMappings, stages, integ } = context;
 
-    const orgId = await upsertOrganization(tenantId, referral, fieldMappings.organization || []);
+    const orgId = await upsertOrganization(tenantId, referral, fieldMappings.organization || []).catch(tagStep('organization'));
+    console.log(`[pipedrive.push] org_upsert referralId=${referralId} company="${referral.prospect_company || ''}" → org_id=${orgId || 'null'}`);
     if (orgId !== referral.pipedrive_organization_id) {
       referral.pipedrive_organization_id = orgId;
     }
 
-    const personId = await upsertPerson(tenantId, referral, fieldMappings.person || [], orgId);
+    const personId = await upsertPerson(tenantId, referral, fieldMappings.person || [], orgId).catch(tagStep('person'));
+    console.log(`[pipedrive.push] person_upsert referralId=${referralId} email="${referral.prospect_email || ''}" → person_id=${personId || 'null'}`);
     if (personId !== referral.pipedrive_person_id) {
       referral.pipedrive_person_id = personId;
     }
@@ -1038,7 +1097,8 @@ async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
     const dealId = await upsertDeal(
       tenantId, referral, fieldMappings.deal || [],
       personId, orgId, stageMappings, stages, integ.pipelineId
-    );
+    ).catch(tagStep('deal'));
+    console.log(`[pipedrive.push] deal_upsert referralId=${referralId} status=${referral.status} → deal_id=${dealId || 'null'}`);
 
     // Persist the three IDs back onto the referral so the next push
     // PATCHes instead of POSTing.
@@ -1067,6 +1127,11 @@ async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
       }
     }
 
+    // History trace for the referral's activity timeline.
+    await logActivity(tenantId, referralId, 'pipedrive_synced',
+      `Synchronisé avec Pipedrive · Deal #${dealId || '?'}`);
+
+    console.log(`[pipedrive.push] done referralId=${referralId} ok=true deal_id=${dealId} person_id=${personId} org_id=${orgId}`);
     return { ok: true, deal_id: dealId, person_id: personId, organization_id: orgId };
   } catch (err) {
     // Map Pipedrive HTTP failures (attached on pdJson) to a stable
@@ -1074,7 +1139,11 @@ async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
     // marked inactive on a 401 so the refresh worker has a clear
     // signal to drop and the next manual reconnect surfaces the
     // problem to the admin.
-    console.error('[pipedrive.push] error referral=' + referralId, err.message, err.status || '');
+    const step = err._pipedriveStep || 'load';
+    const bodyExcerpt = err.body
+      ? (typeof err.body === 'string' ? err.body.slice(0, 500) : JSON.stringify(err.body).slice(0, 500))
+      : null;
+    console.error(`[pipedrive.push] error referralId=${referralId} step=${step} status=${err.status || '-'} message="${err.message}" body=${bodyExcerpt || '-'}`);
     const kind = err.kind || 'internal';
     let errorCode = 'internal';
     let lastErrorReason = null;
@@ -1096,6 +1165,7 @@ async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
            VALUES ($1, $2, 'push', 'error', $3::jsonb)`,
           [integrationId, referralId, JSON.stringify({
             error: errorCode,
+            step,
             message: String(err.message).slice(0, 500),
             status: err.status || null,
             body: err.body && (typeof err.body === 'string' ? err.body.slice(0, 500) : err.body),
@@ -1106,7 +1176,20 @@ async function pushReferralToPipedrive(referralId, tenantId, opts = {}) {
         console.error('[pipedrive.push.log.error]', e.message);
       }
     }
-    return { ok: false, error: errorCode, detail: err.message };
+    // History trace — error variant.
+    await logActivity(tenantId, referralId, 'pipedrive_sync_error',
+      `Échec Pipedrive (${step}) · ${String(err.message).slice(0, 200)}`);
+
+    console.log(`[pipedrive.push] done referralId=${referralId} ok=false error=${errorCode} step=${step}`);
+    return {
+      ok: false,
+      error: errorCode,
+      step,
+      detail: err.message,
+      pipedrive_status: err.status || null,
+      pipedrive_body: bodyExcerpt,
+      prospect_name: prospectNameSnapshot,
+    };
   }
 }
 
@@ -1136,12 +1219,23 @@ async function pushAllReferralsToPipedrive(tenantId, opts = {}) {
     if (res.ok) pushed++;
     else {
       failed++;
-      errors.push({ id: r.id, error: res.error || res.reason || 'unknown' });
+      errors.push({
+        referralId: r.id,
+        prospect_name: res.prospect_name || null,
+        step: res.step || null,
+        error_message: res.detail || res.reason || res.error || 'unknown',
+        pipedrive_status: res.pipedrive_status || null,
+        pipedrive_body: res.pipedrive_body || null,
+        error_code: res.error || res.reason || 'unknown',
+      });
       // Stop on auth errors — every subsequent push would 401 too.
       if (res.error === 'unauthorized') break;
     }
   }
-  return { ok: true, total: rows.length, pushed, failed, errors: errors.slice(0, 20) };
+  // No 20-row cap any more — the FE drawer needs the full list to
+  // be actionable. The payload stays bounded by truncated body
+  // excerpts (500 chars each) so 200 errors ≈ 100KB max.
+  return { ok: true, total: rows.length, pushed, failed, errors };
 }
 
 module.exports = {
