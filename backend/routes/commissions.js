@@ -856,7 +856,12 @@ function sanitizePaymentError(err) {
   // Last resort: a plain status-only string from raw error message.
   const m = /failed \((\d+)\)/.exec(typeof raw === 'string' ? raw : '');
   if (m) return `qonto_http_${m[1]}`;
-  return (message || 'qonto_error').slice(0, 200);
+  // Fall back to the raw JS error message so non-Qonto crashes
+  // (ReferenceError, TypeError, SQL errors, …) are persisted in
+  // commissions.payment_error verbatim instead of being flattened to
+  // the generic "qonto_error" — which is what hid the L.974
+  // `tenantId is not defined` regression for a full day.
+  return (message || err?.message || 'qonto_error').slice(0, 200);
 }
 
 async function loadCommissionForPayment(commissionId, tenantId) {
@@ -952,7 +957,7 @@ router.post('/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (re
           });
           attachmentId = att?.id || null;
           if (attachmentId) {
-            await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1 AND tenant_id = $3', [c.id, attachmentId, tenantId]);
+            await query('UPDATE commissions SET qonto_attachment_id = $2 WHERE id = $1 AND tenant_id = $3', [c.id, attachmentId, req.tenantId]);
           }
         }
       } catch (e) {
@@ -971,7 +976,7 @@ router.post('/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (re
       idempotencyKey = qonto.newIdempotencyKey();
       await query(
         'UPDATE commissions SET qonto_idempotency_key = $2 WHERE id = $1 AND tenant_id = $3',
-        [c.id, idempotencyKey, tenantId]
+        [c.id, idempotencyKey, req.tenantId]
       );
     }
 
