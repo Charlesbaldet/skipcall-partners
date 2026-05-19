@@ -1431,6 +1431,100 @@ async function runMigrations() {
     console.error('[migrate.v53] failed:', err.message);
   }
 
+  // v54: phase E1 of the event-driven recurring-commission rework.
+  // SCHEMA-ONLY — zero behavioural change. The new columns are all
+  // nullable / defaulted to the legacy-behaviour values, so every
+  // existing read path keeps working unmodified. Activation happens
+  // later (E2+) by flipping tenants.recurring_billing_enabled to TRUE
+  // on a per-tenant basis; until then `is_recurring = FALSE` everywhere
+  // and the recurring branches stay dormant.
+  //
+  // Model:
+  //   - commission_revisions: append-only audit of every change to a
+  //     commission's deal_value / rate / VAT snapshot. revision_index = 1
+  //     is the initial creation; subsequent rows are upsell/downsell
+  //     amendments. The existing commissions row is NEVER mutated for
+  //     historical revisions — already-paid amounts stay accurate
+  //     against the revision they were paid on.
+  //   - commissions.is_recurring: FALSE = legacy one-shot
+  //     (forfait/mensuel/trimestriel/annuel × periods, single row,
+  //     no recurring cycle). TRUE = lives as long as the deal is
+  //     `won`, future cycles billed against the latest revision.
+  //   - commissions.is_perpetual: meaningful only when is_recurring;
+  //     TRUE = "à vie" (no end), FALSE = bounded by engagement_until.
+  //   - commissions.engagement_until: optional terminal date for
+  //     bounded recurring commissions. NULL when perpetual or legacy.
+  //   - commissions.current_revision_index: pointer to the active
+  //     row in commission_revisions; backfilled to 1.
+  //   - tenants.recurring_billing_enabled: tenant-level feature flag,
+  //     OFF by default. Every recurring-billing code path will gate
+  //     on this so non-opted-in tenants keep the legacy behaviour
+  //     byte-for-byte.
+  //
+  // Backfill: one revision row per pre-existing commission, mirroring
+  // the v31 VAT-backfill semantics (legacy rows treated as tax_rate=0
+  // and ttc=ht=amount). The `NOT EXISTS` guard makes the backfill
+  // idempotent — re-running the migration over an already-backfilled
+  // database inserts zero rows.
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS commission_revisions (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        commission_id UUID NOT NULL REFERENCES commissions(id) ON DELETE CASCADE,
+        revision_index INTEGER NOT NULL,
+        deal_value NUMERIC(12,2) NOT NULL,
+        rate NUMERIC(5,2) NOT NULL,
+        amount_ht NUMERIC(12,2) NOT NULL,
+        tax_rate_applied NUMERIC(5,2) NOT NULL DEFAULT 0,
+        amount_tax NUMERIC(12,2) NOT NULL DEFAULT 0,
+        amount_ttc NUMERIC(12,2) NOT NULL,
+        effective_date DATE NOT NULL,
+        reason TEXT,
+        created_by UUID REFERENCES users(id),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (commission_id, revision_index)
+      )
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_commission_revisions_commission_effective
+                   ON commission_revisions(commission_id, effective_date)`);
+
+    await query(`ALTER TABLE commissions
+                   ADD COLUMN IF NOT EXISTS is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+                   ADD COLUMN IF NOT EXISTS is_perpetual BOOLEAN NOT NULL DEFAULT FALSE,
+                   ADD COLUMN IF NOT EXISTS engagement_until DATE,
+                   ADD COLUMN IF NOT EXISTS current_revision_index INTEGER NOT NULL DEFAULT 1`);
+
+    await query(`ALTER TABLE tenants
+                   ADD COLUMN IF NOT EXISTS recurring_billing_enabled BOOLEAN NOT NULL DEFAULT FALSE`);
+
+    const { rowCount: revisionsBackfilled } = await query(`
+      INSERT INTO commission_revisions
+        (commission_id, revision_index, deal_value, rate,
+         amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+         effective_date, reason, created_by, created_at)
+      SELECT c.id,
+             1,
+             c.deal_value,
+             c.rate,
+             COALESCE(c.amount_ht,  c.amount),
+             COALESCE(c.tax_rate_applied, 0),
+             COALESCE(c.amount_tax, 0),
+             COALESCE(c.amount_ttc, c.amount),
+             COALESCE(c.created_at::date, NOW()::date),
+             'initial',
+             NULL,
+             COALESCE(c.created_at, NOW())
+        FROM commissions c
+       WHERE NOT EXISTS (
+         SELECT 1 FROM commission_revisions cr
+          WHERE cr.commission_id = c.id AND cr.revision_index = 1
+       )
+    `);
+    console.log(`[recurring] v54 commission_revisions + commissions.is_recurring/is_perpetual/engagement_until/current_revision_index + tenants.recurring_billing_enabled ready · backfilled ${revisionsBackfilled} initial revisions`);
+  } catch (err) {
+    console.error('[migrate.v54] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
