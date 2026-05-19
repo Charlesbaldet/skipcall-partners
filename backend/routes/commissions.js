@@ -179,6 +179,7 @@ router.get('/', async (req, res) => {
               c.engagement_type, c.engagement_periods,
               c.amount_ht, c.tax_rate_applied, c.amount_tax, c.amount_ttc,
               c.is_recurring, c.is_perpetual, c.engagement_until, c.current_revision_index, c.tier_at_won,
+              c.cancelled_at, c.cancelled_reason, c.cancelled_resolved,
               (c.invoice_url IS NOT NULL) AS has_invoice,
               c.qonto_transfer_id, c.payment_initiated_at, c.payment_completed_at,
               c.payment_reference, c.payment_error,
@@ -549,6 +550,100 @@ router.post('/:id/reject', authorize('admin'), async (req, res) => {
     res.json({ commission: updated });
   } catch (err) {
     console.error('Reject commission error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── E4: post-lost arbitrage actions ───────────────────────────────
+// When a deal is closed lost and its recurring commission has been
+// flipped to status='cancelled' (referrals.js leftWon branch), the
+// admin must explicitly arbitrate: pay the last engagement cycle,
+// or confirm the cessation. Both routes operate exclusively on
+// status='cancelled' rows; non-cancelled commissions return 409.
+//
+// resume-last-cycle: commission → 'awaiting_invoice' (re-enters the
+// existing pay-qonto flow without any new payment plumbing).
+// cancelled_resolved=TRUE so the row leaves the "to-arbitrate"
+// queue. cancelled_at + cancelled_reason are kept as historical
+// markers so we don't lose the audit trail.
+//
+// confirm-cancellation: status stays 'cancelled', cancelled_resolved
+// flips to TRUE — the commission is sealed, no further versement
+// will ever be wired against it. Idempotent.
+
+router.post('/:id/resume-last-cycle', authorize('admin'), async (req, res) => {
+  try {
+    const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
+    if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
+    if (existing.status !== 'cancelled') {
+      return res.status(409).json({ error: 'not_cancelled', message: 'Cette action ne s\'applique qu\'à une commission annulée.' });
+    }
+    // Defensive: never re-open an in-flight transfer that somehow
+    // co-existed with cancelled state (shouldn't happen — the
+    // referrals.js guard rejects lost mid-flight — but cheap to
+    // re-check).
+    if (existing.qonto_transfer_id && !existing.payment_completed_at) {
+      return res.status(409).json({
+        error: 'transfer_in_flight',
+        message: 'Un virement est en cours pour cette commission. Attendez sa finalisation.',
+      });
+    }
+    const { rows: [updated] } = await query(
+      `UPDATE commissions
+          SET status = 'awaiting_invoice',
+              cancelled_resolved = TRUE
+        WHERE id = $1 AND status = 'cancelled'
+        RETURNING *`,
+      [req.params.id]
+    );
+    if (!updated) return res.status(409).json({ error: 'state_changed', message: 'La commission a changé d\'état.' });
+
+    // Activity on the parent referral so the timeline records the
+    // admin decision in plain language.
+    try {
+      await query(
+        `INSERT INTO referral_activities (referral_id, user_id, action, old_value, new_value, comment)
+         VALUES ($1, $2, 'commission_last_cycle_authorized', 'cancelled', 'awaiting_invoice', 'Dernier cycle autorisé au paiement avant arrêt définitif.')`,
+        [existing.referral_id, req.user.id]
+      );
+    } catch (e) { console.warn('[resume-last-cycle] activity log failed:', e.message); }
+
+    res.json({ commission: updated });
+  } catch (err) {
+    console.error('Resume last cycle error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/:id/confirm-cancellation', authorize('admin'), async (req, res) => {
+  try {
+    const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
+    if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
+    if (existing.status !== 'cancelled') {
+      return res.status(409).json({ error: 'not_cancelled', message: 'Cette action ne s\'applique qu\'à une commission annulée.' });
+    }
+    // Idempotent: re-confirming an already-resolved cancellation
+    // is a noop, not an error — the FE may double-click the button.
+    const { rows: [updated] } = await query(
+      `UPDATE commissions
+          SET cancelled_resolved = TRUE
+        WHERE id = $1 AND status = 'cancelled'
+        RETURNING *`,
+      [req.params.id]
+    );
+    if (!updated) return res.status(409).json({ error: 'state_changed', message: 'La commission a changé d\'état.' });
+
+    try {
+      await query(
+        `INSERT INTO referral_activities (referral_id, user_id, action, old_value, new_value, comment)
+         VALUES ($1, $2, 'commission_cancellation_confirmed', 'cancelled', 'cancelled', 'Arrêt confirmé — aucun versement supplémentaire.')`,
+        [existing.referral_id, req.user.id]
+      );
+    } catch (e) { console.warn('[confirm-cancellation] activity log failed:', e.message); }
+
+    res.json({ commission: updated });
+  } catch (err) {
+    console.error('Confirm cancellation error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

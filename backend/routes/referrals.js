@@ -791,7 +791,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       || (stage_id && stage_id !== current.stage_id && current.status === 'won');
     if (movingOutOfWon) {
       const { rows: comm } = await client.query(
-        `SELECT id, status FROM commissions
+        `SELECT id, status, is_recurring, qonto_transfer_id, payment_completed_at, tenant_id
+           FROM commissions
           WHERE referral_id = $1
             AND deleted_at IS NULL
             AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
@@ -799,13 +800,44 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         [req.params.id]
       );
       if (comm.length > 0) {
-        await client.query('ROLLBACK');
-        client.release();
-        return res.status(400).json({
-          error: 'commission_locked',
-          message: 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.',
-          commission_status: comm[0].status,
-        });
+        const target = comm[0];
+        // E4 fork: a transition specifically to 'lost' on a
+        // recurring commission of an opted-in tenant is allowed
+        // through; the leftWon block below will flip the
+        // commission to 'cancelled' (never DELETE). Every other
+        // exit (proposal / contacted / lost-with-non-recurring /
+        // any-with-flag-off) keeps the legacy 400 lock.
+        const { rows: [tf] } = await client.query(
+          'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
+          [target.tenant_id]
+        );
+        const recurringOn = !!tf?.recurring_on;
+        const goE4LostPath = recurringOn && !!target.is_recurring && status === 'lost';
+
+        if (goE4LostPath) {
+          // Payment-in-flight guard — symmetrical with E3. We
+          // never change a commission's status while Qonto has an
+          // initiated-but-not-finalised transfer on it.
+          if (target.qonto_transfer_id && !target.payment_completed_at) {
+            await client.query('ROLLBACK');
+            client.release();
+            return res.status(409).json({
+              error: 'lost_blocked_payment_in_flight',
+              message: 'Un virement est déjà initié pour cette commission. Attendez sa finalisation avant de clôturer le deal en perdu.',
+              qonto_transfer_id: target.qonto_transfer_id,
+            });
+          }
+          // Fall through — leftWon block handles the cancellation.
+        } else {
+          // ─── Legacy lock — UNCHANGED ──────────────────────
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(400).json({
+            error: 'commission_locked',
+            message: 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.',
+            commission_status: target.status,
+          });
+        }
       }
     }
 
@@ -1062,8 +1094,18 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         // past pending_approval (awaiting_invoice / pending_validation /
         // paid) shouldn't get its lifecycle reset by a re-drag onto the
         // same column.
+        // E4: a 'cancelled' commission is a terminal historical
+        // record — a lost→won reopen MUST NOT resurrect it. We
+        // filter it out here so the "no existing commission" branch
+        // fires and a brand-new commission gets INSERTed against the
+        // partner's current tier (fresh longevity snapshot + fresh
+        // initial revision). The cancelled row stays around as audit.
         const { rows: [existingCom] } = await client.query(
-          'SELECT id, status, is_recurring, is_perpetual, engagement_until FROM commissions WHERE referral_id = $1 AND deleted_at IS NULL',
+          `SELECT id, status, is_recurring, is_perpetual, engagement_until
+             FROM commissions
+            WHERE referral_id = $1
+              AND deleted_at IS NULL
+              AND status <> 'cancelled'`,
           [req.params.id]
         );
 
@@ -1173,13 +1215,66 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     // doesn't linger in "À approuver". A commission that already moved
     // to awaiting_invoice / pending_validation / paid is preserved —
     // those states represent real-world money flows we can't undo by
-    // dragging a card.
+    // dragging a card. Legacy behaviour byte-for-byte preserved here.
     if (leftWon) {
       await client.query(
         `DELETE FROM commissions
           WHERE referral_id = $1 AND status = 'pending_approval'`,
         [req.params.id]
       );
+
+      // E4: when the exit transition is specifically 'lost' AND
+      // there's still a recurring commission past pending_approval,
+      // flip it to 'cancelled' (never DELETE). The movingOutOfWon
+      // guard above already rejected the payment-in-flight case
+      // and the non-recurring / flag-OFF case, so reaching this
+      // branch means we're cleared to cancel. cancelled_resolved
+      // stays FALSE → the row surfaces in the admin's
+      // "Décisions après lost" queue until they decide (pay last
+      // cycle vs. confirm cessation).
+      if (status === 'lost') {
+        const { rows: rec } = await client.query(
+          `SELECT c.id, c.status, c.tenant_id
+             FROM commissions c
+            WHERE c.referral_id = $1
+              AND c.deleted_at IS NULL
+              AND c.is_recurring = TRUE
+              AND c.status IN ('awaiting_invoice', 'pending_validation', 'paid')
+            LIMIT 1`,
+          [req.params.id]
+        );
+        if (rec.length > 0) {
+          const { rows: [tf] } = await client.query(
+            'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
+            [rec[0].tenant_id]
+          );
+          if (tf?.recurring_on) {
+            const previousStatus = rec[0].status;
+            const reason = (typeof lost_reason === 'string' && lost_reason.trim()) || null;
+            await client.query(
+              `UPDATE commissions
+                  SET status = 'cancelled',
+                      cancelled_at = NOW(),
+                      cancelled_reason = $2,
+                      cancelled_resolved = FALSE
+                WHERE id = $1`,
+              [rec[0].id, reason]
+            );
+            // Direct INSERT (the activities[] array flushed L.952
+            // ran before this block; we can't enqueue here). Same
+            // shape as the normal flush so the timeline renders it
+            // through formatActivity.
+            await client.query(
+              `INSERT INTO referral_activities (referral_id, user_id, action, old_value, new_value, comment)
+               VALUES ($1, $2, $3, $4, $5, $6)`,
+              [req.params.id, req.user.id, 'commission_cancelled_lost', previousStatus, 'cancelled',
+               reason
+                 ? `Motif : ${reason}. Décision admin requise (payer dernier cycle / arrêter).`
+                 : 'Décision admin requise (payer dernier cycle / arrêter).']
+            );
+          }
+        }
+      }
     }
 
     // Notify partner of status changes

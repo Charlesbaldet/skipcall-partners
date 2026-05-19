@@ -296,6 +296,8 @@ class ApiClient {
   updateCommission(id, status) { return this.request(`/commissions/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); }
   approveCommission(id) { return this.request('/commissions/' + id + '/approve', { method: 'POST' }); }
   rejectCommission(id, reason) { return this.request('/commissions/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason }) }); }
+  resumeCommissionLastCycle(id) { return this.request('/commissions/' + id + '/resume-last-cycle', { method: 'POST' }); }
+  confirmCommissionCancellation(id) { return this.request('/commissions/' + id + '/confirm-cancellation', { method: 'POST' }); }
   deleteCommission(id, reason) { return this.request('/commissions/' + id, { method: 'DELETE', body: JSON.stringify({ reason }) }); }
   uploadCommissionInvoice(id, { filename, dataUrl }) {
     return this.request('/commissions/' + id + '/upload-invoice', {

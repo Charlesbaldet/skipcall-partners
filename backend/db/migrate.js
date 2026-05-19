@@ -1586,6 +1586,46 @@ async function runMigrations() {
     console.error('[migrate.v56] failed:', err.message);
   }
 
+  // v57: E4 — won→lost workflow for active recurring commissions.
+  // When a deal moves to "lost" and the recurring commission is
+  // past pending_approval, the legacy path either DELETEd a
+  // pending_approval row silently or 400'd with commission_locked.
+  // E4 introduces 'cancelled' status + an admin arbitrage step:
+  // pay the last engagement cycle, or confirm cessation. The
+  // commission is NEVER physically deleted from this path —
+  // 'cancelled' preserves the row, its revisions, and its snapshot
+  // longevity for audit. cancelled_resolved gates the row out of
+  // the "to-arbitrate" admin queue once the admin has decided.
+  //
+  // The status CHECK constraint must accept the new value, so we
+  // swap commissions_status_check_v2 → _v3 with 'cancelled'
+  // appended. Idempotent: existence guards + IF NOT EXISTS on the
+  // new columns.
+  try {
+    await query(`ALTER TABLE commissions
+                   ADD COLUMN IF NOT EXISTS cancelled_at       TIMESTAMPTZ,
+                   ADD COLUMN IF NOT EXISTS cancelled_reason   TEXT,
+                   ADD COLUMN IF NOT EXISTS cancelled_resolved BOOLEAN NOT NULL DEFAULT FALSE`);
+    await query(`
+      DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'commissions_status_check_v2') THEN
+          ALTER TABLE commissions DROP CONSTRAINT commissions_status_check_v2;
+        END IF;
+      END $$
+    `);
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'commissions_status_check_v3') THEN
+          ALTER TABLE commissions ADD CONSTRAINT commissions_status_check_v3
+            CHECK (status IN ('pending_approval', 'awaiting_invoice', 'pending_validation', 'paid', 'cancelled'));
+        END IF;
+      END $$
+    `);
+    console.log("[recurring] v57 commissions.cancelled_at/_reason/_resolved + status accepts 'cancelled' ready");
+  } catch (err) {
+    console.error('[migrate.v57] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

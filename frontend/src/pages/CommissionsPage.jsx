@@ -674,6 +674,16 @@ export default function CommissionsPage() {
         <ComKPI icon={CheckCircle} label={t('commissions.kpi_paid')}    value={fmt(totals.paid)}    color="#16a34a" />
       </div>
 
+      {/* E4 — "Décisions à arbitrer" : commissions récurrentes
+          annulées suite à un passage en lost et qui attendent une
+          décision admin (payer le dernier cycle, ou confirmer
+          l'arrêt). Bloc entièrement masqué quand la file est vide,
+          donc invisible pour les tenants OFF et pour les pipelines
+          sans commission cancelled. Statut = section additionnelle,
+          pas un nouvel onglet (réutilisation de la page existante). */}
+      <ArbitrageQueue commissions={visibleCommissions} t={t} api={api} onChanged={reload} />
+
+
       {/* Toolbar — tabs left, view toggle + actions right, separated
           from the body by a single bottom border. The right-side
           actions are pipeline-tab-only and the Qonto-bound buttons
@@ -1729,6 +1739,82 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
   }
 
   return null;
+}
+
+// E4: arbitrage queue. Lists commissions that were cancelled
+// because their parent deal moved to lost, and that the admin
+// hasn't yet decided on. Two actions per row: "pay last cycle"
+// (re-enters the existing pay-qonto flow) or "confirm cessation"
+// (marks the cancellation final). Hidden entirely when the queue
+// is empty — non-opted tenants and tidy pipelines see nothing.
+function ArbitrageQueue({ commissions, t, api, onChanged }) {
+  const [busyId, setBusyId] = useState(null);
+  const queue = (commissions || []).filter(c => c.status === 'cancelled' && !c.cancelled_resolved);
+  if (queue.length === 0) return null;
+
+  const resume = async (c) => {
+    setBusyId(c.id);
+    try { await api.resumeCommissionLastCycle(c.id); await onChanged(); }
+    catch (e) { alert(e?.data?.message || e.message || 'Erreur'); }
+    setBusyId(null);
+  };
+  const confirmStop = async (c) => {
+    setBusyId(c.id);
+    try { await api.confirmCommissionCancellation(c.id); await onChanged(); }
+    catch (e) { alert(e?.data?.message || e.message || 'Erreur'); }
+    setBusyId(null);
+  };
+
+  return (
+    <div style={{ marginBottom: 24, padding: 16, borderRadius: 14, border: '1px solid #fde68a', background: '#fffbeb' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <AlertTriangle size={16} color="#92400e" />
+        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>
+          {t('commissions.arbitrage_title', { count: queue.length, defaultValue: 'Décisions à arbitrer ({{count}})' })}
+        </div>
+      </div>
+      <div style={{ fontSize: 12, color: '#92400e', marginBottom: 14 }}>
+        {t('commissions.arbitrage_subtitle', 'Ces commissions récurrentes ont été annulées suite à la perte du deal. Choisissez de payer le dernier cycle dû ou de confirmer l\'arrêt définitif.')}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {queue.map(c => (
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#fff', borderRadius: 10, border: '1px solid #fde68a', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {c.partner_name || '—'}
+                <span style={{ color: '#64748b', fontWeight: 500, marginLeft: 6 }}>· {c.prospect_company || c.prospect_name || '—'}</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                {c.cancelled_reason
+                  ? t('commissions.arbitrage_reason', { reason: c.cancelled_reason, defaultValue: 'Motif : {{reason}}' })
+                  : t('commissions.arbitrage_no_reason', 'Aucun motif renseigné')}
+                {c.cancelled_at && <> · {fmtDate(c.cancelled_at)}</>}
+              </div>
+            </div>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, fontFamily: 'tabular-nums', minWidth: 110, textAlign: 'right' }}>
+              {fmt(c.amount_ttc != null ? c.amount_ttc : c.amount)} TTC
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={() => resume(c)}
+                disabled={busyId === c.id}
+                style={{ padding: '8px 14px', borderRadius: 8, background: '#059669', color: '#fff', border: 'none', fontWeight: 600, fontSize: 12, cursor: busyId === c.id ? 'wait' : 'pointer', opacity: busyId === c.id ? 0.7 : 1 }}
+              >
+                {t('commissions.arbitrage_pay_last', 'Payer le dernier cycle')}
+              </button>
+              <button
+                onClick={() => confirmStop(c)}
+                disabled={busyId === c.id}
+                style={{ padding: '8px 14px', borderRadius: 8, background: '#fff', color: '#475569', border: '1px solid #e2e8f0', fontWeight: 600, fontSize: 12, cursor: busyId === c.id ? 'wait' : 'pointer' }}
+              >
+                {t('commissions.arbitrage_confirm_stop', 'Confirmer l\'arrêt')}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function ComKPI({ icon: Icon, label, value, sub, suffix, color }) {

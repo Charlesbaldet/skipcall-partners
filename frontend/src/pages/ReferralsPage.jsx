@@ -666,6 +666,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
         || (code === 'deal_value_locked' && t('referrals.error_deal_value_locked', 'Le montant ne peut plus être modifié — un virement est en cours pour cette commission.'))
         || (code === 'commission_locked' && t('referrals.error_commission_locked', 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.'))
         || (code === 'revision_blocked_payment_in_flight' && t('referrals.error_revision_payment_in_flight', 'Un virement est déjà initié pour cette commission. Attendez sa finalisation avant de modifier le montant.'))
+        || (code === 'lost_blocked_payment_in_flight' && t('referrals.error_lost_payment_in_flight', 'Un virement est déjà initié pour cette commission. Attendez sa finalisation avant de clôturer le deal en perdu.'))
         || t('referrals.save_error');
       setSaveToast({ type: 'error', text: friendly });
     }
@@ -1110,6 +1111,12 @@ function formatActivity(a, t) {
       detail: a.comment || '',
       defaultValue: 'Commission révisée : {{from}} → {{to}} TTC. {{detail}}',
     });
+    case 'commission_cancelled_lost': return t('referrals.act_commission_cancelled_lost', {
+      detail: a.comment || '',
+      defaultValue: 'Commission annulée (deal perdu). {{detail}}',
+    });
+    case 'commission_last_cycle_authorized': return t('referrals.act_commission_last_cycle_authorized', 'Dernier cycle autorisé au paiement avant arrêt définitif.');
+    case 'commission_cancellation_confirmed': return t('referrals.act_commission_cancellation_confirmed', 'Arrêt définitif confirmé — aucun versement supplémentaire.');
     case 'assigned': return t('referrals.act_assigned');
     case 'note_added': return t('referrals.act_note', { value: a.new_value });
     default: return a.action;
