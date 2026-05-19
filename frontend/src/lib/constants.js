@@ -32,7 +32,7 @@ export const TEMPERATURE_CONFIG = {
   cold: { get label() { return i18n.t('temperature.cold', 'Froid'); }, color: '#2563EB', bg: '#DBEAFE' },
 };
 
-export const fmt = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+export const fmt = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
 export const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 export const fmtDateTime = (d) => d ? new Date(d).toLocaleString('fr-FR') : '—';
 

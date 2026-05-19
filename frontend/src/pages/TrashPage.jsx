@@ -9,8 +9,8 @@ const TRASH_TTL_DAYS = 30;
 
 function fmtMoney(n) {
   const num = parseFloat(n) || 0;
-  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(num); }
-  catch { return num.toFixed(0) + ' €'; }
+  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num); }
+  catch { return num.toFixed(2) + ' €'; }
 }
 
 function daysRemaining(deletedAt) {
