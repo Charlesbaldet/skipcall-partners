@@ -1433,11 +1433,15 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
 
   if (modal.kind === 'confirm') {
     const list = modal.commissions || [];
-    const total = list.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
+    // Wired amount is TTC. Fallback to `amount` for pre-v31 rows where
+    // the VAT snapshot hasn't been backfilled (legacy: amount == HT == TTC,
+    // no VAT applied).
+    const rowTtc = (c) => parseFloat(c.amount_ttc != null ? c.amount_ttc : c.amount) || 0;
+    const total = list.reduce((s, c) => s + rowTtc(c), 0);
     const isBulk = modal.mode === 'bulk';
     const totalLabel = fmt(total);
     return (
-      <Wrap width={520}>
+      <Wrap width={560}>
         <div style={{ marginBottom: 18 }}>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
             {t('qonto.confirm_title', 'Confirmer le paiement')}
@@ -1449,34 +1453,46 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
 
         <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
           <div style={{
-            display: 'grid', gridTemplateColumns: '1.4fr 1.2fr 0.8fr',
+            display: 'grid', gridTemplateColumns: '1.3fr 1.1fr 1.2fr',
             background: '#f8fafc', padding: '10px 14px',
             fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5,
           }}>
             <div>{t('commissions.tbl_partner', 'Partenaire')}</div>
             <div>{t('commissions.tbl_deal', 'Deal')}</div>
-            <div style={{ textAlign: 'right' }}>{t('commissions.tbl_commission', 'Montant')}</div>
+            <div style={{ textAlign: 'right' }}>{t('qonto.confirm_amount_label', 'Montant viré (TTC)')}</div>
           </div>
-          <div style={{ maxHeight: 260, overflowY: 'auto' }}>
-            {list.map((c, i) => (
-              <div key={c.id} style={{
-                display: 'grid', gridTemplateColumns: '1.4fr 1.2fr 0.8fr',
-                padding: '10px 14px', fontSize: 13,
-                background: i % 2 === 0 ? '#fff' : '#fafbfc',
-                borderTop: i === 0 ? 'none' : '1px solid #f1f5f9',
-                alignItems: 'center',
-              }}>
-                <div style={{ fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {c.partner_name || '—'}
+          <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+            {list.map((c, i) => {
+              const taxRate = parseFloat(c.tax_rate_applied || 0);
+              const hasVat = c.amount_ttc != null && taxRate > 0;
+              const ttc = rowTtc(c);
+              const ht  = parseFloat(c.amount_ht  != null ? c.amount_ht  : c.amount) || 0;
+              const tax = parseFloat(c.amount_tax || 0);
+              return (
+                <div key={c.id} style={{
+                  display: 'grid', gridTemplateColumns: '1.3fr 1.1fr 1.2fr',
+                  padding: '10px 14px', fontSize: 13,
+                  background: i % 2 === 0 ? '#fff' : '#fafbfc',
+                  borderTop: i === 0 ? 'none' : '1px solid #f1f5f9',
+                  alignItems: 'center',
+                }}>
+                  <div style={{ fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {c.partner_name || '—'}
+                  </div>
+                  <div style={{ color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {c.prospect_company || c.prospect_name || '—'}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{fmt(ttc)}</div>
+                    {hasVat && (
+                      <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 2, lineHeight: 1.4 }}>
+                        {t('qonto.confirm_row_ht', 'HT')} {fmt(ht)} · {t('qonto.confirm_row_tva', 'TVA')} {taxRate}% {fmt(tax)}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div style={{ color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {c.prospect_company || c.prospect_name || '—'}
-                </div>
-                <div style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
-                  {fmt(c.amount)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -1495,7 +1511,7 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {t('qonto.confirm_total_label', 'Montant total')}
+              {t('qonto.confirm_total_label_ttc', 'Montant total (TTC)')}
             </div>
             <div style={{ fontSize: 22, fontWeight: 800, color: '#16A34A', letterSpacing: -0.5, marginTop: 2 }}>
               {totalLabel}

@@ -196,15 +196,30 @@ function commissionApproved({ partnerName, prospectName, amount, currency, dashb
   });
 }
 
-function commissionPaymentSent({ partnerName, amount, currency, tenantName, dealName, transferReference, transferDateLabel, ibanLast4, dashboardUrl } = {}) {
+function commissionPaymentSent({ partnerName, amount, amountHt, amountTax, amountTtc, taxRate, currency, tenantName, dealName, transferReference, transferDateLabel, ibanLast4, dashboardUrl } = {}) {
+  // Headline = TTC, which is what we wired to Qonto. Caller passes
+  // `amount = amount_ttc ?? amount` so the email stays correct on
+  // pre-v31 rows where no VAT snapshot exists (amount_ttc null).
   const amt = fmtMoney(amount, currency);
   const ibanLine = ibanLast4 ? ` (IBAN se terminant par ${ibanLast4})` : '';
+  const rate = Number(taxRate);
+  const hasVat = amountTtc != null && Number.isFinite(rate) && rate > 0;
+  const breakdownHtml = hasVat ? `
+      <div class="highlight" style="background:#f0fdf4;border-left:4px solid #059669;">
+        <div style="margin-bottom:4px;color:#475569;font-size:13px;">Décomposition du virement</div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:4px 0;color:#475569;">Montant HT</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#0f172a;">${fmtMoney(amountHt, currency)}</td></tr>
+          <tr><td style="padding:4px 0;color:#475569;">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#0f172a;">${fmtMoney(amountTax, currency)}</td></tr>
+          <tr style="border-top:1px solid #bbf7d0;"><td style="padding:6px 0 0;color:#166534;font-weight:700;">Montant TTC viré</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:#059669;font-size:15px;">${fmtMoney(amountTtc, currency)}</td></tr>
+        </table>
+      </div>` : '';
   return renderEmail({
     subject: `Commission versée — ${amt}${tenantName ? ' — ' + tenantName : ''}`,
     heading: `Votre commission a été virée`,
     bodyHtml: `
       <p>Bonjour ${partnerName || ''},</p>
       <p>Votre commission de <strong>${amt}</strong>${dealName ? ` pour le deal <strong>${dealName}</strong>` : ''} a été virée sur votre compte${ibanLine}.</p>
+      ${breakdownHtml}
       <div class="highlight">
         <div style="margin-bottom:6px"><strong>Référence du virement :</strong> ${transferReference || '—'}</div>
         <div><strong>Date du virement :</strong> ${transferDateLabel || new Date().toLocaleDateString('fr-FR')}</div>
@@ -353,13 +368,25 @@ function invoiceSubmitted({ partnerName, prospectName, dealName, amount, currenc
 // Admin confirmation that a Qonto transfer has settled. Mirrors what
 // the partner gets via commissionPaymentSent but framed for the admin
 // (who initiated the transfer).
-function paymentSentAdmin({ partnerName, amount, currency, dealName, transferReference, transferDateLabel, dashboardUrl } = {}) {
+function paymentSentAdmin({ partnerName, amount, amountHt, amountTax, amountTtc, taxRate, currency, dealName, transferReference, transferDateLabel, dashboardUrl } = {}) {
   const amt = fmtMoney(amount, currency);
+  const rate = Number(taxRate);
+  const hasVat = amountTtc != null && Number.isFinite(rate) && rate > 0;
+  const breakdownHtml = hasVat ? `
+      <div class="highlight" style="background:#f8fafc;">
+        <div style="margin-bottom:4px;color:#475569;font-size:13px;">Décomposition</div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:4px 0;color:#475569;">HT</td><td style="padding:4px 0;text-align:right;font-weight:600;">${fmtMoney(amountHt, currency)}</td></tr>
+          <tr><td style="padding:4px 0;color:#475569;">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;">${fmtMoney(amountTax, currency)}</td></tr>
+          <tr style="border-top:1px solid #e2e8f0;"><td style="padding:6px 0 0;color:#0f172a;font-weight:700;">TTC viré</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:#0f172a;">${fmtMoney(amountTtc, currency)}</td></tr>
+        </table>
+      </div>` : '';
   return renderEmail({
     subject: `Virement confirmé — ${amt} → ${partnerName || ''}`,
     heading: 'Virement Qonto confirmé',
     bodyHtml: `
       <p>Le virement de <strong>${amt}</strong> vers <strong>${partnerName || ''}</strong>${dealName ? ` pour le deal <strong>${dealName}</strong>` : ''} a été confirmé par Qonto.</p>
+      ${breakdownHtml}
       <div class="highlight">
         <div style="margin-bottom:6px"><strong>Référence du virement :</strong> ${transferReference || '—'}</div>
         <div><strong>Date :</strong> ${transferDateLabel || new Date().toLocaleDateString('fr-FR')}</div>

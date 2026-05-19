@@ -149,16 +149,29 @@ function commissionValidated({ partnerName, prospectName, commissionAmount, curr
 // ═══════════════════════════════════════════════════
 // Template: Commission Paid
 // ═══════════════════════════════════════════════════
-function commissionPaid({ partnerName, prospectName, commissionAmount, currency, paymentReference, dashboardUrl, tenantName }) {
+function commissionPaid({ partnerName, prospectName, commissionAmount, amountHt, amountTax, amountTtc, taxRate, currency, paymentReference, dashboardUrl, tenantName }) {
   const name = partnerName || 'Bonjour';
   const cur = currency || '€';
+  const nf = (v) => new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + ' ' + cur;
+  // Headline = TTC (the figure the partner actually receives on their
+  // bank account). Caller already resolves `commissionAmount` to
+  // amount_ttc ?? amount.
   const amountFormatted = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(commissionAmount) + ' ' + cur;
+  const rate = Number(taxRate);
+  const hasVat = amountTtc != null && Number.isFinite(rate) && rate > 0;
+  const breakdownHtml = hasVat ? `
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:14px;">
+      <tr><td style="padding:4px 0;color:${TEXT_MUTED};">Montant HT</td><td style="padding:4px 0;text-align:right;font-weight:600;color:${TEXT_DARK};">${nf(amountHt)}</td></tr>
+      <tr><td style="padding:4px 0;color:${TEXT_MUTED};">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;color:${TEXT_DARK};">${nf(amountTax)}</td></tr>
+      <tr style="border-top:1px solid #bbf7d0;"><td style="padding:6px 0 0;color:${BRAND_PRIMARY};font-weight:700;">Montant TTC versé</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:${BRAND_PRIMARY};">${nf(amountTtc)}</td></tr>
+    </table>` : '';
   const bodyHtml = `
     <p style="margin:0 0 16px;">Bonjour ${name},</p>
     <p style="margin:0 0 16px;">Votre commission pour le deal <strong>${prospectName}</strong> vient d'être versée. Vous devriez la recevoir sur votre compte bancaire sous 1 à 3 jours ouvrés.</p>
     <div style="margin:24px 0;padding:20px;background:${BG_SOFT};border-radius:10px;border-left:4px solid ${BRAND_PRIMARY};">
       <div style="font-size:13px;color:${TEXT_MUTED};text-transform:uppercase;letter-spacing:0.05em;">Montant versé</div>
       <div style="font-size:24px;font-weight:700;color:${BRAND_PRIMARY};">${amountFormatted}</div>
+      ${breakdownHtml}
       ${paymentReference ? `<div style="margin-top:12px;font-size:13px;color:${TEXT_MUTED};">Référence : <code style="font-family:ui-monospace,monospace;">${paymentReference}</code></div>` : ''}
     </div>
     <p style="margin:0 0 16px;">Merci pour votre confiance et continuez à nous recommander de nouveaux prospects !</p>

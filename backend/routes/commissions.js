@@ -305,6 +305,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
         try {
           const { rows: [enriched] } = await query(
             `SELECT c.id, c.amount, c.status, c.referral_id, c.partner_id,
+                    c.amount_ht, c.amount_tax, c.amount_ttc, c.tax_rate_applied,
                     r.prospect_name, r.prospect_company,
                     t.name as tenant_name
              FROM commissions c
@@ -321,7 +322,9 @@ router.put('/:id', authorize('admin'), async (req, res) => {
           );
           const dashboardUrl = (process.env.FRONTEND_URL || 'https://refboost.io') + '/commissions';
           const prospectName = enriched.prospect_name || enriched.prospect_company || 'votre prospect';
-          const amount = parseFloat(enriched.amount) || 0;
+          // Headline = TTC (what gets / got wired). Fallback to legacy
+          // `amount` for pre-v31 rows where no VAT snapshot exists.
+          const amount = parseFloat(enriched.amount_ttc != null ? enriched.amount_ttc : enriched.amount) || 0;
           // Parallel fan-out. The previous serial `for (… await …)`
           // pattern blocked this IIFE for ~N×Resend-latency (≈300 ms
           // each), so a partner with 5 users on the account left a
@@ -330,7 +333,15 @@ router.put('/:id', authorize('admin'), async (req, res) => {
           // race; one failure no longer cancels the rest.
           await Promise.all(partnerUsers.map(u => {
             const tmpl = status === 'paid'
-              ? templates.commissionPaid({ partnerName: u.full_name, prospectName, commissionAmount: amount, currency: '€', dashboardUrl, tenantName: enriched.tenant_name })
+              ? templates.commissionPaid({
+                  partnerName: u.full_name, prospectName,
+                  commissionAmount: amount,
+                  amountHt:  enriched.amount_ht,
+                  amountTax: enriched.amount_tax,
+                  amountTtc: enriched.amount_ttc,
+                  taxRate:   enriched.tax_rate_applied,
+                  currency: '€', dashboardUrl, tenantName: enriched.tenant_name,
+                })
               : templates.commissionValidated({ partnerName: u.full_name, prospectName, commissionAmount: amount, currency: '€', dashboardUrl, tenantName: enriched.tenant_name });
             return resend.sendAndLog({
               to: u.email,
@@ -355,6 +366,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
       (async () => {
         const { rows: [enriched] } = await query(
           `SELECT c.id, c.amount, c.status, c.referral_id, c.partner_id,
+                  c.amount_ht, c.amount_tax, c.amount_ttc, c.tax_rate_applied,
                   c.approved_at, c.paid_at,
                   r.prospect_name, r.prospect_company,
                   p.name AS partner_name, p.email AS partner_email
@@ -365,6 +377,11 @@ router.put('/:id', authorize('admin'), async (req, res) => {
           [req.params.id]
         );
         if (!enriched) return;
+        // Webhook `amount` keeps its legacy semantics (= what consumers
+        // already integrated against). The HT/VAT/TTC fields are
+        // additive — non-VAT-subject rows carry null/0 there, so
+        // downstream code can branch on amount_ttc != null to detect
+        // the new VAT-aware payouts.
         const basePayload = {
           commission_id: enriched.id,
           referral_id: enriched.referral_id,
@@ -374,6 +391,10 @@ router.put('/:id', authorize('admin'), async (req, res) => {
           prospect_name: enriched.prospect_name,
           prospect_company: enriched.prospect_company,
           amount: parseFloat(enriched.amount) || 0,
+          amount_ht:  enriched.amount_ht  != null ? parseFloat(enriched.amount_ht)  : null,
+          amount_tax: enriched.amount_tax != null ? parseFloat(enriched.amount_tax) : null,
+          amount_ttc: enriched.amount_ttc != null ? parseFloat(enriched.amount_ttc) : null,
+          tax_rate:   enriched.tax_rate_applied != null ? parseFloat(enriched.tax_rate_applied) : null,
           currency: 'EUR',
         };
         if (status === 'awaiting_invoice') {
@@ -1254,6 +1275,7 @@ router.post('/pay-bulk', authorize('admin'), requireBusinessPlan, async (req, re
 async function reconcileQontoTransfers(tenantId) {
   const { rows } = await query(
     `SELECT c.id, c.qonto_transfer_id, c.amount, c.payment_reference,
+            c.amount_ht, c.amount_tax, c.amount_ttc, c.tax_rate_applied,
             c.tenant_id, c.partner_id,
             p.email AS partner_email, p.name AS partner_name, p.iban,
             r.prospect_name, r.prospect_company,
@@ -1297,10 +1319,20 @@ async function reconcileQontoTransfers(tenantId) {
           const ibanLast4 = (c.iban || '').replace(/\s+/g, '').slice(-4);
           const dealLabel = c.prospect_company || c.prospect_name || '';
           const dateLabel = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+          // Both partner + admin emails now carry the VAT breakdown
+          // (HT / VAT / TTC) snapshotted on the commission row at
+          // payout time. Headline amount = TTC (what actually got
+          // wired). Pre-v31 rows fall back to `amount` and the
+          // template hides the VAT breakdown when amount_ttc is null.
+          const payoutAmount = c.amount_ttc != null ? c.amount_ttc : c.amount;
           // Partner-facing email (existing template).
           const tpl = emailTemplates.commissionPaymentSent({
             partnerName: c.partner_name,
-            amount: c.amount,
+            amount: payoutAmount,
+            amountHt:  c.amount_ht,
+            amountTax: c.amount_tax,
+            amountTtc: c.amount_ttc,
+            taxRate:   c.tax_rate_applied,
             currency: '€',
             tenantName: c.tenant_name,
             dealName: dealLabel,
@@ -1317,7 +1349,7 @@ async function reconcileQontoTransfers(tenantId) {
           const partners = await partnerUsers(c.partner_id);
           for (const u of partners) {
             notify.createNotification(u.id, 'payment_completed', {
-              title: `Paiement effectué — ${fmtMoney(c.amount)}`,
+              title: `Paiement effectué — ${fmtMoney(payoutAmount)}`,
               message: `Référence ${c.payment_reference || '—'}. Vous le recevrez sous 1-2 jours ouvrés.`,
               link: '/partner/payments',
               tenantId: c.tenant_id,
@@ -1325,12 +1357,16 @@ async function reconcileQontoTransfers(tenantId) {
           }
           notify.fanoutAdminNotification(c.tenant_id, 'payment_completed', {
             title: `Virement confirmé — ${c.partner_name}`,
-            message: `${fmtMoney(c.amount)} · réf. ${c.payment_reference || '—'}`,
+            message: `${fmtMoney(payoutAmount)} · réf. ${c.payment_reference || '—'}`,
             link: '/commissions',
           }).catch(() => {});
           const adminEmailTpl = emailTemplates.paymentSentAdmin({
             partnerName: c.partner_name,
-            amount: c.amount,
+            amount: payoutAmount,
+            amountHt:  c.amount_ht,
+            amountTax: c.amount_tax,
+            amountTtc: c.amount_ttc,
+            taxRate:   c.tax_rate_applied,
             currency: '€',
             dealName: dealLabel,
             transferReference: c.payment_reference,
@@ -1503,7 +1539,8 @@ async function reconcileQontoTransfers(tenantId) {
           // as the regular settled branch above.
           try {
             const { rows: extra } = await query(
-              `SELECT p.email AS partner_email, p.name AS partner_name, p.iban,
+              `SELECT c.amount, c.amount_ht, c.amount_tax, c.amount_ttc, c.tax_rate_applied,
+                      p.email AS partner_email, p.name AS partner_name, p.iban,
                       r.prospect_name, r.prospect_company,
                       t.name AS tenant_name
                  FROM commissions c
@@ -1519,7 +1556,11 @@ async function reconcileQontoTransfers(tenantId) {
               const dealLabel = x.prospect_company || x.prospect_name || '';
               const tpl = emailTemplates.commissionPaymentSent({
                 partnerName: x.partner_name,
-                amount: c.amount,
+                amount: x.amount_ttc != null ? x.amount_ttc : x.amount,
+                amountHt:  x.amount_ht,
+                amountTax: x.amount_tax,
+                amountTtc: x.amount_ttc,
+                taxRate:   x.tax_rate_applied,
                 currency: '€',
                 tenantName: x.tenant_name,
                 dealName: dealLabel,
