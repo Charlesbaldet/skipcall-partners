@@ -176,6 +176,21 @@ router.get('/:id', async (req, res) => {
     referral.deal_value_locked = lockingComm.length > 0;
     referral.locking_commission_status = lockingComm[0]?.status || null;
 
+    // E2: surface the recurring-billing duration of the latest live
+    // commission so the deal modal's "À vie / Durée limitée" toggle
+    // can hydrate from the saved value on re-open. Returns nulls when
+    // there's no commission yet (= legacy default = bounded).
+    const { rows: durRows } = await query(
+      `SELECT is_recurring, is_perpetual, engagement_until
+         FROM commissions
+        WHERE referral_id = $1 AND deleted_at IS NULL
+        ORDER BY created_at DESC LIMIT 1`,
+      [req.params.id]
+    );
+    referral.commission_is_recurring = !!durRows[0]?.is_recurring;
+    referral.commission_is_perpetual = !!durRows[0]?.is_perpetual;
+    referral.commission_engagement_until = durRows[0]?.engagement_until || null;
+
     // Resolve the partner's current tier so the deal modal can show
     // the badge + the rate the override is being compared against.
     // Single-row endpoint → the simpler resolveTierForPartner path,
@@ -453,7 +468,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement, engagement_periods,
           contact_first_name, contact_last_name,
           prospect_name, prospect_email, prospect_phone, prospect_company, prospect_role,
-          commission_rate_override, commission_overridden } = req.body;
+          commission_rate_override, commission_overridden,
+          is_perpetual } = req.body;
 
     // Length caps on the free-text fields. Without these, an
     // attacker (or a careless admin pasting a long log) can stuff
@@ -836,15 +852,80 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         const partnerTaxRate = partner.tax_subject ? Number(partner.tax_rate) : 0;
         const breakdown = decomposeAmountWithTax(amount, partnerTaxRate);
 
+        // ─── Phase E2: recurring-commission duration metadata ─────
+        // Read the tenant feature flag once per won-transition. When
+        // OFF (default for every existing tenant), the rest of this
+        // block stays at its legacy values (is_recurring = false,
+        // is_perpetual = false, engagement_until = null) which match
+        // the DB defaults from v54 — zero behavioural change for
+        // non-opted-in tenants.
+        const { rows: [tenantFlagRow] } = await client.query(
+          'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
+          [req.tenantId || null]
+        );
+        const recurringOn = !!tenantFlagRow?.recurring_on;
+        // A recurring commission is, by definition, non-forfait — a
+        // one-off flat fee can't "live as long as the deal is won".
+        const isRecurringEff = recurringOn && effEngagement !== 'forfait';
+        // is_perpetual only meaningful when recurring. When the FE
+        // hasn't opted-in (or sent the field) we default to bounded
+        // (= legacy semantics): engagement_periods is the contract length.
+        const isPerpetualEff = isRecurringEff
+          ? (is_perpetual === true || is_perpetual === 'true')
+          : false;
+        // engagement_until = closed_at + (periods × multiplier) months.
+        // Skip when perpetual (NULL = "à vie") or non-recurring.
+        let engagementUntilEff = null;
+        if (isRecurringEff && !isPerpetualEff) {
+          const PERIOD_MONTHS = { mensuel: 1, trimestriel: 3, annuel: 12 };
+          const monthsToAdd = (PERIOD_MONTHS[effEngagement] || 1) * Math.max(1, effPeriods || 1);
+          // closed_at is set right above (L.579) on a fresh won
+          // transition. Re-drags re-set it too, so it's always the
+          // most recent won date. Fall back to current.closed_at and
+          // finally `now` so the date is never undefined.
+          const baseIso = updates.closed_at || current.closed_at || new Date().toISOString();
+          const base = new Date(baseIso);
+          base.setMonth(base.getMonth() + monthsToAdd);
+          engagementUntilEff = base.toISOString().slice(0, 10);
+        }
+
         // Look up an existing commission first so we can decide between
         // INSERT and a status-aware UPDATE: a row that already moved
         // past pending_approval (awaiting_invoice / pending_validation /
         // paid) shouldn't get its lifecycle reset by a re-drag onto the
         // same column.
         const { rows: [existingCom] } = await client.query(
-          'SELECT id, status FROM commissions WHERE referral_id = $1 AND deleted_at IS NULL',
+          'SELECT id, status, is_recurring, is_perpetual, engagement_until FROM commissions WHERE referral_id = $1 AND deleted_at IS NULL',
           [req.params.id]
         );
+
+        // Build a human label for the duration so the
+        // engagement_duration_set activity stays readable. Skipped
+        // when recurring is off (legacy behaviour = no activity at
+        // all on this axis).
+        const durationLabel = (recurring, perpetual, untilDate) => {
+          if (!recurring) return null;
+          if (perpetual) return 'à vie';
+          return untilDate ? `limité jusqu'au ${untilDate}` : 'limité';
+        };
+        const oldDurationLabel = durationLabel(
+          existingCom?.is_recurring,
+          existingCom?.is_perpetual,
+          existingCom?.engagement_until ? new Date(existingCom.engagement_until).toISOString().slice(0, 10) : null
+        );
+        const newDurationLabel = durationLabel(isRecurringEff, isPerpetualEff, engagementUntilEff);
+        // Only log when the flag is on AND the new state is real (avoids
+        // a noisy entry on every won re-drag of a non-recurring deal).
+        // Note: this push goes into the same `activities` array that's
+        // flushed below by the existing L.752-758 loop, so it lands in
+        // referral_activities transactionally with everything else.
+        if (recurringOn && newDurationLabel && oldDurationLabel !== newDurationLabel) {
+          activities.push({
+            action: 'engagement_duration_set',
+            old_value: oldDurationLabel || '—',
+            new_value: newDurationLabel,
+          });
+        }
 
         let createdCommission;
         if (!existingCom) {
@@ -852,25 +933,30 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
             `INSERT INTO commissions
                (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status,
                 engagement_type, engagement_periods,
-                amount_ht, tax_rate_applied, amount_tax, amount_ttc)
+                amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+                is_recurring, is_perpetual, engagement_until, current_revision_index)
              VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval',
                      $7, $8,
-                     $9, $10, $11, $12)
+                     $9, $10, $11, $12,
+                     $13, $14, $15, 1)
              RETURNING id, amount, rate, deal_value, created_at`,
             [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null,
              effEngagement, effPeriods,
-             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
+             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
+             isRecurringEff, isPerpetualEff, engagementUntilEff]
           ));
         } else if (existingCom.status === 'pending_approval') {
           ({ rows: [createdCommission] } = await client.query(
             `UPDATE commissions
                 SET amount = $2, rate = $3, deal_value = $4,
                     engagement_type = $5, engagement_periods = $6,
-                    amount_ht = $7, tax_rate_applied = $8, amount_tax = $9, amount_ttc = $10
+                    amount_ht = $7, tax_rate_applied = $8, amount_tax = $9, amount_ttc = $10,
+                    is_recurring = $11, is_perpetual = $12, engagement_until = $13
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
             [existingCom.id, amount, rate, effectiveDealValue, effEngagement, effPeriods,
-             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
+             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
+             isRecurringEff, isPerpetualEff, engagementUntilEff]
           ));
         } else {
           // Already approved or further along — keep numbers in sync

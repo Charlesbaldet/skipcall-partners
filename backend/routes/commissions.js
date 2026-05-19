@@ -178,6 +178,7 @@ router.get('/', async (req, res) => {
               c.invoice_uploaded_at,
               c.engagement_type, c.engagement_periods,
               c.amount_ht, c.tax_rate_applied, c.amount_tax, c.amount_ttc,
+              c.is_recurring, c.is_perpetual, c.engagement_until, c.current_revision_index,
               (c.invoice_url IS NOT NULL) AS has_invoice,
               c.qonto_transfer_id, c.payment_initiated_at, c.payment_completed_at,
               c.payment_reference, c.payment_error,

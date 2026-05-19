@@ -165,7 +165,7 @@ router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
-  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model } = req.body;
+  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model, recurring_billing_enabled } = req.body;
 
   let cleanSlug = null;
   if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
@@ -201,6 +201,16 @@ router.put('/:id', authenticate, async (req, res) => {
         await query('UPDATE tenants SET revenue_model = $1 WHERE id = $2', [revenue_model || null, req.params.id]);
       } catch (e) {
         console.error('[tenants PUT] revenue_model update skipped:', e.message);
+      }
+    }
+
+    // Recurring billing feature flag (E1 schema v54). Pre-v54 tenants
+    // table lacks the column — wrap so an unmigrated DB doesn't 500.
+    if (recurring_billing_enabled !== undefined) {
+      try {
+        await query('UPDATE tenants SET recurring_billing_enabled = $1 WHERE id = $2', [!!recurring_billing_enabled, req.params.id]);
+      } catch (e) {
+        console.error('[tenants PUT] recurring_billing_enabled update skipped:', e.message);
       }
     }
     clearTenantCache();
@@ -240,7 +250,9 @@ router.get('/me', authenticate, async (req, res) => {
   if (!req.user || !req.user.tenantId) return res.status(404).json({ error: 'No tenant' });
   try {
     const { rows } = await query(
-      'SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url, revenue_model FROM tenants WHERE id = $1',
+      `SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url, revenue_model,
+              COALESCE(recurring_billing_enabled, FALSE) AS recurring_billing_enabled
+         FROM tenants WHERE id = $1`,
       [req.user.tenantId]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Tenant not found' });

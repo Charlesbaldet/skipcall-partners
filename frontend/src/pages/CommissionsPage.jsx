@@ -995,6 +995,21 @@ export default function CommissionsPage() {
                               `${c.engagement_periods || 1} ${t('pipeline.years', 'an(s)')}`}
                           </span>
                         )}
+                        {/* Recurring-billing duration pill (E2). Shown
+                            only on commissions flagged is_recurring,
+                            which itself only happens when the tenant
+                            has opted in. Non-recurring rows render
+                            nothing here, preserving the legacy card
+                            layout for every existing tenant. */}
+                        {c.is_recurring && (
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700 }}>
+                            {c.is_perpetual
+                              ? t('commissions.duration_perpetual_badge', 'À vie')
+                              : c.engagement_until
+                                ? t('commissions.duration_until_badge', { date: fmtDate(c.engagement_until), defaultValue: "Jusqu'au {{date}}" })
+                                : t('commissions.duration_bounded_badge', 'Durée limitée')}
+                          </span>
+                        )}
                         <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtDate(c.created_at)}</span>
                       </div>
 

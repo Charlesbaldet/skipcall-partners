@@ -2879,12 +2879,21 @@ function ProgramTab() {
   const [editing, setEditing] = useState(null); // level id or 'new'
   const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
   const [msg, setMsg] = useState(null);
+  // Recurring-billing feature flag (E2). Pulled from /tenants/me;
+  // toggling it goes back through the existing PUT /tenants/:id route.
+  // Saving here doesn't touch the levels block above — the two are
+  // independent settings on the same tab.
+  const [recurringBilling, setRecurringBilling] = useState(false);
+  const [recurringSaving, setRecurringSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
       const d = await api.getTenantLevels();
       setData({ levels: d.levels || [], threshold_type: d.threshold_type || 'deals' });
+      const mt = await api.getMyTenant();
+      const t0 = mt && (mt.tenant || mt);
+      setRecurringBilling(!!t0?.recurring_billing_enabled);
     } catch (e) {
       setMsg({ type: 'error', text: e.message || t('common.error') });
     }
@@ -2892,6 +2901,21 @@ function ProgramTab() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const toggleRecurringBilling = async () => {
+    const next = !recurringBilling;
+    setRecurringBilling(next);  // optimistic
+    setRecurringSaving(true);
+    try {
+      await api.updateMyTenant({ recurring_billing_enabled: next });
+      setMsg({ type: 'success', text: t('programme.saved') });
+      setTimeout(() => setMsg(null), 2000);
+    } catch (e) {
+      setRecurringBilling(!next);  // rollback
+      setMsg({ type: 'error', text: e.message || t('common.error') });
+    }
+    setRecurringSaving(false);
+  };
 
   const setType = async (type) => {
     try {
@@ -3021,6 +3045,31 @@ function ProgramTab() {
           {msg.text}
         </div>
       )}
+
+      {/* Recurring-billing feature flag (E2). When OFF the rest of
+          the app behaves exactly like before — the duration selector
+          inside the deal modal stays hidden and commissions keep
+          getting created with is_recurring=false. */}
+      <div style={{ marginBottom: 28, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+              {t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
+            </div>
+            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
+              {t('programme.recurring_billing_desc', 'Permet de définir des commissions à vie ou sur une durée limitée pour les deals récurrents. Sans cette option, les commissions sont calculées une seule fois au moment du gain.')}
+            </div>
+          </div>
+          <button
+            onClick={toggleRecurringBilling}
+            disabled={recurringSaving}
+            style={{ background: 'none', border: 'none', cursor: recurringSaving ? 'wait' : 'pointer', color: recurringBilling ? '#059669' : '#cbd5e1', flexShrink: 0, padding: 4 }}
+            aria-label={t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
+          >
+            {recurringBilling ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+          </button>
+        </div>
+      </div>
 
       {/* Threshold type */}
       <div style={{ marginBottom: 28 }}>

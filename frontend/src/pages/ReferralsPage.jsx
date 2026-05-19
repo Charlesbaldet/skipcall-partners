@@ -565,6 +565,12 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   const [editPeriods, setEditPeriods] = useState(
     _initialEng === 'forfait' ? 1 : Math.max(1, parseInt(referral.engagement_periods, 10) || 1)
   );
+  // Recurring-billing duration toggle (E2). Only meaningful when the
+  // tenant flag is on AND engagement ≠ forfait. The backend ignores
+  // the field entirely when the flag is off, so sending it on a
+  // non-opted-in tenant is a no-op.
+  const recurringOn = !!myTenant?.recurring_billing_enabled;
+  const [editIsPerpetual, setEditIsPerpetual] = useState(!!referral.commission_is_perpetual);
   const [tab, setTab] = useState('info');
   const [saveToast, setSaveToast] = useState(null);
 
@@ -646,6 +652,10 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
         // it on flag-off (it sets commission_rate_override = null
         // when commission_overridden flips to false).
         commission_rate_override: commissionOverridden ? Number(editRate) : null,
+        // E2: duration toggle. Backend gates on tenant flag, so
+        // sending this from an unopted tenant is harmless. Forced to
+        // false when forfait — a one-shot fee can't be perpetual.
+        is_perpetual: recurringOn && editEngagement !== 'forfait' ? !!editIsPerpetual : false,
       };
       if (editStageId) patch.stage_id = editStageId;
       else if (editStatus) patch.status = editStatus;
@@ -922,6 +932,39 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                 </div>
                 {editEngagement !== 'forfait' && (
                   <div style={{ marginTop: 12 }}>
+                    {/* Recurring duration selector (E2). Only rendered
+                        when the tenant has opted in via Settings →
+                        Programme. Picking "À vie" disables the
+                        periods input — a perpetual commission has no
+                        fixed term. */}
+                    {recurringOn && (
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>
+                          {t('pipeline.duration_label', 'Durée de la commission')}
+                        </label>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => setEditIsPerpetual(false)}
+                            style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: !editIsPerpetual ? '2px solid var(--rb-primary, #059669)' : '2px solid #e2e8f0', background: !editIsPerpetual ? '#eef2ff' : '#fff', color: !editIsPerpetual ? '#6366f1' : '#64748b' }}
+                          >
+                            {t('pipeline.duration_bounded', 'Durée limitée')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditIsPerpetual(true)}
+                            style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editIsPerpetual ? '2px solid var(--rb-primary, #059669)' : '2px solid #e2e8f0', background: editIsPerpetual ? '#eef2ff' : '#fff', color: editIsPerpetual ? '#6366f1' : '#64748b' }}
+                          >
+                            {t('pipeline.duration_perpetual', 'À vie')}
+                          </button>
+                        </div>
+                        {editIsPerpetual && (
+                          <div style={{ marginTop: 8, fontSize: 11, color: '#15803d', fontStyle: 'italic' }}>
+                            {t('pipeline.duration_perpetual_hint', 'La commission court tant que le deal reste « Gagné ».')}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>
                       {editEngagement === 'mensuel' && t('pipeline.nb_months', 'Nombre de mois')}
                       {editEngagement === 'trimestriel' && t('pipeline.nb_quarters', 'Nombre de trimestres')}
@@ -932,11 +975,15 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                       min="1"
                       step="1"
                       value={editPeriods}
+                      disabled={recurringOn && editIsPerpetual}
                       onChange={e => setEditPeriods(Math.max(1, parseInt(e.target.value, 10) || 1))}
                       style={{
                         width: 140, padding: '10px 14px', borderRadius: 10,
                         border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 600,
-                        color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                        color: (recurringOn && editIsPerpetual) ? '#94a3b8' : '#0f172a',
+                        background: (recurringOn && editIsPerpetual) ? '#f1f5f9' : '#fff',
+                        boxSizing: 'border-box',
+                        cursor: (recurringOn && editIsPerpetual) ? 'not-allowed' : 'text',
                       }}
                     />
                   </div>
@@ -1058,6 +1105,7 @@ function formatActivity(a, t) {
     case 'status_change': return `${t('referrals.act_status')}: ${STATUS_CONFIG[a.old_value]?.label || a.old_value} → ${STATUS_CONFIG[a.new_value]?.label || a.new_value}`;
     case 'value_updated': return t('referrals.act_value_updated', { value: fmt(a.new_value) });
     case 'engagement_updated': return t('referrals.act_engagement_updated', { value: a.new_value });
+    case 'engagement_duration_set': return t('referrals.act_engagement_duration_set', { from: a.old_value || '—', to: a.new_value, defaultValue: 'Durée de la commission : {{from}} → {{to}}' });
     case 'assigned': return t('referrals.act_assigned');
     case 'note_added': return t('referrals.act_note', { value: a.new_value });
     default: return a.action;
