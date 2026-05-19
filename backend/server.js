@@ -425,6 +425,20 @@ app.listen(PORT, () => {
     setInterval(tick, 5 * 60 * 1000);  // then every 5 min
     logger.info('qonto transfer polling worker started');
   }
+
+  // E5 — recurring renewal worker. Calque exact du pattern Qonto
+  // ci-dessus. The SQL itself filters out non-opted-in tenants
+  // (recurring_billing_enabled=FALSE) and non-recurring commissions,
+  // so a single global tick is enough — no per-tenant scheduling.
+  // Set RECURRING_RENEWAL_WORKER=off to disarm the timer (useful
+  // when running an isolated test instance).
+  if (process.env.RECURRING_RENEWAL_WORKER !== 'off') {
+    const { prepareRecurringRenewals } = require('./routes/commissions');
+    const tick = () => prepareRecurringRenewals(null).catch(e => logger.error('recurring-renewal tick', { error: e.message }));
+    setTimeout(tick, 30_000);
+    setInterval(tick, 5 * 60 * 1000);
+    logger.info('recurring renewal worker started');
+  }
 });
 
 // force rebuild

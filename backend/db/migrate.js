@@ -1626,6 +1626,42 @@ async function runMigrations() {
     console.error('[migrate.v57] failed:', err.message);
   }
 
+  // v58: E5 — event-driven renewal worker. Adds cycle_index to
+  // commissions so we can chain renewals deterministically and
+  // recurring_renewal_trigger to tenants so each tenant picks
+  // between paid-confirmed and purely-temporal renewals.
+  //
+  // The unique partial index is the IDEMPOTENCE backbone: a
+  // concurrent poll can't double-insert cycle N+1, the DB rejects
+  // the second attempt with 23505 which the worker swallows.
+  //
+  // Backfill: every pre-E5 commission becomes cycle_index=1
+  // (= initial cycle). NOT NULL DEFAULT 1 does the job for new rows;
+  // the explicit UPDATE catches any pre-existing 0 / NULL that
+  // somehow slipped past the default.
+  try {
+    await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS cycle_index INTEGER NOT NULL DEFAULT 1`);
+    const { rowCount: cycleBackfilled } = await query(
+      `UPDATE commissions SET cycle_index = 1 WHERE cycle_index IS NULL OR cycle_index = 0`
+    );
+    await query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS commissions_referral_cycle_uidx
+        ON commissions(referral_id, cycle_index) WHERE deleted_at IS NULL
+    `);
+    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS recurring_renewal_trigger VARCHAR(20) DEFAULT 'on_paid'`);
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tenants_renewal_trigger_check') THEN
+          ALTER TABLE tenants ADD CONSTRAINT tenants_renewal_trigger_check
+            CHECK (recurring_renewal_trigger IN ('on_paid', 'temporal'));
+        END IF;
+      END $$
+    `);
+    console.log(`[recurring] v58 cycle_index + recurring_renewal_trigger ready · backfilled ${cycleBackfilled} commissions to cycle_index=1`);
+  } catch (err) {
+    console.error('[migrate.v58] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

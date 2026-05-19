@@ -16,7 +16,7 @@ import {
   X, User, Users, Lock, Eye, EyeOff, UserPlus, Shield, Briefcase,
   CheckCircle, Copy, ToggleLeft, ToggleRight, Plug, Key, Trash2, ExternalLink, Globe, Store,
   Bell, Banknote, Save, CreditCard, Mail, LifeBuoy, BookOpen, Building, History,
-  Download, MonitorSmartphone, AlertTriangle,
+  Download, MonitorSmartphone, AlertTriangle, DollarSign,
 } from 'lucide-react';
 import DateRangePicker from '../components/DateRangePicker.jsx';
 
@@ -76,6 +76,7 @@ export default function SettingsPage() {
       { section: t('layout.section.programme') },
       { id: 'branding', icon: Palette, label: t('settings.tab_branding') },
       { id: 'pipeline', icon: Trophy, label: t('settings.tab_pipeline') },
+      { id: 'commission', icon: DollarSign, label: t('settings.tab_commission', 'Commission') },
       { id: 'public-marketplace', icon: Store, label: t('settings.tab_public_marketplace') },
 
       { section: t('layout.section.preferences') },
@@ -185,6 +186,7 @@ export default function SettingsPage() {
               </>
             )}
             {tab === 'program' && isAdmin && <ProgramTab />}
+            {tab === 'commission' && isAdmin && <CommissionTab />}
             {tab === 'billing' && isAdmin && <BillingPage />}
             {tab === 'audit' && (isAdmin || isSuperadmin) && <AuditLogTab />}
             {tab === 'contact' && <ContactTab />}
@@ -3071,6 +3073,152 @@ function ProgramTab() {
           background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
         }}>{t('programme.reset_defaults')}</button>
       </div>
+    </div>
+  );
+}
+
+// E5 — Commission tab. Hosts the recurring-billing master switch
+// (moved from /programme during E5) and the per-tenant renewal
+// trigger ('on_paid' default vs 'temporal'). The trigger radio is
+// hidden until the master switch is ON — there's nothing to
+// configure otherwise.
+function CommissionTab() {
+  const { t } = useTranslation();
+  const [enabled, setEnabled] = useState(false);
+  const [trigger, setTrigger] = useState('on_paid');
+  const [loading, setLoading] = useState(true);
+  const [savingEnabled, setSavingEnabled] = useState(false);
+  const [savingTrigger, setSavingTrigger] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const mt = await api.getMyTenant();
+        const t0 = mt && (mt.tenant || mt);
+        if (!alive) return;
+        setEnabled(!!t0?.recurring_billing_enabled);
+        setTrigger(t0?.recurring_renewal_trigger || 'on_paid');
+      } catch (e) {
+        if (alive) setMsg({ type: 'error', text: e.message || t('common.error') });
+      }
+      if (alive) setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const toggleEnabled = async () => {
+    const next = !enabled;
+    setEnabled(next);
+    setSavingEnabled(true);
+    try {
+      await api.updateMyTenant({ recurring_billing_enabled: next });
+      setMsg({ type: 'success', text: t('programme.saved') });
+      setTimeout(() => setMsg(null), 2000);
+    } catch (e) {
+      setEnabled(!next);
+      setMsg({ type: 'error', text: e.message || t('common.error') });
+    }
+    setSavingEnabled(false);
+  };
+
+  const setTriggerMode = async (mode) => {
+    if (mode === trigger) return;
+    const prev = trigger;
+    setTrigger(mode);
+    setSavingTrigger(true);
+    try {
+      await api.updateMyTenant({ recurring_renewal_trigger: mode });
+      setMsg({ type: 'success', text: t('programme.saved') });
+      setTimeout(() => setMsg(null), 2000);
+    } catch (e) {
+      setTrigger(prev);
+      setMsg({ type: 'error', text: e.message || t('common.error') });
+    }
+    setSavingTrigger(false);
+  };
+
+  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.commission.title', 'Commission')}</h3>
+      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+        {t('settings.commission.subtitle', 'Configurez la facturation récurrente et le déclenchement des renouvellements.')}
+      </p>
+
+      {msg && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+          {msg.text}
+        </div>
+      )}
+
+      {/* Master switch — moved here from /programme during E5. */}
+      <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+              {t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
+            </div>
+            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
+              {t('programme.recurring_billing_desc', 'Permet de définir des commissions à vie ou sur une durée limitée pour les deals récurrents. Sans cette option, les commissions sont calculées une seule fois au moment du gain.')}
+            </div>
+          </div>
+          <button
+            onClick={toggleEnabled}
+            disabled={savingEnabled}
+            style={{ background: 'none', border: 'none', cursor: savingEnabled ? 'wait' : 'pointer', color: enabled ? '#059669' : '#cbd5e1', flexShrink: 0, padding: 4 }}
+            aria-label={t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
+          >
+            {enabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Renewal trigger — visible only when master switch is ON. */}
+      {!enabled ? (
+        <div style={{ padding: '14px 16px', borderRadius: 10, background: '#f8fafc', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: 13 }}>
+          {t('settings.commission.activate_first', 'Activez d\'abord la facturation récurrente pour configurer le déclenchement des renouvellements.')}
+        </div>
+      ) : (
+        <div style={{ padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 12 }}>
+            {t('settings.commission.trigger_title', 'Déclenchement du renouvellement')}
+          </div>
+          {[
+            {
+              id: 'on_paid',
+              label: t('settings.commission.trigger_on_paid_label', 'Conditionné à une confirmation'),
+              desc:  t('settings.commission.trigger_on_paid_desc', 'Le prochain cycle n\'est préparé que lorsque le cycle précédent a été payé au partenaire.'),
+            },
+            {
+              id: 'temporal',
+              label: t('settings.commission.trigger_temporal_label', 'Purement temporel'),
+              desc:  t('settings.commission.trigger_temporal_desc', 'Le prochain cycle est préparé dès que la durée d\'engagement s\'est écoulée, indépendamment du paiement (limité à 2 cycles non réglés en attente).'),
+            },
+          ].map(opt => {
+            const active = trigger === opt.id;
+            return (
+              <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingTrigger ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
+                <input
+                  type="radio"
+                  name="renewal-trigger"
+                  value={opt.id}
+                  checked={active}
+                  disabled={savingTrigger}
+                  onChange={() => setTriggerMode(opt.id)}
+                  style={{ marginTop: 3, cursor: savingTrigger ? 'wait' : 'pointer' }}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
+                  <div style={{ color: '#64748b', fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>{opt.desc}</div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

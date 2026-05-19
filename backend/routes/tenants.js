@@ -165,7 +165,7 @@ router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
-  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model, recurring_billing_enabled } = req.body;
+  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model, recurring_billing_enabled, recurring_renewal_trigger } = req.body;
 
   let cleanSlug = null;
   if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
@@ -213,6 +213,20 @@ router.put('/:id', authenticate, async (req, res) => {
         console.error('[tenants PUT] recurring_billing_enabled update skipped:', e.message);
       }
     }
+
+    // Recurring renewal trigger (E5 schema v58). Whitelist the value —
+    // the CHECK constraint will catch garbage too, but pinching it
+    // here gives a clean 400 instead of a 500.
+    if (recurring_renewal_trigger !== undefined) {
+      if (!['on_paid', 'temporal'].includes(recurring_renewal_trigger)) {
+        return res.status(400).json({ error: 'invalid_renewal_trigger', allowed: ['on_paid', 'temporal'] });
+      }
+      try {
+        await query('UPDATE tenants SET recurring_renewal_trigger = $1 WHERE id = $2', [recurring_renewal_trigger, req.params.id]);
+      } catch (e) {
+        console.error('[tenants PUT] recurring_renewal_trigger update skipped:', e.message);
+      }
+    }
     clearTenantCache();
     auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
     logAudit(req, 'settings.updated', 'tenant', req.params.id, { name, slug: cleanSlug });
@@ -251,7 +265,8 @@ router.get('/me', authenticate, async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url, revenue_model,
-              COALESCE(recurring_billing_enabled, FALSE) AS recurring_billing_enabled
+              COALESCE(recurring_billing_enabled, FALSE)         AS recurring_billing_enabled,
+              COALESCE(recurring_renewal_trigger, 'on_paid')      AS recurring_renewal_trigger
          FROM tenants WHERE id = $1`,
       [req.user.tenantId]
     );

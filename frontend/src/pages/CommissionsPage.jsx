@@ -962,10 +962,43 @@ export default function CommissionsPage() {
 
                       {/* Amounts row (HT left, rate · MRR right) —
                           divided from the header by a thin top border
-                          so the eye lands on the number first. */}
+                          so the eye lands on the number first.
+                          E5: for recurring rows the headline turns into
+                          "<TTC> / <duration> · <N> versé(s)" — the TTC
+                          is the FULL upfront amount of one cycle (never
+                          divided), the duration is the cycle length in
+                          months / years (raccourci /N ans si multiple
+                          exact de 12). is_recurring=false → strictly
+                          legacy "X € HT" display, untouched. */}
                       {(() => {
                         const hasVat = parseFloat(c.amount_tax || 0) > 0;
                         const headlineAmount = hasVat ? c.amount_ht : c.amount;
+                        if (c.is_recurring) {
+                          const PERIOD_MONTHS = { forfait: 1, mensuel: 1, trimestriel: 3, annuel: 12 };
+                          const months = (parseInt(c.engagement_periods, 10) || 1)
+                                       * (PERIOD_MONTHS[c.engagement_type] || 1);
+                          const durationLabel = months % 12 === 0
+                            ? `${months / 12} ${months / 12 > 1 ? t('commissions.years', 'ans') : t('commissions.year', 'an')}`
+                            : `${months} ${t('commissions.months', 'mois')}`;
+                          const paidCount = commissions.filter(o =>
+                            o.referral_id === c.referral_id && o.status === 'paid'
+                          ).length;
+                          const cycleTtc = c.amount_ttc != null ? c.amount_ttc : c.amount;
+                          return (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderTop: '1px solid #f1f5f9', marginBottom: hasVat ? 6 : 8, flexWrap: 'wrap', rowGap: 4 }}>
+                              <div>
+                                <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--rb-primary, #059669)' }}>{fmt(cycleTtc)}</span>
+                                <span style={{ fontSize: 11, color: '#64748b', marginLeft: 6 }}>
+                                  / {durationLabel} ·{' '}
+                                  {t('commissions.card_paid_count', { count: paidCount, defaultValue: '{{count}} versé(s)' })}
+                                </span>
+                              </div>
+                              <span style={{ color: '#94a3b8', fontSize: 11, textAlign: 'right' }}>
+                                {c.rate}% · {fmt(c.deal_value)}
+                              </span>
+                            </div>
+                          );
+                        }
                         return (
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderTop: '1px solid #f1f5f9', marginBottom: hasVat ? 6 : 8 }}>
                             <div>

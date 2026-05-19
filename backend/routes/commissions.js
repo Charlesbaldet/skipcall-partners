@@ -2021,5 +2021,309 @@ router.post('/:id/reset-payment', authorize('admin'), async (req, res) => {
   }
 });
 
+// ─── E5: event-driven renewal worker ──────────────────────────────
+//
+// Prepares cycle N+1 for recurring commissions whose conditions are
+// met. Calqué sur reconcileQontoTransfers (same shape, same isolation
+// guarantees). The worker NEVER pays and NEVER auto-approves —
+// renewals land in status='pending_validation' WITH
+// approval_status='pending_approval' so the admin can review them
+// through the normal approval flow before they become payable.
+//
+// Series semantics (E5 spec — A4):
+//   - "cycle 1" of a referral  = the commission with the smallest
+//     cycle_index AMONG status != 'cancelled' AND deleted_at IS NULL.
+//   - "latest cycle"           = the commission with the largest
+//     cycle_index AMONG the same set.
+//   - cancelled commissions are EXCLUDED from min/max and from
+//     longevity inheritance — a lost→won reopen starts a fresh
+//     series; the prior cancelled chain never anchors anything.
+//
+// Temporal anchor (E5 spec — A2):
+//   - anchor = created_at of CYCLE 1 of the series. ONE rule, no
+//     fallback, no paid_at conditional.
+//   - cycle N is due when anchor + N × cycle_duration_months <= today.
+//   - cycle_duration_months = engagement_periods × monthsPerPeriod
+//     (forfait:1 / mensuel:1 / trimestriel:3 / annuel:12). Engagement
+//     metadata is read off the latest cycle of the series — it stays
+//     in sync with whatever the deal currently advertises.
+//
+// Idempotence (E5 spec):
+//   - commissions_referral_cycle_uidx (partial unique on
+//     (referral_id, cycle_index) WHERE deleted_at IS NULL) makes a
+//     double-insert physically impossible. A concurrent poll on the
+//     same series throws 23505 on the second attempt; we swallow it
+//     with a debug log and move on.
+//
+// Anti-pileup (E5 spec — A3, mode 'temporal' only):
+//   - if >=2 unsettled cycles already exist for the series
+//     (status NOT IN cancelled,paid), refuse to prepare a new one
+//     and emit a warning. The 'on_paid' mode is naturally immune
+//     (it needs cycle N paid before preparing N+1).
+
+const PERIOD_MONTHS_E5 = { forfait: 1, mensuel: 1, trimestriel: 3, annuel: 12 };
+function cycleDurationMonths(engagementType, engagementPeriods) {
+  const mult = PERIOD_MONTHS_E5[engagementType] || 1;
+  const periods = Math.max(1, parseInt(engagementPeriods, 10) || 1);
+  return mult * periods;
+}
+
+async function prepareRecurringRenewals(tenantId) {
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const result = { prepared: 0, skipped: 0, errors: [] };
+
+  // ─── Candidate selection ─────────────────────────────────────
+  // We pick the LATEST non-cancelled commission of each recurring
+  // series in a won deal on an opted-in tenant. The trigger filter
+  // (on_paid vs temporal) and the due-date filter run in JS so the
+  // SQL stays straightforward and the logic stays auditable.
+  //
+  // For each candidate row we also need cycle 1's created_at (the
+  // anchor) and cycle 1's is_perpetual / engagement_until /
+  // tier_at_won (inherited verbatim). Those are read via a
+  // correlated subquery to keep the worker single-round-trip per
+  // tenant.
+  const { rows: candidates } = await query(
+    `WITH series_latest AS (
+       SELECT c.referral_id,
+              MAX(c.cycle_index) AS max_idx
+         FROM commissions c
+        WHERE c.is_recurring = TRUE
+          AND c.deleted_at IS NULL
+          AND c.status <> 'cancelled'
+        GROUP BY c.referral_id
+     ), series_anchor AS (
+       SELECT c1.referral_id,
+              c1.id            AS cycle1_id,
+              c1.created_at    AS cycle1_created_at,
+              c1.is_perpetual  AS cycle1_is_perpetual,
+              c1.engagement_until AS cycle1_engagement_until,
+              c1.tier_at_won   AS cycle1_tier_at_won
+         FROM commissions c1
+         JOIN (
+           SELECT referral_id, MIN(cycle_index) AS min_idx
+             FROM commissions
+            WHERE is_recurring = TRUE
+              AND deleted_at IS NULL
+              AND status <> 'cancelled'
+            GROUP BY referral_id
+         ) m ON m.referral_id = c1.referral_id AND m.min_idx = c1.cycle_index
+        WHERE c1.is_recurring = TRUE
+          AND c1.deleted_at IS NULL
+          AND c1.status <> 'cancelled'
+     )
+     SELECT c.id, c.referral_id, c.partner_id, c.tenant_id, c.status,
+            c.cycle_index, c.engagement_type, c.engagement_periods,
+            c.amount, c.amount_ht, c.amount_tax, c.amount_ttc, c.tax_rate_applied, c.rate, c.deal_value,
+            sa.cycle1_id, sa.cycle1_created_at, sa.cycle1_is_perpetual,
+            sa.cycle1_engagement_until, sa.cycle1_tier_at_won,
+            r.status AS referral_status,
+            t.recurring_renewal_trigger AS trigger_mode
+       FROM commissions c
+       JOIN series_latest sl ON sl.referral_id = c.referral_id AND sl.max_idx = c.cycle_index
+       JOIN series_anchor sa ON sa.referral_id = c.referral_id
+       JOIN referrals r ON r.id = c.referral_id
+       JOIN tenants t   ON t.id = c.tenant_id
+      WHERE c.is_recurring = TRUE
+        AND c.deleted_at IS NULL
+        AND c.status <> 'cancelled'
+        AND r.status = 'won'
+        AND r.deleted_at IS NULL
+        AND COALESCE(t.recurring_billing_enabled, FALSE) = TRUE
+        AND (c.is_perpetual = TRUE OR (c.engagement_until IS NOT NULL AND c.engagement_until >= $1::date))
+        AND ($2::uuid IS NULL OR c.tenant_id = $2)`,
+    [todayIso, tenantId || null]
+  );
+
+  for (const cand of candidates) {
+    try {
+      // Due-date check — common to both trigger modes.
+      const durationMonths = cycleDurationMonths(cand.engagement_type, cand.engagement_periods);
+      const due = new Date(cand.cycle1_created_at);
+      due.setMonth(due.getMonth() + cand.cycle_index * durationMonths);
+      if (due.getTime() > new Date(todayIso).getTime()) {
+        result.skipped++;
+        continue;
+      }
+      // Trigger-mode-specific gate.
+      if (cand.trigger_mode === 'temporal') {
+        // A3 — anti-pileup. Refuse if 2+ unsettled cycles already
+        // exist for this referral (cancelled and paid don't count).
+        const { rows: [pileup] } = await query(
+          `SELECT COUNT(*)::int AS open_cycles
+             FROM commissions
+            WHERE referral_id = $1
+              AND is_recurring = TRUE
+              AND deleted_at IS NULL
+              AND status NOT IN ('cancelled', 'paid')`,
+          [cand.referral_id]
+        );
+        if (pileup && pileup.open_cycles >= 2) {
+          console.warn(`[recurring-renewal] renouvellements en pause — ${pileup.open_cycles} cycles non réglés pour referral ${cand.referral_id}`);
+          result.skipped++;
+          continue;
+        }
+      } else {
+        // 'on_paid' (default): cycle N must be paid for N+1 to be prepared.
+        if (cand.status !== 'paid') {
+          result.skipped++;
+          continue;
+        }
+      }
+
+      // Pull the latest revision of the source cycle. Its monetary
+      // columns are what the renewal copies verbatim. The
+      // commission headline columns above already reflect this
+      // revision (E3 syncs them at insert time) so either source
+      // works; we read from commission_revisions for explicitness.
+      const { rows: [srcRev] } = await query(
+        `SELECT * FROM commission_revisions
+          WHERE commission_id = $1
+          ORDER BY revision_index DESC
+          LIMIT 1`,
+        [cand.id]
+      );
+      const dealValueRenewal = srcRev ? srcRev.deal_value : cand.deal_value;
+      const rateRenewal      = srcRev ? srcRev.rate       : cand.rate;
+      const htRenewal        = srcRev ? srcRev.amount_ht  : cand.amount_ht;
+      const taxRateRenewal   = srcRev ? srcRev.tax_rate_applied : cand.tax_rate_applied;
+      const taxRenewal       = srcRev ? srcRev.amount_tax : cand.amount_tax;
+      const ttcRenewal       = srcRev ? srcRev.amount_ttc : cand.amount_ttc;
+      const amountRenewal    = srcRev ? srcRev.amount_ttc : (cand.amount_ttc || cand.amount);
+
+      const newCycleIndex = cand.cycle_index + 1;
+
+      // INSERT new commission for cycle N+1. The partial UNIQUE
+      // index on (referral_id, cycle_index) WHERE deleted_at IS
+      // NULL is what makes this idempotent: a concurrent poll
+      // racing on the same series gets a 23505 unique violation
+      // on the second attempt and we swallow it below.
+      //
+      // approval_status='pending_approval' — A1: renewals go
+      // through the normal admin approval, NEVER auto-approved.
+      // This is the explicit human-checkpoint the spec calls for.
+      let newCommissionId = null;
+      try {
+        const { rows: [created] } = await query(
+          `INSERT INTO commissions
+             (referral_id, partner_id, tenant_id, cycle_index,
+              status, approval_status, is_recurring,
+              is_perpetual, engagement_until, tier_at_won,
+              engagement_type, engagement_periods,
+              rate, deal_value,
+              amount, amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+              current_revision_index, approved_at)
+           VALUES
+             ($1, $2, $3, $4,
+              'pending_validation', 'pending_approval', TRUE,
+              $5, $6, $7,
+              $8, $9,
+              $10, $11,
+              $12, $13, $14, $15, $16,
+              1, NULL)
+           RETURNING id`,
+          [
+            cand.referral_id, cand.partner_id, cand.tenant_id, newCycleIndex,
+            cand.cycle1_is_perpetual, cand.cycle1_engagement_until, cand.cycle1_tier_at_won,
+            cand.engagement_type, cand.engagement_periods,
+            rateRenewal, dealValueRenewal,
+            amountRenewal, htRenewal, taxRateRenewal, taxRenewal, ttcRenewal,
+          ]
+        );
+        newCommissionId = created.id;
+      } catch (err) {
+        if (err && err.code === '23505') {
+          // Idempotence in action: another worker tick already
+          // inserted this cycle. Silent debug log, not an error.
+          console.log(`[recurring-renewal] cycle ${newCycleIndex} déjà préparé pour referral ${cand.referral_id} (race idempotent)`);
+          result.skipped++;
+          continue;
+        }
+        throw err;
+      }
+
+      // INSERT initial revision row for the new cycle — same
+      // contract as E1 (revision_index=1, reason hints origin).
+      await query(
+        `INSERT INTO commission_revisions
+           (commission_id, revision_index, deal_value, rate,
+            amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+            effective_date, reason, created_by, created_at)
+         VALUES ($1, 1, $2, $3, $4, $5, $6, $7, $8, 'renewal', NULL, NOW())`,
+        [newCommissionId, dealValueRenewal, rateRenewal,
+         htRenewal, taxRateRenewal, taxRenewal, ttcRenewal,
+         todayIso]
+      );
+
+      // Activity on the parent referral so the timeline records
+      // the renewal preparation in plain language.
+      try {
+        await query(
+          `INSERT INTO referral_activities (referral_id, user_id, action, old_value, new_value, comment)
+           VALUES ($1, NULL, 'commission_renewed', $2, $3, $4)`,
+          [
+            cand.referral_id,
+            String(cand.cycle_index),
+            String(newCycleIndex),
+            `Renouvellement cycle ${newCycleIndex} préparé (en attente d'approbation puis de validation).`,
+          ]
+        );
+      } catch (e) {
+        console.warn('[recurring-renewal] activity log failed:', e.message);
+      }
+
+      // In-app notifications. Best-effort — never blocks the loop.
+      try {
+        const ttcLabel = (parseFloat(ttcRenewal) || 0).toFixed(2) + ' €';
+        const { rows: [ctx] } = await query(
+          `SELECT p.name AS partner_name, r.prospect_name, r.prospect_company
+             FROM commissions c
+             JOIN partners p ON p.id = c.partner_id
+             JOIN referrals r ON r.id = c.referral_id
+            WHERE c.id = $1`,
+          [newCommissionId]
+        );
+        notify.fanoutAdminNotification(cand.tenant_id, 'commission_renewed', {
+          title: `Renouvellement à valider — ${ctx?.partner_name || ''}`,
+          message: `Cycle ${newCycleIndex} · ${ttcLabel}`,
+          link: '/commissions',
+        }).catch(() => {});
+        const partners = await partnerUsers(cand.partner_id);
+        for (const u of partners) {
+          notify.createNotification(u.id, 'commission_renewed', {
+            title: 'Commission de renouvellement générée',
+            message: `Pour ${ctx?.prospect_company || ctx?.prospect_name || '—'} · ${ttcLabel}`,
+            link: '/partner/payments',
+            tenantId: cand.tenant_id,
+          }).catch(() => {});
+        }
+      } catch (e) {
+        console.warn('[recurring-renewal] notify failed:', e.message);
+      }
+
+      result.prepared++;
+    } catch (err) {
+      console.error(`[recurring-renewal] failed for commission ${cand.id}:`, err.message);
+      result.errors.push({ commission_id: cand.id, error: err.message });
+    }
+  }
+
+  return result;
+}
+
+// Admin endpoint: trigger the worker manually. Same auth contract as
+// /poll-qonto. Returns the same { prepared, skipped, errors } shape
+// the internal loop assembles.
+router.post('/poll-renewals', authorize('admin'), async (req, res) => {
+  try {
+    const out = await prepareRecurringRenewals(req.tenantId || null);
+    res.json(out);
+  } catch (err) {
+    console.error('[commissions.poll-renewals] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
 module.exports.reconcileQontoTransfers = reconcileQontoTransfers;
+module.exports.prepareRecurringRenewals = prepareRecurringRenewals;

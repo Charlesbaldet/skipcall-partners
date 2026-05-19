@@ -22,12 +22,11 @@ export default function ProgrammePage() {
   // { kind: 'delete'|'reset', id? }
   const [confirmAction, setConfirmAction] = useState(null);
   const [msg, setMsg] = useState(null);
-  // Recurring-billing feature flag (E2). Lives here on the sidebar
-  // Programme page since this is the natural place users look for
-  // program-level settings. Backend wiring is unchanged from E2 —
-  // we just moved the rendering surface.
+  // Recurring-billing feature flag — read here only to conditionally
+  // expose the per-tier longevity inputs (E2-bis). The master
+  // toggle was moved to Paramètres → Commission during E5; this
+  // page no longer owns the write path.
   const [recurringBilling, setRecurringBilling] = useState(false);
-  const [recurringSaving, setRecurringSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -44,21 +43,6 @@ export default function ProgrammePage() {
   };
 
   useEffect(() => { load(); }, []);
-
-  const toggleRecurringBilling = async () => {
-    const next = !recurringBilling;
-    setRecurringBilling(next);  // optimistic
-    setRecurringSaving(true);
-    try {
-      await api.updateMyTenant({ recurring_billing_enabled: next });
-      setMsg({ type: 'success', text: t('programme.saved') });
-      setTimeout(() => setMsg(null), 2000);
-    } catch (e) {
-      setRecurringBilling(!next);  // rollback on failure
-      setMsg({ type: 'error', text: e.message || t('common.error') });
-    }
-    setRecurringSaving(false);
-  };
 
   const setType = async (type) => {
     try {
@@ -220,31 +204,6 @@ export default function ProgrammePage() {
           {msg.text}
         </div>
       )}
-
-      {/* Recurring-billing feature flag (E2). When OFF the rest of
-          the app behaves exactly like before — the duration selector
-          inside the deal modal stays hidden and commissions keep
-          getting created with is_recurring=false. */}
-      <div style={{ marginBottom: 28, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
-              {t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
-            </div>
-            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-              {t('programme.recurring_billing_desc', 'Permet de définir des commissions à vie ou sur une durée limitée pour les deals récurrents. Sans cette option, les commissions sont calculées une seule fois au moment du gain.')}
-            </div>
-          </div>
-          <button
-            onClick={toggleRecurringBilling}
-            disabled={recurringSaving}
-            style={{ background: 'none', border: 'none', cursor: recurringSaving ? 'wait' : 'pointer', color: recurringBilling ? '#059669' : '#cbd5e1', flexShrink: 0, padding: 4 }}
-            aria-label={t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
-          >
-            {recurringBilling ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-          </button>
-        </div>
-      </div>
 
       {/* Threshold type */}
       <div style={{ marginBottom: 28 }}>
