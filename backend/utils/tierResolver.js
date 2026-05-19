@@ -9,10 +9,10 @@
 const { query } = require('../db');
 
 const DEFAULT_LEVELS = [
-  { name: 'Bronze',   min_threshold: 0,  commission_rate: 10, color: '#cd7f32', icon: '', position: 0 },
-  { name: 'Silver',   min_threshold: 5,  commission_rate: 12, color: '#94a3b8', icon: '', position: 1 },
-  { name: 'Gold',     min_threshold: 15, commission_rate: 15, color: '#f59e0b', icon: '', position: 2 },
-  { name: 'Platinum', min_threshold: 30, commission_rate: 20, color: '#6366f1', icon: '', position: 3 },
+  { name: 'Bronze',   min_threshold: 0,  commission_rate: 10, color: '#cd7f32', icon: '', position: 0, longevity_mode: 'limited',  longevity_months: 12 },
+  { name: 'Silver',   min_threshold: 5,  commission_rate: 12, color: '#94a3b8', icon: '', position: 1, longevity_mode: 'limited',  longevity_months: 12 },
+  { name: 'Gold',     min_threshold: 15, commission_rate: 15, color: '#f59e0b', icon: '', position: 2, longevity_mode: 'limited',  longevity_months: 12 },
+  { name: 'Platinum', min_threshold: 30, commission_rate: 20, color: '#6366f1', icon: '', position: 3, longevity_mode: 'limited',  longevity_months: 12 },
 ];
 
 // Cache levels per tenant for a few seconds so a referrals-list call
@@ -28,7 +28,12 @@ async function getLevels(tenantId) {
   const cached = _levelsCache.get(tenantId);
   if (cached && Date.now() - cached.at < LEVELS_TTL_MS) return cached.levels;
   const { rows } = await query(
-    'SELECT name, min_threshold, commission_rate, color, icon, position FROM tenant_levels WHERE tenant_id = $1 ORDER BY position ASC, min_threshold ASC',
+    `SELECT name, min_threshold, commission_rate, color, icon, position,
+            COALESCE(longevity_mode, 'limited')      AS longevity_mode,
+            COALESCE(longevity_months, 12)            AS longevity_months
+       FROM tenant_levels
+      WHERE tenant_id = $1
+      ORDER BY position ASC, min_threshold ASC`,
     [tenantId]
   );
   const levels = rows.length ? rows : DEFAULT_LEVELS;
@@ -81,6 +86,8 @@ async function resolveTierForPartner({ tenantId, partnerId, wonDeals, totalReven
     icon: level.icon || null,
     position: level.position,
     threshold_type: thresholdType,
+    longevity_mode:   level.longevity_mode   || 'limited',
+    longevity_months: level.longevity_months != null ? parseInt(level.longevity_months, 10) : 12,
   };
 }
 
@@ -124,6 +131,8 @@ async function bulkResolveTiers(tenantId, partnerIds) {
       icon: level.icon || null,
       position: level.position,
       threshold_type: thresholdType,
+      longevity_mode:   level.longevity_mode   || 'limited',
+      longevity_months: level.longevity_months != null ? parseInt(level.longevity_months, 10) : 12,
     });
   }
   return out;

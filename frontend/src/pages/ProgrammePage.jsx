@@ -18,7 +18,7 @@ export default function ProgrammePage() {
   const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // level id or 'new'
-  const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
+  const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10, longevity_mode: 'limited', longevity_months: 12 });
   // { kind: 'delete'|'reset', id? }
   const [confirmAction, setConfirmAction] = useState(null);
   const [msg, setMsg] = useState(null);
@@ -78,12 +78,14 @@ export default function ProgrammePage() {
       color: l.color || '#94a3b8',
       min_threshold: parseFloat(l.min_threshold) || 0,
       commission_rate: parseFloat(l.commission_rate) || 10,
+      longevity_mode:   l.longevity_mode   || 'limited',
+      longevity_months: l.longevity_months != null ? parseInt(l.longevity_months, 10) : 12,
     });
     setEditing(l.id);
   };
 
   const startNew = () => {
-    setForm({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
+    setForm({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10, longevity_mode: 'limited', longevity_months: 12 });
     setEditing('new');
   };
 
@@ -154,6 +156,43 @@ export default function ProgrammePage() {
           <input type="number" min="0" max="100" step="0.5" style={inputStyle} value={form.commission_rate} onChange={e => setForm(f => ({ ...f, commission_rate: parseFloat(e.target.value) || 0 }))} />
         </div>
       </div>
+      {/* Longévité de la commission par palier (E2 refonte). Visible
+          uniquement quand le tenant a activé la facturation récurrente —
+          sinon le réglage n'existe pas pour ce tenant et le bloc reste
+          identique au pré-E2. */}
+      {recurringBilling && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <div>
+            <label style={labelStyle}>{t('programme.level_longevity_mode', 'Longévité')}</label>
+            <select
+              style={inputStyle}
+              value={form.longevity_mode}
+              onChange={e => setForm(f => ({ ...f, longevity_mode: e.target.value }))}
+            >
+              <option value="limited">{t('programme.longevity_limited', 'Durée limitée')}</option>
+              <option value="lifetime">{t('programme.longevity_lifetime', 'À vie')}</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>{t('programme.level_longevity_months', 'Mois')}</label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              disabled={form.longevity_mode === 'lifetime'}
+              value={form.longevity_mode === 'lifetime' ? '' : form.longevity_months}
+              onChange={e => setForm(f => ({ ...f, longevity_months: Math.max(1, parseInt(e.target.value, 10) || 1) }))}
+              style={{
+                ...inputStyle,
+                color: form.longevity_mode === 'lifetime' ? '#94a3b8' : '#0f172a',
+                background: form.longevity_mode === 'lifetime' ? '#f1f5f9' : '#fff',
+                cursor: form.longevity_mode === 'lifetime' ? 'not-allowed' : 'text',
+              }}
+              placeholder={form.longevity_mode === 'lifetime' ? t('programme.longevity_na', '—') : '12'}
+            />
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.save')}</button>
         <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
@@ -234,6 +273,13 @@ export default function ProgrammePage() {
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: l.color || '#0f172a', fontSize: 15 }}>{l.name}</div>
               <div style={{ color: '#64748b', fontSize: 12 }}>{t('programme.level_desc', { min: parseFloat(l.min_threshold), unit: unitLabel, rate: parseFloat(l.commission_rate) })}</div>
+              {recurringBilling && (
+                <div style={{ color: '#6366f1', fontSize: 11, marginTop: 2, fontWeight: 600 }}>
+                  {l.longevity_mode === 'lifetime'
+                    ? t('programme.longevity_lifetime_label', 'Longévité : à vie')
+                    : t('programme.longevity_limited_label', { months: (l.longevity_months != null ? l.longevity_months : 12), defaultValue: 'Longévité : limité {{months}} mois' })}
+                </div>
+              )}
             </div>
             <button onClick={() => startEdit(l)} title={t('common.edit')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef2ff', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#6366f1" /></button>
             <button onClick={() => del(l.id)} title={t('common.delete')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#fef2f2', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>

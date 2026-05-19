@@ -72,14 +72,35 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Normalise the optional longevity inputs (E2 refonte). Returns
+// `{ mode, months }` with mode ∈ {'limited','lifetime'} and months
+// constrained to a sane positive integer when mode='limited'.
+// `undefined` inputs fall back to safe defaults so a request that
+// omits the fields entirely keeps working against pre-v55 callers.
+function normaliseLongevity(modeRaw, monthsRaw) {
+  let mode = typeof modeRaw === 'string' ? modeRaw.toLowerCase() : undefined;
+  if (mode !== 'limited' && mode !== 'lifetime') mode = undefined;
+  let months = monthsRaw == null ? null : parseInt(monthsRaw, 10);
+  if (mode === 'lifetime') months = null;
+  if (mode === 'limited' && (!Number.isFinite(months) || months < 1)) months = 12;
+  return { mode, months };
+}
+
 router.post('/', authorize('admin'), async (req, res) => {
   try {
-    const { name, min_threshold, commission_rate, color, icon, position } = req.body;
+    const { name, min_threshold, commission_rate, color, icon, position, longevity_mode, longevity_months } = req.body;
     if (!name) return res.status(400).json({ error: 'Nom requis' });
     if (!req.tenantId) return res.status(400).json({ error: 'Pas de tenant' });
+    const long = normaliseLongevity(longevity_mode, longevity_months);
     const { rows: [level] } = await query(
-      'INSERT INTO tenant_levels (tenant_id, name, min_threshold, commission_rate, color, icon, position) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [req.tenantId, name, min_threshold || 0, commission_rate || 10, color || '#94a3b8', icon || '⭐', position || 0]
+      `INSERT INTO tenant_levels
+         (tenant_id, name, min_threshold, commission_rate, color, icon, position,
+          longevity_mode, longevity_months)
+       VALUES ($1, $2, $3, $4, $5, $6, $7,
+               COALESCE($8, 'limited'), COALESCE($9, 12))
+       RETURNING *`,
+      [req.tenantId, name, min_threshold || 0, commission_rate || 10, color || '#94a3b8', icon || '⭐', position || 0,
+       long.mode, long.months]
     );
     invalidateTierCache(req.tenantId);
     res.status(201).json({ level });
@@ -91,7 +112,13 @@ router.post('/', authorize('admin'), async (req, res) => {
 
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
-    const { name, min_threshold, commission_rate, color, icon, position } = req.body;
+    const { name, min_threshold, commission_rate, color, icon, position, longevity_mode, longevity_months } = req.body;
+    const long = normaliseLongevity(longevity_mode, longevity_months);
+    // longevity_months is intentionally allowed to land as NULL when
+    // mode flips to 'lifetime' — that's the canonical "no end date"
+    // marker. So we don't COALESCE the months column unless the
+    // caller didn't touch the mode at all.
+    const monthsParam = longevity_mode === undefined ? null : long.months;
     const { rows: [level] } = await query(
       `UPDATE tenant_levels SET
         name = COALESCE($1, name),
@@ -99,9 +126,16 @@ router.put('/:id', authorize('admin'), async (req, res) => {
         commission_rate = COALESCE($3, commission_rate),
         color = COALESCE($4, color),
         icon = COALESCE($5, icon),
-        position = COALESCE($6, position)
+        position = COALESCE($6, position),
+        longevity_mode = COALESCE($9, longevity_mode),
+        longevity_months = CASE
+                             WHEN $9 = 'lifetime' THEN NULL
+                             WHEN $9 = 'limited'  THEN COALESCE($10, longevity_months, 12)
+                             ELSE longevity_months
+                           END
       WHERE id = $7 AND tenant_id = $8 RETURNING *`,
-      [name, min_threshold, commission_rate, color, icon, position, req.params.id, req.tenantId]
+      [name, min_threshold, commission_rate, color, icon, position, req.params.id, req.tenantId,
+       long.mode, monthsParam]
     );
     if (!level) return res.status(404).json({ error: 'Niveau introuvable' });
     invalidateTierCache(req.tenantId);

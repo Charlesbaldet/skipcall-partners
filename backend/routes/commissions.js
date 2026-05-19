@@ -10,6 +10,7 @@ const { decomposeAmountWithTax } = require('../utils/commissionFormula');
 const PennylaneService = require('../services/pennylaneService');
 const { logAudit } = require('../services/auditLog');
 const { decrypt } = require('../utils/crypto');
+const { bulkResolveTiers } = require('../utils/tierResolver');
 
 const router = express.Router();
 
@@ -206,11 +207,32 @@ router.get('/', async (req, res) => {
     const totalApproved = rows.filter(r => r.status === 'awaiting_invoice' || r.status === 'pending_validation').reduce((s, r) => s + parseFloat(r.amount), 0);
     const totalPaid = rows.filter(r => r.status === 'paid').reduce((s, r) => s + parseFloat(r.amount), 0);
 
-    const enriched = rows.map(c => ({
-      ...c,
-      payment_due_date: c.approved_at ? nextQuarterEnd(c.approved_at) : null,
-      is_late: c.approved_at && c.status !== 'paid' && new Date(nextQuarterEnd(c.approved_at)) < new Date(),
-    }));
+    // E2 (refonte): expose the partner's CURRENT-tier longevity
+    // policy on every row so the FE can resolve the displayed
+    // longevity dynamically (resolveCommissionLongevity). The cached
+    // is_perpetual/engagement_until columns on the commission row
+    // become an audit-only snapshot — never the source of truth at
+    // read time. bulkResolveTiers groups the per-partner stats query
+    // so we add one round-trip per LIST call, not one per row.
+    const partnerIds = [...new Set(rows.map(r => r.partner_id).filter(Boolean))];
+    let tierByPartner = new Map();
+    try {
+      tierByPartner = await bulkResolveTiers(req.tenantId, partnerIds);
+    } catch (e) {
+      console.warn('[commissions.list] tier resolution skipped:', e.message);
+    }
+
+    const enriched = rows.map(c => {
+      const tier = tierByPartner.get(c.partner_id);
+      return {
+        ...c,
+        payment_due_date: c.approved_at ? nextQuarterEnd(c.approved_at) : null,
+        is_late: c.approved_at && c.status !== 'paid' && new Date(nextQuarterEnd(c.approved_at)) < new Date(),
+        partner_current_longevity_mode:   tier ? tier.longevity_mode   : null,
+        partner_current_longevity_months: tier ? tier.longevity_months : null,
+        partner_current_tier_name:        tier ? tier.name             : null,
+      };
+    });
 
     res.json({ commissions: enriched, totalPending, totalApproved, totalPaid });
   } catch (err) {

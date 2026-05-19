@@ -1525,6 +1525,43 @@ async function runMigrations() {
     console.error('[migrate.v54] failed:', err.message);
   }
 
+  // v55: phase E2 (refonte) — commission longevity moves from the deal
+  // to the TIER (partner level). E2 first put the "à vie / limité X
+  // mois" selector on the deal modal, but that conflated two things:
+  //   - the deal's billing cadence (mensuel/trim/annuel × periods),
+  //     which is a property of the deal itself
+  //   - the commission's longevity (how long RefBoost keeps paying
+  //     the partner for this deal), which is a PROGRAMME-level policy
+  //     that depends on the partner's tier
+  // The correct model: configure longevity on each tenant_level. The
+  // longevity of a commission is then derived dynamically from the
+  // partner's CURRENT tier (resolveCommissionLongevity, applied at
+  // read time and by the future E5 billing worker — never frozen on
+  // the commission row).
+  //
+  //   tenant_levels.longevity_mode  : 'limited' | 'lifetime'
+  //   tenant_levels.longevity_months: INT (only meaningful when mode='limited')
+  //
+  // Defaults: every existing level is backfilled to ('limited', 12).
+  // Mirrored in the front-end via the new Programme tab UI; non-opted
+  // tenants (recurring_billing_enabled=false) never see this field.
+  // Idempotent — ADD COLUMN IF NOT EXISTS + UPDATE only the freshly-
+  // backfilled rows where longevity_mode is NULL.
+  try {
+    await query(`ALTER TABLE tenant_levels
+                   ADD COLUMN IF NOT EXISTS longevity_mode   VARCHAR(20),
+                   ADD COLUMN IF NOT EXISTS longevity_months INTEGER`);
+    const { rowCount: tiersBackfilled } = await query(`
+      UPDATE tenant_levels
+         SET longevity_mode   = 'limited',
+             longevity_months = 12
+       WHERE longevity_mode IS NULL
+    `);
+    console.log(`[recurring] v55 tenant_levels.longevity_mode + longevity_months ready · backfilled ${tiersBackfilled} legacy levels to ('limited', 12)`);
+  } catch (err) {
+    console.error('[migrate.v55] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

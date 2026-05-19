@@ -468,8 +468,12 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement, engagement_periods,
           contact_first_name, contact_last_name,
           prospect_name, prospect_email, prospect_phone, prospect_company, prospect_role,
-          commission_rate_override, commission_overridden,
-          is_perpetual } = req.body;
+          commission_rate_override, commission_overridden } = req.body;
+    // `is_perpetual` lived on this payload during the first E2 cut.
+    // The refonte moves longevity to the partner's tier (tenant_levels),
+    // so the deal modal no longer asks the user this question. We
+    // accept (and ignore) the field if a stale frontend still sends
+    // it — defensive against caches/old tabs.
 
     // Length caps on the free-text fields. Without these, an
     // attacker (or a careless admin pasting a long log) can stuff
@@ -852,13 +856,14 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         const partnerTaxRate = partner.tax_subject ? Number(partner.tax_rate) : 0;
         const breakdown = decomposeAmountWithTax(amount, partnerTaxRate);
 
-        // ─── Phase E2: recurring-commission duration metadata ─────
-        // Read the tenant feature flag once per won-transition. When
-        // OFF (default for every existing tenant), the rest of this
-        // block stays at its legacy values (is_recurring = false,
-        // is_perpetual = false, engagement_until = null) which match
-        // the DB defaults from v54 — zero behavioural change for
-        // non-opted-in tenants.
+        // ─── Phase E2 (refonte): longevity is derived from the
+        // partner's CURRENT tier, not from the deal modal. The tier
+        // resolution above (rate branch) already has the right tier
+        // object in scope when we didn't take the override path; when
+        // we did take the override path the local `tier` variable is
+        // unset, so we re-resolve once here. Cached for ~10s by
+        // getLevels so the extra call is essentially free for a
+        // burst of won transitions.
         const { rows: [tenantFlagRow] } = await client.query(
           'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
           [req.tenantId || null]
@@ -867,25 +872,38 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         // A recurring commission is, by definition, non-forfait — a
         // one-off flat fee can't "live as long as the deal is won".
         const isRecurringEff = recurringOn && effEngagement !== 'forfait';
-        // is_perpetual only meaningful when recurring. When the FE
-        // hasn't opted-in (or sent the field) we default to bounded
-        // (= legacy semantics): engagement_periods is the contract length.
-        const isPerpetualEff = isRecurringEff
-          ? (is_perpetual === true || is_perpetual === 'true')
-          : false;
-        // engagement_until = closed_at + (periods × multiplier) months.
-        // Skip when perpetual (NULL = "à vie") or non-recurring.
+
+        // Resolve tier-driven longevity. Note we re-resolve the tier
+        // for longevity even if the rate path used an override —
+        // overrides only override the RATE, not the longevity policy.
+        let tierForLongevity = null;
+        if (isRecurringEff) {
+          const { rows: [statsLong] } = await client.query(
+            `SELECT COUNT(*) FILTER (WHERE status = 'won') AS won_deals,
+                    COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
+               FROM referrals WHERE partner_id = $1 AND id <> $2 AND deleted_at IS NULL`,
+            [partner.id, req.params.id]
+          );
+          tierForLongevity = await resolveTierForPartner({
+            tenantId: req.tenantId || null,
+            partnerId: partner.id,
+            wonDeals: statsLong?.won_deals,
+            totalRevenue: statsLong?.total_revenue,
+          });
+        }
+        const isPerpetualEff = isRecurringEff && tierForLongevity?.longevity_mode === 'lifetime';
+        // engagement_until = won_date + tier.longevity_months months.
+        // Cached snapshot used only for audit / debugging — the
+        // authoritative value at read time comes from
+        // resolveCommissionLongevity called against the partner's
+        // CURRENT tier (so a later promotion/demotion overrides this
+        // cache without us touching the row).
         let engagementUntilEff = null;
         if (isRecurringEff && !isPerpetualEff) {
-          const PERIOD_MONTHS = { mensuel: 1, trimestriel: 3, annuel: 12 };
-          const monthsToAdd = (PERIOD_MONTHS[effEngagement] || 1) * Math.max(1, effPeriods || 1);
-          // closed_at is set right above (L.579) on a fresh won
-          // transition. Re-drags re-set it too, so it's always the
-          // most recent won date. Fall back to current.closed_at and
-          // finally `now` so the date is never undefined.
+          const months = tierForLongevity?.longevity_months || 12;
           const baseIso = updates.closed_at || current.closed_at || new Date().toISOString();
           const base = new Date(baseIso);
-          base.setMonth(base.getMonth() + monthsToAdd);
+          base.setMonth(base.getMonth() + months);
           engagementUntilEff = base.toISOString().slice(0, 10);
         }
 
@@ -900,25 +918,23 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         );
 
         // Build a human label for the duration so the
-        // engagement_duration_set activity stays readable. Skipped
-        // when recurring is off (legacy behaviour = no activity at
-        // all on this axis).
-        const durationLabel = (recurring, perpetual, untilDate) => {
+        // engagement_duration_set activity stays readable. The label
+        // now carries the tier name as the origin of the policy
+        // (palier-driven, not deal-driven). Skipped when recurring
+        // is off (legacy behaviour = no activity at all on this axis).
+        const durationLabel = (recurring, perpetual, untilDate, tierName) => {
           if (!recurring) return null;
-          if (perpetual) return 'à vie';
-          return untilDate ? `limité jusqu'au ${untilDate}` : 'limité';
+          const suffix = tierName ? ` (palier ${tierName})` : '';
+          if (perpetual) return `à vie${suffix}`;
+          return untilDate ? `limité jusqu'au ${untilDate}${suffix}` : `limité${suffix}`;
         };
         const oldDurationLabel = durationLabel(
           existingCom?.is_recurring,
           existingCom?.is_perpetual,
-          existingCom?.engagement_until ? new Date(existingCom.engagement_until).toISOString().slice(0, 10) : null
+          existingCom?.engagement_until ? new Date(existingCom.engagement_until).toISOString().slice(0, 10) : null,
+          null,
         );
-        const newDurationLabel = durationLabel(isRecurringEff, isPerpetualEff, engagementUntilEff);
-        // Only log when the flag is on AND the new state is real (avoids
-        // a noisy entry on every won re-drag of a non-recurring deal).
-        // Note: this push goes into the same `activities` array that's
-        // flushed below by the existing L.752-758 loop, so it lands in
-        // referral_activities transactionally with everything else.
+        const newDurationLabel = durationLabel(isRecurringEff, isPerpetualEff, engagementUntilEff, tierForLongevity?.name);
         if (recurringOn && newDurationLabel && oldDurationLabel !== newDurationLabel) {
           activities.push({
             action: 'engagement_duration_set',
