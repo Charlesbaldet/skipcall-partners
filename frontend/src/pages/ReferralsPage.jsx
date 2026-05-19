@@ -665,6 +665,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
       const friendly = e?.data?.message
         || (code === 'deal_value_locked' && t('referrals.error_deal_value_locked', 'Le montant ne peut plus être modifié — un virement est en cours pour cette commission.'))
         || (code === 'commission_locked' && t('referrals.error_commission_locked', 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.'))
+        || (code === 'revision_blocked_payment_in_flight' && t('referrals.error_revision_payment_in_flight', 'Un virement est déjà initié pour cette commission. Attendez sa finalisation avant de modifier le montant.'))
         || t('referrals.save_error');
       setSaveToast({ type: 'error', text: friendly });
     }
@@ -837,6 +838,14 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                         <Lock size={11} /> {t('referrals.deal_value_locked', 'Verrouillé')}
                       </span>
                     )}
+                    {/* E3: clear visual signal that an edit here will
+                        spawn an amendment (commission_revisions) on
+                        an already-approved recurring commission. */}
+                    {referral.deal_value_revision_allowed && Number(editValue) !== Number(referral.deal_value) && (
+                      <span title={t('referrals.deal_value_revision_tooltip', 'La modification créera un avenant — les versements passés restent figés.')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#6366f1', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 999, padding: '2px 8px' }}>
+                        {t('referrals.deal_value_revision_badge', 'Crée un avenant')}
+                      </span>
+                    )}
                   </div>
                   <input
                     type="number"
@@ -985,6 +994,38 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                 );
               })()}
 
+              {/* E3: amendment history. Renders right below the
+                  forecast block when the commission has more than one
+                  revision row (i.e. the deal_value has been edited
+                  after approval at least once). The list is read-only
+                  by design — amendments are immutable. */}
+              {Array.isArray(referral.commission_revisions) && referral.commission_revisions.length > 1 && (
+                <div style={{ marginTop: 16, padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                    {t('pipeline.revisions_title', { count: referral.commission_revisions.length, defaultValue: 'Historique des avenants ({{count}})' })}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {referral.commission_revisions.map(r => {
+                      const reasonLabel = r.reason === 'upsell'   ? t('pipeline.rev_upsell',   'upsell')
+                                       : r.reason === 'downsell' ? t('pipeline.rev_downsell', 'downsell')
+                                       : r.reason === 'initial'  ? t('pipeline.rev_initial',  'initial')
+                                       : (r.reason || '—');
+                      const color = r.reason === 'upsell' ? '#16a34a' : r.reason === 'downsell' ? '#dc2626' : '#64748b';
+                      return (
+                        <div key={r.revision_index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 12 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#475569', fontFamily: 'tabular-nums' }}>
+                            <span style={{ fontWeight: 700, color: '#0f172a' }}>#{r.revision_index}</span>
+                            <span style={{ padding: '1px 7px', borderRadius: 6, background: '#f1f5f9', color, fontWeight: 600, fontSize: 11 }}>{reasonLabel}</span>
+                            <span>{fmt(r.amount_ttc)} TTC</span>
+                          </span>
+                          <span style={{ color: '#94a3b8', fontSize: 11 }}>{fmtDate(r.effective_date)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Separator before the footer buttons. */}
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
 
@@ -1063,6 +1104,12 @@ function formatActivity(a, t) {
     case 'value_updated': return t('referrals.act_value_updated', { value: fmt(a.new_value) });
     case 'engagement_updated': return t('referrals.act_engagement_updated', { value: a.new_value });
     case 'engagement_duration_set': return t('referrals.act_engagement_duration_set', { from: a.old_value || '—', to: a.new_value, defaultValue: 'Durée de la commission : {{from}} → {{to}}' });
+    case 'commission_recalculated': return t('referrals.act_commission_recalculated', {
+      from: a.old_value ? fmt(a.old_value) : '—',
+      to: a.new_value ? fmt(a.new_value) : '—',
+      detail: a.comment || '',
+      defaultValue: 'Commission révisée : {{from}} → {{to}} TTC. {{detail}}',
+    });
     case 'assigned': return t('referrals.act_assigned');
     case 'note_added': return t('referrals.act_note', { value: a.new_value });
     default: return a.action;

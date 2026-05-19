@@ -164,9 +164,13 @@ router.get('/:id', async (req, res) => {
     // Surface whether the deal_value / status is currently locked
     // by an in-flight commission so the frontend can grey out the
     // editor without a second round-trip. Mirrors the same guard
-    // applied in PUT /:id.
+    // applied in PUT /:id. Extended in E3 to also surface enough
+    // state for the FE to render "revision allowed" instead of
+    // "locked" when the commission is recurring on an opted-in tenant.
     const { rows: lockingComm } = await query(
-      `SELECT id, status FROM commissions
+      `SELECT id, status, is_recurring, qonto_transfer_id, payment_completed_at,
+              current_revision_index
+         FROM commissions
         WHERE referral_id = $1
           AND deleted_at IS NULL
           AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
@@ -174,8 +178,48 @@ router.get('/:id', async (req, res) => {
       [req.params.id]
     );
     const referral = rows[0];
-    referral.deal_value_locked = lockingComm.length > 0;
-    referral.locking_commission_status = lockingComm[0]?.status || null;
+    const lockingRow = lockingComm[0] || null;
+    // Read the tenant feature flag once. Cheap — both reads against
+    // tenants for this same handler are coalesced upstream.
+    const { rows: [tflagRow] } = await query(
+      'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
+      [referral.tenant_id || req.tenantId || null]
+    );
+    const tenantRecurringOn = !!tflagRow?.recurring_on;
+    const paymentInFlight = !!(lockingRow && lockingRow.qonto_transfer_id && !lockingRow.payment_completed_at);
+    // Revision path conditions (mirror PUT /:id):
+    //   tenant flag ON + commission is_recurring + no transfer in flight.
+    const revisionAllowed = !!lockingRow
+      && tenantRecurringOn
+      && !!lockingRow.is_recurring
+      && !paymentInFlight;
+    // E3: deal_value is "locked" ONLY when the legacy path applies.
+    // On the revision path the field stays editable — the BE will
+    // accept the edit and emit an amendment instead of a 400.
+    referral.deal_value_locked = !!lockingRow && !revisionAllowed;
+    referral.deal_value_revision_allowed = revisionAllowed;
+    referral.locking_commission_status = lockingRow?.status || null;
+    referral.locking_payment_in_flight = paymentInFlight;
+    referral.locking_commission_id = lockingRow?.id || null;
+    referral.locking_revision_index = lockingRow?.current_revision_index || null;
+
+    // E3: hydrate the recent revision history for the FE record.
+    // Empty array when no commission yet, or a single-row 'initial'
+    // entry for backfilled commissions, or N entries after edits.
+    let revisions = [];
+    if (lockingRow?.id) {
+      const { rows: revRows } = await query(
+        `SELECT revision_index, deal_value, rate,
+                amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+                effective_date, reason, created_by, created_at
+           FROM commission_revisions
+          WHERE commission_id = $1
+          ORDER BY revision_index ASC`,
+        [lockingRow.id]
+      );
+      revisions = revRows;
+    }
+    referral.commission_revisions = revisions;
 
     // E2: surface the recurring-billing duration of the latest live
     // commission so the deal modal's "À vie / Durée limitée" toggle
@@ -609,30 +653,133 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     }
 
     if (deal_value !== undefined && deal_value !== current.deal_value) {
-      // Once a commission has moved past pending_approval (i.e. a
-      // payment is in flight via Qonto), the deal_value MUST stay
-      // frozen — otherwise the auto-recompute below would change the
-      // partner's commission amount mid-transfer and create a money
-      // mismatch with what's been or is being wired out.
+      // E3 split-decision: when the referral has a commission past
+      // pending_approval, the path forks on (tenant flag, is_recurring):
+      //   - flag OFF, or is_recurring=false → legacy 400 deal_value_locked
+      //   - flag ON + is_recurring=true     → create an amendment row
+      //                                       in commission_revisions
+      //                                       and re-sync the commission's
+      //                                       headline amount fields.
+      // The legacy lock is preserved BYTE-FOR-BYTE for non-recurring
+      // commissions — that's the existing safety net for one-shot
+      // deals where the partner has already been wired (or is being
+      // wired) on the original value.
       const { rows: comm } = await client.query(
-        `SELECT id, status FROM commissions
-          WHERE referral_id = $1
-            AND deleted_at IS NULL
-            AND status IN ('awaiting_invoice', 'pending_validation', 'paid')
+        `SELECT c.id, c.status, c.is_recurring, c.amount_ttc, c.amount_ht,
+                c.rate, c.engagement_type, c.engagement_periods,
+                c.current_revision_index, c.qonto_transfer_id,
+                c.payment_completed_at, c.tenant_id, c.partner_id
+           FROM commissions c
+          WHERE c.referral_id = $1
+            AND c.deleted_at IS NULL
+            AND c.status IN ('awaiting_invoice', 'pending_validation', 'paid')
           LIMIT 1`,
         [req.params.id]
       );
+
       if (comm.length > 0) {
-        await client.query('ROLLBACK');
-        client.release();
-        return res.status(400).json({
-          error: 'deal_value_locked',
-          message: 'Le montant ne peut plus être modifié car une commission est déjà en cours de traitement.',
-          commission_status: comm[0].status,
+        const target = comm[0];
+        // Tenant flag: only the opted-in tenants take the new path.
+        const { rows: [tf] } = await client.query(
+          'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
+          [target.tenant_id]
+        );
+        const recurringOn = !!tf?.recurring_on;
+        const goRevisionPath = recurringOn && !!target.is_recurring;
+
+        if (!goRevisionPath) {
+          // ─── Legacy lock — UNCHANGED ──────────────────────────
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(400).json({
+            error: 'deal_value_locked',
+            message: 'Le montant ne peut plus être modifié car une commission est déjà en cours de traitement.',
+            commission_status: target.status,
+          });
+        }
+
+        // ─── Revision path (E3) ───────────────────────────────
+        // PAYMENT-IN-FLIGHT GUARD: a transfer is initiated and not
+        // yet finalised. Changing the amount under it would wire
+        // one figure and book another. Refuse, no revision created.
+        if (target.qonto_transfer_id && !target.payment_completed_at) {
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(409).json({
+            error: 'revision_blocked_payment_in_flight',
+            message: 'Un virement est déjà initié pour cette commission. Attendez sa finalisation avant de modifier le montant.',
+            qonto_transfer_id: target.qonto_transfer_id,
+          });
+        }
+
+        // Recompute the amount: rate / engagement / periods stay the
+        // same (those are not what this edit is about); deal_value is
+        // the new value; partner tax profile re-read to keep the VAT
+        // snapshot accurate.
+        const { rows: [taxRow] } = await client.query(
+          'SELECT tax_subject, tax_rate FROM partners WHERE id = $1',
+          [target.partner_id]
+        );
+        const partnerTaxRate = taxRow?.tax_subject ? Number(taxRow.tax_rate) : 0;
+        const newRate = parseFloat(target.rate) || 0;
+        const newAmount = calculateCommissionAmount({
+          engagementType: target.engagement_type || 'mensuel',
+          periods:        target.engagement_periods || 1,
+          dealValue:      deal_value,
+          rate:           newRate,
         });
+        const breakdown = decomposeAmountWithTax(newAmount, partnerTaxRate);
+        const nextIndex = (target.current_revision_index || 1) + 1;
+        const reason = (parseFloat(deal_value) > parseFloat(current.deal_value)) ? 'upsell' : 'downsell';
+        const today = new Date().toISOString().slice(0, 10);
+        const oldTtcLabel  = target.amount_ttc != null ? target.amount_ttc : target.amount_ht;
+
+        // Append-only amendment. Prior revisions are NEVER mutated
+        // or deleted — they're the audit trail of past-paid cycles.
+        await client.query(
+          `INSERT INTO commission_revisions
+             (commission_id, revision_index, deal_value, rate,
+              amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+              effective_date, reason, created_by, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
+          [target.id, nextIndex, deal_value, newRate,
+           breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
+           today, reason, req.user.id]
+        );
+
+        // Re-sync the commission's headline columns to the latest
+        // revision so Kanban / pay-qonto / Pennylane keep reading
+        // the current value without joining commission_revisions.
+        // is_perpetual / engagement_until / tier_at_won are
+        // deliberately NOT in the SET — a revision changes the
+        // amount, never the longevity (E2-bis snapshot stays frozen).
+        await client.query(
+          `UPDATE commissions
+              SET deal_value = $2, amount = $3,
+                  amount_ht = $4, tax_rate_applied = $5, amount_tax = $6, amount_ttc = $7,
+                  current_revision_index = $8
+            WHERE id = $1`,
+          [target.id, deal_value, newAmount,
+           breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
+           nextIndex]
+        );
+
+        // Mirror the referral.deal_value and the legacy value_updated
+        // activity — same shape as the no-locking-commission path —
+        // then push the dedicated revision activity.
+        updates.deal_value = deal_value;
+        activities.push({ action: 'value_updated', old_value: String(current.deal_value), new_value: String(deal_value) });
+        activities.push({
+          action: 'commission_recalculated',
+          old_value: String(oldTtcLabel != null ? oldTtcLabel : ''),
+          new_value: String(breakdown.amount_ttc),
+          comment: `deal_value ${current.deal_value} → ${deal_value} € (avenant #${nextIndex}, ${reason})`,
+        });
+      } else {
+        // No locking commission: same legacy path as before.
+        updates.deal_value = deal_value;
+        activities.push({ action: 'value_updated', old_value: String(current.deal_value), new_value: String(deal_value) });
       }
-      updates.deal_value = deal_value;
-      activities.push({ action: 'value_updated', old_value: String(current.deal_value), new_value: String(deal_value) });
     }
 
     // Symmetric guard: blocking the user from dragging a card OUT of
