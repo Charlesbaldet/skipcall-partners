@@ -4,6 +4,7 @@ const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
 const { calculateCommissionAmount, decomposeAmountWithTax } = require('../utils/commissionFormula');
 const { bulkResolveTiers, resolveTierForPartner, effectiveRate } = require('../utils/tierResolver');
+const { computeLongevitySnapshotAtWon } = require('../utils/longevitySnapshot');
 // emails via resend.sendAndLog — emailService.queueNotification removed
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
@@ -891,20 +892,22 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
             totalRevenue: statsLong?.total_revenue,
           });
         }
-        const isPerpetualEff = isRecurringEff && tierForLongevity?.longevity_mode === 'lifetime';
-        // engagement_until = won_date + tier.longevity_months months.
-        // Cached snapshot used only for audit / debugging — the
-        // authoritative value at read time comes from
-        // resolveCommissionLongevity called against the partner's
-        // CURRENT tier (so a later promotion/demotion overrides this
-        // cache without us touching the row).
+        // E2-bis: SNAPSHOT FIXED AT WON. The values computed here
+        // get written to the commission row exactly once (or
+        // re-snapshotted while the row is still pending_approval —
+        // see below) and are NEVER recalculated afterwards. A later
+        // tier promotion or demotion has zero effect on existing
+        // commissions, only on deals won after the change. The dynamic
+        // resolver from the previous E2 cut has been removed entirely.
+        let isPerpetualEff = false;
         let engagementUntilEff = null;
-        if (isRecurringEff && !isPerpetualEff) {
-          const months = tierForLongevity?.longevity_months || 12;
-          const baseIso = updates.closed_at || current.closed_at || new Date().toISOString();
-          const base = new Date(baseIso);
-          base.setMonth(base.getMonth() + months);
-          engagementUntilEff = base.toISOString().slice(0, 10);
+        let tierAtWonEff = null;
+        if (isRecurringEff) {
+          const wonDateIso = updates.closed_at || current.closed_at || new Date().toISOString();
+          const snap = computeLongevitySnapshotAtWon(tierForLongevity, wonDateIso);
+          isPerpetualEff   = snap.is_perpetual;
+          engagementUntilEff = snap.engagement_until;
+          tierAtWonEff     = snap.tier_at_won;
         }
 
         // Look up an existing commission first so we can decide between
@@ -950,29 +953,36 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
                (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status,
                 engagement_type, engagement_periods,
                 amount_ht, tax_rate_applied, amount_tax, amount_ttc,
-                is_recurring, is_perpetual, engagement_until, current_revision_index)
+                is_recurring, is_perpetual, engagement_until, current_revision_index, tier_at_won)
              VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval',
                      $7, $8,
                      $9, $10, $11, $12,
-                     $13, $14, $15, 1)
+                     $13, $14, $15, 1, $16)
              RETURNING id, amount, rate, deal_value, created_at`,
             [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null,
              effEngagement, effPeriods,
              breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
-             isRecurringEff, isPerpetualEff, engagementUntilEff]
+             isRecurringEff, isPerpetualEff, engagementUntilEff, tierAtWonEff]
           ));
         } else if (existingCom.status === 'pending_approval') {
+          // Re-snapshot while still pre-approval: the commission isn't
+          // "engaged" yet, so a re-drag onto the won column captures
+          // the partner's tier-at-that-moment. Once the commission
+          // moves past pending_approval, the past-pending UPDATE
+          // branch below leaves these columns untouched — that's
+          // where the SNAPSHOT semantic locks in.
           ({ rows: [createdCommission] } = await client.query(
             `UPDATE commissions
                 SET amount = $2, rate = $3, deal_value = $4,
                     engagement_type = $5, engagement_periods = $6,
                     amount_ht = $7, tax_rate_applied = $8, amount_tax = $9, amount_ttc = $10,
-                    is_recurring = $11, is_perpetual = $12, engagement_until = $13
+                    is_recurring = $11, is_perpetual = $12, engagement_until = $13,
+                    tier_at_won = $14
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
             [existingCom.id, amount, rate, effectiveDealValue, effEngagement, effPeriods,
              breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
-             isRecurringEff, isPerpetualEff, engagementUntilEff]
+             isRecurringEff, isPerpetualEff, engagementUntilEff, tierAtWonEff]
           ));
         } else {
           // Already approved or further along — keep numbers in sync

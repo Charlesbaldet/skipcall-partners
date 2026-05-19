@@ -1534,10 +1534,12 @@ async function runMigrations() {
   //     the partner for this deal), which is a PROGRAMME-level policy
   //     that depends on the partner's tier
   // The correct model: configure longevity on each tenant_level. The
-  // longevity of a commission is then derived dynamically from the
-  // partner's CURRENT tier (resolveCommissionLongevity, applied at
-  // read time and by the future E5 billing worker — never frozen on
-  // the commission row).
+  // commission then captures the partner's tier-driven longevity ONCE
+  // at the won transition (v56 + utils/longevitySnapshot) and never
+  // recalculates after. (An earlier cut tried a dynamic resolver that
+  // re-evaluated against the partner's CURRENT tier on every read —
+  // that was reverted in E2-bis; the field columns added here remain
+  // the authoritative snapshot.)
   //
   //   tenant_levels.longevity_mode  : 'limited' | 'lifetime'
   //   tenant_levels.longevity_months: INT (only meaningful when mode='limited')
@@ -1560,6 +1562,28 @@ async function runMigrations() {
     console.log(`[recurring] v55 tenant_levels.longevity_mode + longevity_months ready · backfilled ${tiersBackfilled} legacy levels to ('limited', 12)`);
   } catch (err) {
     console.error('[migrate.v55] failed:', err.message);
+  }
+
+  // v56: E2-bis — commission longevity becomes a SNAPSHOT FIXED AT
+  // WON. The dynamic resolver from the first E2 refonte cut
+  // (resolveCommissionLongevity called against the partner's current
+  // tier at every read) is removed; the commission row's
+  // is_perpetual / engagement_until columns from v54 become the
+  // single source of truth, frozen at the won transition. Tier
+  // promotions/demotions after won do NOT touch existing commissions
+  // any more — they only affect deals won AFTER the change.
+  //
+  // tier_at_won is a tiny audit field: the human-readable tier name
+  // captured at won, surfaced in the Programme audit trail. Pre-v56
+  // recurring commissions stay at NULL (we can't backfill it
+  // accurately — the partner's then-current tier is not deterministic
+  // from current row state) and the UI degrades to showing just
+  // is_perpetual / engagement_until without the tier badge.
+  try {
+    await query(`ALTER TABLE commissions ADD COLUMN IF NOT EXISTS tier_at_won TEXT`);
+    console.log('[recurring] v56 commissions.tier_at_won ready');
+  } catch (err) {
+    console.error('[migrate.v56] failed:', err.message);
   }
 
   logger.info('Migrations completed');

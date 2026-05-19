@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { fmt, fmtDate, fmtDateTime } from '../lib/constants';
-import { resolveCommissionLongevity } from '../lib/longevityResolver';
 import { DollarSign, CheckCircle, Clock, CreditCard, AlertTriangle, Download, X, Building, User, Banknote, List, LayoutGrid, FileText, ShieldCheck, Send, RefreshCw, Trash2, Eye, BookOpen } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import PageSkeleton from '../components/PageSkeleton.jsx';
@@ -996,34 +995,45 @@ export default function CommissionsPage() {
                               `${c.engagement_periods || 1} ${t('pipeline.years', 'an(s)')}`}
                           </span>
                         )}
-                        {/* Recurring-billing longevity pill (E2 refonte).
-                            Derived DYNAMICALLY from the partner's
-                            CURRENT tier so a Bronze→Gold promotion
-                            instantly flips the pill of every won deal
-                            from "Jusqu'au …" to "À vie", and a
-                            demotion the other way around — without
-                            us touching any commission row. The cached
-                            c.is_perpetual / c.engagement_until are
-                            audit-only and intentionally NOT used here. */}
+                        {/* Recurring-billing longevity pill (E2-bis
+                            SNAPSHOT-AT-WON model). Read DIRECTLY from
+                            c.is_perpetual / c.engagement_until which
+                            were frozen on the commission row at the
+                            won transition. A later tier change on the
+                            partner does NOT affect this pill — the
+                            snapshot is the source of truth. The
+                            previous-cut dynamic resolver is gone. */}
                         {c.is_recurring && (() => {
-                          const longev = resolveCommissionLongevity(
-                            { is_recurring: true, won_date: c.closed_at || c.created_at, created_at: c.created_at },
-                            { longevity_mode: c.partner_current_longevity_mode, longevity_months: c.partner_current_longevity_months },
-                          );
-                          if (longev.status === 'expired') {
+                          if (c.is_perpetual) {
                             return (
-                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#fef2f2', color: '#dc2626', fontWeight: 700 }}>
-                                {t('commissions.duration_expired_badge', 'Échu')}
+                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700 }}>
+                                {t('commissions.duration_perpetual_badge', 'À vie')}
+                              </span>
+                            );
+                          }
+                          if (!c.engagement_until) {
+                            return (
+                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700 }}>
+                                {t('commissions.duration_bounded_badge', 'Durée limitée')}
+                              </span>
+                            );
+                          }
+                          // "Terminé" when the snapshot end-date is
+                          // strictly before today's calendar day.
+                          // Same boundary semantics as the BE worker
+                          // (end == today → still active).
+                          const todayMs = new Date(new Date().toISOString().slice(0, 10)).getTime();
+                          const endMs   = new Date(c.engagement_until).getTime();
+                          if (endMs < todayMs) {
+                            return (
+                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#64748b', fontWeight: 700 }}>
+                                {t('commissions.duration_terminated_badge', 'Terminé')}
                               </span>
                             );
                           }
                           return (
                             <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700 }}>
-                              {longev.is_perpetual
-                                ? t('commissions.duration_perpetual_badge', 'À vie')
-                                : longev.engagement_until
-                                  ? t('commissions.duration_until_badge', { date: fmtDate(longev.engagement_until), defaultValue: "Jusqu'au {{date}}" })
-                                  : t('commissions.duration_bounded_badge', 'Durée limitée')}
+                              {t('commissions.duration_until_badge', { date: fmtDate(c.engagement_until), defaultValue: "Jusqu'au {{date}}" })}
                             </span>
                           );
                         })()}

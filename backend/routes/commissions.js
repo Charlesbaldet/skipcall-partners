@@ -10,7 +10,6 @@ const { decomposeAmountWithTax } = require('../utils/commissionFormula');
 const PennylaneService = require('../services/pennylaneService');
 const { logAudit } = require('../services/auditLog');
 const { decrypt } = require('../utils/crypto');
-const { bulkResolveTiers } = require('../utils/tierResolver');
 
 const router = express.Router();
 
@@ -179,7 +178,7 @@ router.get('/', async (req, res) => {
               c.invoice_uploaded_at,
               c.engagement_type, c.engagement_periods,
               c.amount_ht, c.tax_rate_applied, c.amount_tax, c.amount_ttc,
-              c.is_recurring, c.is_perpetual, c.engagement_until, c.current_revision_index,
+              c.is_recurring, c.is_perpetual, c.engagement_until, c.current_revision_index, c.tier_at_won,
               (c.invoice_url IS NOT NULL) AS has_invoice,
               c.qonto_transfer_id, c.payment_initiated_at, c.payment_completed_at,
               c.payment_reference, c.payment_error,
@@ -207,32 +206,18 @@ router.get('/', async (req, res) => {
     const totalApproved = rows.filter(r => r.status === 'awaiting_invoice' || r.status === 'pending_validation').reduce((s, r) => s + parseFloat(r.amount), 0);
     const totalPaid = rows.filter(r => r.status === 'paid').reduce((s, r) => s + parseFloat(r.amount), 0);
 
-    // E2 (refonte): expose the partner's CURRENT-tier longevity
-    // policy on every row so the FE can resolve the displayed
-    // longevity dynamically (resolveCommissionLongevity). The cached
-    // is_perpetual/engagement_until columns on the commission row
-    // become an audit-only snapshot — never the source of truth at
-    // read time. bulkResolveTiers groups the per-partner stats query
-    // so we add one round-trip per LIST call, not one per row.
-    const partnerIds = [...new Set(rows.map(r => r.partner_id).filter(Boolean))];
-    let tierByPartner = new Map();
-    try {
-      tierByPartner = await bulkResolveTiers(req.tenantId, partnerIds);
-    } catch (e) {
-      console.warn('[commissions.list] tier resolution skipped:', e.message);
-    }
-
-    const enriched = rows.map(c => {
-      const tier = tierByPartner.get(c.partner_id);
-      return {
-        ...c,
-        payment_due_date: c.approved_at ? nextQuarterEnd(c.approved_at) : null,
-        is_late: c.approved_at && c.status !== 'paid' && new Date(nextQuarterEnd(c.approved_at)) < new Date(),
-        partner_current_longevity_mode:   tier ? tier.longevity_mode   : null,
-        partner_current_longevity_months: tier ? tier.longevity_months : null,
-        partner_current_tier_name:        tier ? tier.name             : null,
-      };
-    });
+    // E2-bis: longevity is read straight from the SNAPSHOT columns
+    // written on the commission at the won transition
+    // (is_perpetual / engagement_until / tier_at_won). No dynamic
+    // resolution against the partner's CURRENT tier — that was the
+    // dynamic-resolver pattern from the previous E2 cut and has
+    // been intentionally removed. A partner tier change does NOT
+    // touch existing commissions.
+    const enriched = rows.map(c => ({
+      ...c,
+      payment_due_date: c.approved_at ? nextQuarterEnd(c.approved_at) : null,
+      is_late: c.approved_at && c.status !== 'paid' && new Date(nextQuarterEnd(c.approved_at)) < new Date(),
+    }));
 
     res.json({ commissions: enriched, totalPending, totalApproved, totalPaid });
   } catch (err) {
