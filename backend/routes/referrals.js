@@ -225,16 +225,42 @@ router.get('/:id', async (req, res) => {
     // commission so the deal modal's "À vie / Durée limitée" toggle
     // can hydrate from the saved value on re-open. Returns nulls when
     // there's no commission yet (= legacy default = bounded).
+    // E5/partner-read-access: also expose cycle_index + tier_at_won +
+    // amount_ttc for the partner's read-only Pipeline tab so it can
+    // render the cycle counter and the "X €/durée · N versés" line
+    // identical to the admin Kanban card.
     const { rows: durRows } = await query(
-      `SELECT is_recurring, is_perpetual, engagement_until
+      `SELECT is_recurring, is_perpetual, engagement_until,
+              cycle_index, tier_at_won,
+              amount_ht, tax_rate_applied, amount_tax, amount_ttc, rate
          FROM commissions
         WHERE referral_id = $1 AND deleted_at IS NULL
-        ORDER BY created_at DESC LIMIT 1`,
+          AND status <> 'cancelled'
+        ORDER BY cycle_index DESC, created_at DESC LIMIT 1`,
       [req.params.id]
     );
     referral.commission_is_recurring = !!durRows[0]?.is_recurring;
     referral.commission_is_perpetual = !!durRows[0]?.is_perpetual;
     referral.commission_engagement_until = durRows[0]?.engagement_until || null;
+    referral.commission_cycle_index = durRows[0]?.cycle_index || null;
+    referral.commission_tier_at_won = durRows[0]?.tier_at_won || null;
+    referral.commission_amount_ht = durRows[0]?.amount_ht || null;
+    referral.commission_tax_rate_applied = durRows[0]?.tax_rate_applied || null;
+    referral.commission_amount_tax = durRows[0]?.amount_tax || null;
+    referral.commission_amount_ttc = durRows[0]?.amount_ttc || null;
+    referral.commission_rate = durRows[0]?.rate || null;
+
+    // Count "N versés" for the partner card readout. Same series
+    // definition as E5 (cancelled excluded).
+    const { rows: [paidRow] } = await query(
+      `SELECT COUNT(*)::int AS paid_count
+         FROM commissions
+        WHERE referral_id = $1
+          AND deleted_at IS NULL
+          AND status = 'paid'`,
+      [req.params.id]
+    );
+    referral.commission_paid_count = paidRow?.paid_count || 0;
 
     // Resolve the partner's current tier so the deal modal can show
     // the badge + the rate the override is being compared against.
