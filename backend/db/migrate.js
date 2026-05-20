@@ -1769,6 +1769,22 @@ async function runMigrations() {
     console.error('[migrate.v60] failed:', err.message);
   }
 
+  // v61: phase F2a-FIX2 — patch préventif des colonnes Qonto restantes
+  // sur commission_payout_batches que la création de table v59 avait
+  // oubliées. Audit grep exhaustif de routes/payouts.js (cf. récap
+  // F2a-FIX2) : seules ces 2 colonnes manquaient encore. Sans elles,
+  // pay-qonto crasherait au premier clic admin sur un batch
+  // ready_to_pay (UPDATE sur qonto_idempotency_key + qonto_sca_session_token
+  // à payouts.js:543 et :576). ADD COLUMN IF NOT EXISTS = idempotent ;
+  // aucune valeur à backfiller (la table reste vide d'usage pré-fix).
+  try {
+    await query(`ALTER TABLE commission_payout_batches ADD COLUMN IF NOT EXISTS qonto_idempotency_key TEXT`);
+    await query(`ALTER TABLE commission_payout_batches ADD COLUMN IF NOT EXISTS qonto_sca_session_token TEXT`);
+    console.log('[payout] v61 commission_payout_batches.qonto_idempotency_key + qonto_sca_session_token ready');
+  } catch (err) {
+    console.error('[migrate.v61] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
