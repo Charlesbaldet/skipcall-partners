@@ -612,6 +612,72 @@ router.post('/batches/:id/pay-qonto', authorize('admin'), async (req, res) => {
   }
 });
 
+// ─── POST /admin/purge-orphan-batches ──────────────────────────────
+// Maintenance admin. Supprime physiquement les batches du tenant
+// courant qui n'ont AUCUNE commission liée ET aucun transfer Qonto
+// initié. Cible : les fantômes laissés par un create-batches qui a
+// commit le batch mais raté l'UPDATE commissions dans la même boucle
+// non-atomique (cf. bug F2a pré-FIX). Ces fantômes bloquent toute
+// nouvelle paie sur le même (partner, période) via l'index unique
+// partial commission_payout_batches_uidx.
+//
+// 3 garde-fous critiques côté SQL (ordonnés dans le WHERE) :
+//   1. tenant_id = req.tenantId      — scope strict, jamais cross-tenant
+//   2. NOT EXISTS (commissions liées) — ne supprime jamais un batch qui
+//                                       a des commissions attachées
+//   3. qonto_transfer_id IS NULL      — ne supprime jamais un batch dont
+//                                       un virement a été initié, même
+//                                       sans commission liée (cas
+//                                       théorique mais à blinder)
+// + deleted_at IS NULL pour ne pas re-supprimer un soft-delete.
+//
+// Hard DELETE (pas soft) : on veut libérer le partial unique index
+// pour qu'un re-clic create-batches refasse le batch proprement.
+router.post('/admin/purge-orphan-batches', authorize('admin'), async (req, res) => {
+  try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+
+    const { rows: candidates } = await query(
+      `SELECT b.id
+         FROM commission_payout_batches b
+        WHERE b.tenant_id = $1
+          AND b.deleted_at IS NULL
+          AND b.qonto_transfer_id IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM commissions c
+             WHERE c.payout_batch_id = b.id
+          )`,
+      [req.tenantId]
+    );
+    if (candidates.length === 0) {
+      return res.json({ purged: 0, batch_ids: [] });
+    }
+    const ids = candidates.map(r => r.id);
+
+    // Re-applique les 3 mêmes gardes côté DELETE — défense en profondeur,
+    // pour qu'une race (un create-batches qui attache des commissions
+    // entre le SELECT et le DELETE, ou un pay-qonto qui pose un
+    // qonto_transfer_id entre-temps) ne fasse pas perdre des données.
+    const { rowCount } = await query(
+      `DELETE FROM commission_payout_batches
+        WHERE id = ANY($1::uuid[])
+          AND tenant_id = $2
+          AND qonto_transfer_id IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM commissions c
+             WHERE c.payout_batch_id = commission_payout_batches.id
+          )`,
+      [ids, req.tenantId]
+    );
+
+    console.log(`[payouts.purge-orphan-batches] tenant ${req.tenantId} purged ${rowCount}/${ids.length} orphan batches`);
+    res.json({ purged: rowCount, batch_ids: ids });
+  } catch (err) {
+    console.error('[payouts.purge-orphan-batches] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ─── reconcileBatchTransfers — worker exporté ───────────────────────
 // Calque exact de reconcileQontoTransfers (commissions.js:1378-1788)
 // adapté au shape commission_payout_batches. Chaîné depuis le tick
