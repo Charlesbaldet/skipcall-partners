@@ -165,7 +165,7 @@ router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
-  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model, recurring_billing_enabled, recurring_renewal_trigger } = req.body;
+  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model, recurring_billing_enabled, recurring_renewal_trigger, payout_cadence } = req.body;
 
   let cleanSlug = null;
   if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
@@ -227,6 +227,21 @@ router.put('/:id', authenticate, async (req, res) => {
         console.error('[tenants PUT] recurring_renewal_trigger update skipped:', e.message);
       }
     }
+
+    // Payout cadence (F1 schema v59). Whitelist the value — the CHECK
+    // constraint catches garbage too, but pinching it here gives a
+    // clean 400 instead of a 500. Pre-v59 tenants table lacks the
+    // column — wrap so an unmigrated DB doesn't 500.
+    if (payout_cadence !== undefined) {
+      if (!['unitary', 'monthly', 'quarterly'].includes(payout_cadence)) {
+        return res.status(400).json({ error: 'invalid_payout_cadence', allowed: ['unitary', 'monthly', 'quarterly'] });
+      }
+      try {
+        await query('UPDATE tenants SET payout_cadence = $1 WHERE id = $2', [payout_cadence, req.params.id]);
+      } catch (e) {
+        console.error('[tenants PUT] payout_cadence update skipped:', e.message);
+      }
+    }
     clearTenantCache();
     auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
     logAudit(req, 'settings.updated', 'tenant', req.params.id, { name, slug: cleanSlug });
@@ -266,7 +281,8 @@ router.get('/me', authenticate, async (req, res) => {
     const { rows } = await query(
       `SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url, revenue_model,
               COALESCE(recurring_billing_enabled, FALSE)         AS recurring_billing_enabled,
-              COALESCE(recurring_renewal_trigger, 'on_paid')      AS recurring_renewal_trigger
+              COALESCE(recurring_renewal_trigger, 'on_paid')      AS recurring_renewal_trigger,
+              COALESCE(payout_cadence, 'unitary')                 AS payout_cadence
          FROM tenants WHERE id = $1`,
       [req.user.tenantId]
     );

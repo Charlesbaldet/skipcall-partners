@@ -1662,6 +1662,99 @@ async function runMigrations() {
     console.error('[migrate.v58] failed:', err.message);
   }
 
+  // v59: phase F1 — paie groupée par partenaire (schéma de fondation).
+  // SCHEMA-ONLY — zéro changement comportemental. Aucun code applicatif
+  // ne lit/écrit ces colonnes en F1 ; la mécanique de batch (sélection
+  // des commissions, agrégation, paiement groupé, upload facture
+  // partenaire au total) arrive en F2+. Tous les tenants restent en
+  // cadence 'unitary' par défaut, ce qui préserve byte-for-byte le
+  // flux pay-qonto / upload-invoice actuel.
+  //
+  // Model:
+  //   - commission_payout_batches: 1 row = 1 paie groupée destinée à
+  //     un partenaire pour une période (YYYY-MM mensuel, YYYY-Q1..Q4
+  //     trimestriel). Statut métier indépendant de celui d'une
+  //     commission — le _v3 actuel (pending_approval/awaiting_invoice/
+  //     pending_validation/paid/cancelled) reste valable et n'est pas
+  //     touché. exception=TRUE = batch ad-hoc 1 commission ("Payer
+  //     hors batch"), non soumis à l'unicité (tenant, partner, period).
+  //   - tenants.payout_cadence: 'unitary' (= comportement actuel,
+  //     défaut) | 'monthly' | 'quarterly'. Le sélecteur Paramètres →
+  //     Commission le persiste ; aucun worker ne le consomme en F1.
+  //   - commissions.payout_batch_id: nullable FK. NULL = commission
+  //     traitée à l'unité (comportement actuel). F2+ attachera les
+  //     commissions éligibles à leur batch.
+  //
+  // Idempotence: CREATE ... IF NOT EXISTS partout + gates pg_constraint
+  // pour les CHECK + UPDATE backfill défensif (le DEFAULT 'unitary'
+  // fait le travail sur ADD COLUMN, l'UPDATE rattrape un éventuel run
+  // partiellement crashé qui aurait posé la colonne sans DEFAULT).
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS commission_payout_batches (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        partner_id UUID NOT NULL REFERENCES partners(id) ON DELETE RESTRICT,
+        period TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending_review',
+        total_amount_ht NUMERIC(12,2) NOT NULL DEFAULT 0,
+        total_amount_tax NUMERIC(12,2) NOT NULL DEFAULT 0,
+        total_amount_ttc NUMERIC(12,2) NOT NULL DEFAULT 0,
+        invoice_url TEXT,
+        invoice_filename TEXT,
+        invoice_uploaded_at TIMESTAMPTZ,
+        qonto_transfer_id TEXT,
+        qonto_request_body JSONB,
+        payment_initiated_at TIMESTAMPTZ,
+        payment_completed_at TIMESTAMPTZ,
+        paid_at TIMESTAMPTZ,
+        payment_error TEXT,
+        exception BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        deleted_at TIMESTAMPTZ
+      )
+    `);
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'commission_payout_batches_status_check_v1') THEN
+          ALTER TABLE commission_payout_batches ADD CONSTRAINT commission_payout_batches_status_check_v1
+            CHECK (status IN ('pending_review','awaiting_invoice','ready_to_pay','paid','cancelled'));
+        END IF;
+      END $$
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS commission_payout_batches_tenant_partner
+                   ON commission_payout_batches(tenant_id, partner_id) WHERE deleted_at IS NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS commission_payout_batches_status
+                   ON commission_payout_batches(tenant_id, status) WHERE deleted_at IS NULL`);
+    await query(`CREATE UNIQUE INDEX IF NOT EXISTS commission_payout_batches_uidx
+                   ON commission_payout_batches(tenant_id, partner_id, period)
+                   WHERE exception = FALSE AND deleted_at IS NULL`);
+
+    await query(`ALTER TABLE tenants
+                   ADD COLUMN IF NOT EXISTS payout_cadence TEXT NOT NULL DEFAULT 'unitary'`);
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tenants_payout_cadence_check') THEN
+          ALTER TABLE tenants ADD CONSTRAINT tenants_payout_cadence_check
+            CHECK (payout_cadence IN ('unitary','monthly','quarterly'));
+        END IF;
+      END $$
+    `);
+    const { rowCount: cadenceBackfilled } = await query(
+      `UPDATE tenants SET payout_cadence = 'unitary' WHERE payout_cadence IS NULL`
+    );
+
+    await query(`ALTER TABLE commissions
+                   ADD COLUMN IF NOT EXISTS payout_batch_id UUID REFERENCES commission_payout_batches(id) ON DELETE SET NULL`);
+    await query(`CREATE INDEX IF NOT EXISTS commissions_payout_batch_idx
+                   ON commissions(payout_batch_id) WHERE deleted_at IS NULL AND payout_batch_id IS NOT NULL`);
+
+    console.log(`[payout] v59 commission_payout_batches + tenants.payout_cadence + commissions.payout_batch_id ready · backfilled ${cadenceBackfilled} tenants to 'unitary'`);
+  } catch (err) {
+    console.error('[migrate.v59] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

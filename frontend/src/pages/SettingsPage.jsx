@@ -3086,9 +3086,11 @@ function CommissionTab() {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
   const [trigger, setTrigger] = useState('on_paid');
+  const [payoutCadence, setPayoutCadence] = useState('unitary');
   const [loading, setLoading] = useState(true);
   const [savingEnabled, setSavingEnabled] = useState(false);
   const [savingTrigger, setSavingTrigger] = useState(false);
+  const [savingPayoutCadence, setSavingPayoutCadence] = useState(false);
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
@@ -3100,6 +3102,7 @@ function CommissionTab() {
         if (!alive) return;
         setEnabled(!!t0?.recurring_billing_enabled);
         setTrigger(t0?.recurring_renewal_trigger || 'on_paid');
+        setPayoutCadence(t0?.payout_cadence || 'unitary');
       } catch (e) {
         if (alive) setMsg({ type: 'error', text: e.message || t('common.error') });
       }
@@ -3139,6 +3142,22 @@ function CommissionTab() {
     setSavingTrigger(false);
   };
 
+  const setPayoutCadenceMode = async (mode) => {
+    if (mode === payoutCadence) return;
+    const prev = payoutCadence;
+    setPayoutCadence(mode);
+    setSavingPayoutCadence(true);
+    try {
+      await api.updateMyTenant({ payout_cadence: mode });
+      setMsg({ type: 'success', text: t('programme.saved') });
+      setTimeout(() => setMsg(null), 2000);
+    } catch (e) {
+      setPayoutCadence(prev);
+      setMsg({ type: 'error', text: e.message || t('common.error') });
+    }
+    setSavingPayoutCadence(false);
+  };
+
   if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
 
   return (
@@ -3176,48 +3195,84 @@ function CommissionTab() {
         </div>
       </div>
 
-      {/* Renewal trigger — visible only when master switch is ON. */}
+      {/* Renewal trigger + payout cadence — visible only when master
+          switch is ON. The cadence selector lives in the same gated
+          branch: it only makes sense once recurring billing is on. */}
       {!enabled ? (
         <div style={{ padding: '14px 16px', borderRadius: 10, background: '#f8fafc', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: 13 }}>
           {t('settings.commission.activate_first', 'Activez d\'abord la facturation récurrente pour configurer le déclenchement des renouvellements.')}
         </div>
       ) : (
-        <div style={{ padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
-          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 12 }}>
-            {t('settings.commission.trigger_title', 'Déclenchement du renouvellement')}
+        <>
+          <div style={{ padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 12 }}>
+              {t('settings.commission.trigger_title', 'Déclenchement du renouvellement')}
+            </div>
+            {[
+              {
+                id: 'on_paid',
+                label: t('settings.commission.trigger_on_paid_label', 'Conditionné à une confirmation'),
+                desc:  t('settings.commission.trigger_on_paid_desc', 'Le prochain cycle n\'est préparé que lorsque le cycle précédent a été payé au partenaire.'),
+              },
+              {
+                id: 'temporal',
+                label: t('settings.commission.trigger_temporal_label', 'Purement temporel'),
+                desc:  t('settings.commission.trigger_temporal_desc', 'Le prochain cycle est préparé dès que la durée d\'engagement s\'est écoulée, indépendamment du paiement (limité à 2 cycles non réglés en attente).'),
+              },
+            ].map(opt => {
+              const active = trigger === opt.id;
+              return (
+                <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingTrigger ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
+                  <input
+                    type="radio"
+                    name="renewal-trigger"
+                    value={opt.id}
+                    checked={active}
+                    disabled={savingTrigger}
+                    onChange={() => setTriggerMode(opt.id)}
+                    style={{ marginTop: 3, cursor: savingTrigger ? 'wait' : 'pointer' }}
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
+                    <div style={{ color: '#64748b', fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>{opt.desc}</div>
+                  </div>
+                </label>
+              );
+            })}
           </div>
-          {[
-            {
-              id: 'on_paid',
-              label: t('settings.commission.trigger_on_paid_label', 'Conditionné à une confirmation'),
-              desc:  t('settings.commission.trigger_on_paid_desc', 'Le prochain cycle n\'est préparé que lorsque le cycle précédent a été payé au partenaire.'),
-            },
-            {
-              id: 'temporal',
-              label: t('settings.commission.trigger_temporal_label', 'Purement temporel'),
-              desc:  t('settings.commission.trigger_temporal_desc', 'Le prochain cycle est préparé dès que la durée d\'engagement s\'est écoulée, indépendamment du paiement (limité à 2 cycles non réglés en attente).'),
-            },
-          ].map(opt => {
-            const active = trigger === opt.id;
-            return (
-              <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingTrigger ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
-                <input
-                  type="radio"
-                  name="renewal-trigger"
-                  value={opt.id}
-                  checked={active}
-                  disabled={savingTrigger}
-                  onChange={() => setTriggerMode(opt.id)}
-                  style={{ marginTop: 3, cursor: savingTrigger ? 'wait' : 'pointer' }}
-                />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
-                  <div style={{ color: '#64748b', fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>{opt.desc}</div>
-                </div>
-              </label>
-            );
-          })}
-        </div>
+
+          <div style={{ padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', marginTop: 16 }}>
+            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+              {t('settings.commission.payout_cadence_title', 'Cadence de paiement groupé')}
+            </div>
+            <div style={{ color: '#64748b', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
+              {t('settings.commission.payout_cadence_desc', 'Définit la fréquence à laquelle vous payez vos partenaires. La cadence unitary conserve le comportement actuel.')}
+            </div>
+            {[
+              { id: 'unitary',   label: t('settings.commission.payout_cadence_unitary_label',   'Une commission = un paiement (comportement actuel)') },
+              { id: 'monthly',   label: t('settings.commission.payout_cadence_monthly_label',   'Mensuel — un virement et une facture par mois et par partenaire') },
+              { id: 'quarterly', label: t('settings.commission.payout_cadence_quarterly_label', 'Trimestriel — un virement et une facture par trimestre et par partenaire') },
+            ].map(opt => {
+              const active = payoutCadence === opt.id;
+              return (
+                <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingPayoutCadence ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
+                  <input
+                    type="radio"
+                    name="payout-cadence"
+                    value={opt.id}
+                    checked={active}
+                    disabled={savingPayoutCadence}
+                    onChange={() => setPayoutCadenceMode(opt.id)}
+                    style={{ marginTop: 3, cursor: savingPayoutCadence ? 'wait' : 'pointer' }}
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
