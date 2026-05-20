@@ -196,6 +196,39 @@ function commissionApproved({ partnerName, prospectName, amount, currency, dashb
   });
 }
 
+// F2a — paie groupée. Email envoyé au partenaire à la création d'un
+// batch (status awaiting_invoice) : récap des N commissions, total
+// HT / TVA / TTC, liste des deals, CTA "Déposer ma facture". Remplace
+// commissionApproved en cadence monthly/quarterly (commissions.js
+// conditionne par tenant.payout_cadence).
+function payoutBatchInvoiceRequest({ partner_first_name, period_label, commission_count, total_ht, total_tax, total_ttc, deals_list, deposit_link } = {}) {
+  const ttcLabel = fmtMoney(total_ttc, '€');
+  const htLabel  = fmtMoney(total_ht,  '€');
+  const taxLabel = fmtMoney(total_tax, '€');
+  const list = Array.isArray(deals_list) ? deals_list : [];
+  const dealsHtml = list.length ? `
+      <p style="margin:16px 0 8px;font-weight:600;color:#0f172a;">Détail des commissions :</p>
+      <ul style="margin:0 0 16px;padding-left:20px;color:#374151;line-height:1.7;">
+        ${list.map(d => `<li>${d.prospect_name || ''}${d.company ? ' — ' + d.company : ''} — <strong>${fmtMoney(d.amount_ttc, '€')}</strong></li>`).join('')}
+      </ul>` : '';
+  return renderEmail({
+    subject: `Votre paie groupée de ${period_label} — ${ttcLabel} TTC`,
+    heading: 'Paie groupée à facturer',
+    bodyHtml: `
+      <p>Bonjour ${partner_first_name || ''},</p>
+      <p><strong>${commission_count}</strong> commission${commission_count > 1 ? 's' : ''} approuvée${commission_count > 1 ? 's' : ''} pour la période <strong>${period_label}</strong>.</p>
+      <div class="highlight" style="text-align:center;">
+        <div style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">Total à facturer</div>
+        <div class="stat">${ttcLabel}</div>
+        <div style="color:#475569;font-size:13px;margin-top:6px;">${htLabel} HT + ${taxLabel} TVA</div>
+      </div>
+      ${dealsHtml}
+      <p>Merci de déposer <strong>une seule facture mensuelle</strong> pour le total ci-dessus.</p>`,
+    ctaUrl: deposit_link || `${FRONTEND}/partner/payments`,
+    ctaLabel: 'Déposer ma facture',
+  });
+}
+
 function commissionPaymentSent({ partnerName, amount, amountHt, amountTax, amountTtc, taxRate, currency, tenantName, dealName, transferReference, transferDateLabel, ibanLast4, dashboardUrl } = {}) {
   // Headline = TTC, which is what we wired to Qonto. Caller passes
   // `amount = amount_ttc ?? amount` so the email stays correct on
@@ -497,6 +530,19 @@ const PREVIEW_SAMPLES = {
   referralStatusChange: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', newStatusLabel: 'Proposition envoyée' },
   commissionToApprove: { adminName: 'Charles', partnerName: 'Partner Pro', prospectName: 'Jean Dupont', amount: 1250, currency: '€' },
   commissionApproved: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', amount: 1250, currency: '€' },
+  payoutBatchInvoiceRequest: {
+    partner_first_name: 'Partner Pro',
+    period_label: 'mai 2026',
+    commission_count: 3,
+    total_ht: 3000,
+    total_tax: 600,
+    total_ttc: 3600,
+    deals_list: [
+      { prospect_name: 'Jean Dupont',  company: 'Dupont SARL',   amount_ttc: 1500 },
+      { prospect_name: 'Marie Curie',  company: 'Curie Labs',    amount_ttc: 1200 },
+      { prospect_name: 'Paul Martin',  company: 'Martin & Co',   amount_ttc:  900 },
+    ],
+  },
   commissionRejected: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', reason: "Le deal n'a pas encore été officiellement signé." },
   commissionCancelled: { partnerName: 'Partner Pro', prospectName: 'Jean Dupont', dealName: 'Dupont SARL', amount: 1250, currency: '€', tenantName: 'Acme Partenaires', reason: 'Le client a annulé son contrat.' },
   commissionPaymentSent: { partnerName: 'Partner Pro', amount: 1250, currency: '€', tenantName: 'Acme Partenaires', dealName: 'Dupont SARL', transferReference: 'REFBOOSTCOMABCDEF123456', transferDateLabel: '30 avril 2026', ibanLast4: '0185' },
@@ -522,6 +568,7 @@ const TEMPLATES = {
   referralStatusChange,
   commissionToApprove,
   commissionApproved,
+  payoutBatchInvoiceRequest,
   commissionRejected,
   commissionCancelled,
   commissionPaymentSent,

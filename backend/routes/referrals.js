@@ -705,6 +705,31 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
 
       if (comm.length > 0) {
         const target = comm[0];
+        // F2a — batch-active guard (E3 extension). A commission
+        // attached to a batch in awaiting_invoice / ready_to_pay
+        // must not have its deal_value revised under the partner's
+        // feet — the batch total is already locked-in for the
+        // partner's invoice. The admin must first retire the
+        // commission from its batch (F3 endpoint) before revising.
+        const { rows: batchActive } = await client.query(
+          `SELECT 1
+             FROM commissions c
+             JOIN commission_payout_batches b ON b.id = c.payout_batch_id
+            WHERE c.referral_id = $1
+              AND c.deleted_at IS NULL
+              AND b.deleted_at IS NULL
+              AND b.status IN ('awaiting_invoice','ready_to_pay')
+            LIMIT 1`,
+          [req.params.id]
+        );
+        if (batchActive.length > 0) {
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(409).json({
+            error: 'commission_in_active_batch',
+            message: 'Cette commission est incluse dans un batch en cours. Retirez-la du batch avant de réviser/annuler.',
+          });
+        }
         // Tenant flag: only the opted-in tenants take the new path.
         const { rows: [tf] } = await client.query(
           'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
@@ -827,6 +852,32 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       );
       if (comm.length > 0) {
         const target = comm[0];
+        // F2a — batch-active guard (E4 extension). Même rationale
+        // que côté E3 ci-dessus : un deal qu'on bascule en lost
+        // (ou hors won) alors qu'une commission est déjà dans un
+        // batch actif doit d'abord être retiré du batch. Sans ce
+        // garde-fou, le batch total se retrouverait à inclure une
+        // commission cancelled, désynchronisant le TTC vs la
+        // facture déjà déposée par le partenaire.
+        const { rows: batchActive } = await client.query(
+          `SELECT 1
+             FROM commissions c
+             JOIN commission_payout_batches b ON b.id = c.payout_batch_id
+            WHERE c.referral_id = $1
+              AND c.deleted_at IS NULL
+              AND b.deleted_at IS NULL
+              AND b.status IN ('awaiting_invoice','ready_to_pay')
+            LIMIT 1`,
+          [req.params.id]
+        );
+        if (batchActive.length > 0) {
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(409).json({
+            error: 'commission_in_active_batch',
+            message: 'Cette commission est incluse dans un batch en cours. Retirez-la du batch avant de réviser/annuler.',
+          });
+        }
         // E4 fork: a transition specifically to 'lost' on a
         // recurring commission of an opted-in tenant is allowed
         // through; the leftWon block below will flip the

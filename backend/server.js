@@ -43,6 +43,7 @@ const partnerNotificationPrefsRoutes = require('./routes/partnerNotificationPref
 const partnerBankInfoRoutes = require('./routes/partnerBankInfo');
 const partnerDataExportRoutes = require('./routes/partnerDataExport');
 const qontoRoutes = require('./routes/qonto');
+const payoutsRoutes = require('./routes/payouts');
 const dashboardStatsRoutes = require('./routes/dashboardStats');
 const webhooksRoutes = require('./routes/webhooks');
 const trashRoutes = require('./routes/trash');
@@ -229,6 +230,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/commissions', commissionRoutes);
+app.use('/api/payouts', payoutsRoutes);
 app.use('/api/trash', trashRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/dashboard', dashboardStatsRoutes);
@@ -420,7 +422,16 @@ app.listen(PORT, () => {
   // Qonto webhooks aren't yet wired so polling is the source of truth.
   if (process.env.QONTO_CLIENT_ID) {
     const { reconcileQontoTransfers } = require('./routes/commissions');
-    const tick = () => reconcileQontoTransfers(null).catch(e => logger.error('qonto.poll tick error', { error: e.message }));
+    const { reconcileBatchTransfers } = require('./routes/payouts');
+    // F2a: chain the batch reconcile pass after the commission pass on
+    // the same tick. Single cron, two additive scans — failing the
+    // batch pass never aborts the commission pass.
+    const tick = async () => {
+      try { await reconcileQontoTransfers(null); }
+      catch (e) { logger.error('qonto.poll tick error', { error: e.message }); }
+      try { await reconcileBatchTransfers(null); }
+      catch (e) { logger.error('qonto.poll batch tick error', { error: e.message }); }
+    };
     setTimeout(tick, 30_000);          // first sweep ~30 s after boot
     setInterval(tick, 5 * 60 * 1000);  // then every 5 min
     logger.info('qonto transfer polling worker started');

@@ -481,6 +481,19 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
 
     (async () => {
       try {
+        // F2a: pour les tenants en cadence monthly/quarterly, on ne
+        // veut PAS spammer le partenaire d'un email par commission
+        // approuvée — il recevra un seul email payoutBatchInvoiceRequest
+        // à la création du batch (cf. routes/payouts.js create-batches).
+        // L'in-app reste envoyée dans tous les cas : le partenaire
+        // voit l'approval immédiatement dans le bell, l'email batch
+        // arrive plus tard à la clôture de la période.
+        const { rows: [tenantRow] } = await query(
+          `SELECT COALESCE(payout_cadence, 'unitary') AS payout_cadence FROM tenants WHERE id = $1`,
+          [existing.tenant_id]
+        );
+        const cadence = tenantRow?.payout_cadence || 'unitary';
+        const skipEmail = cadence !== 'unitary';
         const users = await partnerUsers(existing.partner_id);
         const amountLabel = fmtMoney(existing.amount);
         for (const u of users) {
@@ -490,6 +503,10 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
             link: '/partner/payments',
             tenantId: existing.tenant_id,
           }).catch(() => {});
+          if (skipEmail) {
+            console.log(`[commission.approve] skipped commissionApproved email — tenant cadence=${cadence}`);
+            continue;
+          }
           const p = await notify.shouldNotifyPartner(existing.partner_id, 'email_commission_update');
           if (p.email) {
             const tpl = require('../utils/emailTemplates').commissionApproved({
