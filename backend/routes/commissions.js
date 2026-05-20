@@ -185,6 +185,7 @@ router.get('/', async (req, res) => {
               c.payment_reference, c.payment_error,
               (c.qonto_sca_session_token IS NOT NULL) AS sca_pending,
               c.pennylane_invoice_id, c.pennylane_status,
+              c.payout_batch_id,
               p.name as partner_name, p.contact_name as partner_contact,
               r.prospect_name, r.prospect_company
        FROM commissions c

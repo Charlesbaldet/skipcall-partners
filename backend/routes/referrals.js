@@ -553,11 +553,9 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     // for every list endpoint that returns the row. 5 KB is plenty
     // for a deal note; lost_reason fits in 1 KB.
     if (typeof notes === 'string' && notes.length > 5000) {
-      client.release();
       return res.status(400).json({ error: 'notes_too_long', max: 5000 });
     }
     if (typeof lost_reason === 'string' && lost_reason.length > 1000) {
-      client.release();
       return res.status(400).json({ error: 'lost_reason_too_long', max: 1000 });
     }
 
@@ -573,7 +571,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     const { rows: [current] } = await client.query(selectQuery, selectParams);
 
     if (!current) {
-      client.release();
       return res.status(404).json({ error: 'Referral introuvable' });
     }
 
@@ -586,7 +583,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     // editable.
     if (req.user?.role === 'partner') {
       if (!req.user.partnerId || current.partner_id !== req.user.partnerId) {
-        client.release();
         return res.status(403).json({ error: 'partner_not_owner' });
       }
       // Anything that isn't explicitly partner_managed (NULL legacy
@@ -594,7 +590,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       // partner. The frontend already blocks the drag, but the API
       // mirrors it so a hand-rolled request can't bypass the lock.
       if (current.lead_handling !== 'partner_managed') {
-        client.release();
         return res.status(403).json({ error: 'client_prospect_locked' });
       }
       // Strip admin-only fields out of the partner's payload so we
@@ -631,7 +626,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         [stage_id, req.tenantId || current.tenant_id]
       );
       if (!s) {
-        client.release();
         return res.status(400).json({ error: 'stage_id introuvable' });
       }
       // Map flags → legacy status. is_won / is_lost always win so the
@@ -724,7 +718,10 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         );
         if (batchActive.length > 0) {
           await client.query('ROLLBACK');
-          client.release();
+          // Pas de client.release() ici — le finally du handler s'en
+          // charge en sortie de try. Double release = "Release called
+          // on client which has already been released to the pool" qui
+          // crashait le process Node (cf. fix F2a-FIX4).
           return res.status(409).json({
             error: 'commission_in_active_batch',
             message: 'Cette commission est incluse dans un batch en cours. Retirez-la du batch avant de réviser/annuler.',
@@ -741,7 +738,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         if (!goRevisionPath) {
           // ─── Legacy lock — UNCHANGED ──────────────────────────
           await client.query('ROLLBACK');
-          client.release();
           return res.status(400).json({
             error: 'deal_value_locked',
             message: 'Le montant ne peut plus être modifié car une commission est déjà en cours de traitement.',
@@ -755,7 +751,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         // one figure and book another. Refuse, no revision created.
         if (target.qonto_transfer_id && !target.payment_completed_at) {
           await client.query('ROLLBACK');
-          client.release();
           return res.status(409).json({
             error: 'revision_blocked_payment_in_flight',
             message: 'Un virement est déjà initié pour cette commission. Attendez sa finalisation avant de modifier le montant.',
@@ -872,7 +867,10 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         );
         if (batchActive.length > 0) {
           await client.query('ROLLBACK');
-          client.release();
+          // Pas de client.release() ici — le finally du handler s'en
+          // charge en sortie de try. Double release = "Release called
+          // on client which has already been released to the pool" qui
+          // crashait le process Node (cf. fix F2a-FIX4).
           return res.status(409).json({
             error: 'commission_in_active_batch',
             message: 'Cette commission est incluse dans un batch en cours. Retirez-la du batch avant de réviser/annuler.',
@@ -897,7 +895,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           // initiated-but-not-finalised transfer on it.
           if (target.qonto_transfer_id && !target.payment_completed_at) {
             await client.query('ROLLBACK');
-            client.release();
             return res.status(409).json({
               error: 'lost_blocked_payment_in_flight',
               message: 'Un virement est déjà initié pour cette commission. Attendez sa finalisation avant de clôturer le deal en perdu.',
@@ -908,7 +905,6 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         } else {
           // ─── Legacy lock — UNCHANGED ──────────────────────
           await client.query('ROLLBACK');
-          client.release();
           return res.status(400).json({
             error: 'commission_locked',
             message: 'Cette commission est déjà en cours de paiement, le statut ne peut pas être modifié.',
