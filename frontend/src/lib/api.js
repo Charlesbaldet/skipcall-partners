@@ -280,6 +280,10 @@ class ApiClient {
   payCommissionViaQonto(id) { return this.request(`/commissions/${id}/pay-qonto`, { method: 'POST' }); }
   payCommissionsBulk(ids) { return this.request('/commissions/pay-bulk', { method: 'POST', body: JSON.stringify({ commission_ids: ids }) }); }
   pollQontoTransfers() { return this.request('/commissions/poll-qonto', { method: 'POST' }); }
+
+  // Payout batches (F2a/F2b — paie groupée par partenaire)
+  previewPayoutBatches() { return this.request('/payouts/preview-batches', { method: 'POST', body: JSON.stringify({}) }); }
+  createPayoutBatches(body = { confirm: true }) { return this.request('/payouts/create-batches', { method: 'POST', body: JSON.stringify(body) }); }
   resetCommissionPayment(id) { return this.request(`/commissions/${id}/reset-payment`, { method: 'POST' }); }
   confirmCommissionSca(id) { return this.request(`/commissions/${id}/confirm-sca`, { method: 'POST' }); }
 

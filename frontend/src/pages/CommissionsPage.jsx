@@ -182,6 +182,10 @@ export default function CommissionsPage() {
   // with a French-mapped message. Shape:
   //   { kind: 'initiated' | 'bulk' | 'error', ...payload }
   const [qontoModal, setQontoModal] = useState(null);
+  // F2b — paie groupée. payoutModal = null when closed, { loading, batches, period, cadence } when open.
+  // createBusy guards the "Confirmer" button against double-clicks.
+  const [payoutModal, setPayoutModal] = useState(null);
+  const [payoutCreating, setPayoutCreating] = useState(false);
   // Auto-poll loop after a Payer action: tick every 30 s, max 10 min.
   // Refs so we can cancel from a different render without a stale
   // closure.
@@ -226,6 +230,46 @@ export default function CommissionsPage() {
     autoPollIntervalRef.current = setInterval(tick, 30_000);
     autoPollStopperRef.current = setTimeout(clearAutoPoll, 600_000); // 10 min cap
   };
+  // F2b — cadence batch tenant. 'unitary' (défaut F1) = comportement
+  // historique inchangé : le bouton "Lancer la paie groupée" ne s'affiche
+  // pas. 'monthly' / 'quarterly' = bouton visible dans le header.
+  const payoutCadence = myTenant?.payout_cadence || 'unitary';
+  const batchCadenceActive = payoutCadence !== 'unitary';
+
+  const openPayoutPreview = async () => {
+    setPayoutModal({ loading: true, batches: [], period: '', cadence: payoutCadence });
+    try {
+      const data = await api.previewPayoutBatches();
+      setPayoutModal({
+        loading: false,
+        batches: data.batches || [],
+        period: data.period || '',
+        period_label: data.period_label || data.period || '',
+        cadence: data.cadence || payoutCadence,
+      });
+    } catch (err) {
+      setPayoutModal(null);
+      showToast(err.message || t('common.error', 'Erreur'), 'error');
+    }
+  };
+
+  const confirmCreateBatches = async () => {
+    if (!payoutModal || payoutModal.batches.length === 0) return;
+    setPayoutCreating(true);
+    try {
+      const r = await api.createPayoutBatches({ confirm: true });
+      showToast(
+        t('payouts.created_toast', { count: r.created || 0, defaultValue: 'Paie groupée lancée. {{count}} batches créés.' }),
+        'success'
+      );
+      setPayoutModal(null);
+      await reload();
+    } catch (err) {
+      showToast(err.message || t('common.error', 'Erreur'), 'error');
+    }
+    setPayoutCreating(false);
+  };
+
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
 
@@ -659,9 +703,25 @@ export default function CommissionsPage() {
             })}
           </p>
         </div>
-        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-          <Download size={14} /> {t('commissions.export')}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {batchCadenceActive && (
+            <button
+              onClick={openPayoutPreview}
+              title={t('payouts.launch_tooltip', 'Crée un batch par partenaire avec les commissions approuvées de la période.')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 14px', borderRadius: 10,
+                background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <Send size={14} /> {t('payouts.launch_button', 'Lancer la paie groupée')}
+            </button>
+          )}
+          <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            <Download size={14} /> {t('commissions.export')}
+          </button>
+        </div>
       </div>
 
       {/* KPIs — HT only. The TVA breakdown lives on each card's
@@ -1213,6 +1273,21 @@ export default function CommissionsPage() {
                             <div style={{ padding: '7px 10px', borderRadius: 8, background: '#eef2ff', color: '#4338ca', fontSize: 11, textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                               <Send size={12} /> {t('qonto.transfer_in_progress', 'Virement en cours')}
                             </div>
+                          ) : c.payout_batch_id ? (
+                            // F2b — anti-double-paiement : la commission
+                            // est rattachée à un batch ; le bouton Payer
+                            // individuel est masqué. Un badge discret
+                            // signale l'état pour que l'admin sache que
+                            // l'action passe par la modale "Lancer la
+                            // paie groupée".
+                            <div style={{
+                              padding: '7px 10px', borderRadius: 8,
+                              background: '#eef2ff', color: '#4338ca',
+                              fontSize: 11, textAlign: 'center', fontWeight: 600,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                            }}>
+                              {t('payouts.in_batch_badge', 'Dans batch')}
+                            </div>
                           ) : qontoStatus?.connected ? (
                             <button onClick={() => handlePayViaQonto(c)} disabled={busyId === c.id}
                               style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
@@ -1305,7 +1380,8 @@ export default function CommissionsPage() {
                     <td style={{ padding: '13px 16px' }}>
                       {c.status === 'pending_approval' && <button onClick={() => handleApprove(c.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.approve')}</button>}
                       {c.status === 'awaiting_invoice' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{t('commission.waiting_for_partner_invoice')}</span>}
-                      {c.status === 'pending_validation' && <button onClick={() => handlePayClick(c)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.validate_payment')}</button>}
+                      {c.status === 'pending_validation' && !c.payout_batch_id && <button onClick={() => handlePayClick(c)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.validate_payment')}</button>}
+                      {c.status === 'pending_validation' && c.payout_batch_id && <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#eef2ff', color: '#4338ca' }}>{t('payouts.in_batch_badge', 'Dans batch')}</span>}
                       {c.status === 'paid' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
                     </td>
                   </tr>
@@ -1499,6 +1575,108 @@ export default function CommissionsPage() {
                 <Download size={14} /> {t('common.download', 'Télécharger')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* F2b — Modale "Lancer la paie groupée". Preview lecture-seule
+          des batches à créer pour la période courante. Le bouton
+          Confirmer appelle POST /api/payouts/create-batches. */}
+      {payoutModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={() => !payoutCreating && setPayoutModal(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 560, maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+            {(() => {
+              const batches = payoutModal.batches || [];
+              const totalTtcSum = batches.reduce((s, b) => s + (parseFloat(b.total_ttc) || 0), 0);
+              return (
+                <>
+                  <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                          {t('payouts.modal_title', { period: payoutModal.period_label || payoutModal.period || '—', defaultValue: 'Lancer la paie groupée — {{period}}' })}
+                        </h2>
+                        {!payoutModal.loading && batches.length > 0 && (
+                          <p style={{ color: '#64748b', fontSize: 13, marginTop: 6, marginBottom: 0 }}>
+                            {t('payouts.modal_subtitle', { count: batches.length, total: fmt(totalTtcSum), defaultValue: '{{count}} partenaires concernés · total {{total}} TTC' })}
+                          </p>
+                        )}
+                      </div>
+                      <button onClick={() => !payoutCreating && setPayoutModal(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: payoutCreating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={16} color="#475569" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px' }}>
+                    {payoutModal.loading && (
+                      <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>
+                        {t('common.loading', 'Chargement…')}
+                      </div>
+                    )}
+                    {!payoutModal.loading && batches.length === 0 && (
+                      <div style={{ textAlign: 'center', color: '#64748b', padding: 32, fontSize: 14 }}>
+                        {t('payouts.empty_state', 'Aucune commission éligible pour cette période.')}
+                      </div>
+                    )}
+                    {!payoutModal.loading && batches.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {batches.map(b => (
+                          <div key={b.partner_id} style={{ padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {b.partner_name}
+                                </div>
+                                <div style={{ color: '#64748b', fontSize: 12, marginTop: 4 }}>
+                                  {t('payouts.batch_count', { count: b.commission_count, defaultValue: '{{count}} commissions' })}
+                                  {parseFloat(b.total_tax) > 0 && (
+                                    <span style={{ color: '#94a3b8', marginLeft: 6 }}>
+                                      · {fmt(b.total_ht)} HT + {fmt(b.total_tax)} TVA
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--rb-primary, #059669)' }}>{fmt(b.total_ttc)}</div>
+                                <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>TTC</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                    <button
+                      onClick={() => !payoutCreating && setPayoutModal(null)}
+                      disabled={payoutCreating}
+                      style={{ padding: '9px 16px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: payoutCreating ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                    >
+                      {t('common.cancel', 'Annuler')}
+                    </button>
+                    <button
+                      onClick={confirmCreateBatches}
+                      disabled={payoutCreating || payoutModal.loading || batches.length === 0}
+                      style={{
+                        padding: '9px 18px', borderRadius: 10,
+                        background: (payoutCreating || payoutModal.loading || batches.length === 0) ? '#a7f3d0' : 'var(--rb-primary, #059669)',
+                        border: 'none', color: '#fff', fontWeight: 700, fontSize: 13,
+                        cursor: (payoutCreating || payoutModal.loading || batches.length === 0) ? 'not-allowed' : 'pointer',
+                        opacity: (payoutCreating || payoutModal.loading || batches.length === 0) ? 0.8 : 1,
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {payoutCreating
+                        ? t('common.saving', 'Enregistrement…')
+                        : t('payouts.confirm_button', { count: batches.length, defaultValue: 'Confirmer la paie groupée de {{count}} partenaires' })}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

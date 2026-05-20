@@ -79,6 +79,26 @@ async function loadPaymentIntegration(tenantId) {
   return rows[0] || null;
 }
 
+// requireBusinessPlan — calque inline de commissions.js:932-945. Mêmes
+// raisons : Qonto banking est un feature business-plan, le pay-qonto
+// d'un batch doit refuser un tenant downgradé avec 403 plan_upgrade_required
+// (cohérence avec /commissions/:id/pay-qonto unitaire). Inlined plutôt
+// que require('./commissions') pour rester chirurgical.
+async function requireBusinessPlan(req, res, next) {
+  if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+  try {
+    const { rows } = await query('SELECT plan FROM tenants WHERE id = $1', [req.tenantId]);
+    const plan = rows[0]?.plan || 'starter';
+    if (plan !== 'business') {
+      return res.status(403).json({ error: 'plan_upgrade_required', currentPlan: plan, requiredPlan: 'business' });
+    }
+    next();
+  } catch (err) {
+    console.error('[payouts.requireBusinessPlan] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+}
+
 function sanitizePaymentError(err) {
   if (!err) return null;
   const raw = err?.body || err?.message || String(err);
@@ -495,7 +515,7 @@ router.post('/batches/:id/upload-invoice', async (req, res) => {
 // Calque conceptuel de commissions.js:1015-1181 (pay-qonto unitaire),
 // mais sans la décomposition VAT par commission — le total batch est
 // déjà la somme TTC pré-calculée à la création.
-router.post('/batches/:id/pay-qonto', authorize('admin'), async (req, res) => {
+router.post('/batches/:id/pay-qonto', authorize('admin'), requireBusinessPlan, async (req, res) => {
   try {
     if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
 
