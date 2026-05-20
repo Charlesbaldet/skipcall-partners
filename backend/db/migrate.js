@@ -1755,6 +1755,20 @@ async function runMigrations() {
     console.error('[migrate.v59] failed:', err.message);
   }
 
+  // v60: phase F2a-FIX — la table commission_payout_batches livrée en
+  // v59 oubliait la colonne payment_reference, qui est référencée par
+  // le SELECT du worker reconcileBatchTransfers et par l'UPDATE post-
+  // SEPA dans pay-qonto (routes/payouts.js). L'absence faisait planter
+  // le worker toutes les ~5 min ("column b.payment_reference does not
+  // exist"). ADD COLUMN IF NOT EXISTS = idempotent ; aucune valeur à
+  // backfiller (la table n'a aucun batch existant en prod).
+  try {
+    await query(`ALTER TABLE commission_payout_batches ADD COLUMN IF NOT EXISTS payment_reference TEXT`);
+    console.log('[payout] v60 commission_payout_batches.payment_reference ready');
+  } catch (err) {
+    console.error('[migrate.v60] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

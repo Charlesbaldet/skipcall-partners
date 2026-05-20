@@ -288,9 +288,15 @@ router.post('/create-batches', authorize('admin'), async (req, res) => {
         );
 
         const ids = g.commissions.map(c => c.id);
+        // NB: la table `commissions` n'a pas de colonne updated_at
+        // (cf. schéma historique v20+). Ne pas l'ajouter ici sans une
+        // migration dédiée — laisser uniquement payout_batch_id +
+        // status. Bug F2a-FIX (commit 08ae18f) : la version précédente
+        // référençait updated_at et plantait silencieusement chaque
+        // batch via le swallow trop large.
         await query(
           `UPDATE commissions
-              SET payout_batch_id = $1, status = 'awaiting_invoice', updated_at = NOW()
+              SET payout_batch_id = $1, status = 'awaiting_invoice'
             WHERE id = ANY($2::uuid[])
               AND tenant_id = $3
               AND payout_batch_id IS NULL`,
@@ -311,13 +317,25 @@ router.post('/create-batches', authorize('admin'), async (req, res) => {
           commissions: g.commissions,
         });
       } catch (err) {
+        // Swallow STRICT pour les violations d'unique index seulement
+        // (PostgreSQL 23505 = unique_violation, ici sur le partial
+        // index commission_payout_batches_uidx (tenant, partner,
+        // period) WHERE exception=false). C'est l'idempotence
+        // double-clic attendue.
         if (err && err.code === '23505') {
           console.warn(`[payouts.create-batches] batch already exists for partner ${g.partner_id} period ${period} — skipped (idempotent)`);
           skipped.push({ partner_id: g.partner_id, reason: 'batch_already_exists' });
           continue;
         }
+        // Toute autre erreur SQL (column does not exist, FK violation,
+        // type mismatch, etc.) doit propager : sans ça, un bug de
+        // schéma reste invisible sous une 200 avec skipped=N et le
+        // front affiche un faux "0 batches créés" rassurant.
+        // F2a-FIX rationale (commit 08ae18f) : la version précédente
+        // swallowait `column "updated_at" of relation "commissions"
+        // does not exist` en faux-positif skipped.
         console.error(`[payouts.create-batches] insert failed for partner ${g.partner_id}:`, err.message);
-        skipped.push({ partner_id: g.partner_id, reason: 'insert_failed', error: err.message });
+        throw err;
       }
     }
 
@@ -639,13 +657,14 @@ async function reconcileBatchTransfers(tenantId) {
         );
         // 2. Propagation α — commissions du batch passent à 'paid'
         //    en lockstep. Transition autorisée par CHECK v3.
+        //    NB: pas de SET updated_at (la table commissions n'a pas
+        //    cette colonne — cf. fix F2a, commit 08ae18f).
         await query(
           `UPDATE commissions
               SET status = 'paid',
                   paid_at = COALESCE(paid_at, NOW()),
                   payment_completed_at = NOW(),
-                  payment_error = NULL,
-                  updated_at = NOW()
+                  payment_error = NULL
             WHERE payout_batch_id = $1
               AND status <> 'paid'
               AND deleted_at IS NULL`,
