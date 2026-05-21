@@ -86,21 +86,38 @@ function normaliseLongevity(modeRaw, monthsRaw) {
   return { mode, months };
 }
 
+// G2 — normalisation setup_rate (0..100 ou NULL). NUMERIC(5,2) côté
+// DB, le CHECK constraint v62 n'existe pas (colonne juste NULL-able)
+// donc on valide ici.
+function normaliseSetupRate(raw) {
+  if (raw === undefined) return undefined; // ne pas toucher la colonne
+  if (raw === null || raw === '') return null;
+  const n = parseFloat(raw);
+  if (!Number.isFinite(n) || n < 0 || n > 100) return undefined; // input invalide → ignoré côté PUT
+  return Math.round(n * 100) / 100;
+}
+
 router.post('/', authorize('admin'), async (req, res) => {
   try {
-    const { name, min_threshold, commission_rate, color, icon, position, longevity_mode, longevity_months } = req.body;
+    const { name, min_threshold, commission_rate, color, icon, position, longevity_mode, longevity_months, setup_rate } = req.body;
     if (!name) return res.status(400).json({ error: 'Nom requis' });
     if (!req.tenantId) return res.status(400).json({ error: 'Pas de tenant' });
     const long = normaliseLongevity(longevity_mode, longevity_months);
+    const setupNorm = normaliseSetupRate(setup_rate);
+    // 400 propre quand l'admin envoie une valeur clairement hors plage
+    // (sinon normaliseSetupRate retourne undefined et la colonne reste NULL).
+    if (setup_rate !== undefined && setup_rate !== null && setup_rate !== '' && setupNorm === undefined) {
+      return res.status(400).json({ error: 'invalid_setup_rate', message: 'setup_rate doit être entre 0 et 100' });
+    }
     const { rows: [level] } = await query(
       `INSERT INTO tenant_levels
          (tenant_id, name, min_threshold, commission_rate, color, icon, position,
-          longevity_mode, longevity_months)
+          longevity_mode, longevity_months, setup_rate)
        VALUES ($1, $2, $3, $4, $5, $6, $7,
-               COALESCE($8, 'limited'), COALESCE($9, 12))
+               COALESCE($8, 'limited'), COALESCE($9, 12), $10)
        RETURNING *`,
       [req.tenantId, name, min_threshold || 0, commission_rate || 10, color || '#94a3b8', icon || '⭐', position || 0,
-       long.mode, long.months]
+       long.mode, long.months, setupNorm === undefined ? null : setupNorm]
     );
     invalidateTierCache(req.tenantId);
     res.status(201).json({ level });
@@ -112,13 +129,23 @@ router.post('/', authorize('admin'), async (req, res) => {
 
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
-    const { name, min_threshold, commission_rate, color, icon, position, longevity_mode, longevity_months } = req.body;
+    const { name, min_threshold, commission_rate, color, icon, position, longevity_mode, longevity_months, setup_rate } = req.body;
     const long = normaliseLongevity(longevity_mode, longevity_months);
     // longevity_months is intentionally allowed to land as NULL when
     // mode flips to 'lifetime' — that's the canonical "no end date"
     // marker. So we don't COALESCE the months column unless the
     // caller didn't touch the mode at all.
     const monthsParam = longevity_mode === undefined ? null : long.months;
+    // G2 — setup_rate (hybrid). 3 cas distincts pour préserver la
+    // sémantique : (a) absent du body → ne touche pas la colonne ;
+    // (b) explicite null/"" → set NULL (tier sans setup) ;
+    // (c) numérique 0..100 → set valeur.
+    const setupNorm = normaliseSetupRate(setup_rate);
+    if (setup_rate !== undefined && setup_rate !== null && setup_rate !== '' && setupNorm === undefined) {
+      return res.status(400).json({ error: 'invalid_setup_rate', message: 'setup_rate doit être entre 0 et 100' });
+    }
+    const setupTouched = setup_rate !== undefined;
+    const setupParam = setupNorm === undefined ? null : setupNorm;
     const { rows: [level] } = await query(
       `UPDATE tenant_levels SET
         name = COALESCE($1, name),
@@ -132,10 +159,11 @@ router.put('/:id', authorize('admin'), async (req, res) => {
                              WHEN $9 = 'lifetime' THEN NULL
                              WHEN $9 = 'limited'  THEN COALESCE($10, longevity_months, 12)
                              ELSE longevity_months
-                           END
+                           END,
+        setup_rate = CASE WHEN $11::boolean THEN $12::numeric ELSE setup_rate END
       WHERE id = $7 AND tenant_id = $8 RETURNING *`,
       [name, min_threshold, commission_rate, color, icon, position, req.params.id, req.tenantId,
-       long.mode, monthsParam]
+       long.mode, monthsParam, setupTouched, setupParam]
     );
     if (!level) return res.status(404).json({ error: 'Niveau introuvable' });
     invalidateTierCache(req.tenantId);

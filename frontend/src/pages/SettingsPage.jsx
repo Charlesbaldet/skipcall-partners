@@ -3087,10 +3087,16 @@ function CommissionTab() {
   const [enabled, setEnabled] = useState(false);
   const [trigger, setTrigger] = useState('on_paid');
   const [payoutCadence, setPayoutCadence] = useState('unitary');
+  // G2 — modèle commercial : 'mrr_only' (défaut) | 'hybrid'. Le mode
+  // hybrid expose un setup_rate par tier (Programme) + un setup_value
+  // par referral (formulaire deal). Tenants existants : mrr_only par
+  // défaut → comportement strictement inchangé.
+  const [businessModel, setBusinessModel] = useState('mrr_only');
   const [loading, setLoading] = useState(true);
   const [savingEnabled, setSavingEnabled] = useState(false);
   const [savingTrigger, setSavingTrigger] = useState(false);
   const [savingPayoutCadence, setSavingPayoutCadence] = useState(false);
+  const [savingBusinessModel, setSavingBusinessModel] = useState(false);
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
@@ -3103,6 +3109,7 @@ function CommissionTab() {
         setEnabled(!!t0?.recurring_billing_enabled);
         setTrigger(t0?.recurring_renewal_trigger || 'on_paid');
         setPayoutCadence(t0?.payout_cadence || 'unitary');
+        setBusinessModel(t0?.business_model || 'mrr_only');
       } catch (e) {
         if (alive) setMsg({ type: 'error', text: e.message || t('common.error') });
       }
@@ -3110,6 +3117,22 @@ function CommissionTab() {
     })();
     return () => { alive = false; };
   }, []);
+
+  const setBusinessModelMode = async (mode) => {
+    if (mode === businessModel) return;
+    const prev = businessModel;
+    setBusinessModel(mode);
+    setSavingBusinessModel(true);
+    try {
+      await api.updateMyTenant({ business_model: mode });
+      setMsg({ type: 'success', text: t('programme.saved') });
+      setTimeout(() => setMsg(null), 2000);
+    } catch (e) {
+      setBusinessModel(prev);
+      setMsg({ type: 'error', text: e.message || t('common.error') });
+    }
+    setSavingBusinessModel(false);
+  };
 
   const toggleEnabled = async () => {
     const next = !enabled;
@@ -3172,6 +3195,42 @@ function CommissionTab() {
           {msg.text}
         </div>
       )}
+
+      {/* G2 — Business model selector. Visible pour tous les tenants
+          (la valeur par défaut 'mrr_only' reflète le comportement
+          historique). Passer en 'hybrid' débloque le champ setup_rate
+          dans /programme (par tier) + le champ setup_value sur le
+          formulaire deal. */}
+      <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+          {t('settings.commission.business_model_title', 'Modèle commercial')}
+        </div>
+        <div style={{ color: '#64748b', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
+          {t('settings.commission.business_model_desc', 'En mode hybride, vous pouvez configurer un % spécifique sur les paiements de mise en service (setup) en plus du MRR. Le setup est versé une seule fois au won, le MRR à chaque cycle.')}
+        </div>
+        {[
+          { id: 'mrr_only', label: t('settings.commission.business_model_mrr_only', 'MRR uniquement (défaut)') },
+          { id: 'hybrid',   label: t('settings.commission.business_model_hybrid',   'Hybride (MRR + Setup one-shot)') },
+        ].map(opt => {
+          const active = businessModel === opt.id;
+          return (
+            <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingBusinessModel ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
+              <input
+                type="radio"
+                name="business-model"
+                value={opt.id}
+                checked={active}
+                disabled={savingBusinessModel}
+                onChange={() => setBusinessModelMode(opt.id)}
+                style={{ marginTop: 3, cursor: savingBusinessModel ? 'wait' : 'pointer' }}
+              />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
+              </div>
+            </label>
+          );
+        })}
+      </div>
 
       {/* Master switch — moved here from /programme during E5. */}
       <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>

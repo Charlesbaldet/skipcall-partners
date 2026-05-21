@@ -165,7 +165,7 @@ router.put('/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'superadmin' && req.params.id !== req.user.tenantId) {
     return res.status(403).json({ error: 'Vous ne pouvez modifier que votre propre espace' });
   }
-  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model, recurring_billing_enabled, recurring_renewal_trigger, payout_cadence } = req.body;
+  const { name, slug, domain, primary_color, secondary_color, accent_color, logo_url, settings , revenue_model, recurring_billing_enabled, recurring_renewal_trigger, payout_cadence, business_model } = req.body;
 
   let cleanSlug = null;
   if (slug !== undefined && slug !== null && String(slug).trim() !== '') {
@@ -242,6 +242,21 @@ router.put('/:id', authenticate, async (req, res) => {
         console.error('[tenants PUT] payout_cadence update skipped:', e.message);
       }
     }
+
+    // Business model (G1 schema v62). Whitelist + 400 propre. Le CHECK
+    // constraint côté DB attrape aussi, mais le pinçage ici donne un
+    // message clair au front. Pré-v62 tenants table lacks the column —
+    // wrap so an unmigrated DB doesn't 500.
+    if (business_model !== undefined) {
+      if (!['mrr_only', 'hybrid'].includes(business_model)) {
+        return res.status(400).json({ error: 'invalid_business_model', allowed: ['mrr_only', 'hybrid'] });
+      }
+      try {
+        await query('UPDATE tenants SET business_model = $1 WHERE id = $2', [business_model, req.params.id]);
+      } catch (e) {
+        console.error('[tenants PUT] business_model update skipped:', e.message);
+      }
+    }
     clearTenantCache();
     auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
     logAudit(req, 'settings.updated', 'tenant', req.params.id, { name, slug: cleanSlug });
@@ -282,7 +297,8 @@ router.get('/me', authenticate, async (req, res) => {
       `SELECT id, name, slug, primary_color, secondary_color, accent_color, logo_url, revenue_model,
               COALESCE(recurring_billing_enabled, FALSE)         AS recurring_billing_enabled,
               COALESCE(recurring_renewal_trigger, 'on_paid')      AS recurring_renewal_trigger,
-              COALESCE(payout_cadence, 'unitary')                 AS payout_cadence
+              COALESCE(payout_cadence, 'unitary')                 AS payout_cadence,
+              COALESCE(business_model, 'mrr_only')                AS business_model
          FROM tenants WHERE id = $1`,
       [req.user.tenantId]
     );

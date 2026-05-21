@@ -320,7 +320,20 @@ router.post('/', [
       contact_first_name, contact_last_name,
       recommendation_level, notes, lead_handling,
       referral_code_used, promo_code,
+      setup_value, // G2 — montant setup one-shot HT (hybrid). NULL si non-renseigné.
     } = req.body;
+    // G2 — validation setup_value : >= 0 ou NULL. Non utilisé en
+    // mrr_only (le handler closed_won G1 ne lit setup_value qu'en
+    // hybrid), donc safe à accepter même sur tenants legacy : reste
+    // simplement inutilisé.
+    let safeSetupValue = null;
+    if (setup_value !== undefined && setup_value !== null && setup_value !== '') {
+      const n = parseFloat(setup_value);
+      if (!Number.isFinite(n) || n < 0) {
+        return res.status(400).json({ error: 'invalid_setup_value', message: 'setup_value doit être >= 0' });
+      }
+      safeSetupValue = Math.round(n * 100) / 100;
+    }
     // Both contact fields are optional — normalise empty strings to
     // null so we don't store blank rows.
     const safeContactFirst = (contact_first_name || '').trim() || null;
@@ -417,14 +430,14 @@ router.post('/', [
          prospect_phone, prospect_company, prospect_role,
          contact_first_name, contact_last_name,
          recommendation_level, notes, tenant_id, stage_id, lead_handling,
-         source, promo_code_id, referral_code_used)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+         source, promo_code_id, referral_code_used, setup_value)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
        RETURNING *`,
       [partnerId, req.user.id, prospect_name, prospect_email,
        prospect_phone, prospect_company, prospect_role,
        safeContactFirst, safeContactLast,
        recommendation_level, notes, req.tenantId || null, defaultStageId,
-       safeLeadHandling, source, promoCodeId, refCodeNorm]
+       safeLeadHandling, source, promoCodeId, refCodeNorm, safeSetupValue]
     );
 
     // Log activity
@@ -539,7 +552,8 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
     let { status, stage_id, lead_handling, deal_value, assigned_to, notes, lost_reason, engagement, engagement_periods,
           contact_first_name, contact_last_name,
           prospect_name, prospect_email, prospect_phone, prospect_company, prospect_role,
-          commission_rate_override, commission_overridden } = req.body;
+          commission_rate_override, commission_overridden,
+          setup_value } = req.body;
     // `is_perpetual` lived on this payload during the first E2 cut.
     // The refonte moves longevity to the partner's tier (tenant_levels),
     // so the deal modal no longer asks the user this question. We
@@ -1009,6 +1023,23 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
 
     if (notes) {
       activities.push({ action: 'note_added', new_value: notes });
+    }
+
+    // G2 — setup_value (montant setup one-shot HT du contrat client
+    // final, hybrid). Accepté quel que soit business_model (le handler
+    // closed_won ne le lit qu'en hybrid). null/"" → set NULL ; nombre
+    // ≥ 0 → set valeur ; négatif/NaN → 400.
+    if (setup_value !== undefined) {
+      if (setup_value === null || setup_value === '') {
+        updates.setup_value = null;
+      } else {
+        const n = parseFloat(setup_value);
+        if (!Number.isFinite(n) || n < 0) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: 'invalid_setup_value', message: 'setup_value doit être >= 0' });
+        }
+        updates.setup_value = Math.round(n * 100) / 100;
+      }
     }
 
     // Apply updates

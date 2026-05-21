@@ -554,6 +554,13 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   const [editStageId, setEditStageId] = useState(initialStage?.id || referral.stage_id || null);
   const [editStatus, setEditStatus] = useState(initialStage?.slug || referral.status);
   const [editValue, setEditValue] = useState(referral.deal_value || '');
+  // G2 — setup_value du contrat client final (montant setup one-shot HT).
+  // Visible uniquement en business_model 'hybrid'. Le partenaire touchera
+  // un % distinct (tenant_levels.setup_rate) sur ce montant, au won.
+  const [editSetupValue, setEditSetupValue] = useState(
+    referral.setup_value != null ? String(parseFloat(referral.setup_value)) : ''
+  );
+  const isHybridTenant = (myTenant?.business_model || 'mrr_only') === 'hybrid';
   const [saving, setSaving] = useState(false);
   // Existing rows can ship one of the legacy English keys
   // (monthly/quarterly/yearly) until the v27 migration drains them.
@@ -651,6 +658,12 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
         // when commission_overridden flips to false).
         commission_rate_override: commissionOverridden ? Number(editRate) : null,
       };
+      // G2 — setup_value : envoyé UNIQUEMENT si le tenant est en
+      // business_model='hybrid' (en mrr_only, le champ n'est pas
+      // affiché → on ne pollue pas la requête avec une valeur stale).
+      if (isHybridTenant) {
+        patch.setup_value = editSetupValue === '' ? null : Number(editSetupValue);
+      }
       if (editStageId) patch.stage_id = editStageId;
       else if (editStatus) patch.status = editStatus;
       await onUpdate(referral.id, patch);
@@ -865,6 +878,32 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                       boxSizing: 'border-box',
                     }}
                   />
+                  {/* G2 — Setup one-shot HT (hybrid uniquement). Sub-input
+                      sous le MRR pour ne pas perturber l'alignement à
+                      2 colonnes ; help-text pour clarifier la sémantique. */}
+                  {isHybridTenant && (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                        {t('referrals.setup_value_label', 'Setup one-shot HT')}
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={editSetupValue}
+                        onChange={e => setEditSetupValue(e.target.value)}
+                        placeholder={t('referrals.setup_value_ph', 'Montant setup HT (laisser vide si pas de setup)')}
+                        style={{
+                          width: '100%', padding: '10px 14px', borderRadius: 10,
+                          border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 600,
+                          color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                        }}
+                      />
+                      <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>
+                        {t('referrals.setup_value_help', 'Montant one-shot facturé au client à la signature (configuration, onboarding, etc.). Le partenaire touchera un % distinct sur ce montant.')}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div style={{ flex: '1 1 220px' }}>
                   <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>

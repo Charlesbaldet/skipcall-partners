@@ -18,7 +18,7 @@ export default function ProgrammePage() {
   const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // level id or 'new'
-  const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10, longevity_mode: 'limited', longevity_months: 12 });
+  const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10, longevity_mode: 'limited', longevity_months: 12, setup_rate: '' });
   // { kind: 'delete'|'reset', id? }
   const [confirmAction, setConfirmAction] = useState(null);
   const [msg, setMsg] = useState(null);
@@ -27,6 +27,10 @@ export default function ProgrammePage() {
   // toggle was moved to Paramètres → Commission during E5; this
   // page no longer owns the write path.
   const [recurringBilling, setRecurringBilling] = useState(false);
+  // G2 — business_model du tenant. 'hybrid' débloque le champ
+  // setup_rate par tier (input numérique + affichage). 'mrr_only'
+  // (défaut, tous tenants existants) : zéro UI setup, byte-for-byte.
+  const [businessModel, setBusinessModel] = useState('mrr_only');
 
   const load = async () => {
     setLoading(true);
@@ -36,6 +40,7 @@ export default function ProgrammePage() {
       const mt = await api.getMyTenant();
       const t0 = mt && (mt.tenant || mt);
       setRecurringBilling(!!t0?.recurring_billing_enabled);
+      setBusinessModel(t0?.business_model || 'mrr_only');
     } catch (e) {
       setMsg({ type: 'error', text: e.message || t('common.error') });
     }
@@ -64,12 +69,15 @@ export default function ProgrammePage() {
       commission_rate: parseFloat(l.commission_rate) || 10,
       longevity_mode:   l.longevity_mode   || 'limited',
       longevity_months: l.longevity_months != null ? parseInt(l.longevity_months, 10) : 12,
+      // G2 — pré-remplissage setup_rate. NULL côté DB → champ vide
+      // côté UI ; nombre → string pour l'input controlled.
+      setup_rate: l.setup_rate != null ? String(parseFloat(l.setup_rate)) : '',
     });
     setEditing(l.id);
   };
 
   const startNew = () => {
-    setForm({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10, longevity_mode: 'limited', longevity_months: 12 });
+    setForm({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10, longevity_mode: 'limited', longevity_months: 12, setup_rate: '' });
     setEditing('new');
   };
 
@@ -177,6 +185,24 @@ export default function ProgrammePage() {
           </div>
         </div>
       )}
+      {/* G2 — % Setup par tier. Visible uniquement en business_model
+          'hybrid'. Vide = tier sans setup (commission setup = 0).
+          NUMERIC(5,2) côté DB, 0..100 côté UI. */}
+      {businessModel === 'hybrid' && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={labelStyle}>{t('programme.level_setup_rate', '% Setup (sur le montant setup one-shot)')}</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            placeholder={t('programme.level_setup_rate_placeholder', 'ex: 10 (laisser vide = pas de setup pour ce tier)')}
+            style={inputStyle}
+            value={form.setup_rate}
+            onChange={e => setForm(f => ({ ...f, setup_rate: e.target.value }))}
+          />
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.save')}</button>
         <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
@@ -237,6 +263,11 @@ export default function ProgrammePage() {
                   {l.longevity_mode === 'lifetime'
                     ? t('programme.longevity_lifetime_label', 'Longévité : à vie')
                     : t('programme.longevity_limited_label', { months: (l.longevity_months != null ? l.longevity_months : 12), defaultValue: 'Longévité : limité {{months}} mois' })}
+                </div>
+              )}
+              {businessModel === 'hybrid' && l.setup_rate != null && (
+                <div style={{ color: '#7c3aed', fontSize: 11, marginTop: 2, fontWeight: 600 }}>
+                  {t('programme.level_setup_rate_label', { rate: parseFloat(l.setup_rate), defaultValue: 'Setup : {{rate}} % one-shot' })}
                 </div>
               )}
             </div>
