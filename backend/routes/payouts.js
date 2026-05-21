@@ -33,7 +33,7 @@
 //     (cette transition-là EST dans le CHECK v3 → propagation safe).
 
 const express = require('express');
-const { query } = require('../db');
+const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
 const { sendEmail } = require('../services/emailService');
 const notify = require('../services/notifyService');
@@ -41,6 +41,14 @@ const emailTemplates = require('../utils/emailTemplates');
 const qonto = require('../services/qontoService');
 
 const router = express.Router();
+
+// F3a — délai d'invoice partenaire avant qu'un batch awaiting_invoice
+// soit marqué "en retard" (is_late=true). Calculé JS-side dans les
+// endpoints list + detail à partir de batch.created_at. Constante
+// unique pour garantir la cohérence entre les 2 endpoints (un batch
+// is_late dans la liste doit l'être aussi dans son détail, et
+// réciproquement). Ajustement = changer cette valeur, déploiement.
+const BATCH_INVOICE_DEADLINE_DAYS = 10;
 
 router.use(authenticate);
 router.use(tenantScope);
@@ -695,6 +703,316 @@ router.post('/admin/purge-orphan-batches', authorize('admin'), async (req, res) 
   } catch (err) {
     console.error('[payouts.purge-orphan-batches] error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── Shared helper: derive is_late ─────────────────────────────────
+// Source unique de la règle "en retard" pour list (GET /batches) et
+// detail (GET /batches/:id). Un batch est en retard si :
+//   - il attend toujours une facture partenaire (status = 'awaiting_invoice')
+//   - ET sa création remonte à plus de BATCH_INVOICE_DEADLINE_DAYS
+// Les statuts ready_to_pay / paid / cancelled ne sont jamais "en retard"
+// par construction : ils ont déjà reçu leur facture, été payés, ou
+// arbitré par l'admin.
+function deriveIsLate(batch) {
+  if (!batch || batch.status !== 'awaiting_invoice') return false;
+  const createdAt = batch.created_at ? new Date(batch.created_at) : null;
+  if (!createdAt || Number.isNaN(createdAt.getTime())) return false;
+  const ageMs = Date.now() - createdAt.getTime();
+  const ageDays = ageMs / (24 * 60 * 60 * 1000);
+  return ageDays > BATCH_INVOICE_DEADLINE_DAYS;
+}
+
+// ─── GET /api/payouts/batches ──────────────────────────────────────
+// Liste les batches du tenant courant pour le Kanban groupé admin
+// (F3b). Tri DESC par created_at, LIMIT 500 (assez large pour couvrir
+// plusieurs trimestres de paie sur un tenant actif, mais cap pour
+// éviter qu'un tenant historique fasse exploser le payload).
+//
+// commission_count via sous-requête corrélée (évite N+1) : 1 round-
+// trip SQL au lieu de 1 + N. Sur 500 batches max, le SUM des
+// sous-requêtes reste largement sous la milliseconde grâce à
+// l'index commissions_payout_batch_idx (v59) ON (payout_batch_id)
+// WHERE deleted_at IS NULL AND payout_batch_id IS NOT NULL.
+//
+// is_late dérivé JS-side via deriveIsLate (cf. helper ci-dessus).
+router.get('/batches', authorize('admin'), async (req, res) => {
+  try {
+    if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
+
+    const { rows } = await query(
+      `SELECT b.id, b.tenant_id, b.partner_id, b.period, b.status,
+              b.total_amount_ht, b.total_amount_tax, b.total_amount_ttc,
+              (b.invoice_url IS NOT NULL) AS has_invoice,
+              b.invoice_uploaded_at, b.qonto_transfer_id,
+              b.payment_initiated_at, b.payment_completed_at, b.paid_at,
+              b.payment_reference, b.payment_error,
+              b.exception, b.created_at, b.updated_at,
+              p.name AS partner_name, p.email AS partner_email,
+              (SELECT COUNT(*)::int
+                 FROM commissions c
+                WHERE c.payout_batch_id = b.id
+                  AND c.deleted_at IS NULL) AS commission_count
+         FROM commission_payout_batches b
+         JOIN partners p ON p.id = b.partner_id
+        WHERE b.tenant_id = $1
+          AND b.deleted_at IS NULL
+        ORDER BY b.created_at DESC
+        LIMIT 500`,
+      [req.tenantId]
+    );
+
+    const batches = rows.map(b => ({ ...b, is_late: deriveIsLate(b) }));
+    res.json({ batches });
+  } catch (err) {
+    console.error('[payouts.list-batches] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── GET /api/payouts/batches/:id ──────────────────────────────────
+// Détail d'un batch + liste des commissions liées. Scope dual :
+//   - admin (req.partnerScope = null) : exige b.tenant_id = req.tenantId
+//   - partenaire (req.partnerScope set) : exige b.partner_id = req.partnerScope
+// Calque du pattern upload-invoice côté scope.
+//
+// Les commissions retournées portent prospect_name / prospect_company
+// JOIN'd depuis referrals (la table commissions n'a pas ces champs
+// directement). referral_id renvoyé pour permettre au FE (F3b/F3c)
+// de générer un lien vers le deal.
+router.get('/batches/:id', async (req, res) => {
+  try {
+    let where = 'b.id = $1 AND b.deleted_at IS NULL';
+    const params = [req.params.id];
+    let i = 2;
+    if (req.tenantId && !req.skipTenantFilter) {
+      where += ` AND b.tenant_id = $${i++}`;
+      params.push(req.tenantId);
+    }
+    if (req.partnerScope) {
+      where += ` AND b.partner_id = $${i++}`;
+      params.push(req.partnerScope);
+    }
+
+    const { rows: [batch] } = await query(
+      `SELECT b.id, b.tenant_id, b.partner_id, b.period, b.status,
+              b.total_amount_ht, b.total_amount_tax, b.total_amount_ttc,
+              (b.invoice_url IS NOT NULL) AS has_invoice,
+              b.invoice_uploaded_at, b.invoice_filename,
+              b.qonto_transfer_id, b.payment_initiated_at,
+              b.payment_completed_at, b.paid_at,
+              b.payment_reference, b.payment_error,
+              b.exception, b.created_at, b.updated_at,
+              p.name AS partner_name, p.email AS partner_email,
+              t.name AS tenant_name
+         FROM commission_payout_batches b
+         JOIN partners p ON p.id = b.partner_id
+         JOIN tenants  t ON t.id = b.tenant_id
+        WHERE ${where}`,
+      params
+    );
+    if (!batch) return res.status(404).json({ error: 'Batch introuvable' });
+
+    const { rows: commissions } = await query(
+      `SELECT c.id, c.referral_id, c.amount, c.amount_ht, c.amount_tax, c.amount_ttc,
+              c.tax_rate_applied, c.status, c.deal_value, c.rate, c.tier_at_won,
+              c.created_at,
+              r.prospect_name, r.prospect_company
+         FROM commissions c
+         JOIN referrals r ON r.id = c.referral_id
+        WHERE c.payout_batch_id = $1
+          AND c.deleted_at IS NULL
+        ORDER BY c.created_at ASC`,
+      [batch.id]
+    );
+
+    res.json({
+      batch: { ...batch, is_late: deriveIsLate(batch), commission_count: commissions.length },
+      commissions,
+    });
+  } catch (err) {
+    console.error('[payouts.get-batch] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── POST /api/payouts/batches/:id/cancel ──────────────────────────
+// Annule un batch entier : détache toutes les commissions (status
+// commission inchangé — l'admin/partenaire les retraitera à l'unité)
+// et soft-DELETE le batch (deleted_at = NOW(), status='cancelled')
+// pour libérer le slot de l'index unique partiel sur (tenant,
+// partner, period) WHERE exception=false AND deleted_at IS NULL.
+//
+// Transaction + SELECT … FOR UPDATE : empêche un upload-invoice
+// concurrent ou un pay-qonto concurrent d'agir pendant l'annulation.
+// Pattern try/finally + ROLLBACK avant les early returns post-BEGIN
+// + finally release UNIQUE (cf. fix F2a-FIX4 sur referrals.js).
+router.post('/batches/:id/cancel', authorize('admin'), async (req, res) => {
+  if (req.body?.confirm !== true) {
+    return res.status(400).json({ error: 'confirmation_required' });
+  }
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+
+    const { rows: [batch] } = await client.query(
+      `SELECT id, tenant_id, partner_id, status, qonto_transfer_id, payment_completed_at
+         FROM commission_payout_batches
+        WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
+        FOR UPDATE`,
+      [req.params.id, req.tenantId]
+    );
+    if (!batch) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'batch_not_found' });
+    }
+    if (batch.status === 'paid') {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'batch_already_paid' });
+    }
+    if (batch.qonto_transfer_id && !batch.payment_completed_at) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'transfer_in_flight', qonto_transfer_id: batch.qonto_transfer_id });
+    }
+
+    const { rowCount: detached } = await client.query(
+      `UPDATE commissions
+          SET payout_batch_id = NULL
+        WHERE payout_batch_id = $1
+          AND deleted_at IS NULL`,
+      [batch.id]
+    );
+
+    // Soft-delete : status='cancelled' + deleted_at sortent le row du
+    // partial unique index commission_payout_batches_uidx. Un re-clic
+    // create-batches pourra recréer un batch propre pour le même
+    // (partner, period).
+    const { rows: [updated] } = await client.query(
+      `UPDATE commission_payout_batches
+          SET status = 'cancelled',
+              deleted_at = NOW(),
+              updated_at = NOW()
+        WHERE id = $1
+        RETURNING id, status, deleted_at, updated_at`,
+      [batch.id]
+    );
+
+    await client.query('COMMIT');
+    console.log(`[payouts.cancel-batch] tenant ${req.tenantId} cancelled batch ${batch.id}, detached ${detached} commission(s)`);
+    res.json({ batch: updated, detached_commissions: detached });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error('[payouts.cancel-batch] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    client.release();
+  }
+});
+
+// ─── POST /api/payouts/batches/:id/remove-commission ───────────────
+// Retire UNE commission d'un batch (commission reste vivante côté
+// commissions, juste payout_batch_id = NULL). Totaux batch
+// recalculés en lockstep. Refuse de retirer la dernière commission
+// du batch (auquel cas l'admin doit annuler le batch entier — sinon
+// on aurait un fantôme à 0 € que les UI ne sauraient pas afficher
+// proprement).
+//
+// Transaction + FOR UPDATE pour éviter une race avec un autre
+// remove-commission concurrent qui ferait que les 2 calls voient
+// chacun count >= 2 mais finissent à count = 0.
+router.post('/batches/:id/remove-commission', authorize('admin'), async (req, res) => {
+  const { commission_id } = req.body || {};
+  if (!commission_id) return res.status(400).json({ error: 'commission_id_required' });
+  if (req.body?.confirm !== true) {
+    return res.status(400).json({ error: 'confirmation_required' });
+  }
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+
+    const { rows: [batch] } = await client.query(
+      `SELECT id, tenant_id, partner_id, status, qonto_transfer_id, payment_completed_at
+         FROM commission_payout_batches
+        WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
+        FOR UPDATE`,
+      [req.params.id, req.tenantId]
+    );
+    if (!batch) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'batch_not_found' });
+    }
+    if (batch.status === 'paid') {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'batch_already_paid' });
+    }
+    if (batch.qonto_transfer_id && !batch.payment_completed_at) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'transfer_in_flight', qonto_transfer_id: batch.qonto_transfer_id });
+    }
+
+    const { rows: [commission] } = await client.query(
+      `SELECT id FROM commissions
+        WHERE id = $1
+          AND payout_batch_id = $2
+          AND deleted_at IS NULL`,
+      [commission_id, batch.id]
+    );
+    if (!commission) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'commission_not_in_batch' });
+    }
+
+    // Anti-empty-batch : un batch à 0 commission n'a pas de sens
+    // métier — sa facture serait à 0 €. L'admin doit annuler le
+    // batch entier (route cancel ci-dessus) pour libérer le slot.
+    const { rows: [{ count }] } = await client.query(
+      `SELECT COUNT(*)::int AS count
+         FROM commissions
+        WHERE payout_batch_id = $1
+          AND deleted_at IS NULL`,
+      [batch.id]
+    );
+    if (count <= 1) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error: 'batch_would_be_empty',
+        message: 'Utilisez l\'annulation du batch entier (POST /api/payouts/batches/:id/cancel) pour retirer la dernière commission.',
+      });
+    }
+
+    await client.query(
+      `UPDATE commissions
+          SET payout_batch_id = NULL
+        WHERE id = $1`,
+      [commission_id]
+    );
+
+    // Recalcul des 3 totaux en une seule UPDATE corrélée. On lit les
+    // commissions restantes (payout_batch_id = batch.id) APRÈS le
+    // détachement ci-dessus : la commission retirée n'est donc plus
+    // comptée. COALESCE pour le cas théorique (intercepté par le
+    // anti-empty-batch ci-dessus, mais ceinture-bretelles) où le
+    // batch deviendrait vide.
+    const { rows: [updated] } = await client.query(
+      `UPDATE commission_payout_batches b
+          SET total_amount_ht  = COALESCE((SELECT SUM(amount_ht)  FROM commissions WHERE payout_batch_id = b.id AND deleted_at IS NULL), 0),
+              total_amount_tax = COALESCE((SELECT SUM(amount_tax) FROM commissions WHERE payout_batch_id = b.id AND deleted_at IS NULL), 0),
+              total_amount_ttc = COALESCE((SELECT SUM(amount_ttc) FROM commissions WHERE payout_batch_id = b.id AND deleted_at IS NULL), 0),
+              updated_at = NOW()
+        WHERE b.id = $1
+        RETURNING id, status, total_amount_ht, total_amount_tax, total_amount_ttc, updated_at`,
+      [batch.id]
+    );
+
+    await client.query('COMMIT');
+    console.log(`[payouts.remove-commission] tenant ${req.tenantId} removed commission ${commission_id} from batch ${batch.id}`);
+    res.json({ batch: updated, removed_commission_id: commission_id });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error('[payouts.remove-commission] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    client.release();
   }
 });
 
