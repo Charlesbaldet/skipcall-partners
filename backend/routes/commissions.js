@@ -2271,6 +2271,7 @@ async function prepareRecurringRenewals(tenantId) {
      SELECT c.id, c.referral_id, c.partner_id, c.tenant_id, c.status,
             c.cycle_index, c.engagement_type, c.engagement_periods,
             c.amount, c.amount_ht, c.amount_tax, c.amount_ttc, c.tax_rate_applied, c.rate, c.deal_value,
+            c.mrr_amount_ht,
             sa.cycle1_id, sa.cycle1_created_at, sa.cycle1_is_perpetual,
             sa.cycle1_engagement_until, sa.cycle1_tier_at_won,
             r.status AS referral_status,
@@ -2341,11 +2342,37 @@ async function prepareRecurringRenewals(tenantId) {
       );
       const dealValueRenewal = srcRev ? srcRev.deal_value : cand.deal_value;
       const rateRenewal      = srcRev ? srcRev.rate       : cand.rate;
-      const htRenewal        = srcRev ? srcRev.amount_ht  : cand.amount_ht;
       const taxRateRenewal   = srcRev ? srcRev.tax_rate_applied : cand.tax_rate_applied;
-      const taxRenewal       = srcRev ? srcRev.amount_tax : cand.amount_tax;
-      const ttcRenewal       = srcRev ? srcRev.amount_ttc : cand.amount_ttc;
-      const amountRenewal    = srcRev ? srcRev.amount_ttc : (cand.amount_ttc || cand.amount);
+
+      // ─── G1 : propagation hybride aux cycles 2+ ─────────────────
+      // Si la commission source porte un mrr_amount_ht non-NULL, c'est
+      // un deal hybride. Le cycle suivant ne touche QUE la composante
+      // MRR (le setup est one-shot, jamais récurrent) :
+      //   setup_amount_ht = NULL
+      //   mrr_amount_ht   = cand.mrr_amount_ht (verbatim depuis le cycle 1)
+      //   amount_ht       = mrr_amount_ht (pas de setup additionné)
+      //   amount_tax/ttc  = recomputés depuis le nouveau amount_ht
+      // Pour mrr_only (mrr_amount_ht NULL côté DB), on retombe sur le
+      // chemin legacy : htRenewal = srcRev.amount_ht || cand.amount_ht,
+      // taxRenewal et ttcRenewal copiés verbatim. Anti-régression
+      // byte-for-byte.
+      const isHybrid = cand.mrr_amount_ht != null;
+      let htRenewal, taxRenewal, ttcRenewal, amountRenewal;
+      let mrrAmountHtRenewal = null;
+      const setupAmountHtRenewal = null; // cycles 2+ : pas de setup, jamais.
+      if (isHybrid) {
+        mrrAmountHtRenewal = parseFloat(cand.mrr_amount_ht) || 0;
+        htRenewal  = mrrAmountHtRenewal;
+        const rateNum = parseFloat(taxRateRenewal) || 0;
+        taxRenewal = Math.round(htRenewal * rateNum) / 100;
+        ttcRenewal = Math.round((htRenewal + taxRenewal) * 100) / 100;
+        amountRenewal = ttcRenewal;
+      } else {
+        htRenewal     = srcRev ? srcRev.amount_ht  : cand.amount_ht;
+        taxRenewal    = srcRev ? srcRev.amount_tax : cand.amount_tax;
+        ttcRenewal    = srcRev ? srcRev.amount_ttc : cand.amount_ttc;
+        amountRenewal = srcRev ? srcRev.amount_ttc : (cand.amount_ttc || cand.amount);
+      }
 
       const newCycleIndex = cand.cycle_index + 1;
 
@@ -2368,6 +2395,7 @@ async function prepareRecurringRenewals(tenantId) {
               engagement_type, engagement_periods,
               rate, deal_value,
               amount, amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+              setup_amount_ht, mrr_amount_ht,
               current_revision_index, approved_at)
            VALUES
              ($1, $2, $3, $4,
@@ -2376,6 +2404,7 @@ async function prepareRecurringRenewals(tenantId) {
               $8, $9,
               $10, $11,
               $12, $13, $14, $15, $16,
+              $17, $18,
               1, NULL)
            RETURNING id`,
           [
@@ -2384,6 +2413,7 @@ async function prepareRecurringRenewals(tenantId) {
             cand.engagement_type, cand.engagement_periods,
             rateRenewal, dealValueRenewal,
             amountRenewal, htRenewal, taxRateRenewal, taxRenewal, ttcRenewal,
+            setupAmountHtRenewal, mrrAmountHtRenewal,
           ]
         );
         newCommissionId = created.id;

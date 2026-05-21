@@ -1091,12 +1091,77 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         const effPeriods    = updates.engagement_periods != null
           ? updates.engagement_periods
           : (current.engagement_periods || 1);
-        const amount = calculateCommissionAmount({
+        const mrrBaseAmount = calculateCommissionAmount({
           engagementType: effEngagement,
           periods: effPeriods,
           dealValue: effectiveDealValue,
           rate,
         });
+
+        // ─── G1 : business model hybride (MRR + setup one-shot) ────
+        // mrr_only (défaut, tous tenants existants) : comportement
+        //   strictement inchangé — amount = mrrBaseAmount, setup_amount_ht
+        //   et mrr_amount_ht restent NULL en DB.
+        // hybrid : setupAmountHt = referral.setup_value × tier.setup_rate
+        //   sur le cycle 1 (le won transition EST le cycle 1 par
+        //   construction). Le worker E5 propage ensuite uniquement
+        //   mrr_amount_ht aux cycles 2+ (setup = one-shot, jamais
+        //   récurrent). amount = mrrBaseAmount + setupAmountHt → le
+        //   breakdown VAT s'applique sur ce total agrégé (le partner
+        //   facture UN seul HT/TVA/TTC, jamais deux factures séparées).
+        const { rows: [tenantBmRow] } = await client.query(
+          `SELECT COALESCE(business_model, 'mrr_only') AS business_model FROM tenants WHERE id = $1`,
+          [req.tenantId || null]
+        );
+        const businessModel = tenantBmRow?.business_model || 'mrr_only';
+        let setupAmountHt = null;
+        let mrrAmountHt = null;
+        let amount = mrrBaseAmount;
+        if (businessModel === 'hybrid') {
+          // Résolution dédiée du tier pour récupérer le setup_rate.
+          // resolveTierForPartner ne projette pas setup_rate aujourd'hui ;
+          // on récupère son .name (cache getLevels TTL 10s = quasi-gratuit)
+          // puis on fait une petite SELECT sur tenant_levels pour le
+          // setup_rate (idempotent, indexé via (tenant_id, name)).
+          // Indépendant du chemin override/non-override pour fonctionner
+          // dans toutes les branches sans recours à `tier` (out of scope
+          // au point d'exécution).
+          let tierNameHybrid = null;
+          let setupRate = null;
+          try {
+            const { rows: [statsHy] } = await client.query(
+              `SELECT COUNT(*) FILTER (WHERE status = 'won') AS won_deals,
+                      COALESCE(SUM(deal_value) FILTER (WHERE status = 'won'), 0) AS total_revenue
+                 FROM referrals WHERE partner_id = $1 AND id <> $2 AND deleted_at IS NULL`,
+              [partner.id, req.params.id]
+            );
+            const tierHy = await resolveTierForPartner({
+              tenantId: req.tenantId || null,
+              partnerId: partner.id,
+              wonDeals: statsHy?.won_deals,
+              totalRevenue: statsHy?.total_revenue,
+            });
+            tierNameHybrid = tierHy?.name || null;
+            if (tierNameHybrid) {
+              const { rows: [tl] } = await client.query(
+                `SELECT setup_rate FROM tenant_levels
+                  WHERE tenant_id = $1 AND name = $2
+                  LIMIT 1`,
+                [req.tenantId || null, tierNameHybrid]
+              );
+              setupRate = tl?.setup_rate != null ? parseFloat(tl.setup_rate) : null;
+            }
+          } catch (e) {
+            console.warn('[hybrid] setup_rate lookup failed:', e.message);
+          }
+          const setupValue = current.setup_value != null ? parseFloat(current.setup_value) : 0;
+          if (setupValue > 0 && setupRate != null && setupRate > 0) {
+            // Math.round(setup_value × setup_rate) / 100 ≡ arrondi à 2 décimales.
+            setupAmountHt = Math.round(setupValue * setupRate) / 100;
+          }
+          mrrAmountHt = mrrBaseAmount;
+          amount = mrrBaseAmount + (setupAmountHt || 0);
+        }
 
         // Snapshot VAT decomposition at creation/sync time using the
         // partner's current tax profile. Without this the row sits at
@@ -1106,6 +1171,9 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         // /pay-qonto path will overwrite this snapshot with whatever
         // the partner's tax config is at payout time, so this is a
         // best-known-now value, not a final commitment.
+        // En hybrid, `amount` est le total agrégé (setup+mrr) — le
+        // breakdown VAT s'applique sur ce total, partner doit facturer
+        // un seul HT/TVA/TTC.
         const partnerTaxRate = partner.tax_subject ? Number(partner.tax_rate) : 0;
         const breakdown = decomposeAmountWithTax(amount, partnerTaxRate);
 
@@ -1215,15 +1283,18 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
                (referral_id, partner_id, amount, rate, deal_value, tenant_id, approval_status, status,
                 engagement_type, engagement_periods,
                 amount_ht, tax_rate_applied, amount_tax, amount_ttc,
+                setup_amount_ht, mrr_amount_ht,
                 is_recurring, is_perpetual, engagement_until, current_revision_index, tier_at_won)
              VALUES ($1, $2, $3, $4, $5, $6, 'pending_approval', 'pending_approval',
                      $7, $8,
                      $9, $10, $11, $12,
-                     $13, $14, $15, 1, $16)
+                     $13, $14,
+                     $15, $16, $17, 1, $18)
              RETURNING id, amount, rate, deal_value, created_at`,
             [req.params.id, partner.id, amount, rate, effectiveDealValue, req.tenantId || null,
              effEngagement, effPeriods,
              breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
+             setupAmountHt, mrrAmountHt,
              isRecurringEff, isPerpetualEff, engagementUntilEff, tierAtWonEff]
           ));
         } else if (existingCom.status === 'pending_approval') {
@@ -1238,12 +1309,14 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
                 SET amount = $2, rate = $3, deal_value = $4,
                     engagement_type = $5, engagement_periods = $6,
                     amount_ht = $7, tax_rate_applied = $8, amount_tax = $9, amount_ttc = $10,
-                    is_recurring = $11, is_perpetual = $12, engagement_until = $13,
-                    tier_at_won = $14
+                    setup_amount_ht = $11, mrr_amount_ht = $12,
+                    is_recurring = $13, is_perpetual = $14, engagement_until = $15,
+                    tier_at_won = $16
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
             [existingCom.id, amount, rate, effectiveDealValue, effEngagement, effPeriods,
              breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
+             setupAmountHt, mrrAmountHt,
              isRecurringEff, isPerpetualEff, engagementUntilEff, tierAtWonEff]
           ));
         } else {
@@ -1253,15 +1326,20 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           // The breakdown is re-snapshotted too: pay-qonto will
           // re-do it fresh anyway right before wiring, so this stays
           // consistent with what the partner actually receives.
+          // G1 : setup_amount_ht et mrr_amount_ht resync aussi pour
+          // qu'un edit deal_value/setup_value post-approval garde la
+          // décomposition cohérente.
           ({ rows: [createdCommission] } = await client.query(
             `UPDATE commissions
                 SET amount = $2, deal_value = $3,
                     engagement_type = $4, engagement_periods = $5,
-                    amount_ht = $6, tax_rate_applied = $7, amount_tax = $8, amount_ttc = $9
+                    amount_ht = $6, tax_rate_applied = $7, amount_tax = $8, amount_ttc = $9,
+                    setup_amount_ht = $10, mrr_amount_ht = $11
               WHERE id = $1
               RETURNING id, amount, rate, deal_value, created_at`,
             [existingCom.id, amount, effectiveDealValue, effEngagement, effPeriods,
-             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc]
+             breakdown.amount_ht, breakdown.tax_rate, breakdown.amount_tax, breakdown.amount_ttc,
+             setupAmountHt, mrrAmountHt]
           ));
         }
 

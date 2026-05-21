@@ -1785,6 +1785,46 @@ async function runMigrations() {
     console.error('[migrate.v61] failed:', err.message);
   }
 
+  // v62: phase G1 — business model hybride (MRR + setup one-shot).
+  // Schéma-only, zéro changement comportemental :
+  //   - tenants.business_model = 'mrr_only' (défaut) | 'hybrid'
+  //   - tenant_levels.setup_rate : % appliqué au setup_value au won
+  //     (NULL si tenant en mrr_only ou tier sans setup)
+  //   - referrals.setup_value : montant HT one-shot du contrat client
+  //     final (NULL si pas applicable)
+  //   - commissions.setup_amount_ht + mrr_amount_ht : split des deux
+  //     composantes. Sur cycle 1 hybride, les 2 sont renseignés ;
+  //     sur cycles 2+, mrr_amount_ht uniquement (le setup est one-shot).
+  //     amount_ht reste la source de vérité agrégée (= setup + mrr).
+  //     Pour mrr_only, les 2 nouvelles colonnes restent NULL et le
+  //     legacy amount_ht conserve son rôle.
+  //
+  // Anti-régression : tous les tenants existants tombent sur le défaut
+  // 'mrr_only', les colonnes nullable restent NULL, tous les SELECT
+  // existants qui lisent amount_ht continuent à fonctionner sans
+  // modification. ADD COLUMN IF NOT EXISTS = idempotent.
+  try {
+    await query(`ALTER TABLE tenants ADD COLUMN IF NOT EXISTS business_model TEXT NOT NULL DEFAULT 'mrr_only'`);
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tenants_business_model_check') THEN
+          ALTER TABLE tenants ADD CONSTRAINT tenants_business_model_check
+            CHECK (business_model IN ('mrr_only', 'hybrid'));
+        END IF;
+      END $$
+    `);
+    await query(`ALTER TABLE tenant_levels ADD COLUMN IF NOT EXISTS setup_rate NUMERIC(5,2)`);
+    await query(`ALTER TABLE referrals    ADD COLUMN IF NOT EXISTS setup_value NUMERIC(12,2)`);
+    await query(`ALTER TABLE commissions
+                   ADD COLUMN IF NOT EXISTS setup_amount_ht NUMERIC(12,2),
+                   ADD COLUMN IF NOT EXISTS mrr_amount_ht   NUMERIC(12,2)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_tenants_business_model
+                   ON tenants(business_model) WHERE business_model = 'hybrid'`);
+    console.log("[hybrid] v62 tenants.business_model + tenant_levels.setup_rate + referrals.setup_value + commissions.setup_amount_ht/mrr_amount_ht ready");
+  } catch (err) {
+    console.error('[migrate.v62] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
