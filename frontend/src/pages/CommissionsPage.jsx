@@ -164,6 +164,22 @@ export default function CommissionsPage() {
   const [comLimits, setComLimits] = useState({});
   const [myTenant, setMyTenant] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  // F6 — état "SCA en cours". null = aucun paiement en vol.
+  //   { phase: 'in-flight', message } = requête envoyée, attente Qonto
+  //                                     (l'admin doit valider sur son
+  //                                     téléphone). Boutons Payer/Tout
+  //                                     payer disabled tant que != null.
+  //   { phase: 'timeout', message }    = timeout 90s atteint. L'opération
+  //                                     est probablement toujours en
+  //                                     cours côté serveur (qonto
+  //                                     idempotency_key F2a-FIX2
+  //                                     protège contre les doublons).
+  //                                     Auto-refresh dans 30s.
+  const [paymentState, setPaymentState] = useState(null);
+  const paymentTimeoutRef = useRef(null);
+  useEffect(() => () => {
+    if (paymentTimeoutRef.current) clearTimeout(paymentTimeoutRef.current);
+  }, []);
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
@@ -469,6 +485,10 @@ export default function CommissionsPage() {
   const executeSinglePay = async (commission) => {
     setBusyId(commission.id);
     setQontoModal(prev => prev ? { ...prev, executing: true } : prev);
+    setPaymentState({
+      phase: 'in-flight',
+      message: t('qonto.in_flight', 'Paiement en cours, validez sur votre app Qonto si demandé. Ne fermez pas cette fenêtre.'),
+    });
     try {
       const r = await api.payCommissionViaQonto(commission.id);
       setQontoModal({
@@ -478,15 +498,34 @@ export default function CommissionsPage() {
         reference: r.reference,
         requiresSca: !!r.requires_sca,
       });
+      setPaymentState(null);
       await reload();
       // Background reconciliation — quietly polls Qonto every 30 s
       // (up to 10 min) so a successful SCA approval flips the card
       // to Payé without the admin having to click anything.
       startAutoPoll();
     } catch (err) {
-      const code = err?.data?.error || err?.body?.code;
-      const message = qontoErrorLabel(t, code, err?.message);
-      setQontoModal({ kind: 'error', message });
+      // F6 — timeout SCA (AbortError 90s) : on NE déclenche PAS le
+      // modal d'erreur (Qonto a probablement reçu la requête et la
+      // SCA est encore en cours côté téléphone). Message prudent +
+      // auto-refresh dans 30s pour rattraper l'état effectif.
+      if (err && err.name === 'AbortError') {
+        setQontoModal(null);
+        setPaymentState({
+          phase: 'timeout',
+          message: t('qonto.in_flight_timeout', 'Paiement en cours, le résultat apparaîtra dans quelques instants. N\'effectuez pas un nouveau paiement.'),
+        });
+        if (paymentTimeoutRef.current) clearTimeout(paymentTimeoutRef.current);
+        paymentTimeoutRef.current = setTimeout(async () => {
+          try { await reload(); } catch {}
+          setPaymentState(null);
+        }, 30_000);
+      } else {
+        setPaymentState(null);
+        const code = err?.data?.error || err?.body?.code;
+        const message = qontoErrorLabel(t, code, err?.message);
+        setQontoModal({ kind: 'error', message });
+      }
     }
     setBusyId(null);
   };
@@ -531,6 +570,10 @@ export default function CommissionsPage() {
     const ids = commissions.map(c => c.id);
     setBulkBusy(true);
     setQontoModal({ kind: 'bulk', phase: 'running', total: ids.length });
+    setPaymentState({
+      phase: 'in-flight',
+      message: t('qonto.in_flight', 'Paiement en cours, validez sur votre app Qonto si demandé. Ne fermez pas cette fenêtre.'),
+    });
     try {
       const r = await api.payCommissionsBulk(ids);
       const transfers = r.transfers || [];
@@ -552,13 +595,30 @@ export default function CommissionsPage() {
         skipped: r.skipped || [],
         failed,
       });
+      setPaymentState(null);
       clearSelection();
       await reload();
       startAutoPoll();
     } catch (err) {
-      const code = err?.data?.error || err?.body?.code;
-      const message = qontoErrorLabel(t, code, err?.message);
-      setQontoModal({ kind: 'error', message });
+      // F6 — symétrique avec executeSinglePay : AbortError = timeout
+      // SCA, on attend et on auto-refresh plutôt que de crier au loup.
+      if (err && err.name === 'AbortError') {
+        setQontoModal(null);
+        setPaymentState({
+          phase: 'timeout',
+          message: t('qonto.in_flight_timeout', 'Paiement en cours, le résultat apparaîtra dans quelques instants. N\'effectuez pas un nouveau paiement.'),
+        });
+        if (paymentTimeoutRef.current) clearTimeout(paymentTimeoutRef.current);
+        paymentTimeoutRef.current = setTimeout(async () => {
+          try { await reload(); } catch {}
+          setPaymentState(null);
+        }, 30_000);
+      } else {
+        setPaymentState(null);
+        const code = err?.data?.error || err?.body?.code;
+        const message = qontoErrorLabel(t, code, err?.message);
+        setQontoModal({ kind: 'error', message });
+      }
     }
     setBulkBusy(false);
   };
@@ -724,6 +784,45 @@ export default function CommissionsPage() {
   return (
     <div className="fade-in">
       <style>{`@keyframes rb-spin{to{transform:rotate(360deg)}}.rb-spin{animation:rb-spin 1s linear infinite}@keyframes rb-pulse{0%,100%{opacity:1}50%{opacity:.4}}.rb-pulse{animation:rb-pulse 1.4s ease-in-out infinite}`}</style>
+
+      {/* F6 — Bandeau sticky "Paiement en cours" / timeout SCA. Visible
+          tant que paymentState !== null. En phase 'in-flight' : pas de
+          bouton "Fermer" (force l'attente). En phase 'timeout' : bouton
+          "Actualiser maintenant" pour rattraper l'état effectif sans
+          attendre l'auto-refresh 30s. */}
+      {paymentState && (
+        <div
+          style={{
+            position: 'sticky', top: 0, zIndex: 999,
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '12px 16px', borderRadius: 12, marginBottom: 12,
+            background: paymentState.phase === 'in-flight' ? '#eff6ff' : '#fffbeb',
+            border: '1px solid ' + (paymentState.phase === 'in-flight' ? '#bfdbfe' : '#fde68a'),
+            color: paymentState.phase === 'in-flight' ? '#1d4ed8' : '#92400e',
+            fontSize: 13, fontWeight: 600,
+          }}
+        >
+          <Send size={16} className={paymentState.phase === 'in-flight' ? 'rb-pulse' : ''} />
+          <span style={{ flex: 1 }}>{paymentState.message}</span>
+          {paymentState.phase === 'timeout' && (
+            <button
+              onClick={async () => {
+                if (paymentTimeoutRef.current) { clearTimeout(paymentTimeoutRef.current); paymentTimeoutRef.current = null; }
+                try { await reload(); } catch {}
+                setPaymentState(null);
+              }}
+              style={{
+                padding: '6px 12px', borderRadius: 8,
+                background: '#fff', border: '1px solid #fde68a', color: '#92400e',
+                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t('qonto.refresh_now', 'Actualiser maintenant')}
+            </button>
+          )}
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('commissions.title')}</h1>
@@ -925,8 +1024,8 @@ export default function CommissionsPage() {
           + Cancel. */}
       {tab === 'pipeline' && qontoStatus?.connected && selected.size > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-          <button onClick={handlePayBulk} disabled={bulkBusy}
-            style={{ padding: '9px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: bulkBusy ? 0.7 : 1 }}>
+          <button onClick={handlePayBulk} disabled={bulkBusy || !!paymentState}
+            style={{ padding: '9px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: (bulkBusy || !!paymentState) ? 0.7 : 1 }}>
             <Send size={14} /> {bulkBusy ? t('common.saving', 'Enregistrement…') : t('qonto.pay_selection', { count: selected.size, defaultValue: 'Payer la sélection ({{count}})' })}
           </button>
           <button onClick={clearSelection} disabled={bulkBusy}
@@ -1461,13 +1560,13 @@ export default function CommissionsPage() {
                               {t('payouts.in_batch_badge', 'Dans batch')}
                             </div>
                           ) : qontoStatus?.connected ? (
-                            <button onClick={() => handlePayViaQonto(c)} disabled={busyId === c.id}
+                            <button onClick={() => handlePayViaQonto(c)} disabled={busyId === c.id || !!paymentState}
                               style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
                               <Send size={12} /> {t('qonto.pay', 'Payer')}
                             </button>
                           ) : (
-                            <button onClick={() => handlePayClick(c)}
-                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <button onClick={() => handlePayClick(c)} disabled={!!paymentState}
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: paymentState ? 0.7 : 1 }}>
                               <CreditCard size={12} /> {t('commission.validate_payment')}
                             </button>
                           )}
@@ -1614,7 +1713,7 @@ export default function CommissionsPage() {
                     <td style={{ padding: '13px 16px' }}>
                       {c.status === 'pending_approval' && <button onClick={() => handleApprove(c.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.approve')}</button>}
                       {c.status === 'awaiting_invoice' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{t('commission.waiting_for_partner_invoice')}</span>}
-                      {c.status === 'pending_validation' && !c.payout_batch_id && <button onClick={() => handlePayClick(c)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.validate_payment')}</button>}
+                      {c.status === 'pending_validation' && !c.payout_batch_id && <button onClick={() => handlePayClick(c)} disabled={!!paymentState} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer', opacity: paymentState ? 0.7 : 1 }}>{t('commission.validate_payment')}</button>}
                       {c.status === 'pending_validation' && c.payout_batch_id && <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#eef2ff', color: '#4338ca' }}>{t('payouts.in_batch_badge', 'Dans batch')}</span>}
                       {c.status === 'paid' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
                     </td>

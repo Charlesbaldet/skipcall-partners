@@ -2,6 +2,14 @@ import i18n from '../i18n';
 
 const API_BASE = '/api';
 
+// F6 — SCA-aware timeout pour les endpoints qui peuvent déclencher
+// une validation strong-customer-authentication Qonto (mobile app
+// challenge). Le navigateur n'a pas de timeout fetch par défaut, mais
+// certains intermédiaires (proxies, Vercel edge) coupent les requêtes
+// > ~30s. 90s couvre largement le délai d'une SCA standard (10-30s).
+// Au-delà : AbortError côté client → message prudent + auto-refresh.
+const SCA_TIMEOUT_MS = 90_000;
+
 // Build a `start_date=…&end_date=…` querystring suffix from a
 // {startDate,endDate} object. `sep` is '?' for endpoints with no query
 // string, '&' for endpoints that already have one. Returns '' when the
@@ -276,9 +284,31 @@ class ApiClient {
   selectQontoBankAccount(payload) { return this.request('/integrations/qonto/bank-account', { method: 'PUT', body: JSON.stringify(payload) }); }
   disconnectQonto() { return this.request('/integrations/qonto/disconnect', { method: 'POST' }); }
 
-  // Qonto payments
-  payCommissionViaQonto(id) { return this.request(`/commissions/${id}/pay-qonto`, { method: 'POST' }); }
-  payCommissionsBulk(ids) { return this.request('/commissions/pay-bulk', { method: 'POST', body: JSON.stringify({ commission_ids: ids }) }); }
+  // Qonto payments — SCA-aware timeout (F6). Le signal abort propagé
+  // à fetch() force la requête à throw `AbortError` au bout de
+  // SCA_TIMEOUT_MS (90s). Le handler UI catch l'AbortError et affiche
+  // un message prudent + auto-refresh au lieu d'un faux-positif
+  // d'erreur. clearTimeout dans .finally() pour libérer le timer
+  // qu'importe le résultat (succès, échec serveur, abort).
+  payCommissionViaQonto(id) {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), SCA_TIMEOUT_MS);
+    return this.request(`/commissions/${id}/pay-qonto`, { method: 'POST', signal: ctrl.signal }).finally(() => clearTimeout(tid));
+  }
+  payCommissionsBulk(ids) {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), SCA_TIMEOUT_MS);
+    return this.request('/commissions/pay-bulk', { method: 'POST', body: JSON.stringify({ commission_ids: ids }), signal: ctrl.signal }).finally(() => clearTimeout(tid));
+  }
+  // F6 — helper pour le pay-qonto batch (endpoint F2a). Pas encore
+  // câblé côté UI (le bouton n'existe pas dans la modale détail F3b/F5
+  // pour l'instant) — exposé pour le wiring futur, avec timeout SCA
+  // par défaut comme ses jumeaux unitaire/bulk.
+  payPayoutBatchQonto(id) {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), SCA_TIMEOUT_MS);
+    return this.request('/payouts/batches/' + id + '/pay-qonto', { method: 'POST', signal: ctrl.signal }).finally(() => clearTimeout(tid));
+  }
   pollQontoTransfers() { return this.request('/commissions/poll-qonto', { method: 'POST' }); }
 
   // Payout batches (F2a/F2b — paie groupée par partenaire)
