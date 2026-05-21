@@ -186,6 +186,14 @@ export default function CommissionsPage() {
   // createBusy guards the "Confirmer" button against double-clicks.
   const [payoutModal, setPayoutModal] = useState(null);
   const [payoutCreating, setPayoutCreating] = useState(false);
+  // F3b — batches du tenant (cadence != 'unitary'). Permet le banner
+  // deadline, la 5e colonne "En retard", le regroupement automatique
+  // dans les 4 colonnes existantes et la modale détail.
+  const [batches, setBatches] = useState([]);
+  // Modale détail batch : { loading, batch, commissions } pendant
+  // le fetch puis avec la payload. null quand fermée.
+  const [batchDetail, setBatchDetail] = useState(null);
+  const [batchCanceling, setBatchCanceling] = useState(false);
   // Auto-poll loop after a Payer action: tick every 30 s, max 10 min.
   // Refs so we can cancel from a different render without a stale
   // closure.
@@ -253,6 +261,46 @@ export default function CommissionsPage() {
     }
   };
 
+  // F3b — helpers batches : map id -> batch, sets dérivés, ouverture détail
+  const batchesById = (() => { const m = new Map(); for (const b of batches) m.set(b.id, b); return m; })();
+  const lateBatches = batches.filter(b => b.is_late === true && b.status === 'awaiting_invoice');
+  const nearDeadlineBatches = batches.filter(b => {
+    if (b.status !== 'awaiting_invoice' || b.is_late) return false;
+    if (!b.created_at) return false;
+    const ageDays = (Date.now() - new Date(b.created_at).getTime()) / (24 * 60 * 60 * 1000);
+    return ageDays > 7;
+  });
+
+  const openBatchDetail = async (batchId) => {
+    setBatchDetail({ loading: true, batch: null, commissions: [] });
+    try {
+      const r = await api.getPayoutBatchDetail(batchId);
+      setBatchDetail({ loading: false, batch: r.batch, commissions: r.commissions || [] });
+    } catch (e) {
+      setBatchDetail(null);
+      showToast(e.message || t('common.error', 'Erreur'), 'error');
+    }
+  };
+
+  const handleCancelBatch = async () => {
+    if (!batchDetail?.batch) return;
+    const count = batchDetail.commissions.length;
+    const ok = window.confirm(
+      t('payouts.cancel_confirm', { count, defaultValue: 'Annuler ce batch ? Les {{count}} commissions seront détachées et redeviendront payables individuellement.' })
+    );
+    if (!ok) return;
+    setBatchCanceling(true);
+    try {
+      await api.cancelPayoutBatch(batchDetail.batch.id, { confirm: true });
+      showToast(t('payouts.cancel_toast', 'Batch annulé. Commissions détachées.'), 'success');
+      setBatchDetail(null);
+      await reload();
+    } catch (e) {
+      showToast(e.message || t('common.error', 'Erreur'), 'error');
+    }
+    setBatchCanceling(false);
+  };
+
   const confirmCreateBatches = async () => {
     if (!payoutModal || payoutModal.batches.length === 0) return;
     setPayoutCreating(true);
@@ -280,10 +328,27 @@ export default function CommissionsPage() {
       api.getMyTenant(),
       api.getQontoStatus().catch(() => ({ connected: false })),
     ]);
-    setMyTenant(mt && (mt.tenant || mt));
+    const tenant = mt && (mt.tenant || mt);
+    setMyTenant(tenant);
     setSummary(s.summary); setCommissions(c.commissions);
     setTotals({ pending: c.totalPending, paid: c.totalPaid });
     setQontoStatus(q);
+    // F3b — fetch batches uniquement si la cadence est non-unitary.
+    // Pour les tenants 'unitary' (la majorité), on saute purement
+    // pour économiser un round-trip et garder le comportement F2b
+    // strictement inchangé.
+    const cadence = tenant?.payout_cadence || 'unitary';
+    if (cadence !== 'unitary') {
+      try {
+        const r = await api.listPayoutBatches();
+        setBatches(r.batches || []);
+      } catch (e) {
+        console.warn('[commissions] listPayoutBatches failed:', e.message);
+        setBatches([]);
+      }
+    } else {
+      setBatches([]);
+    }
   };
 
   useEffect(() => { reload().catch(console.error).finally(() => setLoading(false)); }, []);
@@ -920,14 +985,71 @@ export default function CommissionsPage() {
         </div>
       )}
 
+      {/* F3b — bandeau deadline pour les batches awaiting_invoice.
+          Rouge si au moins 1 batch dépasse les 10 jours (is_late=true),
+          orange sinon si au moins 1 batch approche (>7j). Caché en
+          cadence unitary (batches reste vide donc lateBatches +
+          nearDeadlineBatches le sont aussi). */}
+      {tab === 'pipeline' && batchCadenceActive && lateBatches.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', marginBottom: 12, fontSize: 13 }}>
+          <AlertTriangle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, fontWeight: 600 }}>
+            {t('payouts.banner_late', { count: lateBatches.length, defaultValue: '{{count}} batches en retard (facture non reçue depuis plus de 10 jours)' })}
+          </span>
+        </div>
+      )}
+      {tab === 'pipeline' && batchCadenceActive && lateBatches.length === 0 && nearDeadlineBatches.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', marginBottom: 12, fontSize: 13 }}>
+          <Clock size={16} color="#d97706" style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, fontWeight: 600 }}>
+            {t('payouts.banner_near_deadline', { count: nearDeadlineBatches.length, defaultValue: '{{count}} batches approchent de la deadline facture (J-3 à J-1)' })}
+          </span>
+        </div>
+      )}
+
       {tab === 'pipeline' && viewMode === 'kanban' && (
         <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 400 }}>
           {STATUS_KEYS.map(status => {
             const sc = COM_STATUS[status];
-            const allCards = visibleCommissions.filter(c => c.status === status);
+            // F3b — exclure les commissions appartenant à un batch
+            // is_late de cette colonne : elles seront rendues dans la
+            // 5ème colonne "En retard" en cartes agrégées. Sans
+            // exclusion, une commission batchée late apparaîtrait
+            // 2× (col classique + col late).
+            const allCards = visibleCommissions.filter(c => {
+              if (c.status !== status) return false;
+              if (c.payout_batch_id) {
+                const b = batchesById.get(c.payout_batch_id);
+                if (b && b.is_late) return false;
+              }
+              return true;
+            });
+            // F3b — regroupement automatique : pour chaque batch
+            // ayant ≥3 commissions dans CETTE colonne, on rend une
+            // seule carte agrégée violette. < 3 → cartes individuelles
+            // (comportement F2b conservé byte-for-byte).
+            const byBatch = new Map();
+            const standalone = [];
+            for (const c of allCards) {
+              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) {
+                if (!byBatch.has(c.payout_batch_id)) byBatch.set(c.payout_batch_id, []);
+                byBatch.get(c.payout_batch_id).push(c);
+              } else {
+                standalone.push(c);
+              }
+            }
+            const displayItems = [];
+            for (const [batchId, group] of byBatch) {
+              if (group.length >= 3) {
+                displayItems.push({ kind: 'aggregate', batch: batchesById.get(batchId), commissions: group });
+              } else {
+                for (const c of group) displayItems.push({ kind: 'commission', c });
+              }
+            }
+            for (const c of standalone) displayItems.push({ kind: 'commission', c });
             const limit = comLimits[status] || 25;
-            const cards = allCards.slice(0, limit);
-            const hasMore = allCards.length > limit;
+            const cards = displayItems.slice(0, limit);
+            const hasMore = displayItems.length > limit;
             return (
               <div key={status} style={{ flex: 1, background: '#f8fafc', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
                 {(() => {
@@ -950,7 +1072,77 @@ export default function CommissionsPage() {
                   );
                 })()}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
-                  {cards.map(c => {
+                  {cards.map(item => {
+                    // F3b — carte agrégée violette pour un batch
+                    // ayant ≥3 commissions dans cette colonne. Rendu
+                    // dédié : aperçu chronologique 3 deals + bouton
+                    // "Voir le détail" qui ouvre la modale.
+                    if (item.kind === 'aggregate') {
+                      const ab = item.batch;
+                      const groupComs = item.commissions;
+                      const sortedPreview = [...groupComs]
+                        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                        .slice(0, 3);
+                      const remaining = groupComs.length - sortedPreview.length;
+                      const hasVatGroup = parseFloat(ab.total_amount_tax || 0) > 0;
+                      return (
+                        <div
+                          key={'aggregate-' + ab.id + '-' + status}
+                          style={{
+                            background: '#faf5ff', borderRadius: 12, padding: 14,
+                            border: '1px solid #d8b4fe',
+                            boxShadow: '0 1px 3px rgba(124,58,237,0.08)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontWeight: 600, color: '#6b21a8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                                {ab.period}
+                              </div>
+                              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {ab.partner_name}
+                              </div>
+                            </div>
+                            <span style={{ background: '#ede9fe', color: '#6b21a8', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 10, flexShrink: 0 }}>
+                              {groupComs.length} {t('payouts.aggregate_count_suffix', 'commissions')}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 20, fontWeight: 800, color: '#7c3aed', letterSpacing: -0.5, marginBottom: hasVatGroup ? 2 : 8 }}>
+                            {fmt(ab.total_amount_ttc)}{hasVatGroup ? ' TTC' : ''}
+                          </div>
+                          {hasVatGroup && (
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
+                              {fmt(ab.total_amount_ht)} HT · {fmt(ab.total_amount_tax)} TVA
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 10 }}>
+                            {sortedPreview.map(pc => (
+                              <div key={pc.id} style={{ color: '#475569', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                · {pc.prospect_company || pc.prospect_name || '—'}
+                              </div>
+                            ))}
+                            {remaining > 0 && (
+                              <div style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>
+                                +{remaining} {t('payouts.aggregate_more', 'autres')}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => openBatchDetail(ab.id)}
+                            style={{
+                              width: '100%', padding: '7px', borderRadius: 8,
+                              background: '#7c3aed', border: 'none', color: '#fff',
+                              fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            {t('payouts.see_details', 'Voir le détail')}
+                          </button>
+                        </div>
+                      );
+                    }
+                    const c = item.c;
                     const isSelected = selected.has(c.id);
                     // SCA-pending: backend stamped payment_initiated_at + a
                     // qonto_sca_session_token but no transfer ID yet.
@@ -1317,12 +1509,74 @@ export default function CommissionsPage() {
                     <button onClick={() => setComLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
                       padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
                       color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
-                    }}>{t('commissions.see_more', { count: allCards.length - limit })}</button>
+                    }}>{t('commissions.see_more', { count: displayItems.length - limit })}</button>
                   )}
                 </div>
               </div>
             );
           })}
+
+          {/* F3b — 5e colonne "En retard". Affichée uniquement si au
+              moins 1 batch est is_late=true (sinon le Kanban reste à
+              4 colonnes). Rendu exclusivement en cartes agrégées —
+              jamais de commission individuelle ici. */}
+          {batchCadenceActive && lateBatches.length > 0 && (
+            <div style={{ flex: 1, background: '#fef2f2', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #fecaca' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <AlertTriangle size={14} color="#dc2626" />
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#991b1b' }}>{t('payouts.column_late', 'En retard')}</span>
+                </div>
+                <span style={{ background: '#fee2e2', color: '#991b1b', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{lateBatches.length}</span>
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
+                {lateBatches.map(lb => {
+                  const hasVatLb = parseFloat(lb.total_amount_tax || 0) > 0;
+                  return (
+                    <div
+                      key={'late-' + lb.id}
+                      style={{
+                        background: '#fff', borderRadius: 12, padding: 14,
+                        border: '1px solid #fecaca',
+                        boxShadow: '0 1px 3px rgba(220,38,38,0.08)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#991b1b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                            {lb.period}
+                          </div>
+                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {lb.partner_name}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#dc2626', letterSpacing: -0.5, marginBottom: hasVatLb ? 2 : 8 }}>
+                        {fmt(lb.total_amount_ttc)}{hasVatLb ? ' TTC' : ''}
+                      </div>
+                      {hasVatLb && (
+                        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
+                          {fmt(lb.total_amount_ht)} HT · {fmt(lb.total_amount_tax)} TVA
+                        </div>
+                      )}
+                      <button
+                        onClick={() => openBatchDetail(lb.id)}
+                        style={{
+                          width: '100%', padding: '7px', borderRadius: 8,
+                          background: '#fee2e2', border: '1px solid #fecaca', color: '#991b1b',
+                          fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                          fontFamily: 'inherit', marginBottom: 6,
+                        }}
+                      >
+                        {lb.commission_count} {t('payouts.aggregate_count_suffix', 'commissions')}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1672,6 +1926,135 @@ export default function CommissionsPage() {
                       {payoutCreating
                         ? t('common.saving', 'Enregistrement…')
                         : t('payouts.confirm_button', { count: batches.length, defaultValue: 'Confirmer la paie groupée de {{count}} partenaires' })}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* F3b — Modale détail batch (au click sur "Voir le détail"
+          d'une carte agrégée ou sur une carte de la colonne "En retard").
+          Liste les commissions du batch avec lien "Voir le deal →"
+          et permet l'annulation. */}
+      {batchDetail && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={() => !batchCanceling && setBatchDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 640, maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+            {batchDetail.loading && (
+              <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                {t('common.loading', 'Chargement…')}
+              </div>
+            )}
+            {!batchDetail.loading && batchDetail.batch && (() => {
+              const bd = batchDetail.batch;
+              const list = batchDetail.commissions || [];
+              const hasVatBd = parseFloat(bd.total_amount_tax || 0) > 0;
+              const statusBadge = {
+                awaiting_invoice:   { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#fffbeb', color: '#92400e' },
+                ready_to_pay:      { label: t('payouts.status_ready_to_pay', 'Prêt à payer'),               bg: '#eff6ff', color: '#1d4ed8' },
+                paid:              { label: t('payouts.status_paid', 'Payé'),                                bg: '#f0fdf4', color: '#166534' },
+                cancelled:         { label: t('payouts.status_cancelled', 'Annulé'),                         bg: '#f1f5f9', color: '#475569' },
+              }[bd.status] || { label: bd.status, bg: '#f1f5f9', color: '#475569' };
+              return (
+                <>
+                  <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                            {t('payouts.detail_title', { partner: bd.partner_name, period: bd.period, defaultValue: 'Batch {{partner}} — {{period}}' })}
+                          </h2>
+                          <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: statusBadge.bg, color: statusBadge.color }}>
+                            {statusBadge.label}
+                          </span>
+                          {bd.is_late && (
+                            <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: '#fee2e2', color: '#991b1b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <AlertTriangle size={11} /> {t('payouts.is_late_badge', 'En retard')}
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>
+                          {list.length} {t('payouts.aggregate_count_suffix', 'commissions')}
+                          {' · '}{fmt(bd.total_amount_ttc)} TTC
+                          {hasVatBd && <span style={{ color: '#94a3b8' }}> ({fmt(bd.total_amount_ht)} HT + {fmt(bd.total_amount_tax)} TVA)</span>}
+                        </p>
+                      </div>
+                      <button onClick={() => !batchCanceling && setBatchDetail(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: batchCanceling ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <X size={16} color="#475569" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px' }}>
+                    {list.length === 0 ? (
+                      <div style={{ textAlign: 'center', color: '#94a3b8', padding: 24, fontSize: 13 }}>
+                        {t('payouts.detail_empty', 'Aucune commission dans ce batch.')}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {list.map(dc => {
+                          const dcHasVat = parseFloat(dc.amount_tax || 0) > 0;
+                          return (
+                            <div key={dc.id} style={{ padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {dc.prospect_company || dc.prospect_name || '—'}
+                                  </div>
+                                  {dc.prospect_company && dc.prospect_name && dc.prospect_company !== dc.prospect_name && (
+                                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 1 }}>{dc.prospect_name}</div>
+                                  )}
+                                  <div style={{ color: '#64748b', fontSize: 11, marginTop: 4 }}>
+                                    {dc.rate}% · {fmt(dc.deal_value)}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                                    {fmt(dcHasVat ? dc.amount_ttc : dc.amount)}{dcHasVat ? ' TTC' : ''}
+                                  </div>
+                                  {dc.referral_id && (
+                                    <a
+                                      href={'/referrals?open=' + dc.referral_id}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
+                                    >
+                                      {t('payouts.see_deal_link', 'Voir le deal →')}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                    {bd.status !== 'paid' && bd.status !== 'cancelled' ? (
+                      <button
+                        onClick={handleCancelBatch}
+                        disabled={batchCanceling}
+                        style={{
+                          padding: '9px 16px', borderRadius: 10,
+                          background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b',
+                          fontWeight: 700, fontSize: 13,
+                          cursor: batchCanceling ? 'wait' : 'pointer', fontFamily: 'inherit',
+                        }}
+                      >
+                        {batchCanceling ? t('common.saving', 'Enregistrement…') : t('payouts.cancel_batch_button', 'Annuler le batch')}
+                      </button>
+                    ) : <div />}
+                    <button
+                      onClick={() => !batchCanceling && setBatchDetail(null)}
+                      disabled={batchCanceling}
+                      style={{ padding: '9px 16px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: batchCanceling ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                    >
+                      {t('common.close', 'Fermer')}
                     </button>
                   </div>
                 </>
