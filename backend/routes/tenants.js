@@ -248,8 +248,18 @@ router.put('/:id', authenticate, async (req, res) => {
     // message clair au front. Pré-v62 tenants table lacks the column —
     // wrap so an unmigrated DB doesn't 500.
     if (business_model !== undefined) {
-      if (!['mrr_only', 'hybrid'].includes(business_model)) {
-        return res.status(400).json({ error: 'invalid_business_model', allowed: ['mrr_only', 'hybrid'] });
+      if (!['mrr', 'hybrid', 'forfait_tjm'].includes(business_model)) {
+        return res.status(400).json({ error: 'invalid_business_model', allowed: ['mrr', 'hybrid', 'forfait_tjm'] });
+      }
+      // H1 — forcer recurring_billing_enabled=false quand on bascule
+      // vers forfait_tjm. Le mode forfait/TJM est intrinsèquement
+      // one-shot ; un flag récurrent contradictoire briserait Phase E.
+      if (business_model === 'forfait_tjm') {
+        try {
+          await query('UPDATE tenants SET recurring_billing_enabled = FALSE WHERE id = $1', [req.params.id]);
+        } catch (e) {
+          console.error('[tenants PUT] forfait_tjm: failed to disable recurring_billing_enabled:', e.message);
+        }
       }
       try {
         await query('UPDATE tenants SET business_model = $1 WHERE id = $2', [business_model, req.params.id]);
@@ -298,7 +308,7 @@ router.get('/me', authenticate, async (req, res) => {
               COALESCE(recurring_billing_enabled, FALSE)         AS recurring_billing_enabled,
               COALESCE(recurring_renewal_trigger, 'on_paid')      AS recurring_renewal_trigger,
               COALESCE(payout_cadence, 'unitary')                 AS payout_cadence,
-              COALESCE(business_model, 'mrr_only')                AS business_model
+              COALESCE(business_model, 'mrr')                     AS business_model
          FROM tenants WHERE id = $1`,
       [req.user.tenantId]
     );

@@ -2287,6 +2287,7 @@ async function prepareRecurringRenewals(tenantId) {
         AND r.status = 'won'
         AND r.deleted_at IS NULL
         AND COALESCE(t.recurring_billing_enabled, FALSE) = TRUE
+        AND COALESCE(t.business_model, 'mrr') <> 'forfait_tjm'
         AND (c.is_perpetual = TRUE OR (c.engagement_until IS NOT NULL AND c.engagement_until >= $1::date))
         AND ($2::uuid IS NULL OR c.tenant_id = $2)`,
     [todayIso, tenantId || null]

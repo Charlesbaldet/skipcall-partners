@@ -1141,10 +1141,10 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         //   breakdown VAT s'applique sur ce total agrégé (le partner
         //   facture UN seul HT/TVA/TTC, jamais deux factures séparées).
         const { rows: [tenantBmRow] } = await client.query(
-          `SELECT COALESCE(business_model, 'mrr_only') AS business_model FROM tenants WHERE id = $1`,
+          `SELECT COALESCE(business_model, 'mrr') AS business_model FROM tenants WHERE id = $1`,
           [req.tenantId || null]
         );
-        const businessModel = tenantBmRow?.business_model || 'mrr_only';
+        const businessModel = tenantBmRow?.business_model || 'mrr';
         let setupAmountHt = null;
         let mrrAmountHt = null;
         let amount = mrrBaseAmount;
@@ -1193,8 +1193,14 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
           mrrAmountHt = mrrBaseAmount;
           amount = mrrBaseAmount + (setupAmountHt || 0);
         }
-
-        // Snapshot VAT decomposition at creation/sync time using the
+        // H1 — mode forfait_tjm (one-shot pur). Commission unique au
+        // won, jamais récurrente. amount_ht = mrrBaseAmount (calcul
+        // legacy via calculateCommissionAmount), setup/mrr columns
+        // restent NULL (pas de split). is_recurring forcé à false plus
+        // bas pour neutraliser Phase E (longévité, worker E5 ignore
+        // via is_recurring=false). Symétrique avec mrr_only mais sans
+        // recurring machinery.
+        const isForfaitTjm = businessModel === 'forfait_tjm';
         // partner's current tax profile. Without this the row sits at
         // tax_rate_applied = 0 / amount_ttc = amount until /pay-qonto
         // re-snapshots — and the partner's payments page can't show
@@ -1223,7 +1229,11 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         const recurringOn = !!tenantFlagRow?.recurring_on;
         // A recurring commission is, by definition, non-forfait — a
         // one-off flat fee can't "live as long as the deal is won".
-        const isRecurringEff = recurringOn && effEngagement !== 'forfait';
+        // H1 : un tenant en business_model='forfait_tjm' force
+        // is_recurring=false quoi qu'il arrive (le sélecteur Commission
+        // est l'arbitre métier — même si recurring_billing_enabled
+        // était à TRUE par erreur côté DB, on neutralise ici).
+        const isRecurringEff = recurringOn && effEngagement !== 'forfait' && !isForfaitTjm;
 
         // Resolve tier-driven longevity. Note we re-resolve the tier
         // for longevity even if the rate path used an override —

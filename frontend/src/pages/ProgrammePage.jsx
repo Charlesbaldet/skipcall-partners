@@ -27,10 +27,11 @@ export default function ProgrammePage() {
   // toggle was moved to Paramètres → Commission during E5; this
   // page no longer owns the write path.
   const [recurringBilling, setRecurringBilling] = useState(false);
-  // G2 — business_model du tenant. 'hybrid' débloque le champ
-  // setup_rate par tier (input numérique + affichage). 'mrr_only'
-  // (défaut, tous tenants existants) : zéro UI setup, byte-for-byte.
-  const [businessModel, setBusinessModel] = useState('mrr_only');
+  // G2/H1 — business_model du tenant. 'hybrid' débloque setup_rate
+  // par tier. 'forfait_tjm' masque les paramètres récurrents
+  // (longevity_mode/months — concepts non-applicables au one-shot).
+  // 'mrr' (défaut) : comportement historique.
+  const [businessModel, setBusinessModel] = useState('mrr');
 
   const load = async () => {
     setLoading(true);
@@ -40,7 +41,7 @@ export default function ProgrammePage() {
       const mt = await api.getMyTenant();
       const t0 = mt && (mt.tenant || mt);
       setRecurringBilling(!!t0?.recurring_billing_enabled);
-      setBusinessModel(t0?.business_model || 'mrr_only');
+      setBusinessModel(t0?.business_model || 'mrr');
     } catch (e) {
       setMsg({ type: 'error', text: e.message || t('common.error') });
     }
@@ -152,7 +153,7 @@ export default function ProgrammePage() {
           uniquement quand le tenant a activé la facturation récurrente —
           sinon le réglage n'existe pas pour ce tenant et le bloc reste
           identique au pré-E2. */}
-      {recurringBilling && (
+      {recurringBilling && businessModel !== 'forfait_tjm' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
           <div>
             <label style={labelStyle}>{t('programme.level_longevity_mode', 'Longévité')}</label>
@@ -258,7 +259,7 @@ export default function ProgrammePage() {
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: l.color || '#0f172a', fontSize: 15 }}>{l.name}</div>
               <div style={{ color: '#64748b', fontSize: 12 }}>{t('programme.level_desc', { min: parseFloat(l.min_threshold), unit: unitLabel, rate: parseFloat(l.commission_rate) })}</div>
-              {recurringBilling && (
+              {recurringBilling && businessModel !== 'forfait_tjm' && (
                 <div style={{ color: '#6366f1', fontSize: 11, marginTop: 2, fontWeight: 600 }}>
                   {l.longevity_mode === 'lifetime'
                     ? t('programme.longevity_lifetime_label', 'Longévité : à vie')

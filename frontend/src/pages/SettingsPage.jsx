@@ -2795,7 +2795,13 @@ function AppearanceTab() {
     setSaving(true); setMsg(null);
     try {
       const slug = slugify(form.name);
-      const payload = { ...form, slug: slug || undefined };
+      // H1 — revenue_model n'est plus piloté par le Branding tab
+      // (sélecteur supprimé). On strip explicitement le champ du
+      // payload pour qu'un state stale ne réécrive pas la colonne en
+      // DB. Pour les autres consumers (publicApi, marketplace) la
+      // valeur DB existante reste accessible en lecture.
+      const { revenue_model: _stale, ...rest } = form;
+      const payload = { ...rest, slug: slug || undefined };
       await api.updateMyTenant(payload);
       if (typeof window !== 'undefined' && window.__rbLoadTheme) window.__rbLoadTheme();
       setMsg({ type: 'success', text: slug ? t('settings.appearance_saved_with_link', { slug }) : t('settings.appearance_saved') });
@@ -2829,16 +2835,13 @@ function AppearanceTab() {
           <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={t('settings.company_ph')} style={inputStyle} />
         </div>
 
-        <div>
-          <label style={labelStyle}>{t('settings.revenue_model')}</label>
-          <select value={form.revenue_model || 'CA'} onChange={e => setForm(f => ({ ...f, revenue_model: e.target.value }))} style={inputStyle}>
-            <option value="MRR">{t('onboarding.mrr_label')}</option>
-            <option value="ARR">{t('onboarding.arr_label')}</option>
-            <option value="CA">{t('onboarding.ca_label')}</option>
-            <option value="Other">{t('onboarding.revenue_other')}</option>
-          </select>
-          <p style={{ margin: '6px 0 0', fontSize: 12, color: '#64748b' }}>{t('settings.revenue_model_hint')}</p>
-        </div>
+        {/* H1 — sélecteur "Modèle de revenu" (MRR/ARR/CA/Autre) supprimé.
+            Le choix architectural est désormais piloté par
+            Paramètres → Commission → Modèle commercial
+            (mrr / hybrid / forfait_tjm). La colonne tenants.revenue_model
+            reste en DB pour compat consumers tiers (publicApi,
+            marketplace, accountExport) mais n'est plus écrite via cette
+            UI. */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div>
             <label style={labelStyle}>{t('settings.branding_primary')}</label>
@@ -3087,11 +3090,11 @@ function CommissionTab() {
   const [enabled, setEnabled] = useState(false);
   const [trigger, setTrigger] = useState('on_paid');
   const [payoutCadence, setPayoutCadence] = useState('unitary');
-  // G2 — modèle commercial : 'mrr_only' (défaut) | 'hybrid'. Le mode
-  // hybrid expose un setup_rate par tier (Programme) + un setup_value
-  // par referral (formulaire deal). Tenants existants : mrr_only par
-  // défaut → comportement strictement inchangé.
-  const [businessModel, setBusinessModel] = useState('mrr_only');
+  // G2/H1 — modèle commercial : 'mrr' (défaut, ex-'mrr_only') | 'hybrid'
+  // | 'forfait_tjm'. Le mode hybrid expose un setup_rate par tier
+  // (Programme) + un setup_value par referral. Le mode forfait_tjm
+  // est one-shot pur (pas de récurrence, pas de longévité).
+  const [businessModel, setBusinessModel] = useState('mrr');
   const [loading, setLoading] = useState(true);
   const [savingEnabled, setSavingEnabled] = useState(false);
   const [savingTrigger, setSavingTrigger] = useState(false);
@@ -3109,7 +3112,7 @@ function CommissionTab() {
         setEnabled(!!t0?.recurring_billing_enabled);
         setTrigger(t0?.recurring_renewal_trigger || 'on_paid');
         setPayoutCadence(t0?.payout_cadence || 'unitary');
-        setBusinessModel(t0?.business_model || 'mrr_only');
+        setBusinessModel(t0?.business_model || 'mrr');
       } catch (e) {
         if (alive) setMsg({ type: 'error', text: e.message || t('common.error') });
       }
@@ -3125,6 +3128,12 @@ function CommissionTab() {
     setSavingBusinessModel(true);
     try {
       await api.updateMyTenant({ business_model: mode });
+      // H1 — bascule forfait_tjm : le backend force déjà
+      // recurring_billing_enabled=false côté tenants.js (PUT /:id).
+      // On reflète localement pour que l'UI cohérente (toggle caché).
+      if (mode === 'forfait_tjm' && enabled) {
+        setEnabled(false);
+      }
       setMsg({ type: 'success', text: t('programme.saved') });
       setTimeout(() => setMsg(null), 2000);
     } catch (e) {
@@ -3196,21 +3205,23 @@ function CommissionTab() {
         </div>
       )}
 
-      {/* G2 — Business model selector. Visible pour tous les tenants
-          (la valeur par défaut 'mrr_only' reflète le comportement
-          historique). Passer en 'hybrid' débloque le champ setup_rate
-          dans /programme (par tier) + le champ setup_value sur le
-          formulaire deal. */}
+      {/* G2/H1 — Business model selector (3 options). 'mrr' = revenu
+          récurrent uniquement (défaut, ex-'mrr_only'). 'hybrid' = MRR
+          + Setup one-shot. 'forfait_tjm' = paiement one-shot pur (pas
+          de récurrence, pas de longévité). Le mode forfait_tjm masque
+          automatiquement le toggle "facturation récurrente" + le
+          backend force recurring_billing_enabled=false. */}
       <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
         <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
           {t('settings.commission.business_model_title', 'Modèle commercial')}
         </div>
         <div style={{ color: '#64748b', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
-          {t('settings.commission.business_model_desc', 'En mode hybride, vous pouvez configurer un % spécifique sur les paiements de mise en service (setup) en plus du MRR. Le setup est versé une seule fois au won, le MRR à chaque cycle.')}
+          {t('settings.commission.business_model_desc', 'Définit comment vos partenaires sont rémunérés. MRR = commission récurrente sur revenu mensuel. Hybride = MRR + setup one-shot. Forfait/TJM = commission unique au gain (pas de récurrence).')}
         </div>
         {[
-          { id: 'mrr_only', label: t('settings.commission.business_model_mrr_only', 'MRR uniquement (défaut)') },
-          { id: 'hybrid',   label: t('settings.commission.business_model_hybrid',   'Hybride (MRR + Setup one-shot)') },
+          { id: 'mrr',         label: t('settings.commission.business_model_mrr',         'MRR (revenu récurrent mensuel)') },
+          { id: 'hybrid',      label: t('settings.commission.business_model_hybrid',      'Hybride (MRR récurrent + Setup one-shot)') },
+          { id: 'forfait_tjm', label: t('settings.commission.business_model_forfait_tjm', 'Forfait / TJM (one-shot, pas de récurrence)') },
         ].map(opt => {
           const active = businessModel === opt.id;
           return (
@@ -3232,27 +3243,33 @@ function CommissionTab() {
         })}
       </div>
 
-      {/* Master switch — moved here from /programme during E5. */}
-      <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
-              {t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
+      {/* Master switch — moved here from /programme during E5.
+          H1 : caché en mode forfait_tjm (one-shot pur, jamais de
+          récurrence). Le backend force aussi recurring_billing_enabled
+          = FALSE à la bascule vers forfait_tjm pour éviter un état
+          incohérent. */}
+      {businessModel !== 'forfait_tjm' && (
+        <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+                {t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
+              </div>
+              <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
+                {t('programme.recurring_billing_desc', 'Permet de définir des commissions à vie ou sur une durée limitée pour les deals récurrents. Sans cette option, les commissions sont calculées une seule fois au moment du gain.')}
+              </div>
             </div>
-            <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-              {t('programme.recurring_billing_desc', 'Permet de définir des commissions à vie ou sur une durée limitée pour les deals récurrents. Sans cette option, les commissions sont calculées une seule fois au moment du gain.')}
-            </div>
+            <button
+              onClick={toggleEnabled}
+              disabled={savingEnabled}
+              style={{ background: 'none', border: 'none', cursor: savingEnabled ? 'wait' : 'pointer', color: enabled ? '#059669' : '#cbd5e1', flexShrink: 0, padding: 4 }}
+              aria-label={t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
+            >
+              {enabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+            </button>
           </div>
-          <button
-            onClick={toggleEnabled}
-            disabled={savingEnabled}
-            style={{ background: 'none', border: 'none', cursor: savingEnabled ? 'wait' : 'pointer', color: enabled ? '#059669' : '#cbd5e1', flexShrink: 0, padding: 4 }}
-            aria-label={t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
-          >
-            {enabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Renewal trigger + payout cadence — visible only when master
           switch is ON. The cadence selector lives in the same gated

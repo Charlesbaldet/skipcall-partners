@@ -1825,6 +1825,49 @@ async function runMigrations() {
     console.error('[migrate.v62] failed:', err.message);
   }
 
+  // v63: phase H1 — ajout du 3ème mode 'forfait_tjm' (one-shot pur,
+  // pas de récurrence ni longévité). Rename 'mrr_only' → 'mrr' pour
+  // cohérence sémantique (3 modes parallèles plutôt que 2 opposés).
+  // Migration legacy : un tenant existant avec revenue_model='CA'
+  // (sélecteur Branding pré-H1) est basculé en 'forfait_tjm' — la
+  // sémantique "CA" est explicitement non-récurrente. ARR / Other
+  // tombent sur 'mrr' (default safe). 'hybrid' est PRÉSERVÉ (le mapping
+  // ne touche que les rows déjà à 'mrr' post step-2).
+  //
+  // La colonne legacy tenants.revenue_model est CONSERVÉE (consommée
+  // encore par publicApi, marketplace, superadmin, accountExport,
+  // commissionFormula, frontend rLabel). Sa désactivation se fait
+  // côté UI ITEM 4 (sélecteur Branding supprimé) — déprécié, mais
+  // accessible en lecture pour ne pas casser les consumers tiers.
+  try {
+    await query(`ALTER TABLE tenants DROP CONSTRAINT IF EXISTS tenants_business_model_check`);
+    // Le DEFAULT v62 était 'mrr_only' — incompatible avec le nouveau
+    // CHECK ci-dessous. On le bascule sur 'mrr' AVANT de poser la
+    // contrainte sinon un INSERT futur sans business_model explicite
+    // crasherait.
+    await query(`ALTER TABLE tenants ALTER COLUMN business_model SET DEFAULT 'mrr'`);
+    const { rowCount: renamed } = await query(
+      `UPDATE tenants SET business_model = 'mrr' WHERE business_model = 'mrr_only'`
+    );
+    const { rowCount: forfaitMigrated } = await query(
+      `UPDATE tenants
+          SET business_model = 'forfait_tjm'
+        WHERE business_model = 'mrr'
+          AND revenue_model = 'CA'`
+    );
+    await query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tenants_business_model_check') THEN
+          ALTER TABLE tenants ADD CONSTRAINT tenants_business_model_check
+            CHECK (business_model IN ('mrr', 'hybrid', 'forfait_tjm'));
+        END IF;
+      END $$
+    `);
+    console.log(`[hybrid] v63 business_model 3-mode constraint ready · renamed ${renamed} mrr_only→mrr · migrated ${forfaitMigrated} CA→forfait_tjm`);
+  } catch (err) {
+    console.error('[migrate.v63] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

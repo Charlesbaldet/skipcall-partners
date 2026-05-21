@@ -560,7 +560,9 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
   const [editSetupValue, setEditSetupValue] = useState(
     referral.setup_value != null ? String(parseFloat(referral.setup_value)) : ''
   );
-  const isHybridTenant = (myTenant?.business_model || 'mrr_only') === 'hybrid';
+  const tenantBusinessModel = myTenant?.business_model || 'mrr';
+  const isHybridTenant = tenantBusinessModel === 'hybrid';
+  const isForfaitTjmTenant = tenantBusinessModel === 'forfait_tjm';
   const [saving, setSaving] = useState(false);
   // Existing rows can ship one of the legacy English keys
   // (monthly/quarterly/yearly) until the v27 migration drains them.
@@ -846,7 +848,12 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 220px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
-                    {rLabel} ({rUnit})
+                    {/* H1 — label deal_value selon business_model.
+                        forfait_tjm = montant one-shot HT (pas de
+                        cadence) ; mrr / hybrid = MRR mensuel comme avant. */}
+                    {isForfaitTjmTenant
+                      ? t('referrals.value_label_forfait', 'Montant forfait HT')
+                      : `${rLabel} (${rUnit})`}
                     {referral.deal_value_locked && (
                       <span title={t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 8px' }}>
                         <Lock size={11} /> {t('referrals.deal_value_locked', 'Verrouillé')}
