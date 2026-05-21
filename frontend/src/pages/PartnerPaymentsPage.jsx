@@ -292,40 +292,39 @@ export default function PartnerPaymentsPage() {
       <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 420 }}>
         {STATUS_KEYS.map(statusKey => {
             const st = PAY_STATUS[statusKey];
-            // F3c — colonne commissions visibles. allCards reste la
-            // source pour le compteur + total HT du header (contrat
-            // F2b preserved). displayItems est la version regroupée
-            // pour le rendu : ≥ 3 commissions d'un même batch dans
-            // cette colonne → 1 carte agrégée à la place. Le reste
-            // (< 3 d'un batch, ou sans batch) → cartes individuelles.
-            const allCards = visibleRows.filter(c => c.status === statusKey);
-            const byBatch = new Map();
-            const standalone = [];
-            for (const c of allCards) {
-              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) {
-                if (!byBatch.has(c.payout_batch_id)) byBatch.set(c.payout_batch_id, []);
-                byBatch.get(c.payout_batch_id).push(c);
-              } else {
-                standalone.push(c);
-              }
-            }
-            const displayItems = [];
-            for (const [batchId, group] of byBatch) {
-              if (group.length >= 3) {
-                displayItems.push({ kind: 'aggregate', batch: batchesById.get(batchId), commissions: group });
-              } else {
-                for (const c of group) displayItems.push({ kind: 'commission', c });
-              }
-            }
-            for (const c of standalone) displayItems.push({ kind: 'commission', c });
+            // F5 — batch = unité visuelle. Position dérivée de
+            // batch.status (et NON commission.status). 1 batch = 1
+            // carte agrégée, peu importe le nombre de commissions
+            // internes. Les commissions standalone (sans batch
+            // résolu) gardent leur rendu individuel (cas unitary
+            // ou batch fetch indisponible).
+            const BATCH_COL_BY_STATUS = {
+              awaiting_invoice: 'awaiting_invoice',
+              ready_to_pay:     'pending_validation',
+              paid:             'paid',
+            };
+            const colBatches = [...batchesById.values()].filter(b => BATCH_COL_BY_STATUS[b.status] === statusKey);
+            const standaloneCommissions = visibleRows.filter(c => {
+              if (c.status !== statusKey) return false;
+              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) return false;
+              return true;
+            });
+            const displayItems = [
+              ...colBatches.map(b => ({
+                kind: 'aggregate',
+                batch: b,
+                commissions: visibleRows.filter(c => c.payout_batch_id === b.id),
+              })),
+              ...standaloneCommissions.map(c => ({ kind: 'commission', c })),
+            ];
             const cards = displayItems;
-            // Column total — HT only, mirroring the admin /commissions
-            // header. The TVA breakdown is on each card; the column
-            // header stays a single number so the partner can scan
-            // their lifecycle stages without doing math. NB: utilise
-            // allCards (commissions individuelles) — l'agrégation
-            // F3c ne change pas le total ni le compteur affiché.
-            const colTotalHt = allCards.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0);
+            // F5 — total HT colonne = somme des commissions standalone
+            // + somme des batches agrégés présents. 1 batch contribue
+            // pour son total_amount_ht, peu importe le nombre de
+            // commissions internes.
+            const colTotalHt =
+              standaloneCommissions.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0)
+              + colBatches.reduce((s, b) => s + (parseFloat(b.total_amount_ht) || 0), 0);
             return (
               <div
                 key={statusKey}
@@ -343,25 +342,27 @@ export default function PartnerPaymentsPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                     {colTotalHt > 0 && <span style={{ fontWeight: 700, fontSize: 13, color: st.color }}>{fmt(colTotalHt)}</span>}
-                    <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
+                    <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{displayItems.length}</span>
                   </div>
                 </div>
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                   {cards.map(item => {
-                    // F3c — branche aggregate violette. Le rendu
-                    // n'affiche PAS partner_name (c'est le partenaire
-                    // lui-même côté Mes Paiements). Bouton "Déposer la
-                    // facture du mois" sur les batches qui attendent
-                    // encore une facture ; "Voir le détail" toujours
-                    // accessible pour ouvrir la modale.
+                    // F5 — carte agrégée violette pour chaque batch.
+                    // Pas de partner_name (le partenaire est lui-même).
+                    // Sub-header "Versée par {tenant_name}" pour clarifier
+                    // l'origine. Bouton "Déposer la facture du mois"
+                    // sur batch.status === 'awaiting_invoice'.
                     if (item.kind === 'aggregate') {
                       const ab = item.batch;
                       const groupComs = item.commissions;
+                      const totalCount = ab.commission_count != null
+                        ? Number(ab.commission_count)
+                        : groupComs.length;
                       const sortedPreview = [...groupComs]
                         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
                         .slice(0, 3);
-                      const remaining = groupComs.length - sortedPreview.length;
+                      const remaining = Math.max(0, totalCount - sortedPreview.length);
                       const hasVatGroup = parseFloat(ab.total_amount_tax || 0) > 0;
                       const canUploadInvoice = ab.status === 'awaiting_invoice';
                       const invoiceReceived = ab.status === 'ready_to_pay';
@@ -374,13 +375,20 @@ export default function PartnerPaymentsPage() {
                             boxShadow: '0 1px 3px rgba(124,58,237,0.08)',
                           }}
                         >
-                          <div style={{ marginBottom: 8 }}>
-                            <div style={{ fontWeight: 600, color: '#6b21a8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
-                              {ab.period}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontWeight: 600, color: '#6b21a8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                                ▣ {t('payouts.partner_period_prefix', 'Votre paie de')} {ab.period}
+                              </div>
+                              {ab.tenant_name && (
+                                <div style={{ color: '#64748b', fontSize: 11 }}>
+                                  {t('payouts.paid_by', { tenant: ab.tenant_name, defaultValue: 'Versée par {{tenant}}' })}
+                                </div>
+                              )}
                             </div>
-                            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>
-                              {groupComs.length} {t('payouts.aggregate_count_suffix', 'commissions')}
-                            </div>
+                            <span style={{ background: '#ede9fe', color: '#6b21a8', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 10, flexShrink: 0 }}>
+                              {totalCount} {totalCount > 1 ? t('payouts.deals_plural', 'deals') : t('payouts.deals_one', 'deal')}
+                            </span>
                           </div>
                           <div style={{ fontSize: 22, fontWeight: 800, color: '#7c3aed', letterSpacing: -0.5, marginBottom: hasVatGroup ? 2 : 8 }}>
                             {fmt(ab.total_amount_ttc)}{hasVatGroup ? ' TTC' : ''}
@@ -390,12 +398,21 @@ export default function PartnerPaymentsPage() {
                               {fmt(ab.total_amount_ht)} HT · {fmt(ab.total_amount_tax)} TVA
                             </div>
                           )}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 10 }}>
-                            {sortedPreview.map(pc => (
-                              <div key={pc.id} style={{ color: '#475569', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                · {pc.prospect_company || pc.prospect_name || '—'}
-                              </div>
-                            ))}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 10 }}>
+                            {sortedPreview.map(pc => {
+                              const pcHasVat = parseFloat(pc.amount_tax || 0) > 0;
+                              const pcHt = pcHasVat ? pc.amount_ht : pc.amount;
+                              return (
+                                <div key={pc.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#475569', fontSize: 11 }}>
+                                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    · {pc.prospect_company || pc.prospect_name || '—'}
+                                  </span>
+                                  <span style={{ color: '#94a3b8', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                                    {fmt(pcHt)}
+                                  </span>
+                                </div>
+                              );
+                            })}
                             {remaining > 0 && (
                               <div style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>
                                 +{remaining} {t('payouts.aggregate_more', 'autres')}
@@ -439,7 +456,7 @@ export default function PartnerPaymentsPage() {
                               fontFamily: 'inherit',
                             }}
                           >
-                            {t('payouts.see_details', 'Voir le détail')}
+                            {t('payouts.see_details', 'Voir le détail')} →
                           </button>
                         </div>
                       );

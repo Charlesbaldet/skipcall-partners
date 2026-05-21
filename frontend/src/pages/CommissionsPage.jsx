@@ -962,53 +962,59 @@ export default function CommissionsPage() {
         <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 400 }}>
           {STATUS_KEYS.map(status => {
             const sc = COM_STATUS[status];
-            // F3b — exclure les commissions appartenant à un batch
-            // is_late de cette colonne : elles seront rendues dans la
-            // 5ème colonne "En retard" en cartes agrégées. Sans
-            // exclusion, une commission batchée late apparaîtrait
-            // 2× (col classique + col late).
-            const allCards = visibleCommissions.filter(c => {
+            // F5 — batch = unité visuelle. Position de la carte batch
+            // dans le Kanban dérivée de batch.status (et NON de
+            // commission.status). Mapping :
+            //   batch.status='awaiting_invoice' → col 'awaiting_invoice'
+            //   batch.status='ready_to_pay'     → col 'pending_validation'
+            //   batch.status='paid'             → col 'paid'
+            //   batch.status='cancelled'        → exclu (deleted_at filtré
+            //                                   par F3a GET /batches déjà)
+            // Les batches is_late vont exclusivement dans la 5e
+            // colonne "En retard" (rendue plus bas), pas ici.
+            const BATCH_COL_BY_STATUS = {
+              awaiting_invoice: 'awaiting_invoice',
+              ready_to_pay:     'pending_validation',
+              paid:             'paid',
+            };
+            const colBatches = batches.filter(b =>
+              BATCH_COL_BY_STATUS[b.status] === status && !b.is_late
+            );
+            // Commissions individuelles : uniquement celles SANS batch
+            // référencé dans batchesById (i.e. cadence unitary, ou
+            // commission héritée pré-F4 sans batch attribué). Les
+            // commissions batchées sont compressées dans la carte
+            // agrégée et NE doivent PAS être rendues en doublon.
+            const standaloneCommissions = visibleCommissions.filter(c => {
               if (c.status !== status) return false;
-              if (c.payout_batch_id) {
-                const b = batchesById.get(c.payout_batch_id);
-                if (b && b.is_late) return false;
-              }
+              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) return false;
               return true;
             });
-            // F3b — regroupement automatique : pour chaque batch
-            // ayant ≥3 commissions dans CETTE colonne, on rend une
-            // seule carte agrégée violette. < 3 → cartes individuelles
-            // (comportement F2b conservé byte-for-byte).
-            const byBatch = new Map();
-            const standalone = [];
-            for (const c of allCards) {
-              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) {
-                if (!byBatch.has(c.payout_batch_id)) byBatch.set(c.payout_batch_id, []);
-                byBatch.get(c.payout_batch_id).push(c);
-              } else {
-                standalone.push(c);
-              }
-            }
-            const displayItems = [];
-            for (const [batchId, group] of byBatch) {
-              if (group.length >= 3) {
-                displayItems.push({ kind: 'aggregate', batch: batchesById.get(batchId), commissions: group });
-              } else {
-                for (const c of group) displayItems.push({ kind: 'commission', c });
-              }
-            }
-            for (const c of standalone) displayItems.push({ kind: 'commission', c });
+            // displayItems = batches (agrégées) + commissions standalone.
+            // 1 batch = 1 item (peu importe le nombre de commissions).
+            const displayItems = [
+              ...colBatches.map(b => ({
+                kind: 'aggregate',
+                batch: b,
+                commissions: visibleCommissions.filter(c => c.payout_batch_id === b.id),
+              })),
+              ...standaloneCommissions.map(c => ({ kind: 'commission', c })),
+            ];
             const limit = comLimits[status] || 25;
             const cards = displayItems.slice(0, limit);
             const hasMore = displayItems.length > limit;
             return (
               <div key={status} style={{ flex: 1, background: '#f8fafc', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
                 {(() => {
-                  // Column total — HT only. Same source as the KPI
-                  // tiles: amount_ht when set (post-payout snapshot),
-                  // fall back to amount for unpaid rows. TVA detail
-                  // is on each card's own banner.
-                  const totalHt = allCards.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0);
+                  // F5 — Column total + count = SOMME des unités visuelles
+                  // affichées (1 carte batch = 1 unité, peu importe le
+                  // nombre de commissions internes). Total HT = somme
+                  // des commissions standalone + somme des batches
+                  // agrégés de la colonne. Cohérence : le total
+                  // correspond exactement à ce que l'admin voit.
+                  const totalHt =
+                    standaloneCommissions.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0)
+                    + colBatches.reduce((s, b) => s + (parseFloat(b.total_amount_ht) || 0), 0);
                   return (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1017,25 +1023,32 @@ export default function CommissionsPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>{fmt(totalHt)}</span>
-                        <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
+                        <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{displayItems.length}</span>
                       </div>
                     </div>
                   );
                 })()}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
                   {cards.map(item => {
-                    // F3b — carte agrégée violette pour un batch
-                    // ayant ≥3 commissions dans cette colonne. Rendu
-                    // dédié : aperçu chronologique 3 deals + bouton
-                    // "Voir le détail" qui ouvre la modale.
+                    // F5 — carte agrégée violette pour CHAQUE batch
+                    // (sans seuil minimum). 1 batch = 1 carte, position
+                    // dans la colonne dérivée de batch.status.
                     if (item.kind === 'aggregate') {
                       const ab = item.batch;
                       const groupComs = item.commissions;
+                      const totalCount = ab.commission_count != null
+                        ? Number(ab.commission_count)
+                        : groupComs.length;
                       const sortedPreview = [...groupComs]
                         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
                         .slice(0, 3);
-                      const remaining = groupComs.length - sortedPreview.length;
+                      const remaining = Math.max(0, totalCount - sortedPreview.length);
                       const hasVatGroup = parseFloat(ab.total_amount_tax || 0) > 0;
+                      const batchStatusPill = {
+                        awaiting_invoice: { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#fffbeb', color: '#92400e' },
+                        ready_to_pay:     { label: t('payouts.status_ready_to_pay',     'Prêt à payer'),           bg: '#eff6ff', color: '#1d4ed8' },
+                        paid:             { label: t('payouts.status_paid',             'Payé'),                    bg: '#f0fdf4', color: '#166534' },
+                      }[ab.status] || null;
                       return (
                         <div
                           key={'aggregate-' + ab.id + '-' + status}
@@ -1048,14 +1061,14 @@ export default function CommissionsPage() {
                           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
                             <div style={{ minWidth: 0, flex: 1 }}>
                               <div style={{ fontWeight: 600, color: '#6b21a8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
-                                {ab.period}
+                                ▣ {ab.period}
                               </div>
                               <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {ab.partner_name}
                               </div>
                             </div>
                             <span style={{ background: '#ede9fe', color: '#6b21a8', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 10, flexShrink: 0 }}>
-                              {groupComs.length} {t('payouts.aggregate_count_suffix', 'commissions')}
+                              {totalCount} {totalCount > 1 ? t('payouts.aggregate_count_suffix', 'commissions') : t('payouts.aggregate_count_suffix_one', 'commission')}
                             </span>
                           </div>
                           <div style={{ fontSize: 20, fontWeight: 800, color: '#7c3aed', letterSpacing: -0.5, marginBottom: hasVatGroup ? 2 : 8 }}>
@@ -1066,18 +1079,34 @@ export default function CommissionsPage() {
                               {fmt(ab.total_amount_ht)} HT · {fmt(ab.total_amount_tax)} TVA
                             </div>
                           )}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 10 }}>
-                            {sortedPreview.map(pc => (
-                              <div key={pc.id} style={{ color: '#475569', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                · {pc.prospect_company || pc.prospect_name || '—'}
-                              </div>
-                            ))}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 10 }}>
+                            {sortedPreview.map(pc => {
+                              const pcHasVat = parseFloat(pc.amount_tax || 0) > 0;
+                              const pcHt = pcHasVat ? pc.amount_ht : pc.amount;
+                              return (
+                                <div key={pc.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#475569', fontSize: 11 }}>
+                                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    · {pc.prospect_company || pc.prospect_name || '—'}
+                                  </span>
+                                  <span style={{ color: '#94a3b8', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                                    {fmt(pcHt)}
+                                  </span>
+                                </div>
+                              );
+                            })}
                             {remaining > 0 && (
                               <div style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>
                                 +{remaining} {t('payouts.aggregate_more', 'autres')}
                               </div>
                             )}
                           </div>
+                          {batchStatusPill && (
+                            <div style={{ marginBottom: 10 }}>
+                              <span style={{ background: batchStatusPill.bg, color: batchStatusPill.color, fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8 }}>
+                                {batchStatusPill.label}
+                              </span>
+                            </div>
+                          )}
                           <button
                             onClick={() => openBatchDetail(ab.id)}
                             style={{
@@ -1088,7 +1117,7 @@ export default function CommissionsPage() {
                               fontFamily: 'inherit',
                             }}
                           >
-                            {t('payouts.see_details', 'Voir le détail')}
+                            {t('payouts.see_details', 'Voir le détail')} →
                           </button>
                         </div>
                       );
