@@ -506,7 +506,25 @@ export default function PartnerPaymentsPage() {
                         {c.rate}% · {fmt(c.deal_value)} · {fmtDate(c.created_at)}
                       </div>
 
-                      {statusKey === 'awaiting_invoice' && !inBatch && (
+                      {/* F4 — En cadence non-unitary, une commission
+                          approved sans payout_batch_id signifie qu'elle
+                          attend son inclusion dans le prochain batch
+                          (cas rare post-F4 : auto-batch à l'approve la
+                          rattacherait normalement immédiatement. Le badge
+                          est défensif pour les commissions historiques
+                          pré-F4 ou un tenant qui vient de flip cadence).
+                          Le bouton upload individuel est masqué. */}
+                      {statusKey === 'awaiting_invoice' && !inBatch && tenantCadence !== 'unitary' && (
+                        <div style={{
+                          padding: '7px 10px', borderRadius: 8,
+                          background: '#f1f5f9', color: '#64748b',
+                          fontSize: 11, textAlign: 'center', fontWeight: 600,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                        }}>
+                          <Clock size={12} /> {t('payouts.awaiting_batch_inclusion', 'En attente d\'inclusion dans le batch mensuel')}
+                        </div>
+                      )}
+                      {statusKey === 'awaiting_invoice' && !inBatch && tenantCadence === 'unitary' && (
                         <button
                           onClick={() => triggerUpload(c.id)}
                           disabled={uploadingId === c.id}

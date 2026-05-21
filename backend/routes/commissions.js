@@ -1,5 +1,5 @@
 const express = require('express');
-const { query } = require('../db');
+const { query, getClient } = require('../db');
 const { authenticate, authorize, partnerScope, tenantScope } = require('../middleware/auth');
 const resend = require('../services/resend');
 const templates = require('../services/email-templates');
@@ -454,15 +454,47 @@ const fmtMoney = (n) => {
 };
 
 // Admin approve: pending_approval → awaiting_invoice
+//
+// F4 — auto-batch à l'approve. Quand tenant.payout_cadence != 'unitary',
+// la commission est immédiatement attachée à un batch
+// commission_payout_batches pour le partenaire + période courante :
+//   - Batch existant ouvert (status='awaiting_invoice') : attachement direct
+//   - Aucun batch : INSERT du batch ON CONFLICT DO NOTHING (idempotent
+//     anti-race) + attachement
+// Le total batch est recalculé en lockstep. Email
+// payoutBatchInvoiceRequest envoyé uniquement à la PREMIÈRE création
+// (isNewBatch=true) pour éviter de spammer le partenaire à chaque
+// commission ajoutée au batch en cours.
+//
+// Pour cadence === 'unitary' : comportement strictement inchangé
+// (email commissionApproved historique, aucun batch).
+//
+// Pattern transactionnel F2a-FIX4 : getClient + BEGIN/COMMIT,
+// client.release() UNIQUEMENT dans finally{}, ROLLBACK avant les
+// early returns post-BEGIN.
 router.post('/:id/approve', authorize('admin'), async (req, res) => {
-  try {
-    const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
-    if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
-    if (existing.status === 'awaiting_invoice' || existing.status === 'pending_validation' || existing.status === 'paid') {
-      return res.json({ commission: existing, noop: true });
-    }
+  const existing = await loadCommissionWithContext(req.params.id, req.tenantId);
+  if (!existing) return res.status(404).json({ error: 'Commission introuvable' });
+  if (existing.status === 'awaiting_invoice' || existing.status === 'pending_validation' || existing.status === 'paid') {
+    return res.json({ commission: existing, noop: true });
+  }
 
-    const { rows: [updated] } = await query(
+  // Late require to avoid module-load-time circularity risk. payouts.js
+  // requires nothing from commissions.js so the cycle is purely
+  // theoretical, but this also lets the unit-test harness stub it.
+  const payouts = require('./payouts');
+
+  const client = await getClient();
+  let updated = null;
+  let cadence = 'unitary';
+  let batchInfo = null; // { id, isNewBatch, period }
+  try {
+    await client.query('BEGIN');
+
+    // 1. Promote the commission. Identical UPDATE to pre-F4 — we just
+    //    wrap it in a transaction now so the auto-batch attachment
+    //    below stays atomic with the approval.
+    const { rows: [u] } = await client.query(
       `UPDATE commissions
           SET status = 'awaiting_invoice',
               approval_status = 'approved',
@@ -471,43 +503,119 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
         WHERE id = $1 RETURNING *`,
       [req.params.id]
     );
+    updated = u;
 
-    logAudit(req, 'commission.approved', 'commission', req.params.id, { amount: existing.amount, partner_id: existing.partner_id });
+    // 2. Lookup tenant cadence in the same transaction (consistent read).
+    const { rows: [tenantRow] } = await client.query(
+      `SELECT COALESCE(payout_cadence, 'unitary') AS payout_cadence FROM tenants WHERE id = $1`,
+      [existing.tenant_id]
+    );
+    cadence = tenantRow?.payout_cadence || 'unitary';
 
-    // Fire-and-forget: create the Pennylane supplier invoice if the
-    // tenant has the integration on. Detached from the response so a
-    // slow Pennylane API never makes the admin's "Approuver" click
-    // feel laggy.
-    createPennylaneInvoice(req.params.id, existing.tenant_id).catch(() => {});
+    if (cadence !== 'unitary') {
+      const period = payouts.currentPeriod(cadence);
+      if (!period) {
+        await client.query('ROLLBACK');
+        return res.status(500).json({ error: 'invalid_cadence', cadence });
+      }
 
-    (async () => {
-      try {
-        // F2a: pour les tenants en cadence monthly/quarterly, on ne
-        // veut PAS spammer le partenaire d'un email par commission
-        // approuvée — il recevra un seul email payoutBatchInvoiceRequest
-        // à la création du batch (cf. routes/payouts.js create-batches).
-        // L'in-app reste envoyée dans tous les cas : le partenaire
-        // voit l'approval immédiatement dans le bell, l'email batch
-        // arrive plus tard à la clôture de la période.
-        const { rows: [tenantRow] } = await query(
-          `SELECT COALESCE(payout_cadence, 'unitary') AS payout_cadence FROM tenants WHERE id = $1`,
-          [existing.tenant_id]
+      // 3. INSERT batch ON CONFLICT DO NOTHING — atomique anti-race
+      //    contre 2 approve concurrents qui voudraient créer le même
+      //    batch (tenant, partner, période). ON CONFLICT cible le
+      //    partial unique index commission_payout_batches_uidx
+      //    (cf. v59 migrate.js) en répétant son prédicat WHERE.
+      const ins = await client.query(
+        `INSERT INTO commission_payout_batches
+           (tenant_id, partner_id, period, status,
+            total_amount_ht, total_amount_tax, total_amount_ttc,
+            exception, created_at, updated_at)
+         VALUES ($1, $2, $3, 'awaiting_invoice', 0, 0, 0, FALSE, NOW(), NOW())
+         ON CONFLICT (tenant_id, partner_id, period)
+           WHERE exception = FALSE AND deleted_at IS NULL
+           DO NOTHING
+         RETURNING id`,
+        [existing.tenant_id, existing.partner_id, period]
+      );
+      let batchId;
+      let isNewBatch;
+      if (ins.rows.length > 0) {
+        batchId = ins.rows[0].id;
+        isNewBatch = true;
+      } else {
+        // Conflit → re-fetch le batch existant.
+        const { rows: [found] } = await client.query(
+          `SELECT id FROM commission_payout_batches
+            WHERE tenant_id = $1 AND partner_id = $2 AND period = $3
+              AND exception = FALSE AND deleted_at IS NULL
+            LIMIT 1`,
+          [existing.tenant_id, existing.partner_id, period]
         );
-        const cadence = tenantRow?.payout_cadence || 'unitary';
-        const skipEmail = cadence !== 'unitary';
-        const users = await partnerUsers(existing.partner_id);
-        const amountLabel = fmtMoney(existing.amount);
+        if (!found) {
+          // Race rarissime : ON CONFLICT a vu un row qui a été
+          // soft-deleted entre temps. On retombe sur une erreur
+          // propre, l'admin pourra retry.
+          await client.query('ROLLBACK');
+          return res.status(409).json({ error: 'batch_race', message: 'Batch en cours d\'arbitrage, réessayez.' });
+        }
+        batchId = found.id;
+        isNewBatch = false;
+      }
+
+      // 4. Attache la commission + recalcule les totaux du batch.
+      //    Calque exact du recalcul utilisé en F3a remove-commission.
+      await client.query(
+        `UPDATE commissions SET payout_batch_id = $1 WHERE id = $2`,
+        [batchId, req.params.id]
+      );
+      await client.query(
+        `UPDATE commission_payout_batches b
+            SET total_amount_ht  = COALESCE((SELECT SUM(amount_ht)  FROM commissions WHERE payout_batch_id = b.id AND deleted_at IS NULL), 0),
+                total_amount_tax = COALESCE((SELECT SUM(amount_tax) FROM commissions WHERE payout_batch_id = b.id AND deleted_at IS NULL), 0),
+                total_amount_ttc = COALESCE((SELECT SUM(amount_ttc) FROM commissions WHERE payout_batch_id = b.id AND deleted_at IS NULL), 0),
+                updated_at = NOW()
+          WHERE b.id = $1`,
+        [batchId]
+      );
+
+      // Refresh updated pour renvoyer payout_batch_id au client.
+      const { rows: [refreshed] } = await client.query(
+        `SELECT * FROM commissions WHERE id = $1`,
+        [req.params.id]
+      );
+      updated = refreshed;
+      batchInfo = { id: batchId, isNewBatch, period };
+    }
+
+    await client.query('COMMIT');
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error('Approve commission error:', err);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    client.release();
+  }
+
+  // ─── Post-commit side effects (fire-and-forget) ────────────────────
+  logAudit(req, 'commission.approved', 'commission', req.params.id, { amount: existing.amount, partner_id: existing.partner_id });
+  createPennylaneInvoice(req.params.id, existing.tenant_id).catch(() => {});
+
+  (async () => {
+    try {
+      const users = await partnerUsers(existing.partner_id);
+      const amountLabel = fmtMoney(existing.amount);
+      // In-app notification : identique pour les 2 cadences.
+      for (const u of users) {
+        notify.createNotification(u.id, 'commission_approved', {
+          title: `Commission approuvée — ${amountLabel}`,
+          message: `Pour ${existing.prospect_name || 'votre lead'} — merci de déposer votre facture.`,
+          link: '/partner/payments',
+          tenantId: existing.tenant_id,
+        }).catch(() => {});
+      }
+
+      if (cadence === 'unitary') {
+        // Email historique commissionApproved (un par commission).
         for (const u of users) {
-          notify.createNotification(u.id, 'commission_approved', {
-            title: `Commission approuvée — ${amountLabel}`,
-            message: `Pour ${existing.prospect_name || 'votre lead'} — merci de déposer votre facture.`,
-            link: '/partner/payments',
-            tenantId: existing.tenant_id,
-          }).catch(() => {});
-          if (skipEmail) {
-            console.log(`[commission.approve] skipped commissionApproved email — tenant cadence=${cadence}`);
-            continue;
-          }
           const p = await notify.shouldNotifyPartner(existing.partner_id, 'email_commission_update');
           if (p.email) {
             const tpl = require('../utils/emailTemplates').commissionApproved({
@@ -518,14 +626,44 @@ router.post('/:id/approve', authorize('admin'), async (req, res) => {
             sendEmail(u.email, tpl.subject, tpl.html).catch(() => {});
           }
         }
-      } catch {}
-    })();
+      } else if (batchInfo && batchInfo.isNewBatch) {
+        // F4 — Email payoutBatchInvoiceRequest UNIQUEMENT à la
+        // première création du batch. Les approves suivants qui
+        // attachent au même batch ne renvoient pas d'email
+        // (anti-spam).
+        const { rows: [ctx] } = await query(
+          `SELECT b.period, b.total_amount_ht, b.total_amount_tax, b.total_amount_ttc,
+                  p.email AS partner_email, p.name AS partner_name
+             FROM commission_payout_batches b
+             JOIN partners p ON p.id = b.partner_id
+            WHERE b.id = $1`,
+          [batchInfo.id]
+        );
+        if (ctx?.partner_email) {
+          const dealsList = [{
+            prospect_name: existing.prospect_name,
+            company: existing.prospect_company,
+            amount_ttc: parseFloat(existing.amount_ttc ?? existing.amount) || 0,
+          }];
+          const tpl = require('../utils/emailTemplates').payoutBatchInvoiceRequest({
+            partner_first_name: ctx.partner_name,
+            period_label: payouts.periodLabel(batchInfo.period),
+            commission_count: 1,
+            total_ht:  parseFloat(ctx.total_amount_ht)  || 0,
+            total_tax: parseFloat(ctx.total_amount_tax) || 0,
+            total_ttc: parseFloat(ctx.total_amount_ttc) || 0,
+            deals_list: dealsList,
+          });
+          if (tpl) sendEmail(ctx.partner_email, tpl.subject, tpl.html).catch(() => {});
+        }
+      } else if (cadence !== 'unitary') {
+        // Batch existant — log seulement, pas d'email.
+        console.log(`[commission.approve] commission attached to existing batch ${batchInfo?.id} — no email sent (anti-spam)`);
+      }
+    } catch {}
+  })();
 
-    res.json({ commission: updated });
-  } catch (err) {
-    console.error('Approve commission error:', err);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
+  res.json({ commission: updated });
 });
 
 router.post('/:id/reject', authorize('admin'), async (req, res) => {

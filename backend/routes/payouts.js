@@ -269,6 +269,13 @@ router.post('/preview-batches', authorize('admin'), async (req, res) => {
 // status='awaiting_invoice'. Idempotent par index unique partiel
 // commission_payout_batches_uidx — un second clic immédiat n'insère
 // rien et renvoie skipped > 0.
+//
+// NOTE F4 : depuis F4, l'auto-batch à l'approve (cf. commissions.js
+// /approve handler) gère la création des batches automatiquement.
+// Cet endpoint reste accessible pour rattrapage manuel — typiquement
+// un admin qui flip son tenant unitary→monthly avec des commissions
+// déjà approved en stock (pré-F4 ou pré-flip). Plus consommé par la
+// UI admin (le bouton "Lancer la paie groupée" est supprimé en F4).
 router.post('/create-batches', authorize('admin'), async (req, res) => {
   try {
     if (!req.tenantId) return res.status(400).json({ error: 'Tenant introuvable' });
@@ -1144,3 +1151,8 @@ async function reconcileBatchTransfers(tenantId) {
 
 module.exports = router;
 module.exports.reconcileBatchTransfers = reconcileBatchTransfers;
+// F4 — exposed for commissions.js auto-batch on approve. Source unique
+// du calcul de période + libellé pour cohérence entre les 2 sites
+// d'usage (create-batches manuel + auto-batch à l'approve).
+module.exports.currentPeriod = currentPeriod;
+module.exports.periodLabel = periodLabel;
