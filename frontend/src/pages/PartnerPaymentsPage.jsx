@@ -5,7 +5,7 @@ import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import PageSkeleton from '../components/PageSkeleton.jsx';
 import { fmt, fmtDate } from '../lib/constants';
-import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, FileText, ShieldCheck, AlertTriangle, Building } from 'lucide-react';
+import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, FileText, ShieldCheck, AlertTriangle, Building, X } from 'lucide-react';
 
 // 4-column lifecycle, ordered left → right.
 const STATUS_KEYS = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
@@ -25,7 +25,19 @@ export default function PartnerPaymentsPage() {
   const [billingInfo, setBillingInfo] = useState(null);
   const [uploadingId, setUploadingId] = useState(null);
   const fileInputRef = useRef(null);
-  const pendingUploadIdRef = useRef(null);
+  // F3c — pendingUploadRef typé : { kind: 'commission' | 'batch', id }.
+  // L'input file caché est partagé pour les deux flux d'upload (commission
+  // unitaire historique + batch nouveau) ; on branche dans handleFileSelected
+  // sur kind pour appeler le bon endpoint.
+  const pendingUploadRef = useRef(null);
+  // F3c — surface batches côté partenaire. tenantCadence = lecture seule
+  // (api.getMyTenant). batchesById = Map(batch_id → batch) chargée
+  // uniquement en cadence != 'unitary' ET seulement pour les batches
+  // référencés par au moins une commission du partenaire (économie).
+  const [tenantCadence, setTenantCadence] = useState('unitary');
+  const [batchesById, setBatchesById] = useState(new Map());
+  const [batchDetail, setBatchDetail] = useState(null); // { loading, batch, commissions }
+  const [batchUploadingId, setBatchUploadingId] = useState(null);
 
   const PAY_STATUS = {
     pending_approval:   { label: t('commission.status.pending_approval'), ...PAY_STATUS_META.pending_approval },
@@ -34,41 +46,80 @@ export default function PartnerPaymentsPage() {
     paid:               { label: t('commission.status.paid'), ...PAY_STATUS_META.paid },
   };
 
-  const reload = () => Promise.all([
-    api.getCommissions(),
-    api.getMyBankInfo().catch(() => ({ bank_info: null })),
-    // Tenant billing info — used to render the "Informations de
-    // facturation" card at the top so the partner has the legal
-    // entity, SIRET, and address to put on their invoice. Failure
-    // is silent; the card simply doesn't render.
-    api.getBillingInfo().catch(() => ({ billing: null })),
-  ]).then(([c, b, bi]) => {
+  const reload = async () => {
+    const [c, b, bi, mt] = await Promise.all([
+      api.getCommissions(),
+      api.getMyBankInfo().catch(() => ({ bank_info: null })),
+      // Tenant billing info — used to render the "Informations de
+      // facturation" card at the top so the partner has the legal
+      // entity, SIRET, and address to put on their invoice. Failure
+      // is silent; the card simply doesn't render.
+      api.getBillingInfo().catch(() => ({ billing: null })),
+      // F3c — tenant.payout_cadence pour décider si on fetch les
+      // batches. Silent failure : on tombe sur 'unitary' par défaut
+      // donc zéro régression côté partenaire en cas de souci API.
+      api.getMyTenant().catch(() => null),
+    ]);
     setCommissions(c.commissions);
     setTotals({ pending: c.totalPending, paid: c.totalPaid });
     setBankInfo(b && b.bank_info ? b.bank_info : null);
     setBillingInfo(bi && bi.billing && bi.billing.billing_company_name ? bi.billing : null);
-  });
+    const tenant = mt && (mt.tenant || mt);
+    const cadence = tenant?.payout_cadence || 'unitary';
+    setTenantCadence(cadence);
+
+    // F3c — fetch les détails des batches uniquement quand la cadence
+    // est non-unitary ET que le partenaire a au moins 1 commission
+    // batchée. N requêtes parallèles (N borné par le nombre de batches
+    // actifs du partenaire, typiquement < 5). Pas de nouvel endpoint
+    // backend : on consomme GET /api/payouts/batches/:id qui supporte
+    // déjà partnerScope (F3a).
+    if (cadence !== 'unitary') {
+      const ids = [...new Set((c.commissions || []).filter(x => x.payout_batch_id).map(x => x.payout_batch_id))];
+      if (ids.length > 0) {
+        try {
+          const details = await Promise.all(ids.map(id => api.getPayoutBatchDetail(id).catch(() => null)));
+          const m = new Map();
+          for (const d of details) if (d && d.batch) m.set(d.batch.id, d.batch);
+          setBatchesById(m);
+        } catch (e) {
+          console.warn('[partner-payments] batches fetch failed:', e.message);
+          setBatchesById(new Map());
+        }
+      } else {
+        setBatchesById(new Map());
+      }
+    } else {
+      setBatchesById(new Map());
+    }
+  };
 
   useEffect(() => {
     reload().catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const triggerUpload = (commissionId) => {
-    pendingUploadIdRef.current = commissionId;
+    pendingUploadRef.current = { kind: 'commission', id: commissionId };
+    fileInputRef.current && fileInputRef.current.click();
+  };
+
+  const triggerBatchUpload = (batchId) => {
+    pendingUploadRef.current = { kind: 'batch', id: batchId };
     fileInputRef.current && fileInputRef.current.click();
   };
 
   const handleFileSelected = async (e) => {
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
-    const id = pendingUploadIdRef.current;
-    pendingUploadIdRef.current = null;
-    if (!file || !id) return;
+    const pending = pendingUploadRef.current;
+    pendingUploadRef.current = null;
+    if (!file || !pending) return;
     if (file.size > 10 * 1024 * 1024) {
       showToast.error(t('commission.invoice_too_large'));
       return;
     }
-    setUploadingId(id);
+    if (pending.kind === 'commission') setUploadingId(pending.id);
+    else setBatchUploadingId(pending.id);
     try {
       const dataUrl = await new Promise((resolve, reject) => {
         const r = new FileReader();
@@ -76,12 +127,43 @@ export default function PartnerPaymentsPage() {
         r.onerror = () => reject(r.error);
         r.readAsDataURL(file);
       });
-      await api.uploadCommissionInvoice(id, { filename: file.name, dataUrl });
+      if (pending.kind === 'commission') {
+        await api.uploadCommissionInvoice(pending.id, { filename: file.name, dataUrl });
+      } else {
+        // F3c — upload facture batch. Réutilise l'endpoint F2a
+        // POST /api/payouts/batches/:id/upload-invoice qui accepte
+        // déjà partnerScope. À la confirmation, le batch passe à
+        // ready_to_pay ; les commissions du batch restent en
+        // awaiting_invoice (propagation α bornée par CHECK v3 —
+        // décision F2a documentée côté backend).
+        await api.uploadPayoutBatchInvoice(pending.id, { filename: file.name, dataUrl });
+        showToast.success(t('payouts.upload_toast', 'Facture déposée. Le batch est en attente de paiement.'));
+        // Si la modale détail est ouverte sur ce batch, refresh sa payload
+        // pour refléter le nouveau statut + invoice_uploaded_at.
+        if (batchDetail?.batch?.id === pending.id) {
+          try {
+            const r = await api.getPayoutBatchDetail(pending.id);
+            setBatchDetail({ loading: false, batch: r.batch, commissions: r.commissions || [] });
+          } catch {}
+        }
+      }
       await reload();
     } catch (err) {
       showToast.error(err.message || "Error");
     }
     setUploadingId(null);
+    setBatchUploadingId(null);
+  };
+
+  const openBatchDetail = async (batchId) => {
+    setBatchDetail({ loading: true, batch: null, commissions: [] });
+    try {
+      const r = await api.getPayoutBatchDetail(batchId);
+      setBatchDetail({ loading: false, batch: r.batch, commissions: r.commissions || [] });
+    } catch (e) {
+      setBatchDetail(null);
+      showToast.error(e.message || t('common.error', 'Erreur'));
+    }
   };
 
   const handleDownload = async (id) => {
@@ -210,12 +292,40 @@ export default function PartnerPaymentsPage() {
       <div style={{ display: 'flex', gap: 12, height: 'calc(100vh - 280px)', minHeight: 420 }}>
         {STATUS_KEYS.map(statusKey => {
             const st = PAY_STATUS[statusKey];
-            const cards = visibleRows.filter(c => c.status === statusKey);
+            // F3c — colonne commissions visibles. allCards reste la
+            // source pour le compteur + total HT du header (contrat
+            // F2b preserved). displayItems est la version regroupée
+            // pour le rendu : ≥ 3 commissions d'un même batch dans
+            // cette colonne → 1 carte agrégée à la place. Le reste
+            // (< 3 d'un batch, ou sans batch) → cartes individuelles.
+            const allCards = visibleRows.filter(c => c.status === statusKey);
+            const byBatch = new Map();
+            const standalone = [];
+            for (const c of allCards) {
+              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) {
+                if (!byBatch.has(c.payout_batch_id)) byBatch.set(c.payout_batch_id, []);
+                byBatch.get(c.payout_batch_id).push(c);
+              } else {
+                standalone.push(c);
+              }
+            }
+            const displayItems = [];
+            for (const [batchId, group] of byBatch) {
+              if (group.length >= 3) {
+                displayItems.push({ kind: 'aggregate', batch: batchesById.get(batchId), commissions: group });
+              } else {
+                for (const c of group) displayItems.push({ kind: 'commission', c });
+              }
+            }
+            for (const c of standalone) displayItems.push({ kind: 'commission', c });
+            const cards = displayItems;
             // Column total — HT only, mirroring the admin /commissions
             // header. The TVA breakdown is on each card; the column
             // header stays a single number so the partner can scan
-            // their lifecycle stages without doing math.
-            const colTotalHt = cards.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0);
+            // their lifecycle stages without doing math. NB: utilise
+            // allCards (commissions individuelles) — l'agrégation
+            // F3c ne change pas le total ni le compteur affiché.
+            const colTotalHt = allCards.reduce((s, c) => s + (parseFloat(c.amount_ht) || parseFloat(c.amount) || 0), 0);
             return (
               <div
                 key={statusKey}
@@ -233,12 +343,117 @@ export default function PartnerPaymentsPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                     {colTotalHt > 0 && <span style={{ fontWeight: 700, fontSize: 13, color: st.color }}>{fmt(colTotalHt)}</span>}
-                    <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{cards.length}</span>
+                    <span style={{ background: st.color + '15', color: st.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{allCards.length}</span>
                   </div>
                 </div>
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', minHeight: 0 }}>
-                  {cards.map(c => (
+                  {cards.map(item => {
+                    // F3c — branche aggregate violette. Le rendu
+                    // n'affiche PAS partner_name (c'est le partenaire
+                    // lui-même côté Mes Paiements). Bouton "Déposer la
+                    // facture du mois" sur les batches qui attendent
+                    // encore une facture ; "Voir le détail" toujours
+                    // accessible pour ouvrir la modale.
+                    if (item.kind === 'aggregate') {
+                      const ab = item.batch;
+                      const groupComs = item.commissions;
+                      const sortedPreview = [...groupComs]
+                        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                        .slice(0, 3);
+                      const remaining = groupComs.length - sortedPreview.length;
+                      const hasVatGroup = parseFloat(ab.total_amount_tax || 0) > 0;
+                      const canUploadInvoice = ab.status === 'awaiting_invoice';
+                      const invoiceReceived = ab.status === 'ready_to_pay';
+                      return (
+                        <div
+                          key={'aggregate-' + ab.id + '-' + statusKey}
+                          style={{
+                            background: '#faf5ff', borderRadius: 12, padding: 14,
+                            border: '1px solid #d8b4fe',
+                            boxShadow: '0 1px 3px rgba(124,58,237,0.08)',
+                          }}
+                        >
+                          <div style={{ marginBottom: 8 }}>
+                            <div style={{ fontWeight: 600, color: '#6b21a8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                              {ab.period}
+                            </div>
+                            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>
+                              {groupComs.length} {t('payouts.aggregate_count_suffix', 'commissions')}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 22, fontWeight: 800, color: '#7c3aed', letterSpacing: -0.5, marginBottom: hasVatGroup ? 2 : 8 }}>
+                            {fmt(ab.total_amount_ttc)}{hasVatGroup ? ' TTC' : ''}
+                          </div>
+                          {hasVatGroup && (
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
+                              {fmt(ab.total_amount_ht)} HT · {fmt(ab.total_amount_tax)} TVA
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 10 }}>
+                            {sortedPreview.map(pc => (
+                              <div key={pc.id} style={{ color: '#475569', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                · {pc.prospect_company || pc.prospect_name || '—'}
+                              </div>
+                            ))}
+                            {remaining > 0 && (
+                              <div style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>
+                                +{remaining} {t('payouts.aggregate_more', 'autres')}
+                              </div>
+                            )}
+                          </div>
+                          {canUploadInvoice && (
+                            <button
+                              onClick={() => triggerBatchUpload(ab.id)}
+                              disabled={batchUploadingId === ab.id}
+                              style={{
+                                width: '100%', padding: '8px', borderRadius: 8,
+                                background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
+                                fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                                fontFamily: 'inherit', marginBottom: 6,
+                                opacity: batchUploadingId === ab.id ? 0.7 : 1,
+                              }}
+                            >
+                              <Upload size={12} /> {batchUploadingId === ab.id ? t('commission.uploading') : t('payouts.upload_batch_invoice', 'Déposer la facture du mois')}
+                            </button>
+                          )}
+                          {invoiceReceived && (
+                            <div style={{
+                              padding: '7px 10px', borderRadius: 8,
+                              background: '#eff6ff', color: '#0284c7',
+                              fontSize: 11, textAlign: 'center', fontWeight: 600,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                              marginBottom: 6,
+                            }}>
+                              <ShieldCheck size={12} /> {t('payouts.invoice_received_waiting_payment', 'Facture déposée, en attente du paiement')}
+                            </div>
+                          )}
+                          <button
+                            onClick={() => openBatchDetail(ab.id)}
+                            style={{
+                              width: '100%', padding: '7px', borderRadius: 8,
+                              background: '#ede9fe', border: '1px solid #d8b4fe', color: '#6b21a8',
+                              fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            {t('payouts.see_details', 'Voir le détail')}
+                          </button>
+                        </div>
+                      );
+                    }
+                    const c = item.c;
+                    // F3c — badge "Dans batch" sur les cartes individuelles
+                    // dont la commission appartient à un batch (< 3 du même
+                    // batch dans cette colonne, donc pas regroupé en
+                    // aggregate). Le bouton "Déposer la facture" individuel
+                    // est masqué dans ce cas : le partenaire doit utiliser
+                    // la modale détail batch pour uploader la facture
+                    // groupée.
+                    const inBatch = !!c.payout_batch_id && batchesById.has(c.payout_batch_id);
+                    return (
                     <div
                       key={c.id}
                       style={{
@@ -249,10 +464,15 @@ export default function PartnerPaymentsPage() {
                     >
                       {/* Status pill removed — the column header
                           already conveys the lifecycle stage. */}
-                      <div style={{ marginBottom: 6 }}>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ marginBottom: 6, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {c.prospect_company || c.prospect_name || '—'}
                         </div>
+                        {inBatch && (
+                          <span style={{ background: '#ede9fe', color: '#6b21a8', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 8, flexShrink: 0 }}>
+                            {t('payouts.in_batch_badge', 'Dans batch')}
+                          </span>
+                        )}
                       </div>
 
                       {c.prospect_company && c.prospect_name && c.prospect_company !== c.prospect_name && (
@@ -286,7 +506,7 @@ export default function PartnerPaymentsPage() {
                         {c.rate}% · {fmt(c.deal_value)} · {fmtDate(c.created_at)}
                       </div>
 
-                      {statusKey === 'awaiting_invoice' && (
+                      {statusKey === 'awaiting_invoice' && !inBatch && (
                         <button
                           onClick={() => triggerUpload(c.id)}
                           disabled={uploadingId === c.id}
@@ -299,6 +519,24 @@ export default function PartnerPaymentsPage() {
                           }}
                         >
                           <Upload size={12} /> {uploadingId === c.id ? t('commission.uploading') : t('commission.upload_invoice')}
+                        </button>
+                      )}
+                      {/* F3c — Si la commission est batchée (<3 dans
+                          cette colonne donc pas regroupée en aggregate),
+                          l'upload se fait au niveau batch via la modale
+                          détail, pas individuellement. */}
+                      {statusKey === 'awaiting_invoice' && inBatch && (
+                        <button
+                          onClick={() => openBatchDetail(c.payout_batch_id)}
+                          style={{
+                            width: '100%', padding: '8px', borderRadius: 8,
+                            background: '#ede9fe', border: '1px solid #d8b4fe', color: '#6b21a8',
+                            fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          {t('payouts.see_details', 'Voir le détail')}
                         </button>
                       )}
                       {statusKey === 'pending_validation' && (
@@ -334,7 +572,8 @@ export default function PartnerPaymentsPage() {
                         </div>
                       )}
                     </div>
-                  ))}
+                  );
+                  })}
                   {cards.length === 0 && (
                     <div style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', padding: 16 }}>
                       {t('partnerPayments.empty_col', 'Aucune commission')}
@@ -349,6 +588,138 @@ export default function PartnerPaymentsPage() {
       {commissions.length === 0 && (
         <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', color: '#94a3b8', border: '1px solid #e2e8f0', marginTop: 16 }}>
           {t('partnerPayments.no_payments')}
+        </div>
+      )}
+
+      {/* F3c — Modale détail batch partenaire. Pas de partner_name
+          (c'est le partenaire lui-même). Lien "Voir le deal →" vers
+          la fiche referral partenaire. Bouton "Déposer la facture"
+          en bas si batch.status === 'awaiting_invoice'. */}
+      {batchDetail && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={() => batchUploadingId === null && setBatchDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 600, maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
+            {batchDetail.loading && (
+              <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                {t('common.loading', 'Chargement…')}
+              </div>
+            )}
+            {!batchDetail.loading && batchDetail.batch && (() => {
+              const bd = batchDetail.batch;
+              const list = batchDetail.commissions || [];
+              const hasVatBd = parseFloat(bd.total_amount_tax || 0) > 0;
+              const canUploadBd = bd.status === 'awaiting_invoice';
+              const statusBadge = {
+                awaiting_invoice:  { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#fffbeb', color: '#92400e' },
+                ready_to_pay:      { label: t('payouts.status_ready_to_pay', 'Prêt à payer'),               bg: '#eff6ff', color: '#1d4ed8' },
+                paid:              { label: t('payouts.status_paid', 'Payé'),                                bg: '#f0fdf4', color: '#166534' },
+                cancelled:         { label: t('payouts.status_cancelled', 'Annulé'),                         bg: '#f1f5f9', color: '#475569' },
+              }[bd.status] || { label: bd.status, bg: '#f1f5f9', color: '#475569' };
+              return (
+                <>
+                  <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                            {t('payouts.partner_detail_title', { period: bd.period, defaultValue: 'Batch — {{period}}' })}
+                          </h2>
+                          <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: statusBadge.bg, color: statusBadge.color }}>
+                            {statusBadge.label}
+                          </span>
+                        </div>
+                        <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>
+                          {list.length} {t('payouts.aggregate_count_suffix', 'commissions')}
+                          {' · '}{fmt(bd.total_amount_ttc)} TTC
+                          {hasVatBd && <span style={{ color: '#94a3b8' }}> ({fmt(bd.total_amount_ht)} HT + {fmt(bd.total_amount_tax)} TVA)</span>}
+                        </p>
+                        {bd.invoice_uploaded_at && (
+                          <p style={{ color: '#0284c7', fontSize: 12, margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <CheckCircle size={12} /> {t('payouts.invoice_deposited_on', { date: fmtDate(bd.invoice_uploaded_at), defaultValue: 'Facture déposée le {{date}}' })}
+                          </p>
+                        )}
+                      </div>
+                      <button onClick={() => batchUploadingId === null && setBatchDetail(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: batchUploadingId !== null ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <X size={16} color="#475569" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px' }}>
+                    {list.length === 0 ? (
+                      <div style={{ textAlign: 'center', color: '#94a3b8', padding: 24, fontSize: 13 }}>
+                        {t('payouts.detail_empty', 'Aucune commission dans ce batch.')}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {list.map(dc => {
+                          const dcHasVat = parseFloat(dc.amount_tax || 0) > 0;
+                          return (
+                            <div key={dc.id} style={{ padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {dc.prospect_company || dc.prospect_name || '—'}
+                                  </div>
+                                  {dc.prospect_company && dc.prospect_name && dc.prospect_company !== dc.prospect_name && (
+                                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 1 }}>{dc.prospect_name}</div>
+                                  )}
+                                  <div style={{ color: '#64748b', fontSize: 11, marginTop: 4 }}>
+                                    {dc.rate}% · {fmt(dc.deal_value)}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                                    {fmt(dcHasVat ? dc.amount_ttc : dc.amount)}{dcHasVat ? ' TTC' : ''}
+                                  </div>
+                                  {dc.referral_id && (
+                                    <a
+                                      href={'/partner/referrals?open=' + dc.referral_id}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
+                                    >
+                                      {t('payouts.see_deal_link', 'Voir le deal →')}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                    {canUploadBd ? (
+                      <button
+                        onClick={() => triggerBatchUpload(bd.id)}
+                        disabled={batchUploadingId === bd.id}
+                        style={{
+                          padding: '9px 16px', borderRadius: 10,
+                          background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
+                          fontWeight: 700, fontSize: 13,
+                          cursor: batchUploadingId === bd.id ? 'wait' : 'pointer', fontFamily: 'inherit',
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          opacity: batchUploadingId === bd.id ? 0.7 : 1,
+                        }}
+                      >
+                        <Upload size={14} /> {batchUploadingId === bd.id ? t('commission.uploading') : t('payouts.upload_batch_invoice', 'Déposer la facture du mois')}
+                      </button>
+                    ) : <div />}
+                    <button
+                      onClick={() => batchUploadingId === null && setBatchDetail(null)}
+                      disabled={batchUploadingId !== null}
+                      style={{ padding: '9px 16px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: batchUploadingId !== null ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                    >
+                      {t('common.close', 'Fermer')}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
         </div>
       )}
     </div>

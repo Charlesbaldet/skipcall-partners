@@ -288,6 +288,12 @@ class ApiClient {
   getPayoutBatchDetail(id) { return this.request('/payouts/batches/' + id); }
   cancelPayoutBatch(id, body = { confirm: true }) { return this.request('/payouts/batches/' + id + '/cancel', { method: 'POST', body: JSON.stringify(body) }); }
   removeCommissionFromBatch(id, body) { return this.request('/payouts/batches/' + id + '/remove-commission', { method: 'POST', body: JSON.stringify(body) }); }
+  uploadPayoutBatchInvoice(id, { filename, dataUrl }) {
+    return this.request('/payouts/batches/' + id + '/upload-invoice', {
+      method: 'POST',
+      body: JSON.stringify({ filename, data_url: dataUrl }),
+    });
+  }
   resetCommissionPayment(id) { return this.request(`/commissions/${id}/reset-payment`, { method: 'POST' }); }
   confirmCommissionSca(id) { return this.request(`/commissions/${id}/confirm-sca`, { method: 'POST' }); }
 
