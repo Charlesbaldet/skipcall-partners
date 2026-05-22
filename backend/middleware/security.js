@@ -4,21 +4,39 @@ const crypto = require('crypto');
 // ═══════════════════════════════════════
 // ISO 27001 A.12.4 - AUDIT LOGGING
 // ═══════════════════════════════════════
-async function auditLog(req, action, resourceType, resourceId, details = {}) {
+// J2-FIX2 — Mirror la priorité de services/auditLog.js logAudit :
+//   1. explicit tenantIdOverride
+//   2. req.user.tenantId (JWT-derived, signed)
+//   3. req.tenantId (host-derived fallback)
+//   4. null
+// Pré-J2-FIX2 ce logger n'utilisait QUE req.tenantId → tenant_updated
+// (tenants.js:276) + login_success (auth.js:288) étaient attribués au
+// tenant du host header au lieu du tenant cible/utilisateur. Bug
+// cosmétique observé dans la console super-admin (logs Dylan sur
+// AlloAgent SAS via skipcall-partners.vercel.app attribués à TEST).
+async function auditLog(req, action, resourceType, resourceId, details = {}, tenantIdOverride) {
   try {
+    let resolvedTenantId = null;
+    if (tenantIdOverride !== undefined && tenantIdOverride !== null) {
+      resolvedTenantId = tenantIdOverride;
+    } else if (req && req.user && req.user.tenantId) {
+      resolvedTenantId = req.user.tenantId;
+    } else if (req && req.tenantId) {
+      resolvedTenantId = req.tenantId;
+    }
     await query(
       `INSERT INTO audit_logs (tenant_id, user_id, user_email, action, resource_type, resource_id, details, ip_address, user_agent)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
-        req.tenantId || null,
-        req.user?.id || null,
-        req.user?.email || null,
+        resolvedTenantId,
+        (req && req.user && req.user.id) || null,
+        (req && req.user && req.user.email) || null,
         action,
         resourceType,
         resourceId || null,
         JSON.stringify(details),
-        req.ip || req.connection?.remoteAddress || null,
-        (req.headers['user-agent'] || '').substring(0, 500),
+        (req && (req.ip || (req.connection && req.connection.remoteAddress))) || null,
+        ((req && req.headers && req.headers['user-agent']) || '').toString().substring(0, 500),
       ]
     );
   } catch (err) {

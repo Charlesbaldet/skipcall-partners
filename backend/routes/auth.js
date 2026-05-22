@@ -224,7 +224,7 @@ router.post('/login', [
     const user = rows[0];
 
     if (!user.is_active) {
-      auditLog(req, 'login_blocked_inactive', 'user', user.id, { email });
+      auditLog(req, 'login_blocked_inactive', 'user', user.id, { email }, user.tenant_id);
       return res.status(403).json({ error: 'Compte désactivé' });
     }
 
@@ -234,7 +234,7 @@ router.post('/login', [
     // Seuls les nouveaux signups post-J2 qui n'ont pas cliqué sur le
     // lien de vérification voient ce 403.
     if (!user.email_verified_at) {
-      auditLog(req, 'login_blocked_email_not_verified', 'user', user.id, { email });
+      auditLog(req, 'login_blocked_email_not_verified', 'user', user.id, { email }, user.tenant_id);
       return res.status(403).json({
         error: 'email_not_verified',
         message: 'Votre email n\'a pas encore été vérifié. Vérifiez votre boîte mail ou demandez un nouveau lien.',
@@ -244,7 +244,7 @@ router.post('/login', [
     const validPassword = await bcrypt.compare(password, user.password_hash);
     if (!validPassword) {
       await recordLoginAttempt(email, ip, false);
-      auditLog(req, 'login_failed', 'user', user.id, { email, reason: 'wrong_password' });
+      auditLog(req, 'login_failed', 'user', user.id, { email, reason: 'wrong_password' }, user.tenant_id);
       logAudit(
         { ip: req.ip, headers: req.headers, user: { id: user.id, tenantId: user.tenant_id }, tenantId: user.tenant_id },
         'auth.login_failed', 'user', user.id,
@@ -267,7 +267,7 @@ router.post('/login', [
         process.env.JWT_SECRET,
         { expiresIn: '5m' }
       );
-      auditLog(req, 'login_mfa_required', 'user', user.id, { email });
+      auditLog(req, 'login_mfa_required', 'user', user.id, { email }, user.tenant_id);
       return res.json({ mfa_required: true, mfa_token: mfaToken });
     }
 
@@ -285,7 +285,11 @@ router.post('/login', [
     const spaces = await listUserSpaces(user.id);
     const space = pickInitialSpace(spaces, user.tenant_id);
 
-    auditLog(req, 'login_success', 'user', user.id, { email, spaces: spaces.length });
+    // J2-FIX2 — tenant_id = user.tenant_id depuis le record DB (pas
+    // le host header). À ce point du flow, req.user n'est pas encore
+    // set (JWT pas encore généré) donc le fallback JWT du logger ne
+    // fonctionne pas — on doit passer l'override explicite.
+    auditLog(req, 'login_success', 'user', user.id, { email, spaces: spaces.length }, user.tenant_id);
 
     if (!space && spaces.length > 1) {
       const tempToken = signPendingSelectionToken(user);
@@ -404,7 +408,9 @@ router.post('/google', async (req, res) => {
     const spaces = await listUserSpaces(user.id);
     const space = pickInitialSpace(spaces, user.tenant_id);
 
-    auditLog(req, 'google_login_success', 'user', user.id, { email, spaces: spaces.length });
+    // J2-FIX2 — symétrique avec login_success ci-dessus : tenant_id =
+    // user.tenant_id du record DB, pas le host header.
+    auditLog(req, 'google_login_success', 'user', user.id, { email, spaces: spaces.length }, user.tenant_id);
 
     if (!space && spaces.length > 1) {
       const tempToken = signPendingSelectionToken(user);

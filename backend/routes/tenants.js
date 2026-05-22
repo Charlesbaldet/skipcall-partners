@@ -96,7 +96,9 @@ router.post('/', authenticate, async (req, res) => {
       [name, slug.toLowerCase().replace(/[^a-z0-9-]/g, ''), domain || null, primary_color || '#6366f1', secondary_color || '#8b5cf6', logo_url || null]
     );
     clearTenantCache();
-    auditLog(req, 'tenant_created', 'tenant', rows[0].id, { name, slug });
+    // J2-FIX2 — tenant_id = nouveau tenant créé (rows[0].id), pas le
+    // tenant du superadmin créateur. Mismatch volontaire pour audit.
+    auditLog(req, 'tenant_created', 'tenant', rows[0].id, { name, slug }, rows[0].id);
     res.json({ tenant: rows[0] });
   } catch (err) {
     if (err.message.includes('duplicate')) return res.status(400).json({ error: 'Ce slug existe déjà' });
@@ -273,7 +275,10 @@ router.put('/:id', authenticate, async (req, res) => {
       }
     }
     clearTenantCache();
-    auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
+    // J2-FIX2 — tenant_id = tenant CIBLE de l'update (req.params.id),
+    // pas le tenant du superadmin si différent. Aligne avec
+    // settings.updated voisin (déjà patché J2).
+    auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name }, req.params.id);
     // J2 ITEM 2 : explicit override sur le tenant CIBLE (req.params.id),
     // pas le tenant du user appelant (utile quand un superadmin modifie
     // un tenant tiers — log attribué au tenant modifié).
