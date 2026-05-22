@@ -17,6 +17,11 @@ export default function SignupPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // J2 — email pending verification après signup classique. Step 4
+  // rendu uniquement pour cette voie ; le flow Google bascule en step 3
+  // (auto-login) comme avant.
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [resendStatus, setResendStatus] = useState(null); // 'sending' | 'sent' | 'error'
 
   // Google-prefilled signup: LoginPage redirects here with google_email /
   // google_name / google_avatar when the user signs in with Google but
@@ -97,21 +102,13 @@ export default function SignupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t('signup.error_generic'));
-      // Auto-login — push the token into the api client too so
-      // subsequent /billing/checkout calls authenticate correctly.
-      api.setToken(data.token);
-      api.setUser(data.user);
-      try {
-          // Tenant-scoped flag: a user re-invited as admin in a second
-          // tenant should still trigger the wizard there. The data
-          // shape is the auto-login response, which carries the freshly
-          // created tenant's id on user.tenantId.
-          const tid = data && data.user && data.user.tenantId;
-          if (tid) localStorage.setItem('refboost_onboarding_pending_' + tid, '1');
-        } catch {}
+      // J2 — Le backend ne renvoie plus de token (pending_verification:
+      // true). On bascule sur un écran "Vérifiez votre email" plutôt
+      // que d'auto-login. Track l'event signup pour analytics même si
+      // le user n'est pas encore connecté.
       try { window._rb_track?.('signup', { company: form.company, plan: requestedPlan || 'starter' }); } catch(e) {}
-      if (await redirectToCheckoutIfRequested()) return;
-      setStep(3);
+      setPendingEmail(data.email_sent_to || form.email);
+      setStep(4);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -282,6 +279,58 @@ export default function SignupPage() {
             <button onClick={()=>{ window.location.href = '/dashboard'; }}
               style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}25` }}>
               {t("signup.success_cta")}
+            </button>
+          </div>
+        )}
+
+        {/* J2 — Step 4 : email pending verification.
+            Affiché après signup classique (email+password). Le user
+            doit cliquer sur le lien envoyé par email pour activer
+            son compte avant de pouvoir se connecter. */}
+        {step === 4 && (
+          <div style={{ textAlign:'center' }}>
+            <div style={{ width:72,height:72,borderRadius:20,background:'#eff6ff',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}>📧</div>
+            <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>
+              {t('signup.verify_title', 'Vérifiez votre email')}
+            </h2>
+            <p style={{ color:C.m,fontSize:14,margin:'0 0 24px',fontFamily:"'DM Sans',sans-serif" }}>
+              {t('signup.verify_sub', 'Un lien de vérification a été envoyé à')}<br/>
+              <strong style={{ color:C.s }}>{pendingEmail || form.email}</strong><br/>
+              {t('signup.verify_sub2', 'Cliquez dessus pour activer votre compte.')}
+            </p>
+            {resendStatus === 'sent' && (
+              <p style={{ color:C.p, fontSize:13, marginBottom:16 }}>
+                {t('signup.verify_resent', 'Lien renvoyé. Vérifiez votre boîte (et les spams).')}
+              </p>
+            )}
+            {resendStatus === 'error' && (
+              <p style={{ color:'#b91c1c', fontSize:13, marginBottom:16 }}>
+                {t('signup.verify_resend_failed', 'Échec du renvoi. Réessayez dans quelques minutes.')}
+              </p>
+            )}
+            <button
+              onClick={async () => {
+                setResendStatus('sending');
+                try {
+                  const r = await fetch('/api/auth/resend-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingEmail || form.email }),
+                  });
+                  if (r.ok) setResendStatus('sent');
+                  else setResendStatus('error');
+                } catch { setResendStatus('error'); }
+              }}
+              disabled={resendStatus === 'sending'}
+              style={{ width:'100%',padding:'14px',borderRadius:14,border:'1.5px solid '+C.p,background:'#fff',color:C.p,fontWeight:700,fontSize:15,cursor:resendStatus==='sending'?'wait':'pointer',fontFamily:'inherit',marginBottom:10 }}>
+              {resendStatus === 'sending'
+                ? t('signup.verify_resending', 'Envoi en cours…')
+                : t('signup.verify_resend_cta', 'Renvoyer le lien')}
+            </button>
+            <button
+              onClick={() => { setStep(2); setResendStatus(null); }}
+              style={{ width:'100%',padding:'12px',borderRadius:14,border:'none',background:'transparent',color:C.m,fontWeight:600,fontSize:13,cursor:'pointer',fontFamily:'inherit' }}>
+              {t('signup.verify_edit_email', 'Modifier l\'email')}
             </button>
           </div>
         )}

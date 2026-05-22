@@ -80,6 +80,7 @@ class ApiClient {
         path === '/' ||
         path === '/login' ||
         path === '/signup' ||
+        path === '/verify-email' ||
         path === '/forgot-password' ||
         path === '/reset-password' ||
         path.startsWith('/apply') ||

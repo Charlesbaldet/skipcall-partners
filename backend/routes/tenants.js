@@ -78,7 +78,12 @@ router.get('/', authenticate, async (req, res) => {
 
 // ─── Admin: Create tenant ───
 router.post('/', authenticate, async (req, res) => {
-  if (!['admin', 'superadmin'].includes(req.user.role)) {
+  // J2 ITEM 1 (A2) : restreint à superadmin uniquement. Pré-J2 cette
+  // route acceptait les admins de tenant, ce qui permettait à un
+  // admin de polluer la table tenants via curl + JWT. Aucune UI
+  // frontend ne consomme cette route (audit J1 grep confirmé) →
+  // resserrement zéro impact UX.
+  if (req.user.role !== 'superadmin') {
     return res.status(403).json({ error: 'Accès interdit' });
   }
   const { name, slug, domain, primary_color, secondary_color, logo_url } = req.body;
@@ -269,7 +274,10 @@ router.put('/:id', authenticate, async (req, res) => {
     }
     clearTenantCache();
     auditLog(req, 'tenant_updated', 'tenant', req.params.id, { name });
-    logAudit(req, 'settings.updated', 'tenant', req.params.id, { name, slug: cleanSlug });
+    // J2 ITEM 2 : explicit override sur le tenant CIBLE (req.params.id),
+    // pas le tenant du user appelant (utile quand un superadmin modifie
+    // un tenant tiers — log attribué au tenant modifié).
+    logAudit(req, 'settings.updated', 'tenant', req.params.id, { name, slug: cleanSlug }, req.params.id);
     res.json({ tenant: rows[0] });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur' });

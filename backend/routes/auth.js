@@ -200,7 +200,7 @@ router.post('/login', [
 
     const { rows } = await query(
       `SELECT u.id, u.email, u.password_hash, u.full_name, u.role, u.partner_id, u.is_active, u.tenant_id, u.must_change_password,
-              u.mfa_enabled,
+              u.mfa_enabled, u.email_verified_at,
               COALESCE(u.token_version, 0) AS token_version,
               p.name as partner_name
        FROM users u LEFT JOIN partners p ON u.partner_id = p.id
@@ -226,6 +226,19 @@ router.post('/login', [
     if (!user.is_active) {
       auditLog(req, 'login_blocked_inactive', 'user', user.id, { email });
       return res.status(403).json({ error: 'Compte désactivé' });
+    }
+
+    // J2 ITEM 3.4 — bloquer login si email non vérifié. Les users
+    // existants pré-J2 sont tous backfillés via la migration v64
+    // (email_verified_at = created_at) donc ne sont JAMAIS bloqués.
+    // Seuls les nouveaux signups post-J2 qui n'ont pas cliqué sur le
+    // lien de vérification voient ce 403.
+    if (!user.email_verified_at) {
+      auditLog(req, 'login_blocked_email_not_verified', 'user', user.id, { email });
+      return res.status(403).json({
+        error: 'email_not_verified',
+        message: 'Votre email n\'a pas encore été vérifié. Vérifiez votre boîte mail ou demandez un nouveau lien.',
+      });
     }
 
     const validPassword = await bcrypt.compare(password, user.password_hash);
@@ -662,14 +675,58 @@ router.post('/signup', [
       await seedDefaultCategories(tenant.id);
     } catch (e) { console.error('[signup.categories]', e.message); }
     const hash = await bcrypt.hash(password, 12);
+    // J2 — email verification obligatoire. User créé en pending,
+    // email_verified_at = NULL bloque le login. Token UUID v4 envoyé
+    // par email ; user.email_verification_sent_at = NOW() permet à
+    // /resend-verification de throttler. JWT N'EST PAS retourné dans
+    // la réponse (le user ne doit pas pouvoir bypass la vérif via le
+    // token déjà en main) — seul un message "vérifiez votre boîte mail"
+    // est renvoyé. Une fois le lien cliqué, le user passe par /login.
+    const verifyToken = require('crypto').randomUUID();
     const { rows: [user] } = await query(
-      "INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, 'admin', $4) RETURNING id, email, full_name, role, tenant_id",
-      [email, hash, fullName, tenant.id]
+      "INSERT INTO users (email, password_hash, full_name, role, tenant_id, email_verified_at, email_verification_token, email_verification_sent_at) VALUES ($1, $2, $3, 'admin', $4, NULL, $5, NOW()) RETURNING id, email, full_name, role, tenant_id",
+      [email, hash, fullName, tenant.id, verifyToken]
     );
     await ensureUserRoleEntry(user.id, tenant.id, 'admin', null);
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, tenantId: tenant.id, token_version: 0 }, process.env.JWT_SECRET, { expiresIn: '7d' });
     try { await query("INSERT INTO audit_logs (user_id, tenant_id, action, resource_type, resource_id, details) VALUES ($1, $2, 'signup', 'tenant', $3, $4)", [user.id, tenant.id, tenant.id, JSON.stringify({ company, email })]); } catch(e) {}
-    res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role, tenantId: tenant.id } });
+    // Envoi email verification — fire-and-forget, l'admin sera invité
+    // à demander un re-send si le mail n'arrive pas.
+    (async () => {
+      try {
+        const frontendUrl = (process.env.FRONTEND_URL || 'https://refboost.io').replace(/\/$/, '');
+        const verifyUrl = `${frontendUrl}/verify-email?token=${verifyToken}`;
+        const subject = `Vérifiez votre adresse email — RefBoost`;
+        const bodyHtml = `
+          <p style="margin:0 0 16px;">Bonjour ${fullName || ''},</p>
+          <p style="margin:0 0 16px;">Merci de vous être inscrit·e à RefBoost ! Pour activer votre compte <strong>${company}</strong>, cliquez sur le lien ci-dessous :</p>
+          <p style="margin:24px 0;text-align:center;">
+            <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Vérifier mon email</a>
+          </p>
+          <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Ou copiez ce lien : <a href="${verifyUrl}">${verifyUrl}</a></p>
+          <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Sans cette vérification, vous ne pourrez pas vous connecter à votre espace.</p>`;
+        const html = templates.baseLayout({
+          title: 'Vérifiez votre email',
+          preheader: 'Activez votre compte RefBoost en un clic',
+          bodyHtml,
+          ctaLabel: 'Vérifier mon email',
+          ctaUrl: verifyUrl,
+        });
+        await resend.sendAndLog({
+          to: email,
+          subject,
+          html,
+          text: `Bonjour ${fullName || ''},\n\nVérifiez votre email RefBoost en cliquant sur : ${verifyUrl}\n\nSans cette vérification, vous ne pourrez pas vous connecter.`,
+          template: 'email_verification',
+          payload: { recipient_name: fullName, tenant: company },
+          query,
+        });
+      } catch (e) { console.error('[signup.verify-email] send failed:', e.message); }
+    })();
+    res.status(201).json({
+      pending_verification: true,
+      message: 'Vérifiez votre email pour activer votre compte.',
+      email_sent_to: email,
+    });
   } catch (err) { console.error('Signup error:', err); res.status(500).json({ error: 'Erreur lors de la creation du compte.' }); }
 });
 
@@ -728,17 +785,22 @@ router.post('/signup-google', [
     const placeholder = require('crypto').randomBytes(32).toString('hex');
     const hash = await bcrypt.hash(placeholder, 12);
 
+    // J2 — Google a déjà vérifié l'email (`emailVerified` check L.706
+    // ci-dessus). On stamp email_verified_at = NOW() pour que le user
+    // puisse se logger directement, sans étape /verify-email
+    // supplémentaire. Pas de email_verification_token (jamais consommé
+    // côté handler /verify-email pour ce flow).
     let user;
     try {
       // Try inserting with avatar_url; fall back if the column doesn't exist yet.
       const r = await query(
-        "INSERT INTO users (email, password_hash, full_name, role, tenant_id, avatar_url) VALUES ($1, $2, $3, 'admin', $4, $5) RETURNING id, email, full_name, role, tenant_id",
+        "INSERT INTO users (email, password_hash, full_name, role, tenant_id, avatar_url, email_verified_at) VALUES ($1, $2, $3, 'admin', $4, $5, NOW()) RETURNING id, email, full_name, role, tenant_id",
         [email, hash, fullName, tenant.id, payload.picture || null]
       );
       user = r.rows[0];
     } catch {
       const r = await query(
-        "INSERT INTO users (email, password_hash, full_name, role, tenant_id) VALUES ($1, $2, $3, 'admin', $4) RETURNING id, email, full_name, role, tenant_id",
+        "INSERT INTO users (email, password_hash, full_name, role, tenant_id, email_verified_at) VALUES ($1, $2, $3, 'admin', $4, NOW()) RETURNING id, email, full_name, role, tenant_id",
         [email, hash, fullName, tenant.id]
       );
       user = r.rows[0];
@@ -764,6 +826,115 @@ router.post('/signup-google', [
   } catch (err) {
     console.error('Signup-google error:', err);
     res.status(500).json({ error: 'Erreur lors de la creation du compte.' });
+  }
+});
+
+// ─── J2 — Email verification flow ───────────────────────────────
+// GET /api/auth/verify-email/:token — endpoint public consommé par
+// la page /verify-email du frontend après que l'admin clique sur le
+// lien envoyé à la création du compte. Idempotent : un re-click sur
+// le même lien après vérification renvoie { already_verified: true }.
+router.get('/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    if (!token || typeof token !== 'string' || token.length < 8) {
+      return res.status(400).json({ error: 'invalid_or_expired_token' });
+    }
+    const { rows: [u] } = await query(
+      `SELECT id, email, tenant_id, email_verified_at, email_verification_token
+         FROM users WHERE email_verification_token = $1 LIMIT 1`,
+      [token]
+    );
+    if (!u) {
+      // Token déjà consommé OU jamais existé. Si on trouve un user
+      // sans token mais avec email_verified_at, on renvoie idempotent.
+      return res.status(400).json({ error: 'invalid_or_expired_token' });
+    }
+    if (u.email_verified_at) {
+      // Edge case : token encore présent en DB mais l'user a déjà été
+      // vérifié par un autre chemin. Idempotent.
+      return res.json({ already_verified: true, user: { id: u.id, email: u.email, tenant_id: u.tenant_id } });
+    }
+    await query(
+      `UPDATE users
+          SET email_verified_at = NOW(),
+              email_verification_token = NULL
+        WHERE id = $1`,
+      [u.id]
+    );
+    return res.json({ verified: true, user: { id: u.id, email: u.email, tenant_id: u.tenant_id } });
+  } catch (err) {
+    console.error('[verify-email] error:', err);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/auth/resend-verification — rate-limité côté server.js
+// (5/heure/IP via passwordResetLimiter étendu) + throttle DB :
+// minimum 5 min entre 2 envois pour le même user.
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'email_required' });
+    }
+    const { rows: [u] } = await query(
+      `SELECT id, email, full_name, tenant_id, email_verified_at,
+              email_verification_sent_at
+         FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      [email]
+    );
+    // Réponse uniforme pour éviter l'énumération d'emails — toujours 200.
+    if (!u || u.email_verified_at) {
+      return res.json({ ok: true });
+    }
+    // Throttle DB : 5 min mini entre 2 envois pour le même user.
+    if (u.email_verification_sent_at) {
+      const ageMs = Date.now() - new Date(u.email_verification_sent_at).getTime();
+      if (ageMs < 5 * 60 * 1000) {
+        return res.json({ ok: true, throttled: true });
+      }
+    }
+    const newToken = require('crypto').randomUUID();
+    await query(
+      `UPDATE users SET email_verification_token = $1, email_verification_sent_at = NOW(),
+              email_verification_attempts = COALESCE(email_verification_attempts, 0) + 1
+        WHERE id = $2`,
+      [newToken, u.id]
+    );
+    (async () => {
+      try {
+        const frontendUrl = (process.env.FRONTEND_URL || 'https://refboost.io').replace(/\/$/, '');
+        const verifyUrl = `${frontendUrl}/verify-email?token=${newToken}`;
+        const bodyHtml = `
+          <p style="margin:0 0 16px;">Bonjour ${u.full_name || ''},</p>
+          <p style="margin:0 0 16px;">Voici votre nouveau lien de vérification :</p>
+          <p style="margin:24px 0;text-align:center;">
+            <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Vérifier mon email</a>
+          </p>
+          <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Ou copiez ce lien : <a href="${verifyUrl}">${verifyUrl}</a></p>`;
+        const html = templates.baseLayout({
+          title: 'Nouveau lien de vérification',
+          preheader: 'Activez votre compte RefBoost',
+          bodyHtml,
+          ctaLabel: 'Vérifier mon email',
+          ctaUrl: verifyUrl,
+        });
+        await resend.sendAndLog({
+          to: u.email,
+          subject: `Nouveau lien de vérification — RefBoost`,
+          html,
+          text: `Bonjour ${u.full_name || ''},\n\nVoici votre nouveau lien : ${verifyUrl}`,
+          template: 'email_verification_resend',
+          payload: { recipient_name: u.full_name },
+          query,
+        });
+      } catch (e) { console.error('[resend-verification] send failed:', e.message); }
+    })();
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[resend-verification] error:', err);
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

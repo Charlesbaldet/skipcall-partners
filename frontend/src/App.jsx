@@ -31,6 +31,7 @@ import Layout from './components/Layout.jsx';
 // SEO. Each lazy() call corresponds to one route-level chunk that
 // downloads on demand.
 const SignupPage           = lazy(() => import('./pages/SignupPage.jsx'));
+const VerifyEmailPage      = lazy(() => import('./pages/VerifyEmailPage.jsx'));
 const ForgotPasswordPage   = lazy(() => import('./pages/ForgotPasswordPage.jsx'));
 const ResetPasswordPage    = lazy(() => import('./pages/ResetPasswordPage.jsx'));
 const SetupPasswordPage    = lazy(() => import('./pages/SetupPasswordPage.jsx'));
@@ -207,6 +208,7 @@ function PublicCookieBanner() {
     path === '/' ||
     path === '/login' ||
     path === '/signup' ||
+    path === '/verify-email' ||
     path === '/forgot-password' ||
     path === '/reset-password' ||
     path === '/pricing' ||
@@ -316,6 +318,7 @@ function AppRoutes() {
           <Route path="/r/:slug" element={suspend(PublicReferralRedirectPage)} />
       <Route path="/setup-password/:token" element={suspend(SetupPasswordPage)} />
       <Route path="/signup" element={suspend(SignupPage)} />
+      <Route path="/verify-email" element={suspend(VerifyEmailPage)} />
           <Route path="/forgot-password" element={suspend(ForgotPasswordPage)} />
         <Route path="/reset-password" element={suspend(ResetPasswordPage)} />
         <Route path="/blog" element={suspend(BlogPage)} />

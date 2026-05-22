@@ -195,7 +195,38 @@ const loginLimiter = rateLimit({
   max: 20,
 });
 app.use('/api/auth/login', loginLimiter);
-app.use('/api/auth/signup', loginLimiter);
+
+// J2 ITEM 3.5 — rate limit dédié + serré sur signup public.
+// Pré-J2 : signup partageait le loginLimiter (20/15min). Trop large
+// pour le spam de tenants (vu en prod : 3 signups orphelins en 2 min
+// le 22/05). 3/heure/IP = un humain qui hésite et retape peut encore
+// signer ; un bot voit son volume effondré x80. signup-google
+// n'avait AUCUN rate limit dédié — ajout 5/heure/IP (Google vérifie
+// déjà l'email donc surface plus stable que email/password, mais un
+// attaquant avec N comptes Google pouvait spam N tenants).
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const signupGoogleLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/signup', signupLimiter);
+app.use('/api/auth/signup-google', signupGoogleLimiter);
+// J2 — resend-verification rate-limited 5/heure/IP pour ne pas être
+// utilisé comme amplificateur de spam mail.
+const resendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/resend-verification', resendVerificationLimiter);
 
 // Tighter limiter on the password-reset surface. Both forgot-password
 // (email enumeration) and reset-password (token brute-force) need a

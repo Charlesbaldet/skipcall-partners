@@ -1868,6 +1868,36 @@ async function runMigrations() {
     console.error('[migrate.v63] failed:', err.message);
   }
 
+  // v64: phase J2 — email verification obligatoire pour les nouveaux
+  // signups publics. Anti-régression : TOUS les users existants sont
+  // backfillés avec email_verified_at = created_at (ou NOW() si
+  // created_at est NULL). Si le backfill rate, un user existant se
+  // retrouverait bloqué au login post-J2 (403 email_not_verified) —
+  // d'où le UPDATE défensif IS NULL juste après l'ADD COLUMN. Doit
+  // s'exécuter avant que le code J2 du handler login ne soit déployé.
+  try {
+    await query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS email_verification_token TEXT,
+        ADD COLUMN IF NOT EXISTS email_verification_sent_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS email_verification_attempts INTEGER NOT NULL DEFAULT 0
+    `);
+    const { rowCount: backfilled } = await query(`
+      UPDATE users
+         SET email_verified_at = COALESCE(created_at, NOW())
+       WHERE email_verified_at IS NULL
+    `);
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_users_email_verification_token
+        ON users(email_verification_token)
+        WHERE email_verification_token IS NOT NULL
+    `);
+    console.log(`[security] v64 users.email_verification columns ready · backfilled ${backfilled} existing users to verified`);
+  } catch (err) {
+    console.error('[migrate.v64] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
