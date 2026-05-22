@@ -967,12 +967,21 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                 </div>
               )}
 
-              {/* Section: engagement + periods */}
+              {/* Section: engagement + periods.
+                  H2 : entièrement cachée en business_model='forfait_tjm'
+                  (deal one-shot, la notion d'engagement récurrent n'a
+                  pas de sens). Pour 'mrr' et 'hybrid', section identique
+                  à pré-H2 — sauf que l'option "Forfait" est retirée du
+                  set des choix (les modes business_model couvrent ce
+                  cas). Deals legacy avec engagement='forfait' en DB :
+                  valeur conservée, aucun bouton sélectionné, l'admin
+                  peut re-choisir Mensuel/Trim./Annuel pour la mettre
+                  à jour. */}
+              {!isForfaitTjmTenant && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('referrals.engagement')}</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {[
-                    ['forfait',     t('pipeline.forfait',     'Forfait')],
                     ['mensuel',     t('pipeline.mensuel',     'Mensuel')],
                     ['trimestriel', t('pipeline.trimestriel', 'Trimestriel')],
                     ['annuel',      t('pipeline.annuel',      'Annuel')],
@@ -1002,6 +1011,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   </div>
                 )}
               </div>
+              )}
 
               {/* Section: forecast commission. Updates live as the
                   user drags any of the four inputs above. When the
