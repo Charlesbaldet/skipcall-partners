@@ -303,10 +303,21 @@ export default function PartnerPaymentsPage() {
               ready_to_pay:     'pending_validation',
               paid:             'paid',
             };
-            const colBatches = [...batchesById.values()].filter(b => BATCH_COL_BY_STATUS[b.status] === statusKey);
+            // F5-FIX1 : seuil minimum à 2 commissions pour qu'un batch
+            // s'affiche en carte agrégée. En dessous (= 1 commission),
+            // la commission revient en carte individuelle classique
+            // selon son propre commission.status. Réexpose le bouton
+            // "Déposer ma facture" individuel + le download facture.
+            const isAggregatedBatch = (b) => (b?.commission_count ?? 0) >= 2;
+            const colBatches = [...batchesById.values()].filter(
+              b => BATCH_COL_BY_STATUS[b.status] === statusKey && isAggregatedBatch(b)
+            );
+            const aggregatedBatchIds = new Set(
+              [...batchesById.values()].filter(isAggregatedBatch).map(b => b.id)
+            );
             const standaloneCommissions = visibleRows.filter(c => {
               if (c.status !== statusKey) return false;
-              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) return false;
+              if (c.payout_batch_id && aggregatedBatchIds.has(c.payout_batch_id)) return false;
               return true;
             });
             const displayItems = [

@@ -263,10 +263,20 @@ export default function CommissionsPage() {
 
   // F3b — helpers batches : map id -> batch, sets dérivés, ouverture détail
   const batchesById = (() => { const m = new Map(); for (const b of batches) m.set(b.id, b); return m; })();
-  const lateBatches = batches.filter(b => b.is_late === true && b.status === 'awaiting_invoice');
+  // F5-FIX1 — seuil minimum à 2 commissions pour qu'un batch s'affiche
+  // en carte agrégée. En dessous (= 1 commission), la commission est
+  // rendue comme carte individuelle classique selon son propre status.
+  // Cache le bug discrepancy DB (batch awaiting_invoice + commission
+  // paid) et réexpose les UI controls par-commission (icon download
+  // facture, tag "Jusqu'au DATE", compteur "0/12 versés").
+  const isAggregatedBatch = (b) => (b?.commission_count ?? 0) >= 2;
+  const lateBatches = batches.filter(b =>
+    b.is_late === true && b.status === 'awaiting_invoice' && isAggregatedBatch(b)
+  );
   const nearDeadlineBatches = batches.filter(b => {
     if (b.status !== 'awaiting_invoice' || b.is_late) return false;
     if (!b.created_at) return false;
+    if (!isAggregatedBatch(b)) return false;
     const ageDays = (Date.now() - new Date(b.created_at).getTime()) / (24 * 60 * 60 * 1000);
     return ageDays > 7;
   });
@@ -1076,17 +1086,27 @@ export default function CommissionsPage() {
               ready_to_pay:     'pending_validation',
               paid:             'paid',
             };
+            // F5-FIX1 : ne garder en carte agrégée que les batches
+            // ≥ 2 commissions. Les batches à 1 commission sont
+            // "désagrégés" et leur commission ré-apparaît en standalone
+            // ci-dessous (placée dans la colonne selon commission.status,
+            // pas batch.status — donc une commission paid sur un batch
+            // awaiting_invoice s'affiche bien en "Payé").
             const colBatches = batches.filter(b =>
-              BATCH_COL_BY_STATUS[b.status] === status && !b.is_late
+              BATCH_COL_BY_STATUS[b.status] === status && !b.is_late && isAggregatedBatch(b)
             );
-            // Commissions individuelles : uniquement celles SANS batch
-            // référencé dans batchesById (i.e. cadence unitary, ou
-            // commission héritée pré-F4 sans batch attribué). Les
-            // commissions batchées sont compressées dans la carte
-            // agrégée et NE doivent PAS être rendues en doublon.
+            // Set des batches qui s'affichent comme cartes agrégées
+            // (≥2). Inclut les batches is_late (cartes agrégées dans la
+            // 5e colonne "En retard") pour que leurs commissions ne
+            // soient pas dupliquées en standalone. Les commissions des
+            // batches < 2 (ni En retard ni colonne classique) reviennent
+            // en standalone.
+            const aggregatedBatchIds = new Set(
+              batches.filter(b => isAggregatedBatch(b)).map(b => b.id)
+            );
             const standaloneCommissions = visibleCommissions.filter(c => {
               if (c.status !== status) return false;
-              if (c.payout_batch_id && batchesById.has(c.payout_batch_id)) return false;
+              if (c.payout_batch_id && aggregatedBatchIds.has(c.payout_batch_id)) return false;
               return true;
             });
             // displayItems = batches (agrégées) + commissions standalone.
