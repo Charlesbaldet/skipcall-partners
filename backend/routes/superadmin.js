@@ -56,19 +56,29 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
     const prevTo = from || null;
     const hasPrev = !!(prevFrom && prevTo);
 
+    // J3.1 — Exclude excluded_from_stats tenants from all aggregations.
+    // /stats is the super-admin reporting surface ; sandbox démo / archives
+    // (ex: tenant TEST) shouldn't pollute KPIs. Two filter shapes used :
+    //   - sur table tenants : `AND excluded_from_stats = FALSE`
+    //   - sur autres tables (users/partners/referrals) :
+    //     `AND tenant_id NOT IN (SELECT id FROM tenants WHERE excluded_from_stats = TRUE)`
+    // Note : /tenants (liste) + /audit-logs gardent leur visibilité intacte
+    // sur ces tenants archivés — c'est volontaire pour la maintenance.
+    const EXCL_FILTER = `tenant_id NOT IN (SELECT id FROM tenants WHERE excluded_from_stats = TRUE)`;
+
     // Live snapshot queries — these don't take from/to.
     const [
       tenantsTotal, usersTotal, activeUsersTotal, partnersTotal, activePartnersTotal,
       referralsByStatus, volumeByStatus, leadsByTenant,
       plansBreakdown, conversionsTotalRow,
     ] = await Promise.all([
-      query('SELECT COUNT(*) FROM tenants WHERE is_active = true'),
-      query("SELECT COUNT(*) FROM users WHERE role != 'system'"),
-      query('SELECT COUNT(*) FROM users WHERE is_active = true'),
-      query('SELECT COUNT(*) FROM partners'),
-      query("SELECT COUNT(*) FROM partners WHERE is_active = true"),
-      query('SELECT status, COUNT(*) as count FROM referrals WHERE deleted_at IS NULL GROUP BY status'),
-      query('SELECT status, COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE deal_value IS NOT NULL AND deleted_at IS NULL GROUP BY status'),
+      query('SELECT COUNT(*) FROM tenants WHERE is_active = true AND excluded_from_stats = FALSE'),
+      query(`SELECT COUNT(*) FROM users WHERE role != 'system' AND ${EXCL_FILTER}`),
+      query(`SELECT COUNT(*) FROM users WHERE is_active = true AND ${EXCL_FILTER}`),
+      query(`SELECT COUNT(*) FROM partners WHERE ${EXCL_FILTER}`),
+      query(`SELECT COUNT(*) FROM partners WHERE is_active = true AND ${EXCL_FILTER}`),
+      query(`SELECT status, COUNT(*) as count FROM referrals WHERE deleted_at IS NULL AND ${EXCL_FILTER} GROUP BY status`),
+      query(`SELECT status, COALESCE(SUM(deal_value), 0) as total FROM referrals WHERE deal_value IS NOT NULL AND deleted_at IS NULL AND ${EXCL_FILTER} GROUP BY status`),
       query(`
         SELECT t.id, t.name, t.slug,
                (SELECT u.full_name FROM users u WHERE u.tenant_id = t.id AND u.role = 'admin' ORDER BY u.id LIMIT 1) as admin_name,
@@ -79,16 +89,16 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
         FROM tenants t
         LEFT JOIN partners p ON p.tenant_id = t.id
         LEFT JOIN referrals r ON r.partner_id = p.id AND r.deleted_at IS NULL
-        WHERE t.is_active = true
+        WHERE t.is_active = true AND t.excluded_from_stats = FALSE
         GROUP BY t.id
         ORDER BY lead_count DESC
       `),
-      query(`SELECT plan, COUNT(*)::int AS c FROM tenants WHERE is_active = TRUE GROUP BY plan`),
+      query(`SELECT plan, COUNT(*)::int AS c FROM tenants WHERE is_active = TRUE AND excluded_from_stats = FALSE GROUP BY plan`),
       // Conversions all-time = tenants that ever started a paying plan.
       // Proxy: plan_started_at IS NOT NULL AND plan != 'starter'. Covers
       // upgrades pro→business as well as first paid signups — acceptable
       // until/unless we add a first_paid_at column.
-      query(`SELECT COUNT(*)::int AS c FROM tenants WHERE plan_started_at IS NOT NULL AND plan IS NOT NULL AND plan <> 'starter'`),
+      query(`SELECT COUNT(*)::int AS c FROM tenants WHERE plan_started_at IS NOT NULL AND plan IS NOT NULL AND plan <> 'starter' AND excluded_from_stats = FALSE`),
     ]);
 
     // Plan counts → object + MRR total. Prices come from PLANS via the
@@ -125,13 +135,14 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
         : `${col} < $1::timestamptz`;
       const params = lo ? [loStr, hiStr] : [hiStr];
 
+      // J3.1 — same EXCL_FILTER pattern as the live snapshot above.
       const [newT, newP, newU, newL, vol, conv, mrrEndRow, tenantsEndRow] = await Promise.all([
-        query(`SELECT COUNT(*)::int AS c FROM tenants WHERE ${where('created_at', !!lo)}`, params),
-        query(`SELECT COUNT(*)::int AS c FROM partners WHERE ${where('created_at', !!lo)}`, params),
-        query(`SELECT COUNT(*)::int AS c FROM users WHERE ${where('created_at', !!lo)} AND role != 'system'`, params),
-        query(`SELECT COUNT(*)::int AS c FROM referrals WHERE deleted_at IS NULL AND ${where('created_at', !!lo)}`, params),
-        query(`SELECT COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND ${where('closed_at', !!lo)}`, params),
-        query(`SELECT COUNT(*)::int AS c FROM tenants WHERE plan IN ('pro','business') AND plan_started_at IS NOT NULL AND ${where('plan_started_at', !!lo)}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM tenants WHERE ${where('created_at', !!lo)} AND excluded_from_stats = FALSE`, params),
+        query(`SELECT COUNT(*)::int AS c FROM partners WHERE ${where('created_at', !!lo)} AND ${EXCL_FILTER}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM users WHERE ${where('created_at', !!lo)} AND role != 'system' AND ${EXCL_FILTER}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM referrals WHERE deleted_at IS NULL AND ${where('created_at', !!lo)} AND ${EXCL_FILTER}`, params),
+        query(`SELECT COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND ${where('closed_at', !!lo)} AND ${EXCL_FILTER}`, params),
+        query(`SELECT COUNT(*)::int AS c FROM tenants WHERE plan IN ('pro','business') AND plan_started_at IS NOT NULL AND ${where('plan_started_at', !!lo)} AND excluded_from_stats = FALSE`, params),
         // MRR snapshot at hi. Static SQL, 3 fixed params — no lo
         // dependency, no orphan risk.
         query(
@@ -144,6 +155,7 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
            ), 0)::int AS s
            FROM tenants
            WHERE is_active = TRUE
+             AND excluded_from_stats = FALSE
              AND plan_started_at IS NOT NULL
              AND plan_started_at <= $1::timestamptz
              AND (plan_ends_at IS NULL OR plan_ends_at > $1::timestamptz)`,
@@ -151,7 +163,7 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
         ),
         // Tenants active at hi snapshot. Static SQL, 1 fixed param.
         query(
-          `SELECT COUNT(*)::int AS c FROM tenants WHERE is_active = TRUE AND created_at <= $1::timestamptz`,
+          `SELECT COUNT(*)::int AS c FROM tenants WHERE is_active = TRUE AND excluded_from_stats = FALSE AND created_at <= $1::timestamptz`,
           [hiStr],
         ),
       ]);
@@ -522,19 +534,23 @@ router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
     // Cumulative-count queries grouped by the truncated bucket. The
     // "before" pre-window totals seed the cumulative counter so the
     // first point in the visible series carries the all-time value.
+    // J3.1 — Exclude excluded_from_stats tenants from /timeline series.
+    // Même pattern que /stats : `AND excluded_from_stats = FALSE` sur
+    // table tenants ; `AND tenant_id NOT IN (SELECT...)` sur les autres.
+    const EXCL_FILTER = `tenant_id NOT IN (SELECT id FROM tenants WHERE excluded_from_stats = TRUE)`;
     const [tenantsRows, partnersRows, leadsRows, volumeRows, tBefore, pBefore, lBefore, vBefore] = await Promise.all([
-      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM tenants WHERE created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
+      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM tenants WHERE excluded_from_stats = FALSE AND created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
         [truncUnit, from.toISOString(), to.toISOString()]),
-      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM partners WHERE created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
+      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM partners WHERE ${EXCL_FILTER} AND created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
         [truncUnit, from.toISOString(), to.toISOString()]),
-      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM referrals WHERE deleted_at IS NULL AND created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
+      query(`SELECT date_trunc($1, created_at) AS bucket, COUNT(*)::int AS c FROM referrals WHERE deleted_at IS NULL AND ${EXCL_FILTER} AND created_at >= $2 AND created_at <= $3 GROUP BY bucket`,
         [truncUnit, from.toISOString(), to.toISOString()]),
-      query(`SELECT date_trunc($1, closed_at) AS bucket, COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND closed_at >= $2 AND closed_at <= $3 GROUP BY bucket`,
+      query(`SELECT date_trunc($1, closed_at) AS bucket, COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND ${EXCL_FILTER} AND closed_at IS NOT NULL AND closed_at >= $2 AND closed_at <= $3 GROUP BY bucket`,
         [truncUnit, from.toISOString(), to.toISOString()]),
-      query(`SELECT COUNT(*)::int AS c FROM tenants WHERE created_at < $1`, [from.toISOString()]),
-      query(`SELECT COUNT(*)::int AS c FROM partners WHERE created_at < $1`, [from.toISOString()]),
-      query(`SELECT COUNT(*)::int AS c FROM referrals WHERE created_at < $1 AND deleted_at IS NULL`, [from.toISOString()]),
-      query(`SELECT COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND closed_at IS NOT NULL AND closed_at < $1`, [from.toISOString()]),
+      query(`SELECT COUNT(*)::int AS c FROM tenants WHERE excluded_from_stats = FALSE AND created_at < $1`, [from.toISOString()]),
+      query(`SELECT COUNT(*)::int AS c FROM partners WHERE ${EXCL_FILTER} AND created_at < $1`, [from.toISOString()]),
+      query(`SELECT COUNT(*)::int AS c FROM referrals WHERE created_at < $1 AND deleted_at IS NULL AND ${EXCL_FILTER}`, [from.toISOString()]),
+      query(`SELECT COALESCE(SUM(deal_value), 0)::float AS s FROM referrals WHERE status = 'won' AND deleted_at IS NULL AND ${EXCL_FILTER} AND closed_at IS NOT NULL AND closed_at < $1`, [from.toISOString()]),
     ]);
 
     const bucketKey = (d) => new Date(d).toISOString();
@@ -566,6 +582,7 @@ router.get('/timeline', authenticate, requireSuperAdmin, async (req, res) => {
         ), 0)::int AS s
         FROM tenants
         WHERE is_active = TRUE
+          AND excluded_from_stats = FALSE
           AND plan_started_at IS NOT NULL
           AND plan_started_at <= $1
           AND (plan_ends_at IS NULL OR plan_ends_at > $1)

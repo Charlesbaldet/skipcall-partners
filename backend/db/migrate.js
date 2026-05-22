@@ -1898,6 +1898,20 @@ async function runMigrations() {
     console.error('[migrate.v64] failed:', err.message);
   }
 
+  // v65: phase J3.1 — colonne tenants.excluded_from_stats.
+  // Permet de masquer les sandbox démo / archives des agrégats stats
+  // super-admin (/api/super-admin/stats + /timeline) sans pour autant
+  // les retirer de la liste tenants (/api/super-admin/tenants reste
+  // accessible pour gestion). DEFAULT FALSE = aucun tenant existant
+  // n'est exclu, opt-in par UPDATE ciblé. Idempotent.
+  try {
+    await query(`ALTER TABLE tenants
+                   ADD COLUMN IF NOT EXISTS excluded_from_stats BOOLEAN NOT NULL DEFAULT FALSE`);
+    console.log('[meta] v65 tenants.excluded_from_stats ready');
+  } catch (err) {
+    console.error('[migrate.v65] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
