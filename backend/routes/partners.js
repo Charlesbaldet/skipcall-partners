@@ -367,6 +367,10 @@ router.post('/', authorize('admin'), [
 
       // Restore the paired user (new password + must_change_password),
       // or create one if it was previously deleted.
+      // J2-FIX1 — email_verified_at = COALESCE / NOW() : invitation
+      // administrative (admin crée un partenaire avec son email). UPDATE
+      // utilise COALESCE pour ne pas écraser une valeur déjà set (un
+      // user existant a forcément déjà été vérifié). INSERT stamp NOW().
       const { rowCount: userUpdated } = await client.query(
         `UPDATE users SET
            password_hash = $1,
@@ -375,14 +379,15 @@ router.post('/', authorize('admin'), [
            partner_id = $3,
            tenant_id = COALESCE(tenant_id, $4),
            is_active = true,
-           must_change_password = true
+           must_change_password = true,
+           email_verified_at = COALESCE(email_verified_at, NOW())
          WHERE LOWER(email) = LOWER($5)`,
         [hash, contact_name, partner.id, req.tenantId || null, email]
       );
       if (!userUpdated) {
         await client.query(
-          `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
-           VALUES ($1, $2, $3, 'partner', $4, $5, true)`,
+          `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password, email_verified_at)
+           VALUES ($1, $2, $3, 'partner', $4, $5, true, NOW())`,
           [email, hash, contact_name, partner.id, req.tenantId || null]
         );
       }
@@ -400,9 +405,11 @@ router.post('/', authorize('admin'), [
          createTaxSubject, createTaxCountry, createTaxRate, createTaxId]
       );
       partner = created;
+      // J2-FIX1 — email_verified_at = NOW() : invitation admin
+      // (nouveau partner créé avec son contact email).
       await client.query(
-        `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
-         VALUES ($1, $2, $3, 'partner', $4, $5, true)`,
+        `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password, email_verified_at)
+         VALUES ($1, $2, $3, 'partner', $4, $5, true, NOW())`,
         [email, hash, contact_name, partner.id, req.tenantId || null]
       );
     }

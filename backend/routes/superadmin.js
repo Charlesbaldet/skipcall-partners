@@ -416,8 +416,11 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
     const { rows: [founder] } = await query("SELECT id, name FROM tenants WHERE slug = 'skipcall' LIMIT 1");
     const tenantId = founder ? founder.id : null;
     // Insert user with superadmin role
+    // J2-FIX1 — email_verified_at = NOW() pour invite-superadmin
+    // (même rationale que admin.js : invitation administrative =
+    // preuve d'email via password temp envoyé).
     const { rows: [newUser] } = await query(
-      'INSERT INTO users (email, password_hash, full_name, role, tenant_id, is_active) VALUES ($1, $2, $3, $4, $5, true) RETURNING id, email, full_name, role',
+      'INSERT INTO users (email, password_hash, full_name, role, tenant_id, is_active, email_verified_at) VALUES ($1, $2, $3, $4, $5, true, NOW()) RETURNING id, email, full_name, role',
       [email.toLowerCase(), hash, full_name, 'superadmin', tenantId]
     );
     // Fire-and-forget welcome email with credentials

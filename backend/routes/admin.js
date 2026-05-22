@@ -62,8 +62,13 @@ router.post('/invite', [
     const hash = await bcrypt.hash(tempPassword, 12);
 
     // INSERT with tenant_id
+    // J2-FIX1 — email_verified_at = NOW() : une invitation admin
+    // équivaut à une vérif d'email (l'admin connaît la personne
+    // qu'il invite + le password temporaire est envoyé sur cet
+    // email = preuve de possession). Sans ce flag, le user serait
+    // bloqué 403 email_not_verified au login (check ajouté en J2).
     await query(
-      'INSERT INTO users (email, password_hash, full_name, role, tenant_id, must_change_password) VALUES ($1, $2, $3, $4, $5, true)',
+      'INSERT INTO users (email, password_hash, full_name, role, tenant_id, must_change_password, email_verified_at) VALUES ($1, $2, $3, $4, $5, true, NOW())',
       [email, hash, full_name, role, req.tenantId || null]
     );
     // Fire-and-forget invitation email via Resend

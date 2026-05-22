@@ -56,9 +56,12 @@ async function ensureSystemUser(tenantId) {
   // Create. INSERT ... ON CONFLICT (email) DO NOTHING covers the
   // unlikely race where two callers create simultaneously.
   const hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+  // J2-FIX1 — email_verified_at = NOW() : user système interne, jamais
+  // de login UI, mais cohérence schéma (et défense en profondeur si
+  // le check login devait un jour fonctionner sur is_active=false).
   const { rows: insRows } = await query(
-    `INSERT INTO users (email, password_hash, full_name, role, tenant_id, is_active, must_change_password)
-     VALUES ($1, $2, 'RefBoost Forms', 'system', $3, FALSE, FALSE)
+    `INSERT INTO users (email, password_hash, full_name, role, tenant_id, is_active, must_change_password, email_verified_at)
+     VALUES ($1, $2, 'RefBoost Forms', 'system', $3, FALSE, FALSE, NOW())
      ON CONFLICT (email) DO NOTHING
      RETURNING id`,
     [email, hash, tenantId]

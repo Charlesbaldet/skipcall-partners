@@ -400,9 +400,11 @@ router.put('/:id/approve', authenticate, tenantScope, authorize('admin'), async 
       // Brand new user - create account with temp password
       tempPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
       const hash = await bcrypt.hash(tempPassword, 10);
+      // J2-FIX1 — email_verified_at = NOW() : l'applicant a soumis sa
+      // candidature avec cet email + l'admin l'approuve = double preuve.
       const newUserRows = await client.query(
-        `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password)
-         VALUES ($1, $2, $3, 'partner', $4, $5, true)
+        `INSERT INTO users (email, password_hash, full_name, role, partner_id, tenant_id, must_change_password, email_verified_at)
+         VALUES ($1, $2, $3, 'partner', $4, $5, true, NOW())
          RETURNING id`,
         [app.email, hash, app.contact_name, partner.id, req.tenantId || null]
       );
