@@ -54,17 +54,35 @@ export default function DashboardPage() {
   // copy-pasted localStorage flag can't surface the wizard to a
   // non-admin role. Partners never reach this page (they live on
   // /partner/dashboard) so they're already excluded by routing.
-  const [showWizard, setShowWizard] = useState(() => {
+  // I1 — Wizard auto-display conditional. Toutes les conditions ci-dessous
+  // doivent être vraies pour que le modal s'ouvre automatiquement :
+  //   1. user role admin / superadmin (partner n'arrive jamais ici)
+  //   2. sessionStorage onboarding_wizard_shown_this_session !== 'true'
+  //      (déjà ouvert dans cette session → on ne ré-affiche pas au
+  //      re-render du Dashboard)
+  //   3. localStorage onboarding_wizard_dismissed !== 'true' (choix
+  //      "Ne plus afficher au démarrage" persistant cross-session)
+  //   4. /api/onboarding/status percentage < 100 (tenant pas terminé)
+  // L'initial state est false ; un useEffect fait le fetch async puis
+  // bascule à true si les conditions sont réunies.
+  const [showWizard, setShowWizard] = useState(false);
+  useEffect(() => {
     const u = api.getUser && api.getUser();
-    if (!u || (u.role !== 'admin' && u.role !== 'superadmin')) return false;
-    // Tenant-scoped flag, with legacy unscoped flag as a fallback so
-    // a user who signed up before this patch still gets the wizard
-    // once. The legacy key is cleared by the wizard on dismiss
-    // alongside the new one.
-    if (u.tenantId && localStorage.getItem('refboost_onboarding_pending_' + u.tenantId) === '1') return true;
-    if (localStorage.getItem('refboost_onboarding_pending') === '1') return true;
-    return false;
-  });
+    if (!u || (u.role !== 'admin' && u.role !== 'superadmin')) return;
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('onboarding_wizard_shown_this_session') === 'true') return;
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('onboarding_wizard_dismissed') === 'true') return;
+    let cancelled = false;
+    api.getOnboardingStatus()
+      .then(d => {
+        if (cancelled) return;
+        if (d && typeof d.percentage === 'number' && d.percentage < 100) {
+          try { sessionStorage.setItem('onboarding_wizard_shown_this_session', 'true'); } catch {}
+          setShowWizard(true);
+        }
+      })
+      .catch(() => { /* silent — wizard simply doesn't show */ });
+    return () => { cancelled = true; };
+  }, []);
   const [billingPlan, setBillingPlan] = useState(null);
   const [dateRange, setDateRange] = useState(null);
   const [monthlyCumul, setMonthlyCumul] = useState(false);

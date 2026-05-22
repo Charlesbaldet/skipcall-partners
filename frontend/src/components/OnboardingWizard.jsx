@@ -43,6 +43,10 @@ export default function OnboardingWizard({ onClose }) {
 
   const [copied, setCopied] = useState(false);
   const [tenantSlug, setTenantSlug] = useState('');
+  // I1 — "Ne plus afficher au démarrage". Coché → persiste dans
+  // localStorage à la fermeture (cross-session). DashboardPage le lit
+  // au mount pour décider d'afficher ou non le wizard.
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   useEffect(() => {
     api.getMyTenant().then(d => { if (d && d.tenant) setTenantSlug(d.tenant.slug || ''); }).catch(() => {});
@@ -77,6 +81,13 @@ export default function OnboardingWizard({ onClose }) {
       const u = (typeof api.getUser === 'function' && api.getUser()) || null;
       if (u && u.tenantId) localStorage.removeItem('refboost_onboarding_pending_' + u.tenantId);
       localStorage.removeItem('refboost_onboarding_pending');
+      // I1 — persistence cross-session du choix "Ne plus afficher au
+      // démarrage". DashboardPage le lit pour gater l'auto-affichage
+      // du wizard. Sans le check, le wizard ne ré-apparaît plus jamais
+      // au login suivant.
+      if (dontShowAgain) {
+        localStorage.setItem('onboarding_wizard_dismissed', 'true');
+      }
     } catch {}
     onClose();
   };
@@ -348,6 +359,20 @@ export default function OnboardingWizard({ onClose }) {
               background: 'transparent', color: C.m, fontWeight: 600, fontSize: 14, cursor: 'pointer',
             }}>{t('onboarding.skip')}</button>
           )}
+          {/* I1 — opt-out persistent. Affiché sur toutes les étapes
+              du wizard, coché à la fermeture → écriture localStorage
+              dans handleClose. */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 4 }}>
+            <input
+              type="checkbox"
+              checked={dontShowAgain}
+              onChange={e => setDontShowAgain(e.target.checked)}
+              style={{ width: 14, height: 14, cursor: 'pointer', accentColor: C.p }}
+            />
+            <span style={{ fontSize: 12, color: C.m }}>
+              {t('onboarding.dont_show_again', 'Ne plus afficher au démarrage')}
+            </span>
+          </label>
         </div>
       </div>
     </div>

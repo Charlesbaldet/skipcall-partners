@@ -50,11 +50,23 @@ router.get('/status', authenticate, authorize('admin', 'superadmin'), async (req
         link: '/settings?tab=company',
         order: 1,
       },
+      // I1 — choix du modèle commercial (G/H phases). Auto-validée
+      // pour tous les tenants migrés H1 (business_model='mrr' par
+      // défaut depuis v63), ce qui évite une régression du % de
+      // progression vs pré-I1. Un tenant qui n'a pas encore touché
+      // au sélecteur est traité comme conscient du choix (le DEFAULT
+      // 'mrr' = choix par défaut explicite côté config).
+      {
+        id: 'business_model',
+        completed: !!(t.business_model && String(t.business_model).trim()),
+        link: '/settings?tab=commission',
+        order: 2,
+      },
       {
         id: 'program',
         completed: levelsR.rows[0].c > 0,
         link: '/programme',
-        order: 2,
+        order: 3,
       },
       {
         id: 'branding',
@@ -76,31 +88,31 @@ router.get('/status', authenticate, authorize('admin', 'superadmin'), async (req
           (t.secondary_color && String(t.secondary_color).toLowerCase() !== '#0f172a')
         ),
         link: '/settings?tab=branding',
-        order: 3,
+        order: 4,
       },
       {
         id: 'pipeline',
         completed: categoriesR.rows[0].c > 0,
         link: '/settings?tab=pipeline',
-        order: 4,
+        order: 5,
       },
       {
         id: 'marketplace',
         completed: !!(t.marketplace_visible && t.short_description),
         link: '/marketplace-admin',
-        order: 5,
+        order: 6,
       },
       {
         id: 'banking',
         completed: paymentR.rows.length > 0,
         link: '/settings?tab=integrations',
-        order: 6,
+        order: 7,
       },
       {
         id: 'first_partner',
         completed: partnersR.rows[0].c > 0,
         link: '/partners',
-        order: 7,
+        order: 8,
       },
     ];
 
