@@ -524,12 +524,26 @@ export default function SuperAdminPage() {
                 <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr></thead>
-            <tbody>{tenants.map(tn => (
-              <tr key={tn.id} data-row-id={tn.id} style={{ borderBottom: '1px solid #f8fafc', background: flashId === tn.id ? '#fef9c3' : undefined, transition: 'background 0.6s' }}>
+            <tbody>{tenants.map(tn => {
+              // J4-FIX2 : badges visuels distinctifs. Tenant fondateur
+              // (J4 flag is_founder) ou tenant archivé (J3.1
+              // excluded_from_stats ou soft-deleted) sont signalés
+              // par un petit chip après le nom. Ligne légèrement
+              // atténuée pour l'archive (opacity 0.7) pour la sortir
+              // visuellement sans la cacher.
+              const isArchived = !!(tn.excluded_from_stats || tn.deleted_at);
+              return (
+              <tr key={tn.id} data-row-id={tn.id} style={{ borderBottom: '1px solid #f8fafc', background: flashId === tn.id ? '#fef9c3' : undefined, transition: 'background 0.6s', opacity: isArchived ? 0.7 : 1 }}>
                 <td style={{ padding: '13px 16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <div style={{ width: 34, height: 34, borderRadius: 8, background: tn.primary_color || '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{tn.name[0]}</div>
                     <span style={{ fontWeight: 600, color: '#0f172a' }}>{tn.name}</span>
+                    {tn.is_founder && (
+                      <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: '#ede9fe', color: '#6d28d9' }}>{t('admin.badge_founder', 'Fondateur')}</span>
+                    )}
+                    {isArchived && (
+                      <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: '#e2e8f0', color: '#475569' }}>{t('admin.badge_archived', 'Archivé')}</span>
+                    )}
                   </div>
                 </td>
                 <td style={{ padding: '13px 16px', textAlign: 'center' }}><code style={{ fontSize: 12, color: 'var(--rb-primary, #059669)', background: '#eef2ff', padding: '2px 8px', borderRadius: 4 }}>{tn.slug}</code></td>
@@ -557,7 +571,8 @@ export default function SuperAdminPage() {
                   </div>
                 </td>
               </tr>
-            ))}</tbody>
+              );
+            })}</tbody>
           </table>
           {tenants.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.no_tenants')}</div>}
         </div>
