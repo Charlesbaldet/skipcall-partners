@@ -335,6 +335,13 @@ export default function SuperAdminPage() {
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}><p style={{ color: '#94a3b8' }}>{t('admin.loading')}</p></div>;
 
+  // J4-FIX2 — masque le tenant fondateur de la liste Clients. Aucune
+  // action utile possible dessus (DELETE protégé J4, pas d'édition
+  // business). L'API /api/super-admin/tenants continue à le renvoyer
+  // pour les autres surfaces (audit logs, stats). Filter défensif :
+  // is_founder undefined ou false → tenant visible.
+  const visibleTenants = tenants.filter(t => !t.is_founder);
+
   return (
     <div className="fade-in">
       <ConfirmModal
@@ -524,7 +531,7 @@ export default function SuperAdminPage() {
                 <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr></thead>
-            <tbody>{tenants.map(tn => (
+            <tbody>{visibleTenants.map(tn => (
               <tr key={tn.id} data-row-id={tn.id} style={{ borderBottom: '1px solid #f8fafc', background: flashId === tn.id ? '#fef9c3' : undefined, transition: 'background 0.6s' }}>
                 <td style={{ padding: '13px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -559,7 +566,7 @@ export default function SuperAdminPage() {
               </tr>
             ))}</tbody>
           </table>
-          {tenants.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.no_tenants')}</div>}
+          {visibleTenants.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.no_tenants')}</div>}
         </div>
       </>)}
 
