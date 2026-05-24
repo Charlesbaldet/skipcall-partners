@@ -324,13 +324,15 @@ router.delete('/tenants/:id', authenticate, requireSuperAdmin, async (req, res) 
   try {
     await client.query('BEGIN');
     // Check tenant exists and get info for audit
-    const { rows: [tenant] } = await client.query('SELECT id, name, slug FROM tenants WHERE id = $1', [req.params.id]);
+    const { rows: [tenant] } = await client.query('SELECT id, name, slug, is_founder FROM tenants WHERE id = $1', [req.params.id]);
     if (!tenant) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Tenant introuvable' });
     }
-    // Protect the default founder tenant
-    if (tenant.slug === 'skipcall') {
+    // J4 — protection via flag is_founder (was slug === 'skipcall').
+    // Le slug reste user-facing (URLs publiques) ; is_founder est le
+    // marqueur système garanti unique par tenants_founder_uidx.
+    if (tenant.is_founder) {
       await client.query('ROLLBACK');
       return res.status(403).json({ error: 'Impossible de supprimer le tenant fondateur' });
     }
@@ -424,8 +426,8 @@ router.post('/invite-superadmin', authenticate, requireSuperAdmin, async (req, r
     // Generate temporary password
     const tempPassword = crypto.randomBytes(9).toString('base64').replace(/[+/=]/g, '').slice(0, 12);
     const hash = await bcrypt.hash(tempPassword, 10);
-    // Find the founder tenant (skipcall) to attach the superadmin to
-    const { rows: [founder] } = await query("SELECT id, name FROM tenants WHERE slug = 'skipcall' LIMIT 1");
+    // J4 — Find the founder tenant via is_founder flag (was slug match).
+    const { rows: [founder] } = await query('SELECT id, name FROM tenants WHERE is_founder = TRUE LIMIT 1');
     const tenantId = founder ? founder.id : null;
     // Insert user with superadmin role
     // J2-FIX1 — email_verified_at = NOW() pour invite-superadmin

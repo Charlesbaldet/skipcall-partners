@@ -48,9 +48,13 @@ async function tenantMiddleware(req, res, next) {
     }
   }
 
-  // 3. Default to first tenant (skipcall)
+  // 3. Default to founder tenant (J4 : was 'skipcall' slug match).
+  // Triple fallback : flag is_founder (post-v66) → slug 'skipcall'
+  // (legacy compat avant migration v66 ait tourné, et seed initial)
+  // → premier tenant cache (extrême last-resort).
   if (!tenant) {
-    tenant = tenantCache['skipcall'] || Object.values(tenantCache)[0];
+    const founder = Object.values(tenantCache).find(t => t.is_founder);
+    tenant = founder || tenantCache['skipcall'] || Object.values(tenantCache)[0];
   }
 
   if (!tenant) {

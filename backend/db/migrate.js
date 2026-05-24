@@ -1,4 +1,4 @@
-const { query } = require('../db');
+const { query, getClient } = require('../db');
 const crypto = require('crypto');
 const logger = require('../services/logger');
 
@@ -169,9 +169,13 @@ async function runMigrations() {
     if (tenants.length === 0) {
       console.log(' Empty DB detected — running seed...');
       const bcrypt = require('bcryptjs');
+      // J4 — seed initial marque is_founder=TRUE puisqu'il crée
+      // littéralement le 1er tenant (= fondateur par définition).
+      // L'unique partial index `tenants_founder_uidx` garantit qu'il
+      // restera le seul à pouvoir avoir is_founder=TRUE.
       const { rows: [tenant] } = await query(
-        `INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color, revenue_model)
-         VALUES ('Skipcall', 'skipcall', '#059669', '#10b981', NULL, 'CA')
+        `INSERT INTO tenants (name, slug, primary_color, secondary_color, accent_color, revenue_model, is_founder)
+         VALUES ('Skipcall', 'skipcall', '#059669', '#10b981', NULL, 'CA', TRUE)
          ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name RETURNING id`
       );
       const hash = await bcrypt.hash('RefBoost2026!', 12);
@@ -1910,6 +1914,51 @@ async function runMigrations() {
     console.log('[meta] v65 tenants.excluded_from_stats ready');
   } catch (err) {
     console.error('[migrate.v65] failed:', err.message);
+  }
+
+  // v66: phase J4 — flag tenants.is_founder pour identifier le tenant
+  // système fondateur sans hardcoder le slug 'skipcall'. Casse le
+  // couplage business/system : le slug reste user-facing (URLs publiques)
+  // tandis que is_founder devient le marqueur système (tenantMiddleware
+  // fallback, invite-superadmin attach, protection DELETE).
+  //
+  // Transaction unique (BEGIN/COMMIT) — ALTER + CREATE INDEX + UPDATE
+  // ensemble pour éviter tout état semi-cassé si l'un échoue.
+  // Idempotent : safe à rejouer (IF NOT EXISTS partout + UPDATE
+  // garde-fou is_founder = FALSE évite double marquage).
+  try {
+    const founderClient = await getClient();
+    try {
+      await founderClient.query('BEGIN');
+      await founderClient.query(`ALTER TABLE tenants
+                                    ADD COLUMN IF NOT EXISTS is_founder BOOLEAN NOT NULL DEFAULT FALSE`);
+      await founderClient.query(`CREATE UNIQUE INDEX IF NOT EXISTS tenants_founder_uidx
+                                    ON tenants (is_founder) WHERE is_founder = TRUE`);
+      await founderClient.query(`COMMENT ON COLUMN tenants.is_founder IS
+        'TRUE pour le tenant système fondateur (singleton garanti par tenants_founder_uidx). Utilisé par tenantMiddleware fallback, invite-superadmin attach, et protection DELETE. NE PAS supprimer ce tenant.'`);
+      await founderClient.query(
+        `UPDATE tenants SET is_founder = TRUE
+          WHERE id = '1a93f0fc-de5b-413b-beed-f18350dd9583'
+            AND slug = 'skipcall'
+            AND is_founder = FALSE`
+      );
+      await founderClient.query('COMMIT');
+      const { rows: [founderRow] } = await founderClient.query(
+        `SELECT name, slug FROM tenants WHERE is_founder = TRUE LIMIT 1`
+      );
+      if (founderRow) {
+        console.log(`[v66] is_founder column ready. Founder tenant: ${founderRow.name} (${founderRow.slug})`);
+      } else {
+        console.log('[v66] is_founder column ready. No founder marked yet (expected on fresh DB before seed).');
+      }
+    } catch (e) {
+      try { await founderClient.query('ROLLBACK'); } catch {}
+      throw e;
+    } finally {
+      founderClient.release();
+    }
+  } catch (err) {
+    console.error('[migrate.v66] failed:', err.message);
   }
 
   logger.info('Migrations completed');
