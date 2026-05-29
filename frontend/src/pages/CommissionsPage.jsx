@@ -211,6 +211,10 @@ export default function CommissionsPage() {
   // le fetch puis avec la payload. null quand fermée.
   const [batchDetail, setBatchDetail] = useState(null);
   const [batchCanceling, setBatchCanceling] = useState(false);
+  // J5-C2 — états modale détail batch : paiement Qonto en cours +
+  // chargement/ouverture de la facture batch.
+  const [batchPaying, setBatchPaying] = useState(false);
+  const [batchInvoiceLoading, setBatchInvoiceLoading] = useState(false);
   // Auto-poll loop after a Payer action: tick every 30 s, max 10 min.
   // Refs so we can cancel from a different render without a stale
   // closure.
@@ -324,6 +328,47 @@ export default function CommissionsPage() {
       showToast(e.message || t('common.error', 'Erreur'), 'error');
     }
     setBatchCanceling(false);
+  };
+
+  // J5-C2 — ouvrir/télécharger la facture batch. Le data-URI base64
+  // n'est jamais projeté dans le JSON détail (payload lourd) : on le
+  // récupère à la demande via GET /payouts/batches/:id/invoice qui
+  // streame le PDF, puis on ouvre l'object URL dans un nouvel onglet.
+  const handleViewBatchInvoice = async () => {
+    if (!batchDetail?.batch) return;
+    setBatchInvoiceLoading(true);
+    try {
+      const { url } = await api.fetchPayoutBatchInvoiceObjectUrl(batchDetail.batch.id);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      // Révoque l'object URL après un délai laissant le temps au navigateur d'ouvrir.
+      setTimeout(() => { try { URL.revokeObjectURL(url); } catch {} }, 60_000);
+    } catch (e) {
+      showToast(e.message || t('common.error', 'Erreur'), 'error');
+    }
+    setBatchInvoiceLoading(false);
+  };
+
+  // J5-C2 — valider + payer le batch via Qonto SEPA (helper F6 avec
+  // timeout SCA). Sur succès, on ferme la modale et on reload : le
+  // batch passe en 'paid' (colonne "Payé"). Le flux SCA peut demander
+  // une confirmation côté Qonto ; le helper gère le timeout 90s.
+  const handlePayBatch = async () => {
+    if (!batchDetail?.batch) return;
+    const b = batchDetail.batch;
+    const ok = window.confirm(
+      t('payouts.pay_confirm', { amount: fmt(b.total_amount_ttc), partner: b.partner_name, defaultValue: 'Valider et payer {{amount}} TTC à {{partner}} via Qonto ?' })
+    );
+    if (!ok) return;
+    setBatchPaying(true);
+    try {
+      await api.payPayoutBatchQonto(b.id);
+      showToast(t('payouts.pay_toast', 'Paiement Qonto initié.'), 'success');
+      setBatchDetail(null);
+      await reload();
+    } catch (e) {
+      showToast(e.message || t('common.error', 'Erreur'), 'error');
+    }
+    setBatchPaying(false);
   };
 
   const rModel = myTenant?.revenue_model || 'CA';
@@ -2046,28 +2091,84 @@ export default function CommissionsPage() {
                     )}
                   </div>
 
+                  {/* J5-C2 — section facture batch + statut paiement.
+                      Visible dès qu'une facture est déposée (has_invoice
+                      ou invoice_uploaded_at). Le PDF base64 n'est pas
+                      dans ce payload : on le récupère à la demande via
+                      handleViewBatchInvoice. */}
+                  {(bd.has_invoice || bd.invoice_uploaded_at) && (
+                    <div style={{ padding: '14px 28px', borderTop: '1px solid #f1f5f9', background: '#fafbfc' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: '#64748b', marginBottom: 8 }}>
+                        {t('payouts.invoice_section_title', 'Facture déposée')}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                          <FileText size={20} color="#dc2626" style={{ flexShrink: 0 }} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {bd.invoice_filename || t('payouts.invoice_default_name', 'Facture batch')}
+                            </div>
+                            {bd.invoice_uploaded_at && (
+                              <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 1 }}>
+                                {t('payouts.invoice_uploaded_on', { date: fmtDateTime(bd.invoice_uploaded_at), defaultValue: 'Déposée le {{date}}' })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleViewBatchInvoice}
+                          disabled={batchInvoiceLoading}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, background: '#eef2ff', border: 'none', color: '#4338ca', fontWeight: 600, fontSize: 12, cursor: batchInvoiceLoading ? 'wait' : 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                        >
+                          <Download size={14} />
+                          {batchInvoiceLoading ? t('common.loading', 'Chargement…') : t('payouts.invoice_view', 'Voir')}
+                        </button>
+                      </div>
+                      {bd.status === 'paid' && (
+                        <div style={{ marginTop: 8, fontSize: 12, color: '#166534', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <CheckCircle size={14} />
+                          {t('payouts.paid_on', { date: bd.paid_at ? fmtDate(bd.paid_at) : '', defaultValue: 'Payé le {{date}}' })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     {bd.status !== 'paid' && bd.status !== 'cancelled' ? (
                       <button
                         onClick={handleCancelBatch}
-                        disabled={batchCanceling}
+                        disabled={batchCanceling || batchPaying}
                         style={{
                           padding: '9px 16px', borderRadius: 10,
                           background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b',
                           fontWeight: 700, fontSize: 13,
-                          cursor: batchCanceling ? 'wait' : 'pointer', fontFamily: 'inherit',
+                          cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', fontFamily: 'inherit',
                         }}
                       >
                         {batchCanceling ? t('common.saving', 'Enregistrement…') : t('payouts.cancel_batch_button', 'Annuler le batch')}
                       </button>
                     ) : <div />}
-                    <button
-                      onClick={() => !batchCanceling && setBatchDetail(null)}
-                      disabled={batchCanceling}
-                      style={{ padding: '9px 16px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: batchCanceling ? 'wait' : 'pointer', fontFamily: 'inherit' }}
-                    >
-                      {t('common.close', 'Fermer')}
-                    </button>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        onClick={() => !(batchCanceling || batchPaying) && setBatchDetail(null)}
+                        disabled={batchCanceling || batchPaying}
+                        style={{ padding: '9px 16px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                      >
+                        {t('common.close', 'Fermer')}
+                      </button>
+                      {/* J5-C2 — bouton paiement Qonto, uniquement quand le
+                          batch est prêt (facture déposée → ready_to_pay). */}
+                      {bd.status === 'ready_to_pay' && (
+                        <button
+                          onClick={handlePayBatch}
+                          disabled={batchPaying || batchCanceling}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: (batchPaying || batchCanceling) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                        >
+                          <Banknote size={15} />
+                          {batchPaying ? t('payouts.pay_in_progress', 'Paiement…') : t('payouts.pay_button', 'Valider et payer le batch')}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </>
               );

@@ -384,6 +384,21 @@ class ApiClient {
     return { url, filename, blob };
   }
 
+  // J5-C2 — mirror de fetchCommissionInvoiceObjectUrl pour les factures
+  // batch (GET /payouts/batches/:id/invoice).
+  async fetchPayoutBatchInvoiceObjectUrl(id) {
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/payouts/batches/${id}/invoice`, { headers });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erreur chargement facture');
+    const blob = await res.blob();
+    const cd = res.headers.get('Content-Disposition') || '';
+    const match = /filename="?([^";]+)"?/.exec(cd);
+    const filename = match ? match[1] : `facture-batch-${id}.pdf`;
+    const url = URL.createObjectURL(blob);
+    return { url, filename, blob };
+  }
+
   // Dashboard. The optional `range` arg is `{startDate, endDate}` (ISO
   // YYYY-MM-DD) or null/undefined for "no filter".
   getKPIs(range)            { return this.request('/dashboard/kpis' + dateQS(range)); }

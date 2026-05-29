@@ -843,6 +843,44 @@ router.get('/batches/:id', async (req, res) => {
   }
 });
 
+// ─── GET /batches/:id/invoice — stream la facture batch (J5-C2) ──────
+// Mirror exact de GET /commissions/:id/invoice : la facture batch est
+// stockée en data-URI base64 dans invoice_url (jamais projetée dans le
+// JSON détail pour ne pas alourdir les payloads). Ce endpoint la
+// décode et la streame en attachment. Tenant + partnerScope appliqués
+// (un partner ne peut récupérer que les factures de ses propres
+// batches ; un admin celles de son tenant).
+router.get('/batches/:id/invoice', async (req, res) => {
+  try {
+    let where = 'id = $1 AND deleted_at IS NULL';
+    const params = [req.params.id];
+    let i = 2;
+    if (req.tenantId && !req.skipTenantFilter) {
+      where += ` AND tenant_id = $${i++}`;
+      params.push(req.tenantId);
+    }
+    if (req.partnerScope) {
+      where += ` AND partner_id = $${i++}`;
+      params.push(req.partnerScope);
+    }
+    const { rows: [b] } = await query(
+      `SELECT invoice_url,
+              COALESCE(NULLIF(invoice_filename, ''), 'facture-batch.pdf') AS invoice_filename
+         FROM commission_payout_batches WHERE ${where}`,
+      params
+    );
+    if (!b || !b.invoice_url) return res.status(404).json({ error: 'Aucune facture' });
+    const m = /^data:([^;]+);base64,(.+)$/.exec(b.invoice_url);
+    if (!m) return res.status(500).json({ error: 'Fichier corrompu' });
+    res.setHeader('Content-Type', m[1]);
+    res.setHeader('Content-Disposition', `attachment; filename="${b.invoice_filename}"`);
+    res.send(Buffer.from(m[2], 'base64'));
+  } catch (err) {
+    console.error('[payouts.get-batch-invoice] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // ─── POST /api/payouts/batches/:id/cancel ──────────────────────────
 // Annule un batch entier : détache toutes les commissions (status
 // commission inchangé — l'admin/partenaire les retraitera à l'unité)
