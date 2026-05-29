@@ -269,7 +269,22 @@ export default function CommissionsPage() {
   // Cache le bug discrepancy DB (batch awaiting_invoice + commission
   // paid) et réexpose les UI controls par-commission (icon download
   // facture, tag "Jusqu'au DATE", compteur "0/12 versés").
-  const isAggregatedBatch = (b) => (b?.commission_count ?? 0) >= 2;
+  //
+  // J5-C1 — un batch ACTIONNABLE doit rester visible même à 1 commission :
+  // si une facture a été déposée (has_invoice / invoice_uploaded_at,
+  // champs projetés par GET /payouts/batches) OU si le batch est en
+  // état avancé (ready_to_pay / paid), il faut le rendre en carte
+  // agrégée — sinon l'admin ne voit ni la facture ni le statut et ne
+  // peut ni valider ni payer (cas Mooniz + Trait d'Union, batches à
+  // 1 commission passés en ready_to_pay après upload partenaire). Le
+  // seuil ≥2 reste appliqué uniquement aux batches awaiting_invoice
+  // sans facture (où la carte agrégée n'apporte rien vs l'individuelle).
+  const isAggregatedBatch = (b) => {
+    if (!b) return false;
+    if (b.has_invoice || b.invoice_uploaded_at) return true;
+    if (b.status === 'ready_to_pay' || b.status === 'paid') return true;
+    return (b.commission_count ?? 0) >= 2;
+  };
   const lateBatches = batches.filter(b =>
     b.is_late === true && b.status === 'awaiting_invoice' && isAggregatedBatch(b)
   );
