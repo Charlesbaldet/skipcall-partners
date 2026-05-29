@@ -308,7 +308,22 @@ export default function PartnerPaymentsPage() {
             // la commission revient en carte individuelle classique
             // selon son propre commission.status. Réexpose le bouton
             // "Déposer ma facture" individuel + le download facture.
-            const isAggregatedBatch = (b) => (b?.commission_count ?? 0) >= 2;
+            //
+            // J5-C1-FIX2 — symétrie avec CommissionsPage (admin) : un
+            // batch ACTIONNABLE reste visible en carte agrégée même à
+            // 1 commission. has_invoice / invoice_uploaded_at sont
+            // projetés par getPayoutBatchDetail (L.805 payouts.js) donc
+            // dispo côté partenaire sans changement backend. commission_
+            // count n'est PAS projeté par le detail endpoint (undefined)
+            // → la 3e branche est inerte côté partenaire, mais les 2
+            // premières couvrent les batches facturés / ready_to_pay
+            // (cas Mooniz, Trait d'Union).
+            const isAggregatedBatch = (b) => {
+              if (!b) return false;
+              if (b.has_invoice || b.invoice_uploaded_at) return true;
+              if (b.status === 'ready_to_pay' || b.status === 'paid') return true;
+              return (b.commission_count ?? 0) >= 2;
+            };
             const colBatches = [...batchesById.values()].filter(
               b => BATCH_COL_BY_STATUS[b.status] === statusKey && isAggregatedBatch(b)
             );
