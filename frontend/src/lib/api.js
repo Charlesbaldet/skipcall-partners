@@ -310,6 +310,12 @@ class ApiClient {
     const tid = setTimeout(() => ctrl.abort(), SCA_TIMEOUT_MS);
     return this.request('/payouts/batches/' + id + '/pay-qonto', { method: 'POST', signal: ctrl.signal }).finally(() => clearTimeout(tid));
   }
+  // J5-C3 — "J'ai déjà approuvé" : Charles valide le challenge SCA
+  // sur l'app Qonto, on rejoue la requête transfer côté backend pour
+  // que Qonto crée le virement et nous rende un transfer_id.
+  confirmPayoutBatchSCA(id) {
+    return this.request('/payouts/batches/' + id + '/confirm-sca', { method: 'POST' });
+  }
   pollQontoTransfers() { return this.request('/commissions/poll-qonto', { method: 'POST' }); }
 
   // Payout batches (F2a/F2b — paie groupée par partenaire)

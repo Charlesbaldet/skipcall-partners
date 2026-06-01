@@ -215,6 +215,10 @@ export default function CommissionsPage() {
   // chargement/ouverture de la facture batch.
   const [batchPaying, setBatchPaying] = useState(false);
   const [batchInvoiceLoading, setBatchInvoiceLoading] = useState(false);
+  // J5-C3 — Qonto SCA challenge en cours sur le batch. Allumé soit par
+  // le premier pay-qonto qui répond requires_sca, soit en ouverture de
+  // modale si le batch projette déjà sca_pending=true (cas refresh).
+  const [batchScaPending, setBatchScaPending] = useState(false);
   // Auto-poll loop after a Payer action: tick every 30 s, max 10 min.
   // Refs so we can cancel from a different render without a stale
   // closure.
@@ -302,9 +306,14 @@ export default function CommissionsPage() {
 
   const openBatchDetail = async (batchId) => {
     setBatchDetail({ loading: true, batch: null, commissions: [] });
+    // J5-C3 — reset puis hydrate selon le state DB projeté (sca_pending
+    // est un booléen renvoyé par GET /batches/:id si qonto_sca_session_
+    // token est non NULL en base).
+    setBatchScaPending(false);
     try {
       const r = await api.getPayoutBatchDetail(batchId);
       setBatchDetail({ loading: false, batch: r.batch, commissions: r.commissions || [] });
+      if (r.batch && r.batch.sca_pending) setBatchScaPending(true);
     } catch (e) {
       setBatchDetail(null);
       showToast(e.message || t('common.error', 'Erreur'), 'error');
@@ -348,10 +357,15 @@ export default function CommissionsPage() {
     setBatchInvoiceLoading(false);
   };
 
-  // J5-C2 — valider + payer le batch via Qonto SEPA (helper F6 avec
-  // timeout SCA). Sur succès, on ferme la modale et on reload : le
-  // batch passe en 'paid' (colonne "Payé"). Le flux SCA peut demander
-  // une confirmation côté Qonto ; le helper gère le timeout 90s.
+  // J5-C2/J5-C3 — valider + payer le batch via Qonto SEPA. Flow en 2
+  // temps quand Qonto demande une SCA :
+  //   1. handlePayBatch : déclenche le 1er appel pay-qonto. Si Qonto
+  //      renvoie requires_sca=true, on reste sur la modale et on
+  //      affiche le bandeau "Validez la SCA dans Qonto" + bouton
+  //      "J'ai déjà approuvé".
+  //   2. handleConfirmSCA : Charles a validé sur son téléphone, on
+  //      appelle confirm-sca qui rejoue la transaction avec le token
+  //      SCA stocké → Qonto crée le transfert, on ferme + reload.
   const handlePayBatch = async () => {
     if (!batchDetail?.batch) return;
     const b = batchDetail.batch;
@@ -361,10 +375,46 @@ export default function CommissionsPage() {
     if (!ok) return;
     setBatchPaying(true);
     try {
-      await api.payPayoutBatchQonto(b.id);
-      showToast(t('payouts.pay_toast', 'Paiement Qonto initié.'), 'success');
-      setBatchDetail(null);
-      await reload();
+      const res = await api.payPayoutBatchQonto(b.id);
+      if (res && res.requires_sca) {
+        setBatchScaPending(true);
+        showToast(t('payouts.sca_pending_toast', 'Validez la SCA dans l\'app Qonto, puis cliquez "J\'ai déjà approuvé".'), 'info');
+      } else {
+        showToast(t('payouts.pay_toast', 'Paiement Qonto initié.'), 'success');
+        setBatchDetail(null);
+        await reload();
+      }
+    } catch (e) {
+      showToast(e.message || t('common.error', 'Erreur'), 'error');
+    }
+    setBatchPaying(false);
+  };
+
+  // J5-C3 — Charles confirme avoir validé la SCA sur son téléphone.
+  // confirm-sca rejoue la transaction côté backend ; si Qonto refuse
+  // (SCA pas encore approuvée / expirée), le backend renvoie un payload
+  // explicite et on garde la modale ouverte.
+  const handleConfirmSCA = async () => {
+    if (!batchDetail?.batch) return;
+    const b = batchDetail.batch;
+    setBatchPaying(true);
+    try {
+      const res = await api.confirmPayoutBatchSCA(b.id);
+      if (res && res.ok) {
+        showToast(t('payouts.sca_confirmed_toast', 'Paiement confirmé. Virement en cours.'), 'success');
+        setBatchScaPending(false);
+        setBatchDetail(null);
+        await reload();
+      } else if (res && res.needs_restart) {
+        setBatchScaPending(false);
+        showToast(res.message || t('payouts.sca_expired', 'SCA expirée — relancez le paiement.'), 'error');
+        // reload : récupère le state propre (token nullifié côté backend)
+        await reload();
+        setBatchDetail(null);
+      } else {
+        // sca_still_pending : on reste sur la modale, message info
+        showToast(res?.message || t('payouts.sca_still_pending', 'SCA pas encore approuvée — validez dans Qonto.'), 'info');
+      }
     } catch (e) {
       showToast(e.message || t('common.error', 'Erreur'), 'error');
     }
@@ -2133,6 +2183,24 @@ export default function CommissionsPage() {
                     </div>
                   )}
 
+                  {/* J5-C3 — bandeau SCA en attente. Affiché quand un
+                      pay-qonto a renvoyé requires_sca ou si le batch
+                      a sca_pending=true en DB. Charles valide sur son
+                      tél → bouton "J'ai déjà approuvé" en footer. */}
+                  {batchScaPending && bd.status === 'ready_to_pay' && (
+                    <div style={{ margin: '0 28px 16px', padding: 14, borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                      <ShieldCheck size={20} color="#b45309" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <div style={{ minWidth: 0, fontSize: 13, color: '#78350f', lineHeight: 1.5 }}>
+                        <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                          {t('payouts.sca_banner_title', 'Validation SCA requise')}
+                        </div>
+                        <div>
+                          {t('payouts.sca_banner_body', { amount: fmt(bd.total_amount_ttc), partner: bd.partner_name, defaultValue: 'Approuvez le virement de {{amount}} à {{partner}} dans votre app Qonto, puis cliquez "J\'ai déjà approuvé" ci-dessous pour finaliser.' })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     {bd.status !== 'paid' && bd.status !== 'cancelled' ? (
                       <button
@@ -2156,9 +2224,12 @@ export default function CommissionsPage() {
                       >
                         {t('common.close', 'Fermer')}
                       </button>
-                      {/* J5-C2 — bouton paiement Qonto, uniquement quand le
-                          batch est prêt (facture déposée → ready_to_pay). */}
-                      {bd.status === 'ready_to_pay' && (
+                      {/* J5-C2 / J5-C3 — bouton paiement conditionnel.
+                          Quand batchScaPending=true (SCA challenge en
+                          attente côté Qonto), affiche "J'ai déjà
+                          approuvé" qui appelle confirm-sca. Sinon
+                          bouton standard "Valider et payer le batch". */}
+                      {bd.status === 'ready_to_pay' && !batchScaPending && (
                         <button
                           onClick={handlePayBatch}
                           disabled={batchPaying || batchCanceling}
@@ -2166,6 +2237,16 @@ export default function CommissionsPage() {
                         >
                           <Banknote size={15} />
                           {batchPaying ? t('payouts.pay_in_progress', 'Paiement…') : t('payouts.pay_button', 'Valider et payer le batch')}
+                        </button>
+                      )}
+                      {bd.status === 'ready_to_pay' && batchScaPending && (
+                        <button
+                          onClick={handleConfirmSCA}
+                          disabled={batchPaying || batchCanceling}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: (batchPaying || batchCanceling) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                        >
+                          <ShieldCheck size={15} />
+                          {batchPaying ? t('payouts.sca_confirming', 'Confirmation…') : t('payouts.sca_confirm_button', 'J\'ai déjà approuvé')}
                         </button>
                       )}
                     </div>

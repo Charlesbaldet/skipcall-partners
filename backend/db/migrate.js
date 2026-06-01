@@ -1961,6 +1961,21 @@ async function runMigrations() {
     console.error('[migrate.v66] failed:', err.message);
   }
 
+  // v67: phase J5-C3 — colonne qonto_vop_proof_token sur les batches.
+  // Mirror du flow commission (qonto_vop_proof_token déjà présent là).
+  // Nécessaire pour le replay SCA via qonto.replayTransfer : depuis oct
+  // 2025 Qonto exige le VOP-Proof-Token sur tout POST /sepa/transfers,
+  // sinon 401 vop_proof_token_missing. Le pay-qonto batch captait
+  // result.vop_proof_token mais ne le stockait nulle part → impossible
+  // de finaliser un batch en mode SCA challenge. Idempotent.
+  try {
+    await query(`ALTER TABLE commission_payout_batches
+                   ADD COLUMN IF NOT EXISTS qonto_vop_proof_token TEXT`);
+    console.log('[payouts] v67 commission_payout_batches.qonto_vop_proof_token ready');
+  } catch (err) {
+    console.error('[migrate.v67] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {

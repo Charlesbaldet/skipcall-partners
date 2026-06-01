@@ -39,6 +39,8 @@ const { sendEmail } = require('../services/emailService');
 const notify = require('../services/notifyService');
 const emailTemplates = require('../utils/emailTemplates');
 const qonto = require('../services/qontoService');
+// J5-C3 — audit logger (J2 priority: override > JWT > host > null).
+const { logAudit } = require('../services/auditLog');
 
 const router = express.Router();
 
@@ -607,11 +609,16 @@ router.post('/batches/:id/pay-qonto', authorize('admin'), requireBusinessPlan, a
 
     const transfer = result.transfer || {};
 
+    // J5-C3 — store qonto_vop_proof_token aussi : Qonto exige le
+    // VOP-Proof-Token sur le replay (oct 2025), sans quoi confirm-sca
+    // renverra 401 vop_proof_token_missing. createSingleTransfer
+    // expose ce token dans la branche requires_sca (sca.vop_proof_token).
     await query(
       `UPDATE commission_payout_batches
           SET qonto_transfer_id = $2,
               qonto_sca_session_token = $3,
               qonto_request_body = $4,
+              qonto_vop_proof_token = $6,
               payment_initiated_at = NOW(),
               payment_reference = $5,
               payment_error = NULL,
@@ -623,8 +630,21 @@ router.post('/batches/:id/pay-qonto', authorize('admin'), requireBusinessPlan, a
         result.requires_sca ? (result.sca_session_token || null) : null,
         result.requires_sca ? JSON.stringify(result.request_body) : null,
         result.reference,
+        result.requires_sca ? (result.vop_proof_token || null) : null,
       ]
     );
+
+    // J5-C3 — traçabilité audit (aucun event n'était loggé avant).
+    try {
+      logAudit(req, 'batch.pay_initiated', 'commission_payout_batch', batch.id, {
+        partner_name: batch.partner_name,
+        period: batch.period,
+        amount_ttc: amountTtc,
+        requires_sca: !!result.requires_sca,
+        transfer_id: transfer.id || null,
+        reference: result.reference,
+      }, batch.tenant_id);
+    } catch {}
 
     res.status(202).json({
       ok: true,
@@ -809,6 +829,7 @@ router.get('/batches/:id', async (req, res) => {
               b.qonto_transfer_id, b.payment_initiated_at,
               b.payment_completed_at, b.paid_at,
               b.payment_reference, b.payment_error,
+              (b.qonto_sca_session_token IS NOT NULL) AS sca_pending,
               b.exception, b.created_at, b.updated_at,
               p.name AS partner_name, p.email AS partner_email,
               t.name AS tenant_name
@@ -877,6 +898,137 @@ router.get('/batches/:id/invoice', async (req, res) => {
     res.send(Buffer.from(m[2], 'base64'));
   } catch (err) {
     console.error('[payouts.get-batch-invoice] error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ─── POST /api/payouts/batches/:id/confirm-sca (J5-C3) ─────────────
+// "J'ai déjà approuvé" — mirror exact de POST /commissions/:id/
+// confirm-sca (commissions.js:1968). Charles a validé le challenge
+// SCA sur son téléphone Qonto, on rejoue la requête transfer avec
+// le sca_session_token + vop_proof_token + idempotency_key stockés
+// au premier appel. Qonto crée alors le transfert et renvoie son id.
+// Sur succès : qonto_transfer_id rempli, qonto_sca_session_token +
+// qonto_vop_proof_token + qonto_request_body nullifiés, le worker
+// reconcileBatchTransfers prendra le relai pour passer en 'paid'.
+router.post('/batches/:id/confirm-sca', authorize('admin'), async (req, res) => {
+  console.log(`[batch.confirm-sca] User clicked "J'ai déjà approuvé" for batch ${req.params.id}`);
+  try {
+    let where = 'id = $1 AND deleted_at IS NULL';
+    const params = [req.params.id];
+    let i = 2;
+    if (req.tenantId && !req.skipTenantFilter) {
+      where += ` AND tenant_id = $${i++}`;
+      params.push(req.tenantId);
+    }
+    const { rows: [b] } = await query(
+      `SELECT id, tenant_id, status, partner_id, total_amount_ttc, payment_reference,
+              qonto_request_body, qonto_idempotency_key,
+              qonto_sca_session_token, qonto_vop_proof_token,
+              qonto_transfer_id, payment_initiated_at
+         FROM commission_payout_batches
+        WHERE ${where} LIMIT 1`,
+      params
+    );
+    if (!b) return res.status(404).json({ error: 'Batch introuvable' });
+    if (b.qonto_transfer_id) {
+      return res.status(409).json({ error: 'transfer_already_initiated', transfer_id: b.qonto_transfer_id });
+    }
+    if (b.status !== 'ready_to_pay') {
+      return res.status(409).json({ error: 'batch_not_ready_to_pay', status: b.status });
+    }
+    if (!b.qonto_request_body || !b.qonto_idempotency_key) {
+      return res.status(400).json({ error: 'no_pending_sca', message: 'Aucun virement en attente de validation SCA pour ce batch.' });
+    }
+    if (!b.qonto_sca_session_token) {
+      console.log(`[batch.confirm-sca] No sca_session_token for ${b.id} — restart required`);
+      return res.json({
+        ok: false, needs_restart: true,
+        message: 'La validation SCA a expiré. Cliquez sur "Valider et payer" pour relancer le virement.',
+      });
+    }
+
+    const result = await qonto.replayTransfer(b.tenant_id, {
+      body: b.qonto_request_body,
+      idempotencyKey: b.qonto_idempotency_key,
+      scaSessionToken: b.qonto_sca_session_token,
+      vopToken: b.qonto_vop_proof_token || undefined,
+    });
+    console.log(`[batch.confirm-sca] replay result:`, {
+      ok: !!result.ok, expired: !!result.expired, not_found: !!result.not_found,
+      transfer_id: result.transfer?.id || null, transfer_status: result.transfer?.status || null,
+    });
+
+    if (result.ok) {
+      const transfer = result.transfer || {};
+      await query(
+        `UPDATE commission_payout_batches
+            SET qonto_transfer_id = $2,
+                qonto_sca_session_token = NULL,
+                qonto_vop_proof_token = NULL,
+                qonto_request_body = NULL,
+                payment_error = NULL,
+                updated_at = NOW()
+          WHERE id = $1`,
+        [b.id, transfer.id || null]
+      );
+      // Si Qonto a déjà settled le transfert dans cette réponse,
+      // finaliser inline (le worker reconcileBatchTransfers le ferait
+      // de toute façon au prochain tick).
+      if (transfer.status === 'settled' || transfer.status === 'completed') {
+        await query(
+          `UPDATE commission_payout_batches
+              SET status = 'paid', paid_at = COALESCE(paid_at, NOW()),
+                  payment_completed_at = NOW(), updated_at = NOW()
+            WHERE id = $1`,
+          [b.id]
+        );
+        await query(
+          `UPDATE commissions
+              SET status = 'paid', paid_at = COALESCE(paid_at, NOW()),
+                  payment_completed_at = NOW(), payment_error = NULL
+            WHERE payout_batch_id = $1 AND status <> 'paid' AND deleted_at IS NULL`,
+          [b.id]
+        );
+      }
+      try {
+        logAudit(req, 'batch.pay_confirmed', 'commission_payout_batch', b.id, {
+          transfer_id: transfer.id || null,
+          transfer_status: transfer.status || 'processing',
+          amount_ttc: parseFloat(b.total_amount_ttc) || 0,
+          reference: b.payment_reference,
+        }, b.tenant_id);
+      } catch {}
+      return res.json({
+        ok: true,
+        transfer_id: transfer.id || null,
+        status: transfer.status || 'processing',
+      });
+    }
+
+    // 412 expired ou 422 not_found ou 401 vop_missing → reset partiel
+    // pour que l'admin puisse repartir d'un nouveau challenge en
+    // re-cliquant "Valider et payer".
+    if (result.expired || result.not_found) {
+      await query(
+        `UPDATE commission_payout_batches
+            SET qonto_sca_session_token = NULL,
+                qonto_vop_proof_token = NULL,
+                qonto_request_body = NULL,
+                qonto_idempotency_key = NULL,
+                updated_at = NOW()
+          WHERE id = $1`,
+        [b.id]
+      );
+      return res.json({
+        ok: false, needs_restart: true,
+        message: 'La session SCA a expiré ou été rejetée par Qonto. Cliquez sur "Valider et payer" pour relancer.',
+      });
+    }
+    return res.json({ ok: false, sca_still_pending: true,
+      message: 'La SCA n\'est pas encore approuvée côté Qonto. Validez sur votre téléphone puis recliquez.' });
+  } catch (err) {
+    console.error('[batch.confirm-sca] error:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
