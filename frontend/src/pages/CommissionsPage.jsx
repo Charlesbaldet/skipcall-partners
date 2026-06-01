@@ -369,10 +369,11 @@ export default function CommissionsPage() {
   const handlePayBatch = async () => {
     if (!batchDetail?.batch) return;
     const b = batchDetail.batch;
-    const ok = window.confirm(
-      t('payouts.pay_confirm', { amount: fmt(b.total_amount_ttc), partner: b.partner_name, defaultValue: 'Valider et payer {{amount}} TTC à {{partner}} via Qonto ?' })
-    );
-    if (!ok) return;
+    // J5-C3-FIX1 — plus de window.confirm() natif (anti-charte). La
+    // modale détail batch elle-même sert de "step 1" visuel (montant,
+    // facture, partner clairement visibles avant que Charles ne clique
+    // sur "Valider et payer"). Au moindre doute il peut fermer la
+    // modale avant de cliquer.
     setBatchPaying(true);
     try {
       const res = await api.payPayoutBatchQonto(b.id);
@@ -2048,7 +2049,7 @@ export default function CommissionsPage() {
           et permet l'annulation. */}
       {batchDetail && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div onClick={() => !batchCanceling && setBatchDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
+          <div onClick={() => !(batchCanceling || batchPaying) && setBatchDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 640, maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
             {batchDetail.loading && (
               <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
@@ -2089,7 +2090,7 @@ export default function CommissionsPage() {
                           {hasVatBd && <span style={{ color: '#94a3b8' }}> ({fmt(bd.total_amount_ht)} HT + {fmt(bd.total_amount_tax)} TVA)</span>}
                         </p>
                       </div>
-                      <button onClick={() => !batchCanceling && setBatchDetail(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: batchCanceling ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <button onClick={() => !(batchCanceling || batchPaying) && setBatchDetail(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <X size={16} color="#475569" />
                       </button>
                     </div>
