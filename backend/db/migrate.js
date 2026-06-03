@@ -1976,6 +1976,27 @@ async function runMigrations() {
     console.error('[migrate.v67] failed:', err.message);
   }
 
+  // v68: drop de la contrainte legacy commissions_referral_id_unique.
+  // Ajoutée tout au début (migrate.js:82-83) elle imposait UNE seule
+  // commission par referral SUR TOUTES les rows — y compris les
+  // soft-deleted (pas de WHERE deleted_at IS NULL). Depuis v58 elle est
+  // entièrement remplacée par commissions_referral_cycle_uidx
+  // (referral_id, cycle_index) WHERE deleted_at IS NULL, qui garantit
+  // l'unicité des commissions VIVANTES et ignore correctement les
+  // supprimées. La contrainte globale était devenue de la dette pure et
+  // causait un 500 « duplicate key » au repassage closed_won d'un lead
+  // dont une commission précédente avait été soft-deletée (cas Waisso) :
+  // le handler INSÉRAIT une nouvelle row mais la row soft-deletée gardait
+  // le referral_id verrouillé. C'était aussi un blocage latent du
+  // recurring multi-cycle (cycle ≥2 → même referral_id → violation).
+  // DDL pure, 0 row impactée, idempotent via IF EXISTS.
+  try {
+    await query(`ALTER TABLE commissions DROP CONSTRAINT IF EXISTS commissions_referral_id_unique`);
+    console.log('[commissions] v68 legacy commissions_referral_id_unique constraint dropped (superseded by cycle uidx)');
+  } catch (err) {
+    console.error('[migrate.v68] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
