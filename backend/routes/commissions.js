@@ -2182,9 +2182,10 @@ router.post('/:id/reset-payment', authorize('admin'), async (req, res) => {
 // Prepares cycle N+1 for recurring commissions whose conditions are
 // met. Calqué sur reconcileQontoTransfers (same shape, same isolation
 // guarantees). The worker NEVER pays and NEVER auto-approves —
-// renewals land in status='pending_validation' WITH
+// renewals land in status='pending_approval' WITH
 // approval_status='pending_approval' so the admin can review them
-// through the normal approval flow before they become payable.
+// through the normal approval flow (→ F4 batch + invoice request)
+// before they become payable.
 //
 // Series semantics (E5 spec — A4):
 //   - "cycle 1" of a referral  = the commission with the smallest
@@ -2383,9 +2384,16 @@ async function prepareRecurringRenewals(tenantId) {
       // racing on the same series gets a 23505 unique violation
       // on the second attempt and we swallow it below.
       //
-      // approval_status='pending_approval' — A1: renewals go
-      // through the normal admin approval, NEVER auto-approved.
+      // status + approval_status = 'pending_approval' — A1: renewals
+      // go through the normal admin approval, NEVER auto-approved.
       // This is the explicit human-checkpoint the spec calls for.
+      // FIX-E5-WORKER-STATUS : le status écrivait 'pending_validation'
+      // (combo bâtard avec approval_status='pending_approval') → la
+      // commission ratait À LA FOIS la file « À approuver » et l'étape
+      // awaiting_invoice/batch (F4). On l'aligne sur 'pending_approval'
+      // comme la création au won (referrals.js), pour que l'admin
+      // l'approuve → F4 crée/attache le batch + email facture →
+      // awaiting_invoice → dépôt facture partenaire.
       let newCommissionId = null;
       try {
         const { rows: [created] } = await query(
@@ -2400,7 +2408,7 @@ async function prepareRecurringRenewals(tenantId) {
               current_revision_index, approved_at)
            VALUES
              ($1, $2, $3, $4,
-              'pending_validation', 'pending_approval', TRUE,
+              'pending_approval', 'pending_approval', TRUE,
               $5, $6, $7,
               $8, $9,
               $10, $11,
