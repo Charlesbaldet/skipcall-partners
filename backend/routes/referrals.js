@@ -861,52 +861,15 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
       );
       if (comm.length > 0) {
         const target = comm[0];
-        // F2a — batch-active guard (E4 extension). Même rationale
-        // que côté E3 ci-dessus : un deal qu'on bascule en lost
-        // (ou hors won) alors qu'une commission est déjà dans un
-        // batch actif doit d'abord être retiré du batch. Sans ce
-        // garde-fou, le batch total se retrouverait à inclure une
-        // commission cancelled, désynchronisant le TTC vs la
-        // facture déjà déposée par le partenaire.
-        const { rows: batchActive } = await client.query(
-          `SELECT 1
-             FROM commissions c
-             JOIN commission_payout_batches b ON b.id = c.payout_batch_id
-            WHERE c.referral_id = $1
-              AND c.deleted_at IS NULL
-              AND b.deleted_at IS NULL
-              AND b.status IN ('awaiting_invoice','ready_to_pay')
-            LIMIT 1`,
-          [req.params.id]
-        );
-        if (batchActive.length > 0) {
-          await client.query('ROLLBACK');
-          // Pas de client.release() ici — le finally du handler s'en
-          // charge en sortie de try. Double release = "Release called
-          // on client which has already been released to the pool" qui
-          // crashait le process Node (cf. fix F2a-FIX4).
-          return res.status(409).json({
-            error: 'commission_in_active_batch',
-            message: 'Cette commission est incluse dans un batch en cours. Retirez-la du batch avant de réviser/annuler.',
-          });
-        }
-        // E4 fork: a transition specifically to 'lost' on a
-        // recurring commission of an opted-in tenant is allowed
-        // through; the leftWon block below will flip the
-        // commission to 'cancelled' (never DELETE). Every other
-        // exit (proposal / contacted / lost-with-non-recurring /
-        // any-with-flag-off) keeps the legacy 400 lock.
-        const { rows: [tf] } = await client.query(
-          'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
-          [target.tenant_id]
-        );
-        const recurringOn = !!tf?.recurring_on;
-        const goE4LostPath = recurringOn && !!target.is_recurring && status === 'lost';
-
-        if (goE4LostPath) {
-          // Payment-in-flight guard — symmetrical with E3. We
-          // never change a commission's status while Qonto has an
-          // initiated-but-not-finalised transfer on it.
+        if (status === 'lost') {
+          // J6-CLOSED-LOST-FIX — un passage en 'lost' PRÉSERVE les
+          // commissions engagées (dans un batch ou non) : on ne bloque
+          // plus sur le batch actif et on n'annule plus (la cascade E4
+          // du bloc leftWon est retirée). Le recurring s'arrête seul via
+          // le filtre r.status='won' du worker E5 (commissions.js
+          // prepareRecurringRenewals). Seul garde-fou conservé : un
+          // virement Qonto déjà initié mais non finalisé (évite une race
+          // SCA où l'on clôturerait le deal pendant le transfert).
           if (target.qonto_transfer_id && !target.payment_completed_at) {
             await client.query('ROLLBACK');
             return res.status(409).json({
@@ -915,9 +878,34 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
               qonto_transfer_id: target.qonto_transfer_id,
             });
           }
-          // Fall through — leftWon block handles the cancellation.
+          // sinon : on laisse passer, AUCUNE mutation de la commission.
         } else {
-          // ─── Legacy lock — UNCHANGED ──────────────────────
+          // ─── Exits NON-lost (retour proposal / contacted / …) ───────
+          // Verrous legacy INCHANGÉS : un deal qu'on sort de 'won' avec
+          // une commission déjà engagée reste bloqué (batch actif → 409,
+          // sinon → 400) tant que la commission n'est pas retirée du
+          // batch. Letting them do so would leave a paid commission
+          // attached to a referral that's no longer "won".
+          const { rows: batchActive } = await client.query(
+            `SELECT 1
+               FROM commissions c
+               JOIN commission_payout_batches b ON b.id = c.payout_batch_id
+              WHERE c.referral_id = $1
+                AND c.deleted_at IS NULL
+                AND b.deleted_at IS NULL
+                AND b.status IN ('awaiting_invoice','ready_to_pay')
+              LIMIT 1`,
+            [req.params.id]
+          );
+          if (batchActive.length > 0) {
+            await client.query('ROLLBACK');
+            // Pas de client.release() ici — le finally du handler s'en
+            // charge en sortie de try (cf. fix F2a-FIX4).
+            return res.status(409).json({
+              error: 'commission_in_active_batch',
+              message: 'Cette commission est incluse dans un batch en cours. Retirez-la du batch avant de réviser/annuler.',
+            });
+          }
           await client.query('ROLLBACK');
           return res.status(400).json({
             error: 'commission_locked',
@@ -1415,58 +1403,17 @@ router.put('/:id', authenticate, authorize('admin', 'commercial', 'partner'), as
         [req.params.id]
       );
 
-      // E4: when the exit transition is specifically 'lost' AND
-      // there's still a recurring commission past pending_approval,
-      // flip it to 'cancelled' (never DELETE). The movingOutOfWon
-      // guard above already rejected the payment-in-flight case
-      // and the non-recurring / flag-OFF case, so reaching this
-      // branch means we're cleared to cancel. cancelled_resolved
-      // stays FALSE → the row surfaces in the admin's
-      // "Décisions après lost" queue until they decide (pay last
-      // cycle vs. confirm cessation).
-      if (status === 'lost') {
-        const { rows: rec } = await client.query(
-          `SELECT c.id, c.status, c.tenant_id
-             FROM commissions c
-            WHERE c.referral_id = $1
-              AND c.deleted_at IS NULL
-              AND c.is_recurring = TRUE
-              AND c.status IN ('awaiting_invoice', 'pending_validation', 'paid')
-            LIMIT 1`,
-          [req.params.id]
-        );
-        if (rec.length > 0) {
-          const { rows: [tf] } = await client.query(
-            'SELECT COALESCE(recurring_billing_enabled, FALSE) AS recurring_on FROM tenants WHERE id = $1',
-            [rec[0].tenant_id]
-          );
-          if (tf?.recurring_on) {
-            const previousStatus = rec[0].status;
-            const reason = (typeof lost_reason === 'string' && lost_reason.trim()) || null;
-            await client.query(
-              `UPDATE commissions
-                  SET status = 'cancelled',
-                      cancelled_at = NOW(),
-                      cancelled_reason = $2,
-                      cancelled_resolved = FALSE
-                WHERE id = $1`,
-              [rec[0].id, reason]
-            );
-            // Direct INSERT (the activities[] array flushed L.952
-            // ran before this block; we can't enqueue here). Same
-            // shape as the normal flush so the timeline renders it
-            // through formatActivity.
-            await client.query(
-              `INSERT INTO referral_activities (referral_id, user_id, action, old_value, new_value, comment)
-               VALUES ($1, $2, $3, $4, $5, $6)`,
-              [req.params.id, req.user.id, 'commission_cancelled_lost', previousStatus, 'cancelled',
-               reason
-                 ? `Motif : ${reason}. Décision admin requise (payer dernier cycle / arrêter).`
-                 : 'Décision admin requise (payer dernier cycle / arrêter).']
-            );
-          }
-        }
-      }
+      // J6-CLOSED-LOST-FIX — cascade E4 retirée : un passage en 'lost'
+      // ne flip plus la commission engagée en 'cancelled'. Les
+      // commissions approved+ (awaiting_invoice / pending_validation /
+      // paid) sont PRÉSERVÉES intactes (dans un batch ou non), à payer
+      // normalement. Seules les commissions encore 'pending_approval'
+      // (non engagées) sont supprimées ci-dessus, pour ne pas laisser
+      // d'orpheline morte dans la file "À approuver". L'arrêt du
+      // recurring est garanti par le filtre r.status='won' du worker E5
+      // (commissions.js prepareRecurringRenewals) — aucune action requise
+      // ici. Les endpoints "Décisions après lost" restent en place pour
+      // les éventuelles rows 'cancelled' legacy.
     }
 
     // Notify partner of status changes
@@ -1630,6 +1577,16 @@ Voir : ${(process.env.FRONTEND_URL || 'https://refboost.io')}/referrals`,
         from: current.status,
         to: status,
       });
+      // J6-CLOSED-LOST-FIX — trace dédiée du passage en perdu : les
+      // commissions engagées sont préservées (plus de cascade cancel),
+      // le recurring s'arrête via le filtre worker E5 (status='won').
+      if (status === 'lost') {
+        logAudit(req, 'referral.closed_lost', 'referral', req.params.id, {
+          from: current.status,
+          lost_reason: (typeof lost_reason === 'string' && lost_reason.trim()) || null,
+          commissions_preserved: true,
+        });
+      }
     }
 
     // ─── Pipedrive auto-push (fire-and-forget) ────────────────────────
