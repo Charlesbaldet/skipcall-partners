@@ -699,6 +699,8 @@ router.post('/signup', [
     // à demander un re-send si le mail n'arrive pas.
     (async () => {
       try {
+        const { renderEmail } = require('../utils/emailTemplates');
+        const resend = require('../services/resend');
         const frontendUrl = (process.env.FRONTEND_URL || 'https://refboost.io').replace(/\/$/, '');
         const verifyUrl = `${frontendUrl}/verify-email?token=${verifyToken}`;
         const subject = `Vérifiez votre adresse email — RefBoost`;
@@ -710,12 +712,12 @@ router.post('/signup', [
           </p>
           <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Ou copiez ce lien : <a href="${verifyUrl}">${verifyUrl}</a></p>
           <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Sans cette vérification, vous ne pourrez pas vous connecter à votre espace.</p>`;
-        const html = templates.baseLayout({
-          title: 'Vérifiez votre email',
-          preheader: 'Activez votre compte RefBoost en un clic',
+        const { html } = renderEmail({
+          subject,
+          heading: 'Vérifiez votre email',
           bodyHtml,
-          ctaLabel: 'Vérifier mon email',
           ctaUrl: verifyUrl,
+          ctaLabel: 'Vérifier mon email',
         });
         await resend.sendAndLog({
           to: email,
@@ -726,7 +728,17 @@ router.post('/signup', [
           payload: { recipient_name: fullName, tenant: company },
           query,
         });
-      } catch (e) { console.error('[signup.verify-email] send failed:', e.message); }
+      } catch (e) {
+        // Ne plus avaler silencieusement : log structuré + trace DB d'échec
+        // (sans quoi un envoi raté ne laisse AUCune trace — cf. bug Fabien).
+        console.error('[signup.verify-email] send failed:', e.message, e.stack);
+        try {
+          await query(
+            "INSERT INTO notification_queue (recipient_email, recipient_name, template, sent, error, tenant_id) VALUES ($1, $2, 'email_verification', false, $3, $4)",
+            [email, fullName || null, e.message, tenant.id]
+          );
+        } catch (_) {}
+      }
     })();
     res.status(201).json({
       pending_verification: true,
@@ -910,6 +922,8 @@ router.post('/resend-verification', async (req, res) => {
     );
     (async () => {
       try {
+        const { renderEmail } = require('../utils/emailTemplates');
+        const resend = require('../services/resend');
         const frontendUrl = (process.env.FRONTEND_URL || 'https://refboost.io').replace(/\/$/, '');
         const verifyUrl = `${frontendUrl}/verify-email?token=${newToken}`;
         const bodyHtml = `
@@ -919,12 +933,12 @@ router.post('/resend-verification', async (req, res) => {
             <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Vérifier mon email</a>
           </p>
           <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">Ou copiez ce lien : <a href="${verifyUrl}">${verifyUrl}</a></p>`;
-        const html = templates.baseLayout({
-          title: 'Nouveau lien de vérification',
-          preheader: 'Activez votre compte RefBoost',
+        const { html } = renderEmail({
+          subject: `Nouveau lien de vérification — RefBoost`,
+          heading: 'Nouveau lien de vérification',
           bodyHtml,
-          ctaLabel: 'Vérifier mon email',
           ctaUrl: verifyUrl,
+          ctaLabel: 'Vérifier mon email',
         });
         await resend.sendAndLog({
           to: u.email,
@@ -935,7 +949,15 @@ router.post('/resend-verification', async (req, res) => {
           payload: { recipient_name: u.full_name },
           query,
         });
-      } catch (e) { console.error('[resend-verification] send failed:', e.message); }
+      } catch (e) {
+        console.error('[resend-verification] send failed:', e.message, e.stack);
+        try {
+          await query(
+            "INSERT INTO notification_queue (recipient_email, recipient_name, template, sent, error, tenant_id) VALUES ($1, $2, 'email_verification_resend', false, $3, $4)",
+            [u.email, u.full_name || null, e.message, u.tenant_id]
+          );
+        } catch (_) {}
+      }
     })();
     return res.json({ ok: true });
   } catch (err) {
