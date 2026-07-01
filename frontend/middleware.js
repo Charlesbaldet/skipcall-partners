@@ -147,7 +147,7 @@ function resolveMeta(path) {
   };
   if (path === '/integrations') return {
     title: 'Intégrations — RefBoost',
-    description: "Connectez RefBoost à vos outils : Notion, HubSpot, Salesforce, Qonto, Google SSO. Synchronisez votre pipeline et automatisez les paiements partenaires.",
+    description: "Connectez RefBoost à vos CRM (HubSpot, Salesforce, Pipedrive, Notion), à Qonto, Pennylane et Google SSO. Automatisez pipeline, paiements et compta partenaires.",
   };
   if (path === '/integrations/notion') return {
     title: 'Intégration Notion — RefBoost',
@@ -161,9 +161,17 @@ function resolveMeta(path) {
     title: 'Intégration Salesforce — RefBoost',
     description: "Connectez Salesforce à RefBoost. Synchronisez Opportunities, Contacts et Accounts avec mapping personnalisé des objets standards et custom.",
   };
+  if (path === '/integrations/pipedrive') return {
+    title: 'Intégration Pipedrive — RefBoost',
+    description: "Synchronisez vos deals Pipedrive avec RefBoost pour tracker les ventes générées par vos partenaires et calculer les commissions automatiquement.",
+  };
   if (path === '/integrations/qonto') return {
     title: 'Intégration Qonto — RefBoost',
     description: "Automatisez le paiement de vos commissions partenaires via Qonto. Virements SEPA en un clic avec validation SCA sécurisée et preuve par email.",
+  };
+  if (path === '/integrations/pennylane') return {
+    title: 'Intégration Pennylane — RefBoost',
+    description: "Automatisez la remontée des factures partenaires vers Pennylane. Détection TVA auto-entrepreneur, imputation comptable et matching bancaire inclus.",
   };
   if (path === '/integrations/google-sso') return {
     title: 'Google SSO — RefBoost',
@@ -380,7 +388,9 @@ export default async function middleware(request) {
       '<li><a href="' + SITE + '/integrations/notion">Notion — Synchronisez votre pipeline avec vos bases Notion (CRM)</a></li>' +
       '<li><a href="' + SITE + '/integrations/hubspot">HubSpot — Poussez vos referrals vers HubSpot Deals (CRM)</a></li>' +
       '<li><a href="' + SITE + '/integrations/salesforce">Salesforce — Connectez vos Opportunities Salesforce (CRM)</a></li>' +
+      '<li><a href="' + SITE + '/integrations/pipedrive">Pipedrive — Poussez vos referrals vers vos deals Pipedrive (CRM)</a></li>' +
       '<li><a href="' + SITE + '/integrations/qonto">Qonto — Virements SEPA automatisés (Paiements)</a></li>' +
+      '<li><a href="' + SITE + '/integrations/pennylane">Pennylane — Factures partenaires et comptabilité automatisées (Comptabilité)</a></li>' +
       '<li><a href="' + SITE + '/integrations/google-sso">Google SSO — Connexion sans mot de passe (Authentification)</a></li>' +
       '</ul>',
     '/integrations/notion':
@@ -410,6 +420,15 @@ export default async function middleware(request) {
       '<li>Mapping des Stages Salesforce avec les statuts RefBoost.</li>' +
       '<li>Support des custom objects et fields via l\'éditeur de mapping.</li></ul>' +
       '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
+    '/integrations/pipedrive':
+      '<h2>Intégration Pipedrive</h2>' +
+      '<p>Connectez votre pipeline Pipedrive à votre programme partenaires RefBoost. Chaque deal fermé venant d\'un apporteur d\'affaires est automatiquement attribué et déclenche le calcul de commission, sans double saisie.</p>' +
+      '<h2>Ce que vous pouvez faire</h2>' +
+      '<ul><li>Deal registration côté partenaire : le lead crée un deal Pipedrive avec la source partenaire pré-remplie.</li>' +
+      '<li>Attribution automatique conservée jusqu\'au closed-won, quelles que soient les étapes traversées.</li>' +
+      '<li>Calcul de commission déclenché dès qu\'un deal passe en Won, sur le montant réel.</li>' +
+      '<li>Sync bidirectionnelle des statuts, montants et propriétaires entre Pipedrive et RefBoost.</li></ul>' +
+      '<p>Disponible avec le plan Business. <a href="' + SITE + '/pricing">Voir les tarifs</a> · <a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
     '/integrations/qonto':
       '<h2>Intégration Qonto</h2>' +
       '<p>Connectez votre compte pro Qonto à RefBoost et payez les commissions de vos partenaires en un clic. Virements SEPA, validation SCA conforme DSP2 et preuve de virement automatisée.</p>' +
@@ -419,6 +438,15 @@ export default async function middleware(request) {
       '<li>Paiements groupés jusqu\'à 400 commissions en une action.</li>' +
       '<li>Email de preuve de virement envoyé automatiquement au partenaire.</li></ul>' +
       '<p>Disponible avec le plan Business. <a href="' + SITE + '/pricing">Voir les tarifs</a> · <a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
+    '/integrations/pennylane':
+      '<h2>Intégration Pennylane</h2>' +
+      '<p>Chaque facture partenaire validée dans RefBoost remonte automatiquement dans Pennylane avec la bonne imputation comptable, la bonne TVA et le rapprochement bancaire pré-préparé.</p>' +
+      '<h2>Ce que vous pouvez faire</h2>' +
+      '<ul><li>Import automatique des factures partenaires dans Pennylane dès validation, métadonnées complètes.</li>' +
+      '<li>Détection du régime TVA (auto-entrepreneur 0%, société 20%, particulier) et écriture appliquée automatiquement.</li>' +
+      '<li>Imputation comptable pré-remplie : compte 622 par défaut ou compte personnalisé selon votre plan comptable.</li>' +
+      '<li>Matching bancaire : le virement Qonto est rapproché automatiquement avec la facture Pennylane.</li></ul>' +
+      '<p><a href="' + SITE + '/integrations">Toutes les intégrations</a></p>',
     '/integrations/google-sso':
       '<h2>Google SSO</h2>' +
       '<p>Activé par défaut sur tous les plans. Vos équipes et vos partenaires se connectent à RefBoost via leur compte Google en un clic — zéro mot de passe à gérer, sécurité renforcée.</p>' +
