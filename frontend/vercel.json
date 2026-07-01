@@ -6,9 +6,9 @@
   },
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [{ "type": "host", "value": "www.refboost.io" }],
-      "destination": "https://refboost.io/:path*",
+      "destination": "https://refboost.io/$1",
       "permanent": true
     }
   ],
