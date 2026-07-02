@@ -9,7 +9,10 @@
 
 const { query } = require('../db');
 
-const MODEL = 'claude-sonnet-4-20250514';
+// claude-sonnet-4-20250514 was retired upstream and started returning
+// 404 not_found_error on every call (silent 0/0/0 job, see translate-blog
+// fix). claude-sonnet-5 is the current non-deprecated Sonnet.
+const MODEL = 'claude-sonnet-5';
 const TARGET_LANGS = [
   { code: 'en', name: 'English' },
   { code: 'es', name: 'Spanish' },
@@ -54,6 +57,11 @@ async function translate({ text, targetLangName, kind, log = () => {} }) {
   const body = {
     model: MODEL,
     max_tokens: kind === 'content' ? 16000 : 1024,
+    // Sonnet 5 runs adaptive thinking when `thinking` is omitted (Sonnet 4
+    // ran thinking-off). Thinking tokens count against max_tokens and would
+    // both slow/inflate cost and risk truncating long `content` translations,
+    // so keep the prior thinking-off behaviour explicitly.
+    thinking: { type: 'disabled' },
     system,
     messages: [{ role: 'user', content: text }],
   };
