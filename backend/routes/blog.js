@@ -380,41 +380,47 @@ router.delete('/admin/posts/:id', authenticate, requireSuperAdmin, async (req, r
 // rate-limit budget.
 function startBlogTranslationJob({ scope = 'blog', dryRun = false } = {}) {
   if (_runningJob) return { ok: false, reason: 'already_running', startedAt: _runningJob.startedAt };
-  _runningJob = {
+  // Capture the job object in a local so the worker closure and the cancel
+  // endpoint act on the same reference even after `_runningJob` is reassigned
+  // (cancel clears it immediately to allow an instant re-trigger).
+  const job = {
     startedAt: new Date().toISOString(),
     scope,
     dryRun,
     progress: { table: null, attempted: 0, done: 0, skipped: 0, failed: 0, lastError: null },
     finishedAt: null,
     error: null,
+    cancelRequested: false,
   };
+  _runningJob = job;
   setImmediate(async () => {
     const log = (msg) => console.log(`[translate-blog] ${msg}`);
-    const onProgress = (p) => { _runningJob.progress = { ...p }; };
+    const onProgress = (p) => { job.progress = { ...p }; };
+    const shouldCancel = () => job.cancelRequested;
     try {
       log(`starting (scope=${scope}${dryRun ? ', dry-run' : ''})`);
       if (scope === 'tenants' || scope === 'all') {
-        await translateService.translateTenants({ dryRun, log, onProgress });
+        await translateService.translateTenants({ dryRun, log, onProgress, shouldCancel });
       }
       if (scope === 'partners' || scope === 'all') {
-        await translateService.translatePartners({ dryRun, log, onProgress });
+        await translateService.translatePartners({ dryRun, log, onProgress, shouldCancel });
       }
       if (scope === 'blog' || scope === 'all') {
-        await translateService.translateBlogPosts({ dryRun, log, onProgress });
+        await translateService.translateBlogPosts({ dryRun, log, onProgress, shouldCancel });
       }
-      _runningJob.finishedAt = new Date().toISOString();
-      log(`done — ${JSON.stringify(_runningJob.progress)}`);
+      log(`${job.cancelRequested ? 'cancelled' : 'done'} — ${JSON.stringify(job.progress)}`);
     } catch (err) {
-      _runningJob.error = err.message;
-      _runningJob.finishedAt = new Date().toISOString();
+      job.error = err.message;
       log(`failed: ${err.message}`);
     } finally {
-      const finished = _runningJob;
-      _runningJob = null;
-      lastJob = finished;
+      job.finishedAt = job.finishedAt || new Date().toISOString();
+      lastJob = job;
+      // Only clear the slot if it's still ours — cancel (or a re-trigger)
+      // may already have replaced it.
+      if (_runningJob === job) _runningJob = null;
     }
   });
-  return { ok: true, startedAt: _runningJob.startedAt };
+  return { ok: true, startedAt: job.startedAt };
 }
 
 const translateService = require('../services/translateContentService');
@@ -462,6 +468,24 @@ router.get('/admin/translate-blog/status', authenticate, requireSuperAdmin, asyn
   } catch (err) {
     res.status(500).json({ error: err.message || 'Erreur serveur' });
   }
+});
+
+// POST /api/blog/admin/translate-blog/cancel
+// Requests cancellation of the running job. The worker checks the cancel flag
+// at each per-cell checkpoint and stops within one throttle interval; we clear
+// _runningJob here so the admin can re-trigger immediately without waiting for
+// the in-flight job to unwind (or for a stuck call to hit its 60s timeout).
+router.post('/admin/translate-blog/cancel', authenticate, requireSuperAdmin, async (req, res) => {
+  if (!_runningJob) {
+    return res.status(404).json({ error: 'no_running_job', message: 'No translation job is currently running.' });
+  }
+  const cancelled = _runningJob;
+  cancelled.cancelRequested = true;
+  cancelled.error = cancelled.error || 'cancelled_by_user';
+  cancelled.finishedAt = new Date().toISOString();
+  lastJob = cancelled;
+  _runningJob = null;
+  res.json({ ok: true, cancelledAt: cancelled.finishedAt, startedAt: cancelled.startedAt });
 });
 
 module.exports = router;
