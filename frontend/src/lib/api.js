@@ -537,6 +537,9 @@ class ApiClient {
   getBlogTranslateStatus() {
     return this.request('/blog/admin/translate-blog/status');
   }
+  cancelBlogTranslate() {
+    return this.request('/blog/admin/translate-blog/cancel', { method: 'POST' });
+  }
   getMarketplaceProgram(slug) {
     return this.request('/marketplace/programs/' + encodeURIComponent(slug));
   }

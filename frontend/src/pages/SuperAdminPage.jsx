@@ -213,6 +213,21 @@ export default function SuperAdminPage() {
     }
   };
 
+  const handleCancelTranslate = async () => {
+    try {
+      await api.cancelBlogTranslate();
+      setBlogTranslating(false);
+      showToast(t('admin.translate_cancelled', 'Traduction annulée'), 'info', 4000);
+      refreshBlogTranslateStatus();
+    } catch (err) {
+      const msg = err?.data?.error === 'no_running_job'
+        ? t('admin.translate_no_running', 'Aucune traduction en cours')
+        : err.message || 'Erreur';
+      showToast(msg, 'error', 4000);
+      refreshBlogTranslateStatus();
+    }
+  };
+
   const saveBlogPost = async () => {
     setBlogSaving(true);
     setBlogMsg('');
@@ -757,6 +772,19 @@ export default function SuperAdminPage() {
                     ? t('admin.translate_running', 'Traduction en cours…')
                     : t('admin.translate_button', 'Traduire les articles')}
                 </button>
+                {blogTranslating && (
+                  <button
+                    onClick={handleCancelTranslate}
+                    title={t('admin.translate_cancel_tooltip', 'Arrête la traduction en cours et permet de relancer immédiatement')}
+                    style={{
+                      marginTop: 6, padding: '6px 12px', borderRadius: 8,
+                      background: '#fff', color: '#dc2626', border: '1px solid #fecaca',
+                      cursor: 'pointer', fontWeight: 600, fontSize: 12,
+                    }}
+                  >
+                    {t('admin.translate_cancel', 'Annuler')}
+                  </button>
+                )}
                 {blogTranslating && blogTranslateStatus?.running && !blogTranslateStatus.running.finishedAt && (
                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
                     {(blogTranslateStatus.running.progress?.done || 0)} {t('admin.translate_done_count', 'traduits')}

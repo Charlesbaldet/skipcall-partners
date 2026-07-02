@@ -118,7 +118,7 @@ async function translate({ text, targetLangName, kind, log = () => {} }) {
 
 // ─── Per-table translators ────────────────────────────────────────────
 
-async function translateTenants({ dryRun = false, log = () => {}, onProgress = () => {} } = {}) {
+async function translateTenants({ dryRun = false, log = () => {}, onProgress = () => {}, shouldCancel = () => false } = {}) {
   const { rows } = await query(`
     SELECT id, name, short_description,
            short_description_en, short_description_es, short_description_de,
@@ -131,6 +131,7 @@ async function translateTenants({ dryRun = false, log = () => {}, onProgress = (
   const emit = () => onProgress({ table: 'tenants', attempted, done, skipped, failed, lastError });
   for (const row of rows) {
     for (const { code, name } of TARGET_LANGS) {
+      if (shouldCancel()) { log('cancelled by user'); return { attempted, done, skipped, failed, lastError }; }
       const col = `short_description_${code}`;
       if (row[col] && row[col].trim()) { skipped++; emit(); continue; }
       attempted++;
@@ -151,7 +152,7 @@ async function translateTenants({ dryRun = false, log = () => {}, onProgress = (
   return { attempted, done, skipped, failed, lastError };
 }
 
-async function translatePartners({ dryRun = false, log = () => {}, onProgress = () => {} } = {}) {
+async function translatePartners({ dryRun = false, log = () => {}, onProgress = () => {}, shouldCancel = () => false } = {}) {
   const { rows } = await query(`
     SELECT id, name, description,
            description_en, description_es, description_de,
@@ -164,6 +165,7 @@ async function translatePartners({ dryRun = false, log = () => {}, onProgress = 
   const emit = () => onProgress({ table: 'partners', attempted, done, skipped, failed, lastError });
   for (const row of rows) {
     for (const { code, name } of TARGET_LANGS) {
+      if (shouldCancel()) { log('cancelled by user'); return { attempted, done, skipped, failed, lastError }; }
       const col = `description_${code}`;
       if (row[col] && row[col].trim()) { skipped++; emit(); continue; }
       attempted++;
@@ -184,7 +186,7 @@ async function translatePartners({ dryRun = false, log = () => {}, onProgress = 
   return { attempted, done, skipped, failed, lastError };
 }
 
-async function translateBlogPosts({ dryRun = false, log = () => {}, onProgress = () => {} } = {}) {
+async function translateBlogPosts({ dryRun = false, log = () => {}, onProgress = () => {}, shouldCancel = () => false } = {}) {
   const { rows } = await query(`
     SELECT id, slug, title, excerpt, content, meta_description,
            title_en, title_es, title_de, title_it, title_nl, title_pt,
@@ -210,6 +212,7 @@ async function translateBlogPosts({ dryRun = false, log = () => {}, onProgress =
   for (const row of rows) {
     for (const { code, name } of TARGET_LANGS) {
       for (const f of FIELDS) {
+        if (shouldCancel()) { log('cancelled by user'); return { attempted, done, skipped, failed, lastError }; }
         const targetCol = `${f.prefix}_${code}`;
         if (row[targetCol] && row[targetCol].trim()) { skipped++; emit(); continue; }
         if (!row[f.src] || !row[f.src].trim()) { skipped++; emit(); continue; }
