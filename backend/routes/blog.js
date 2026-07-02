@@ -384,7 +384,7 @@ function startBlogTranslationJob({ scope = 'blog', dryRun = false } = {}) {
     startedAt: new Date().toISOString(),
     scope,
     dryRun,
-    progress: { table: null, done: 0, skipped: 0, failed: 0 },
+    progress: { table: null, attempted: 0, done: 0, skipped: 0, failed: 0, lastError: null },
     finishedAt: null,
     error: null,
   };

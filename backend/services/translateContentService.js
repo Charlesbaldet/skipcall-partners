@@ -24,6 +24,26 @@ const TARGET_LANGS = [
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+// Every external Anthropic call gets an explicit timeout so a hung socket
+// can't stall the whole job indefinitely (the previous silent-failure run
+// had no ceiling per request). Aborts surface as a normal Error, caught and
+// counted by the per-item try/catch in each translator.
+const CALL_TIMEOUT_MS = 60000;
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CALL_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err && err.name === 'AbortError') {
+      throw new Error(`translator_timeout_${CALL_TIMEOUT_MS / 1000}s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // 5 req/min → 13s spacing for safety.
 const MIN_SPACING_MS = 13000;
 let lastCallAt = 0;
@@ -69,7 +89,7 @@ async function translate({ text, targetLangName, kind, log = () => {} }) {
   let lastErr;
   for (let attempt = 1; attempt <= 5; attempt++) {
     await throttle();
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
@@ -107,20 +127,28 @@ async function translateTenants({ dryRun = false, log = () => {}, onProgress = (
     WHERE short_description IS NOT NULL AND short_description <> ''
   `);
   log(`[tenants] ${rows.length} row(s) with a short_description`);
-  let done = 0, skipped = 0, failed = 0;
+  let attempted = 0, done = 0, skipped = 0, failed = 0, lastError = null;
+  const emit = () => onProgress({ table: 'tenants', attempted, done, skipped, failed, lastError });
   for (const row of rows) {
     for (const { code, name } of TARGET_LANGS) {
       const col = `short_description_${code}`;
-      if (row[col] && row[col].trim()) { skipped++; continue; }
+      if (row[col] && row[col].trim()) { skipped++; emit(); continue; }
+      attempted++;
       try {
         const t = await translate({ text: row.short_description, targetLangName: name, kind: 'description', log });
         if (!dryRun) await query(`UPDATE tenants SET ${col} = $1 WHERE id = $2`, [t, row.id]);
         log(` ${row.name} [${code}] short_description`);
-        done++; onProgress({ table: 'tenants', done, skipped, failed });
-      } catch (err) { failed++; log(` ${row.name} [${code}]: ${err.message}`); }
+        done++; emit();
+      } catch (err) {
+        failed++;
+        lastError = { name: row.name, id: row.id, lang: code, field: 'short_description', message: err.message, at: new Date().toISOString() };
+        console.error('[translate-blog] failed cell', lastError);
+        log(` ${row.name} [${code}]: ${err.message}`);
+        emit();
+      }
     }
   }
-  return { done, skipped, failed };
+  return { attempted, done, skipped, failed, lastError };
 }
 
 async function translatePartners({ dryRun = false, log = () => {}, onProgress = () => {} } = {}) {
@@ -132,20 +160,28 @@ async function translatePartners({ dryRun = false, log = () => {}, onProgress = 
     WHERE description IS NOT NULL AND description <> ''
   `);
   log(`[partners] ${rows.length} row(s) with a description`);
-  let done = 0, skipped = 0, failed = 0;
+  let attempted = 0, done = 0, skipped = 0, failed = 0, lastError = null;
+  const emit = () => onProgress({ table: 'partners', attempted, done, skipped, failed, lastError });
   for (const row of rows) {
     for (const { code, name } of TARGET_LANGS) {
       const col = `description_${code}`;
-      if (row[col] && row[col].trim()) { skipped++; continue; }
+      if (row[col] && row[col].trim()) { skipped++; emit(); continue; }
+      attempted++;
       try {
         const t = await translate({ text: row.description, targetLangName: name, kind: 'description', log });
         if (!dryRun) await query(`UPDATE partners SET ${col} = $1 WHERE id = $2`, [t, row.id]);
         log(` ${row.name} [${code}] description`);
-        done++; onProgress({ table: 'partners', done, skipped, failed });
-      } catch (err) { failed++; log(` ${row.name} [${code}]: ${err.message}`); }
+        done++; emit();
+      } catch (err) {
+        failed++;
+        lastError = { name: row.name, id: row.id, lang: code, field: 'description', message: err.message, at: new Date().toISOString() };
+        console.error('[translate-blog] failed cell', lastError);
+        log(` ${row.name} [${code}]: ${err.message}`);
+        emit();
+      }
     }
   }
-  return { done, skipped, failed };
+  return { attempted, done, skipped, failed, lastError };
 }
 
 async function translateBlogPosts({ dryRun = false, log = () => {}, onProgress = () => {} } = {}) {
@@ -159,7 +195,8 @@ async function translateBlogPosts({ dryRun = false, log = () => {}, onProgress =
     FROM blog_posts
   `);
   log(`[blog_posts] ${rows.length} post(s)`);
-  let done = 0, skipped = 0, failed = 0;
+  let attempted = 0, done = 0, skipped = 0, failed = 0, lastError = null;
+  const emit = () => onProgress({ table: 'blog_posts', attempted, done, skipped, failed, lastError });
 
   // (sourceCol, targetColPrefix, kind) — drives the loop below so the
   // four field types share one code path.
@@ -174,18 +211,25 @@ async function translateBlogPosts({ dryRun = false, log = () => {}, onProgress =
     for (const { code, name } of TARGET_LANGS) {
       for (const f of FIELDS) {
         const targetCol = `${f.prefix}_${code}`;
-        if (row[targetCol] && row[targetCol].trim()) { skipped++; continue; }
-        if (!row[f.src] || !row[f.src].trim()) { skipped++; continue; }
+        if (row[targetCol] && row[targetCol].trim()) { skipped++; emit(); continue; }
+        if (!row[f.src] || !row[f.src].trim()) { skipped++; emit(); continue; }
+        attempted++;
         try {
           const t = await translate({ text: row[f.src], targetLangName: name, kind: f.kind, log });
           if (!dryRun) await query(`UPDATE blog_posts SET ${targetCol} = $1 WHERE id = $2`, [t, row.id]);
           log(` ${row.slug} [${code}] ${f.prefix}: ${t.slice(0, 60)}${t.length > 60 ? '…' : ''}`);
-          done++; onProgress({ table: 'blog_posts', done, skipped, failed });
-        } catch (err) { failed++; log(` ${row.slug} [${code}] ${f.prefix}: ${err.message}`); }
+          done++; emit();
+        } catch (err) {
+          failed++;
+          lastError = { slug: row.slug, id: row.id, lang: code, field: f.prefix, message: err.message, at: new Date().toISOString() };
+          console.error('[translate-blog] failed cell', lastError);
+          log(` ${row.slug} [${code}] ${f.prefix}: ${err.message}`);
+          emit();
+        }
       }
     }
   }
-  return { done, skipped, failed };
+  return { attempted, done, skipped, failed, lastError };
 }
 
 // ─── Progress query ───────────────────────────────────────────────────
