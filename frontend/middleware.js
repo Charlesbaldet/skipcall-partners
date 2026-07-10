@@ -191,6 +191,102 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
+// ─── Blog structured-data extraction (FAQPage / HowTo) ───────────────
+// Runs on the Edge runtime, which has no DOM, so everything here is
+// regex over the raw article HTML. Both extractors are conservative on
+// purpose: they only emit schema when the article genuinely contains
+// the corresponding structure (real question headings for FAQ, real
+// "Étape N" step headings under a "Comment …" title for HowTo). That
+// keeps us from stamping semantically-bogus FAQPage/HowTo onto every
+// post — which reads as spammy structured data to Google and risks a
+// manual action for no upside. Exported so the unit test can exercise
+// them against real article HTML without booting the Edge runtime.
+
+// Strip tags + decode the handful of HTML entities the blog editor
+// emits, then collapse whitespace. Good enough for JSON-LD text values
+// (which get JSON-escaped, and their `<` further <-escaped, at
+// injection time — same guard the Article LD already uses).
+export function stripTags(s) {
+  return String(s || '')
+    .replace(/<\/(p|li|h[1-6]|div|tr)>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&(#39|apos|rsquo|lsquo);/gi, "'")
+    .replace(/&(quot|rdquo|ldquo);/gi, '"')
+    .replace(/&ge;/gi, '≥')
+    .replace(/&le;/gi, '≤')
+    .replace(/&(mdash|ndash);/gi, '—')
+    .replace(/&hellip;/gi, '…')
+    .replace(/\s+/g, ' ')
+    // Stripping inline tags (e.g. </strong>) can leave a space before a
+    // period/comma ("gagne toujours ."). French never spaces before . or
+    // , (unlike ; : ! ? which keep their typographic space), so tidy just
+    // those two so the FAQ answer mirrors the on-page text.
+    .replace(/\s+([.,])/g, '$1')
+    .trim();
+}
+
+// Return [{question, answer}] for genuine question headings (text ends
+// with "?") that are followed by real answer text. Caller emits a
+// FAQPage only when there are enough of them (≥3), which — on the
+// current corpus — isolates exactly the posts carrying an explicit
+// "FAQ" section and nothing else.
+export function buildFaq(content) {
+  const html = String(content || '');
+  const re = /<(h2|h3)\b[^>]*>([\s\S]*?)<\/\1>/gi;
+  const heads = [];
+  let m;
+  while ((m = re.exec(html))) {
+    heads.push({ title: stripTags(m[2]), end: re.lastIndex, start: m.index });
+  }
+  const items = [];
+  for (let i = 0; i < heads.length; i++) {
+    const q = heads[i].title;
+    if (!q.endsWith('?')) continue;
+    const bodyEnd = i + 1 < heads.length ? heads[i + 1].start : html.length;
+    const answer = stripTags(html.slice(heads[i].end, bodyEnd));
+    // Skip a bare question heading with no real answer under it.
+    if (answer.length < 20) continue;
+    // Keep the full answer but bound it so a pathological post can't
+    // bloat the head. 900 chars comfortably fits a 2-paragraph answer
+    // and stays well under any practical limit.
+    items.push({ question: q, answer: answer.length > 900 ? answer.slice(0, 900).replace(/\s+\S*$/, '') : answer });
+  }
+  return items;
+}
+
+// Return [{name, text}] steps for a genuine how-to: the title must
+// start with "Comment" and the body must carry sequential "Étape N"
+// (or "Step N") headings. We deliberately ignore loose <ol> lists and
+// "J+N" calendar sub-sections — those aren't the article's procedure
+// and marking them as HowToSteps would misrepresent the page.
+export function buildHowTo(content, title) {
+  if (!/^comment\b/i.test(String(title || '').trim())) return [];
+  const html = String(content || '');
+  const re = /<(h2|h3)\b[^>]*>([\s\S]*?)<\/\1>/gi;
+  const heads = [];
+  let m;
+  while ((m = re.exec(html))) {
+    heads.push({ title: stripTags(m[2]), end: re.lastIndex, start: m.index });
+  }
+  const stepRe = /^(étape|etape|step)\s*\d+/i;
+  const steps = [];
+  for (let i = 0; i < heads.length; i++) {
+    if (!stepRe.test(heads[i].title)) continue;
+    const bodyEnd = i + 1 < heads.length ? heads[i + 1].start : html.length;
+    const text = stripTags(html.slice(heads[i].end, bodyEnd));
+    // Drop the "Étape N —" prefix so the step name reads as the action
+    // ("Auto-qualification via formulaire"), falling back to the raw
+    // heading if stripping leaves nothing.
+    const name = heads[i].title.replace(/^(étape|etape|step)\s*\d+\s*[—\-–:.]*\s*/i, '').trim() || heads[i].title;
+    steps.push({ name: name.slice(0, 100), text: (text || name).slice(0, 500) });
+  }
+  return steps;
+}
+
 // Normalise the path for the canonical URL: keep "/" but strip any
 // trailing slash on deeper paths.
 function canonicalPath(path) {
@@ -534,6 +630,64 @@ export default async function middleware(request) {
     };
     const ld = `<script type="application/ld+json">${JSON.stringify(articleLd).replace(/</g, '\\u003c')}</script>`;
     html = html.replace('</head>', '    ' + ld + '\n  </head>');
+
+    // FAQPage — only when the article carries a real FAQ section (≥3
+    // question-form headings, each with an answer). Injected server-side
+    // alongside the Article LD so every crawler (not just JS-running
+    // Googlebot) sees it. Google no longer renders FAQ rich results for
+    // non gov/health sites, but the markup is still valid, harmless, and
+    // consumed by Bing, AI Overviews and other LLM crawlers — so it's
+    // future-proofing at zero regression risk.
+    //
+    // Wrapped in try/catch so a pathological future article that trips
+    // the extractor can NEVER take the already-built SEO (Article LD +
+    // per-article title/description) hostage. On throw we log and skip
+    // only the FAQ block; the rest of the enriched head is untouched.
+    try {
+      const faqItems = buildFaq(articlePost.content);
+      if (faqItems.length >= 3) {
+        const faqLd = {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqItems.map(it => ({
+            '@type': 'Question',
+            name: it.question,
+            acceptedAnswer: { '@type': 'Answer', text: it.answer },
+          })),
+        };
+        const faqScript = `<script type="application/ld+json">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>`;
+        html = html.replace('</head>', '    ' + faqScript + '\n  </head>');
+      }
+    } catch (e) {
+      console.error('[edge.blog] FAQ extraction failed for', canonical, '-', e && e.message);
+    }
+
+    // HowTo — only for a genuine "Comment …" procedure with sequential
+    // "Étape N" step headings (≥2). Loose <ol> lists and "J+N" calendar
+    // sub-sections are intentionally ignored (see buildHowTo). Same
+    // deprecation caveat as FAQ above: valid + additive, no regression.
+    // Same defensive isolation as the FAQ block above.
+    try {
+      const howToSteps = buildHowTo(articlePost.content, articlePost.title);
+      if (howToSteps.length >= 2) {
+        const howToLd = {
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          name: String(articlePost.title || meta.title || '').slice(0, 110),
+          description: articlePost.meta_description || articlePost.excerpt || meta.description,
+          step: howToSteps.map((s, i) => ({
+            '@type': 'HowToStep',
+            position: i + 1,
+            name: s.name,
+            text: s.text,
+          })),
+        };
+        const howToScript = `<script type="application/ld+json">${JSON.stringify(howToLd).replace(/</g, '\\u003c')}</script>`;
+        html = html.replace('</head>', '    ' + howToScript + '\n  </head>');
+      }
+    } catch (e) {
+      console.error('[edge.blog] HowTo extraction failed for', canonical, '-', e && e.message);
+    }
 
     // Inject the article body inside a <noscript> so crawlers that
     // don't run JS (and Googlebot when its JS budget gets cut) still
