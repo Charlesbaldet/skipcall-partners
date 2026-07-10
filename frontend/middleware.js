@@ -638,41 +638,55 @@ export default async function middleware(request) {
     // non gov/health sites, but the markup is still valid, harmless, and
     // consumed by Bing, AI Overviews and other LLM crawlers — so it's
     // future-proofing at zero regression risk.
-    const faqItems = buildFaq(articlePost.content);
-    if (faqItems.length >= 3) {
-      const faqLd = {
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: faqItems.map(it => ({
-          '@type': 'Question',
-          name: it.question,
-          acceptedAnswer: { '@type': 'Answer', text: it.answer },
-        })),
-      };
-      const faqScript = `<script type="application/ld+json">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>`;
-      html = html.replace('</head>', '    ' + faqScript + '\n  </head>');
+    //
+    // Wrapped in try/catch so a pathological future article that trips
+    // the extractor can NEVER take the already-built SEO (Article LD +
+    // per-article title/description) hostage. On throw we log and skip
+    // only the FAQ block; the rest of the enriched head is untouched.
+    try {
+      const faqItems = buildFaq(articlePost.content);
+      if (faqItems.length >= 3) {
+        const faqLd = {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqItems.map(it => ({
+            '@type': 'Question',
+            name: it.question,
+            acceptedAnswer: { '@type': 'Answer', text: it.answer },
+          })),
+        };
+        const faqScript = `<script type="application/ld+json">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>`;
+        html = html.replace('</head>', '    ' + faqScript + '\n  </head>');
+      }
+    } catch (e) {
+      console.error('[edge.blog] FAQ extraction failed for', canonical, '-', e && e.message);
     }
 
     // HowTo — only for a genuine "Comment …" procedure with sequential
     // "Étape N" step headings (≥2). Loose <ol> lists and "J+N" calendar
     // sub-sections are intentionally ignored (see buildHowTo). Same
     // deprecation caveat as FAQ above: valid + additive, no regression.
-    const howToSteps = buildHowTo(articlePost.content, articlePost.title);
-    if (howToSteps.length >= 2) {
-      const howToLd = {
-        '@context': 'https://schema.org',
-        '@type': 'HowTo',
-        name: String(articlePost.title || meta.title || '').slice(0, 110),
-        description: articlePost.meta_description || articlePost.excerpt || meta.description,
-        step: howToSteps.map((s, i) => ({
-          '@type': 'HowToStep',
-          position: i + 1,
-          name: s.name,
-          text: s.text,
-        })),
-      };
-      const howToScript = `<script type="application/ld+json">${JSON.stringify(howToLd).replace(/</g, '\\u003c')}</script>`;
-      html = html.replace('</head>', '    ' + howToScript + '\n  </head>');
+    // Same defensive isolation as the FAQ block above.
+    try {
+      const howToSteps = buildHowTo(articlePost.content, articlePost.title);
+      if (howToSteps.length >= 2) {
+        const howToLd = {
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          name: String(articlePost.title || meta.title || '').slice(0, 110),
+          description: articlePost.meta_description || articlePost.excerpt || meta.description,
+          step: howToSteps.map((s, i) => ({
+            '@type': 'HowToStep',
+            position: i + 1,
+            name: s.name,
+            text: s.text,
+          })),
+        };
+        const howToScript = `<script type="application/ld+json">${JSON.stringify(howToLd).replace(/</g, '\\u003c')}</script>`;
+        html = html.replace('</head>', '    ' + howToScript + '\n  </head>');
+      }
+    } catch (e) {
+      console.error('[edge.blog] HowTo extraction failed for', canonical, '-', e && e.message);
     }
 
     // Inject the article body inside a <noscript> so crawlers that
