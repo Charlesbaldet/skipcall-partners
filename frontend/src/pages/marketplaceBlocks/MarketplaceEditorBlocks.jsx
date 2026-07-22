@@ -47,7 +47,11 @@ export function formatThreshold(level, thresholdType, revenueModel, t) {
   const min = Number(level?.min_threshold || 0);
   if (!min) return t('marketplace.editor.tiers_starting', 'Niveau de départ');
   if (thresholdType === 'volume') {
-    const unit = (revenueModel && revenueModel !== 'Other') ? revenueModel : 'CA';
+    const rm = (revenueModel && revenueModel !== 'Other') ? revenueModel : 'CA';
+    // 'CA' (chiffre d'affaires) is a French term — localize it so the
+    // volume line reads correctly in EN/ES/DE/… MRR and ARR are
+    // international acronyms and pass through untranslated.
+    const unit = rm === 'CA' ? t('marketplace.editor.tiers_unit_revenue', 'CA') : rm;
     const formatted = min.toLocaleString('fr-FR');
     return t('marketplace.editor.tiers_volume', {
       n: formatted, unit,
