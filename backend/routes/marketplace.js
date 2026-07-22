@@ -387,7 +387,7 @@ router.get('/programs/:slug', async (req, res) => {
     // Empty tenants get an empty array, not null, so the FE doesn't
     // need to nullcheck.
     const { rows: tierRows } = await query(
-      `SELECT name, min_threshold, commission_rate, color, icon, position
+      `SELECT name, name_i18n, min_threshold, commission_rate, color, icon, position
          FROM tenant_levels
         WHERE tenant_id = $1
         ORDER BY position ASC, min_threshold ASC`,
@@ -419,7 +419,16 @@ router.get('/programs/:slug', async (req, res) => {
         page_blocks: Array.isArray(r.page_blocks) && r.page_blocks.length ? r.page_blocks : DEFAULT_PAGE_BLOCKS,
         revenue_model: r.revenue_model || 'CA',
         threshold_type: r.level_threshold_type || 'deals',
-        tiers: tierRows,
+        // Localize the tier name (name_i18n) but keep the public payload
+        // stripped to the display fields — never leak the raw i18n map.
+        tiers: tierRows.map(tr => ({
+          name: pickI18n(tr.name, tr.name_i18n),
+          min_threshold: tr.min_threshold,
+          commission_rate: tr.commission_rate,
+          color: tr.color,
+          icon: tr.icon,
+          position: tr.position,
+        })),
       },
     });
   } catch (err) {

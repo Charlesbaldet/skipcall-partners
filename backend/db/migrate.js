@@ -1997,6 +1997,19 @@ async function runMigrations() {
     console.error('[migrate.v68] failed:', err.message);
   }
 
+  // v69: i18n des noms de niveaux (tenant_levels.name). Jusqu'ici le nom
+  // du tier ("Argent", "Or"…) était rendu tel quel sur la page programme
+  // publique, sans couche de traduction. name_i18n = { <lang>: "...",
+  // _srchash: "<empreinte source>" } ; alimenté par le traducteur
+  // marketplace et lu via pickI18n dans GET /marketplace/programs/:slug.
+  // DDL pure, idempotent, 0 row impactée.
+  try {
+    await query(`ALTER TABLE tenant_levels ADD COLUMN IF NOT EXISTS name_i18n JSONB DEFAULT '{}'`);
+    console.log('[marketplace] v69 tenant_levels.name_i18n ready');
+  } catch (err) {
+    console.error('[migrate.v69] failed:', err.message);
+  }
+
   logger.info('Migrations completed');
 
   } catch (err) {
