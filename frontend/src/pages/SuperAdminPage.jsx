@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
-import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ChevronDown, Calendar, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3, Search, FileText } from 'lucide-react';
+import { Globe, Users, Shield, Plus, X, Pencil, Activity, ChevronRight, ChevronDown, Calendar, ToggleRight, ToggleLeft, Trash2, AlertTriangle, Briefcase, Target, TrendingUp, BarChart2, BarChart3, Search, FileText, Check } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import Pagination from '../components/Pagination.jsx';
@@ -542,7 +542,7 @@ export default function SuperAdminPage() {
         <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead><tr style={{ background: '#f8fafc' }}>
-              {[t('admin.th_tenant'), t('admin.th_slug'), t('admin.th_admin'), t('admin.th_domain'), t('admin.th_users'), t('admin.th_partners'), t('admin.th_status'), t('admin.th_plan', 'Plan'), t('admin.th_created_at'), t('admin.th_model'), ''].map((h, i) => (
+              {[t('admin.th_tenant'), t('admin.th_slug'), t('admin.th_admin'), t('admin.th_domain'), t('admin.th_users'), t('admin.th_partners'), t('admin.th_status'), t('admin.th_onboarding', 'Onboarding'), t('admin.th_plan', 'Plan'), t('admin.th_created_at'), t('admin.th_model'), ''].map((h, i) => (
                 <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
               ))}
             </tr></thead>
@@ -563,6 +563,9 @@ export default function SuperAdminPage() {
                 </td>
                 <td style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600 }}>{tn.partner_count}</td>
                 <td style={{ padding: '13px 16px', textAlign: 'center' }}><span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: tn.is_active ? '#f0fdf4' : '#fef2f2', color: tn.is_active ? '#16a34a' : '#dc2626' }}>{tn.is_active ? t('admin.status_active') : t('admin.status_inactive')}</span></td>
+                <td style={{ padding: '13px 16px', textAlign: 'center' }}>
+                  <OnboardingCell tn={tn} t={t} />
+                </td>
                 <td style={{ padding: '13px 16px', textAlign: 'center' }}>
                   {(() => {
                     const p = tn.plan || 'starter';
@@ -1064,6 +1067,63 @@ function SectionLabel({ children }) {
   return (
     <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
       {children}
+    </div>
+  );
+}
+
+// ─── Clients tab — onboarding progress badge ─────────────────────────
+// At-a-glance where each client (tenant) sits in its onboarding, so the
+// super-admin can spot who to follow up with. Data comes from
+// /super-admin/tenants (onboarding_completed / onboarding_total /
+// onboarding_completed_at), computed server-side from the same step
+// logic as the client's own onboarding checklist.
+//   - complete            → green "Terminé" pill
+//   - in progress         → mini progress bar + "done/total étapes",
+//                           bar coloured red→amber→blue by ratio
+//   - incomplete >7 days   → extra red "À relancer" flag (the whole
+//                           point: catch stalled clients)
+//   - onboarding_completed null (compute unavailable) → discreet dash
+const ONB_FOLLOWUP_DAYS = 7;
+function OnboardingCell({ tn, t }) {
+  const total = tn.onboarding_total || 8;
+  const done = tn.onboarding_completed;
+  if (done == null) {
+    return <span title={t('admin.onb_unknown', 'Indisponible')} style={{ color: '#cbd5e1', fontSize: 13 }}>—</span>;
+  }
+  const isComplete = !!tn.onboarding_completed_at || done >= total;
+  const pct = Math.max(0, Math.min(100, Math.round((done / total) * 100)));
+  const ageDays = tn.created_at ? (Date.now() - new Date(tn.created_at).getTime()) / 86400000 : 0;
+  const needsFollowup = !isComplete && ageDays > ONB_FOLLOWUP_DAYS;
+  const barColor = pct >= 100 ? '#16a34a' : pct >= 67 ? '#2563eb' : pct >= 34 ? '#f59e0b' : '#dc2626';
+
+  if (isComplete) {
+    return (
+      <span
+        title={t('admin.onb_tooltip', { done: total, total, defaultValue: '{{done}} sur {{total}} étapes d’onboarding complétées' })}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: '#f0fdf4', color: '#16a34a' }}
+      >
+        <Check size={12} /> {t('admin.onb_complete', 'Terminé')}
+      </span>
+    );
+  }
+
+  return (
+    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 5, minWidth: 96 }}
+      title={t('admin.onb_tooltip', { done, total, defaultValue: '{{done}} sur {{total}} étapes d’onboarding complétées' })}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, width: '100%' }}>
+        <div style={{ flex: 1, height: 6, borderRadius: 999, background: '#e2e8f0', overflow: 'hidden' }}>
+          <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 999, transition: 'width .3s' }} />
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>{done}/{total}</span>
+      </div>
+      {needsFollowup && (
+        <span
+          title={t('admin.onb_followup_tooltip', 'Onboarding incomplet depuis plus de 7 jours — pensez à relancer ce client')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700, background: '#fef2f2', color: '#dc2626', textTransform: 'uppercase', letterSpacing: 0.3 }}
+        >
+          <AlertTriangle size={10} /> {t('admin.onb_followup', 'À relancer')}
+        </span>
+      )}
     </div>
   );
 }

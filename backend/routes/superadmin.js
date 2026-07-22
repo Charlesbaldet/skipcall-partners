@@ -244,12 +244,19 @@ router.get('/stats', authenticate, requireSuperAdmin, async (req, res) => {
 });
 
 // ─── List tenants with user counts (NO financial data) ───
+// Number of onboarding steps — kept in sync with routes/onboarding.js
+// (billing, business_model, program, branding, pipeline, marketplace,
+// banking, first_partner). Exposed per-tenant so the super-admin
+// Clients list can show an at-a-glance onboarding progress badge and
+// flag clients to follow up with.
+const ONBOARDING_TOTAL = 8;
+
 router.get('/tenants', authenticate, requireSuperAdmin, async (req, res) => {
   try {
     const { rows } = await query(`
       SELECT t.id, t.name, t.slug, t.domain, t.logo_url, t.primary_color, t.secondary_color, t.accent_color,
              t.is_active, t.created_at, t.updated_at, t.revenue_model, t.plan,
-             t.is_founder, t.excluded_from_stats, t.deleted_at,
+             t.is_founder, t.excluded_from_stats, t.deleted_at, t.onboarding_completed_at,
              COUNT(DISTINCT u.id) as user_count,
              COUNT(DISTINCT u.id) FILTER (WHERE u.is_active = true) as active_user_count,
              COUNT(DISTINCT p.id) as partner_count
@@ -259,7 +266,46 @@ router.get('/tenants', authenticate, requireSuperAdmin, async (req, res) => {
       GROUP BY t.id
       ORDER BY t.created_at ASC
     `);
-    res.json({ tenants: rows });
+
+    // Onboarding progress per tenant. Computed in a separate query
+    // wrapped in try/catch so the Clients list keeps working even if
+    // an onboarding-related table is missing on a given deployment —
+    // graceful degradation (onboarding_completed = null) instead of a
+    // 500 on the whole list. Step logic mirrors routes/onboarding.js
+    // exactly so both surfaces agree on "where is this client at".
+    const onboardingMap = {};
+    try {
+      const ob = await query(`
+        SELECT t.id,
+          (
+            (CASE WHEN t.billing_company_name IS NOT NULL AND btrim(t.billing_company_name) <> ''
+                   AND t.billing_address IS NOT NULL AND btrim(t.billing_address) <> ''
+                   AND t.billing_siret IS NOT NULL AND btrim(t.billing_siret) <> '' THEN 1 ELSE 0 END)
+          + (CASE WHEN t.business_model IS NOT NULL AND btrim(t.business_model) <> '' THEN 1 ELSE 0 END)
+          + (CASE WHEN (SELECT COUNT(*) FROM tenant_levels tl WHERE tl.tenant_id = t.id) > 0 THEN 1 ELSE 0 END)
+          + (CASE WHEN (t.logo_url IS NOT NULL AND btrim(t.logo_url) <> '')
+                   OR (t.primary_color   IS NOT NULL AND lower(t.primary_color)   <> '#6366f1')
+                   OR (t.accent_color    IS NOT NULL AND lower(t.accent_color)    <> '#f97316')
+                   OR (t.secondary_color IS NOT NULL AND lower(t.secondary_color) <> '#0f172a')
+              THEN 1 ELSE 0 END)
+          + (CASE WHEN (SELECT COUNT(*) FROM partner_categories pc WHERE pc.tenant_id = t.id) > 0 THEN 1 ELSE 0 END)
+          + (CASE WHEN t.marketplace_visible IS TRUE AND t.short_description IS NOT NULL AND btrim(t.short_description) <> '' THEN 1 ELSE 0 END)
+          + (CASE WHEN EXISTS (SELECT 1 FROM payment_integrations pi WHERE pi.tenant_id = t.id AND pi.is_active = TRUE) THEN 1 ELSE 0 END)
+          + (CASE WHEN (SELECT COUNT(*) FROM partners p2 WHERE p2.tenant_id = t.id AND p2.deleted_at IS NULL) > 0 THEN 1 ELSE 0 END)
+          )::int AS onboarding_completed
+        FROM tenants t
+      `);
+      for (const r of ob.rows) onboardingMap[r.id] = r.onboarding_completed;
+    } catch (e) {
+      console.error('[super-admin/tenants] onboarding compute failed:', e.message);
+    }
+
+    const tenants = rows.map(t => ({
+      ...t,
+      onboarding_total: ONBOARDING_TOTAL,
+      onboarding_completed: onboardingMap[t.id] ?? null,
+    }));
+    res.json({ tenants });
   } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
