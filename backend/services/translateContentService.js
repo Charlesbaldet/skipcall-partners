@@ -116,6 +116,49 @@ async function translate({ text, targetLangName, kind, log = () => {} }) {
   throw new Error(lastErr || 'exhausted retries');
 }
 
+// ─── Long-content chunking ────────────────────────────────────────────
+// A blog article translated in ONE call fails two ways on long inputs:
+// the request exceeds CALL_TIMEOUT_MS, and/or the model abridges a
+// 20k-char guide down to a ~1.5k-char summary (observed: 33/36 articles
+// truncated to 6-20% of source across all 6 langs). Splitting the HTML
+// on top-level block boundaries and translating each piece keeps every
+// call small (fast, no condensing) and reassembles to full length.
+//
+// Cutting only immediately AFTER a closing block tag guarantees we never
+// split inside a tag or across an element's open/close, so tag balance
+// is preserved when the chunks are concatenated back.
+const CONTENT_CHUNK_MAX = 3500;      // ~chars per chunk (well under timeout)
+const CONTENT_CHUNK_THRESHOLD = 4000; // below this, one call is fine
+function chunkHtml(html, maxLen = CONTENT_CHUNK_MAX) {
+  const parts = html.split(/(?<=<\/(?:h[1-6]|p|ul|ol|li|blockquote|table|pre|div|section)>)/i);
+  const chunks = [];
+  let buf = '';
+  for (const p of parts) {
+    if (buf && (buf.length + p.length) > maxLen) { chunks.push(buf); buf = ''; }
+    buf += p;
+  }
+  if (buf) chunks.push(buf);
+  return chunks;
+}
+
+// Translate blog HTML content, chunking when long. Short content goes
+// through a single call (unchanged behaviour). Returns the reassembled
+// translation. Any chunk failure throws so the caller's try/catch counts
+// the cell as failed rather than writing a partial article.
+async function translateContent({ text, targetLangName, log = () => {} }) {
+  if (!text || text.length <= CONTENT_CHUNK_THRESHOLD) {
+    return translate({ text, targetLangName, kind: 'content', log });
+  }
+  const chunks = chunkHtml(text);
+  log(`    content ${text.length}c → ${chunks.length} chunk(s)`);
+  const out = [];
+  for (let i = 0; i < chunks.length; i++) {
+    const t = await translate({ text: chunks[i], targetLangName, kind: 'content', log });
+    out.push(t);
+  }
+  return out.join('');
+}
+
 // ─── Per-table translators ────────────────────────────────────────────
 
 async function translateTenants({ dryRun = false, log = () => {}, onProgress = () => {}, shouldCancel = () => false } = {}) {
@@ -218,7 +261,11 @@ async function translateBlogPosts({ dryRun = false, log = () => {}, onProgress =
         if (!row[f.src] || !row[f.src].trim()) { skipped++; emit(); continue; }
         attempted++;
         try {
-          const t = await translate({ text: row[f.src], targetLangName: name, kind: f.kind, log });
+          // Content is chunked when long (avoids timeout + model
+          // abridging); other fields are single-call as before.
+          const t = f.kind === 'content'
+            ? await translateContent({ text: row[f.src], targetLangName: name, log })
+            : await translate({ text: row[f.src], targetLangName: name, kind: f.kind, log });
           if (!dryRun) await query(`UPDATE blog_posts SET ${targetCol} = $1 WHERE id = $2`, [t, row.id]);
           log(` ${row.slug} [${code}] ${f.prefix}: ${t.slice(0, 60)}${t.length > 60 ? '…' : ''}`);
           done++; emit();
@@ -278,6 +325,8 @@ module.exports = {
   MODEL,
   TARGET_LANGS,
   translate,
+  translateContent,
+  chunkHtml,
   translateTenants,
   translatePartners,
   translateBlogPosts,
