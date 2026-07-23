@@ -78,11 +78,17 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_partners_referral_code ON partners(referral_code)');
 
     // UNIQUE constraints
-    await query(`DO $$ BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'commissions_referral_id_unique') THEN
-        ALTER TABLE commissions ADD CONSTRAINT commissions_referral_id_unique UNIQUE (referral_id);
-      END IF;
-    END $$`);
+    // NOTE: commissions_referral_id_unique (UNIQUE on referral_id) was
+    // REMOVED here. It is obsolete — superseded by
+    // commissions_referral_cycle_uidx (partial unique on
+    // (referral_id, cycle_index) WHERE deleted_at IS NULL) and explicitly
+    // dropped by v68. Recreating it here was a migration DEADLOCK: v68
+    // drops it, then the next deploy re-added it here and FAILED ("could
+    // not create unique index") because prod now has duplicate referral_id
+    // across soft-deleted rows (Waisso case). That failure aborted the
+    // whole migration chain in the outer try/catch, so every migration
+    // after this point (v62→v69) silently stopped applying on deploy. Do
+    // NOT reintroduce this constraint.
 
     await query(`DO $$ BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_invitations_email_unique') THEN
