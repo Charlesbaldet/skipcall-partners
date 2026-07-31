@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check for secrets in code
         run: |
-          if grep -rn "password\s*=\s*['\"]" backend/ frontend/src/ --include="*.js" --include="*.jsx" | grep -v node_modules | grep -v "process.env" | grep -v "placeholder\|example\|dummy"; then
+          if grep -rnE "(password|passwd|pwd|secret|token|api[_-]?key)\s*[:=]\s*['\"][^'\"]+['\"]" backend/ frontend/src/ --include="*.js" --include="*.jsx" | grep -v node_modules | grep -v "process.env" | grep -vE "placeholder|example|dummy"; then
             echo "Potential hardcoded secrets found!"
             exit 1
           fi
