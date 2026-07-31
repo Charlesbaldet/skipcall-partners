@@ -48,4 +48,17 @@ i18n
     },
   });
 
+// Garder <html lang> synchronisé avec la langue active. C'est le standard web
+// (accessibilité + SEO : l'attribut doit refléter la langue du contenu affiché)
+// et c'est ce que lit le widget de support LOGPOSE pour s'afficher dans la
+// langue du SITE plutôt que celle du navigateur. index.html fige lang="fr" au
+// chargement ; on le met à jour ici à l'init ET à chaque changement de langue.
+if (typeof document !== 'undefined') {
+  const syncHtmlLang = (lng) => {
+    if (lng) document.documentElement.setAttribute('lang', String(lng).slice(0, 2));
+  };
+  i18n.on('languageChanged', syncHtmlLang);
+  syncHtmlLang(i18n.language || i18n.options?.lng);
+}
+
 export default i18n;
