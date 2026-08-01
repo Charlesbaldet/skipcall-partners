@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link as LinkIcon, Copy, RotateCcw, FileText } from 'lucide-react';
+import { Link as LinkIcon, Copy, RotateCcw, FileText, Megaphone } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { showConfirm, showToast } from '../components/Dialogs.jsx';
@@ -47,6 +47,8 @@ export default function PartnerLinksPage() {
       )}
 
       <FormLinkCard link={formLink} t={t} />
+
+      <CampaignLinksNotice t={t} />
     </div>
   );
 }
@@ -287,6 +289,32 @@ function PartnerStat({ label, value, accent }) {
     <div style={{ background: accent ? '#f0fdf4' : '#f8fafc', borderRadius: 10, padding: '10px 12px', border: '1px solid ' + (accent ? '#bbf7d0' : '#e2e8f0') }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 4 }}>{value}</div>
+    </div>
+  );
+}
+
+// Section 3 — informational notice about the upcoming multi-campaign
+// direct-purchase links. The client asked for direct (non-partner)
+// trackable links, several per campaign; the request was confirmed as
+// transmitted to the tech team. Non-blocking teaser card until it
+// ships, matching the app's card/design-token charter.
+function CampaignLinksNotice({ t }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24, marginTop: 20, display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Megaphone size={18} color="#059669" />
+      </div>
+      <div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
+          {t('partner_links.campaign_title', 'Liens de campagne (bientôt disponible)')}
+        </div>
+        <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
+          {t('partner_links.campaign_hint', 'La création de plusieurs liens d\'achat direct, avec suivi de la provenance par campagne (e-mail, réseaux sociaux, etc.), a été transmise à notre équipe technique et arrivera prochainement.')}
+        </p>
+        <span style={{ display: 'inline-block', marginTop: 10, padding: '4px 10px', borderRadius: 999, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#059669', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {t('partner_links.campaign_badge', 'En préparation')}
+        </span>
+      </div>
     </div>
   );
 }
