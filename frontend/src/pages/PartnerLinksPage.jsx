@@ -311,9 +311,6 @@ function CampaignLinksNotice({ t }) {
         <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
           {t('partner_links.campaign_hint', 'La création de plusieurs liens d\'achat direct, avec suivi de la provenance par campagne (e-mail, réseaux sociaux, etc.), a été transmise à notre équipe technique et arrivera prochainement.')}
         </p>
-        <span style={{ display: 'inline-block', marginTop: 10, padding: '4px 10px', borderRadius: 999, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#059669', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          {t('partner_links.campaign_badge', 'En préparation')}
-        </span>
       </div>
     </div>
   );
