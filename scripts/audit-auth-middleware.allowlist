@@ -22,3 +22,7 @@ routes/webhooks.js
 routes/tracking.js
 routes/trackingScript.js
 routes/referralRedirect.js
+# formsPublic.js — endpoints publics des formulaires partenaires (pas d'auth par
+# design : tenant résolu via form_id ; autorisation = form publié + token ?p= +
+# honeypot + rate-limit par IP, cf. en-tête du fichier).
+routes/formsPublic.js
