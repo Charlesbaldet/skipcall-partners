@@ -8,10 +8,10 @@ import { Helmet } from 'react-helmet-async';
 
 // ─── Design tokens (sync avec LandingPage) ───
 const C = {
-  p: '#059669', pl: '#10b981', pd: '#047857',
-  s: '#0f172a', sl: '#1e293b',
-  a: '#f97316', al: '#fb923c',
-  m: '#64748b', bg: '#fafbfc',
+  p: '#0e7a54', pl: '#1c9a6b', pd: '#0b5e40',
+  s: '#0e1f18', sl: '#1a2c24',
+  a: '#d5541a', al: '#fb923c',
+  m: '#6e756c', bg: '#faf6ec',
 };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
@@ -238,7 +238,7 @@ export default function LoginPage() {
       <div className="fu" style={{
         width: '100%', maxWidth: 440,
         background: '#fff',
-        border: '1px solid #f1f5f9',
+        border: '1px solid #ece7db',
         borderRadius: 24,
         padding: 48,
         boxShadow: '0 20px 60px rgba(15,23,42,0.08)',
@@ -267,9 +267,9 @@ export default function LoginPage() {
             partner record has been archived or deleted). */}
         {revoked && (
           <div style={{
-            background: '#fef2f2', border: '1px solid #fecaca',
+            background: '#f7e9e6', border: '1px solid #edc4bd',
             borderRadius: 12, padding: '12px 16px',
-            color: '#b91c1c', fontSize: 14, marginBottom: 20,
+            color: '#8f2e24', fontSize: 14, marginBottom: 20,
             fontFamily: 'inherit', fontWeight: 500,
           }}>
             {t('login.access_revoked')}
@@ -279,9 +279,9 @@ export default function LoginPage() {
         {/* Error */}
         {error && (
           <div style={{
-            background: '#fef2f2', border: '1px solid #fecaca',
+            background: '#f7e9e6', border: '1px solid #edc4bd',
             borderRadius: 12, padding: '12px 16px',
-            color: '#b91c1c', fontSize: 14, marginBottom: 20,
+            color: '#8f2e24', fontSize: 14, marginBottom: 20,
             fontFamily: 'inherit',
           }}>
             {error}
@@ -321,8 +321,8 @@ export default function LoginPage() {
                 className="input-rb"
                 style={{
                   width: '100%', padding: '14px 16px', borderRadius: 12,
-                  border: '1.5px solid #e2e8f0',
-                  background: '#fafbfc', fontSize: 22, color: C.s,
+                  border: '1.5px solid #ded8cb',
+                  background: '#faf6ec', fontSize: 22, color: C.s,
                   fontFamily: 'monospace', letterSpacing: 6, textAlign: 'center',
                   outline: 'none', boxSizing: 'border-box', transition: 'all .2s',
                 }}
@@ -376,8 +376,8 @@ export default function LoginPage() {
               className="input-rb"
               style={{
                 width: '100%', padding: '14px 16px', borderRadius: 12,
-                border: '1.5px solid #e2e8f0',
-                background: '#fafbfc', fontSize: 15, color: C.s,
+                border: '1.5px solid #ded8cb',
+                background: '#faf6ec', fontSize: 15, color: C.s,
                 fontFamily: 'inherit',
                 outline: 'none', boxSizing: 'border-box',
                 transition: 'all .2s',
@@ -402,14 +402,14 @@ export default function LoginPage() {
               className="input-rb"
               style={{
                 width: '100%', padding: '14px 40px 14px 16px', borderRadius: 12,
-                border: '1.5px solid #e2e8f0',
-                background: '#fafbfc', fontSize: 15, color: C.s,
+                border: '1.5px solid #ded8cb',
+                background: '#faf6ec', fontSize: 15, color: C.s,
                 fontFamily: 'inherit',
                 outline: 'none', boxSizing: 'border-box',
                 transition: 'all .2s',
               }}
             />
-              <button type="button" onClick={() => setShowPwd(v => !v)} tabIndex={-1} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex', alignItems: 'center' }}>
+              <button type="button" onClick={() => setShowPwd(v => !v)} tabIndex={-1} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#99a09a', padding: 2, display: 'flex', alignItems: 'center' }}>
                 {showPwd
                   ? <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                   : <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -428,9 +428,9 @@ export default function LoginPage() {
           {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
-                <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>{t('login.or')}</span>
-                <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                <div style={{ flex: 1, height: 1, background: '#ded8cb' }} />
+                <span style={{ color: '#99a09a', fontSize: 12, fontWeight: 500 }}>{t('login.or')}</span>
+                <div style={{ flex: 1, height: 1, background: '#ded8cb' }} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <GoogleSignInButton text={t('login.google_continue')} intent="login" />
@@ -508,14 +508,14 @@ export default function LoginPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '14px 16px', borderRadius: 12,
-                      border: '1.5px solid #e2e8f0', background: '#fafbfc',
+                      border: '1.5px solid #ded8cb', background: '#faf6ec',
                       cursor: pickerBusy ? 'wait' : 'pointer',
                       textAlign: 'left', fontFamily: 'inherit',
                       transition: 'all .15s',
                       opacity: pickerBusy ? 0.6 : 1,
                     }}
                     onMouseEnter={e => !pickerBusy && (e.currentTarget.style.borderColor = C.p)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = '#e2e8f0')}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = '#ded8cb')}
                   >
                     <div style={{
                       width: 40, height: 40, borderRadius: 10, flexShrink: 0,

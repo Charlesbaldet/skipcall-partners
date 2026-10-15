@@ -261,21 +261,21 @@ export default function PartnersPage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={() => setEditingId(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 480, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0f172a' }}>{t('partners.edit_title')}</h3>
+            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0e1f18' }}>{t('partners.edit_title')}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[['name', t('partners.field_company').replace(' *', '')], ['contact_name', t('partners.contact')], ['email', t('partners.email')], ['phone', t('partners.phone')], ['company_website', t('partners.field_website')], ['commission_rate', t('partners.rate')], ['account_holder', t('partners.field_holder')], ['iban', t('partners.iban')], ['bic', t('partners.field_bic')]].map(([key, label]) => (
                 <div key={key} style={{ gridColumn: key === 'iban' ? '1 / -1' : undefined }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
-                  <input value={editForm[key] || ''} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} type={key === 'commission_rate' ? 'number' : 'text'} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, fontFamily: ['iban', 'bic'].includes(key) ? 'monospace' : 'inherit' }} />
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
+                  <input value={editForm[key] || ''} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} type={key === 'commission_rate' ? 'number' : 'text'} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4, fontFamily: ['iban', 'bic'].includes(key) ? 'monospace' : 'inherit' }} />
                 </div>
               ))}
               {categories.length > 0 && (
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partner_category.title').replace(/s$/, '')}</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partner_category.title').replace(/s$/, '')}</label>
                   <select
                     value={editForm.category_id || ''}
                     onChange={e => setEditForm(f => ({ ...f, category_id: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, background: '#fff' }}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4, background: '#fff' }}
                   >
                     {categories.map(c => (
                       <option key={c.id} value={c.id}>{categoryName(c)}</option>
@@ -285,11 +285,11 @@ export default function PartnersPage() {
               )}
 
               {/* ─── Informations fiscales ───────────────────────── */}
-              <div style={{ gridColumn: '1 / -1', marginTop: 12, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>
+              <div style={{ gridColumn: '1 / -1', marginTop: 12, paddingTop: 16, borderTop: '1px solid #ded8cb' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#0e1f18', marginBottom: 10 }}>
                   {t('partners.tax_section', 'Informations fiscales')}
                 </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155', cursor: 'pointer', marginBottom: 10 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#2b3a32', cursor: 'pointer', marginBottom: 10 }}>
                   <input
                     type="checkbox"
                     checked={!!editForm.tax_subject}
@@ -300,7 +300,7 @@ export default function PartnersPage() {
                 {editForm.tax_subject && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_country_label', 'Pays')}</label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_country_label', 'Pays')}</label>
                       <select
                         value={editForm.tax_country || ''}
                         onChange={e => {
@@ -318,7 +318,7 @@ export default function PartnersPage() {
                             return { ...f, tax_country: next, tax_rate: aligned };
                           });
                         }}
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, background: '#fff' }}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4, background: '#fff' }}
                       >
                         <option value="">—</option>
                         {VAT_COUNTRIES.map(cc => (
@@ -327,21 +327,21 @@ export default function PartnersPage() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_rate_label', 'Taux TVA (%)')}</label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_rate_label', 'Taux TVA (%)')}</label>
                       <input
                         type="number" min="0" max="30" step="0.01"
                         value={editForm.tax_rate || ''}
                         onChange={e => setEditForm(f => ({ ...f, tax_rate: e.target.value }))}
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }}
                       />
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_id_label', 'N° TVA intracom')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({t('common.optional', 'optionnel')})</span></label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('partners.tax_id_label', 'N° TVA intracom')} <span style={{ color: '#99a09a', fontWeight: 400 }}>({t('common.optional', 'optionnel')})</span></label>
                       <input
                         value={editForm.tax_id || ''}
                         onChange={e => setEditForm(f => ({ ...f, tax_id: e.target.value }))}
                         placeholder="FR12345678901"
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4, fontFamily: 'monospace' }}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4, fontFamily: 'monospace' }}
                       />
                     </div>
                   </div>
@@ -349,12 +349,12 @@ export default function PartnersPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.cancel')}</button>
-              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.save')}</button>
+              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #ded8cb', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.cancel')}</button>
+              <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--rb-primary, #0e7a54)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('partners.save')}</button>
             </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
-              <button onClick={() => { handleArchive(editingId); setEditingId(null); }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fcd34d', background: '#fffbeb', color: '#b45309', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Archive size={14} /> {t('partners.archive')}</button>
-              <button onClick={() => setDeleteConfirm(editingId)} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={14} /> {t('partners.delete')}</button>
+            <div style={{ display: 'flex', gap: 10, marginTop: 12, borderTop: '1px solid #ded8cb', paddingTop: 16 }}>
+              <button onClick={() => { handleArchive(editingId); setEditingId(null); }} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #fcd34d', background: '#f6efda', color: '#9a5a16', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Archive size={14} /> {t('partners.archive')}</button>
+              <button onClick={() => setDeleteConfirm(editingId)} style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #edc4bd', background: '#f7e9e6', color: '#b23b2e', fontWeight: 600, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={14} /> {t('partners.delete')}</button>
             </div>
           </div>
         </div>
@@ -367,10 +367,10 @@ export default function PartnersPage() {
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 520, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
-                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{selectedApp.company_name}</h3>
-                <p style={{ color: '#64748b', fontSize: 14 }}>{selectedApp.contact_name} · {selectedApp.email}</p>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0e1f18' }}>{selectedApp.company_name}</h3>
+                <p style={{ color: '#6e756c', fontSize: 14 }}>{selectedApp.contact_name} · {selectedApp.email}</p>
               </div>
-              <button onClick={() => setSelectedApp(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+              <button onClick={() => setSelectedApp(null)} style={{ background: '#ece7db', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
               <InfoBlock label={t('partners.app_phone')} value={selectedApp.phone || '—'} />
@@ -379,25 +379,25 @@ export default function PartnersPage() {
               <InfoBlock label={t('partners.app_date')} value={fmtDate(selectedApp.created_at)} />
             </div>
             {selectedApp.motivation && (
-              <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, marginBottom: 20, border: '1px solid #e2e8f0' }}>
-                <div style={{ fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 6 }}>{t('partners.app_motivation')}</div>
-                <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.6 }}>{selectedApp.motivation}</p>
+              <div style={{ background: '#f6f2e9', borderRadius: 12, padding: 16, marginBottom: 20, border: '1px solid #ded8cb' }}>
+                <div style={{ fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 6 }}>{t('partners.app_motivation')}</div>
+                <p style={{ color: '#33433b', fontSize: 14, lineHeight: 1.6 }}>{selectedApp.motivation}</p>
               </div>
             )}
             {selectedApp.status === 'pending' && (
               <div>
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6, display: 'block' }}>{t('partners.app_rate')}</label>
-                  <input type="number" value={commissionRate} onChange={e => setCommissionRate(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, width: 120 }} />
+                  <label style={{ fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6, display: 'block' }}>{t('partners.app_rate')}</label>
+                  <input type="number" value={commissionRate} onChange={e => setCommissionRate(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, width: 120 }} />
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={handleApprove} style={{ flex: 1, padding: 13, borderRadius: 12, background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><CheckCircle size={16} /> {t('partners.app_accept')}</button>
-                  <button onClick={handleReject} style={{ flex: 1, padding: 13, borderRadius: 12, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><XCircle size={16} /> {t('partners.app_reject')}</button>
+                  <button onClick={handleApprove} style={{ flex: 1, padding: 13, borderRadius: 12, background: 'linear-gradient(135deg,#2fa876,#157a4c)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><CheckCircle size={16} /> {t('partners.app_accept')}</button>
+                  <button onClick={handleReject} style={{ flex: 1, padding: 13, borderRadius: 12, background: '#f7e9e6', color: '#b23b2e', border: '1px solid #edc4bd', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><XCircle size={16} /> {t('partners.app_reject')}</button>
                 </div>
               </div>
             )}
             {selectedApp.status !== 'pending' && (
-              <div style={{ padding: '12px 16px', borderRadius: 10, background: selectedApp.status === 'approved' ? '#f0fdf4' : '#fef2f2', color: selectedApp.status === 'approved' ? '#16a34a' : '#dc2626', fontWeight: 600, fontSize: 14 }}>
+              <div style={{ padding: '12px 16px', borderRadius: 10, background: selectedApp.status === 'approved' ? '#e9f1ea' : '#f7e9e6', color: selectedApp.status === 'approved' ? '#157a4c' : '#b23b2e', fontWeight: 600, fontSize: 14 }}>
                 {selectedApp.status === 'approved' ? t('partners.app_accepted') : t('partners.app_rejected')}
               </div>
             )}
@@ -410,14 +410,14 @@ export default function PartnersPage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={() => setDeleteConfirm(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 420, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <AlertTriangle size={28} color="#dc2626" />
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f7e9e6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <AlertTriangle size={28} color="#b23b2e" />
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{t('partners.delete_confirm_title')}</h3>
-            <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>{t('partners.delete_confirm_body')}</p>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0e1f18', marginBottom: 8 }}>{t('partners.delete_confirm_title')}</h3>
+            <p style={{ color: '#6e756c', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>{t('partners.delete_confirm_body')}</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, color: '#475569' }}>{t('partners.cancel')}</button>
-              <button onClick={() => { handleDeletePartner(deleteConfirm); setDeleteConfirm(null); setEditingId(null); }} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> {t('partners.delete')}</button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #ded8cb', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, color: '#33433b' }}>{t('partners.cancel')}</button>
+              <button onClick={() => { handleDeletePartner(deleteConfirm); setDeleteConfirm(null); setEditingId(null); }} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #b23b2e, #8f2e24)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> {t('partners.delete')}</button>
             </div>
           </div>
         </div>
@@ -425,15 +425,15 @@ export default function PartnersPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('partners.title')}</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{t('partners.active_count', { count: partnersTotal })}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.2, margin: 0 }}>{t('partners.title')}</h1>
+          <p style={{ color: '#6e756c', fontSize: 13, margin: '4px 0 0' }}>{t('partners.active_count', { count: partnersTotal })}</p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {tab === 'partners' && categories.length > 0 && (
             <select
               value={categoryFilter}
               onChange={e => { setCategoryFilter(e.target.value); loadPartners({ catId: e.target.value, page: 1 }); }}
-              style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontSize: 13, fontWeight: 600, color: '#334155', cursor: 'pointer' }}
+              style={{ padding: '10px 14px', borderRadius: 12, border: '2px solid #ded8cb', background: '#fff', fontSize: 13, fontWeight: 600, color: '#2b3a32', cursor: 'pointer' }}
             >
               <option value="all">{t('partner_category.filter')}</option>
               {categories.map(c => (
@@ -443,10 +443,10 @@ export default function PartnersPage() {
           )}
           {tab === 'partners' && (
             <>
-              <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners({ showAll: next, page: 1 }); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #e2e8f0', background: showArchived ? '#fef3c7' : '#fff', color: showArchived ? '#b45309' : '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={() => { const next = !showArchived; setShowArchived(next); loadPartners({ showAll: next, page: 1 }); }} style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '2px solid #ded8cb', background: showArchived ? '#f3ead0' : '#fff', color: showArchived ? '#9a5a16' : '#6e756c', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Archive size={14} /> {showArchived ? `${t('partners.archived')} (${archivedPartners.length})` : t('partners.see_archived')}
               </button>
-              <button onClick={() => { setShowForm(!showForm); setCreatedEmail(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showForm ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={() => { setShowForm(!showForm); setCreatedEmail(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, background: showForm ? '#ece7db' : 'var(--rb-primary, #0e7a54)', color: showForm ? '#33433b' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
                 {showForm ? <X size={16} /> : <Plus size={16} />}
                 {showForm ? t('partners.cancel') : t('partners.add')}
               </button>
@@ -456,14 +456,14 @@ export default function PartnersPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
-        <button onClick={() => setTab('partners')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'partners' ? '#fff' : 'transparent', color: tab === 'partners' ? '#0f172a' : '#64748b', boxShadow: tab === 'partners' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 4, background: '#ece7db', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
+        <button onClick={() => setTab('partners')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'partners' ? '#fff' : 'transparent', color: tab === 'partners' ? '#0e1f18' : '#6e756c', boxShadow: tab === 'partners' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Users size={14} /> {t('partners.tab_partners')}
         </button>
         {isAdmin && (
-          <button onClick={() => setTab('candidatures')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'candidatures' ? '#fff' : 'transparent', color: tab === 'candidatures' ? '#0f172a' : '#64748b', boxShadow: tab === 'candidatures' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={() => setTab('candidatures')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === 'candidatures' ? '#fff' : 'transparent', color: tab === 'candidatures' ? '#0e1f18' : '#6e756c', boxShadow: tab === 'candidatures' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <UserPlus size={14} /> {t('partners.tab_applications')}
-            {pendingCount > 0 && <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8 }}>{pendingCount}</span>}
+            {pendingCount > 0 && <span style={{ background: '#c24436', color: '#fff', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8 }}>{pendingCount}</span>}
           </button>
         )}
       </div>
@@ -472,21 +472,21 @@ export default function PartnersPage() {
         <>
           {/* Create form */}
           {showForm && (
-            <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #e2e8f0', marginBottom: 24 }} className="fade-in">
+            <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #ded8cb', marginBottom: 24 }} className="fade-in">
               {tempPwd ? (
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 16px' }}></div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('partners.temp_created')}</h3>
-                  <p style={{ color: '#64748b', marginBottom: 16, fontSize: 14 }}>{t('partners.temp_creds')}</p>
-                  <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, display: 'inline-block', textAlign: 'left' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#e9f1ea', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 16px' }}></div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0e1f18', marginBottom: 8 }}>{t('partners.temp_created')}</h3>
+                  <p style={{ color: '#6e756c', marginBottom: 16, fontSize: 14 }}>{t('partners.temp_creds')}</p>
+                  <div style={{ background: '#f6f2e9', borderRadius: 12, padding: 16, display: 'inline-block', textAlign: 'left' }}>
                     <p style={{ fontSize: 13, marginBottom: 4 }}><strong>{t('partners.temp_email')}</strong> {form.email || partners[partners.length-1]?.email}</p>
-                    <p style={{ fontSize: 13 }}><strong>{t('partners.temp_pwd')}</strong> <code style={{ background: '#eef2ff', padding: '2px 8px', borderRadius: 4, color: 'var(--rb-primary, #059669)' }}>{tempPwd}</code></p>
+                    <p style={{ fontSize: 13 }}><strong>{t('partners.temp_pwd')}</strong> <code style={{ background: '#eef1ea', padding: '2px 8px', borderRadius: 4, color: 'var(--rb-primary, #0e7a54)' }}>{tempPwd}</code></p>
                   </div>
-                  <div style={{ marginTop: 20 }}><button onClick={() => { setShowForm(false); setCreatedEmail(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>{t('common.close')}</button></div>
+                  <div style={{ marginTop: 20 }}><button onClick={() => { setShowForm(false); setCreatedEmail(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>{t('common.close')}</button></div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 20 }}>{t('partners.add_title')}</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18', marginBottom: 20 }}>{t('partners.add_title')}</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                     <FormField label={t('partners.field_company')} value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} required />
                     <FormField label={t('partners.field_contact')} value={form.contact_name} onChange={v => setForm(f => ({ ...f, contact_name: v }))} required />
@@ -496,11 +496,11 @@ export default function PartnersPage() {
                     <FormField label={t('partners.field_rate')} value={form.commission_rate} onChange={v => setForm(f => ({ ...f, commission_rate: v }))} type="number" />
                     {categories.length > 0 && (
                       <div>
-                        <label style={{ display: 'block', color: '#475569', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partner_category.select')}</label>
+                        <label style={{ display: 'block', color: '#33433b', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partner_category.select')}</label>
                         <select
                           value={form.category_id}
                           onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
-                          style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
                         >
                           {categories.map(c => (
                             <option key={c.id} value={c.id}>{categoryName(c)}</option>
@@ -514,19 +514,19 @@ export default function PartnersPage() {
                       the partner's first commission already wires the
                       right gross amount. Defaults off → identical to
                       the legacy create flow. */}
-                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16, marginBottom: 20 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155', cursor: 'pointer', marginBottom: form.tax_subject ? 12 : 0 }}>
+                  <div style={{ borderTop: '1px solid #ded8cb', paddingTop: 16, marginBottom: 20 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#2b3a32', cursor: 'pointer', marginBottom: form.tax_subject ? 12 : 0 }}>
                       <input
                         type="checkbox"
                         checked={!!form.tax_subject}
                         onChange={e => setForm(f => ({ ...f, tax_subject: e.target.checked }))}
                       />
-                      <span>{t('partners.tax_subject_label', 'Assujetti à la TVA')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({t('common.optional', 'optionnel')})</span></span>
+                      <span>{t('partners.tax_subject_label', 'Assujetti à la TVA')} <span style={{ color: '#99a09a', fontWeight: 400 }}>({t('common.optional', 'optionnel')})</span></span>
                     </label>
                     {form.tax_subject && (
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div>
-                          <label style={{ display: 'block', color: '#475569', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partners.tax_country_label', 'Pays')}</label>
+                          <label style={{ display: 'block', color: '#33433b', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partners.tax_country_label', 'Pays')}</label>
                           <select
                             value={form.tax_country || ''}
                             onChange={e => {
@@ -541,7 +541,7 @@ export default function PartnersPage() {
                                 return { ...f, tax_country: next, tax_rate: aligned };
                               });
                             }}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
                           >
                             <option value="">—</option>
                             {VAT_COUNTRIES.map(cc => (
@@ -550,19 +550,19 @@ export default function PartnersPage() {
                           </select>
                         </div>
                         <div>
-                          <label style={{ display: 'block', color: '#475569', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partners.tax_rate_label', 'Taux TVA (%)')}</label>
+                          <label style={{ display: 'block', color: '#33433b', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('partners.tax_rate_label', 'Taux TVA (%)')}</label>
                           <input
                             type="number" min="0" max="30" step="0.01"
                             value={form.tax_rate || ''}
                             onChange={e => setForm(f => ({ ...f, tax_rate: e.target.value }))}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }}
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' }}
                           />
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? t('partners.creating') : t('partners.create')}</button>
+                  <button type="submit" disabled={saving} style={{ padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? t('partners.creating') : t('partners.create')}</button>
                 </form>
               )}
             </div>
@@ -595,18 +595,18 @@ export default function PartnersPage() {
           {showArchived && archivedPartners.length > 0 && (
             <div style={{ marginTop: 36 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <Archive size={18} color="#b45309" />
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#b45309' }}>{t('partners.archived')}</h2>
-                <span style={{ padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#b45309', fontSize: 12, fontWeight: 600 }}>{archivedPartners.length}</span>
+                <Archive size={18} color="#9a5a16" />
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#9a5a16' }}>{t('partners.archived')}</h2>
+                <span style={{ padding: '2px 10px', borderRadius: 20, background: '#f3ead0', color: '#9a5a16', fontSize: 12, fontWeight: 600 }}>{archivedPartners.length}</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
                 {archivedPartners.map(p => (
-                  <div key={p.id} style={{ background: '#fffbeb', borderRadius: 16, padding: 24, border: '1px solid #fcd34d' }}>
-                    <div style={{ fontWeight: 700, color: '#92400e', fontSize: 18 }}>{p.name}</div>
-                    <div style={{ color: '#b45309', fontSize: 13, marginTop: 2, marginBottom: 16 }}>{p.contact_name} · {p.email}</div>
+                  <div key={p.id} style={{ background: '#f6efda', borderRadius: 16, padding: 24, border: '1px solid #fcd34d' }}>
+                    <div style={{ fontWeight: 700, color: '#7a4a16', fontSize: 18 }}>{p.name}</div>
+                    <div style={{ color: '#9a5a16', fontSize: 13, marginTop: 2, marginBottom: 16 }}>{p.contact_name} · {p.email}</div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => handleArchive(p.id)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><ArchiveRestore size={14} /> {t('partners.restore')}</button>
-                      <button onClick={() => handleDeletePartner(p.id)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Trash2 size={14} /></button>
+                      <button onClick={() => handleArchive(p.id)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#2fa876,#157a4c)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><ArchiveRestore size={14} /> {t('partners.restore')}</button>
+                      <button onClick={() => handleDeletePartner(p.id)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #edc4bd', background: '#f7e9e6', color: '#b23b2e', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Trash2 size={14} /></button>
                     </div>
                   </div>
                 ))}
@@ -619,39 +619,39 @@ export default function PartnersPage() {
       {tab === 'candidatures' && isAdmin && (
         <>
           {/* Filter */}
-          <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 20, width: 'fit-content' }}>
+          <div style={{ display: 'flex', gap: 4, background: '#ece7db', borderRadius: 10, padding: 3, marginBottom: 20, width: 'fit-content' }}>
             {[['pending', t('partners.app_filter_pending')], ['all', t('partners.app_filter_all')], ['approved', t('partners.app_filter_approved')], ['rejected', t('partners.app_filter_rejected')]].map(([k, label]) => (
               <button key={k} onClick={() => setAppFilter(k)} style={{
                 padding: '6px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                background: appFilter === k ? '#fff' : 'transparent', color: appFilter === k ? '#0f172a' : '#64748b',
+                background: appFilter === k ? '#fff' : 'transparent', color: appFilter === k ? '#0e1f18' : '#6e756c',
                 boxShadow: appFilter === k ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               }}>{label}</button>
             ))}
           </div>
 
           {appLoading ? (
-            <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('partners.loading')}</div>
+            <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>{t('partners.loading')}</div>
           ) : applications.length === 0 ? (
-            <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>{t('partners.app_none')}</div>
+            <div style={{ padding: 48, textAlign: 'center', color: '#99a09a', background: '#fff', borderRadius: 16, border: '1px solid #ded8cb' }}>{t('partners.app_none')}</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {applications.map(a => {
-                const statusColors = { pending: { bg: '#fffbeb', color: '#f59e0b', label: t('partners.app_filter_pending') }, approved: { bg: '#f0fdf4', color: '#16a34a', label: t('partners.app_filter_approved') }, rejected: { bg: '#fef2f2', color: '#dc2626', label: t('partners.app_filter_rejected') } };
+                const statusColors = { pending: { bg: '#f6efda', color: '#b4791f', label: t('partners.app_filter_pending') }, approved: { bg: '#e9f1ea', color: '#157a4c', label: t('partners.app_filter_approved') }, rejected: { bg: '#f7e9e6', color: '#b23b2e', label: t('partners.app_filter_rejected') } };
                 const sc = statusColors[a.status] || statusColors.pending;
                 return (
-                  <div key={a.id} style={{ background: '#fff', borderRadius: 14, padding: '16px 20px', border: '1px solid #e2e8f0', borderLeft: `4px solid ${sc.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={a.id} style={{ background: '#fff', borderRadius: 14, padding: '16px 20px', border: '1px solid #ded8cb', borderLeft: `4px solid ${sc.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 16 }}>{a.company_name}</span>
+                        <span style={{ fontWeight: 700, color: '#0e1f18', fontSize: 16 }}>{a.company_name}</span>
                         <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: sc.bg, color: sc.color }}>{sc.label}</span>
                       </div>
-                      <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{a.contact_name} · {a.email} · {fmtDate(a.created_at)}</div>
+                      <div style={{ color: '#6e756c', fontSize: 13, marginTop: 2 }}>{a.contact_name} · {a.email} · {fmtDate(a.created_at)}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => { setSelectedApp(a); setCommissionRate(10); }} style={{ padding: '6px 14px', borderRadius: 8, background: '#eef2ff', border: 'none', color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button onClick={() => { setSelectedApp(a); setCommissionRate(10); }} style={{ padding: '6px 14px', borderRadius: 8, background: '#eef1ea', border: 'none', color: 'var(--rb-primary, #0e7a54)', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <CheckCircle size={12} /> {t('partners.app_review')}
                       </button>
-                      <button onClick={() => handleDeleteApplication(a.id)} title={t('partners.delete')} style={{ padding: '6px 10px', borderRadius: 8, background: '#fef2f2', border: 'none', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <button onClick={() => handleDeleteApplication(a.id)} title={t('partners.delete')} style={{ padding: '6px 10px', borderRadius: 8, background: '#f7e9e6', border: 'none', color: '#b23b2e', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -674,11 +674,11 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
   const confirmArchive = (e) => { e.stopPropagation(); onArchive(p.id); };
   const confirmDelete = (e) => { e.stopPropagation(); onDelete(p.id); };
   return (
-    <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0' }}>
+    <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #ded8cb' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18 }}>{p.name}</div>
-          <div style={{ color: '#64748b', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
+          <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 18 }}>{p.name}</div>
+          <div style={{ color: '#6e756c', fontSize: 13, marginTop: 2 }}>{p.contact_name} · {p.email}</div>
           {p.category_name && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, padding: '3px 8px', borderRadius: 999, background: (p.category_color || '#6B7280') + '15', color: p.category_color || '#6B7280', fontSize: 11, fontWeight: 700 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.category_color || '#6B7280' }} />
@@ -687,28 +687,28 @@ function PartnerCard({ partner: p, onEdit, onArchive, onDelete }) {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} title={t('partners.edit_title')} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#64748b', display: 'flex' }}><Pencil size={13} /></button>
-          <button onClick={confirmArchive} title={t('partners.archive')} style={{ background: '#fffbeb', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#b45309', display: 'flex' }}><Archive size={13} /></button>
-          <button onClick={confirmDelete} title={t('partners.delete')} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={13} /></button>
+          <span style={{ padding: '4px 10px', borderRadius: 8, background: '#eef1ea', color: 'var(--rb-primary, #0e7a54)', fontWeight: 700, fontSize: 13 }}>{p.commission_rate}%</span>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} title={t('partners.edit_title')} style={{ background: '#ece7db', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#6e756c', display: 'flex' }}><Pencil size={13} /></button>
+          <button onClick={confirmArchive} title={t('partners.archive')} style={{ background: '#f6efda', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#9a5a16', display: 'flex' }}><Archive size={13} /></button>
+          <button onClick={confirmDelete} title={t('partners.delete')} style={{ background: '#f7e9e6', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', color: '#b23b2e', display: 'flex' }}><Trash2 size={13} /></button>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
         <MiniStat label={t('partners.stat_referrals')} value={refs} />
-        <MiniStat label={t('partners.stat_won')} value={won} color="#16a34a" />
-        <MiniStat label={t('partners.stat_conversion')} value={`${conv}%`} color="#6366f1" />
-        <MiniStat label={t('partners.stat_ca')} value={fmt(p.total_revenue)} color="#0f172a" />
+        <MiniStat label={t('partners.stat_won')} value={won} color="#157a4c" />
+        <MiniStat label={t('partners.stat_conversion')} value={`${conv}%`} color="#0e7a54" />
+        <MiniStat label={t('partners.stat_ca')} value={fmt(p.total_revenue)} color="#0e1f18" />
       </div>
     </div>
   );
 }
 
 function MiniStat({ label, value, color }) {
-  return (<div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: color || '#0f172a' }}>{value}</div><div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500, marginTop: 2 }}>{label}</div></div>);
+  return (<div style={{ background: '#f6f2e9', borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: color || '#0e1f18' }}>{value}</div><div style={{ fontSize: 10, color: '#99a09a', fontWeight: 500, marginTop: 2 }}>{label}</div></div>);
 }
 function InfoBlock({ label, value }) {
-  return (<div><div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{label}</div><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div></div>);
+  return (<div><div style={{ color: '#99a09a', fontSize: 11, fontWeight: 500 }}>{label}</div><div style={{ color: '#0e1f18', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div></div>);
 }
 function FormField({ label, value, onChange, type = 'text', required }) {
-  return (<div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{label}</label><input type={type} value={value} onChange={e => onChange(e.target.value)} required={required} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, color: '#0f172a', boxSizing: 'border-box' }} /></div>);
+  return (<div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>{label}</label><input type={type} value={value} onChange={e => onChange(e.target.value)} required={required} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, color: '#0e1f18', boxSizing: 'border-box' }} /></div>);
 }

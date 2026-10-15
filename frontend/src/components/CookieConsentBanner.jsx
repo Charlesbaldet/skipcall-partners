@@ -80,8 +80,8 @@ export default function CookieConsentBanner() {
         bottom: 16,
         zIndex: 9999,
         background: '#ffffff',
-        color: '#0f172a',
-        border: '1px solid #e2e8f0',
+        color: '#0e1f18',
+        border: '1px solid #ded8cb',
         borderRadius: 14,
         boxShadow: '0 10px 40px rgba(15, 23, 42, 0.18)',
         padding: '16px 20px',
@@ -93,11 +93,11 @@ export default function CookieConsentBanner() {
         margin: '0 auto',
       }}
     >
-      <div style={{ flex: '1 1 280px', fontSize: 14, lineHeight: 1.5, color: '#334155' }}>
+      <div style={{ flex: '1 1 280px', fontSize: 14, lineHeight: 1.5, color: '#2b3a32' }}>
         {t('cookies.banner_text', 'Nous utilisons des cookies pour améliorer votre expérience.')}{' '}
         <a
           href="/legal#cookies"
-          style={{ color: '#059669', textDecoration: 'underline', fontWeight: 600 }}
+          style={{ color: '#0e7a54', textDecoration: 'underline', fontWeight: 600 }}
         >
           {t('cookies.banner_link', 'En savoir plus')}
         </a>
@@ -109,9 +109,9 @@ export default function CookieConsentBanner() {
           style={{
             padding: '10px 18px',
             borderRadius: 10,
-            border: '1.5px solid #cbd5e1',
+            border: '1.5px solid #cfc8b8',
             background: 'transparent',
-            color: '#0f172a',
+            color: '#0e1f18',
             fontSize: 14,
             fontWeight: 600,
             cursor: 'pointer',
@@ -126,7 +126,7 @@ export default function CookieConsentBanner() {
             padding: '10px 18px',
             borderRadius: 10,
             border: 'none',
-            background: '#059669',
+            background: '#0e7a54',
             color: '#ffffff',
             fontSize: 14,
             fontWeight: 700,

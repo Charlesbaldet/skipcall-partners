@@ -310,7 +310,7 @@ export default function FormBuilderPage() {
   // ─── Render ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="fade-in" style={{ padding: 40, color: '#94a3b8', textAlign: 'center' }}>
+      <div className="fade-in" style={{ padding: 40, color: '#99a09a', textAlign: 'center' }}>
         {t('common.loading', 'Chargement…')}
       </div>
     );
@@ -327,17 +327,17 @@ export default function FormBuilderPage() {
       {/* ─── Sticky top bar — Marketplace pattern ─────────────── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 50,
-        background: '#fff', borderBottom: '1px solid #e2e8f0',
+        background: '#fff', borderBottom: '1px solid #ded8cb',
         padding: '14px 28px', marginBottom: 24,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         gap: 16, flexWrap: 'wrap',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flexWrap: 'wrap' }}>
           <div style={{ minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2 }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.2 }}>
               {t('forms.builder.title_short', 'Formulaire')}
             </h1>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6e756c' }}>
               {t('forms.builder.subtitle_short', 'Configuration du formulaire de leads')}
             </p>
             {/* Status badge on its own line, left-aligned under the
@@ -358,11 +358,11 @@ export default function FormBuilderPage() {
             pixel-for-pixel side-by-side. The Statistiques button
             previously living here has moved into the tab strip as
             the 5th tab. */}
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#0f172a' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#0e1f18' }}>
           <button onClick={togglePublish} aria-pressed={!!form.is_published}
             style={{
               width: 44, height: 24, borderRadius: 999,
-              background: form.is_published ? '#059669' : '#cbd5e1',
+              background: form.is_published ? '#0e7a54' : '#cfc8b8',
               border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
             }}>
             <span style={{
@@ -394,8 +394,8 @@ export default function FormBuilderPage() {
                   padding: '10px 20px', background: 'transparent', border: 'none', cursor: 'pointer',
                   fontFamily: 'inherit', fontSize: 14,
                   fontWeight: active ? 600 : 500,
-                  color: active ? '#059669' : '#64748b',
-                  borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
+                  color: active ? '#0e7a54' : '#6e756c',
+                  borderBottom: '2px solid ' + (active ? '#0e7a54' : 'transparent'),
                   marginBottom: -1,
                   transition: 'color .15s, border-color .15s',
                 }}>
@@ -404,7 +404,7 @@ export default function FormBuilderPage() {
             );
           })}
         </div>
-        <div style={{ borderBottom: '1px solid #e2e8f0', marginBottom: 24 }} />
+        <div style={{ borderBottom: '1px solid #ded8cb', marginBottom: 24 }} />
       </>
 
       {mode === 'preview' && (
@@ -416,10 +416,10 @@ export default function FormBuilderPage() {
           {/* Title block centred above both columns. Subtitle reflects
               the two-pane preview (form + thank-you page). */}
           <div style={{ marginBottom: 24, textAlign: 'center' }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#0f172a' }}>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, color: '#0e1f18' }}>
               {t('forms.builder.preview_label', 'Aperçu formulaire')}
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 400, color: '#64748b' }}>
+            <p style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 400, color: '#6e756c' }}>
               {t('forms.builder.preview_caption', 'Ce que vos partenaires partageront avec leurs visiteurs')}
             </p>
           </div>
@@ -477,7 +477,7 @@ export default function FormBuilderPage() {
       <div>
         {/* ─── Steps + fields ─────────────────────────────────── */}
         <div>
-          <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: '#f1f5f9', borderRadius: 12, width: 'fit-content', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 16, padding: 4, background: '#ece7db', borderRadius: 12, width: 'fit-content', flexWrap: 'wrap' }}>
             {stepsArray(form.step_count).map(s => {
               const active = activeStep === s;
               const count = fields.filter(f => f.step === s).length;
@@ -485,14 +485,14 @@ export default function FormBuilderPage() {
               return (
                 <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 6px 4px 12px', borderRadius: 8, background: active ? '#fff' : 'transparent', boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none' }}>
                   <button onClick={() => setActiveStep(s)}
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: active ? '#0f172a' : '#64748b', fontWeight: active ? 700 : 600, fontSize: 13, padding: '4px 0', fontFamily: 'inherit' }}>
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: active ? '#0e1f18' : '#6e756c', fontWeight: active ? 700 : 600, fontSize: 13, padding: '4px 0', fontFamily: 'inherit' }}>
                     {t('forms.builder.step', 'Étape')} {s}/{form.step_count}
-                    <span style={{ marginLeft: 8, fontSize: 11, color: '#94a3b8' }}>{count}</span>
+                    <span style={{ marginLeft: 8, fontSize: 11, color: '#99a09a' }}>{count}</span>
                   </button>
                   {canRemove && (
                     <button onClick={() => requestRemoveStep(s)}
                       title={t('forms.builder.remove_step', 'Supprimer cette étape')}
-                      style={{ background: 'transparent', border: 'none', borderRadius: 6, padding: 3, cursor: 'pointer', display: 'flex', color: '#94a3b8' }}>
+                      style={{ background: 'transparent', border: 'none', borderRadius: 6, padding: 3, cursor: 'pointer', display: 'flex', color: '#99a09a' }}>
                       <X size={12} />
                     </button>
                   )}
@@ -502,15 +502,15 @@ export default function FormBuilderPage() {
             {(form.step_count || 3) < MAX_STEPS && (
               <button onClick={addStep}
                 title={t('forms.builder.add_step', 'Ajouter une étape')}
-                style={{ padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'transparent', color: '#64748b', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                style={{ padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'transparent', color: '#6e756c', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Plus size={14} /> {t('forms.builder.add_step_short', 'Étape')}
               </button>
             )}
           </div>
 
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 8 }}>
+          <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 8 }}>
             {fieldsOfStep.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+              <div style={{ padding: 40, textAlign: 'center', color: '#99a09a' }}>
                 <FileText size={32} style={{ opacity: 0.4 }} />
                 <p style={{ margin: '10px 0 0', fontSize: 13 }}>
                   {t('forms.builder.no_fields', 'Aucun champ sur cette étape. Ajoutez le premier ci-dessous.')}
@@ -521,23 +521,23 @@ export default function FormBuilderPage() {
                 const meta = TYPE_META[f.type];
                 const Icon = meta?.icon || Type;
                 return (
-                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: idx < fieldsOfStep.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: idx < fieldsOfStep.length - 1 ? '1px solid #ece7db' : 'none' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <button onClick={() => reorder(f, -1)} disabled={idx === 0}
-                        style={{ background: 'transparent', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', padding: 2, color: idx === 0 ? '#cbd5e1' : '#64748b', display: 'flex' }}>
+                        style={{ background: 'transparent', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', padding: 2, color: idx === 0 ? '#cfc8b8' : '#6e756c', display: 'flex' }}>
                         <ArrowUp size={14} />
                       </button>
                       <button onClick={() => reorder(f, 1)} disabled={idx === fieldsOfStep.length - 1}
-                        style={{ background: 'transparent', border: 'none', cursor: idx === fieldsOfStep.length - 1 ? 'not-allowed' : 'pointer', padding: 2, color: idx === fieldsOfStep.length - 1 ? '#cbd5e1' : '#64748b', display: 'flex' }}>
+                        style={{ background: 'transparent', border: 'none', cursor: idx === fieldsOfStep.length - 1 ? 'not-allowed' : 'pointer', padding: 2, color: idx === fieldsOfStep.length - 1 ? '#cfc8b8' : '#6e756c', display: 'flex' }}>
                         <ArrowDown size={14} />
                       </button>
                     </div>
-                    <div style={{ width: 34, height: 34, borderRadius: 8, background: '#eef2ff', color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: '#eef1ea', color: '#0e7a54', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Icon size={16} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{f.label}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                      <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14 }}>{f.label}</div>
+                      <div style={{ fontSize: 12, color: '#99a09a', marginTop: 2 }}>
                         {t('forms.builder.type.' + f.type, f.type)}
                         {f.required ? ' · ' + t('forms.builder.required', 'obligatoire') : ''}
                       </div>
@@ -547,7 +547,7 @@ export default function FormBuilderPage() {
                       <Pencil size={14} />
                     </button>
                     <button onClick={() => setConfirmDelete(f)} title={t('common.delete', 'Supprimer')}
-                      style={{ background: '#fef2f2', color: '#dc2626', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', display: 'flex' }}>
+                      style={{ background: '#f7e9e6', color: '#b23b2e', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', display: 'flex' }}>
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -555,7 +555,7 @@ export default function FormBuilderPage() {
               })
             )}
             <button onClick={() => setEditingField({ __new: true, step: activeStep })}
-              style={{ width: '100%', padding: '14px', borderRadius: 10, border: '2px dashed #cbd5e1', background: 'transparent', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: fieldsOfStep.length > 0 ? 8 : 0 }}>
+              style={{ width: '100%', padding: '14px', borderRadius: 10, border: '2px dashed #cfc8b8', background: 'transparent', color: '#6e756c', cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: fieldsOfStep.length > 0 ? 8 : 0 }}>
               <Plus size={14} /> {t('forms.builder.add_field', 'Ajouter un champ')}
             </button>
           </div>
@@ -643,10 +643,10 @@ export default function FormBuilderPage() {
 function SaveIndicator({ state, t, onRetry }) {
   if (state === 'idle') return null;
   const cfg = state === 'saving'
-    ? { bg: '#f1f5f9', fg: '#64748b', icon: <Loader2 size={12} className="rb-spin" />, text: t('forms.builder.saving', 'Sauvegarde…') }
+    ? { bg: '#ece7db', fg: '#6e756c', icon: <Loader2 size={12} className="rb-spin" />, text: t('forms.builder.saving', 'Sauvegarde…') }
     : state === 'saved'
-      ? { bg: '#f0fdf4', fg: '#15803d', icon: <Check size={12} />, text: t('forms.builder.saved', 'Enregistré') }
-      : { bg: '#fef2f2', fg: '#dc2626', icon: <AlertTriangle size={12} />, text: t('forms.builder.save_error', 'Erreur, réessayez') };
+      ? { bg: '#e9f1ea', fg: '#15803d', icon: <Check size={12} />, text: t('forms.builder.saved', 'Enregistré') }
+      : { bg: '#f7e9e6', fg: '#b23b2e', icon: <AlertTriangle size={12} />, text: t('forms.builder.save_error', 'Erreur, réessayez') };
   return (
     <>
       <style>{`@keyframes rb-spin { to { transform: rotate(360deg); } } .rb-spin { animation: rb-spin 1s linear infinite; }`}</style>
@@ -703,12 +703,12 @@ function StatsView({ formId, t }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Filters row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'inline-flex', padding: 3, background: '#f1f5f9', borderRadius: 8 }}>
+        <div style={{ display: 'inline-flex', padding: 3, background: '#ece7db', borderRadius: 8 }}>
           {PERIODS.map(p => {
             const active = period === p.val;
             return (
               <button key={p.val} onClick={() => setPeriod(p.val)}
-                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0f172a' : '#64748b', fontWeight: 500, fontSize: 12, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
+                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0e1f18' : '#6e756c', fontWeight: 500, fontSize: 12, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
                 {p.label}
               </button>
             );
@@ -716,7 +716,7 @@ function StatsView({ formId, t }) {
         </div>
         {partners.length > 0 && (
           <select value={partnerId} onChange={e => setPartnerId(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, background: '#fff', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, background: '#fff', color: '#0e1f18', cursor: 'pointer', fontFamily: 'inherit' }}>
             <option value="">{t('forms.stats.all_partners', 'Tous les partenaires')}</option>
             {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
@@ -724,7 +724,7 @@ function StatsView({ formId, t }) {
       </div>
 
       {loading && !data && (
-        <div style={{ padding: 40, color: '#94a3b8', fontSize: 13, textAlign: 'center' }}>{t('common.loading', 'Chargement…')}</div>
+        <div style={{ padding: 40, color: '#99a09a', fontSize: 13, textAlign: 'center' }}>{t('common.loading', 'Chargement…')}</div>
       )}
 
       {data && (
@@ -746,16 +746,16 @@ function StatsView({ formId, t }) {
           <FunnelSection funnel={funnel} period={period} kpis={k} t={t} fmtPct={fmtPct} />
 
           {/* Top abandoned fields */}
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('forms.stats.abandons_title', 'Top des champs abandonnés')}</h3>
+          <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 20 }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#0e1f18' }}>{t('forms.stats.abandons_title', 'Top des champs abandonnés')}</h3>
             {abandons.length === 0 ? (
-              <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>{t('forms.stats.abandons_empty', 'Aucun champ abandonné sur la période.')}</p>
+              <p style={{ margin: 0, color: '#99a09a', fontSize: 13 }}>{t('forms.stats.abandons_empty', 'Aucun champ abandonné sur la période.')}</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {abandons.map((a, i) => (
-                  <div key={a.field_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid #f1f5f9' }}>
-                    <span style={{ color: '#0f172a', fontSize: 13 }}>{a.label}</span>
-                    <span style={{ color: '#dc2626', fontWeight: 700, fontSize: 13 }}>{a.count}</span>
+                  <div key={a.field_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: i === 0 ? 'none' : '1px solid #ece7db' }}>
+                    <span style={{ color: '#0e1f18', fontSize: 13 }}>{a.label}</span>
+                    <span style={{ color: '#b23b2e', fontWeight: 700, fontSize: 13 }}>{a.count}</span>
                   </div>
                 ))}
               </div>
@@ -769,9 +769,9 @@ function StatsView({ formId, t }) {
 
 function StatCard({ label, value, accent }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '14px 18px' }}>
-      <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 6, letterSpacing: -0.5 }}>{value}</div>
+    <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 14, padding: '14px 18px' }}>
+      <div style={{ color: '#6e756c', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: accent ? '#0e7a54' : '#0e1f18', marginTop: 6, letterSpacing: -0.5 }}>{value}</div>
     </div>
   );
 }
@@ -783,7 +783,7 @@ function StatCard({ label, value, accent }) {
 const previewColumnLabelStyle = {
   fontSize: 11,
   fontWeight: 600,
-  color: '#64748b',
+  color: '#6e756c',
   textTransform: 'uppercase',
   letterSpacing: 0.5,
   marginBottom: 10,
@@ -792,7 +792,7 @@ const previewColumnLabelStyle = {
 
 const previewColumnCardStyle = {
   background: '#fff',
-  border: '0.5px solid #e2e8f0',
+  border: '0.5px solid #ded8cb',
   borderRadius: 16,
   padding: 22,
 };
@@ -827,7 +827,7 @@ function ThankYouPreview({ form, t }) {
   return (
     <div>
       <h3 style={{
-        margin: 0, fontSize: 16, fontWeight: 500, color: '#0f172a',
+        margin: 0, fontSize: 16, fontWeight: 500, color: '#0e1f18',
         textAlign: 'center', marginBottom: 14,
       }}>
         {t('forms.builder.preview_thankyou_title', 'Merci !')}
@@ -835,14 +835,14 @@ function ThankYouPreview({ form, t }) {
 
       {message ? (
         <p style={{
-          margin: '0 0 16px', fontSize: 14, color: '#334155',
+          margin: '0 0 16px', fontSize: 14, color: '#2b3a32',
           textAlign: 'center', lineHeight: 1.6, whiteSpace: 'pre-wrap',
         }}>
           {message}
         </p>
       ) : (
         <p style={{
-          margin: '0 0 16px', fontSize: 13, color: '#94a3b8',
+          margin: '0 0 16px', fontSize: 13, color: '#99a09a',
           textAlign: 'center', fontStyle: 'italic',
         }}>
           {t('forms.builder.preview_thankyou_empty_message', 'Aucun message configuré')}
@@ -865,11 +865,11 @@ function ThankYouPreview({ form, t }) {
       {apptEnabled && !isCalendlyUrl && (
         <div style={{
           padding: '24px 20px', borderRadius: 10,
-          background: '#f8fafc', border: '1px dashed #cbd5e1',
+          background: '#f6f2e9', border: '1px dashed #cfc8b8',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: 8, color: '#64748b', fontSize: 13, textAlign: 'center',
+          gap: 8, color: '#6e756c', fontSize: 13, textAlign: 'center',
         }}>
-          <CalendarIcon size={20} color="#94a3b8" />
+          <CalendarIcon size={20} color="#99a09a" />
           <span>{t('forms.builder.preview_thankyou_no_calendar', 'Agenda non configuré · Renseignez votre URL Calendly dans Paramètres')}</span>
         </div>
       )}
@@ -934,8 +934,8 @@ function FunnelStep({ row, index, isLast, baseCount, fmtPct }) {
           primary green to mark it as the goal. */}
       <div style={{
         width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-        background: isLast ? FUNNEL_PRIMARY : '#f1f5f9',
-        color: isLast ? '#fff' : '#64748b',
+        background: isLast ? FUNNEL_PRIMARY : '#ece7db',
+        color: isLast ? '#fff' : '#6e756c',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 11, fontWeight: 600,
         marginTop: 12,
@@ -944,7 +944,7 @@ function FunnelStep({ row, index, isLast, baseCount, fmtPct }) {
       </div>
       <div style={{
         flex: 1,
-        background: isLast ? FUNNEL_ACCENT_BG : '#f8fafc',
+        background: isLast ? FUNNEL_ACCENT_BG : '#f6f2e9',
         border: isLast ? `0.5px solid ${FUNNEL_ACCENT_BORDER}` : 'none',
         borderRadius: 10, padding: '12px 16px',
       }}>
@@ -952,13 +952,13 @@ function FunnelStep({ row, index, isLast, baseCount, fmtPct }) {
           <div style={{ height: '100%', width: `${widthPct}%`, background: FUNNEL_PRIMARY, borderRadius: 999, transition: 'width .3s' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{row.label}</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: '#0e1f18' }}>{row.label}</span>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: 18, fontWeight: 500, color: isLast ? '#085041' : '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: 18, fontWeight: 500, color: isLast ? '#085041' : '#0e1f18', fontVariantNumeric: 'tabular-nums' }}>
               {row.count.toLocaleString('fr-FR')}
             </span>
             {showConvFromBase && (
-              <span style={{ fontSize: 11, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: 11, color: '#99a09a', fontVariantNumeric: 'tabular-nums' }}>
                 {fmtPct(convFromBase)}
               </span>
             )}
@@ -984,7 +984,7 @@ function FunnelDropoff({ prevRow, currRow, t }) {
       }}>
         <ArrowDownRight size={11} /> {lossPct}%
       </span>
-      <span style={{ fontSize: 11, color: '#94a3b8' }}>
+      <span style={{ fontSize: 11, color: '#99a09a' }}>
         {dropoffText(prevRow, currRow, dropped, t)}
       </span>
     </div>
@@ -994,8 +994,8 @@ function FunnelDropoff({ prevRow, currRow, t }) {
 function FunnelSection({ funnel, period, kpis, t, fmtPct }) {
   if (!funnel || funnel.length === 0) {
     return (
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
-        <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>
+      <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 20 }}>
+        <p style={{ margin: 0, color: '#99a09a', fontSize: 13 }}>
           {t('forms.stats.funnel_empty', 'Aucune donnée sur cette période.')}
         </p>
       </div>
@@ -1003,12 +1003,12 @@ function FunnelSection({ funnel, period, kpis, t, fmtPct }) {
   }
   const baseCount = funnel[0]?.count || 0;
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20 }}>
+    <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2 }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.2 }}>
           {t('forms.stats.funnel_journey', 'Parcours visiteur')}
         </h3>
-        <span style={{ fontSize: 12, color: '#94a3b8' }}>
+        <span style={{ fontSize: 12, color: '#99a09a' }}>
           {periodLabel(period, t)}
         </span>
       </div>
@@ -1029,10 +1029,10 @@ function FunnelSection({ funnel, period, kpis, t, fmtPct }) {
           after reading the journey top-to-bottom. */}
       <div style={{
         marginTop: 16, padding: '12px 16px',
-        background: '#f8fafc', borderRadius: 10,
+        background: '#f6f2e9', borderRadius: 10,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={{ fontSize: 13, color: '#64748b' }}>
+        <span style={{ fontSize: 13, color: '#6e756c' }}>
           {t('forms.stats.funnel_overall_rate', 'Taux de conversion global')}
         </span>
         <span style={{ fontSize: 18, fontWeight: 500, color: FUNNEL_PRIMARY, fontVariantNumeric: 'tabular-nums' }}>
@@ -1047,17 +1047,17 @@ function FunnelSection({ funnel, period, kpis, t, fmtPct }) {
 function EmptyState({ t, onCreate }) {
   return (
     <div className="fade-in" style={{ maxWidth: 640, margin: '60px auto 0', textAlign: 'center', padding: 40 }}>
-      <div style={{ width: 64, height: 64, borderRadius: 16, background: '#eef2ff', color: '#6366f1', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 64, height: 64, borderRadius: 16, background: '#eef1ea', color: '#0e7a54', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <FileText size={28} />
       </div>
-      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: '#0f172a', letterSpacing: -0.4 }}>
+      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.4 }}>
         {t('forms.empty.title', 'Créez votre formulaire d\'inscription')}
       </h1>
-      <p style={{ margin: '10px 0 24px', color: '#64748b', fontSize: 14 }}>
+      <p style={{ margin: '10px 0 24px', color: '#6e756c', fontSize: 14 }}>
         {t('forms.empty.subtitle', 'Un formulaire en 3 étapes que vos partenaires partageront sur leur site pour recruter des leads attribués automatiquement.')}
       </p>
       <button onClick={onCreate}
-        style={{ padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        style={{ padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         <Plus size={16} /> {t('forms.empty.cta', 'Créer le formulaire')}
       </button>
     </div>
@@ -1069,12 +1069,12 @@ function EmptyState({ t, onCreate }) {
 // Putting it inside SettingsPanel makes React see a fresh component
 // type every render, which unmounts every <input> wrapped by it on
 // each keystroke (focus loss bug). Same reason inputStyle lives here.
-const SETTINGS_INPUT_STYLE = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, color: '#0f172a', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' };
+const SETTINGS_INPUT_STYLE = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, color: '#0e1f18', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' };
 
 function SettingsField({ label, children }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#6e756c', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
       {children}
     </div>
   );
@@ -1126,8 +1126,8 @@ function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
   }, []);
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 20, position: 'sticky', top: 16 }}>
-      <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+    <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 20, position: 'sticky', top: 16 }}>
+      <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#0e1f18' }}>
         {t('forms.builder.settings', 'Paramètres')}
       </h3>
       <SettingsField label={t('forms.builder.field_title', 'Titre')}>
@@ -1159,9 +1159,9 @@ function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
           const active = form.default_lead_handling === opt.val;
           return (
             <button key={opt.val} type="button" onClick={() => onPatch({ default_lead_handling: opt.val })}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: active ? '2px solid var(--rb-primary, #059669)' : '1.5px solid #e2e8f0', background: active ? '#f0fdf4' : '#fff', marginBottom: 6, cursor: 'pointer' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{opt.label}</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{opt.sub}</div>
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 10, border: active ? '2px solid var(--rb-primary, #0e7a54)' : '1.5px solid #ded8cb', background: active ? '#e9f1ea' : '#fff', marginBottom: 6, cursor: 'pointer' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#0e1f18' }}>{opt.label}</div>
+              <div style={{ fontSize: 11, color: '#6e756c', marginTop: 2 }}>{opt.sub}</div>
             </button>
           );
         })}
@@ -1172,11 +1172,11 @@ function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
           drives forms.appointment_url. The public page embeds the
           iframe under the thank-you message when both are set. */}
       <SettingsField label={t('forms.builder.appointment_section', 'Rendez-vous')}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', cursor: 'pointer', marginBottom: form.appointment_enabled ? 8 : 0 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #ded8cb', background: '#fff', cursor: 'pointer', marginBottom: form.appointment_enabled ? 8 : 0 }}>
           <input type="checkbox" checked={!!form.appointment_enabled}
             onChange={e => onPatch({ appointment_enabled: e.target.checked })}
             style={{ width: 16, height: 16, cursor: 'pointer' }} />
-          <span style={{ fontSize: 13, color: '#0f172a', fontWeight: 500 }}>
+          <span style={{ fontSize: 13, color: '#0e1f18', fontWeight: 500 }}>
             {t('forms.builder.appointment_toggle', 'Proposer un rendez-vous après soumission')}
           </span>
         </label>
@@ -1189,15 +1189,15 @@ function SettingsPanel({ form, t, onPatch, onReset, onRestoreDefaults }) {
         )}
       </SettingsField>
 
-      <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ borderTop: '1px solid #ece7db', paddingTop: 14, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
         {onRestoreDefaults && (
           <button onClick={onRestoreDefaults}
-            style={{ background: 'transparent', border: 'none', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            style={{ background: 'transparent', border: 'none', color: '#33433b', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <RotateCcw size={12} /> {t('forms.builder.restore', 'Restaurer les champs par défaut')}
           </button>
         )}
         <button onClick={onReset}
-          style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          style={{ background: 'transparent', border: 'none', color: '#b23b2e', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Trash2 size={12} /> {t('forms.builder.reset', 'Supprimer le formulaire')}
         </button>
       </div>
@@ -1240,23 +1240,23 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
     }
   };
 
-  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, color: '#0f172a', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' };
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #ded8cb', fontSize: 14, color: '#0e1f18', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
       <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 20, padding: 28, width: 560, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0e1f18' }}>
             {initial.__new ? t('forms.builder.add_field_title', 'Ajouter un champ') : t('forms.builder.edit_field_title', 'Modifier le champ')}
           </h3>
-          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
-            <X size={16} color="#64748b" />
+          <button onClick={onClose} style={{ background: '#ece7db', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
+            <X size={16} color="#6e756c" />
           </button>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#6e756c', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             {t('forms.builder.type_label', 'Type de champ')}
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 6 }}>
@@ -1265,7 +1265,7 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
               const Icon = ft.icon;
               return (
                 <button key={ft.key} type="button" onClick={() => setType(ft.key)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: active ? '2px solid var(--rb-primary, #059669)' : '1.5px solid #e2e8f0', background: active ? '#f0fdf4' : '#fff', cursor: 'pointer', fontSize: 12, color: '#0f172a', fontWeight: active ? 700 : 500, textAlign: 'left' }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: active ? '2px solid var(--rb-primary, #0e7a54)' : '1.5px solid #ded8cb', background: active ? '#e9f1ea' : '#fff', cursor: 'pointer', fontSize: 12, color: '#0e1f18', fontWeight: active ? 700 : 500, textAlign: 'left' }}>
                   <Icon size={13} />
                   {t('forms.builder.type.' + ft.key, ft.key)}
                 </button>
@@ -1275,7 +1275,7 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#6e756c', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             {t('forms.builder.label', 'Libellé')}
           </label>
           <input type="text" value={label} onChange={e => setLabel(e.target.value)}
@@ -1284,7 +1284,7 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#6e756c', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             {t('forms.builder.placeholder_label', 'Placeholder (optionnel)')}
           </label>
           <input type="text" value={placeholder} onChange={e => setPlaceholder(e.target.value)}
@@ -1293,7 +1293,7 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
 
         {meta && meta.hasOptions && (
           <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#6e756c', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('forms.builder.options_label', 'Options (une par ligne)')}
             </label>
             <textarea rows={4} value={optionsText} onChange={e => setOptionsText(e.target.value)}
@@ -1303,26 +1303,26 @@ function FieldModal({ t, initial, onClose, onSave, stepCount = 3 }) {
         )}
 
         <div style={{ display: 'flex', gap: 14, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#334155' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#2b3a32' }}>
             <input type="checkbox" checked={required} onChange={e => setRequired(e.target.checked)}
               style={{ width: 16, height: 16, cursor: 'pointer' }} />
             {t('forms.builder.required_label', 'Champ obligatoire')}
           </label>
           <div style={{ flex: 1, minWidth: 140, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{t('forms.builder.step', 'Étape')}</span>
+            <span style={{ fontSize: 12, color: '#6e756c', fontWeight: 600 }}>{t('forms.builder.step', 'Étape')}</span>
             <select value={step} onChange={e => setStep(Number(e.target.value))}
-              style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, background: '#fff', cursor: 'pointer' }}>
+              style={{ padding: '6px 10px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 12, background: '#fff', cursor: 'pointer' }}>
               {stepsArray(stepCount).map(s => <option key={s} value={s}>{s}/{stepCount}</option>)}
             </select>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, background: '#f1f5f9', color: '#475569', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+          <button onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, background: '#ece7db', color: '#33433b', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
             {t('common.cancel', 'Annuler')}
           </button>
           <button onClick={handleSave} disabled={saving || !label.trim()}
-            style={{ padding: '10px 22px', borderRadius: 10, background: !label.trim() ? '#e2e8f0' : 'var(--rb-primary, #059669)', color: !label.trim() ? '#94a3b8' : '#fff', border: 'none', cursor: !label.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>
+            style={{ padding: '10px 22px', borderRadius: 10, background: !label.trim() ? '#ded8cb' : 'var(--rb-primary, #0e7a54)', color: !label.trim() ? '#99a09a' : '#fff', border: 'none', cursor: !label.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>
             {saving ? t('common.saving', 'Enregistrement…') : t('common.save', 'Enregistrer')}
           </button>
         </div>
@@ -1419,26 +1419,26 @@ function ShareModal({ t, form, onClose, embedded = false }) {
     <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0e1f18' }}>
             {t('forms.share.title', 'Partager le formulaire')}
           </h3>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#6e756c' }}>
             {t('forms.share.subtitle', 'Générez un lien unique par partenaire. Chaque soumission sera attribuée automatiquement.')}
           </p>
         </div>
         {!embedded && (
-          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
-            <X size={16} color="#64748b" />
+          <button onClick={onClose} style={{ background: '#ece7db', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}>
+            <X size={16} color="#6e756c" />
           </button>
         )}
       </div>
 
       {loading ? (
-        <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+        <div style={{ padding: 30, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
           {t('common.loading', 'Chargement…')}
         </div>
       ) : partners.length === 0 ? (
-        <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+        <div style={{ padding: 30, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
           {t('forms.share.no_partners', 'Aucun partenaire actif à inviter.')}
         </div>
       ) : (
@@ -1455,18 +1455,18 @@ function ShareModal({ t, form, onClose, embedded = false }) {
                 placeholder={t('forms.share.search_placeholder', 'Rechercher un partenaire (nom, email)…')}
                 style={{
                   width: '100%', padding: '9px 12px', borderRadius: 8,
-                  border: '1.5px solid #e2e8f0', fontSize: 13, color: '#0f172a',
+                  border: '1.5px solid #ded8cb', fontSize: 13, color: '#0e1f18',
                   fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none',
                 }}
               />
             </div>
-            <span style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 12, color: '#6e756c', whiteSpace: 'nowrap' }}>
               {t('forms.share.count', { count: filteredPartners.length, defaultValue: '{{count}} partenaires' })}
             </span>
           </div>
 
           {filteredPartners.length === 0 ? (
-            <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+            <div style={{ padding: 30, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
               {t('forms.share.no_match', 'Aucun partenaire trouvé')}
             </div>
           ) : (
@@ -1475,30 +1475,30 @@ function ShareModal({ t, form, onClose, embedded = false }) {
               const tk = tokenByPartner[p.id];
               const url = tk ? publicFormUrl(form.id, tk.token) : '';
               return (
-                <div key={p.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: 12 }}>
+                <div key={p.id} style={{ border: '1px solid #ded8cb', borderRadius: 12, padding: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{p.name}</div>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{p.email}</div>
+                      <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14 }}>{p.name}</div>
+                      <div style={{ fontSize: 12, color: '#6e756c', marginTop: 2 }}>{p.email}</div>
                     </div>
                     {tk ? (
                       <button onClick={() => revoke(tk.id)}
-                        style={{ padding: '7px 12px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>
+                        style={{ padding: '7px 12px', borderRadius: 8, background: '#f7e9e6', color: '#b23b2e', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>
                         {t('forms.share.revoke', 'Révoquer')}
                       </button>
                     ) : (
                       <button onClick={() => generate(p.id)}
-                        style={{ padding: '7px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        style={{ padding: '7px 12px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                         <Link2 size={12} /> {t('forms.share.generate', 'Générer un lien')}
                       </button>
                     )}
                   </div>
                   {tk && (
-                    <div style={{ marginTop: 10, padding: '8px 10px', background: '#f8fafc', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <code style={{ flex: 1, fontSize: 11, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</code>
+                    <div style={{ marginTop: 10, padding: '8px 10px', background: '#f6f2e9', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <code style={{ flex: 1, fontSize: 11, color: '#33433b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</code>
                       <button onClick={() => copy(url, tk.id)}
-                        style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 9px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#475569', fontWeight: 600 }}>
-                        {copiedId === tk.id ? <><Check size={11} color="#059669" /> {t('common.copied', 'Copié')}</> : <><Copy size={11} /> {t('common.copy', 'Copier')}</>}
+                        style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 6, padding: '5px 9px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#33433b', fontWeight: 600 }}>
+                        {copiedId === tk.id ? <><Check size={11} color="#0e7a54" /> {t('common.copied', 'Copié')}</> : <><Copy size={11} /> {t('common.copy', 'Copier')}</>}
                       </button>
                     </div>
                   )}
@@ -1523,7 +1523,7 @@ function ShareModal({ t, form, onClose, embedded = false }) {
 
   if (embedded) {
     return (
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 28 }}>
+      <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 28 }}>
         {body}
       </div>
     );

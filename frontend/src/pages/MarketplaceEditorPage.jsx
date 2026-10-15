@@ -26,7 +26,7 @@ const SECTORS = [
 // (mousedown on the handle flips a state flag); this prevents a click
 // inside contenteditable from accidentally starting a block drag.
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c', bg: '#faf6ec', border: '#ded8cb' };
 
 function Toggle({ value, onChange, disabled }) {
   return (
@@ -35,7 +35,7 @@ function Toggle({ value, onChange, disabled }) {
       disabled={disabled}
       style={{
         width: 44, height: 24, borderRadius: 999,
-        background: value ? C.p : '#cbd5e1',
+        background: value ? C.p : '#cfc8b8',
         border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
         position: 'relative', transition: 'background .15s',
         flexShrink: 0,
@@ -71,7 +71,7 @@ function CardPreview({ tenant, t }) {
       <div style={{ padding: '24px 24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
           {tenant.logo_url
-            ? <img src={tenant.logo_url} alt={tenant.company_name} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'contain', border: '1px solid #f1f5f9' }} />
+            ? <img src={tenant.logo_url} alt={tenant.company_name} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'contain', border: '1px solid #ece7db' }} />
             : <div style={{ width: 48, height: 48, borderRadius: 12, background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color }}>{initials}</div>}
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{ fontWeight: 700, fontSize: 16, color: C.s, display: 'block' }}>
@@ -88,7 +88,7 @@ function CardPreview({ tenant, t }) {
           {tenant.short_description || t('marketplace.editor.preview_no_desc', 'Description courte de votre programme — apparaît sur la liste des programmes.')}
         </p>
         {tenant.icp && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.m, background: '#f8fafc', borderRadius: 8, padding: '6px 10px', marginTop: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.m, background: '#f6f2e9', borderRadius: 8, padding: '6px 10px', marginTop: 12 }}>
             <Users size={12} color={C.p} />
             <span><strong style={{ color: C.s }}>{t('marketplace.target', 'Cible :')}</strong> {tenant.icp}</span>
           </div>
@@ -98,7 +98,7 @@ function CardPreview({ tenant, t }) {
         <span style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           padding: '12px 14px', borderRadius: 10,
-          background: 'linear-gradient(135deg,' + C.p + ',#10b981)',
+          background: 'linear-gradient(135deg,' + C.p + ',#1c9a6b)',
           color: '#fff', fontWeight: 600, fontSize: 13,
         }}>
           {t('marketplace.learn_more', 'En savoir plus')} <ArrowRight size={14} />
@@ -125,7 +125,7 @@ const inputStyle = {
 };
 const inputStyleLocked = {
   ...inputStyle,
-  background: '#f8fafc', color: '#64748b', cursor: 'not-allowed',
+  background: '#f6f2e9', color: '#6e756c', cursor: 'not-allowed',
 };
 
 function CardEditor({ tenant, onPatch, t, editable = true }) {
@@ -279,7 +279,7 @@ function BlockToolbar({ id, visible, dragArmed, onArmDrag, onDisarmDrag, onToggl
           onMouseDown={() => onArmDrag(id)}
           onMouseUp={onDisarmDrag}
           style={{
-            background: dragArmed ? '#ecfdf5' : 'transparent', border: 'none',
+            background: dragArmed ? '#e9f1ea' : 'transparent', border: 'none',
             color: C.s, padding: 6, borderRadius: 999, cursor: 'grab',
             display: 'flex',
           }}
@@ -694,7 +694,7 @@ export default function MarketplaceEditorPage() {
               background: '#fff7ed', border: '1px solid #fed7aa',
               padding: '3px 10px', borderRadius: 999,
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f97316' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#d5541a' }} />
               {t('marketplace.editor.unsaved_indicator', 'Modifications non sauvegardées')}
             </span>
           )}
@@ -752,7 +752,7 @@ export default function MarketplaceEditorPage() {
             {hasUnsavedChanges && (
               <span aria-hidden="true" style={{
                 width: 8, height: 8, borderRadius: '50%',
-                background: '#f97316', boxShadow: '0 0 0 2px rgba(255,255,255,0.5)',
+                background: '#d5541a', boxShadow: '0 0 0 2px rgba(255,255,255,0.5)',
               }} />
             )}
           </button>

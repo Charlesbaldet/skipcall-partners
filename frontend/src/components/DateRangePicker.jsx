@@ -100,25 +100,25 @@ export default function DateRangePicker({ value, onChange }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 12px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-          background: '#fff', color: '#0f172a', border: '1px solid #e2e8f0',
+          background: '#fff', color: '#0e1f18', border: '1px solid #ded8cb',
           cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
         }}
       >
-        <Calendar size={14} color="#64748b" />
+        <Calendar size={14} color="#6e756c" />
         <span>{triggerLabel}</span>
-        <ChevronDown size={14} color="#94a3b8" />
+        <ChevronDown size={14} color="#99a09a" />
       </button>
 
       {open && (
         <div style={{
           position: 'absolute', top: '100%', right: 0, marginTop: 6,
-          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
+          background: '#fff', border: '1px solid #ded8cb', borderRadius: 12,
           boxShadow: '0 10px 30px rgba(0,0,0,0.10)', zIndex: 50,
           display: 'flex', minWidth: 460, fontFamily: 'inherit',
         }}>
           {/* Shortcuts */}
-          <div style={{ borderRight: '1px solid #f1f5f9', padding: 12, minWidth: 180 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, padding: '0 8px' }}>
+          <div style={{ borderRight: '1px solid #ece7db', padding: 12, minWidth: 180 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, padding: '0 8px' }}>
               {t('dashboard.shortcuts')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -133,10 +133,10 @@ export default function DateRangePicker({ value, onChange }) {
                       textAlign: 'left', padding: '8px 10px', borderRadius: 8,
                       border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
                       fontFamily: 'inherit',
-                      background: active ? '#ecfdf5' : 'transparent',
-                      color: active ? '#059669' : '#334155',
+                      background: active ? '#e9f1ea' : 'transparent',
+                      color: active ? '#0e7a54' : '#2b3a32',
                     }}
-                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = '#f8fafc'; }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = '#f6f2e9'; }}
                     onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
                   >
                     {p.label}
@@ -154,15 +154,15 @@ export default function DateRangePicker({ value, onChange }) {
                 value={draftStart}
                 max={draftEnd || undefined}
                 onChange={(e) => setDraftStart(e.target.value)}
-                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', color: '#0f172a' }}
+                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', color: '#0e1f18' }}
               />
-              <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>→</span>
+              <span style={{ color: '#99a09a', fontSize: 13, fontWeight: 600 }}>→</span>
               <input
                 type="date"
                 value={draftEnd}
                 min={draftStart || undefined}
                 onChange={(e) => setDraftEnd(e.target.value)}
-                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', color: '#0f172a' }}
+                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', color: '#0e1f18' }}
               />
             </div>
 
@@ -173,8 +173,8 @@ export default function DateRangePicker({ value, onChange }) {
                 type="button"
                 onClick={() => setOpen(false)}
                 style={{
-                  padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
-                  background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600,
+                  padding: '8px 14px', borderRadius: 8, border: '1px solid #ded8cb',
+                  background: '#fff', color: '#33433b', fontSize: 13, fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
@@ -185,7 +185,7 @@ export default function DateRangePicker({ value, onChange }) {
                 onClick={apply}
                 style={{
                   padding: '8px 14px', borderRadius: 8, border: 'none',
-                  background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700,
+                  background: '#0e7a54', color: '#fff', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >

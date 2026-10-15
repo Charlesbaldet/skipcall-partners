@@ -159,20 +159,20 @@ export default function PartnerMyReferrals() {
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerReferrals.title')}</h1>
-          <p style={{ color: '#64748b' }}>{t('partnerReferrals.subtitle')}</p>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerReferrals.title')}</h1>
+          <p style={{ color: '#6e756c' }}>{t('partnerReferrals.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
-            <button onClick={() => setViewMode('kanban')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><LayoutGrid size={14} /> {t('partnerReferrals.view_kanban')}</button>
-            <button onClick={() => setViewMode('table')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><List size={14} /> {t('partnerReferrals.view_table')}</button>
+          <div style={{ display: 'flex', gap: 2, background: '#ece7db', borderRadius: 10, padding: 3 }}>
+            <button onClick={() => setViewMode('kanban')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0e1f18' : '#99a09a', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><LayoutGrid size={14} /> {t('partnerReferrals.view_kanban')}</button>
+            <button onClick={() => setViewMode('table')} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0e1f18' : '#99a09a', fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}><List size={14} /> {t('partnerReferrals.view_table')}</button>
           </div>
           <button
             onClick={() => setShowSubmitModal(true)}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '10px 16px', borderRadius: 10,
-              background: '#059669', color: '#fff', border: 'none',
+              background: '#0e7a54', color: '#fff', border: 'none',
               fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
               boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
             }}
@@ -183,11 +183,11 @@ export default function PartnerMyReferrals() {
       </div>
 
       {referrals.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: '1px solid #e2e8f0' }}>
-          <p style={{ color: '#94a3b8', marginBottom: 16 }}>{t('partnerReferrals.empty_message')}</p>
+        <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', border: '1px solid #ded8cb' }}>
+          <p style={{ color: '#99a09a', marginBottom: 16 }}>{t('partnerReferrals.empty_message')}</p>
           <button
             onClick={() => setShowSubmitModal(true)}
-            style={{ background: 'transparent', border: 'none', color: 'var(--rb-primary, #059669)', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', fontSize: 14 }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--rb-primary, #0e7a54)', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', fontSize: 14 }}
           >{t('partnerReferrals.empty_cta')}</button>
         </div>
       ) : viewMode === 'kanban' ? (
@@ -207,9 +207,9 @@ export default function PartnerMyReferrals() {
         <div style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 2000,
           padding: '14px 18px', borderRadius: 12,
-          background: toast.type === 'error' ? '#fef2f2' : toast.type === 'success' ? '#ecfdf5' : '#fffbeb',
-          color: toast.type === 'error' ? '#dc2626' : toast.type === 'success' ? '#047857' : '#92400e',
-          border: `1px solid ${toast.type === 'error' ? '#fecaca' : toast.type === 'success' ? '#a7f3d0' : '#fcd34d'}`,
+          background: toast.type === 'error' ? '#f7e9e6' : toast.type === 'success' ? '#e9f1ea' : '#f6efda',
+          color: toast.type === 'error' ? '#b23b2e' : toast.type === 'success' ? '#0b5e40' : '#7a4a16',
+          border: `1px solid ${toast.type === 'error' ? '#edc4bd' : toast.type === 'success' ? '#a7f3d0' : '#fcd34d'}`,
           fontSize: 13, fontWeight: 600,
           boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
           maxWidth: 360,
@@ -285,13 +285,13 @@ function SubmitReferralModal({ onClose, onSubmitted, t }) {
           style={{
             position: 'absolute', top: 16, right: 16,
             width: 32, height: 32, borderRadius: 8,
-            background: '#f1f5f9', border: 'none', cursor: 'pointer',
+            background: '#ece7db', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
-          <X size={16} color="#475569" />
+          <X size={16} color="#33433b" />
         </button>
-        <h2 style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: -0.3 }}>
+        <h2 style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.3 }}>
           {t('partner.submit_referral_title', 'Nouveau referral')}
         </h2>
         <PartnerSubmitPage onSubmitted={onSubmitted} />
@@ -304,12 +304,12 @@ function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelec
   const { t } = useTranslation();
   const cols = stages.length
     ? stages
-    : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#64748b' }));
+    : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#6e756c' }));
   return (
     <div style={{ overflow: 'hidden', borderRadius: 16 }}>
       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 140px)', minHeight: 400 }}>
         {cols.map(stage => {
-          const stageColor = stage.color || '#64748b';
+          const stageColor = stage.color || '#6e756c';
           const cards = referrals.filter(r =>
             r.stage_id ? r.stage_id === stage.id : r.status === stage.slug
           );
@@ -317,19 +317,19 @@ function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelec
             <div
               key={stage.id || stage.slug}
               onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${stageColor}0a`; }}
-              onDragLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
-              onDrop={e => { e.currentTarget.style.background = '#f8fafc'; onDrop(e, stage); }}
+              onDragLeave={e => { e.currentTarget.style.background = '#f6f2e9'; }}
+              onDrop={e => { e.currentTarget.style.background = '#f6f2e9'; onDrop(e, stage); }}
               style={{
-                minWidth: 260, width: 260, flexShrink: 0, background: '#f8fafc', borderRadius: 16,
+                minWidth: 260, width: 260, flexShrink: 0, background: '#f6f2e9', borderRadius: 16,
                 padding: 12, display: 'flex', flexDirection: 'column',
-                border: '1px solid #e2e8f0',
+                border: '1px solid #ded8cb',
                 borderTop: `3px solid ${stageColor}`,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: stageColor }} />
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{stage.name}</span>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0e1f18' }}>{stage.name}</span>
                 </div>
                 <span style={{ background: stageColor + '15', color: stageColor, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{cards.length}</span>
               </div>
@@ -347,28 +347,28 @@ function KanbanView({ referrals, stages, draggedId, onDragStart, onDrop, onSelec
                       onClick={() => onSelect(r)}
                       title={locked ? t('referral.managed_by_company_tooltip') : undefined}
                       style={{
-                        background: locked ? '#f8fafc' : '#fff',
+                        background: locked ? '#f6f2e9' : '#fff',
                         borderRadius: 12, padding: 14,
                         cursor: locked ? 'not-allowed' : 'grab',
-                        border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0',
+                        border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #ded8cb',
                         boxShadow: locked ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
                         opacity: draggedId === r.id ? 0.5 : (locked ? 0.75 : 1),
                         transition: 'all 0.15s',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.prospect_name}</div>
+                        <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.prospect_name}</div>
                         {locked
-                          ? <Lock size={13} color="#94a3b8" />
-                          : <GripVertical size={14} color="#cbd5e1" />}
+                          ? <Lock size={13} color="#99a09a" />
+                          : <GripVertical size={14} color="#cfc8b8" />}
                       </div>
                       <LeadHandlingBadge locked={locked} />
-                      {r.prospect_company && <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4, marginBottom: 6 }}>{r.prospect_company}</div>}
-                      {r.deal_value > 0 && <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{fmt(r.deal_value)}</div>}
+                      {r.prospect_company && <div style={{ color: '#99a09a', fontSize: 11, marginTop: 4, marginBottom: 6 }}>{r.prospect_company}</div>}
+                      {r.deal_value > 0 && <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 13 }}>{fmt(r.deal_value)}</div>}
                     </div>
                   );
                 })}
-                {cards.length === 0 && <div style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', padding: 16 }}>{t('partnerReferrals.empty_col')}</div>}
+                {cards.length === 0 && <div style={{ color: '#cfc8b8', fontSize: 12, textAlign: 'center', padding: 16 }}>{t('partnerReferrals.empty_col')}</div>}
               </div>
             </div>
           );
@@ -388,7 +388,7 @@ function LeadHandlingBadge({ locked }) {
     );
   }
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#f0fdf4', color: '#059669', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#e9f1ea', color: '#0e7a54', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
       {t('referral.managed_by_you')}
     </div>
   );
@@ -397,27 +397,27 @@ function LeadHandlingBadge({ locked }) {
 function TableView({ referrals, onSelect }) {
   const { t } = useTranslation();
   return (
-    <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+    <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
         <thead>
-          <tr style={{ background: '#f8fafc' }}>
+          <tr style={{ background: '#f6f2e9' }}>
             {[t('partnerReferrals.tbl_prospect'), t('referrals.tbl_level'), t('partnerReferrals.tbl_status'), t('partnerReferrals.tbl_value'), t('partnerReferrals.tbl_date'), ''].map((h, i) => (
-              <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+              <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#6e756c', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #ded8cb' }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {referrals.map(r => (
-            <tr key={r.id} onClick={() => onSelect(r)} style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+            <tr key={r.id} onClick={() => onSelect(r)} style={{ borderBottom: '1px solid #f6f2e9', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = '#faf6ec'} onMouseLeave={e => e.currentTarget.style.background = ''}>
               <td style={{ padding: '13px 16px' }}>
-                <div style={{ fontWeight: 600, color: '#0f172a' }}>{r.prospect_name}</div>
-                <div style={{ color: '#94a3b8', fontSize: 12 }}>{r.prospect_company}</div>
+                <div style={{ fontWeight: 600, color: '#0e1f18' }}>{r.prospect_name}</div>
+                <div style={{ color: '#99a09a', fontSize: 12 }}>{r.prospect_company}</div>
               </td>
               <td style={{ padding: '13px 16px' }}><span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: LEVEL_CONFIG[r.recommendation_level]?.bg, color: LEVEL_CONFIG[r.recommendation_level]?.color }}>{LEVEL_CONFIG[r.recommendation_level]?.label}</span></td>
               <td style={{ padding: '13px 16px' }}><span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: STATUS_CONFIG[r.status]?.bg, color: STATUS_CONFIG[r.status]?.color }}>{STATUS_CONFIG[r.status]?.label}</span></td>
-              <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
-              <td style={{ padding: '13px 16px', color: '#94a3b8', fontSize: 13 }}>{fmtDate(r.created_at)}</td>
-              <td style={{ padding: '13px 16px' }}><ChevronRight size={16} color="#94a3b8" /></td>
+              <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0e1f18' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
+              <td style={{ padding: '13px 16px', color: '#99a09a', fontSize: 13 }}>{fmtDate(r.created_at)}</td>
+              <td style={{ padding: '13px 16px' }}><ChevronRight size={16} color="#99a09a" /></td>
             </tr>
           ))}
         </tbody>
@@ -464,16 +464,16 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
   let longevityPill = null;
   if (isRecurring) {
     if (isPerpetual) {
-      longevityPill = { label: t('commissions.duration_perpetual_badge', 'À vie'), bg: '#eef2ff', color: '#6366f1' };
+      longevityPill = { label: t('commissions.duration_perpetual_badge', 'À vie'), bg: '#eef1ea', color: '#0e7a54' };
     } else if (!engagementUntil) {
-      longevityPill = { label: t('commissions.duration_bounded_badge', 'Durée limitée'), bg: '#eef2ff', color: '#6366f1' };
+      longevityPill = { label: t('commissions.duration_bounded_badge', 'Durée limitée'), bg: '#eef1ea', color: '#0e7a54' };
     } else {
       const todayMs = new Date(new Date().toISOString().slice(0, 10)).getTime();
       const endMs   = new Date(engagementUntil).getTime();
       if (endMs < todayMs) {
-        longevityPill = { label: t('commissions.duration_terminated_badge', 'Terminé'), bg: '#f1f5f9', color: '#64748b' };
+        longevityPill = { label: t('commissions.duration_terminated_badge', 'Terminé'), bg: '#ece7db', color: '#6e756c' };
       } else {
-        longevityPill = { label: t('commissions.duration_until_badge', { date: fmtDate(engagementUntil), defaultValue: "Jusqu'au {{date}}" }), bg: '#eef2ff', color: '#6366f1' };
+        longevityPill = { label: t('commissions.duration_until_badge', { date: fmtDate(engagementUntil), defaultValue: "Jusqu'au {{date}}" }), bg: '#eef1ea', color: '#0e7a54' };
       }
     }
   }
@@ -487,7 +487,7 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-                <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{referral.prospect_name}</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0e1f18' }}>{referral.prospect_name}</h2>
                 {LEVEL_CONFIG[referral.recommendation_level] && (
                   <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: LEVEL_CONFIG[referral.recommendation_level]?.bg, color: LEVEL_CONFIG[referral.recommendation_level]?.color }}>{LEVEL_CONFIG[referral.recommendation_level]?.label}</span>
                 )}
@@ -495,20 +495,20 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
                   <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: STATUS_CONFIG[referral.status]?.bg, color: STATUS_CONFIG[referral.status]?.color }}>{STATUS_CONFIG[referral.status]?.label}</span>
                 )}
               </div>
-              <p style={{ color: '#64748b', fontSize: 13 }}>{referral.prospect_company}</p>
+              <p style={{ color: '#6e756c', fontSize: 13 }}>{referral.prospect_company}</p>
             </div>
-            <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#475569" /></button>
+            <button onClick={onClose} style={{ background: '#ece7db', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#33433b" /></button>
           </div>
         </div>
 
         {/* Tabs strip — same visual + interaction as the admin modal. */}
-        <div style={{ padding: '0 32px', display: 'flex', gap: 4, borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ padding: '0 32px', display: 'flex', gap: 4, borderBottom: '1px solid #ded8cb' }}>
           {[
             { id: 'info',     label: t('referrals.tab_info',     'Informations') },
             { id: 'pipeline', label: t('referrals.tab_pipeline', 'Pipeline') },
             { id: 'history',  label: `${t('referrals.tab_history', 'Historique')} (${activities.length})` },
           ].map(tab_ => (
-            <button key={tab_.id} onClick={() => setTab(tab_.id)} style={{ padding: '10px 18px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: tab === tab_.id ? '#6366f1' : '#64748b', borderBottom: tab === tab_.id ? '2px solid var(--rb-primary, #059669)' : '2px solid transparent', background: 'transparent', marginBottom: -1 }}>{tab_.label}</button>
+            <button key={tab_.id} onClick={() => setTab(tab_.id)} style={{ padding: '10px 18px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: tab === tab_.id ? '#0e7a54' : '#6e756c', borderBottom: tab === tab_.id ? '2px solid var(--rb-primary, #0e7a54)' : '2px solid transparent', background: 'transparent', marginBottom: -1 }}>{tab_.label}</button>
           ))}
         </div>
 
@@ -525,18 +525,18 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
               </div>
 
               {referral.notes && (
-                <div style={{ background: '#fffbeb', borderRadius: 10, padding: 14, color: '#92400e', fontSize: 13, lineHeight: 1.5, borderLeft: '3px solid #f59e0b', marginBottom: 18 }}>{referral.notes}</div>
+                <div style={{ background: '#f6efda', borderRadius: 10, padding: 14, color: '#7a4a16', fontSize: 13, lineHeight: 1.5, borderLeft: '3px solid #b4791f', marginBottom: 18 }}>{referral.notes}</div>
               )}
 
               {referral.status === 'won' && referral.deal_value > 0 && (
-                <div style={{ background: '#f0fdf4', borderRadius: 10, padding: 12, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <DollarSign size={16} color="#16a34a" />
-                  <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 13 }}>{t('partnerReferrals.deal_won_msg')}</span>
+                <div style={{ background: '#e9f1ea', borderRadius: 10, padding: 12, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <DollarSign size={16} color="#157a4c" />
+                  <span style={{ color: '#157a4c', fontWeight: 600, fontSize: 13 }}>{t('partnerReferrals.deal_won_msg')}</span>
                 </div>
               )}
 
               {onDelete && (
-                <button onClick={onDelete} disabled={deleting} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: deleting ? 0.5 : 1 }}>
+                <button onClick={onDelete} disabled={deleting} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, background: '#f7e9e6', border: '1px solid #edc4bd', color: '#b23b2e', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: deleting ? 0.5 : 1 }}>
                   <Trash2 size={14} /> {deleting ? t('partnerReferrals.deleting') : t('partnerReferrals.delete')}
                 </button>
               )}
@@ -548,7 +548,7 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Status — pill only, no interactive control. */}
               <div>
-                <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('referrals.field_status', 'Statut')}</div>
+                <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('referrals.field_status', 'Statut')}</div>
                 {STATUS_CONFIG[referral.status] && (
                   <span style={{ padding: '4px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: STATUS_CONFIG[referral.status].bg, color: STATUS_CONFIG[referral.status].color }}>{STATUS_CONFIG[referral.status].label}</span>
                 )}
@@ -557,15 +557,15 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
               {/* Deal value — span, never an input. */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('partnerReferrals.deal_value', 'Valeur du deal')}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{referral.deal_value > 0 ? fmt(referral.deal_value) : '—'}</div>
+                  <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('partnerReferrals.deal_value', 'Valeur du deal')}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18' }}>{referral.deal_value > 0 ? fmt(referral.deal_value) : '—'}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('referrals.field_rate', 'Taux de commission')}</div>
+                  <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('referrals.field_rate', 'Taux de commission')}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{commRate != null ? `${commRate}%` : '—'}</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18' }}>{commRate != null ? `${commRate}%` : '—'}</span>
                     {tierAtWon && (
-                      <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: '#f1f5f9', color: '#475569' }}>{tierAtWon}</span>
+                      <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: '#ece7db', color: '#33433b' }}>{tierAtWon}</span>
                     )}
                   </div>
                 </div>
@@ -574,14 +574,14 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
               {/* Engagement — read-only summary. */}
               {referral.engagement && (
                 <div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('referrals.engagement', 'Engagement')}</div>
+                  <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('referrals.engagement', 'Engagement')}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#f1f5f9', color: '#0f172a' }}>
+                    <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#ece7db', color: '#0e1f18' }}>
                       {t('pipeline.' + referral.engagement, referral.engagement)}
                       {referral.engagement !== 'forfait' && ` × ${referral.engagement_periods || 1}`}
                     </span>
                     {cycleMonths > 0 && (
-                      <span style={{ color: '#64748b', fontSize: 12 }}>· {cycleDurationLabel}</span>
+                      <span style={{ color: '#6e756c', fontSize: 12 }}>· {cycleDurationLabel}</span>
                     )}
                     {longevityPill && (
                       <span style={{ padding: '2px 8px', borderRadius: 6, background: longevityPill.bg, color: longevityPill.color, fontWeight: 700, fontSize: 11 }}>{longevityPill.label}</span>
@@ -594,11 +594,11 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
                   that have already paid at least one cycle, or that
                   are past their initial cycle. */}
               {isRecurring && commTtc != null && (
-                <div style={{ background: '#f0fdf4', borderRadius: 12, padding: 14, border: '1px solid #bbf7d0' }}>
+                <div style={{ background: '#e9f1ea', borderRadius: 12, padding: 14, border: '1px solid #cfe6d6' }}>
                   <div style={{ fontSize: 11, color: '#15803d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
                     {t('partnerReferrals.cycle_label', 'Cycle')} #{cycleIndex}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: '#16a34a' }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#157a4c' }}>
                     {fmt(commTtc)}
                     <span style={{ fontSize: 12, color: '#15803d', fontWeight: 500, marginLeft: 6 }}>
                       / {cycleDurationLabel} ·{' '}
@@ -612,30 +612,30 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
                   same shape as the admin "forecast" block in
                   ReferralsPage.jsx. */}
               {commTtc != null && (
-                <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #ded8cb' }}>
+                  <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                     {t('pipeline.forecast_commission', 'Commission prévisionnelle')}
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <tbody>
                       <tr>
-                        <td style={{ padding: '4px 0', color: '#64748b' }}>{t('commissions.tbl_ht', 'HT')}</td>
-                        <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{fmt(commHt)}</td>
+                        <td style={{ padding: '4px 0', color: '#6e756c' }}>{t('commissions.tbl_ht', 'HT')}</td>
+                        <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 600, color: '#0e1f18' }}>{fmt(commHt)}</td>
                       </tr>
                       {parseFloat(commTax || 0) > 0 && (
                         <tr>
-                          <td style={{ padding: '4px 0', color: '#64748b' }}>{t('commissions.tbl_tva', 'TVA')} {commTaxRate}%</td>
-                          <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{fmt(commTax)}</td>
+                          <td style={{ padding: '4px 0', color: '#6e756c' }}>{t('commissions.tbl_tva', 'TVA')} {commTaxRate}%</td>
+                          <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 600, color: '#0e1f18' }}>{fmt(commTax)}</td>
                         </tr>
                       )}
-                      <tr style={{ borderTop: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '6px 0 0', color: '#166534', fontWeight: 700 }}>{t('commissions.tbl_ttc', 'TTC')}</td>
-                        <td style={{ padding: '6px 0 0', textAlign: 'right', fontWeight: 800, color: '#059669' }}>{fmt(commTtc)}</td>
+                      <tr style={{ borderTop: '1px solid #ece7db' }}>
+                        <td style={{ padding: '6px 0 0', color: '#0e4d34', fontWeight: 700 }}>{t('commissions.tbl_ttc', 'TTC')}</td>
+                        <td style={{ padding: '6px 0 0', textAlign: 'right', fontWeight: 800, color: '#0e7a54' }}>{fmt(commTtc)}</td>
                       </tr>
                     </tbody>
                   </table>
                   {referral.deal_value > 0 && commRate != null && (
-                    <div style={{ marginTop: 8, fontSize: 11, color: '#94a3b8' }}>
+                    <div style={{ marginTop: 8, fontSize: 11, color: '#99a09a' }}>
                       {commRate}% × {fmt(referral.deal_value)}
                     </div>
                   )}
@@ -646,8 +646,8 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
                   Read-only by design (amendments are immutable). Only
                   rendered when more than one revision exists. */}
               {revisions.length > 1 && (
-                <div style={{ padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                <div style={{ padding: 14, borderRadius: 12, border: '1px solid #ded8cb', background: '#fff' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
                     {t('pipeline.revisions_title', { count: revisions.length, defaultValue: 'Historique des avenants ({{count}})' })}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -657,15 +657,15 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
                                        : r.reason === 'initial'  ? t('pipeline.rev_initial',  'initial')
                                        : r.reason === 'renewal'  ? t('pipeline.rev_renewal',  'renouvellement')
                                        : (r.reason || '—');
-                      const color = r.reason === 'upsell' ? '#16a34a' : r.reason === 'downsell' ? '#dc2626' : '#64748b';
+                      const color = r.reason === 'upsell' ? '#157a4c' : r.reason === 'downsell' ? '#b23b2e' : '#6e756c';
                       return (
                         <div key={r.revision_index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 12 }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#475569', fontFamily: 'tabular-nums' }}>
-                            <span style={{ fontWeight: 700, color: '#0f172a' }}>#{r.revision_index}</span>
-                            <span style={{ padding: '1px 7px', borderRadius: 6, background: '#f1f5f9', color, fontWeight: 600, fontSize: 11 }}>{reasonLabel}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#33433b', fontFamily: 'tabular-nums' }}>
+                            <span style={{ fontWeight: 700, color: '#0e1f18' }}>#{r.revision_index}</span>
+                            <span style={{ padding: '1px 7px', borderRadius: 6, background: '#ece7db', color, fontWeight: 600, fontSize: 11 }}>{reasonLabel}</span>
                             <span>{fmt(r.amount_ttc)} TTC</span>
                           </span>
-                          <span style={{ color: '#94a3b8', fontSize: 11 }}>{fmtDate(r.effective_date)}</span>
+                          <span style={{ color: '#99a09a', fontSize: 11 }}>{fmtDate(r.effective_date)}</span>
                         </div>
                       );
                     })}
@@ -679,14 +679,14 @@ function DetailModal({ referral, activities, onClose, onDelete, deleting }) {
           {tab === 'history' && (
             <div>
               {activities.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>{t('referrals.no_activity', 'Aucune activité')}</div>
+                <div style={{ padding: 32, textAlign: 'center', color: '#99a09a' }}>{t('referrals.no_activity', 'Aucune activité')}</div>
               ) : (
-                <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div style={{ borderLeft: '2px solid #ded8cb', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
                   {activities.map(a => (
                     <div key={a.id} style={{ position: 'relative' }}>
-                      <div style={{ position: 'absolute', left: -26, top: 4, width: 10, height: 10, borderRadius: '50%', background: 'var(--rb-primary, #059669)', border: '2px solid #fff', boxShadow: '0 0 0 2px #e2e8f0' }} />
-                      <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 3 }}>{fmtDateTime(a.created_at)}{a.user_name ? ` · ${a.user_name}` : ''}</div>
-                      <div style={{ fontSize: 14, color: '#334155', fontWeight: 500 }}>{formatPartnerActivity(a, t)}</div>
+                      <div style={{ position: 'absolute', left: -26, top: 4, width: 10, height: 10, borderRadius: '50%', background: 'var(--rb-primary, #0e7a54)', border: '2px solid #fff', boxShadow: '0 0 0 2px #ded8cb' }} />
+                      <div style={{ fontSize: 11, color: '#99a09a', marginBottom: 3 }}>{fmtDateTime(a.created_at)}{a.user_name ? ` · ${a.user_name}` : ''}</div>
+                      <div style={{ fontSize: 14, color: '#2b3a32', fontWeight: 500 }}>{formatPartnerActivity(a, t)}</div>
                     </div>
                   ))}
                 </div>
@@ -731,8 +731,8 @@ function formatPartnerActivity(a, t) {
 function Field({ label, value }) {
   return (
     <div>
-      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{label}</div>
-      <div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div>
+      <div style={{ color: '#99a09a', fontSize: 11, fontWeight: 500 }}>{label}</div>
+      <div style={{ color: '#0e1f18', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div>
     </div>
   );
 }

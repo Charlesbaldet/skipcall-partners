@@ -138,10 +138,10 @@ function qontoErrorLabel(t, code, rawMessage) {
 // New 4-stage lifecycle. Order matters — drives the kanban column order.
 const STATUS_KEYS = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
 const COM_STATUS_META = {
-  pending_approval:   { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
-  awaiting_invoice:   { color: '#6366f1', bg: '#eef2ff', icon: FileText },
-  pending_validation: { color: '#0284c7', bg: '#eff6ff', icon: ShieldCheck },
-  paid:               { color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
+  pending_approval:   { color: '#b4791f', bg: '#f6efda', icon: Clock },
+  awaiting_invoice:   { color: '#0e7a54', bg: '#eef1ea', icon: FileText },
+  pending_validation: { color: '#0284c7', bg: '#e9f1ea', icon: ShieldCheck },
+  paid:               { color: '#157a4c', bg: '#e9f1ea', icon: CreditCard },
 };
 
 export default function CommissionsPage() {
@@ -917,9 +917,9 @@ export default function CommissionsPage() {
             position: 'sticky', top: 0, zIndex: 999,
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '12px 16px', borderRadius: 12, marginBottom: 12,
-            background: paymentState.phase === 'in-flight' ? '#eff6ff' : '#fffbeb',
-            border: '1px solid ' + (paymentState.phase === 'in-flight' ? '#bfdbfe' : '#fde68a'),
-            color: paymentState.phase === 'in-flight' ? '#1d4ed8' : '#92400e',
+            background: paymentState.phase === 'in-flight' ? '#e9f1ea' : '#f6efda',
+            border: '1px solid ' + (paymentState.phase === 'in-flight' ? '#bfdbfe' : '#ecd9a0'),
+            color: paymentState.phase === 'in-flight' ? '#1d4ed8' : '#7a4a16',
             fontSize: 13, fontWeight: 600,
           }}
         >
@@ -934,7 +934,7 @@ export default function CommissionsPage() {
               }}
               style={{
                 padding: '6px 12px', borderRadius: 8,
-                background: '#fff', border: '1px solid #fde68a', color: '#92400e',
+                background: '#fff', border: '1px solid #ecd9a0', color: '#7a4a16',
                 fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 whiteSpace: 'nowrap',
               }}
@@ -946,8 +946,8 @@ export default function CommissionsPage() {
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('commissions.title')}</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.2, margin: 0 }}>{t('commissions.title')}</h1>
+          <p style={{ color: '#6e756c', fontSize: 13, margin: '4px 0 0' }}>
             {t('commissions.subtitle_counts', {
               pending: fmt(totals.pending),
               paid: fmt(totals.paid),
@@ -955,7 +955,7 @@ export default function CommissionsPage() {
             })}
           </p>
         </div>
-        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: '#fff', border: '1px solid #ded8cb', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           <Download size={14} /> {t('commissions.export')}
         </button>
       </div>
@@ -965,9 +965,9 @@ export default function CommissionsPage() {
           the admin can scan totals at a glance. Backend already sums
           c.amount (HT) for totalAll / totals.pending / totals.paid. */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComKPI icon={DollarSign}  label={t('commissions.kpi_total')}   value={fmt(totalAll)}       color="var(--rb-primary, #059669)" />
-        <ComKPI icon={Clock}       label={t('commissions.kpi_pending')} value={fmt(totals.pending)} color="#f59e0b" />
-        <ComKPI icon={CheckCircle} label={t('commissions.kpi_paid')}    value={fmt(totals.paid)}    color="#16a34a" />
+        <ComKPI icon={DollarSign}  label={t('commissions.kpi_total')}   value={fmt(totalAll)}       color="var(--rb-primary, #0e7a54)" />
+        <ComKPI icon={Clock}       label={t('commissions.kpi_pending')} value={fmt(totals.pending)} color="#b4791f" />
+        <ComKPI icon={CheckCircle} label={t('commissions.kpi_paid')}    value={fmt(totals.paid)}    color="#157a4c" />
       </div>
 
       {/* E4 — "Décisions à arbitrer" : commissions récurrentes
@@ -987,7 +987,7 @@ export default function CommissionsPage() {
       {(() => {
         const payableCount = visibleCommissions.filter(c => c.status === 'pending_validation').length;
         return (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ded8cb', marginBottom: 20 }}>
             <div style={{ display: 'flex' }}>
               {[
                 { id: 'pipeline', label: t('commissions.pipeline') },
@@ -1001,8 +1001,8 @@ export default function CommissionsPage() {
                     style={{
                       padding: '10px 16px', fontSize: 13, fontFamily: 'inherit',
                       background: 'transparent', border: 'none',
-                      borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
-                      color: active ? '#059669' : '#64748b',
+                      borderBottom: '2px solid ' + (active ? '#0e7a54' : 'transparent'),
+                      color: active ? '#0e7a54' : '#6e756c',
                       fontWeight: active ? 700 : 500,
                       cursor: 'pointer',
                       marginBottom: -1,
@@ -1017,19 +1017,19 @@ export default function CommissionsPage() {
             {tab === 'pipeline' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 6 }}>
                 {/* Kanban / Table toggle (dark pill) */}
-                <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', border: '1px solid #ded8cb', borderRadius: 8, overflow: 'hidden' }}>
                   <button onClick={() => setViewMode('kanban')} style={{
                     padding: '6px 10px', fontSize: 12, fontWeight: 600, border: 'none',
-                    background: viewMode === 'kanban' ? '#0f172a' : '#fff',
-                    color: viewMode === 'kanban' ? '#fff' : '#64748b',
+                    background: viewMode === 'kanban' ? '#0e1f18' : '#fff',
+                    color: viewMode === 'kanban' ? '#fff' : '#6e756c',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit',
                   }}>
                     <LayoutGrid size={12} /> {t('commissions.kanban')}
                   </button>
                   <button onClick={() => setViewMode('table')} style={{
-                    padding: '6px 10px', fontSize: 12, fontWeight: 600, border: 'none', borderLeft: '1px solid #e2e8f0',
-                    background: viewMode === 'table' ? '#0f172a' : '#fff',
-                    color: viewMode === 'table' ? '#fff' : '#64748b',
+                    padding: '6px 10px', fontSize: 12, fontWeight: 600, border: 'none', borderLeft: '1px solid #ded8cb',
+                    background: viewMode === 'table' ? '#0e1f18' : '#fff',
+                    color: viewMode === 'table' ? '#fff' : '#6e756c',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit',
                   }}>
                     <List size={12} /> {t('commissions.table')}
@@ -1038,7 +1038,7 @@ export default function CommissionsPage() {
 
                 {qontoStatus?.connected && (
                   <>
-                    <div style={{ width: 1, height: 24, background: '#e2e8f0' }} />
+                    <div style={{ width: 1, height: 24, background: '#ded8cb' }} />
 
                     <button
                       onClick={selectAllPayable}
@@ -1046,9 +1046,9 @@ export default function CommissionsPage() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 6,
                         padding: '6px 12px', borderRadius: 8,
-                        border: '1px solid ' + (payableCount === 0 ? '#e2e8f0' : '#a7f3d0'),
-                        background: payableCount === 0 ? '#fff' : '#f0fdf4',
-                        color: payableCount === 0 ? '#94a3b8' : '#059669',
+                        border: '1px solid ' + (payableCount === 0 ? '#ded8cb' : '#a7f3d0'),
+                        background: payableCount === 0 ? '#fff' : '#e9f1ea',
+                        color: payableCount === 0 ? '#99a09a' : '#0e7a54',
                         fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                         cursor: payableCount === 0 ? 'not-allowed' : 'pointer',
                         opacity: payableCount === 0 ? 0.5 : 1,
@@ -1063,8 +1063,8 @@ export default function CommissionsPage() {
                       title={t('qonto.refresh_status_tooltip', 'Rafraîchir les statuts Qonto')}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '6px 12px', borderRadius: 8, border: '1px solid #e2e8f0',
-                        background: '#fff', color: '#475569',
+                        padding: '6px 12px', borderRadius: 8, border: '1px solid #ded8cb',
+                        background: '#fff', color: '#33433b',
                         fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
                         cursor: refreshingPolls ? 'wait' : 'pointer',
                         opacity: refreshingPolls ? 0.7 : 1,
@@ -1089,18 +1089,18 @@ export default function CommissionsPage() {
         const anyVat = summary.some(p => parseFloat(p.total_tax || 0) > 0);
         const totalAllTtc = summary.reduce((s, p) => s + (parseFloat(p.total_ttc) || parseFloat(p.total_amount) || 0), 0);
         return (
-        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
-            <thead><tr style={{ background: '#f8fafc' }}>
+            <thead><tr style={{ background: '#f6f2e9' }}>
               {[t('commissions.tbl_partner'), t('commissions.tbl_rate'), t('commissions.tbl_deals'), `${rLabel} ${t('commissions.tbl_generated')}`, t('commissions.tbl_pending'), t('commissions.tbl_approved'), t('commissions.tbl_paid'), anyVat ? t('commissions.tbl_total') + ' TTC' : t('commissions.tbl_total')].map((h, i) => (
                 <th
                   key={i}
                   style={{
                     padding: '13px 16px',
                     textAlign: i === 0 ? 'left' : 'right',
-                    fontWeight: 600, color: '#64748b', fontSize: 11,
+                    fontWeight: 600, color: '#6e756c', fontSize: 11,
                     textTransform: 'uppercase', letterSpacing: 0.5,
-                    borderBottom: '1px solid #e2e8f0',
+                    borderBottom: '1px solid #ded8cb',
                   }}
                 >{h}</th>
               ))}
@@ -1111,27 +1111,27 @@ export default function CommissionsPage() {
                 ? (parseFloat(p.total_ttc) || parseFloat(p.total_amount) || 0)
                 : (parseFloat(p.total_amount) || 0);
               return (
-              <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                <td style={{ padding: '13px 16px', textAlign: 'left' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{p.contact_name}</div></td>
-                <td style={{ padding: '13px 16px', textAlign: 'right' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{p.commission_rate}%</span></td>
+              <tr key={p.id} style={{ borderBottom: '1px solid #f6f2e9' }}>
+                <td style={{ padding: '13px 16px', textAlign: 'left' }}><div style={{ fontWeight: 600, color: '#0e1f18' }}>{p.name}</div><div style={{ color: '#99a09a', fontSize: 12 }}>{p.contact_name}</div></td>
+                <td style={{ padding: '13px 16px', textAlign: 'right' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef1ea', color: 'var(--rb-primary, #0e7a54)', fontWeight: 700, fontSize: 12 }}>{p.commission_rate}%</span></td>
                 <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 600 }}>{p.total_commissions}</td>
                 <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 600 }}>{fmt(p.total_deal_value)}</td>
-                <td style={{ padding: '13px 16px', textAlign: 'right', color: '#f59e0b', fontWeight: 600 }}>{fmt(p.pending_amount)}</td>
-                <td style={{ padding: '13px 16px', textAlign: 'right', color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{fmt(p.approved_amount)}</td>
-                <td style={{ padding: '13px 16px', textAlign: 'right', color: '#16a34a', fontWeight: 600 }}>{fmt(p.paid_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', color: '#b4791f', fontWeight: 600 }}>{fmt(p.pending_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', color: 'var(--rb-primary, #0e7a54)', fontWeight: 600 }}>{fmt(p.approved_amount)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'right', color: '#157a4c', fontWeight: 600 }}>{fmt(p.paid_amount)}</td>
                 <td style={{ padding: '13px 16px', textAlign: 'right' }}>
-                  <div style={{ fontWeight: 800, fontSize: 16, color: '#0f172a', lineHeight: 1.2 }}>{fmt(totalDisplay)}</div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: '#0e1f18', lineHeight: 1.2 }}>{fmt(totalDisplay)}</div>
                   {anyVat && partnerHasVat && (
-                    <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>{fmt(p.total_ht)} HT</div>
+                    <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 500 }}>{fmt(p.total_ht)} HT</div>
                   )}
                 </td>
               </tr>
             );})}</tbody>
             <tfoot><tr style={{ background: '#fefce8' }}>
-              <td colSpan={7} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 700, color: '#0f172a' }}>{t('commissions.total')}</td>
-              <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#f59e0b', fontSize: 18 }}>
+              <td colSpan={7} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 700, color: '#0e1f18' }}>{t('commissions.total')}</td>
+              <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#b4791f', fontSize: 18 }}>
                 {fmt(anyVat ? totalAllTtc : totalAll)}
-                {anyVat && <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginLeft: 6 }}>TTC</span>}
+                {anyVat && <span style={{ fontSize: 12, color: '#99a09a', fontWeight: 600, marginLeft: 6 }}>TTC</span>}
               </td>
             </tr></tfoot>
           </table>
@@ -1146,11 +1146,11 @@ export default function CommissionsPage() {
       {tab === 'pipeline' && qontoStatus?.connected && selected.size > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
           <button onClick={handlePayBulk} disabled={bulkBusy || !!paymentState}
-            style={{ padding: '9px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: (bulkBusy || !!paymentState) ? 0.7 : 1 }}>
+            style={{ padding: '9px 16px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: (bulkBusy || !!paymentState) ? 0.7 : 1 }}>
             <Send size={14} /> {bulkBusy ? t('common.saving', 'Enregistrement…') : t('qonto.pay_selection', { count: selected.size, defaultValue: 'Payer la sélection ({{count}})' })}
           </button>
           <button onClick={clearSelection} disabled={bulkBusy}
-            style={{ padding: '9px 14px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            style={{ padding: '9px 14px', borderRadius: 10, background: '#ece7db', border: 'none', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             {t('common.cancel', 'Annuler')}
           </button>
         </div>
@@ -1162,15 +1162,15 @@ export default function CommissionsPage() {
           cadence unitary (batches reste vide donc lateBatches +
           nearDeadlineBatches le sont aussi). */}
       {tab === 'pipeline' && batchCadenceActive && lateBatches.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', marginBottom: 12, fontSize: 13 }}>
-          <AlertTriangle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#f7e9e6', border: '1px solid #edc4bd', color: '#991b1b', marginBottom: 12, fontSize: 13 }}>
+          <AlertTriangle size={16} color="#b23b2e" style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontWeight: 600 }}>
             {t('payouts.banner_late', { count: lateBatches.length, defaultValue: '{{count}} batches en retard (facture non reçue depuis plus de 10 jours)' })}
           </span>
         </div>
       )}
       {tab === 'pipeline' && batchCadenceActive && lateBatches.length === 0 && nearDeadlineBatches.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', marginBottom: 12, fontSize: 13 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#f6efda', border: '1px solid #ecd9a0', color: '#7a4a16', marginBottom: 12, fontSize: 13 }}>
           <Clock size={16} color="#d97706" style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontWeight: 600 }}>
             {t('payouts.banner_near_deadline', { count: nearDeadlineBatches.length, defaultValue: '{{count}} batches approchent de la deadline facture (J-3 à J-1)' })}
@@ -1234,7 +1234,7 @@ export default function CommissionsPage() {
             const cards = displayItems.slice(0, limit);
             const hasMore = displayItems.length > limit;
             return (
-              <div key={status} style={{ flex: 1, background: '#f8fafc', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
+              <div key={status} style={{ flex: 1, background: '#f6f2e9', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #ded8cb' }}>
                 {(() => {
                   // F5 — Column total + count = SOMME des unités visuelles
                   // affichées (1 carte batch = 1 unité, peu importe le
@@ -1249,7 +1249,7 @@ export default function CommissionsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: sc.color }} />
-                        <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{sc.label}</span>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: '#0e1f18' }}>{sc.label}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontWeight: 700, fontSize: 13, color: sc.color }}>{fmt(totalHt)}</span>
@@ -1275,9 +1275,9 @@ export default function CommissionsPage() {
                       const remaining = Math.max(0, totalCount - sortedPreview.length);
                       const hasVatGroup = parseFloat(ab.total_amount_tax || 0) > 0;
                       const batchStatusPill = {
-                        awaiting_invoice: { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#fffbeb', color: '#92400e' },
-                        ready_to_pay:     { label: t('payouts.status_ready_to_pay',     'Prêt à payer'),           bg: '#eff6ff', color: '#1d4ed8' },
-                        paid:             { label: t('payouts.status_paid',             'Payé'),                    bg: '#f0fdf4', color: '#166534' },
+                        awaiting_invoice: { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#f6efda', color: '#7a4a16' },
+                        ready_to_pay:     { label: t('payouts.status_ready_to_pay',     'Prêt à payer'),           bg: '#e9f1ea', color: '#1d4ed8' },
+                        paid:             { label: t('payouts.status_paid',             'Payé'),                    bg: '#e9f1ea', color: '#0e4d34' },
                       }[ab.status] || null;
                       return (
                         <div
@@ -1293,7 +1293,7 @@ export default function CommissionsPage() {
                               <div style={{ fontWeight: 600, color: '#6b21a8', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
                                 ▣ {ab.period}
                               </div>
-                              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {ab.partner_name}
                               </div>
                             </div>
@@ -1305,7 +1305,7 @@ export default function CommissionsPage() {
                             {fmt(ab.total_amount_ttc)}{hasVatGroup ? ' TTC' : ''}
                           </div>
                           {hasVatGroup && (
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
+                            <div style={{ color: '#6e756c', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
                               {fmt(ab.total_amount_ht)} HT · {fmt(ab.total_amount_tax)} TVA
                             </div>
                           )}
@@ -1314,18 +1314,18 @@ export default function CommissionsPage() {
                               const pcHasVat = parseFloat(pc.amount_tax || 0) > 0;
                               const pcHt = pcHasVat ? pc.amount_ht : pc.amount;
                               return (
-                                <div key={pc.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#475569', fontSize: 11 }}>
+                                <div key={pc.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#33433b', fontSize: 11 }}>
                                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     · {pc.prospect_company || pc.prospect_name || '—'}
                                   </span>
-                                  <span style={{ color: '#94a3b8', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                                  <span style={{ color: '#99a09a', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
                                     {fmt(pcHt)}
                                   </span>
                                 </div>
                               );
                             })}
                             {remaining > 0 && (
-                              <div style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>
+                              <div style={{ color: '#99a09a', fontSize: 11, fontStyle: 'italic' }}>
                                 +{remaining} {t('payouts.aggregate_more', 'autres')}
                               </div>
                             )}
@@ -1369,7 +1369,7 @@ export default function CommissionsPage() {
                           ? `2px solid ${sc.color}`
                           : isSelected
                             ? `2px solid ${sc.color}`
-                            : '1px solid #e2e8f0',
+                            : '1px solid #ded8cb',
                         boxShadow: highlightId === c.id
                           ? `0 0 0 4px ${sc.color}25`
                           : '0 1px 3px rgba(0,0,0,0.04)',
@@ -1389,9 +1389,9 @@ export default function CommissionsPage() {
                           />
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.partner_name}</div>
+                          <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.partner_name}</div>
                           {(c.prospect_company || c.prospect_name) && (
-                            <div style={{ color: '#94a3b8', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ color: '#99a09a', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {c.prospect_company || c.prospect_name}
                             </div>
                           )}
@@ -1409,13 +1409,13 @@ export default function CommissionsPage() {
                             style={{
                               flexShrink: 0,
                               padding: 5, borderRadius: 6, background: 'transparent',
-                              border: '1px solid transparent', color: '#cbd5e1',
+                              border: '1px solid transparent', color: '#cfc8b8',
                               cursor: busyId === c.id ? 'wait' : 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               transition: 'background .15s, color .15s, border-color .15s',
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = '#fecaca'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; e.currentTarget.style.borderColor = 'transparent'; }}
+                            onMouseEnter={e => { e.currentTarget.style.background = '#f7e9e6'; e.currentTarget.style.color = '#b23b2e'; e.currentTarget.style.borderColor = '#edc4bd'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#cfc8b8'; e.currentTarget.style.borderColor = 'transparent'; }}
                           >
                             <Trash2 size={13} />
                           </button>
@@ -1447,27 +1447,27 @@ export default function CommissionsPage() {
                           ).length;
                           const cycleTtc = c.amount_ttc != null ? c.amount_ttc : c.amount;
                           return (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderTop: '1px solid #f1f5f9', marginBottom: hasVat ? 6 : 8, flexWrap: 'wrap', rowGap: 4 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderTop: '1px solid #ece7db', marginBottom: hasVat ? 6 : 8, flexWrap: 'wrap', rowGap: 4 }}>
                               <div>
-                                <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--rb-primary, #059669)' }}>{fmt(cycleTtc)}</span>
-                                <span style={{ fontSize: 11, color: '#64748b', marginLeft: 6 }}>
+                                <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--rb-primary, #0e7a54)' }}>{fmt(cycleTtc)}</span>
+                                <span style={{ fontSize: 11, color: '#6e756c', marginLeft: 6 }}>
                                   / {durationLabel} ·{' '}
                                   {t('commissions.card_paid_count', { count: paidCount, defaultValue: '{{count}} versé(s)' })}
                                 </span>
                               </div>
-                              <span style={{ color: '#94a3b8', fontSize: 11, textAlign: 'right' }}>
+                              <span style={{ color: '#99a09a', fontSize: 11, textAlign: 'right' }}>
                                 {c.rate}% · {fmt(c.deal_value)}
                               </span>
                             </div>
                           );
                         }
                         return (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderTop: '1px solid #f1f5f9', marginBottom: hasVat ? 6 : 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 0', borderTop: '1px solid #ece7db', marginBottom: hasVat ? 6 : 8 }}>
                             <div>
-                              <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--rb-primary, #059669)' }}>{fmt(headlineAmount)}</span>
-                              {hasVat && <span style={{ fontSize: 11, color: 'var(--rb-primary, #059669)', marginLeft: 4, fontWeight: 600 }}>HT</span>}
+                              <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--rb-primary, #0e7a54)' }}>{fmt(headlineAmount)}</span>
+                              {hasVat && <span style={{ fontSize: 11, color: 'var(--rb-primary, #0e7a54)', marginLeft: 4, fontWeight: 600 }}>HT</span>}
                             </div>
-                            <span style={{ color: '#94a3b8', fontSize: 11, textAlign: 'right' }}>
+                            <span style={{ color: '#99a09a', fontSize: 11, textAlign: 'right' }}>
                               {c.rate}% · {fmt(c.deal_value)}
                             </span>
                           </div>
@@ -1478,9 +1478,9 @@ export default function CommissionsPage() {
                           for non-subject rows so the card stays
                           minimal for tenants without assujettis. */}
                       {parseFloat(c.amount_tax || 0) > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#64748b', padding: '5px 8px', background: '#f8fafc', borderRadius: 6, marginBottom: 8, lineHeight: 1.3 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#6e756c', padding: '5px 8px', background: '#f6f2e9', borderRadius: 6, marginBottom: 8, lineHeight: 1.3 }}>
                           <span>TVA {c.tax_rate_applied}% : {fmt(c.amount_tax)}</span>
-                          <span style={{ fontWeight: 600, color: '#334155' }}>TTC : {fmt(c.amount_ttc)}</span>
+                          <span style={{ fontWeight: 600, color: '#2b3a32' }}>TTC : {fmt(c.amount_ttc)}</span>
                         </div>
                       )}
 
@@ -1491,7 +1491,7 @@ export default function CommissionsPage() {
                           the column itself + the ref banner below. */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                         {c.engagement_type && c.engagement_type !== 'forfait' && (
-                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#64748b', fontWeight: 600 }}>
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#ece7db', color: '#6e756c', fontWeight: 600 }}>
                             {(c.engagement_type === 'mensuel' || c.engagement_type === 'monthly') &&
                               `${c.engagement_periods || 1} ${t('pipeline.months', 'mois')}`}
                             {(c.engagement_type === 'trimestriel' || c.engagement_type === 'quarterly') &&
@@ -1511,14 +1511,14 @@ export default function CommissionsPage() {
                         {c.is_recurring && (() => {
                           if (c.is_perpetual) {
                             return (
-                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700 }}>
+                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef1ea', color: '#0e7a54', fontWeight: 700 }}>
                                 {t('commissions.duration_perpetual_badge', 'À vie')}
                               </span>
                             );
                           }
                           if (!c.engagement_until) {
                             return (
-                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700 }}>
+                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef1ea', color: '#0e7a54', fontWeight: 700 }}>
                                 {t('commissions.duration_bounded_badge', 'Durée limitée')}
                               </span>
                             );
@@ -1531,18 +1531,18 @@ export default function CommissionsPage() {
                           const endMs   = new Date(c.engagement_until).getTime();
                           if (endMs < todayMs) {
                             return (
-                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#64748b', fontWeight: 700 }}>
+                              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#ece7db', color: '#6e756c', fontWeight: 700 }}>
                                 {t('commissions.duration_terminated_badge', 'Terminé')}
                               </span>
                             );
                           }
                           return (
-                            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef2ff', color: '#6366f1', fontWeight: 700 }}>
+                            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#eef1ea', color: '#0e7a54', fontWeight: 700 }}>
                               {t('commissions.duration_until_badge', { date: fmtDate(c.engagement_until), defaultValue: "Jusqu'au {{date}}" })}
                             </span>
                           );
                         })()}
-                        <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtDate(c.created_at)}</span>
+                        <span style={{ fontSize: 10, color: '#99a09a' }}>{fmtDate(c.created_at)}</span>
                       </div>
 
                       {/* Compact monospace ref line for paid commissions.
@@ -1550,14 +1550,14 @@ export default function CommissionsPage() {
                           "Vérifier sur Qonto" link (redundant — admin
                           can paste the ref into Qonto search). */}
                       {status === 'paid' && c.payment_reference && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontFamily: 'monospace', color: '#94a3b8', padding: '4px 8px', background: '#f8fafc', borderRadius: 6, marginBottom: 8, wordBreak: 'break-all' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontFamily: 'monospace', color: '#99a09a', padding: '4px 8px', background: '#f6f2e9', borderRadius: 6, marginBottom: 8, wordBreak: 'break-all' }}>
                           <FileText size={10} />
                           <span style={{ flex: 1 }}>{c.payment_reference}</span>
                           {c.has_invoice && (
                             <button
                               onClick={() => handleDownloadInvoice(c.id)}
                               title={t('qonto.payment_proof', 'Preuve de virement')}
-                              style={{ padding: 2, borderRadius: 4, background: 'transparent', border: 'none', color: '#16a34a', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                              style={{ padding: 2, borderRadius: 4, background: 'transparent', border: 'none', color: '#157a4c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                             >
                               <Download size={11} />
                             </button>
@@ -1588,9 +1588,9 @@ export default function CommissionsPage() {
                       {(c.payment_initiated_at || c.qonto_transfer_id) && status !== 'paid' && (
                         <div style={{
                           padding: '8px 10px', borderRadius: 8,
-                          background: scaPending ? '#fffbeb' : '#eff6ff',
-                          border: `1px solid ${scaPending ? '#fde68a' : '#bfdbfe'}`,
-                          color: scaPending ? '#92400e' : '#1e40af',
+                          background: scaPending ? '#f6efda' : '#e9f1ea',
+                          border: `1px solid ${scaPending ? '#ecd9a0' : '#bfdbfe'}`,
+                          color: scaPending ? '#7a4a16' : '#1e40af',
                           fontSize: 11, marginBottom: 8, lineHeight: 1.45,
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -1611,9 +1611,9 @@ export default function CommissionsPage() {
                       {!scaPending && errBanner && (
                         <div style={{
                           padding: '8px 10px', borderRadius: 8,
-                          background: errBanner.tone === 'info' ? '#fffbeb' : '#fef2f2',
-                          border: `1px solid ${errBanner.tone === 'info' ? '#fde68a' : '#fecaca'}`,
-                          color: errBanner.tone === 'info' ? '#92400e' : '#b91c1c',
+                          background: errBanner.tone === 'info' ? '#f6efda' : '#f7e9e6',
+                          border: `1px solid ${errBanner.tone === 'info' ? '#ecd9a0' : '#edc4bd'}`,
+                          color: errBanner.tone === 'info' ? '#7a4a16' : '#8f2e24',
                           fontSize: 11, marginBottom: 8, lineHeight: 1.45,
                         }}>
                           <div style={{ marginBottom: errBanner.action === 'retry' ? 6 : 0 }}>
@@ -1625,8 +1625,8 @@ export default function CommissionsPage() {
                               disabled={resettingId === c.id}
                               style={{
                                 width: '100%', padding: '6px', borderRadius: 6,
-                                background: '#fff', border: '1px solid #fecaca',
-                                color: '#b91c1c', fontWeight: 700, fontSize: 11,
+                                background: '#fff', border: '1px solid #edc4bd',
+                                color: '#8f2e24', fontWeight: 700, fontSize: 11,
                                 cursor: resettingId === c.id ? 'wait' : 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                                 opacity: resettingId === c.id ? 0.7 : 1,
@@ -1644,17 +1644,17 @@ export default function CommissionsPage() {
                       {status === 'pending_approval' && (
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button onClick={() => handleApprove(c.id)} disabled={busyId === c.id}
-                            style={{ flex: 2, padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
+                            style={{ flex: 2, padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
                             <CheckCircle size={12} /> {t('commission.approve')}
                           </button>
                           <button onClick={() => openReject(c)}
-                            style={{ flex: 1, padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #fecaca', color: '#dc2626', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+                            style={{ flex: 1, padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #edc4bd', color: '#b23b2e', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
                             {t('commission.reject')}
                           </button>
                         </div>
                       )}
                       {status === 'awaiting_invoice' && (
-                        <div style={{ padding: '7px 10px', borderRadius: 8, background: '#fffbeb', color: '#92400e', fontSize: 11, textAlign: 'center', fontWeight: 600 }}>
+                        <div style={{ padding: '7px 10px', borderRadius: 8, background: '#f6efda', color: '#7a4a16', fontSize: 11, textAlign: 'center', fontWeight: 600 }}>
                           {t('commission.waiting_for_partner_invoice')}
                         </div>
                       )}
@@ -1662,17 +1662,17 @@ export default function CommissionsPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           {c.has_invoice && (
                             <button onClick={() => handlePreviewInvoice(c)}
-                              style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                              style={{ width: '100%', padding: '7px', borderRadius: 8, background: '#e9f1ea', border: '1px solid #bfdbfe', color: '#1d4ed8', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                               <Eye size={12} /> {t('commission.view_invoice', 'Voir la facture')}
                             </button>
                           )}
                           {scaPending ? (
                             <button onClick={() => handleConfirmSca(c.id)} disabled={confirmingScaId === c.id}
-                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #fde68a', color: '#92400e', fontWeight: 700, fontSize: 12, cursor: confirmingScaId === c.id ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: confirmingScaId === c.id ? 0.7 : 1 }}>
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: '#fff', border: '1px solid #ecd9a0', color: '#7a4a16', fontWeight: 700, fontSize: 12, cursor: confirmingScaId === c.id ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: confirmingScaId === c.id ? 0.7 : 1 }}>
                               <CheckCircle size={12} className={confirmingScaId === c.id ? 'rb-spin' : ''} /> {confirmingScaId === c.id ? t('qonto.refreshing_status', 'Vérification…') : t('qonto.already_approved', 'J\'ai déjà approuvé')}
                             </button>
                           ) : isInitiated ? (
-                            <div style={{ padding: '7px 10px', borderRadius: 8, background: '#eef2ff', color: '#4338ca', fontSize: 11, textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <div style={{ padding: '7px 10px', borderRadius: 8, background: '#eef1ea', color: '#4338ca', fontSize: 11, textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                               <Send size={12} /> {t('qonto.transfer_in_progress', 'Virement en cours')}
                             </div>
                           ) : c.payout_batch_id ? (
@@ -1684,7 +1684,7 @@ export default function CommissionsPage() {
                             // paie groupée".
                             <div style={{
                               padding: '7px 10px', borderRadius: 8,
-                              background: '#eef2ff', color: '#4338ca',
+                              background: '#eef1ea', color: '#4338ca',
                               fontSize: 11, textAlign: 'center', fontWeight: 600,
                               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                             }}>
@@ -1692,12 +1692,12 @@ export default function CommissionsPage() {
                             </div>
                           ) : qontoStatus?.connected ? (
                             <button onClick={() => handlePayViaQonto(c)} disabled={busyId === c.id || !!paymentState}
-                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: busyId === c.id ? 0.7 : 1 }}>
                               <Send size={12} /> {t('qonto.pay', 'Payer')}
                             </button>
                           ) : (
                             <button onClick={() => handlePayClick(c)} disabled={!!paymentState}
-                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: paymentState ? 0.7 : 1 }}>
+                              style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, opacity: paymentState ? 0.7 : 1 }}>
                               <CreditCard size={12} /> {t('commission.validate_payment')}
                             </button>
                           )}
@@ -1714,11 +1714,11 @@ export default function CommissionsPage() {
                     </div>
                     );
                   })}
-                  {cards.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: '#cbd5e1', fontSize: 13 }}>{t('commissions.no_commission')}</div>}
+                  {cards.length === 0 && <div style={{ padding: 24, textAlign: 'center', color: '#cfc8b8', fontSize: 13 }}>{t('commissions.no_commission')}</div>}
                   {hasMore && (
                     <button onClick={() => setComLimits(prev => ({ ...prev, [status]: limit + 25 }))} style={{
-                      padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
-                      color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
+                      padding: '10px', borderRadius: 10, border: '1px dashed #cfc8b8', background: 'transparent',
+                      color: 'var(--rb-primary, #0e7a54)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
                     }}>{t('commissions.see_more', { count: displayItems.length - limit })}</button>
                   )}
                 </div>
@@ -1731,10 +1731,10 @@ export default function CommissionsPage() {
               4 colonnes). Rendu exclusivement en cartes agrégées —
               jamais de commission individuelle ici. */}
           {batchCadenceActive && lateBatches.length > 0 && (
-            <div style={{ flex: 1, background: '#fef2f2', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #fecaca' }}>
+            <div style={{ flex: 1, background: '#f7e9e6', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', border: '1px solid #edc4bd' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <AlertTriangle size={14} color="#dc2626" />
+                  <AlertTriangle size={14} color="#b23b2e" />
                   <span style={{ fontWeight: 700, fontSize: 13, color: '#991b1b' }}>{t('payouts.column_late', 'En retard')}</span>
                 </div>
                 <span style={{ background: '#fee2e2', color: '#991b1b', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>{lateBatches.length}</span>
@@ -1747,7 +1747,7 @@ export default function CommissionsPage() {
                       key={'late-' + lb.id}
                       style={{
                         background: '#fff', borderRadius: 12, padding: 14,
-                        border: '1px solid #fecaca',
+                        border: '1px solid #edc4bd',
                         boxShadow: '0 1px 3px rgba(220,38,38,0.08)',
                       }}
                     >
@@ -1756,16 +1756,16 @@ export default function CommissionsPage() {
                           <div style={{ fontWeight: 600, color: '#991b1b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
                             {lb.period}
                           </div>
-                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {lb.partner_name}
                           </div>
                         </div>
                       </div>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#dc2626', letterSpacing: -0.5, marginBottom: hasVatLb ? 2 : 8 }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#b23b2e', letterSpacing: -0.5, marginBottom: hasVatLb ? 2 : 8 }}>
                         {fmt(lb.total_amount_ttc)}{hasVatLb ? ' TTC' : ''}
                       </div>
                       {hasVatLb && (
-                        <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
+                        <div style={{ color: '#6e756c', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
                           {fmt(lb.total_amount_ht)} HT · {fmt(lb.total_amount_tax)} TVA
                         </div>
                       )}
@@ -1773,7 +1773,7 @@ export default function CommissionsPage() {
                         onClick={() => openBatchDetail(lb.id)}
                         style={{
                           width: '100%', padding: '7px', borderRadius: 8,
-                          background: '#fee2e2', border: '1px solid #fecaca', color: '#991b1b',
+                          background: '#fee2e2', border: '1px solid #edc4bd', color: '#991b1b',
                           fontWeight: 700, fontSize: 12, cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                           fontFamily: 'inherit', marginBottom: 6,
@@ -1793,14 +1793,14 @@ export default function CommissionsPage() {
       {tab === 'pipeline' && viewMode === 'table' && (
         <>
           <div style={{ marginBottom: 16 }}>
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#334155', background: '#fff', cursor: 'pointer' }}>
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 13, fontWeight: 600, color: '#2b3a32', background: '#fff', cursor: 'pointer' }}>
               <option value="all">{t('commissions.all_statuses')}</option>
               {STATUS_KEYS.map(k => <option key={k} value={k}>{COM_STATUS[k].label}</option>)}
             </select>
           </div>
-          <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+          <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-              <thead><tr style={{ background: '#f8fafc' }}>
+              <thead><tr style={{ background: '#f6f2e9' }}>
                 {[
                   t('commissions.tbl_prospect'),
                   t('commissions.tbl_partner'),
@@ -1814,7 +1814,7 @@ export default function CommissionsPage() {
                   t('commissions.tbl_due'),
                   t('commissions.tbl_action'),
                 ].map((h, i) => (
-                  <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                  <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#6e756c', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #ded8cb' }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>{filtered.map(c => {
@@ -1826,33 +1826,33 @@ export default function CommissionsPage() {
                 const ttc = c.amount_ttc != null ? c.amount_ttc : c.amount;
                 const tax = parseFloat(c.amount_tax || 0);
                 return (
-                  <tr key={c.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                    <td style={{ padding: '13px 16px' }}><div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_name}</div><div style={{ color: '#94a3b8', fontSize: 12 }}>{c.prospect_company}</div></td>
-                    <td style={{ padding: '13px 16px', color: '#475569' }}>{c.partner_name}</td>
-                    <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef2ff', color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span></td>
+                  <tr key={c.id} style={{ borderBottom: '1px solid #f6f2e9' }}>
+                    <td style={{ padding: '13px 16px' }}><div style={{ fontWeight: 600, color: '#0e1f18' }}>{c.prospect_name}</div><div style={{ color: '#99a09a', fontSize: 12 }}>{c.prospect_company}</div></td>
+                    <td style={{ padding: '13px 16px', color: '#33433b' }}>{c.partner_name}</td>
+                    <td style={{ padding: '13px 16px' }}><span style={{ padding: '3px 8px', borderRadius: 6, background: '#eef1ea', color: 'var(--rb-primary, #0e7a54)', fontWeight: 700, fontSize: 12 }}>{c.rate}%</span></td>
                     <td style={{ padding: '13px 16px', fontWeight: 600 }}>{fmt(c.deal_value)}</td>
-                    <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>{fmt(ht)}</td>
-                    <td style={{ padding: '13px 16px', textAlign: 'right', fontSize: 12, color: '#94a3b8' }}>
+                    <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 600, color: '#0e1f18' }}>{fmt(ht)}</td>
+                    <td style={{ padding: '13px 16px', textAlign: 'right', fontSize: 12, color: '#99a09a' }}>
                       {tax > 0 ? `${c.tax_rate_applied}% · ${fmt(tax)}` : '—'}
                     </td>
-                    <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#f59e0b', fontSize: 16 }}>{fmt(ttc)}</td>
+                    <td style={{ padding: '13px 16px', textAlign: 'right', fontWeight: 800, color: '#b4791f', fontSize: 16 }}>{fmt(ttc)}</td>
                     <td style={{ padding: '13px 16px' }}><span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: cs.bg, color: cs.color }}>{cs.label}</span></td>
-                    <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '—'}</td>
+                    <td style={{ padding: '13px 16px', color: '#6e756c', fontSize: 12 }}>{c.approved_at ? fmtDate(c.approved_at) : '—'}</td>
                     <td style={{ padding: '13px 16px', fontSize: 12 }}>
-                      {c.payment_due_date ? (<span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#dc2626' : '#64748b', fontWeight: c.is_late ? 700 : 400 }}>{c.is_late && <AlertTriangle size={14} />}{fmtDate(c.payment_due_date)}</span>) : '—'}
+                      {c.payment_due_date ? (<span style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.is_late ? '#b23b2e' : '#6e756c', fontWeight: c.is_late ? 700 : 400 }}>{c.is_late && <AlertTriangle size={14} />}{fmtDate(c.payment_due_date)}</span>) : '—'}
                     </td>
                     <td style={{ padding: '13px 16px' }}>
-                      {c.status === 'pending_approval' && <button onClick={() => handleApprove(c.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.approve')}</button>}
-                      {c.status === 'awaiting_invoice' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{t('commission.waiting_for_partner_invoice')}</span>}
-                      {c.status === 'pending_validation' && !c.payout_batch_id && <button onClick={() => handlePayClick(c)} disabled={!!paymentState} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer', opacity: paymentState ? 0.7 : 1 }}>{t('commission.validate_payment')}</button>}
-                      {c.status === 'pending_validation' && c.payout_batch_id && <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#eef2ff', color: '#4338ca' }}>{t('payouts.in_batch_badge', 'Dans batch')}</span>}
-                      {c.status === 'paid' && <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
+                      {c.status === 'pending_approval' && <button onClick={() => handleApprove(c.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('commission.approve')}</button>}
+                      {c.status === 'awaiting_invoice' && <span style={{ color: '#99a09a', fontSize: 12 }}>{t('commission.waiting_for_partner_invoice')}</span>}
+                      {c.status === 'pending_validation' && !c.payout_batch_id && <button onClick={() => handlePayClick(c)} disabled={!!paymentState} style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer', opacity: paymentState ? 0.7 : 1 }}>{t('commission.validate_payment')}</button>}
+                      {c.status === 'pending_validation' && c.payout_batch_id && <span style={{ padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#eef1ea', color: '#4338ca' }}>{t('payouts.in_batch_badge', 'Dans batch')}</span>}
+                      {c.status === 'paid' && <span style={{ color: '#99a09a', fontSize: 12 }}>{fmtDate(c.paid_at)}</span>}
                     </td>
                   </tr>
                 );
               })}</tbody>
             </table>
-            {filtered.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('commissions.no_commission')}</div>}
+            {filtered.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>{t('commissions.no_commission')}</div>}
           </div>
         </>
       )}
@@ -1862,18 +1862,18 @@ export default function CommissionsPage() {
         title={t('commission.reject')}
         message={
           <div>
-            <div style={{ marginBottom: 12, color: '#475569' }}>
+            <div style={{ marginBottom: 12, color: '#33433b' }}>
               {rejectModal && (<>
-                <strong style={{ color: '#0f172a' }}>{rejectModal.prospect_name}</strong> — {fmt(rejectModal.amount)}
+                <strong style={{ color: '#0e1f18' }}>{rejectModal.prospect_name}</strong> — {fmt(rejectModal.amount)}
               </>)}
             </div>
-            <div style={{ color: '#334155', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{t('commission.reject_reason')}</div>
+            <div style={{ color: '#2b3a32', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{t('commission.reject_reason')}</div>
             <textarea
               value={rejectReason}
               onChange={e => setRejectReason(e.target.value)}
               placeholder={t('commission.reject_reason_placeholder')}
               rows={3}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', color: '#0f172a', resize: 'vertical', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', color: '#0e1f18', resize: 'vertical', boxSizing: 'border-box' }}
             />
           </div>
         }
@@ -1890,29 +1890,29 @@ export default function CommissionsPage() {
           <div onClick={() => setPayModal(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 480, maxWidth: '100%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', padding: 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-              <div><h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{t('commissions.modal_title')}</h2><p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{t('commissions.modal_subtitle')}</p></div>
-              <button onClick={() => setPayModal(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#475569" /></button>
+              <div><h2 style={{ fontSize: 20, fontWeight: 800, color: '#0e1f18' }}>{t('commissions.modal_title')}</h2><p style={{ color: '#6e756c', fontSize: 13, marginTop: 4 }}>{t('commissions.modal_subtitle')}</p></div>
+              <button onClick={() => setPayModal(null)} style={{ background: '#ece7db', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#33433b" /></button>
             </div>
-            <div style={{ background: '#f8fafc', borderRadius: 14, padding: 20, marginBottom: 20, border: '1px solid #e2e8f0' }}>
+            <div style={{ background: '#f6f2e9', borderRadius: 14, padding: 20, marginBottom: 20, border: '1px solid #ded8cb' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}><Building size={16} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} /><div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_partner')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{payModal.partner.name || payModal.commission.partner_name}</div></div></div>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}><User size={16} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} /><div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_contact')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{payModal.partner.contact_name || payModal.commission.partner_contact}</div></div></div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}><Building size={16} color="#6e756c" style={{ marginTop: 2, flexShrink: 0 }} /><div><div style={{ color: '#99a09a', fontSize: 11 }}>{t('commissions.modal_partner')}</div><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14 }}>{payModal.partner.name || payModal.commission.partner_name}</div></div></div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}><User size={16} color="#6e756c" style={{ marginTop: 2, flexShrink: 0 }} /><div><div style={{ color: '#99a09a', fontSize: 11 }}>{t('commissions.modal_contact')}</div><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14 }}>{payModal.partner.contact_name || payModal.commission.partner_contact}</div></div></div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16 }}><Banknote size={16} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} /><div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_iban')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, fontFamily: 'monospace' }}>{payModal.partner.iban || t('commissions.modal_iban_missing')}</div></div></div>
-              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                <div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_prospect')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{payModal.commission.prospect_name}</div></div>
-                <div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_deal')}</div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>{fmt(payModal.commission.deal_value)}</div></div>
-                <div><div style={{ color: '#94a3b8', fontSize: 11 }}>{t('commissions.modal_rate')}</div><div style={{ fontWeight: 600, color: 'var(--rb-primary, #059669)', fontSize: 13 }}>{payModal.commission.rate}%</div></div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16 }}><Banknote size={16} color="#6e756c" style={{ marginTop: 2, flexShrink: 0 }} /><div><div style={{ color: '#99a09a', fontSize: 11 }}>{t('commissions.modal_iban')}</div><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14, fontFamily: 'monospace' }}>{payModal.partner.iban || t('commissions.modal_iban_missing')}</div></div></div>
+              <div style={{ borderTop: '1px solid #ded8cb', paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div><div style={{ color: '#99a09a', fontSize: 11 }}>{t('commissions.modal_prospect')}</div><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 13 }}>{payModal.commission.prospect_name}</div></div>
+                <div><div style={{ color: '#99a09a', fontSize: 11 }}>{t('commissions.modal_deal')}</div><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 13 }}>{fmt(payModal.commission.deal_value)}</div></div>
+                <div><div style={{ color: '#99a09a', fontSize: 11 }}>{t('commissions.modal_rate')}</div><div style={{ fontWeight: 600, color: 'var(--rb-primary, #0e7a54)', fontSize: 13 }}>{payModal.commission.rate}%</div></div>
               </div>
             </div>
-            <div style={{ background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)', borderRadius: 14, padding: 20, textAlign: 'center', marginBottom: 24, border: '1px solid #bbf7d0' }}>
-              <div style={{ color: '#16a34a', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{t('commissions.modal_amount')}</div>
-              <div style={{ fontSize: 36, fontWeight: 800, color: '#16a34a', letterSpacing: -1 }}>{fmt(payModal.commission.amount)}</div>
+            <div style={{ background: 'linear-gradient(135deg, #e9f1ea, #e9f1ea)', borderRadius: 14, padding: 20, textAlign: 'center', marginBottom: 24, border: '1px solid #cfe6d6' }}>
+              <div style={{ color: '#157a4c', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{t('commissions.modal_amount')}</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: '#157a4c', letterSpacing: -1 }}>{fmt(payModal.commission.amount)}</div>
             </div>
-            {!payModal.partner.iban && (<div style={{ background: '#fffbeb', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #fde68a' }}><AlertTriangle size={14} /> {t('commissions.modal_iban_missing')}</div>)}
+            {!payModal.partner.iban && (<div style={{ background: '#f6efda', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#7a4a16', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #ecd9a0' }}><AlertTriangle size={14} /> {t('commissions.modal_iban_missing')}</div>)}
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setPayModal(null)} style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>{t('commissions.modal_cancel')}</button>
-              <button onClick={handleConfirmPay} disabled={paying} style={{ flex: 2, padding: '13px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: paying ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(34,197,94,0.3)' }}>
+              <button onClick={() => setPayModal(null)} style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#ece7db', border: 'none', color: '#33433b', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>{t('commissions.modal_cancel')}</button>
+              <button onClick={handleConfirmPay} disabled={paying} style={{ flex: 2, padding: '13px', borderRadius: 12, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: paying ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 15px rgba(34,197,94,0.3)' }}>
                 <CreditCard size={16} /> {paying ? t('commissions.modal_confirming') : t('commissions.modal_confirm')}
               </button>
             </div>
@@ -1931,12 +1931,12 @@ export default function CommissionsPage() {
 
       {toast && (() => {
         const palette = toast.type === 'error'
-          ? { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' }
+          ? { bg: '#f7e9e6', color: '#8f2e24', border: '#edc4bd' }
           : toast.type === 'info'
             ? { bg: '#f0f9ff', color: '#075985', border: '#bae6fd' }
             : toast.type === 'warning'
-              ? { bg: '#fffbeb', color: '#92400e', border: '#fde68a' }
-              : { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' };
+              ? { bg: '#f6efda', color: '#7a4a16', border: '#ecd9a0' }
+              : { bg: '#e9f1ea', color: '#0e4d34', border: '#cfe6d6' };
         return (
           <div role="status" style={{
             position: 'fixed', bottom: 24, right: 24, zIndex: 2000,
@@ -1975,9 +1975,9 @@ export default function CommissionsPage() {
           >
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 20px', borderBottom: '1px solid #e2e8f0',
+              padding: '16px 20px', borderBottom: '1px solid #ded8cb',
             }}>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>
+              <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 15 }}>
                 {t('commission.invoice_modal_title', { name: invoicePreview.partnerName || '', defaultValue: 'Facture — {{name}}' })}
               </div>
               <button
@@ -1985,18 +1985,18 @@ export default function CommissionsPage() {
                 aria-label={t('common.close', 'Fermer')}
                 style={{
                   padding: 6, borderRadius: 8, background: 'transparent',
-                  border: '1px solid transparent', color: '#64748b',
+                  border: '1px solid transparent', color: '#6e756c',
                   cursor: 'pointer', display: 'flex',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#ece7db'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
               >
                 <X size={18} />
               </button>
             </div>
-            <div style={{ flex: 1, minHeight: 320, background: '#f8fafc' }}>
+            <div style={{ flex: 1, minHeight: 320, background: '#f6f2e9' }}>
               {invoicePreview.loading ? (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 13 }}>
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6e756c', fontSize: 13 }}>
                   {t('common.loading', 'Chargement…')}
                 </div>
               ) : invoicePreview.url ? (
@@ -2006,21 +2006,21 @@ export default function CommissionsPage() {
                   style={{ width: '100%', height: '100%', minHeight: 'calc(80vh - 130px)', border: 'none', background: '#fff' }}
                 />
               ) : (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: '#64748b', fontSize: 13, padding: 24, textAlign: 'center' }}>
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: '#6e756c', fontSize: 13, padding: 24, textAlign: 'center' }}>
                   {t('commission.invoice_preview_failed', 'Impossible de prévisualiser la facture. Téléchargez-la pour la consulter.')}
                 </div>
               )}
             </div>
             <div style={{
               display: 'flex', gap: 10, justifyContent: 'flex-end',
-              padding: '14px 20px', borderTop: '1px solid #e2e8f0', background: '#fff',
+              padding: '14px 20px', borderTop: '1px solid #ded8cb', background: '#fff',
             }}>
               <button
                 onClick={closeInvoicePreview}
                 style={{
                   padding: '10px 18px', borderRadius: 10,
-                  border: '1.5px solid #e2e8f0', background: '#fff',
-                  color: '#0f172a', fontSize: 14, fontWeight: 600,
+                  border: '1.5px solid #ded8cb', background: '#fff',
+                  color: '#0e1f18', fontSize: 14, fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
@@ -2030,7 +2030,7 @@ export default function CommissionsPage() {
                 onClick={() => handleDownloadInvoice(invoicePreview.commissionId)}
                 style={{
                   padding: '10px 18px', borderRadius: 10,
-                  border: 'none', background: 'var(--rb-primary, #059669)',
+                  border: 'none', background: 'var(--rb-primary, #0e7a54)',
                   color: '#fff', fontSize: 14, fontWeight: 700,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                   boxShadow: '0 6px 18px rgba(5,150,105,0.25)',
@@ -2052,7 +2052,7 @@ export default function CommissionsPage() {
           <div onClick={() => !(batchCanceling || batchPaying) && setBatchDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 640, maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
             {batchDetail.loading && (
-              <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+              <div style={{ padding: 48, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
                 {t('common.loading', 'Chargement…')}
               </div>
             )}
@@ -2061,18 +2061,18 @@ export default function CommissionsPage() {
               const list = batchDetail.commissions || [];
               const hasVatBd = parseFloat(bd.total_amount_tax || 0) > 0;
               const statusBadge = {
-                awaiting_invoice:   { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#fffbeb', color: '#92400e' },
-                ready_to_pay:      { label: t('payouts.status_ready_to_pay', 'Prêt à payer'),               bg: '#eff6ff', color: '#1d4ed8' },
-                paid:              { label: t('payouts.status_paid', 'Payé'),                                bg: '#f0fdf4', color: '#166534' },
-                cancelled:         { label: t('payouts.status_cancelled', 'Annulé'),                         bg: '#f1f5f9', color: '#475569' },
-              }[bd.status] || { label: bd.status, bg: '#f1f5f9', color: '#475569' };
+                awaiting_invoice:   { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#f6efda', color: '#7a4a16' },
+                ready_to_pay:      { label: t('payouts.status_ready_to_pay', 'Prêt à payer'),               bg: '#e9f1ea', color: '#1d4ed8' },
+                paid:              { label: t('payouts.status_paid', 'Payé'),                                bg: '#e9f1ea', color: '#0e4d34' },
+                cancelled:         { label: t('payouts.status_cancelled', 'Annulé'),                         bg: '#ece7db', color: '#33433b' },
+              }[bd.status] || { label: bd.status, bg: '#ece7db', color: '#33433b' };
               return (
                 <>
-                  <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #ece7db' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0e1f18', margin: 0 }}>
                             {t('payouts.detail_title', { partner: bd.partner_name, period: bd.period, defaultValue: 'Batch {{partner}} — {{period}}' })}
                           </h2>
                           <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: statusBadge.bg, color: statusBadge.color }}>
@@ -2084,21 +2084,21 @@ export default function CommissionsPage() {
                             </span>
                           )}
                         </div>
-                        <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>
+                        <p style={{ color: '#6e756c', fontSize: 13, margin: 0 }}>
                           {list.length} {t('payouts.aggregate_count_suffix', 'commissions')}
                           {' · '}{fmt(bd.total_amount_ttc)} TTC
-                          {hasVatBd && <span style={{ color: '#94a3b8' }}> ({fmt(bd.total_amount_ht)} HT + {fmt(bd.total_amount_tax)} TVA)</span>}
+                          {hasVatBd && <span style={{ color: '#99a09a' }}> ({fmt(bd.total_amount_ht)} HT + {fmt(bd.total_amount_tax)} TVA)</span>}
                         </p>
                       </div>
-                      <button onClick={() => !(batchCanceling || batchPaying) && setBatchDetail(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <X size={16} color="#475569" />
+                      <button onClick={() => !(batchCanceling || batchPaying) && setBatchDetail(null)} style={{ background: '#ece7db', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <X size={16} color="#33433b" />
                       </button>
                     </div>
                   </div>
 
                   <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px' }}>
                     {list.length === 0 ? (
-                      <div style={{ textAlign: 'center', color: '#94a3b8', padding: 24, fontSize: 13 }}>
+                      <div style={{ textAlign: 'center', color: '#99a09a', padding: 24, fontSize: 13 }}>
                         {t('payouts.detail_empty', 'Aucune commission dans ce batch.')}
                       </div>
                     ) : (
@@ -2106,21 +2106,21 @@ export default function CommissionsPage() {
                         {list.map(dc => {
                           const dcHasVat = parseFloat(dc.amount_tax || 0) > 0;
                           return (
-                            <div key={dc.id} style={{ padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                            <div key={dc.id} style={{ padding: 12, background: '#f6f2e9', borderRadius: 10, border: '1px solid #ded8cb' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                 <div style={{ minWidth: 0, flex: 1 }}>
-                                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {dc.prospect_company || dc.prospect_name || '—'}
                                   </div>
                                   {dc.prospect_company && dc.prospect_name && dc.prospect_company !== dc.prospect_name && (
-                                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 1 }}>{dc.prospect_name}</div>
+                                    <div style={{ color: '#99a09a', fontSize: 11, marginTop: 1 }}>{dc.prospect_name}</div>
                                   )}
-                                  <div style={{ color: '#64748b', fontSize: 11, marginTop: 4 }}>
+                                  <div style={{ color: '#6e756c', fontSize: 11, marginTop: 4 }}>
                                     {dc.rate}% · {fmt(dc.deal_value)}
                                   </div>
                                 </div>
                                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0e1f18' }}>
                                     {fmt(dcHasVat ? dc.amount_ttc : dc.amount)}{dcHasVat ? ' TTC' : ''}
                                   </div>
                                   {dc.referral_id && (
@@ -2128,7 +2128,7 @@ export default function CommissionsPage() {
                                       href={'/referrals?open=' + dc.referral_id}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
+                                      style={{ color: 'var(--rb-primary, #0e7a54)', fontSize: 11, fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
                                     >
                                       {t('payouts.see_deal_link', 'Voir le deal →')}
                                     </a>
@@ -2148,19 +2148,19 @@ export default function CommissionsPage() {
                       dans ce payload : on le récupère à la demande via
                       handleViewBatchInvoice. */}
                   {(bd.has_invoice || bd.invoice_uploaded_at) && (
-                    <div style={{ padding: '14px 28px', borderTop: '1px solid #f1f5f9', background: '#fafbfc' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: '#64748b', marginBottom: 8 }}>
+                    <div style={{ padding: '14px 28px', borderTop: '1px solid #ece7db', background: '#faf6ec' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: '#6e756c', marginBottom: 8 }}>
                         {t('payouts.invoice_section_title', 'Facture déposée')}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: '#fff', borderRadius: 10, border: '1px solid #ded8cb' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                          <FileText size={20} color="#dc2626" style={{ flexShrink: 0 }} />
+                          <FileText size={20} color="#b23b2e" style={{ flexShrink: 0 }} />
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {bd.invoice_filename || t('payouts.invoice_default_name', 'Facture batch')}
                             </div>
                             {bd.invoice_uploaded_at && (
-                              <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 1 }}>
+                              <div style={{ color: '#99a09a', fontSize: 11, marginTop: 1 }}>
                                 {t('payouts.invoice_uploaded_on', { date: fmtDateTime(bd.invoice_uploaded_at), defaultValue: 'Déposée le {{date}}' })}
                               </div>
                             )}
@@ -2169,14 +2169,14 @@ export default function CommissionsPage() {
                         <button
                           onClick={handleViewBatchInvoice}
                           disabled={batchInvoiceLoading}
-                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, background: '#eef2ff', border: 'none', color: '#4338ca', fontWeight: 600, fontSize: 12, cursor: batchInvoiceLoading ? 'wait' : 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, background: '#eef1ea', border: 'none', color: '#4338ca', fontWeight: 600, fontSize: 12, cursor: batchInvoiceLoading ? 'wait' : 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                         >
                           <Download size={14} />
                           {batchInvoiceLoading ? t('common.loading', 'Chargement…') : t('payouts.invoice_view', 'Voir')}
                         </button>
                       </div>
                       {bd.status === 'paid' && (
-                        <div style={{ marginTop: 8, fontSize: 12, color: '#166534', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ marginTop: 8, fontSize: 12, color: '#0e4d34', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                           <CheckCircle size={14} />
                           {t('payouts.paid_on', { date: bd.paid_at ? fmtDate(bd.paid_at) : '', defaultValue: 'Payé le {{date}}' })}
                         </div>
@@ -2189,8 +2189,8 @@ export default function CommissionsPage() {
                       a sca_pending=true en DB. Charles valide sur son
                       tél → bouton "J'ai déjà approuvé" en footer. */}
                   {batchScaPending && bd.status === 'ready_to_pay' && (
-                    <div style={{ margin: '0 28px 16px', padding: 14, borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <ShieldCheck size={20} color="#b45309" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ margin: '0 28px 16px', padding: 14, borderRadius: 10, background: '#f6efda', border: '1px solid #ecd9a0', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                      <ShieldCheck size={20} color="#9a5a16" style={{ flexShrink: 0, marginTop: 1 }} />
                       <div style={{ minWidth: 0, fontSize: 13, color: '#78350f', lineHeight: 1.5 }}>
                         <div style={{ fontWeight: 700, marginBottom: 4 }}>
                           {t('payouts.sca_banner_title', 'Validation SCA requise')}
@@ -2202,14 +2202,14 @@ export default function CommissionsPage() {
                     </div>
                   )}
 
-                  <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #ece7db', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     {bd.status !== 'paid' && bd.status !== 'cancelled' ? (
                       <button
                         onClick={handleCancelBatch}
                         disabled={batchCanceling || batchPaying}
                         style={{
                           padding: '9px 16px', borderRadius: 10,
-                          background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b',
+                          background: '#f7e9e6', border: '1px solid #edc4bd', color: '#991b1b',
                           fontWeight: 700, fontSize: 13,
                           cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', fontFamily: 'inherit',
                         }}
@@ -2221,7 +2221,7 @@ export default function CommissionsPage() {
                       <button
                         onClick={() => !(batchCanceling || batchPaying) && setBatchDetail(null)}
                         disabled={batchCanceling || batchPaying}
-                        style={{ padding: '9px 16px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                        style={{ padding: '9px 16px', borderRadius: 10, background: '#ece7db', border: 'none', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: (batchCanceling || batchPaying) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
                       >
                         {t('common.close', 'Fermer')}
                       </button>
@@ -2234,7 +2234,7 @@ export default function CommissionsPage() {
                         <button
                           onClick={handlePayBatch}
                           disabled={batchPaying || batchCanceling}
-                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: (batchPaying || batchCanceling) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: (batchPaying || batchCanceling) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
                         >
                           <Banknote size={15} />
                           {batchPaying ? t('payouts.pay_in_progress', 'Paiement…') : t('payouts.pay_button', 'Valider et payer le batch')}
@@ -2244,7 +2244,7 @@ export default function CommissionsPage() {
                         <button
                           onClick={handleConfirmSCA}
                           disabled={batchPaying || batchCanceling}
-                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: (batchPaying || batchCanceling) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: '#b4791f', border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: (batchPaying || batchCanceling) ? 'wait' : 'pointer', fontFamily: 'inherit' }}
                         >
                           <ShieldCheck size={15} />
                           {batchPaying ? t('payouts.sca_confirming', 'Confirmation…') : t('payouts.sca_confirm_button', 'J\'ai déjà approuvé')}
@@ -2284,19 +2284,19 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
     return (
       <Wrap width={560}>
         <div style={{ marginBottom: 18 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', margin: '0 0 6px' }}>
             {t('qonto.confirm_title', 'Confirmer le paiement')}
           </h2>
-          <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>
+          <p style={{ color: '#6e756c', fontSize: 14, margin: 0 }}>
             {t('qonto.confirm_subtitle', 'Vous êtes sur le point de lancer des virements via Qonto.')}
           </p>
         </div>
 
-        <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
+        <div style={{ border: '1px solid #ded8cb', borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
           <div style={{
             display: 'grid', gridTemplateColumns: '1.3fr 1.1fr 1.2fr',
-            background: '#f8fafc', padding: '10px 14px',
-            fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5,
+            background: '#f6f2e9', padding: '10px 14px',
+            fontSize: 11, fontWeight: 700, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5,
           }}>
             <div>{t('commissions.tbl_partner', 'Partenaire')}</div>
             <div>{t('commissions.tbl_deal', 'Deal')}</div>
@@ -2313,20 +2313,20 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
                 <div key={c.id} style={{
                   display: 'grid', gridTemplateColumns: '1.3fr 1.1fr 1.2fr',
                   padding: '10px 14px', fontSize: 13,
-                  background: i % 2 === 0 ? '#fff' : '#fafbfc',
-                  borderTop: i === 0 ? 'none' : '1px solid #f1f5f9',
+                  background: i % 2 === 0 ? '#fff' : '#faf6ec',
+                  borderTop: i === 0 ? 'none' : '1px solid #ece7db',
                   alignItems: 'center',
                 }}>
-                  <div style={{ fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontWeight: 600, color: '#0e1f18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.partner_name || '—'}
                   </div>
-                  <div style={{ color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ color: '#33433b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.prospect_company || c.prospect_name || '—'}
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{fmt(ttc)}</div>
+                    <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14 }}>{fmt(ttc)}</div>
                     {hasVat && (
-                      <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 2, lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 500, marginTop: 2, lineHeight: 1.4 }}>
                         {t('qonto.confirm_row_ht', 'HT')} {fmt(ht)} · {t('qonto.confirm_row_tva', 'TVA')} {taxRate}% {fmt(tax)}
                       </div>
                     )}
@@ -2339,22 +2339,22 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
 
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 16px', borderRadius: 12, background: '#f0fdf4', border: '1px solid #bbf7d0',
+          padding: '12px 16px', borderRadius: 12, background: '#e9f1ea', border: '1px solid #cfe6d6',
           marginBottom: 12,
         }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#0e4d34', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('qonto.confirm_count_label', 'Nombre d\'opérations')}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#166534', marginTop: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#0e4d34', marginTop: 2 }}>
               {t('qonto.confirm_count_value', { count: list.length, defaultValue: '{{count}} virement(s)' })}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#0e4d34', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('qonto.confirm_total_label_ttc', 'Montant total (TTC)')}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#16A34A', letterSpacing: -0.5, marginTop: 2 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#157a4c', letterSpacing: -0.5, marginTop: 2 }}>
               {totalLabel}
             </div>
           </div>
@@ -2362,8 +2362,8 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
 
         <div style={{
           padding: '10px 14px', borderRadius: 10,
-          background: '#fffbeb', border: '1px solid #fde68a',
-          color: '#92400e', fontSize: 12, fontWeight: 500, marginBottom: 18,
+          background: '#f6efda', border: '1px solid #ecd9a0',
+          color: '#7a4a16', fontSize: 12, fontWeight: 500, marginBottom: 18,
         }}>
           {t('qonto.confirm_sca_hint', 'Chaque virement nécessitera une validation SCA dans votre application Qonto.')}
         </div>
@@ -2374,8 +2374,8 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
             disabled={modal.executing}
             style={{
               padding: '11px 18px', borderRadius: 10,
-              background: '#fff', border: '1px solid #e2e8f0',
-              color: '#475569', fontWeight: 600, fontSize: 14, cursor: modal.executing ? 'not-allowed' : 'pointer',
+              background: '#fff', border: '1px solid #ded8cb',
+              color: '#33433b', fontWeight: 600, fontSize: 14, cursor: modal.executing ? 'not-allowed' : 'pointer',
             }}
           >
             {t('common.cancel', 'Annuler')}
@@ -2385,7 +2385,7 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
             disabled={modal.executing || list.length === 0}
             style={{
               padding: '11px 22px', borderRadius: 10,
-              background: '#16A34A', border: 'none', color: '#fff',
+              background: '#157a4c', border: 'none', color: '#fff',
               fontWeight: 700, fontSize: 14, cursor: modal.executing ? 'wait' : 'pointer',
               opacity: modal.executing ? 0.75 : 1,
               display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -2407,30 +2407,30 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
     return (
       <Wrap>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f0fdf4', border: '2px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-            <CheckCircle size={32} color="#16a34a" />
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#e9f1ea', border: '2px solid #cfe6d6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <CheckCircle size={32} color="#157a4c" />
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', margin: '0 0 8px' }}>
             {t('qonto.modal_initiated_title', 'Virement initié')}
           </h2>
-          <p style={{ color: '#475569', fontSize: 15, margin: '0 0 6px' }}>
+          <p style={{ color: '#33433b', fontSize: 15, margin: '0 0 6px' }}>
             {t('qonto.modal_initiated_message', 'Un virement de {{amount}} € vers {{partner}} a été envoyé à Qonto.', {
               amount: fmt(modal.amount).replace(/\s?€/, ''),
               partner: modal.partnerName || '—',
             })}
           </p>
           {modal.requiresSca && (
-            <p style={{ color: '#92400e', fontSize: 13, fontWeight: 600, margin: '4px 0 0' }}>
+            <p style={{ color: '#7a4a16', fontSize: 13, fontWeight: 600, margin: '4px 0 0' }}>
               {t('qonto.modal_initiated_sca_hint', 'Validez le virement dans votre application Qonto (notification SCA).')}
             </p>
           )}
           {modal.reference && (
-            <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: 12, color: '#475569' }}>
-              <span style={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('qonto.transfer_reference', 'Référence')}</span>
-              <span style={{ marginLeft: 8, fontFamily: 'monospace', color: '#0f172a' }}>{modal.reference}</span>
+            <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#f6f2e9', border: '1px solid #ded8cb', fontSize: 12, color: '#33433b' }}>
+              <span style={{ color: '#99a09a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('qonto.transfer_reference', 'Référence')}</span>
+              <span style={{ marginLeft: 8, fontFamily: 'monospace', color: '#0e1f18' }}>{modal.reference}</span>
             </div>
           )}
-          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
             {t('common.understood', 'Compris')}
           </button>
         </div>
@@ -2442,14 +2442,14 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
     return (
       <Wrap>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#fef2f2', border: '2px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-            <X size={32} color="#dc2626" />
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#f7e9e6', border: '2px solid #edc4bd', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <X size={32} color="#b23b2e" />
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', margin: '0 0 8px' }}>
             {t('qonto.modal_error_title', 'Échec du virement')}
           </h2>
-          <p style={{ color: '#475569', fontSize: 15, margin: '0 0 6px' }}>{modal.message}</p>
-          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+          <p style={{ color: '#33433b', fontSize: 15, margin: '0 0 6px' }}>{modal.message}</p>
+          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: '#ece7db', border: 'none', color: '#33433b', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
             {t('common.close', 'Fermer')}
           </button>
         </div>
@@ -2463,13 +2463,13 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
       return (
         <Wrap>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#eef2ff', border: '2px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#eef1ea', border: '2px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
               <Send size={32} color="#4f46e5" />
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', margin: '0 0 8px' }}>
               {t('qonto.modal_bulk_running_title', 'Paiement en cours…')}
             </h2>
-            <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>
+            <p style={{ color: '#6e756c', fontSize: 14, margin: 0 }}>
               {t('qonto.modal_bulk_running_message', { count: modal.total, defaultValue: 'Envoi de {{count}} virement(s) à Qonto…' })}
             </p>
           </div>
@@ -2480,27 +2480,27 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
     return (
       <Wrap>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: partial ? '#fffbeb' : '#f0fdf4', border: `2px solid ${partial ? '#fde68a' : '#bbf7d0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-            {partial ? <AlertTriangle size={32} color="#d97706" /> : <CheckCircle size={32} color="#16a34a" />}
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: partial ? '#f6efda' : '#e9f1ea', border: `2px solid ${partial ? '#ecd9a0' : '#cfe6d6'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            {partial ? <AlertTriangle size={32} color="#d97706" /> : <CheckCircle size={32} color="#157a4c" />}
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', margin: '0 0 8px' }}>
             {partial
               ? t('qonto.modal_bulk_partial_title', 'Paiement partiel')
               : t('qonto.modal_bulk_done_title', 'Virements initiés')}
           </h2>
-          <p style={{ color: '#475569', fontSize: 15, margin: '0 0 6px' }}>
+          <p style={{ color: '#33433b', fontSize: 15, margin: '0 0 6px' }}>
             {partial
               ? t('qonto.modal_bulk_partial_summary', { ok: modal.okCount, fail: modal.failed.length, defaultValue: '{{ok}} virement(s) initié(s), {{fail}} en erreur.' })
               : t('qonto.modal_bulk_done_summary', { count: modal.okCount, total: fmt(modal.totalAmount).replace(/\s?€/, ''), defaultValue: '{{count}} virement(s) initié(s) pour un total de {{total}} €.' })
             }
           </p>
           {modal.requiresSca && modal.okCount > 0 && (
-            <p style={{ color: '#92400e', fontSize: 13, fontWeight: 600, margin: '6px 0 0' }}>
+            <p style={{ color: '#7a4a16', fontSize: 13, fontWeight: 600, margin: '6px 0 0' }}>
               {t('qonto.modal_bulk_sca_hint', 'Validez les virements dans votre application Qonto.')}
             </p>
           )}
           {modal.skipped && modal.skipped.length > 0 && (
-            <div style={{ marginTop: 14, alignSelf: 'stretch', textAlign: 'left', padding: '10px 14px', borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a', fontSize: 12, color: '#92400e' }}>
+            <div style={{ marginTop: 14, alignSelf: 'stretch', textAlign: 'left', padding: '10px 14px', borderRadius: 10, background: '#f6efda', border: '1px solid #ecd9a0', fontSize: 12, color: '#7a4a16' }}>
               <strong>{t('qonto.skipped', { count: modal.skipped.length, defaultValue: '{{count}} ignorée(s)' })}</strong>
               <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                 {modal.skipped.slice(0, 5).map((s, i) => (
@@ -2510,7 +2510,7 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
             </div>
           )}
           {partial && (
-            <div style={{ marginTop: 12, alignSelf: 'stretch', textAlign: 'left', padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', fontSize: 12, color: '#b91c1c' }}>
+            <div style={{ marginTop: 12, alignSelf: 'stretch', textAlign: 'left', padding: '10px 14px', borderRadius: 10, background: '#f7e9e6', border: '1px solid #edc4bd', fontSize: 12, color: '#8f2e24' }}>
               <strong>{t('qonto.modal_bulk_failed_label', 'En erreur')}</strong>
               <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                 {modal.failed.slice(0, 5).map((f, i) => (
@@ -2519,7 +2519,7 @@ function QontoResultModal({ modal, onClose, onConfirm, t }) {
               </ul>
             </div>
           )}
-          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ marginTop: 22, padding: '11px 32px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
             {t('common.understood', 'Compris')}
           </button>
         </div>
@@ -2555,46 +2555,46 @@ function ArbitrageQueue({ commissions, t, api, onChanged }) {
   };
 
   return (
-    <div style={{ marginBottom: 24, padding: 16, borderRadius: 14, border: '1px solid #fde68a', background: '#fffbeb' }}>
+    <div style={{ marginBottom: 24, padding: 16, borderRadius: 14, border: '1px solid #ecd9a0', background: '#f6efda' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <AlertTriangle size={16} color="#92400e" />
-        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>
+        <AlertTriangle size={16} color="#7a4a16" />
+        <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14 }}>
           {t('commissions.arbitrage_title', { count: queue.length, defaultValue: 'Décisions à arbitrer ({{count}})' })}
         </div>
       </div>
-      <div style={{ fontSize: 12, color: '#92400e', marginBottom: 14 }}>
+      <div style={{ fontSize: 12, color: '#7a4a16', marginBottom: 14 }}>
         {t('commissions.arbitrage_subtitle', 'Ces commissions récurrentes ont été annulées suite à la perte du deal. Choisissez de payer le dernier cycle dû ou de confirmer l\'arrêt définitif.')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {queue.map(c => (
-          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#fff', borderRadius: 10, border: '1px solid #fde68a', flexWrap: 'wrap' }}>
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#fff', borderRadius: 10, border: '1px solid #ecd9a0', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 220px', minWidth: 0 }}>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {c.partner_name || '—'}
-                <span style={{ color: '#64748b', fontWeight: 500, marginLeft: 6 }}>· {c.prospect_company || c.prospect_name || '—'}</span>
+                <span style={{ color: '#6e756c', fontWeight: 500, marginLeft: 6 }}>· {c.prospect_company || c.prospect_name || '—'}</span>
               </div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: '#99a09a', marginTop: 2 }}>
                 {c.cancelled_reason
                   ? t('commissions.arbitrage_reason', { reason: c.cancelled_reason, defaultValue: 'Motif : {{reason}}' })
                   : t('commissions.arbitrage_no_reason', 'Aucun motif renseigné')}
                 {c.cancelled_at && <> · {fmtDate(c.cancelled_at)}</>}
               </div>
             </div>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, fontFamily: 'tabular-nums', minWidth: 110, textAlign: 'right' }}>
+            <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, fontFamily: 'tabular-nums', minWidth: 110, textAlign: 'right' }}>
               {fmt(c.amount_ttc != null ? c.amount_ttc : c.amount)} TTC
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button
                 onClick={() => resume(c)}
                 disabled={busyId === c.id}
-                style={{ padding: '8px 14px', borderRadius: 8, background: '#059669', color: '#fff', border: 'none', fontWeight: 600, fontSize: 12, cursor: busyId === c.id ? 'wait' : 'pointer', opacity: busyId === c.id ? 0.7 : 1 }}
+                style={{ padding: '8px 14px', borderRadius: 8, background: '#0e7a54', color: '#fff', border: 'none', fontWeight: 600, fontSize: 12, cursor: busyId === c.id ? 'wait' : 'pointer', opacity: busyId === c.id ? 0.7 : 1 }}
               >
                 {t('commissions.arbitrage_pay_last', 'Payer le dernier cycle')}
               </button>
               <button
                 onClick={() => confirmStop(c)}
                 disabled={busyId === c.id}
-                style={{ padding: '8px 14px', borderRadius: 8, background: '#fff', color: '#475569', border: '1px solid #e2e8f0', fontWeight: 600, fontSize: 12, cursor: busyId === c.id ? 'wait' : 'pointer' }}
+                style={{ padding: '8px 14px', borderRadius: 8, background: '#fff', color: '#33433b', border: '1px solid #ded8cb', fontWeight: 600, fontSize: 12, cursor: busyId === c.id ? 'wait' : 'pointer' }}
               >
                 {t('commissions.arbitrage_confirm_stop', 'Confirmer l\'arrêt')}
               </button>
@@ -2608,15 +2608,15 @@ function ArbitrageQueue({ commissions, t, api, onChanged }) {
 
 function ComKPI({ icon: Icon, label, value, sub, suffix, color }) {
   return (
-    <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
+    <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #ded8cb' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
+          <div style={{ color: '#6e756c', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
           <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>
             {value}
-            {suffix && <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 6, color: '#94a3b8' }}>{suffix}</span>}
+            {suffix && <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 6, color: '#99a09a' }}>{suffix}</span>}
           </div>
-          {sub && <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 4 }}>{sub}</div>}
+          {sub && <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 500, marginTop: 4 }}>{sub}</div>}
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={20} color={color} /></div>
       </div>

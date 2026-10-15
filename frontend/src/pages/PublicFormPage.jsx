@@ -69,13 +69,13 @@ function emitEvent(formId, partnerToken, eventType, extra) {
 // client.
 
 const C = {
-  primary: '#059669',
-  dark: '#0f172a',
-  muted: '#64748b',
-  mutedLight: '#94a3b8',
-  border: '#e2e8f0',
-  borderLight: '#f1f5f9',
-  bg: '#f8fafc',
+  primary: '#0e7a54',
+  dark: '#0e1f18',
+  muted: '#6e756c',
+  mutedLight: '#99a09a',
+  border: '#ded8cb',
+  borderLight: '#ece7db',
+  bg: '#f6f2e9',
   danger: '#e24b4a',
   white: '#ffffff',
 };
@@ -162,7 +162,7 @@ export default function PublicFormPage() {
              : t('public_form.error_generic', 'Une erreur est survenue.');
     return (
       <CenteredCard>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fef2f2', color: C.danger, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f7e9e6', color: C.danger, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
           <AlertTriangle size={24} />
         </div>
         <h2 style={{ margin: '0 0 8px', fontSize: 20, color: C.dark }}>{t('public_form.error_title', 'Oups')}</h2>
@@ -275,7 +275,7 @@ export function FormPreview({ form, fields, onSubmit, t, embed, onEvent }) {
     return (
       <Card>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', color: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: '#e9f1ea', color: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
             <Check size={28} />
           </div>
           <h2 style={{ margin: 0, fontSize: 22, color: C.dark, fontWeight: 500 }}>
@@ -399,7 +399,7 @@ export function FormPreview({ form, fields, onSubmit, t, embed, onEvent }) {
       />
 
       {submitError && (
-        <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#fef2f2', color: C.danger, fontSize: 13 }}>
+        <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#f7e9e6', color: C.danger, fontSize: 13 }}>
           {submitError}
         </div>
       )}
@@ -508,7 +508,7 @@ function FieldRow({ field, value, touched, onChange, onBlur, t }) {
       control = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {(field.options || []).map(o => (
-            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (value === o ? C.primary : C.border), borderRadius: 8, cursor: 'pointer', background: value === o ? '#f0fdf4' : C.white }}>
+            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (value === o ? C.primary : C.border), borderRadius: 8, cursor: 'pointer', background: value === o ? '#e9f1ea' : C.white }}>
               <input type="radio" name={field.id} checked={value === o} onChange={() => { onChange(o); onBlur?.(); }} style={{ cursor: 'pointer' }} />
               <span style={{ fontSize: 14, color: C.dark }}>{o}</span>
             </label>
@@ -525,7 +525,7 @@ function FieldRow({ field, value, touched, onChange, onBlur, t }) {
       control = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {(field.options || []).map(o => (
-            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (arr.includes(o) ? C.primary : C.border), borderRadius: 8, cursor: 'pointer', background: arr.includes(o) ? '#f0fdf4' : C.white }}>
+            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid ' + (arr.includes(o) ? C.primary : C.border), borderRadius: 8, cursor: 'pointer', background: arr.includes(o) ? '#e9f1ea' : C.white }}>
               <input type="checkbox" checked={arr.includes(o)} onChange={() => { toggle(o); onBlur?.(); }} style={{ cursor: 'pointer' }} />
               <span style={{ fontSize: 14, color: C.dark }}>{o}</span>
             </label>

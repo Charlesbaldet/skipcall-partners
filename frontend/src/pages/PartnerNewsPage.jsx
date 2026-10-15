@@ -7,16 +7,16 @@ import {
 import api from '../lib/api';
 
 const C = {
-  p: '#059669', s: '#0f172a', m: '#64748b', card: '#fff',
-  border: '#e2e8f0', light: '#f1f5f9',
+  p: '#0e7a54', s: '#0e1f18', m: '#6e756c', card: '#fff',
+  border: '#ded8cb', light: '#ece7db',
 };
 
 const CAT_COLORS = {
-  update:        { bg: '#dbeafe', color: '#3b82f6', border: '#bfdbfe' },
-  newsletter:    { bg: '#ede9fe', color: '#8b5cf6', border: '#ddd6fe' },
-  event:         { bg: '#fef3c7', color: '#f59e0b', border: '#fde68a' },
-  product:       { bg: '#d1fae5', color: '#059669', border: '#a7f3d0' },
-  promotion:     { bg: '#fee2e2', color: '#ef4444', border: '#fecaca' },
+  update:        { bg: '#dbeafe', color: '#0e7a54', border: '#bfdbfe' },
+  newsletter:    { bg: '#ede9fe', color: '#0e7a54', border: '#ddd6fe' },
+  event:         { bg: '#f3ead0', color: '#b4791f', border: '#ecd9a0' },
+  product:       { bg: '#d1fae5', color: '#0e7a54', border: '#a7f3d0' },
+  promotion:     { bg: '#fee2e2', color: '#c24436', border: '#edc4bd' },
   commercial_kit:{ bg: '#cffafe', color: '#0891b2', border: '#a5f3fc' },
 };
 
@@ -84,7 +84,7 @@ export default function PartnerNewsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: C.s, letterSpacing: -0.2, margin: 0 }}>{t('news.title')}</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{t('news.subtitle_partner')}</p>
+          <p style={{ color: '#6e756c', fontSize: 13, margin: '4px 0 0' }}>{t('news.subtitle_partner')}</p>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ function ProgramSocials({ program }) {
   if (!links.length) return null;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', marginBottom: 12, background: '#f8fafc', borderRadius: 12, border: `1px solid ${C.border}` }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', marginBottom: 12, background: '#f6f2e9', borderRadius: 12, border: `1px solid ${C.border}` }}>
       {program.logo && <img src={program.logo} alt={program.name} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />}
       <span style={{ fontWeight: 600, fontSize: 13, color: C.s, flex: 1 }}>{program.name}</span>
       <div style={{ display: 'flex', gap: 6 }}>
@@ -182,7 +182,7 @@ function PostCard({ post, attachments, t }) {
   return (
     <article style={{
       background: C.card, borderRadius: 16, border: `1px solid ${C.border}`,
-      borderLeft: isPromo ? '3px solid #ef4444' : isKit ? '3px solid #0891b2' : `1px solid ${C.border}`,
+      borderLeft: isPromo ? '3px solid #c24436' : isKit ? '3px solid #0891b2' : `1px solid ${C.border}`,
       padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
     }}>
       {/* Header */}
@@ -196,12 +196,12 @@ function PostCard({ post, attachments, t }) {
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 600, fontSize: 14, color: C.s }}>{post.tenant_name}</div>
-          <div style={{ fontSize: 11, color: '#94a3b8' }}>{post.published_at ? new Date(post.published_at).toLocaleString() : ''}</div>
+          <div style={{ fontSize: 11, color: '#99a09a' }}>{post.published_at ? new Date(post.published_at).toLocaleString() : ''}</div>
         </div>
         <span style={{ padding: '3px 10px', borderRadius: 20, background: c.bg, color: c.color, border: `1px solid ${c.border}`, fontSize: 11, fontWeight: 700 }}>
           {t(`news.cat_${post.category === 'commercial_kit' ? 'kit' : post.category}`)}
         </span>
-        {post.is_pinned && <Pin size={14} color="#f59e0b" />}
+        {post.is_pinned && <Pin size={14} color="#b4791f" />}
       </div>
 
       {isKit && (
@@ -212,7 +212,7 @@ function PostCard({ post, attachments, t }) {
 
       {/* Title + content */}
       <h2 style={{ fontSize: 18, fontWeight: 800, color: C.s, margin: '0 0 10px' }}>{post.title}</h2>
-      <div style={{ fontSize: 15, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 14 }}>
+      <div style={{ fontSize: 15, color: '#2b3a32', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 14 }}>
         {post.content}
       </div>
 
@@ -278,12 +278,12 @@ function PromoSection({ post, t }) {
   };
 
   return (
-    <div style={{ padding: 16, background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+    <div style={{ padding: 16, background: '#f7e9e6', borderRadius: 12, border: '1px solid #edc4bd', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
       {post.promo_code && (
         <button onClick={copy} style={{
           padding: '10px 18px',
-          background: '#fff', color: '#dc2626',
-          border: '2px dashed #ef4444', borderRadius: 10,
+          background: '#fff', color: '#b23b2e',
+          border: '2px dashed #c24436', borderRadius: 10,
           fontWeight: 800, fontSize: 16, letterSpacing: 1, cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'monospace',
         }}>
@@ -292,19 +292,19 @@ function PromoSection({ post, t }) {
         </button>
       )}
       {post.promo_discount && (
-        <span style={{ fontSize: 15, fontWeight: 700, color: '#dc2626' }}>{post.promo_discount}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: '#b23b2e' }}>{post.promo_discount}</span>
       )}
       {exp && (
         exp.expired ? (
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>{t('news.promo_expires')} —</span>
+          <span style={{ fontSize: 12, color: '#99a09a' }}>{t('news.promo_expires')} —</span>
         ) : (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#b91c1c' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#8f2e24' }}>
             <Calendar size={12} /> {t('news.promo_expires_in')} {exp.days}d {exp.hours}h
           </span>
         )
       )}
       {!post.promo_code && !post.promo_discount && !exp && (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#dc2626', fontWeight: 600, fontSize: 13 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#b23b2e', fontWeight: 600, fontSize: 13 }}>
           <Tag size={14} /> {t('news.cat_promotion')}
         </span>
       )}

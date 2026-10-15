@@ -13,7 +13,7 @@ export default function PageSkeleton() {
     <div style={{ padding: 24 }}>
       <style>{`
         @keyframes rb-skel-pulse { 0%,100% { opacity: .6 } 50% { opacity: 1 } }
-        .rb-skel { background: #f1f5f9; border-radius: 10px; animation: rb-skel-pulse 1.4s ease-in-out infinite; }
+        .rb-skel { background: #ece7db; border-radius: 10px; animation: rb-skel-pulse 1.4s ease-in-out infinite; }
       `}</style>
       <div className="rb-skel" style={{ width: 220, height: 28, marginBottom: 8 }} />
       <div className="rb-skel" style={{ width: 320, height: 14, marginBottom: 28 }} />

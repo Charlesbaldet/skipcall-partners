@@ -6,7 +6,7 @@ import api from '../lib/api';
 import { Helmet } from 'react-helmet-async';
 import PasswordStrengthMeter, { validatePasswordClient } from '../components/PasswordStrengthMeter';
 
-const C = { p:'#059669', pl:'#10b981', s:'#0f172a', a:'#f97316', m:'#64748b' };
+const C = { p:'#0e7a54', pl:'#1c9a6b', s:'#0e1f18', a:'#d5541a', m:'#6e756c' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
 
 export default function SignupPage() {
@@ -118,12 +118,12 @@ export default function SignupPage() {
 
   const inputStyle = {
     width: '100%', padding: '14px 16px', borderRadius: 12,
-    border: '2px solid #e2e8f0', fontSize: 15, fontFamily: 'inherit',
+    border: '2px solid #ded8cb', fontSize: 15, fontFamily: 'inherit',
     outline: 'none', transition: 'border-color .2s', boxSizing: 'border-box',
   };
 
   return (
-    <div style={{ minHeight:'100vh', background:`radial-gradient(ellipse 80% 50% at 50% -10%,${C.p}10,transparent),#fafbfc`, fontFamily:"'Outfit','DM Sans',sans-serif", display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 20px' }}>
+    <div style={{ minHeight:'100vh', background:`radial-gradient(ellipse 80% 50% at 50% -10%,${C.p}10,transparent),#faf6ec`, fontFamily:"'Outfit','DM Sans',sans-serif", display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 20px' }}>
       <Helmet>
         <title>Créer votre compte RefBoost — Gratuit, sans carte bancaire</title>
         <meta name="description" content="Créez votre programme partenaires en 5 minutes avec RefBoost. Suivi des referrals, commissions, tableau de bord — gratuit à vie, sans carte bancaire." />
@@ -147,13 +147,13 @@ export default function SignupPage() {
       </div>
 
       {/* Card */}
-      <div style={{ width:'100%',maxWidth:460,background:'#fff',borderRadius:24,padding:40,boxShadow:'0 20px 60px rgba(0,0,0,.08)',border:'1px solid #f1f5f9' }}>
+      <div style={{ width:'100%',maxWidth:460,background:'#fff',borderRadius:24,padding:40,boxShadow:'0 20px 60px rgba(0,0,0,.08)',border:'1px solid #ece7db' }}>
 
         {/* Progress */}
         {step < 3 && !isGoogleSignup && (
           <div style={{ display:'flex',gap:8,marginBottom:32 }}>
             {[1,2].map(s=>(
-              <div key={s} style={{ flex:1,height:4,borderRadius:2,background:step>=s?g(C.p,C.pl):'#e2e8f0',transition:'all .3s' }}/>
+              <div key={s} style={{ flex:1,height:4,borderRadius:2,background:step>=s?g(C.p,C.pl):'#ded8cb',transition:'all .3s' }}/>
             ))}
           </div>
         )}
@@ -166,19 +166,19 @@ export default function SignupPage() {
 
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.company")} *</label>
-              <input value={form.company} onChange={e=>set('company',e.target.value)} placeholder={t("signup.company_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <input value={form.company} onChange={e=>set('company',e.target.value)} placeholder={t("signup.company_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#ded8cb'}/>
             </div>
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.fullname")} *</label>
-              <input value={form.fullName} onChange={e=>set('fullName',e.target.value)} placeholder={t("signup.fullname_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <input value={form.fullName} onChange={e=>set('fullName',e.target.value)} placeholder={t("signup.fullname_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#ded8cb'}/>
             </div>
             <div style={{ marginBottom:28 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.phone")}</label>
-              <input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder={t("signup.phone_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder={t("signup.phone_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#ded8cb'}/>
             </div>
 
             {isGoogleSignup && (
-              <div style={{ display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,marginBottom:16 }}>
+              <div style={{ display:'flex',alignItems:'center',gap:10,padding:'12px 14px',background:'#e9f1ea',border:'1px solid #cfe6d6',borderRadius:10,marginBottom:16 }}>
                 {googleAvatar && <img src={googleAvatar} alt="" style={{ width:32,height:32,borderRadius:'50%' }}/>}
                 <div style={{ fontSize:13,color:C.s,lineHeight:1.3 }}>
                   <div style={{ fontWeight:600 }}>{googleName || googleEmail}</div>
@@ -187,7 +187,7 @@ export default function SignupPage() {
               </div>
             )}
 
-            {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#fef2f2',color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
+            {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#f7e9e6',color:'#b23b2e',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
 
             <button
               onClick={()=>{
@@ -196,7 +196,7 @@ export default function SignupPage() {
                 setStep(2);
               }}
               disabled={loading}
-              style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#94a3b8':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
+              style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#99a09a':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
               {loading ? t("signup.creating") : (isGoogleSignup ? t("signup.create") : t("signup.next"))}
             </button>
           </>
@@ -211,13 +211,13 @@ export default function SignupPage() {
 
             <div style={{ marginBottom:20 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.email")} *</label>
-              <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder={t("signup.email_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+              <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder={t("signup.email_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#ded8cb'}/>
             </div>
             <div style={{ marginBottom:8 }}>
               <label style={{ fontSize:13,fontWeight:600,color:C.s,display:'block',marginBottom:6 }}>{t("signup.password")} *</label>
               <div style={{ position: 'relative' }}>
-              <input type={showPwd ? "text" : "password"} value={form.password} onChange={e=>set('password',e.target.value)} placeholder={t("signup.password_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
-              <button type="button" onClick={() => setShowPwd(v => !v)} tabIndex={-1} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex', alignItems: 'center' }}>
+              <input type={showPwd ? "text" : "password"} value={form.password} onChange={e=>set('password',e.target.value)} placeholder={t("signup.password_ph")} style={inputStyle} onFocus={e=>e.target.style.borderColor=C.p} onBlur={e=>e.target.style.borderColor='#ded8cb'}/>
+              <button type="button" onClick={() => setShowPwd(v => !v)} tabIndex={-1} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#99a09a', padding: 2, display: 'flex', alignItems: 'center' }}>
                 {showPwd
                   ? <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                   : <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -233,22 +233,22 @@ export default function SignupPage() {
                 [/[0-9]/.test(form.password), t("signup.pwd_digit")],
                 [/[^A-Za-z0-9]/.test(form.password), t("signup.pwd_special")],
               ].map(([ok,label],i)=>(
-                <span key={i} style={{ fontSize:11,padding:'3px 8px',borderRadius:6,background:ok?`${C.p}15`:'#f1f5f9',color:ok?C.p:'#94a3b8',fontWeight:600 }}>{ok?'':'○'} {label}</span>
+                <span key={i} style={{ fontSize:11,padding:'3px 8px',borderRadius:6,background:ok?`${C.p}15`:'#ece7db',color:ok?C.p:'#99a09a',fontWeight:600 }}>{ok?'':'○'} {label}</span>
               ))}
             </div>
             <div style={{ marginBottom:28 }}>
               <PasswordStrengthMeter password={form.password} />
             </div>
 
-            {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#fef2f2',color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
+            {error && <div style={{ padding:'12px 16px',borderRadius:10,background:'#f7e9e6',color:'#b23b2e',fontSize:13,marginBottom:16,fontWeight:500 }}>{error}</div>}
 
             {/* "or" divider + Google SSO, placed just above submit */}
             {import.meta.env?.VITE_GOOGLE_CLIENT_ID && (
               <>
                 <div style={{ display:'flex',alignItems:'center',gap:10,margin:'18px 0' }}>
-                  <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
+                  <div style={{ flex:1,height:1,background:'#ded8cb' }} />
                   <span style={{ color:C.m,fontSize:12,fontWeight:500 }}>{t('login.or')}</span>
-                  <div style={{ flex:1,height:1,background:'#e2e8f0' }} />
+                  <div style={{ flex:1,height:1,background:'#ded8cb' }} />
                 </div>
                 <div style={{ marginBottom:16 }}>
                   <GoogleSignInButton text={t('signup.google_continue')} intent="signup" />
@@ -258,11 +258,11 @@ export default function SignupPage() {
 
             <button onClick={()=>{ if(!form.email||!passwordOk) setError(t("signup.error_creds")); else handleSubmit(); }}
               disabled={loading}
-              style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#94a3b8':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
+              style={{ width:'100%',padding:'16px',borderRadius:14,border:'none',background:loading?'#99a09a':g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:16,cursor:loading?'wait':'pointer',fontFamily:'inherit',boxShadow:loading?'none':`0 8px 30px ${C.p}25` }}>
               {loading ? t("signup.creating") : t("signup.create")}
             </button>
 
-            <p style={{ color:'#94a3b8',fontSize:11,textAlign:'center',marginTop:16,fontFamily:"'DM Sans',sans-serif" }}>
+            <p style={{ color:'#99a09a',fontSize:11,textAlign:'center',marginTop:16,fontFamily:"'DM Sans',sans-serif" }}>
               {t("signup.terms")} <a href="#" style={{ color:C.p }}>{t("signup.terms_cgv")}</a> {t("signup.terms_and")} <a href="#" style={{ color:C.p }}>{t("signup.terms_privacy")}</a>.
             </p>
           </>
@@ -289,7 +289,7 @@ export default function SignupPage() {
             son compte avant de pouvoir se connecter. */}
         {step === 4 && (
           <div style={{ textAlign:'center' }}>
-            <div style={{ width:72,height:72,borderRadius:20,background:'#eff6ff',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}>📧</div>
+            <div style={{ width:72,height:72,borderRadius:20,background:'#e9f1ea',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:36 }}>📧</div>
             <h2 style={{ fontSize:26,fontWeight:800,margin:'0 0 8px',color:C.s }}>
               {t('signup.verify_title', 'Vérifiez votre email')}
             </h2>
@@ -304,7 +304,7 @@ export default function SignupPage() {
               </p>
             )}
             {resendStatus === 'error' && (
-              <p style={{ color:'#b91c1c', fontSize:13, marginBottom:16 }}>
+              <p style={{ color:'#8f2e24', fontSize:13, marginBottom:16 }}>
                 {t('signup.verify_resend_failed', 'Échec du renvoi. Réessayez dans quelques minutes.')}
               </p>
             )}

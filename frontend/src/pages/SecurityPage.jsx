@@ -10,7 +10,7 @@ import LandingLayout from '../components/LandingLayout';
 // IntegrationPageTemplate which is wired to per-slug i18n. All copy
 // flows through the security.* i18n namespace (7 locales).
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c', bg: '#faf6ec', border: '#ded8cb' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 function useMobile() {
@@ -108,7 +108,7 @@ export default function SecurityPage() {
       </Helmet>
 
       {/* Hero */}
-      <section style={{ background: `linear-gradient(135deg, ${C.s} 0%, #1e293b 100%)`, padding: mobile ? '56px 20px 48px' : '80px 24px 64px', textAlign: 'center' }}>
+      <section style={{ background: `linear-gradient(135deg, ${C.s} 0%, #1a2c24 100%)`, padding: mobile ? '56px 20px 48px' : '80px 24px 64px', textAlign: 'center' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{
             width: 72, height: 72, borderRadius: 18, background: g(C.p, C.pl),
@@ -124,7 +124,7 @@ export default function SecurityPage() {
           <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -1 }}>
             {t('security.hero_title')}
           </h1>
-          <p style={{ margin: '0 auto', fontSize: mobile ? 16 : 18, color: '#94a3b8', lineHeight: 1.6, maxWidth: 620 }}>
+          <p style={{ margin: '0 auto', fontSize: mobile ? 16 : 18, color: '#99a09a', lineHeight: 1.6, maxWidth: 620 }}>
             {t('security.hero_subtitle')}
           </p>
         </div>
@@ -163,7 +163,7 @@ export default function SecurityPage() {
       })}
 
       {/* Bottom CTA */}
-      <section style={{ background: g(C.s, '#1e293b'), padding: mobile ? '56px 20px' : '96px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ background: g(C.s, '#1a2c24'), padding: mobile ? '56px 20px' : '96px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: `${C.p}10` }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto', zIndex: 1 }}>
           <h2 style={{ margin: '0 0 32px', fontSize: mobile ? 24 : 32, fontWeight: 800, color: '#fff', letterSpacing: -0.5, lineHeight: 1.3 }}>

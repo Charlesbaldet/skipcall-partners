@@ -142,7 +142,7 @@ function usePrefetchAppChunks(user) {
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#99a09a' }}>Chargement...</div>;
   if (!user) return <Navigate to="/login" />;
   if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" />;
   return children;
@@ -258,16 +258,16 @@ function SessionExpiredModal() {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)' }}>
       <div style={{ background: '#fff', borderRadius: 24, padding: 40, width: 420, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
-        <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>!</div>
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: '#f7e9e6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 28 }}>!</div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', margin: '0 0 8px' }}>
           {t('session.expired_title', 'Votre session a expiré')}
         </h2>
-        <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5, margin: '0 0 24px' }}>
+        <p style={{ color: '#6e756c', fontSize: 14, lineHeight: 1.5, margin: '0 0 24px' }}>
           {t('session.expired_message', 'Pour des raisons de sécurité, vous avez été déconnecté après 30 minutes d’inactivité.')}
         </p>
         <button
           onClick={handleReconnect}
-          style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: '#059669', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
+          style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: '#0e7a54', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
         >
           {t('session.expired_cta', 'Se reconnecter')}
         </button>

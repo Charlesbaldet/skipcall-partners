@@ -31,7 +31,7 @@ export function validatePasswordClient(pwd) {
   return { valid: errors.length === 0, errors };
 }
 
-const SEGMENT_COLORS = ['#dc2626', '#f97316', '#eab308', '#059669'];
+const SEGMENT_COLORS = ['#b23b2e', '#d5541a', '#eab308', '#0e7a54'];
 const STRENGTH_KEYS = ['password.strength.weak', 'password.strength.fair', 'password.strength.good', 'password.strength.strong'];
 
 function scorePassword(pwd) {
@@ -60,19 +60,19 @@ export default function PasswordStrengthMeter({ password = '' }) {
               flex: 1,
               height: 4,
               borderRadius: 2,
-              background: password && i < score ? SEGMENT_COLORS[score - 1] : '#e2e8f0',
+              background: password && i < score ? SEGMENT_COLORS[score - 1] : '#ded8cb',
               transition: 'background-color 0.2s',
             }}
           />
         ))}
       </div>
       {password && (
-        <div style={{ fontSize: 12, color: SEGMENT_COLORS[score - 1] || '#94a3b8', fontWeight: 600, marginBottom: 8 }}>
+        <div style={{ fontSize: 12, color: SEGMENT_COLORS[score - 1] || '#99a09a', fontWeight: 600, marginBottom: 8 }}>
           {t(STRENGTH_KEYS[score - 1] || STRENGTH_KEYS[0])}
         </div>
       )}
       {errors.length > 0 && (
-        <ul style={{ margin: 0, padding: '0 0 0 18px', fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>
+        <ul style={{ margin: 0, padding: '0 0 0 18px', fontSize: 12, color: '#6e756c', lineHeight: 1.6 }}>
           {errors.map(key => (
             <li key={key}>{t(key)}</li>
           ))}

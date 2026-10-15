@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import LandingLayout from '../../components/LandingLayout';
 import { INTEGRATIONS, CATEGORY_KEYS } from './integrationsData';
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c' };
 const SITE = 'https://refboost.io';
 const HREF_LANGS = ['fr', 'en', 'es', 'de', 'it', 'nl', 'pt'];
 
@@ -12,7 +12,7 @@ function Logo({ src, alt, size = 44 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: 10,
-      background: '#fff', border: '1px solid #e2e8f0',
+      background: '#fff', border: '1px solid #ded8cb',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexShrink: 0, padding: 6,
     }}>
@@ -36,19 +36,19 @@ function IntegrationCard({ integration, t }) {
       style={{
         display: 'flex', flexDirection: 'column',
         background: '#fff', borderRadius: 16, padding: 24,
-        border: '1px solid #e2e8f0', textDecoration: 'none',
+        border: '1px solid #ded8cb', textDecoration: 'none',
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         transition: 'transform .15s, box-shadow .15s, border-color .15s',
       }}
       onMouseEnter={e => {
         e.currentTarget.style.transform = 'translateY(-2px)';
         e.currentTarget.style.boxShadow = '0 12px 30px rgba(15,23,42,0.08)';
-        e.currentTarget.style.borderColor = '#cbd5e1';
+        e.currentTarget.style.borderColor = '#cfc8b8';
       }}
       onMouseLeave={e => {
         e.currentTarget.style.transform = 'none';
         e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
-        e.currentTarget.style.borderColor = '#e2e8f0';
+        e.currentTarget.style.borderColor = '#ded8cb';
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -66,12 +66,12 @@ function IntegrationCard({ integration, t }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
         <span style={{
           fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999,
-          background: '#f0fdf4', color: '#059669',
+          background: '#e9f1ea', color: '#0e7a54',
         }}>{t('integrations.shared.available')}</span>
         {i.plan === 'business' && (
           <span style={{
             fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999,
-            background: '#eef2ff', color: '#4338ca',
+            background: '#eef1ea', color: '#4338ca',
           }}>{t('integrations.shared.business_plan')}</span>
         )}
       </div>
@@ -86,8 +86,8 @@ function ComingSoonCard({ t }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', justifyContent: 'center',
-      background: '#fafbfc', borderRadius: 16, padding: 28,
-      border: '2px dashed #cbd5e1', minHeight: 220,
+      background: '#faf6ec', borderRadius: 16, padding: 28,
+      border: '2px dashed #cfc8b8', minHeight: 220,
       textAlign: 'center',
     }}>
       <div style={{ fontWeight: 700, fontSize: 15, color: C.s, marginBottom: 8 }}>
@@ -146,7 +146,7 @@ export default function IntegrationsIndexPage() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
-      <div style={{ background: 'linear-gradient(135deg, ' + C.s + ' 0%, #1e293b 100%)', padding: '80px 24px 60px', textAlign: 'center' }}>
+      <div style={{ background: 'linear-gradient(135deg, ' + C.s + ' 0%, #1a2c24 100%)', padding: '80px 24px 60px', textAlign: 'center' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <span style={{ display: 'inline-block', color: C.p, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
             {t('integrations.index.label', 'Intégrations')}
@@ -154,13 +154,13 @@ export default function IntegrationsIndexPage() {
           <h1 style={{ fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, color: '#fff', margin: '0 0 16px', lineHeight: 1.1 }}>
             {t('integrations.index.title', 'Connectez vos outils')}
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: 17, margin: '0 auto', lineHeight: 1.6, maxWidth: 600 }}>
+          <p style={{ color: '#99a09a', fontSize: 17, margin: '0 auto', lineHeight: 1.6, maxWidth: 600 }}>
             {t('integrations.index.subtitle', "RefBoost s'intègre avec vos CRM, outils de paiement et d'authentification pour automatiser votre programme partenaires.")}
           </p>
         </div>
       </div>
 
-      <div style={{ background: '#fafbfc', padding: '60px 24px 80px' }}>
+      <div style={{ background: '#faf6ec', padding: '60px 24px 80px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 36, justifyContent: 'center' }}>
             {CATEGORY_KEYS.map(catKey => {
@@ -173,7 +173,7 @@ export default function IntegrationsIndexPage() {
                     padding: '8px 16px', borderRadius: 999,
                     background: active ? C.s : '#fff',
                     color: active ? '#fff' : C.m,
-                    border: `1px solid ${active ? C.s : '#e2e8f0'}`,
+                    border: `1px solid ${active ? C.s : '#ded8cb'}`,
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
                   }}
                 >
@@ -194,7 +194,7 @@ export default function IntegrationsIndexPage() {
 
           <div style={{
             marginTop: 60, padding: 36, borderRadius: 20,
-            background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+            background: 'linear-gradient(135deg, #e9f1ea, #d1fae5)',
             textAlign: 'center', border: '1px solid #a7f3d0',
           }}>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: C.s, margin: '0 0 8px' }}>

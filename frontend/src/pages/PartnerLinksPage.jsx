@@ -34,10 +34,10 @@ export default function PartnerLinksPage() {
   return (
     <div className="fade-in">
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5, marginBottom: 4 }}>
           {t('partner_links.title', 'Mes liens')}
         </h1>
-        <p style={{ color: '#64748b' }}>
+        <p style={{ color: '#6e756c' }}>
           {t('partner_links.subtitle', 'Vos liens à partager pour générer des leads attribués à votre compte.')}
         </p>
       </div>
@@ -90,14 +90,14 @@ function RedirectLinkCard({ partnerId, t }) {
   };
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24, marginBottom: 20 }}>
+    <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 24, marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <LinkIcon size={18} color="#059669" />
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eef1ea', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LinkIcon size={18} color="#0e7a54" />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{t('referral_link.title')}</div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 1 }}>{t('referral_link.subtitle')}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18' }}>{t('referral_link.title')}</div>
+          <div style={{ fontSize: 12, color: '#6e756c', marginTop: 1 }}>{t('referral_link.subtitle')}</div>
         </div>
       </div>
 
@@ -105,13 +105,13 @@ function RedirectLinkCard({ partnerId, t }) {
         <input
           readOnly
           value={data.referralLink}
-          style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'ui-monospace, monospace', color: '#334155', background: '#f8fafc', boxSizing: 'border-box' }}
+          style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 13, fontFamily: 'ui-monospace, monospace', color: '#2b3a32', background: '#f6f2e9', boxSizing: 'border-box' }}
           onFocus={e => e.target.select()}
         />
-        <button onClick={copy} style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button onClick={copy} style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Copy size={14} /> {copied ? t('referral_link.copied') : t('referral_link.copy')}
         </button>
-        <button onClick={regenerate} disabled={busy} title={t('referral_link.regenerate')} style={{ padding: '10px 12px', borderRadius: 10, background: '#f1f5f9', color: '#475569', border: 'none', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}>
+        <button onClick={regenerate} disabled={busy} title={t('referral_link.regenerate')} style={{ padding: '10px 12px', borderRadius: 10, background: '#ece7db', color: '#33433b', border: 'none', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}>
           <RotateCcw size={14} />
         </button>
       </div>
@@ -126,9 +126,9 @@ function RedirectLinkCard({ partnerId, t }) {
 
 function LinkStat({ label, value, accent }) {
   return (
-    <div style={{ background: accent ? '#f0fdf4' : '#f8fafc', borderRadius: 10, padding: '12px 14px', border: '1px solid ' + (accent ? '#bbf7d0' : '#e2e8f0') }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 4 }}>{value}</div>
+    <div style={{ background: accent ? '#e9f1ea' : '#f6f2e9', borderRadius: 10, padding: '12px 14px', border: '1px solid ' + (accent ? '#cfe6d6' : '#ded8cb') }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: accent ? '#0e7a54' : '#0e1f18', marginTop: 4 }}>{value}</div>
     </div>
   );
 }
@@ -171,12 +171,12 @@ function FormLinkCard({ link, t }) {
 
   if (!link) {
     return (
-      <div style={{ background: '#fff', border: '1px dashed #e2e8f0', borderRadius: 16, padding: 24, color: '#64748b', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <FileText size={18} color="#94a3b8" />
+      <div style={{ background: '#fff', border: '1px dashed #ded8cb', borderRadius: 16, padding: 24, color: '#6e756c', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f6f2e9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <FileText size={18} color="#99a09a" />
         </div>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#475569', marginBottom: 2 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#33433b', marginBottom: 2 }}>
             {t('partner_links.form_empty_title', 'Lien du formulaire')}
           </div>
           <div style={{ fontSize: 12 }}>
@@ -188,16 +188,16 @@ function FormLinkCard({ link, t }) {
   }
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24 }}>
+    <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 16, padding: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <FileText size={18} color="#6366f1" />
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eef1ea', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <FileText size={18} color="#0e7a54" />
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18' }}>
             {t('partner_links.form_title', 'Lien du formulaire')}
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 1 }}>
+          <div style={{ fontSize: 12, color: '#6e756c', marginTop: 1 }}>
             {t('partner_links.form_subtitle', { tenant: link.tenant_name, defaultValue: 'Partagez ce lien : les visiteurs remplissent le formulaire d\'inscription configuré par {{tenant}}.' })}
           </div>
         </div>
@@ -206,7 +206,7 @@ function FormLinkCard({ link, t }) {
       {/* Mode toggle: direct URL vs HTML/JS snippet for an iframe
           embed. The partner can pick whichever fits their site. Both
           carry the same partner_token so attribution is identical. */}
-      <div style={{ display: 'inline-flex', padding: 3, marginBottom: 12, background: '#f1f5f9', borderRadius: 8 }}>
+      <div style={{ display: 'inline-flex', padding: 3, marginBottom: 12, background: '#ece7db', borderRadius: 8 }}>
         {[
           { val: 'url',   label: t('partner_links.mode_direct',  'Lien direct') },
           { val: 'embed', label: t('partner_links.mode_embed',   'Intégrer sur mon site') },
@@ -214,7 +214,7 @@ function FormLinkCard({ link, t }) {
           const active = mode === opt.val;
           return (
             <button key={opt.val} onClick={() => setMode(opt.val)}
-              style={{ padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0f172a' : '#64748b', fontWeight: 500, fontSize: 12, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
+              style={{ padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0e1f18' : '#6e756c', fontWeight: 500, fontSize: 12, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
               {opt.label}
             </button>
           );
@@ -226,23 +226,23 @@ function FormLinkCard({ link, t }) {
           <input
             readOnly
             value={url}
-            style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'ui-monospace, monospace', color: '#334155', background: '#f8fafc', boxSizing: 'border-box' }}
+            style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 13, fontFamily: 'ui-monospace, monospace', color: '#2b3a32', background: '#f6f2e9', boxSizing: 'border-box' }}
             onFocus={e => e.target.select()}
           />
-          <button onClick={copy} style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={copy} style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Copy size={14} /> {copied ? t('referral_link.copied') : t('referral_link.copy')}
           </button>
         </div>
       ) : (
         <div>
-          <pre style={{ margin: 0, padding: '12px 14px', borderRadius: 10, border: '2px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: 12, fontFamily: 'ui-monospace, monospace', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+          <pre style={{ margin: 0, padding: '12px 14px', borderRadius: 10, border: '2px solid #ded8cb', background: '#f6f2e9', color: '#2b3a32', fontSize: 12, fontFamily: 'ui-monospace, monospace', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
             <code>{snippet}</code>
           </pre>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-            <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
+            <p style={{ margin: 0, fontSize: 12, color: '#6e756c' }}>
               {t('partner_links.embed_hint', 'Copiez ce code et collez-le dans le HTML de votre site, là où vous voulez afficher le formulaire.')}
             </p>
-            <button onClick={copy} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <button onClick={copy} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               <Copy size={12} /> {copied ? t('referral_link.copied') : t('partner_links.copy_code', 'Copier le code')}
             </button>
           </div>
@@ -253,10 +253,10 @@ function FormLinkCard({ link, t }) {
           there's no traffic yet AND no stats response, to avoid
           showing a row of "0 / 0 / 0 %" before the first visit. */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 18, marginBottom: 10, flexWrap: 'wrap' }}>
-        <h4 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <h4 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#33433b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
           {t('partner_links.stats_title', 'Performances')}
         </h4>
-        <div style={{ display: 'inline-flex', padding: 2, background: '#f1f5f9', borderRadius: 7 }}>
+        <div style={{ display: 'inline-flex', padding: 2, background: '#ece7db', borderRadius: 7 }}>
           {[
             { v: '7d',  l: t('forms.stats.period_7d',  '7 j') },
             { v: '30d', l: t('forms.stats.period_30d', '30 j') },
@@ -266,7 +266,7 @@ function FormLinkCard({ link, t }) {
             const active = period === p.v;
             return (
               <button key={p.v} onClick={() => setPeriod(p.v)}
-                style={{ padding: '4px 10px', borderRadius: 5, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0f172a' : '#64748b', fontWeight: 500, fontSize: 11, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
+                style={{ padding: '4px 10px', borderRadius: 5, border: 'none', cursor: 'pointer', background: active ? '#fff' : 'transparent', color: active ? '#0e1f18' : '#6e756c', fontWeight: 500, fontSize: 11, boxShadow: active ? '0 1px 2px rgba(15,23,42,0.06)' : 'none', fontFamily: 'inherit' }}>
                 {p.l}
               </button>
             );
@@ -284,9 +284,9 @@ function FormLinkCard({ link, t }) {
 
 function PartnerStat({ label, value, accent }) {
   return (
-    <div style={{ background: accent ? '#f0fdf4' : '#f8fafc', borderRadius: 10, padding: '10px 12px', border: '1px solid ' + (accent ? '#bbf7d0' : '#e2e8f0') }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: accent ? '#059669' : '#0f172a', marginTop: 4 }}>{value}</div>
+    <div style={{ background: accent ? '#e9f1ea' : '#f6f2e9', borderRadius: 10, padding: '10px 12px', border: '1px solid ' + (accent ? '#cfe6d6' : '#ded8cb') }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: accent ? '#0e7a54' : '#0e1f18', marginTop: 4 }}>{value}</div>
     </div>
   );
 }

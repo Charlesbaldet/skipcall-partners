@@ -71,11 +71,11 @@ export default function PublicApplyPage() {
       <Page>
         
         <div style={{ textAlign: 'center', maxWidth: 520, margin: '0 auto', padding: '60px 24px' }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#2fa876,#157a4c)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}>
             <CheckCircle size={36} color="#fff" />
           </div>
           <h2 style={{ fontSize: 30, fontWeight: 800, color: '#fff', marginBottom: 12 }}>{t("publicApply.sent_title")}</h2>
-          <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.7, marginBottom: 32 }}>
+          <p style={{ color: '#99a09a', fontSize: 17, lineHeight: 1.7, marginBottom: 32 }}>
             {t("publicApply.sent_text")}
           </p>
           <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
@@ -93,7 +93,7 @@ export default function PublicApplyPage() {
   if (tenantLoading) {
     return (
       <Page>
-        <div style={{ color: '#94a3b8', padding: 48 }}>…</div>
+        <div style={{ color: '#99a09a', padding: 48 }}>…</div>
       </Page>
     );
   }
@@ -103,7 +103,7 @@ export default function PublicApplyPage() {
         <div style={{ textAlign: 'center', maxWidth: 420, margin: '0 auto', padding: '60px 24px' }}>
           <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#fca5a5', fontSize: 28 }}></div>
           <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Lien invalide</h2>
-          <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>
+          <p style={{ color: '#99a09a', fontSize: 15, lineHeight: 1.6 }}>
             Aucun programme partenaire n'a été trouvé pour ce lien. Vérifiez l'URL auprès de la personne qui vous l'a partagé.
           </p>
         </div>
@@ -120,12 +120,12 @@ export default function PublicApplyPage() {
               {tenant.logo_url ? (
                 <img src={tenant.logo_url} alt={tenant.name} style={{ height: 44, maxWidth: 160, objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
               ) : (
-                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>{(tenant.name || '?').charAt(0).toUpperCase()}</div>
+                <div style={{ width: 44, height: 44, borderRadius: 13, background: 'var(--rb-primary, #0e7a54)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(5,150,105,0.4)' }}>{(tenant.name || '?').charAt(0).toUpperCase()}</div>
               )}
               <span style={{ fontSize: 26, fontWeight: 700, color: '#fff' }}>{tenant.name}</span>
             </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{t("publicApply.title")}</h1>
-          <p style={{ color: '#94a3b8', fontSize: 15 }}>{t("publicApply.subtitle")}</p>
+          <p style={{ color: '#99a09a', fontSize: 15 }}>{t("publicApply.subtitle")}</p>
         <div style={{ display:"flex", justifyContent:"center", marginTop:16, marginBottom:8 }}><LanguageSwitcher dark={true} /></div>
         <p style={{ display:"none" }}></p>
         </div>
@@ -133,7 +133,7 @@ export default function PublicApplyPage() {
         {/* Progress */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 36 }}>
           {[1, 2].map(s => (
-            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? 'linear-gradient(90deg,#6366f1,#a855f7)' : 'rgba(255,255,255,0.1)', transition: 'all .3s' }} />
+            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? 'linear-gradient(90deg,#0e7a54,#a855f7)' : 'rgba(255,255,255,0.1)', transition: 'all .3s' }} />
           ))}
         </div>
 
@@ -155,20 +155,20 @@ export default function PublicApplyPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <Field icon={Globe} label={t("publicApply.field_website")} value={form.company_website} onChange={set('company_website')} placeholder="https://..." />
                   <div>
-                    <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.size")}</label>
+                    <label style={{ display: 'block', color: '#cfc8b8', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.size")}</label>
                     <select value={form.company_size} onChange={set('company_size')} style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box', appearance: 'none' }}>
-                      <option value="" style={{ background: '#1e293b' }}>{t("publicApply.size_ph")}</option>
-                      <option value="1-10" style={{ background: '#1e293b' }}>{t("publicApply.size_1")}</option>
-                      <option value="11-50" style={{ background: '#1e293b' }}>{t("publicApply.size_2")}</option>
-                      <option value="51-200" style={{ background: '#1e293b' }}>{t("publicApply.size_3")}</option>
-                      <option value="200+" style={{ background: '#1e293b' }}>{t("publicApply.size_4")}</option>
+                      <option value="" style={{ background: '#1a2c24' }}>{t("publicApply.size_ph")}</option>
+                      <option value="1-10" style={{ background: '#1a2c24' }}>{t("publicApply.size_1")}</option>
+                      <option value="11-50" style={{ background: '#1a2c24' }}>{t("publicApply.size_2")}</option>
+                      <option value="51-200" style={{ background: '#1a2c24' }}>{t("publicApply.size_3")}</option>
+                      <option value="200+" style={{ background: '#1a2c24' }}>{t("publicApply.size_4")}</option>
                     </select>
                   </div>
                 </div>
               </div>
               {categories.length > 0 && (
                 <div style={{ marginTop: 24 }}>
-                  <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+                  <label style={{ display: 'block', color: '#cfc8b8', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                     {t('partner_category.select_type')} *
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -184,7 +184,7 @@ export default function PublicApplyPage() {
                         appearance: 'none', fontFamily: 'inherit', cursor: 'pointer',
                       }}
                     >
-                      <option value="" disabled style={{ background: '#1e293b' }}>
+                      <option value="" disabled style={{ background: '#1a2c24' }}>
                         {t('partner_category.select_placeholder')}
                       </option>
                       {categories.map(c => {
@@ -194,7 +194,7 @@ export default function PublicApplyPage() {
                         // admin ships a translation for (e.g. `client`).
                         const label = c.slug ? t('partner_category.' + c.slug, { defaultValue: c.name || '' }) : (c.name || '');
                         return (
-                          <option key={c.id} value={c.id} style={{ background: '#1e293b' }}>{label}</option>
+                          <option key={c.id} value={c.id} style={{ background: '#1a2c24' }}>{label}</option>
                         );
                       })}
                     </select>
@@ -203,15 +203,15 @@ export default function PublicApplyPage() {
                         none so it doesn't steal clicks from the select. */}
                     <span aria-hidden="true" style={{
                       position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
-                      color: '#94a3b8', fontSize: 12, pointerEvents: 'none',
+                      color: '#99a09a', fontSize: 12, pointerEvents: 'none',
                     }}>▼</span>
                   </div>
                 </div>
               )}
               <button disabled={!canSubmit} onClick={() => setStep(2)} style={{
                 marginTop: 28, width: '100%', padding: '14px', borderRadius: 12,
-                background: canSubmit ? 'var(--rb-primary, #059669)' : 'rgba(255,255,255,0.06)',
-                color: canSubmit ? '#fff' : '#64748b', border: 'none', fontWeight: 600, fontSize: 15,
+                background: canSubmit ? 'var(--rb-primary, #0e7a54)' : 'rgba(255,255,255,0.06)',
+                color: canSubmit ? '#fff' : '#6e756c', border: 'none', fontWeight: 600, fontSize: 15,
                 cursor: canSubmit ? 'pointer' : 'default', boxShadow: canSubmit ? '0 4px 15px rgba(5,150,105,0.3)' : 'none',
               }}>{t("publicApply.continue")}</button>
             </div>
@@ -221,7 +221,7 @@ export default function PublicApplyPage() {
             <div>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 24 }}>{t("publicApply.why_title")}</h2>
               <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.motivation")}</label>
+                <label style={{ display: 'block', color: '#cfc8b8', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t("publicApply.motivation")}</label>
                 <textarea value={form.motivation} onChange={set('motivation')} rows={5}
                   placeholder={t("publicApply.motivation_ph")}
                   style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, resize: 'vertical', fontFamily: 'inherit', color: '#fff', boxSizing: 'border-box' }} />
@@ -239,10 +239,10 @@ export default function PublicApplyPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>{t("publicApply.sent_back")}</button>
+                <button onClick={() => setStep(1)} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#99a09a', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>{t("publicApply.sent_back")}</button>
                 <button onClick={handleSubmit} disabled={saving} style={{
                   flex: 2, padding: '14px', borderRadius: 12,
-                  background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff',
+                  background: 'linear-gradient(135deg,#2fa876,#157a4c)', color: '#fff',
                   border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer',
                   boxShadow: '0 4px 15px rgba(34,197,94,0.3)', opacity: saving ? 0.7 : 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -255,7 +255,7 @@ export default function PublicApplyPage() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <a href="/login" style={{ color: '#64748b', fontSize: 14, textDecoration: 'none' }}>
+          <a href="/login" style={{ color: '#6e756c', fontSize: 14, textDecoration: 'none' }}>
             {t("publicApply.already")} ? <span style={{ color: '#818cf8' }}>{t("publicApply.login_link")}</span>
           </a>
         </div>
@@ -266,7 +266,7 @@ export default function PublicApplyPage() {
 
 function Page({ children }) {
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(168deg, #0a0a0f 0%, #111827 50%, #0f172a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(168deg, #0a0a0f 0%, #111827 50%, #0e1f18 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {children}
     </div>
   );
@@ -275,9 +275,9 @@ function Page({ children }) {
 function Field({ icon: Icon, label, value, onChange, placeholder, type = 'text' }) {
   return (
     <div>
-      <label style={{ display: 'block', color: '#cbd5e1', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{label}</label>
+      <label style={{ display: 'block', color: '#cfc8b8', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{label}</label>
       <div style={{ position: 'relative' }}>
-        {Icon && <Icon size={16} color="#64748b" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />}
+        {Icon && <Icon size={16} color="#6e756c" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />}
         <input type={type} value={value} onChange={onChange} placeholder={placeholder}
           style={{ width: '100%', padding: `12px ${Icon ? '16px' : '16px'} 12px ${Icon ? '40px' : '16px'}`, borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', fontSize: 15, color: '#fff', boxSizing: 'border-box' }} />
       </div>
@@ -288,7 +288,7 @@ function Field({ icon: Icon, label, value, onChange, placeholder, type = 'text' 
 function RecapRow({ label, value }) {
   return (
     <div>
-      <div style={{ color: '#64748b', fontSize: 12 }}>{label}</div>
+      <div style={{ color: '#6e756c', fontSize: 12 }}>{label}</div>
       <div style={{ color: '#fff', fontWeight: 600 }}>{value}</div>
     </div>
   );

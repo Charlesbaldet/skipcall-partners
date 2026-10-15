@@ -13,13 +13,13 @@ import api from '../lib/api';
 const PALETTE = {
   new_referral:     { bg: '#E6F1FB', fg: '#378ADD', Icon: FileText },
   referral_update:  { bg: '#E1F5EE', fg: '#0f766e', Icon: FileText },
-  deal_won:         { bg: '#EAF3DE', fg: '#16a34a', Icon: Trophy },
-  commission:       { bg: '#EAF3DE', fg: '#16a34a', Icon: DollarSign },
-  new_application:  { bg: '#FAEEDA', fg: '#b45309', Icon: UserPlus },
+  deal_won:         { bg: '#EAF3DE', fg: '#157a4c', Icon: Trophy },
+  commission:       { bg: '#EAF3DE', fg: '#157a4c', Icon: DollarSign },
+  new_application:  { bg: '#FAEEDA', fg: '#9a5a16', Icon: UserPlus },
   news:             { bg: '#EEEDFE', fg: '#7c3aed', Icon: Newspaper },
-  promo:            { bg: '#FAEEDA', fg: '#b45309', Icon: Tag },
+  promo:            { bg: '#FAEEDA', fg: '#9a5a16', Icon: Tag },
   kit:              { bg: '#E0F7FA', fg: '#0891b2', Icon: Package },
-  event:            { bg: '#FEF3C7', fg: '#d97706', Icon: Calendar },
+  event:            { bg: '#f3ead0', fg: '#d97706', Icon: Calendar },
 };
 
 // Filter pills — each one maps to a set of notification types that
@@ -110,7 +110,7 @@ export default function NotificationsPage() {
     <div className="fade-in">
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5 }}>
           {t('notifications.title')}
         </h1>
         <button
@@ -134,8 +134,8 @@ export default function NotificationsPage() {
               onClick={() => setFilter(f.id)}
               style={{
                 padding: '5px 14px', borderRadius: 20, border: 'none',
-                background: isActive ? '#0f172a' : '#f1f5f9',
-                color: isActive ? '#fff' : '#64748b',
+                background: isActive ? '#0e1f18' : '#ece7db',
+                color: isActive ? '#fff' : '#6e756c',
                 fontSize: 11, fontWeight: 600, cursor: 'pointer',
                 transition: 'background .15s',
               }}
@@ -146,7 +146,7 @@ export default function NotificationsPage() {
 
       {/* Body */}
       {loading ? (
-        <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>…</div>
+        <div style={{ padding: 48, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>…</div>
       ) : grouped.length === 0 ? (
         <EmptyState t={t} />
       ) : (
@@ -154,7 +154,7 @@ export default function NotificationsPage() {
           {grouped.map(g => (
             <section key={g.id}>
               <div style={{
-                fontSize: 11, fontWeight: 600, color: '#94a3b8',
+                fontSize: 11, fontWeight: 600, color: '#99a09a',
                 textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8,
               }}>{t('notifications.group_' + g.id)}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -177,8 +177,8 @@ function Row({ n, t, onClick }) {
       style={{
         width: '100%', textAlign: 'left', cursor: 'pointer',
         background: n.is_read ? '#fff' : '#F0F7FE',
-        border: '1px solid #e2e8f0',
-        borderLeft: n.is_read ? '1px solid #e2e8f0' : '3px solid #378ADD',
+        border: '1px solid #ded8cb',
+        borderLeft: n.is_read ? '1px solid #ded8cb' : '3px solid #378ADD',
         borderRadius: 12, padding: '12px 14px',
         display: 'flex', alignItems: 'center', gap: 12,
         opacity: n.is_read ? 0.72 : 1,
@@ -194,17 +194,17 @@ function Row({ n, t, onClick }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontWeight: 700, fontSize: 13, color: '#0f172a',
+          fontWeight: 700, fontSize: 13, color: '#0e1f18',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{n.title}</div>
         {n.message && (
           <div style={{
-            fontSize: 12, color: '#64748b', marginTop: 2,
+            fontSize: 12, color: '#6e756c', marginTop: 2,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>{n.message}</div>
         )}
       </div>
-      <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>
+      <div style={{ fontSize: 11, color: '#99a09a', flexShrink: 0 }}>
         {timeAgo(n.created_at, t)}
       </div>
     </button>
@@ -214,17 +214,17 @@ function Row({ n, t, onClick }) {
 function EmptyState({ t }) {
   return (
     <div style={{
-      background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14,
+      background: '#fff', border: '1px solid #ded8cb', borderRadius: 14,
       padding: '56px 24px', textAlign: 'center',
     }}>
       <div style={{
-        width: 56, height: 56, borderRadius: '50%', background: '#f1f5f9',
+        width: 56, height: 56, borderRadius: '50%', background: '#ece7db',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        color: '#94a3b8', marginBottom: 14,
+        color: '#99a09a', marginBottom: 14,
       }}>
         <Bell size={22} />
       </div>
-      <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+      <div style={{ fontSize: 15, fontWeight: 600, color: '#0e1f18' }}>
         {t('notifications.no_notifications')}
       </div>
     </div>

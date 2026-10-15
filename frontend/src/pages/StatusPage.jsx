@@ -37,16 +37,16 @@ function StatusDot({ color, size = 12 }) {
 }
 
 const COLORS = {
-  ok: '#10b981',
-  warn: '#f59e0b',
-  err: '#ef4444',
-  unknown: '#94a3b8',
+  ok: '#1c9a6b',
+  warn: '#b4791f',
+  err: '#c24436',
+  unknown: '#99a09a',
 };
 
 function severityColor(sev) {
   if (sev === 'critical') return COLORS.err;
   if (sev === 'major') return COLORS.warn;
-  return '#64748b';
+  return '#6e756c';
 }
 
 function StatusCard({ label, value, color, sub }) {
@@ -55,16 +55,16 @@ function StatusCard({ label, value, color, sub }) {
       flex: '1 1 200px',
       minWidth: 200,
       background: '#fff',
-      border: '1px solid #e2e8f0',
+      border: '1px solid #ded8cb',
       borderRadius: 12,
       padding: 20,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <StatusDot color={color} size={10} />
-        <span style={{ color: '#64748b', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.6 }}>{label}</span>
+        <span style={{ color: '#6e756c', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.6 }}>{label}</span>
       </div>
-      <div style={{ color: '#0f172a', fontSize: 18, fontWeight: 700, letterSpacing: -0.2 }}>{value}</div>
-      {sub && <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{sub}</div>}
+      <div style={{ color: '#0e1f18', fontSize: 18, fontWeight: 700, letterSpacing: -0.2 }}>{value}</div>
+      {sub && <div style={{ color: '#99a09a', fontSize: 12, marginTop: 4 }}>{sub}</div>}
     </div>
   );
 }
@@ -123,11 +123,11 @@ export default function StatusPage() {
         <title>{t('statusPage.title')} · RefBoost</title>
         <meta name="description" content={t('statusPage.title')} />
       </Helmet>
-      <main style={{ maxWidth: 980, margin: '0 auto', padding: '60px 24px 80px', fontFamily: 'inherit', color: '#0f172a' }}>
+      <main style={{ maxWidth: 980, margin: '0 auto', padding: '60px 24px 80px', fontFamily: 'inherit', color: '#0e1f18' }}>
         <h1 style={{ fontSize: 40, fontWeight: 800, letterSpacing: -1.2, margin: '0 0 8px' }}>
           {t('statusPage.title')}
         </h1>
-        <p style={{ color: '#64748b', fontSize: 15, margin: '0 0 32px' }}>
+        <p style={{ color: '#6e756c', fontSize: 15, margin: '0 0 32px' }}>
           {t('statusPage.subtitle', 'Disponibilité en temps réel des services RefBoost.')}
         </p>
 
@@ -146,7 +146,7 @@ export default function StatusPage() {
           <StatusDot color={bannerColor} size={16} />
           <div>
             <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.4 }}>{bannerLabel}</div>
-            <div style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>
+            <div style={{ color: '#6e756c', fontSize: 13, marginTop: 4 }}>
               {t('statusPage.last_check', 'Dernière vérification')} · {new Date().toLocaleTimeString(dateLocale)}
             </div>
           </div>
@@ -185,10 +185,10 @@ export default function StatusPage() {
         {visibleIncidents.length === 0 ? (
           <div style={{
             background: '#fff',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #ded8cb',
             borderRadius: 12,
             padding: 28,
-            color: '#64748b',
+            color: '#6e756c',
             fontSize: 14,
             textAlign: 'center',
           }}>
@@ -202,7 +202,7 @@ export default function StatusPage() {
               return (
                 <li key={inc.id} style={{
                   background: '#fff',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #ded8cb',
                   borderRadius: 12,
                   padding: '16px 20px',
                 }}>
@@ -226,8 +226,8 @@ export default function StatusPage() {
                       fontWeight: 600,
                       textTransform: 'uppercase',
                       letterSpacing: 0.6,
-                      color: '#64748b',
-                      background: '#f1f5f9',
+                      color: '#6e756c',
+                      background: '#ece7db',
                       padding: '2px 8px',
                       borderRadius: 6,
                     }}>
@@ -235,9 +235,9 @@ export default function StatusPage() {
                     </span>
                   </div>
                   {inc.description && (
-                    <div style={{ color: '#334155', fontSize: 14, lineHeight: 1.6, margin: '10px 0 0' }}>{inc.description}</div>
+                    <div style={{ color: '#2b3a32', fontSize: 14, lineHeight: 1.6, margin: '10px 0 0' }}>{inc.description}</div>
                   )}
-                  <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 10 }}>
+                  <div style={{ color: '#99a09a', fontSize: 12, marginTop: 10 }}>
                     {start ? start.toLocaleString(dateLocale) : '—'}
                     {end ? ` → ${end.toLocaleString(dateLocale)}` : ''}
                   </div>

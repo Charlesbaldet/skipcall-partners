@@ -7,7 +7,7 @@ import Pagination from '../components/Pagination';
 import api from '../lib/api';
 import { useTranslation } from 'react-i18next';
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c', bg: '#f6f2e9', card: '#fff' };
 const ITEMS_PER_PAGE = 9;
 const SITE = 'https://refboost.io';
 
@@ -39,7 +39,7 @@ function PartnerCard({ partner }) {
       <div style={{ padding: '24px 24px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
           {partner.logo_url
-            ? <img src={partner.logo_url} alt={partner.name} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'contain', border: '1px solid #f1f5f9' }} />
+            ? <img src={partner.logo_url} alt={partner.name} style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'contain', border: '1px solid #ece7db' }} />
             : <div style={{ width: 48, height: 48, borderRadius: 12, background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color }}>{initials}</div>}
           <div style={{ flex: 1, minWidth: 0 }}>
             <a href={'/marketplace/' + partner.slug}
@@ -59,7 +59,7 @@ function PartnerCard({ partner }) {
           {partner.short_description}
         </p>
         {partner.icp && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.m, background: '#f8fafc', borderRadius: 8, padding: '6px 10px', marginTop: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.m, background: '#f6f2e9', borderRadius: 8, padding: '6px 10px', marginTop: 12 }}>
             <Users size={12} color={C.p} />
             <span><strong style={{ color: C.s }}>{t("marketplace.target")}</strong> {partner.icp}</span>
           </div>
@@ -171,7 +171,7 @@ export default function MarketplacePage() {
       </Helmet>
 
       {/* Hero — identique au Blog */}
-      <div style={{ background: 'linear-gradient(135deg, ' + C.s + ' 0%, #1e293b 100%)', padding: '80px 24px 60px', textAlign: 'center' }}>
+      <div style={{ background: 'linear-gradient(135deg, ' + C.s + ' 0%, #1a2c24 100%)', padding: '80px 24px 60px', textAlign: 'center' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
           <span style={{ display: 'inline-block', color: C.p, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
             Marketplace
@@ -179,7 +179,7 @@ export default function MarketplacePage() {
           <h1 style={{ fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, color: '#fff', margin: '0 0 16px', lineHeight: 1.1 }}>
             {t("marketplace.title")}
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: 17, margin: '0 0 36px', lineHeight: 1.6 }}>
+          <p style={{ color: '#99a09a', fontSize: 17, margin: '0 0 36px', lineHeight: 1.6 }}>
             {t("marketplace.subtitle")}
             
           </p>
@@ -208,19 +208,19 @@ export default function MarketplacePage() {
 
       {/* Sector filters — identique aux catégories Blog */}
       {showFilters && (
-        <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 24px' }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid #ded8cb', padding: '14px 24px' }}>
           <nav aria-label="Secteurs" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 960, margin: '0 auto', alignItems: 'center' }}>
             <button
               onClick={() => setSectorAndReset('')}
-              style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (!activeSector ? C.p : '#e2e8f0'), background: !activeSector ? C.p : '#fff', color: !activeSector ? '#fff' : C.m, transition: 'all .2s' }}>{t("marketplace.all")}</button>
+              style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (!activeSector ? C.p : '#ded8cb'), background: !activeSector ? C.p : '#fff', color: !activeSector ? '#fff' : C.m, transition: 'all .2s' }}>{t("marketplace.all")}</button>
             {allSectors.map(s => (
               <button key={s} onClick={() => setSectorAndReset(activeSector === s ? '' : s)}
-                style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (activeSector === s ? C.p : '#e2e8f0'), background: activeSector === s ? C.p : '#fff', color: activeSector === s ? '#fff' : C.m, transition: 'all .2s' }}>
+                style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid ' + (activeSector === s ? C.p : '#ded8cb'), background: activeSector === s ? C.p : '#fff', color: activeSector === s ? '#fff' : C.m, transition: 'all .2s' }}>
                 {s}
               </button>
             ))}
             {(activeSector || search) && (
-              <button onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, padding: '7px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid #fecaca', background: '#fef2f2', color: '#dc2626' }}>
+              <button onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, padding: '7px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1.5px solid #edc4bd', background: '#f7e9e6', color: '#b23b2e' }}>
                 <X size={12} /> {t("marketplace.reset")}
               </button>
             )}
@@ -244,9 +244,9 @@ export default function MarketplacePage() {
               {[1,2,3,4,5,6].map(i => (
                 <div key={i} style={{ background: C.card, borderRadius: 16, height: 240, boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
                   <div style={{ padding: 24 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f1f5f9', marginBottom: 16 }} />
-                    <div style={{ height: 14, background: '#f1f5f9', borderRadius: 4, marginBottom: 8, width: '60%' }} />
-                    <div style={{ height: 12, background: '#f1f5f9', borderRadius: 4, width: '90%' }} />
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: '#ece7db', marginBottom: 16 }} />
+                    <div style={{ height: 14, background: '#ece7db', borderRadius: 4, marginBottom: 8, width: '60%' }} />
+                    <div style={{ height: 12, background: '#ece7db', borderRadius: 4, width: '90%' }} />
                   </div>
                 </div>
               ))}
@@ -274,11 +274,11 @@ export default function MarketplacePage() {
           )}
 
           {/* CTA */}
-          <div style={{ marginTop: 64, textAlign: 'center', background: 'linear-gradient(135deg,' + C.s + ',#1e293b)', borderRadius: 20, padding: '48px 24px' }}>
+          <div style={{ marginTop: 64, textAlign: 'center', background: 'linear-gradient(135deg,' + C.s + ',#1a2c24)', borderRadius: 20, padding: '48px 24px' }}>
             <h2 style={{ color: '#fff', fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>
               {t("marketplace.add_program")}
             </h2>
-            <p style={{ color: '#94a3b8', margin: '0 0 24px', fontSize: 15 }}>
+            <p style={{ color: '#99a09a', margin: '0 0 24px', fontSize: 15 }}>
               {t("marketplace.add_program_sub")}
             </p>
             <a href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg,' + C.p + ',' + C.pl + ')', color: '#fff', padding: '14px 28px', borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: 'none', boxShadow: '0 8px 30px ' + C.p + '50' }}>

@@ -55,24 +55,24 @@ export default function PublicReferralRedirectPage() {
 
   if (status === 'loading') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6e756c', fontFamily: 'system-ui, sans-serif' }}>
         Redirection…
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui, sans-serif', background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui, sans-serif', background: 'linear-gradient(135deg, #e9f1ea, #e9f1ea)' }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 40, maxWidth: 480, textAlign: 'center', boxShadow: '0 10px 40px rgba(15,23,42,0.08)' }}>
         <div style={{ fontSize: 44, marginBottom: 16 }}></div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0e1f18', marginBottom: 10 }}>
           You've been referred by a partner of {tenantName || 'RefBoost'}
         </h1>
-        <p style={{ color: '#64748b', fontSize: 15, lineHeight: 1.5, marginBottom: 24 }}>
+        <p style={{ color: '#6e756c', fontSize: 15, lineHeight: 1.5, marginBottom: 24 }}>
           Your referral has been recorded. Please continue to the partner's website to finish signing up.
         </p>
         {fallbackUrl && (
-          <a href={fallbackUrl} style={{ display: 'inline-block', padding: '12px 28px', background: '#059669', color: '#fff', borderRadius: 10, textDecoration: 'none', fontWeight: 600 }}>
+          <a href={fallbackUrl} style={{ display: 'inline-block', padding: '12px 28px', background: '#0e7a54', color: '#fff', borderRadius: 10, textDecoration: 'none', fontWeight: 600 }}>
             Continue
           </a>
         )}

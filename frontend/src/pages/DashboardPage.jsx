@@ -9,13 +9,13 @@ import PageSkeleton from '../components/PageSkeleton.jsx';
 import { fmt, STATUS_CONFIG, LEVEL_CONFIG, categoryName } from '../lib/constants';
 import DateRangePicker from '../components/DateRangePicker.jsx';
 
-const COLORS = ['#6366f1', '#0ea5e9', '#f59e0b', '#c026d3', '#16a34a', '#dc2626'];
+const COLORS = ['#0e7a54', '#0ea5e9', '#b4791f', '#c026d3', '#157a4c', '#b23b2e'];
 
 const LEVEL_COLORS = {
   Bronze: { bg: '#fef3e2', color: '#cd7f32', border: '#f5d5a0' },
-  Silver: { bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' },
-  Gold: { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
-  Platinum: { bg: '#eef2ff', color: 'var(--rb-primary, #059669)', border: '#c7d2fe' },
+  Silver: { bg: '#ece7db', color: '#6e756c', border: '#cfc8b8' },
+  Gold: { bg: '#f6efda', color: '#d97706', border: '#ecd9a0' },
+  Platinum: { bg: '#eef1ea', color: 'var(--rb-primary, #0e7a54)', border: '#c7d2fe' },
 };
 
 // Fill colour for the "vers <next level>" progress bar. Distinct from
@@ -148,7 +148,7 @@ export default function DashboardPage() {
   const pipelineData = pipeline.map(p => ({
     name: STATUS_CONFIG[p.status]?.label || p.status,
     count: parseInt(p.count), value: parseFloat(p.value),
-    fill: STATUS_CONFIG[p.status]?.color || '#94a3b8',
+    fill: STATUS_CONFIG[p.status]?.color || '#99a09a',
   }));
 
   const levelData = levels.map(l => {
@@ -158,7 +158,7 @@ export default function DashboardPage() {
       name: LEVEL_CONFIG[l.level]?.label || l.level,
       total, won, lost: total - won,
       convRate: total > 0 ? Math.round((won / total) * 100) : 0,
-      fill: LEVEL_CONFIG[l.level]?.color || '#94a3b8',
+      fill: LEVEL_CONFIG[l.level]?.color || '#99a09a',
     };
   });
 
@@ -177,22 +177,22 @@ export default function DashboardPage() {
       {showWizard && <OnboardingWizard onClose={() => setShowWizard(false)} />}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('dashboard.title')}</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{t('dashboard.subtitle')}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.2, margin: 0 }}>{t('dashboard.title')}</h1>
+          <p style={{ color: '#6e756c', fontSize: 13, margin: '4px 0 0' }}>{t('dashboard.subtitle')}</p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <DateRangePicker value={dateRange} onChange={setDateRange} />
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
+          <div style={{ display: 'flex', gap: 4, background: '#ece7db', borderRadius: 10, padding: 3 }}>
             {[
               { id: 'overview', label: t('dashboard.tab_overview'), icon: Target },
               { id: 'classement', label: t('dashboard.tab_leaderboard'), icon: Trophy },
             ].map(tab_ => (
               <button key={tab_.id} onClick={() => handleTabChange(tab_.id)} style={{
                 padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                background: tab === tab_.id ? '#fff' : 'transparent', color: tab === tab_.id ? '#0f172a' : '#64748b',
+                background: tab === tab_.id ? '#fff' : 'transparent', color: tab === tab_.id ? '#0e1f18' : '#6e756c',
                 boxShadow: tab === tab_.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                 display: 'flex', alignItems: 'center', gap: 6,
               }}>
@@ -288,21 +288,21 @@ function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, mo
   return (
     <>
       {paymentFailed && (
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontFamily: 'inherit' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontFamily: 'inherit' }}>
           <AlertCircle size={18} style={{ flexShrink: 0 }}/>
           <div style={{ flex: 1, fontWeight: 500 }}>{t('billing.payment_failed_banner')}</div>
-          <button onClick={openStripePortal} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+          <button onClick={openStripePortal} style={{ background: '#b23b2e', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
             {t('billing.update_payment')}
           </button>
         </div>
       )}
       {over && (
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontFamily: 'inherit' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#f6efda', border: '1px solid #ecd9a0', color: '#7a4a16', padding: '14px 16px', borderRadius: 12, fontSize: 14, marginBottom: 20, fontFamily: 'inherit' }}>
           <AlertCircle size={18} style={{ flexShrink: 0 }}/>
           <div style={{ flex: 1 }}>
             {t('billing.over_limit_banner', { count: billingPlan.partnerCount, limit: billingPlan.partnerLimit, plan: t('billing.' + (billingPlan.plan || 'starter')) })}
           </div>
-          <button onClick={() => navigate('/billing')} style={{ background: 'linear-gradient(135deg,#059669,#10b981)', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+          <button onClick={() => navigate('/billing')} style={{ background: 'linear-gradient(135deg,#0e7a54,#1c9a6b)', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
             {t('billing.upgrade')}
           </button>
         </div>
@@ -310,11 +310,11 @@ function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, mo
 
       {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <KPICard icon={FileText} label={t('dashboard.kpi_total')} value={kpis?.total_referrals} color="#6366f1" />
-        <KPICard icon={Zap} label={t('dashboard.kpi_new')} value={kpis?.new_count} color="#f59e0b" />
+        <KPICard icon={FileText} label={t('dashboard.kpi_total')} value={kpis?.total_referrals} color="#0e7a54" />
+        <KPICard icon={Zap} label={t('dashboard.kpi_new')} value={kpis?.new_count} color="#b4791f" />
         <KPICard icon={Target} label={t('dashboard.kpi_pipeline')} value={kpis?.active_count} sub={fmt(kpis?.pipeline_value || 0)} color="#0ea5e9" />
-        <KPICard icon={TrendingUp} label={t('dashboard.kpi_won')} value={kpis?.won_count} sub={fmt(kpis?.total_revenue || 0)} color="#16a34a" />
-        <KPICard icon={DollarSign} label={t('dashboard.kpi_commissions')} value={fmt(kpis?.pending_commission || 0)} color="#f59e0b" highlight />
+        <KPICard icon={TrendingUp} label={t('dashboard.kpi_won')} value={kpis?.won_count} sub={fmt(kpis?.total_revenue || 0)} color="#157a4c" />
+        <KPICard icon={DollarSign} label={t('dashboard.kpi_commissions')} value={fmt(kpis?.pending_commission || 0)} color="#b4791f" highlight />
         <KPICard icon={Users} label={t('dashboard.kpi_rate')} value={`${kpis?.win_rate || 0}%`} color="#c026d3" />
       </div>
 
@@ -341,7 +341,7 @@ function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, mo
                 <button key={String(opt.key)} onClick={() => setMonthlyCumul(opt.key)} style={{
                   padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
                   background: monthlyCumul === opt.key ? '#fff' : 'transparent',
-                  color: monthlyCumul === opt.key ? '#059669' : '#9ca3af',
+                  color: monthlyCumul === opt.key ? '#0e7a54' : '#99a09a',
                   boxShadow: monthlyCumul === opt.key ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                 }}>{opt.label}</button>
               ))}
@@ -358,23 +358,23 @@ function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, mo
                 <AreaChart data={monthlyData} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#059669" stopOpacity={0.18}/>
-                      <stop offset="100%" stopColor="#059669" stopOpacity={0}/>
+                      <stop offset="0%" stopColor="#0e7a54" stopOpacity={0.18}/>
+                      <stop offset="100%" stopColor="#0e7a54" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="#f3f4f6" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={32} />
-                  <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }} />
-                  <Area type="monotone" dataKey="total" stroke="#059669" strokeWidth={2} fill="url(#totalGrad)" name="Total" isAnimationActive={false} />
-                  <Area type="monotone" dataKey="won"   stroke="#059669" strokeWidth={2} strokeDasharray="4 4" strokeOpacity={0.55} fill="transparent" name="Gagnés" isAnimationActive={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#99a09a' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#99a09a' }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e3ddd0', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }} />
+                  <Area type="monotone" dataKey="total" stroke="#0e7a54" strokeWidth={2} fill="url(#totalGrad)" name="Total" isAnimationActive={false} />
+                  <Area type="monotone" dataKey="won"   stroke="#0e7a54" strokeWidth={2} strokeDasharray="4 4" strokeOpacity={0.55} fill="transparent" name="Gagnés" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', fontSize: 11, color: '#6b7280', marginTop: 6 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 2, background: '#059669' }}/> Total</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 0, borderTop: '2px dashed #059669', opacity: 0.55 }}/> Gagnés</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 2, background: '#0e7a54' }}/> Total</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 14, height: 0, borderTop: '2px dashed #0e7a54', opacity: 0.55 }}/> Gagnés</span>
           </div>
         </ChartCard>
 
@@ -392,29 +392,29 @@ function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, mo
                 <button key={String(opt.key)} onClick={() => setRevenueCumul(opt.key)} style={{
                   padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
                   background: revenueCumul === opt.key ? '#fff' : 'transparent',
-                  color: revenueCumul === opt.key ? '#059669' : '#9ca3af',
+                  color: revenueCumul === opt.key ? '#0e7a54' : '#99a09a',
                   boxShadow: revenueCumul === opt.key ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                 }}>{opt.label}</button>
               ))}
             </div>
           }
         >
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#059669', letterSpacing: -1, marginBottom: 4 }}>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#0e7a54', letterSpacing: -1, marginBottom: 4 }}>
             {fmtK(revenueCumul ? mrrTotal : (mrrSeries[mrrSeries.length - 1]?.mrr || 0))}
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={mrrSeries} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
               <defs>
                 <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#059669" stopOpacity={0.18}/>
-                  <stop offset="100%" stopColor="#059669" stopOpacity={0}/>
+                  <stop offset="0%" stopColor="#0e7a54" stopOpacity={0.18}/>
+                  <stop offset="100%" stopColor="#0e7a54" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="#f3f4f6" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
-              <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={v => fmt(v)} />
-              <Area type="monotone" dataKey="value" stroke="#059669" strokeWidth={2} fill="url(#mrrGrad)" name={revenueCumul ? 'Cumulé' : 'Mensuel'} isAnimationActive={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#99a09a' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: '#99a09a' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+              <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e3ddd0', fontSize: 13 }} formatter={v => fmt(v)} />
+              <Area type="monotone" dataKey="value" stroke="#0e7a54" strokeWidth={2} fill="url(#mrrGrad)" name={revenueCumul ? 'Cumulé' : 'Mensuel'} isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -436,15 +436,15 @@ function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, mo
           <AreaChart data={commissionMonthly} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="commGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.22}/>
-                <stop offset="100%" stopColor="#F59E0B" stopOpacity={0}/>
+                <stop offset="0%" stopColor="#b4791f" stopOpacity={0.22}/>
+                <stop offset="100%" stopColor="#b4791f" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid stroke="#f3f4f6" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
-            <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={v => fmt(v)} />
-            <Area type="monotone" dataKey="amount" stroke="#F59E0B" strokeWidth={2} fill="url(#commGrad)" name="Commissions" isAnimationActive={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#99a09a' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 12, fill: '#99a09a' }} axisLine={false} tickLine={false} width={40} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
+            <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e3ddd0', fontSize: 13 }} formatter={v => fmt(v)} />
+            <Area type="monotone" dataKey="amount" stroke="#b4791f" strokeWidth={2} fill="url(#commGrad)" name="Commissions" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -455,32 +455,32 @@ function OverviewTab({ kpis, stats, dateRange, revenueCumul, setRevenueCumul, mo
 // ═══ Donut: Pipeline par statut ═══
 function PipelineDonutCard({ stages, total }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>Pipeline par statut</div>
+    <div style={{ background: '#fff', border: '1px solid #e3ddd0', borderRadius: 12, padding: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#10231b', marginBottom: 12 }}>Pipeline par statut</div>
       {stages.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>Aucune donnée</div>
+        <div style={{ textAlign: 'center', color: '#99a09a', padding: 32, fontSize: 13 }}>Aucune donnée</div>
       ) : (
         <>
           <div style={{ position: 'relative', height: 180 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={stages} dataKey="count" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={2} isAnimationActive={false}>
-                  {stages.map((s, i) => <Cell key={i} fill={s.color || '#94a3b8'} stroke="#fff" strokeWidth={2} />)}
+                  {stages.map((s, i) => <Cell key={i} fill={s.color || '#99a09a'} stroke="#fff" strokeWidth={2} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} />
+                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e3ddd0', fontSize: 13 }} />
               </PieChart>
             </ResponsiveContainer>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#1a2236', letterSpacing: -1 }}>{total}</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#10231b', letterSpacing: -1 }}>{total}</div>
+              <div style={{ fontSize: 11, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 12, fontSize: 12 }}>
             {stages.map(s => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4b5563' }}>
-                <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color || '#94a3b8', flexShrink: 0 }}/>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color || '#99a09a', flexShrink: 0 }}/>
                 <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
-                <span style={{ fontWeight: 700, color: '#1a2236' }}>{s.count}</span>
+                <span style={{ fontWeight: 700, color: '#10231b' }}>{s.count}</span>
               </div>
             ))}
           </div>
@@ -493,12 +493,12 @@ function PipelineDonutCard({ stages, total }) {
 // ═══ Horizontal progress bars per lead temperature ═══
 function TemperatureBars({ data }) {
   const PALETTE = {
-    hot:  { label: 'Hot',  fg: '#DC2626', bg: '#FEE2E2' },
-    warm: { label: 'Warm', fg: '#F59E0B', bg: '#FEF3C7' },
-    cold: { label: 'Cold', fg: '#3B82F6', bg: '#DBEAFE' },
+    hot:  { label: 'Hot',  fg: '#b23b2e', bg: '#FEE2E2' },
+    warm: { label: 'Warm', fg: '#b4791f', bg: '#f3ead0' },
+    cold: { label: 'Cold', fg: '#0e7a54', bg: '#DBEAFE' },
   };
   const any = data.some(d => d.total > 0);
-  if (!any) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>Aucune donnée</div>;
+  if (!any) return <div style={{ textAlign: 'center', color: '#99a09a', padding: 32, fontSize: 13 }}>Aucune donnée</div>;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18, paddingTop: 6 }}>
       {data.map(row => {
@@ -507,13 +507,13 @@ function TemperatureBars({ data }) {
         return (
           <div key={row.temperature}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1a2236' }}>{p.label}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#10231b' }}>{p.label}</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: p.fg }}>{row.conversion}%</span>
             </div>
             <div style={{ height: 10, borderRadius: 999, background: p.bg, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${pct}%`, background: p.fg, borderRadius: 999, transition: 'width .4s' }}/>
             </div>
-            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>{row.won} / {row.total} deals</div>
+            <div style={{ fontSize: 11, color: '#99a09a', marginTop: 3 }}>{row.won} / {row.total} deals</div>
           </div>
         );
       })}
@@ -525,10 +525,10 @@ function TemperatureBars({ data }) {
 function CommissionStatusCard({ data, total }) {
   const fmtEur = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>Commissions par statut</div>
+    <div style={{ background: '#fff', border: '1px solid #e3ddd0', borderRadius: 12, padding: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#10231b', marginBottom: 12 }}>Commissions par statut</div>
       {data.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>Aucune donnée</div>
+        <div style={{ textAlign: 'center', color: '#99a09a', padding: 32, fontSize: 13 }}>Aucune donnée</div>
       ) : (
         <>
           <div style={{ position: 'relative', height: 180 }}>
@@ -537,12 +537,12 @@ function CommissionStatusCard({ data, total }) {
                 <Pie data={data} dataKey="amount" nameKey="label" innerRadius={55} outerRadius={80} paddingAngle={2} isAnimationActive={false}>
                   {data.map((s, i) => <Cell key={i} fill={s.color} stroke="#fff" strokeWidth={2} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} formatter={v => fmtEur(v)} />
+                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e3ddd0', fontSize: 13 }} formatter={v => fmtEur(v)} />
               </PieChart>
             </ResponsiveContainer>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#1a2236', letterSpacing: -0.5 }}>{fmtEur(total)}</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#10231b', letterSpacing: -0.5 }}>{fmtEur(total)}</div>
+              <div style={{ fontSize: 11, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 12, fontSize: 12 }}>
@@ -550,7 +550,7 @@ function CommissionStatusCard({ data, total }) {
               <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4b5563' }}>
                 <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color, flexShrink: 0 }}/>
                 <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
-                <span style={{ fontWeight: 700, color: '#1a2236' }}>{fmtEur(s.amount)}</span>
+                <span style={{ fontWeight: 700, color: '#10231b' }}>{fmtEur(s.amount)}</span>
               </div>
             ))}
           </div>
@@ -564,24 +564,24 @@ function CommissionStatusCard({ data, total }) {
 function CycleDurationCard({ cycle }) {
   const fmt = (n) => n == null ? '—' : `${Math.round(n)}j`;
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>Durée moyenne du cycle</div>
+    <div style={{ background: '#fff', border: '1px solid #e3ddd0', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#10231b', marginBottom: 12 }}>Durée moyenne du cycle</div>
       <div style={{ textAlign: 'center', padding: '24px 0' }}>
-        <div style={{ fontSize: 56, fontWeight: 800, color: '#8B5CF6', letterSpacing: -2, lineHeight: 1 }}>{fmt(cycle.overall)}</div>
+        <div style={{ fontSize: 56, fontWeight: 800, color: '#0e7a54', letterSpacing: -2, lineHeight: 1 }}>{fmt(cycle.overall)}</div>
         <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>Nouveau à Gagné</div>
       </div>
       <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, textAlign: 'center' }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#1a2236' }}>{fmt(cycle.qualification)}</div>
-          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Qualification</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#10231b' }}>{fmt(cycle.qualification)}</div>
+          <div style={{ fontSize: 11, color: '#99a09a', marginTop: 2 }}>Qualification</div>
         </div>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#1a2236' }}>{fmt(cycle.proposition)}</div>
-          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Proposition</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#10231b' }}>{fmt(cycle.proposition)}</div>
+          <div style={{ fontSize: 11, color: '#99a09a', marginTop: 2 }}>Proposition</div>
         </div>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#1a2236' }}>{fmt(cycle.closing)}</div>
-          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Closing</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#10231b' }}>{fmt(cycle.closing)}</div>
+          <div style={{ fontSize: 11, color: '#99a09a', marginTop: 2 }}>Closing</div>
         </div>
       </div>
     </div>
@@ -595,7 +595,7 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
   const { t } = useTranslation();
   const rModel = myTenant?.revenue_model || 'CA';
   const rLabel = rModel === 'ARR' ? 'ARR' : rModel === 'CA' ? t('common.revenue') : rModel === 'Other' ? t('common.revenue') : 'MRR';
-  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('dashboard.loading')}</div>;
+  if (loading) return <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>{t('dashboard.loading')}</div>;
 
   const topThree = leaderboard.slice(0, 3);
 
@@ -610,7 +610,7 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
               <span style={{ fontSize: 18 }}>{l.icon}</span>
               <div>
                 <div style={{ fontWeight: 700, color: lc.color, fontSize: 13 }}>{l.name}</div>
-                <div style={{ color: '#94a3b8', fontSize: 11 }}>{l.min}+ {t('dashboard.deals').toLowerCase()} · {l.rate}% com.</div>
+                <div style={{ color: '#99a09a', fontSize: 11 }}>{l.min}+ {t('dashboard.deals').toLowerCase()} · {l.rate}% com.</div>
               </div>
             </div>
           );
@@ -630,7 +630,7 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
           podium top 3. ≤ 3 partners or 0 partners are handled by the
           podium itself + the no_partner empty state below. */}
       {leaderboard.length > 3 && (
-      <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+      <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           {/* Per-column alignment: # and level are centred (badge / rank
               symbol), partner left (textual), numeric columns right
@@ -638,7 +638,7 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
               Header alignment matches the cell alignment exactly so the
               eye doesn't have to jump. */}
           <thead>
-            <tr style={{ background: '#f8fafc' }}>
+            <tr style={{ background: '#f6f2e9' }}>
               {[
                 { label: t('dashboard.tbl_rank'),                                  align: 'center' },
                 { label: t('dashboard.tbl_partner'),                               align: 'left'   },
@@ -649,7 +649,7 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
                 { label: t('dashboard.tbl_conversion'),                            align: 'right'  },
                 { label: t('dashboard.tbl_progression'),                           align: 'right'  },
               ].map((h, i) => (
-                <th key={i} style={{ padding: '13px 14px', textAlign: h.align, fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h.label}</th>
+                <th key={i} style={{ padding: '13px 14px', textAlign: h.align, fontWeight: 600, color: '#6e756c', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #ded8cb' }}>{h.label}</th>
               ))}
             </tr>
           </thead>
@@ -661,38 +661,38 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
             {leaderboard.slice(3).map(p => {
               const lc = LEVEL_COLORS[p.level] || LEVEL_COLORS.Bronze;
               return (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                  <td style={{ padding: '13px 14px', fontWeight: 800, color: p.rank <= 3 ? '#f59e0b' : '#94a3b8', fontSize: 16, textAlign: 'center' }}>
+                <tr key={p.id} style={{ borderBottom: '1px solid #f6f2e9' }}>
+                  <td style={{ padding: '13px 14px', fontWeight: 800, color: p.rank <= 3 ? '#b4791f' : '#99a09a', fontSize: 16, textAlign: 'center' }}>
                     {p.rank <= 3 ? ['', '', ''][p.rank - 1] : p.rank}
                   </td>
                   <td style={{ padding: '13px 14px', textAlign: 'left' }}>
-                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div>
-                    <div style={{ color: '#94a3b8', fontSize: 12 }}>{p.contact_name}</div>
+                    <div style={{ fontWeight: 600, color: '#0e1f18' }}>{p.name}</div>
+                    <div style={{ color: '#99a09a', fontSize: 12 }}>{p.contact_name}</div>
                   </td>
                   <td style={{ padding: '13px 14px', textAlign: 'center' }}>
                     <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: lc.bg, color: lc.color, border: `1px solid ${lc.border}`, display: 'inline-block' }}>
                       {p.level_icon} {p.level}
                     </span>
                   </td>
-                  <td style={{ padding: '13px 14px', fontWeight: 700, color: '#0f172a', fontSize: 16, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{p.won_deals}</td>
+                  <td style={{ padding: '13px 14px', fontWeight: 700, color: '#0e1f18', fontSize: 16, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{p.won_deals}</td>
                   <td style={{ padding: '13px 14px', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.total_revenue)}</td>
-                  <td style={{ padding: '13px 14px', fontWeight: 600, color: '#16a34a', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.total_commissions)}</td>
+                  <td style={{ padding: '13px 14px', fontWeight: 600, color: '#157a4c', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(p.total_commissions)}</td>
                   <td style={{ padding: '13px 14px', textAlign: 'right' }}>
                     <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 12, fontWeight: 600, fontVariantNumeric: 'tabular-nums', display: 'inline-block',
-                      background: p.conversion_rate >= 50 ? '#f0fdf4' : p.conversion_rate >= 25 ? '#fffbeb' : '#fef2f2',
-                      color: p.conversion_rate >= 50 ? '#16a34a' : p.conversion_rate >= 25 ? '#f59e0b' : '#dc2626',
+                      background: p.conversion_rate >= 50 ? '#e9f1ea' : p.conversion_rate >= 25 ? '#f6efda' : '#f7e9e6',
+                      color: p.conversion_rate >= 50 ? '#157a4c' : p.conversion_rate >= 25 ? '#b4791f' : '#b23b2e',
                     }}>{p.conversion_rate}%</span>
                   </td>
                   <td style={{ padding: '13px 14px', fontSize: 12, minWidth: 120, textAlign: 'right' }}>
                     {p.next_level ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
-                        <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden', maxWidth: 80 }}>
+                        <div style={{ flex: 1, height: 6, background: '#ece7db', borderRadius: 3, overflow: 'hidden', maxWidth: 80 }}>
                           <div style={{ height: '100%', borderRadius: 3, background: lc.color, width: `${Math.min(100, (p.won_deals / (p.won_deals + p.next_level.deals_needed)) * 100)}%` }} />
                         </div>
-                        <span style={{ color: '#94a3b8', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{p.next_level.deals_needed} → {p.next_level.icon}</span>
+                        <span style={{ color: '#99a09a', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{p.next_level.deals_needed} → {p.next_level.icon}</span>
                       </div>
                     ) : (
-                      <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{t('dashboard.max')}</span>
+                      <span style={{ color: 'var(--rb-primary, #0e7a54)', fontWeight: 600 }}>{t('dashboard.max')}</span>
                     )}
                   </td>
                 </tr>
@@ -703,7 +703,7 @@ function ClassementTab({ leaderboard, levels, loading, myTenant, thresholdType =
       </div>
       )}
       {leaderboard.length === 0 && (
-        <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+        <div style={{ padding: 48, textAlign: 'center', color: '#99a09a', background: '#fff', borderRadius: 16, border: '1px solid #ded8cb' }}>
           {t('dashboard.no_partner')}
         </div>
       )}
@@ -727,48 +727,48 @@ function PodiumCard({ partner: p, isFirst, thresholdType = 'deals' }) {
   const progressPct = nextLevelTotal > 0
     ? Math.min(100, Math.max(0, (currentValue / nextLevelTotal) * 100))
     : 0;
-  const barFill = (p.next_level && NEXT_LEVEL_BAR[p.next_level.name]) || '#94a3b8';
+  const barFill = (p.next_level && NEXT_LEVEL_BAR[p.next_level.name]) || '#99a09a';
   const remainingLabel = thresholdType === 'volume'
     ? fmt(p.next_level?.deals_needed || 0)
     : `${Math.round(p.next_level?.deals_needed || 0).toLocaleString('fr-FR')} ${t('dashboard.deals').toLowerCase()}`;
   return (
     <div style={{
-      background: '#fff', borderRadius: 20, padding: isFirst ? 28 : 22, border: '1px solid #e2e8f0',
+      background: '#fff', borderRadius: 20, padding: isFirst ? 28 : 22, border: '1px solid #ded8cb',
       textAlign: 'center', boxShadow: isFirst ? '0 8px 30px rgba(99,102,241,0.15)' : 'none',
       transform: isFirst ? 'scale(1)' : 'scale(0.95)',
     }}>
       <div style={{ fontSize: isFirst ? 40 : 32, marginBottom: 8 }}>{['', '', ''][p.rank - 1]}</div>
-      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: isFirst ? 18 : 16, marginBottom: 4 }}>{p.name}</div>
+      <div style={{ fontWeight: 800, color: '#0e1f18', fontSize: isFirst ? 18 : 16, marginBottom: 4 }}>{p.name}</div>
       <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: lc.bg, color: lc.color }}>{p.level_icon} {p.level}</span>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 16 }}>
         <div>
-          <div style={{ fontSize: isFirst ? 24 : 20, fontWeight: 800, color: '#0f172a' }}>{p.won_deals}</div>
-          <div style={{ color: '#94a3b8', fontSize: 11 }}>{t('dashboard.deals')}</div>
+          <div style={{ fontSize: isFirst ? 24 : 20, fontWeight: 800, color: '#0e1f18' }}>{p.won_deals}</div>
+          <div style={{ color: '#99a09a', fontSize: 11 }}>{t('dashboard.deals')}</div>
         </div>
         <div>
-          <div style={{ fontSize: isFirst ? 24 : 20, fontWeight: 800, color: '#16a34a' }}>{fmt(p.total_commissions)}</div>
-          <div style={{ color: '#94a3b8', fontSize: 11 }}>{t('dashboard.commissions_label')}</div>
+          <div style={{ fontSize: isFirst ? 24 : 20, fontWeight: 800, color: '#157a4c' }}>{fmt(p.total_commissions)}</div>
+          <div style={{ color: '#99a09a', fontSize: 11 }}>{t('dashboard.commissions_label')}</div>
         </div>
       </div>
       {/* Progress to next tier — only when a next tier exists. Top-of-
           the-ladder partners get a "max level reached" hint instead. */}
-      <div style={{ borderTop: '0.5px solid #e2e8f0', marginTop: 16, paddingTop: 10 }}>
+      <div style={{ borderTop: '0.5px solid #ded8cb', marginTop: 16, paddingTop: 10 }}>
         {p.next_level ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>
+              <span style={{ fontSize: 11, color: '#99a09a' }}>
                 {t('dashboard.to_next_level', 'Vers')} {p.next_level.name}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 500, color: '#0f172a' }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: '#0e1f18' }}>
                 {remainingLabel}
               </span>
             </div>
-            <div style={{ height: 4, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+            <div style={{ height: 4, background: '#ece7db', borderRadius: 999, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${progressPct}%`, background: barFill, borderRadius: 999, transition: 'width .3s' }} />
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
+          <div style={{ fontSize: 11, color: '#99a09a', textAlign: 'center' }}>
             {t('dashboard.max_level_reached', 'Niveau maximum atteint')}
           </div>
         )}
@@ -779,12 +779,12 @@ function PodiumCard({ partner: p, isFirst, thresholdType = 'deals' }) {
 
 function KPICard({ icon: Icon, label, value, sub, color, highlight }) {
   return (
-    <div style={{ padding: 20, borderRadius: 16, background: highlight ? 'linear-gradient(135deg,#fef3c7,#fffbeb)' : '#fff', border: highlight ? '1px solid #fcd34d' : '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+    <div style={{ padding: 20, borderRadius: 16, background: highlight ? 'linear-gradient(135deg,#f3ead0,#f6efda)' : '#fff', border: highlight ? '1px solid #fcd34d' : '1px solid #ded8cb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: color || '#0f172a', letterSpacing: -1 }}>{value}</div>
-          {sub && <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{sub}</div>}
+          <div style={{ color: '#6e756c', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: color || '#0e1f18', letterSpacing: -1 }}>{value}</div>
+          {sub && <div style={{ color: '#99a09a', fontSize: 12, marginTop: 4 }}>{sub}</div>}
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={20} color={color} />
@@ -796,9 +796,9 @@ function KPICard({ icon: Icon, label, value, sub, color, highlight }) {
 
 function ChartCard({ title, action, children }) {
   return (
-    <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+    <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #ded8cb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', letterSpacing: -0.3 }}>{title}</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', letterSpacing: -0.3 }}>{title}</h3>
         {action}
       </div>
       {children}
@@ -843,11 +843,11 @@ function LeadsEvolutionChart({ dateRange }) {
     <ChartCard title={t('dashboard.leads_evolution', 'Évolution des leads')}>
       <div style={{ height: 250 }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: 13 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#99a09a', fontSize: 13 }}>
             {t('dashboard.loading', 'Chargement…')}
           </div>
         ) : data.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: 13 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#99a09a', fontSize: 13 }}>
             {t('dashboard.no_data', 'Aucune donnée')}
           </div>
         ) : (
@@ -855,26 +855,26 @@ function LeadsEvolutionChart({ dateRange }) {
             <AreaChart data={data} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
               <defs>
                 <linearGradient id="leadsEvolutionFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#16a34a" stopOpacity={0.18} />
-                  <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#157a4c" stopOpacity={0.18} />
+                  <stop offset="100%" stopColor="#157a4c" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="#f3f4f6" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} width={40} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#99a09a' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#99a09a' }} axisLine={false} tickLine={false} allowDecimals={false} width={40} />
               <Tooltip
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb', padding: '8px 12px' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e3ddd0', padding: '8px 12px' }}
                 formatter={(value) => [value, t('dashboard.new_leads', 'Nouveaux leads')]}
-                labelStyle={{ color: '#0f172a', fontWeight: 600, marginBottom: 4 }}
+                labelStyle={{ color: '#0e1f18', fontWeight: 600, marginBottom: 4 }}
               />
               <Area
                 type="monotone"
                 dataKey="leads"
-                stroke="#16a34a"
+                stroke="#157a4c"
                 strokeWidth={2}
                 fill="url(#leadsEvolutionFill)"
                 dot={false}
-                activeDot={{ r: 4, fill: '#16a34a', stroke: '#fff', strokeWidth: 2 }}
+                activeDot={{ r: 4, fill: '#157a4c', stroke: '#fff', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -943,12 +943,12 @@ function PartnersByCategoryCard() {
   }));
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a2236', marginBottom: 12 }}>
+    <div style={{ background: '#fff', border: '1px solid #e3ddd0', borderRadius: 12, padding: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#10231b', marginBottom: 12 }}>
         {t('partner_category.stats')}
       </div>
       {total === 0 ? (
-        <div style={{ textAlign: 'center', color: '#94a3b8', padding: 32, fontSize: 13 }}>—</div>
+        <div style={{ textAlign: 'center', color: '#99a09a', padding: 32, fontSize: 13 }}>—</div>
       ) : (
         <>
           <div style={{ position: 'relative', height: 180 }}>
@@ -957,12 +957,12 @@ function PartnersByCategoryCard() {
                 <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={2} isAnimationActive={false}>
                   {data.map((d, i) => <Cell key={i} fill={d.color} stroke="#fff" strokeWidth={2} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13 }} />
+                <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e3ddd0', fontSize: 13 }} />
               </PieChart>
             </ResponsiveContainer>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#1a2236', letterSpacing: -1 }}>{total}</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#10231b', letterSpacing: -1 }}>{total}</div>
+              <div style={{ fontSize: 11, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.5 }}>total</div>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', marginTop: 12, fontSize: 12 }}>
@@ -970,7 +970,7 @@ function PartnersByCategoryCard() {
               <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4b5563' }}>
                 <span style={{ width: 10, height: 10, borderRadius: 2, background: d.color, flexShrink: 0 }}/>
                 <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</span>
-                <span style={{ fontWeight: 700, color: '#1a2236' }}>{d.value}</span>
+                <span style={{ fontWeight: 700, color: '#10231b' }}>{d.value}</span>
               </div>
             ))}
           </div>

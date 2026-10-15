@@ -1,13 +1,13 @@
 import i18n from '../i18n';
 
 export const STATUS_CONFIG = {
-  new:       { get label() { return i18n.t('status.new',       'Nouveau');    }, color: 'var(--rb-primary, #059669)', bg: '#eef2ff' },
+  new:       { get label() { return i18n.t('status.new',       'Nouveau');    }, color: 'var(--rb-primary, #0e7a54)', bg: '#eef1ea' },
   contacted: { get label() { return i18n.t('status.contacted', 'Contact\u00e9');  }, color: '#0891b2', bg: '#ecfeff' },
   meeting:   { get label() { return i18n.t('status.meeting',   'RDV planifi\u00e9'); }, color: '#ca8a04', bg: '#fefce8' },
-  proposal:  { get label() { return i18n.t('status.proposal',  'Proposition'); }, color: '#8b5cf6', bg: '#f5f3ff' },
-  won:       { get label() { return i18n.t('status.won',       'Gagn\u00e9');  }, color: '#16a34a', bg: '#f0fdf4' },
-  lost:      { get label() { return i18n.t('status.lost',      'Perdu');       }, color: '#dc2626', bg: '#fef2f2' },
-  duplicate: { get label() { return i18n.t('status.duplicate', 'Doublon');     }, color: '#94a3b8', bg: '#f8fafc' },
+  proposal:  { get label() { return i18n.t('status.proposal',  'Proposition'); }, color: '#0e7a54', bg: '#f5f3ff' },
+  won:       { get label() { return i18n.t('status.won',       'Gagn\u00e9');  }, color: '#157a4c', bg: '#e9f1ea' },
+  lost:      { get label() { return i18n.t('status.lost',      'Perdu');       }, color: '#b23b2e', bg: '#f7e9e6' },
+  duplicate: { get label() { return i18n.t('status.duplicate', 'Doublon');     }, color: '#99a09a', bg: '#f6f2e9' },
 };
 
 export const STATUS_ORDER = ['new','contacted','meeting','proposal','won','lost','duplicate'];
@@ -15,8 +15,8 @@ export const STATUS_ORDER = ['new','contacted','meeting','proposal','won','lost'
 export const LEVEL_CONFIG = {
   Bronze:   { get label() { return i18n.t('level.Bronze',   'Bronze');   }, color: '#cd7f32', bg: '#fef3e2', icon: '\ud83e\udd49' },
   Silver:   { get label() { return i18n.t('level.Silver',   'Silver');   }, color: '#6b7280', bg: '#f3f4f6', icon: '\ud83e\udd48' },
-  Gold:     { get label() { return i18n.t('level.Gold',     'Gold');     }, color: '#d97706', bg: '#fffbeb', icon: '\ud83e\udd47' },
-  Platinum: { get label() { return i18n.t('level.Platinum', 'Platinum'); }, color: 'var(--rb-primary, #059669)', bg: '#eef2ff', icon: '\ud83d\udc8e' },
+  Gold:     { get label() { return i18n.t('level.Gold',     'Gold');     }, color: '#d97706', bg: '#f6efda', icon: '\ud83e\udd47' },
+  Platinum: { get label() { return i18n.t('level.Platinum', 'Platinum'); }, color: 'var(--rb-primary, #0e7a54)', bg: '#eef1ea', icon: '\ud83d\udc8e' },
 };
 
 // Deal-temperature pill displayed on Kanban cards, table rows and
@@ -27,8 +27,8 @@ export const LEVEL_CONFIG = {
 // correct config to hand to <Badge>. Colours are the task spec:
 // red / orange / blue.
 export const TEMPERATURE_CONFIG = {
-  hot:  { get label() { return i18n.t('temperature.hot',  'Chaud'); }, color: '#DC2626', bg: '#FEE2E2' },
-  warm: { get label() { return i18n.t('temperature.warm', 'Ti\u00e8de'); }, color: '#D97706', bg: '#FEF3C7' },
+  hot:  { get label() { return i18n.t('temperature.hot',  'Chaud'); }, color: '#b23b2e', bg: '#FEE2E2' },
+  warm: { get label() { return i18n.t('temperature.warm', 'Ti\u00e8de'); }, color: '#D97706', bg: '#f3ead0' },
   cold: { get label() { return i18n.t('temperature.cold', 'Froid'); }, color: '#2563EB', bg: '#DBEAFE' },
 };
 

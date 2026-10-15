@@ -5,10 +5,10 @@ import api from './api';
 const STYLE_ID = 'rb-theme-vars';
 
 const DEFAULTS = {
-  primary: '#059669',
-  primaryLight: '#10b981',
-  primaryDark: '#047857',
-  accent: '#f97316',
+  primary: '#0e7a54',
+  primaryLight: '#1c9a6b',
+  primaryDark: '#0b5e40',
+  accent: '#d5541a',
   accentLight: '#fb923c',
 };
 

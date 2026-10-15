@@ -102,7 +102,7 @@ export default function NotificationBell() {
         style={{
           background: 'transparent', border: 'none', cursor: 'pointer',
           padding: 8, borderRadius: 10, display: 'flex', alignItems: 'center',
-          position: 'relative', color: '#475569',
+          position: 'relative', color: '#33433b',
         }}
       >
         <Bell size={20} />
@@ -110,7 +110,7 @@ export default function NotificationBell() {
           <span style={{
             position: 'absolute', top: 4, right: 4,
             minWidth: 16, height: 16, borderRadius: 8,
-            background: '#dc2626', color: '#fff',
+            background: '#b23b2e', color: '#fff',
             fontSize: 10, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 4px', lineHeight: 1,
@@ -125,20 +125,20 @@ export default function NotificationBell() {
           <div style={{
             position: 'absolute', top: 'calc(100% + 8px)', right: 0,
             width: 360, maxWidth: 'calc(100vw - 32px)',
-            background: '#fff', border: '1px solid #e2e8f0',
+            background: '#fff', border: '1px solid #ded8cb',
             borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
             zIndex: 999, overflow: 'hidden',
           }}>
             <div style={{
-              padding: '12px 16px', borderBottom: '1px solid #f1f5f9',
+              padding: '12px 16px', borderBottom: '1px solid #ece7db',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>
+              <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14 }}>
                 {t('notifications.title')}
               </div>
               {unread > 0 && (
                 <button onClick={markAll} style={{
-                  background: 'none', border: 'none', color: '#059669',
+                  background: 'none', border: 'none', color: '#0e7a54',
                   fontWeight: 600, fontSize: 12, cursor: 'pointer', padding: 0,
                 }}>{t('notifications.mark_all_read')}</button>
               )}
@@ -147,7 +147,7 @@ export default function NotificationBell() {
             {/* Filter tabs */}
             <div style={{
               display: 'flex', gap: 4, padding: '8px 10px',
-              borderBottom: '1px solid #f1f5f9', overflowX: 'auto',
+              borderBottom: '1px solid #ece7db', overflowX: 'auto',
             }}>
               {TABS.map(tab => {
                 const isActive = activeTab === tab;
@@ -161,8 +161,8 @@ export default function NotificationBell() {
                     onClick={() => setActiveTab(tab)}
                     style={{
                       padding: '4px 10px', borderRadius: 8, border: 'none',
-                      background: isActive ? '#059669' : '#f1f5f9',
-                      color: isActive ? '#fff' : '#475569',
+                      background: isActive ? '#0e7a54' : '#ece7db',
+                      color: isActive ? '#fff' : '#33433b',
                       fontSize: 11, fontWeight: 600, cursor: 'pointer',
                       whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4,
                     }}
@@ -171,7 +171,7 @@ export default function NotificationBell() {
                     {count > 0 && (
                       <span style={{
                         fontSize: 10, padding: '1px 5px', borderRadius: 8,
-                        background: isActive ? 'rgba(255,255,255,0.3)' : '#ef4444',
+                        background: isActive ? 'rgba(255,255,255,0.3)' : '#c24436',
                         color: '#fff', fontWeight: 700,
                       }}>{count}</span>
                     )}
@@ -185,10 +185,10 @@ export default function NotificationBell() {
                 const bucket = TAB_BUCKETS[activeTab];
                 const visible = bucket ? items.filter(n => bucket.has(n.type)) : items;
                 if (loading) return (
-                  <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>…</div>
+                  <div style={{ padding: 24, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>…</div>
                 );
                 if (visible.length === 0) return (
-                  <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                  <div style={{ padding: 32, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
                     {t('notifications.no_notifications')}
                   </div>
                 );
@@ -201,16 +201,16 @@ export default function NotificationBell() {
                       style={{
                         width: '100%', textAlign: 'left',
                         padding: '12px 16px',
-                        background: n.is_read ? 'transparent' : '#f0fdf4',
-                        border: 'none', borderBottom: '1px solid #f1f5f9',
+                        background: n.is_read ? 'transparent' : '#e9f1ea',
+                        border: 'none', borderBottom: '1px solid #ece7db',
                         cursor: 'pointer', display: 'flex', gap: 12,
                         alignItems: 'flex-start',
                       }}
                     >
                       <div style={{
                         width: 32, height: 32, flexShrink: 0,
-                        background: n.is_read ? '#f1f5f9' : '#dcfce7',
-                        color: n.is_read ? '#64748b' : '#059669',
+                        background: n.is_read ? '#ece7db' : '#dcfce7',
+                        color: n.is_read ? '#6e756c' : '#0e7a54',
                         borderRadius: 8, display: 'flex',
                         alignItems: 'center', justifyContent: 'center',
                       }}>
@@ -219,19 +219,19 @@ export default function NotificationBell() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
                           fontWeight: n.is_read ? 500 : 700,
-                          fontSize: 13, color: '#0f172a',
+                          fontSize: 13, color: '#0e1f18',
                           overflow: 'hidden', textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                         }}>{n.title}</div>
                         {n.message && (
                           <div style={{
-                            color: '#64748b', fontSize: 12, marginTop: 2,
+                            color: '#6e756c', fontSize: 12, marginTop: 2,
                             overflow: 'hidden', textOverflow: 'ellipsis',
                             display: '-webkit-box', WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                           }}>{n.message}</div>
                         )}
-                        <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4 }}>
+                        <div style={{ color: '#99a09a', fontSize: 11, marginTop: 4 }}>
                           {timeAgo(n.created_at, t)}
                         </div>
                       </div>

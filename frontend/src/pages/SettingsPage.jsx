@@ -116,8 +116,8 @@ export default function SettingsPage() {
       <div onClick={handleClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
       <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 920, maxWidth: '100%', height: '85vh', maxHeight: 700, display: 'flex', overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
         {/* Left sidebar */}
-        <div style={{ width: 240, background: '#f8fafc', borderRight: '1px solid #e2e8f0', padding: '28px 12px', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', padding: '0 12px', marginBottom: 20 }}>{t('settings.title')}</h2>
+        <div style={{ width: 240, background: '#f6f2e9', borderRight: '1px solid #ded8cb', padding: '28px 12px', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0e1f18', padding: '0 12px', marginBottom: 20 }}>{t('settings.title')}</h2>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {NAV.map((item, i) => {
               if (item.section) {
@@ -126,7 +126,7 @@ export default function SettingsPage() {
                     key={'sec-' + i}
                     style={{
                       fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
-                      color: '#475569', fontWeight: 700,
+                      color: '#33433b', fontWeight: 700,
                       padding: '12px 12px 4px',
                       marginTop: i === 0 ? 0 : 8,
                     }}
@@ -138,7 +138,7 @@ export default function SettingsPage() {
               return (
                 <button key={item.id} onClick={() => setTab(item.id)} style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px 10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, textAlign: 'left',
-                  background: tab === item.id ? '#fff' : 'transparent', color: tab === item.id ? '#0f172a' : '#64748b',
+                  background: tab === item.id ? '#fff' : 'transparent', color: tab === item.id ? '#0e1f18' : '#6e756c',
                   boxShadow: tab === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                 }}><item.icon size={16} /> {item.label}</button>
               );
@@ -147,8 +147,8 @@ export default function SettingsPage() {
         </div>
         {/* Right content */}
         <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
-          <button onClick={handleClose} style={{ position: 'absolute', top: 24, right: 24, width: 36, height: 36, borderRadius: 10, zIndex: 10, background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={18} color="#475569" />
+          <button onClick={handleClose} style={{ position: 'absolute', top: 24, right: 24, width: 36, height: 36, borderRadius: 10, zIndex: 10, background: '#ece7db', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={18} color="#33433b" />
           </button>
           {/* Extra bottom padding so dropdowns near the bottom (e.g. the
               language switcher in Profil) aren't clipped by the
@@ -170,7 +170,7 @@ export default function SettingsPage() {
             {tab === 'pipeline' && isAdmin && (
               <>
                 <PipelineStagesEditor />
-                <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+                <div style={{ height: 1, background: '#ded8cb', margin: '32px 0' }} />
                 <PartnerCategoriesTab />
               </>
             )}
@@ -181,7 +181,7 @@ export default function SettingsPage() {
                     the public link + tracking-feature toggles, which aren't
                     marketplace-specific. */}
                 <PublicLinkTab />
-                <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+                <div style={{ height: 1, background: '#ded8cb', margin: '32px 0' }} />
                 <TrackingFeaturesTab />
               </>
             )}
@@ -282,10 +282,10 @@ function AuditLogTab() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 8px' }}>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', margin: '0 0 8px' }}>
         {t('settings.audit.title', 'Historique des actions')}
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, margin: '0 0 24px' }}>
+      <p style={{ color: '#6e756c', fontSize: 14, margin: '0 0 24px' }}>
         {t('settings.audit.description', 'Journal des actions administrateur — conservé pour la conformité ISO 27001 / SOC 2.')}
       </p>
 
@@ -300,9 +300,9 @@ function AuditLogTab() {
               onClick={() => { setActionType(p.id); setPage(1); }}
               style={{
                 padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600,
-                border: '1px solid ' + (active ? '#059669' : '#e2e8f0'),
-                background: active ? '#ecfdf5' : '#fff',
-                color: active ? '#059669' : '#475569',
+                border: '1px solid ' + (active ? '#0e7a54' : '#ded8cb'),
+                background: active ? '#e9f1ea' : '#fff',
+                color: active ? '#0e7a54' : '#33433b',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
@@ -315,15 +315,15 @@ function AuditLogTab() {
       {/* Date range + free-form action picker + export. */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 20 }}>
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_action', 'Action')}</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#33433b', marginBottom: 4 }}>{t('settings.audit.filter_action', 'Action')}</label>
           <select value={action} onChange={e => { setAction(e.target.value); setPage(1); }}
-            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, minWidth: 200 }}>
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ded8cb', fontSize: 13, minWidth: 200 }}>
             <option value="">{t('common.all', 'Toutes')}</option>
             {ACTION_KEYS.map(k => <option key={k} value={k}>{actionLabel(k)}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('settings.audit.filter_from', 'Du')} → {t('settings.audit.filter_to', 'Au')}</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#33433b', marginBottom: 4 }}>{t('settings.audit.filter_from', 'Du')} → {t('settings.audit.filter_to', 'Au')}</label>
           <DateRangePicker value={dateRange} onChange={(r) => { setDateRange(r); setPage(1); }} />
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
@@ -334,7 +334,7 @@ function AuditLogTab() {
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 14px', borderRadius: 8,
-              border: '1px solid #e2e8f0', background: '#fff', color: '#0f172a',
+              border: '1px solid #ded8cb', background: '#fff', color: '#0e1f18',
               fontSize: 13, fontWeight: 600, cursor: exporting ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit', opacity: exporting ? 0.6 : 1,
             }}
@@ -344,16 +344,16 @@ function AuditLogTab() {
               : t('settings.audit.export_csv', 'Exporter CSV')}
           </button>
           {exportErr && (
-            <span style={{ fontSize: 11, color: '#dc2626' }}>
+            <span style={{ fontSize: 11, color: '#b23b2e' }}>
               {t('settings.audit.export_error', 'Erreur lors de l’export')}
             </span>
           )}
         </div>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 12, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead style={{ background: '#f8fafc' }}>
+          <thead style={{ background: '#f6f2e9' }}>
             <tr>
               <th style={thCell}>{t('settings.audit.col_date', 'Date')}</th>
               <th style={thCell}>{t('settings.audit.col_user', 'Utilisateur')}</th>
@@ -364,10 +364,10 @@ function AuditLogTab() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>...</td></tr>
+              <tr><td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#99a09a' }}>...</td></tr>
             )}
             {!loading && data.logs.length === 0 && (
-              <tr><td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>
+              <tr><td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#99a09a' }}>
                 {t('settings.audit.empty', 'Aucune entrée')}
               </td></tr>
             )}
@@ -378,10 +378,10 @@ function AuditLogTab() {
                 catch { return ''; }
               })();
               return (
-                <tr key={log.id} style={{ borderTop: '1px solid #f1f5f9' }}>
+                <tr key={log.id} style={{ borderTop: '1px solid #ece7db' }}>
                   <td style={tdCell}>{fmt(log.created_at)}</td>
                   <td style={tdCell}>{log.user_name || log.user_email || '—'}</td>
-                  <td style={tdCell}><code style={{ fontSize: 12, background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>{actionLabel(log.action)}</code></td>
+                  <td style={tdCell}><code style={{ fontSize: 12, background: '#ece7db', padding: '2px 6px', borderRadius: 4 }}>{actionLabel(log.action)}</code></td>
                   <td style={tdCell}>
                     {log.entity_type ? `${log.entity_type}${log.entity_id ? ` · ${String(log.entity_id).slice(0, 8)}` : ''}` : '—'}
                   </td>
@@ -390,12 +390,12 @@ function AuditLogTab() {
                       <>
                         <button
                           onClick={() => setExpanded(p => ({ ...p, [log.id]: !p[log.id] }))}
-                          style={{ background: 'none', border: 'none', color: '#059669', cursor: 'pointer', fontSize: 12, padding: 0 }}
+                          style={{ background: 'none', border: 'none', color: '#0e7a54', cursor: 'pointer', fontSize: 12, padding: 0 }}
                         >
                           {open ? '▼' : '▶'} JSON
                         </button>
                         {open && (
-                          <pre style={{ marginTop: 6, padding: 8, background: '#f8fafc', borderRadius: 6, fontSize: 11, color: '#334155', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          <pre style={{ marginTop: 6, padding: 8, background: '#f6f2e9', borderRadius: 6, fontSize: 11, color: '#2b3a32', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {detailsStr}
                           </pre>
                         )}
@@ -411,20 +411,20 @@ function AuditLogTab() {
 
       {data.totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-          <div style={{ fontSize: 12, color: '#64748b' }}>
+          <div style={{ fontSize: 12, color: '#6e756c' }}>
             {t('settings.audit.pagination', '{{count}} entrées', { count: data.total })}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page <= 1}
-              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: page <= 1 ? 'not-allowed' : 'pointer', fontSize: 13, opacity: page <= 1 ? 0.5 : 1 }}
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #ded8cb', background: '#fff', cursor: page <= 1 ? 'not-allowed' : 'pointer', fontSize: 13, opacity: page <= 1 ? 0.5 : 1 }}
             >‹</button>
-            <span style={{ padding: '6px 12px', fontSize: 13, color: '#475569' }}>{page} / {data.totalPages}</span>
+            <span style={{ padding: '6px 12px', fontSize: 13, color: '#33433b' }}>{page} / {data.totalPages}</span>
             <button
               onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
               disabled={page >= data.totalPages}
-              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: page >= data.totalPages ? 'not-allowed' : 'pointer', fontSize: 13, opacity: page >= data.totalPages ? 0.5 : 1 }}
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #ded8cb', background: '#fff', cursor: page >= data.totalPages ? 'not-allowed' : 'pointer', fontSize: 13, opacity: page >= data.totalPages ? 0.5 : 1 }}
             >›</button>
           </div>
         </div>
@@ -433,8 +433,8 @@ function AuditLogTab() {
   );
 }
 
-const thCell = { textAlign: 'left', padding: '12px 16px', fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 };
-const tdCell = { padding: '12px 16px', color: '#334155', verticalAlign: 'top' };
+const thCell = { textAlign: 'left', padding: '12px 16px', fontSize: 12, fontWeight: 700, color: '#33433b', textTransform: 'uppercase', letterSpacing: 0.5 };
+const tdCell = { padding: '12px 16px', color: '#2b3a32', verticalAlign: 'top' };
 
 // ═══ CONTACT ═══
 // Available to admin / sales / partner / superadmin. Three cards
@@ -446,20 +446,20 @@ function ContactTab() {
   const cards = [
     {
       icon: Mail,
-      iconBg: '#ecfdf5',
-      iconColor: '#059669',
+      iconBg: '#e9f1ea',
+      iconColor: '#0e7a54',
       titleKey: 'settings.contact.sales_title',
       titleDefault: 'Commercial',
       descKey: 'settings.contact.sales_desc',
       descDefault: 'Questions sur les plans, démos, partenariats',
       href: 'mailto:sales@refboost.io',
       label: 'sales@refboost.io',
-      labelColor: '#059669',
+      labelColor: '#0e7a54',
       external: false,
     },
     {
       icon: LifeBuoy,
-      iconBg: '#eff6ff',
+      iconBg: '#e9f1ea',
       iconColor: '#2563eb',
       titleKey: 'settings.contact.support_title',
       titleDefault: 'Support technique',
@@ -472,25 +472,25 @@ function ContactTab() {
     },
     {
       icon: BookOpen,
-      iconBg: '#f8fafc',
-      iconColor: '#64748b',
+      iconBg: '#f6f2e9',
+      iconColor: '#6e756c',
       titleKey: 'settings.contact.docs_title',
       titleDefault: 'Ressources',
       descKey: 'settings.contact.docs_desc',
       descDefault: 'Guides, articles et bonnes pratiques',
       href: 'https://refboost.io/blog',
       label: 'refboost.io/blog →',
-      labelColor: '#475569',
+      labelColor: '#33433b',
       external: true,
       dashed: true,
     },
   ];
   return (
     <div style={{ maxWidth: 520 }}>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', marginBottom: 6 }}>
         {t('settings.contact.title', 'Contact')}
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>
         {t('settings.contact.subtitle', "Besoin d'aide ou d'informations ? Contactez notre équipe.")}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -498,7 +498,7 @@ function ContactTab() {
           <div
             key={c.titleKey}
             style={{
-              border: c.dashed ? '1.5px dashed #e2e8f0' : '1px solid #e2e8f0',
+              border: c.dashed ? '1.5px dashed #ded8cb' : '1px solid #ded8cb',
               borderRadius: 12, padding: 16, background: '#fff',
             }}
           >
@@ -512,10 +512,10 @@ function ContactTab() {
                 <c.icon size={20} />
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0e1f18' }}>
                   {t(c.titleKey, c.titleDefault)}
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: '#6e756c', lineHeight: 1.5 }}>
                   {t(c.descKey, c.descDefault)}
                 </div>
               </div>
@@ -547,8 +547,8 @@ function AccountTab({ user }) {
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
   const [showPw, setShowPw] = useState(false);
-  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' };
-  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 };
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 };
 
   const handlePasswordChange = async () => {
     if (pwForm.newPw.length < 8) { setPwMsg({ type: 'error', text: t('settings.password_min8') }); return; }
@@ -561,36 +561,36 @@ function AccountTab({ user }) {
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>{t('settings.tab_account')}</h3>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 20, background: '#f8fafc', borderRadius: 14, marginBottom: 28, border: '1px solid #e2e8f0' }}>
-        <div style={{ width: 48, height: 48, borderRadius: 14, background: user?.role === 'admin' ? '#6366f1' : user?.role === 'commercial' ? '#0891b2' : '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 20 }}>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', marginBottom: 24 }}>{t('settings.tab_account')}</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 20, background: '#f6f2e9', borderRadius: 14, marginBottom: 28, border: '1px solid #ded8cb' }}>
+        <div style={{ width: 48, height: 48, borderRadius: 14, background: user?.role === 'admin' ? '#0e7a54' : user?.role === 'commercial' ? '#0891b2' : '#0e7a54', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 20 }}>
           {user?.fullName?.charAt(0) || '?'}
         </div>
         <div>
-          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 16 }}>{user?.fullName}</div>
-          <div style={{ color: '#64748b', fontSize: 13 }}>{user?.email} · <span style={{ textTransform: 'capitalize', color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{user?.role}</span></div>
+          <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 16 }}>{user?.fullName}</div>
+          <div style={{ color: '#6e756c', fontSize: 13 }}>{user?.email} · <span style={{ textTransform: 'capitalize', color: 'var(--rb-primary, #0e7a54)', fontWeight: 600 }}>{user?.role}</span></div>
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <Lock size={16} color="#6366f1" />
-        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{t('settings.change_pwd')}</h4>
+        <Lock size={16} color="#0e7a54" />
+        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18' }}>{t('settings.change_pwd')}</h4>
       </div>
-      {pwMsg && (<div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500, background: pwMsg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: pwMsg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${pwMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>{pwMsg.text}</div>)}
+      {pwMsg && (<div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500, background: pwMsg.type === 'success' ? '#e9f1ea' : '#f7e9e6', color: pwMsg.type === 'success' ? '#157a4c' : '#b23b2e', border: `1px solid ${pwMsg.type === 'success' ? '#cfe6d6' : '#edc4bd'}` }}>{pwMsg.text}</div>)}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400 }}>
         <div>
           <label style={labelStyle}>{t('settings.pwd_current')}</label>
           <div style={{ position: 'relative' }}>
             <input type={showPw ? 'text' : 'password'} value={pwForm.current} onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))} style={inputStyle} />
-            <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>{showPw ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+            <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#99a09a' }}>{showPw ? <EyeOff size={16} /> : <Eye size={16} />}</button>
           </div>
         </div>
         <div><label style={labelStyle}>{t('settings.pwd_new')}</label><input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder={t('settings.password_min8')} style={inputStyle} /></div>
         <div><label style={labelStyle}>{t('settings.pwd_confirm')}</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} style={inputStyle} /></div>
-        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? t('settings.updating') : t('settings.update')}</button>
+        <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{ padding: '11px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' }}><Lock size={14} /> {pwSaving ? t('settings.updating') : t('settings.update')}</button>
       </div>
 
       {/* MFA / 2FA section */}
-      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #ded8cb' }}>
         <MfaSection />
       </div>
 
@@ -600,18 +600,18 @@ function AccountTab({ user }) {
           per-user one. The section itself decides via /account-info
           whether to render anything (commercials + invited admins
           get nothing). */}
-      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #ded8cb' }}>
         <PrivacySection user={user} />
       </div>
 
       {/* Language — moved out of the sidebar so the only language entry
           point lives in the user's account settings. */}
-      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+      <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #ded8cb' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <Globe size={16} color="#6366f1" />
-          <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('settings.language') || 'Langue'}</h4>
+          <Globe size={16} color="#0e7a54" />
+          <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', margin: 0 }}>{t('settings.language') || 'Langue'}</h4>
         </div>
-        <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>
+        <p style={{ color: '#6e756c', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>
           {t('settings.language_help') || 'Choisissez la langue d\'affichage de l\'interface.'}
         </p>
         <div style={{ maxWidth: 260 }}>
@@ -699,11 +699,11 @@ function LoginHistoryCard() {
   };
 
   return (
-    <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #e2e8f0' }}>
+    <div style={{ marginTop: 36, paddingTop: 28, borderTop: '1px solid #ded8cb' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <MonitorSmartphone size={16} color="#6366f1" />
-          <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+          <MonitorSmartphone size={16} color="#0e7a54" />
+          <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', margin: 0 }}>
             {t('settings.profile.login_history.title', 'Connexions récentes')}
           </h4>
         </div>
@@ -713,7 +713,7 @@ function LoginHistoryCard() {
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '6px 12px', borderRadius: 8,
-            border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626',
+            border: '1px solid #edc4bd', background: '#f7e9e6', color: '#b23b2e',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -722,9 +722,9 @@ function LoginHistoryCard() {
         </button>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 12, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead style={{ background: '#f8fafc' }}>
+          <thead style={{ background: '#f6f2e9' }}>
             <tr>
               <th style={thCell}>{t('settings.profile.login_history.col_date', 'Date')}</th>
               <th style={thCell}>{t('settings.profile.login_history.col_ip', 'IP')}</th>
@@ -734,19 +734,19 @@ function LoginHistoryCard() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>...</td></tr>
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#99a09a' }}>...</td></tr>
             )}
             {!loading && logins.length === 0 && (
-              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#99a09a' }}>
                 {t('settings.profile.login_history.empty', 'Aucune connexion récente')}
               </td></tr>
             )}
             {!loading && visibleLogins.map((row, idx) => {
               const ua = parseUserAgent(row.user_agent);
               return (
-                <tr key={idx} style={{ borderTop: '1px solid #f1f5f9' }}>
+                <tr key={idx} style={{ borderTop: '1px solid #ece7db' }}>
                   <td style={tdCell}>{fmt(row.created_at)}</td>
-                  <td style={tdCell}><code style={{ fontSize: 12, background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>{row.ip || '—'}</code></td>
+                  <td style={tdCell}><code style={{ fontSize: 12, background: '#ece7db', padding: '2px 6px', borderRadius: 4 }}>{row.ip || '—'}</code></td>
                   <td style={tdCell}>{ua.device}{ua.browser ? ` · ${ua.browser}` : ''}</td>
                   <td style={tdCell}>{row.method || 'password'}</td>
                 </tr>
@@ -755,13 +755,13 @@ function LoginHistoryCard() {
           </tbody>
         </table>
         {!loading && visibleCount < logins.length && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', borderTop: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', borderTop: '1px solid #ece7db' }}>
             <button
               type="button"
               onClick={() => setVisibleCount(c => c + LOGIN_PAGE_STEP)}
               style={{
-                padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0',
-                background: '#fff', color: '#475569', fontSize: 12, fontWeight: 600,
+                padding: '8px 16px', borderRadius: 8, border: '1px solid #ded8cb',
+                background: '#fff', color: '#33433b', fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
@@ -774,10 +774,10 @@ function LoginHistoryCard() {
       {confirmOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.6)' }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: 28, maxWidth: 460, width: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#0e1f18' }}>
               {t('settings.profile.login_history.invalidate_modal_title', 'Déconnecter toutes les sessions ?')}
             </h3>
-            <p style={{ margin: '0 0 20px', color: '#475569', fontSize: 14, lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 20px', color: '#33433b', fontSize: 14, lineHeight: 1.5 }}>
               {t('settings.profile.login_history.invalidate_modal_body', 'Vous serez déconnecté de tous vos appareils, y compris celui-ci. Vous devrez vous reconnecter.')}
             </p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -785,7 +785,7 @@ function LoginHistoryCard() {
                 type="button"
                 onClick={() => setConfirmOpen(false)}
                 disabled={submitting}
-                style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #ded8cb', background: '#fff', color: '#33433b', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 {t('settings.profile.login_history.cancel', 'Annuler')}
               </button>
@@ -793,7 +793,7 @@ function LoginHistoryCard() {
                 type="button"
                 onClick={handleConfirmInvalidate}
                 disabled={submitting}
-                style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.6 : 1 }}
+                style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#b23b2e', color: '#fff', fontSize: 13, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.6 : 1 }}
               >
                 {t('settings.profile.login_history.confirm_invalidate', 'Tout déconnecter')}
               </button>
@@ -895,30 +895,30 @@ function MfaSection() {
     setBusy(false);
   };
 
-  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' };
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' };
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <Shield size={16} color="#6366f1" />
-        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('mfa.title')}</h4>
+        <Shield size={16} color="#0e7a54" />
+        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', margin: 0 }}>{t('mfa.title')}</h4>
       </div>
 
       {error && (
-        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 500, background: '#f7e9e6', color: '#b23b2e', border: '1px solid #edc4bd' }}>
           {error}
         </div>
       )}
 
       {status === 'loading' && (
-        <div style={{ color: '#94a3b8', fontSize: 13 }}>…</div>
+        <div style={{ color: '#99a09a', fontSize: 13 }}>…</div>
       )}
 
       {status === 'disabled' && (
         <button
           onClick={handleStartSetup}
           disabled={busy}
-          style={{ padding: '11px 18px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1 }}
+          style={{ padding: '11px 18px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1 }}
         >
           {t('mfa.activate_cta')}
         </button>
@@ -926,14 +926,14 @@ function MfaSection() {
 
       {status === 'setup' && setupData && (
         <div>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>
+          <p style={{ color: '#6e756c', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>
             {t('mfa.scan_with_app')}
           </p>
           <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 18 }}>
-            <img src={setupData.qrCode} alt="QR" style={{ width: 200, height: 200, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff' }} />
+            <img src={setupData.qrCode} alt="QR" style={{ width: 200, height: 200, borderRadius: 8, border: '1px solid #ded8cb', background: '#fff' }} />
             <div style={{ flex: '1 1 220px', minWidth: 220 }}>
-              <div style={{ color: '#64748b', fontSize: 12, marginBottom: 4 }}>{t('mfa.manual_entry')}</div>
-              <div style={{ fontFamily: 'monospace', fontSize: 14, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', wordBreak: 'break-all' }}>
+              <div style={{ color: '#6e756c', fontSize: 12, marginBottom: 4 }}>{t('mfa.manual_entry')}</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 14, padding: '10px 12px', background: '#f6f2e9', borderRadius: 8, border: '1px solid #ded8cb', wordBreak: 'break-all' }}>
                 {setupData.secret}
               </div>
             </div>
@@ -953,7 +953,7 @@ function MfaSection() {
           <button
             onClick={handleVerify}
             disabled={busy || setupCode.length !== 6}
-            style={{ padding: '11px 18px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: busy ? 'wait' : 'pointer', opacity: (busy || setupCode.length !== 6) ? 0.6 : 1 }}
+            style={{ padding: '11px 18px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: busy ? 'wait' : 'pointer', opacity: (busy || setupCode.length !== 6) ? 0.6 : 1 }}
           >
             {t('mfa.verify_cta')}
           </button>
@@ -962,25 +962,25 @@ function MfaSection() {
 
       {status === 'backup' && (
         <div>
-          <h5 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>{t('mfa.backup_codes_title')}</h5>
-          <p style={{ color: '#b91c1c', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55, fontWeight: 500 }}>
+          <h5 style={{ fontSize: 14, fontWeight: 700, color: '#0e1f18', margin: '0 0 6px' }}>{t('mfa.backup_codes_title')}</h5>
+          <p style={{ color: '#8f2e24', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55, fontWeight: 500 }}>
             {t('mfa.backup_codes_warning')}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, maxWidth: 360, marginBottom: 16 }}>
             {backupCodes.map((c, i) => (
-              <div key={i} style={{ fontFamily: 'monospace', fontSize: 14, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', textAlign: 'center', letterSpacing: 1 }}>{c}</div>
+              <div key={i} style={{ fontFamily: 'monospace', fontSize: 14, padding: '8px 12px', background: '#f6f2e9', borderRadius: 8, border: '1px solid #ded8cb', textAlign: 'center', letterSpacing: 1 }}>{c}</div>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
               onClick={handleDownloadCodes}
-              style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#0f172a', border: '1.5px solid #e2e8f0', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#0e1f18', border: '1.5px solid #ded8cb', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
             >
               {t('mfa.download_codes')}
             </button>
             <button
               onClick={handleConfirmSaved}
-              style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              style={{ padding: '10px 16px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
             >
               {t('mfa.codes_saved_cta')}
             </button>
@@ -996,7 +996,7 @@ function MfaSection() {
           <div>
             <button
               onClick={() => setShowDisable(true)}
-              style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#dc2626', border: '1.5px solid #fecaca', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#b23b2e', border: '1.5px solid #edc4bd', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
             >
               {t('mfa.disable_cta')}
             </button>
@@ -1007,8 +1007,8 @@ function MfaSection() {
       {showDisable && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)' }}>
           <div style={{ width: '100%', maxWidth: 420, background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 25px 60px rgba(0,0,0,0.25)' }}>
-            <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{t('mfa.disable_modal_title')}</h3>
-            <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>{t('mfa.disable_modal_body')}</p>
+            <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#0e1f18' }}>{t('mfa.disable_modal_title')}</h3>
+            <p style={{ color: '#6e756c', fontSize: 13, margin: '0 0 14px', lineHeight: 1.55 }}>{t('mfa.disable_modal_body')}</p>
             <input
               type="text"
               inputMode="numeric"
@@ -1022,14 +1022,14 @@ function MfaSection() {
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
               <button
                 onClick={() => { setShowDisable(false); setDisableCode(''); setError(null); }}
-                style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#0f172a', border: '1.5px solid #e2e8f0', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                style={{ padding: '10px 16px', borderRadius: 10, background: '#fff', color: '#0e1f18', border: '1.5px solid #ded8cb', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
               >
                 {t('mfa.cancel')}
               </button>
               <button
                 onClick={handleDisable}
                 disabled={busy || !disableCode}
-                style={{ padding: '10px 16px', borderRadius: 10, background: '#dc2626', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: (busy || !disableCode) ? 0.6 : 1 }}
+                style={{ padding: '10px 16px', borderRadius: 10, background: '#b23b2e', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: (busy || !disableCode) ? 0.6 : 1 }}
               >
                 {t('mfa.confirm_disable')}
               </button>
@@ -1100,8 +1100,8 @@ function SuperAdminsTab() {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{t('settings.superadmins_title')}</h2>
-        <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>{t('settings.superadmins_desc')}</p>
+        <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: '#0e1f18' }}>{t('settings.superadmins_title')}</h2>
+        <p style={{ margin: 0, fontSize: 14, color: '#6e756c' }}>{t('settings.superadmins_desc')}</p>
       </div>
 
       <div style={{ marginBottom: 24, padding: 20, background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 12 }}>
@@ -1115,20 +1115,20 @@ function SuperAdminsTab() {
       </div>
 
       <div>
-        <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('settings.list_label')} ({superadmins.length})</h3>
+        <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: '#33433b', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('settings.list_label')} ({superadmins.length})</h3>
         {loading ? (
-          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>{t('settings.loading')}</div>
+          <div style={{ padding: 32, textAlign: 'center', color: '#99a09a' }}>{t('settings.loading')}</div>
         ) : superadmins.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: 12, border: '1px dashed #e2e8f0' }}>{t('settings.no_super_admin')}</div>
+          <div style={{ padding: 32, textAlign: 'center', color: '#99a09a', background: '#f6f2e9', borderRadius: 12, border: '1px dashed #ded8cb' }}>{t('settings.no_super_admin')}</div>
         ) : (
-          <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ background: 'white', borderRadius: 12, border: '1px solid #ded8cb', overflow: 'hidden' }}>
             {superadmins.map((sa, idx) => (
-              <div key={sa.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderTop: idx === 0 ? 'none' : '1px solid #f1f5f9' }}>
+              <div key={sa.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderTop: idx === 0 ? 'none' : '1px solid #ece7db' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#7c3aed', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>{(sa.full_name || sa.email).charAt(0).toUpperCase()}</div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{sa.full_name || '—'}</div>
-                    <div style={{ fontSize: 13, color: '#64748b' }}>{sa.email}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0e1f18' }}>{sa.full_name || '—'}</div>
+                    <div style={{ fontSize: 13, color: '#6e756c' }}>{sa.email}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1148,7 +1148,7 @@ function SuperAdminsTab() {
 function MembersTab() {
   const { t } = useTranslation();
   const ROLE_CONFIG = {
-    admin: { label: t('settings.role_admin_short'), icon: Shield, color: '#dc2626', bg: '#fef2f2' },
+    admin: { label: t('settings.role_admin_short'), icon: Shield, color: '#b23b2e', bg: '#f7e9e6' },
     commercial: { label: t('settings.role_member'), icon: Briefcase, color: '#0891b2', bg: '#ecfeff' },
   };
   const [users, setUsers] = useState([]);
@@ -1178,49 +1178,49 @@ function MembersTab() {
 
   const copyToClipboard = (tx) => { navigator.clipboard.writeText(tx); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#99a09a', padding: 40 }}>{t('settings.loading')}</div>;
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{t('settings.members_title')}</h3>
-        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18' }}>{t('settings.members_title')}</h3>
+        <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: showInvite ? '#ece7db' : 'var(--rb-primary, #0e7a54)', color: showInvite ? '#33433b' : '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           {showInvite ? <X size={14} /> : <UserPlus size={14} />} {showInvite ? t('settings.cancel') : t('settings.add')}
         </button>
       </div>
 
       {/* Invite form */}
       {showInvite && (
-        <div style={{ background: '#f8fafc', borderRadius: 14, padding: 20, marginBottom: 20, border: '1px solid #e2e8f0' }} className="fade-in">
+        <div style={{ background: '#f6f2e9', borderRadius: 14, padding: 20, marginBottom: 20, border: '1px solid #ded8cb' }} className="fade-in">
           {inviteResult ? (
             <div style={{ textAlign: 'center' }}>
-              <CheckCircle size={32} color="#16a34a" style={{ marginBottom: 10 }} />
-              <h4 style={{ fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>{t('settings.member_created')}</h4>
-              <div style={{ background: '#fff', borderRadius: 10, padding: 16, display: 'inline-block', textAlign: 'left', border: '1px solid #e2e8f0' }}>
-                <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>{t('settings.email')}</span><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{inviteResult.email}</div></div>
-                <div style={{ marginBottom: 8 }}><span style={{ color: '#64748b', fontSize: 11 }}>{t('settings.temp_password')}</span>
+              <CheckCircle size={32} color="#157a4c" style={{ marginBottom: 10 }} />
+              <h4 style={{ fontWeight: 700, color: '#0e1f18', marginBottom: 12 }}>{t('settings.member_created')}</h4>
+              <div style={{ background: '#fff', borderRadius: 10, padding: 16, display: 'inline-block', textAlign: 'left', border: '1px solid #ded8cb' }}>
+                <div style={{ marginBottom: 8 }}><span style={{ color: '#6e756c', fontSize: 11 }}>{t('settings.email')}</span><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14 }}>{inviteResult.email}</div></div>
+                <div style={{ marginBottom: 8 }}><span style={{ color: '#6e756c', fontSize: 11 }}>{t('settings.temp_password')}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <code style={{ background: '#eef2ff', padding: '4px 10px', borderRadius: 6, color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
-                    <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 5, padding: 4, cursor: 'pointer', display: 'flex' }}>{copied ? <CheckCircle size={12} color="#16a34a" /> : <Copy size={12} color="#6366f1" />}</button>
+                    <code style={{ background: '#eef1ea', padding: '4px 10px', borderRadius: 6, color: 'var(--rb-primary, #0e7a54)', fontWeight: 700, fontSize: 15 }}>{inviteResult.tempPassword}</code>
+                    <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#e9f1ea' : '#eef1ea', border: 'none', borderRadius: 5, padding: 4, cursor: 'pointer', display: 'flex' }}>{copied ? <CheckCircle size={12} color="#157a4c" /> : <Copy size={12} color="#0e7a54" />}</button>
                   </div>
                 </div>
               </div>
-              <div style={{ marginTop: 12 }}><button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>OK</button></div>
+              <div style={{ marginTop: 12 }}><button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>OK</button></div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.name_required_label')}</label><input value={inviteForm.full_name} onChange={e => setInviteForm(f => ({ ...f, full_name: e.target.value }))} placeholder={t('settings.full_name_ph')} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
-                <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.email_required_label')}</label><input value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder={t('settings.email_ph_work')} type="email" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
+                <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('settings.name_required_label')}</label><input value={inviteForm.full_name} onChange={e => setInviteForm(f => ({ ...f, full_name: e.target.value }))} placeholder={t('settings.full_name_ph')} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box' }} /></div>
+                <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('settings.email_required_label')}</label><input value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder={t('settings.email_ph_work')} type="email" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box' }} /></div>
               </div>
-              <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.role_label')}</label>
+              <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('settings.role_label')}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {Object.entries(ROLE_CONFIG).map(([k, v]) => (
-                    <button key={k} onClick={() => setInviteForm(f => ({ ...f, role: k }))} style={{ padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, border: inviteForm.role === k ? `2px solid ${v.color}` : '2px solid #e2e8f0', background: inviteForm.role === k ? v.bg : '#fff', color: v.color, display: 'flex', alignItems: 'center', gap: 5 }}><v.icon size={13} /> {v.label}</button>
+                    <button key={k} onClick={() => setInviteForm(f => ({ ...f, role: k }))} style={{ padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, border: inviteForm.role === k ? `2px solid ${v.color}` : '2px solid #ded8cb', background: inviteForm.role === k ? v.bg : '#fff', color: v.color, display: 'flex', alignItems: 'center', gap: 5 }}><v.icon size={13} /> {v.label}</button>
                   ))}
                 </div>
               </div>
-              <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: sending ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}><UserPlus size={14} /> {sending ? t('settings.creating') : t('settings.create')}</button>
+              <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: sending ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}><UserPlus size={14} /> {sending ? t('settings.creating') : t('settings.create')}</button>
             </div>
           )}
         </div>
@@ -1231,12 +1231,12 @@ function MembersTab() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div onClick={() => setDeleteUserConfirm(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 400, boxShadow: '0 25px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><Trash2 size={28} color="#dc2626" /></div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{t('settings.delete_user_confirm')}</h3>
-            <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.irreversible_action')}</p>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f7e9e6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><Trash2 size={28} color="#b23b2e" /></div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0e1f18', marginBottom: 8 }}>{t('settings.delete_user_confirm')}</h3>
+            <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>{t('settings.irreversible_action')}</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('settings.cancel')}</button>
-              <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#dc2626,#b91c1c)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> {t('common.delete')}</button>
+              <button onClick={() => setDeleteUserConfirm(null)} style={{ flex: 1, padding: 13, borderRadius: 12, border: '2px solid #ded8cb', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('settings.cancel')}</button>
+              <button onClick={() => handleDeleteUser(deleteUserConfirm)} style={{ flex: 1, padding: 13, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#b23b2e,#8f2e24)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Trash2 size={16} /> {t('common.delete')}</button>
             </div>
           </div>
         </div>
@@ -1247,20 +1247,20 @@ function MembersTab() {
         {users.map(u => {
           const role = ROLE_CONFIG[u.role];
           return (
-            <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: 12, opacity: u.is_active ? 1 : 0.5 }}>
+            <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f6f2e9', borderRadius: 12, opacity: u.is_active ? 1 : 0.5 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 34, height: 34, borderRadius: 10, background: role.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><role.icon size={15} color={role.color} /></div>
-                <div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{u.full_name}</div><div style={{ color: '#94a3b8', fontSize: 11 }}>{u.email}</div></div>
+                <div><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14 }}>{u.full_name}</div><div style={{ color: '#99a09a', fontSize: 11 }}>{u.email}</div></div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <select value={u.role} onChange={e => api.updateAdminUser(u.id, { role: e.target.value }).then(load)} style={{ padding: '3px 6px', borderRadius: 6, border: `1px solid ${role.color}30`, background: role.bg, color: role.color, fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>
                   <option value="admin">{t('settings.role_admin_short')}</option><option value="commercial">{t('settings.role_member')}</option>
                 </select>
                 {u.role !== 'admin' && (<button onClick={() => api.updateAdminUser(u.id, { is_active: !u.is_active }).then(load)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex' }}>
-                  {u.is_active ? <ToggleRight size={24} color="#16a34a" /> : <ToggleLeft size={24} color="#dc2626" />}
+                  {u.is_active ? <ToggleRight size={24} color="#157a4c" /> : <ToggleLeft size={24} color="#b23b2e" />}
                 </button>)}
-                {u.id !== founderAdminId && (<button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex' }}>
-                  <Trash2 size={14} color="#dc2626" />
+                {u.id !== founderAdminId && (<button onClick={() => setDeleteUserConfirm(u.id)} style={{ background: '#f7e9e6', border: 'none', borderRadius: 6, padding: 5, cursor: 'pointer', display: 'flex' }}>
+                  <Trash2 size={14} color="#b23b2e" />
                 </button>)}
               </div>
             </div>
@@ -1328,7 +1328,7 @@ function IntegrationsTab() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 24 }}>{t('settings.tab_integrations')}</h3>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', marginBottom: 24 }}>{t('settings.tab_integrations')}</h3>
 
       {/* Unified integrations panel — filter pills (All / CRM /
           Payments / Accounting / Auth / Webhooks / History) over a
@@ -1338,61 +1338,61 @@ function IntegrationsTab() {
           every other integration. */}
       <IntegrationsPanel />
 
-      <div style={{ height: 1, background: '#e2e8f0', margin: '32px 0' }} />
+      <div style={{ height: 1, background: '#ded8cb', margin: '32px 0' }} />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}><Key size={16} color="#6366f1" /><h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Open API</h4></div>
-      <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>{t('settings.api_desc')} <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>POST /api/v1/referrals</code> · <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>GET /api/v1/referrals</code></p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}><Key size={16} color="#0e7a54" /><h4 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18' }}>Open API</h4></div>
+      <p style={{ color: '#6e756c', fontSize: 13, marginBottom: 16 }}>{t('settings.api_desc')} <code style={{ background: '#ece7db', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>POST /api/v1/referrals</code> · <code style={{ background: '#ece7db', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>GET /api/v1/referrals</code></p>
 
       {newKey && (
-        <div style={{ background: '#fffbeb', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #fde68a' }} className="fade-in">
-          <div style={{ fontWeight: 700, color: '#92400e', fontSize: 13, marginBottom: 8 }}>{t('settings.copy_this_key_now')}</div>
+        <div style={{ background: '#f6efda', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #ecd9a0' }} className="fade-in">
+          <div style={{ fontWeight: 700, color: '#7a4a16', fontSize: 13, marginBottom: 8 }}>{t('settings.copy_this_key_now')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <code style={{ background: '#fff', padding: '8px 12px', borderRadius: 8, color: '#0f172a', fontWeight: 600, fontSize: 14, fontFamily: 'monospace', flex: 1, wordBreak: 'break-all' }}>{newKey}</code>
-            <button onClick={() => copyToClipboard(newKey)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 8, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>{copied ? <CheckCircle size={16} color="#16a34a" /> : <Copy size={16} color="#6366f1" />}</button>
+            <code style={{ background: '#fff', padding: '8px 12px', borderRadius: 8, color: '#0e1f18', fontWeight: 600, fontSize: 14, fontFamily: 'monospace', flex: 1, wordBreak: 'break-all' }}>{newKey}</code>
+            <button onClick={() => copyToClipboard(newKey)} style={{ background: copied ? '#e9f1ea' : '#eef1ea', border: 'none', borderRadius: 6, padding: 8, cursor: 'pointer', display: 'flex', flexShrink: 0 }}>{copied ? <CheckCircle size={16} color="#157a4c" /> : <Copy size={16} color="#0e7a54" />}</button>
           </div>
         </div>
       )}
 
       {showCreate ? (
-        <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#f6f2e9', borderRadius: 12, padding: 16, marginBottom: 16, border: '1px solid #ded8cb' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.name_required_label')}</label><input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder={t('settings.integrations_zapier_ph')} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
-            <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('settings.partner_optional')}</label><select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }}><option value="">{t('settings.none_option')}</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+            <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('settings.name_required_label')}</label><input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder={t('settings.integrations_zapier_ph')} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box' }} /></div>
+            <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('settings.partner_optional')}</label><select value={partnerId} onChange={e => setPartnerId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box' }}><option value="">{t('settings.none_option')}</option>{partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           </div>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 6 }}>{t('settings.api_permissions')}</div>
+            <div style={{ fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 6 }}>{t('settings.api_permissions')}</div>
             <div style={{ display: 'flex', gap: 16 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#475569', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#33433b', cursor: 'pointer' }}>
                 <input type="checkbox" checked={permRead} onChange={e => setPermRead(e.target.checked)} />
                 {t('settings.api_read')}
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#475569', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#33433b', cursor: 'pointer' }}>
                 <input type="checkbox" checked={permWrite} onChange={e => setPermWrite(e.target.checked)} />
                 {t('settings.api_write')}
               </label>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleCreate} disabled={creating || !keyName || (!permRead && !permWrite)} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: (creating || (!permRead && !permWrite)) ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? t('settings.creating') : t('settings.api_generate')}</button>
-            <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
+            <button onClick={handleCreate} disabled={creating || !keyName || (!permRead && !permWrite)} style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: (creating || (!permRead && !permWrite)) ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6 }}><Key size={13} /> {creating ? t('settings.creating') : t('settings.api_generate')}</button>
+            <button onClick={() => setShowCreate(false)} style={{ padding: '8px 16px', borderRadius: 8, background: '#ece7db', border: 'none', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> {t('settings.api_key_create')}</button>
+        <button onClick={() => { setShowCreate(true); setNewKey(null); }} style={{ padding: '8px 16px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}><Key size={14} /> {t('settings.api_key_create')}</button>
       )}
 
-      {loading ? <div style={{ color: '#94a3b8', padding: 20 }}>{t('settings.loading')}</div> : (
+      {loading ? <div style={{ color: '#99a09a', padding: 20 }}>{t('settings.loading')}</div> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {apiKeys.filter(k => k.is_active).map(k => (
-            <div key={k.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+            <div key={k.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f6f2e9', borderRadius: 12, border: '1px solid #ded8cb' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Key size={16} color="#6366f1" />
-                <div><div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{k.name}</div><div style={{ color: '#94a3b8', fontSize: 11 }}><code>{k.key_prefix}</code> · {k.partner_name || t('settings.global_label')} · {t('settings.created_on')} {fmtDate(k.created_at)}{k.last_used_at && <> · {t('settings.used_on')} {fmtDate(k.last_used_at)}</>}</div></div>
+                <Key size={16} color="#0e7a54" />
+                <div><div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14 }}>{k.name}</div><div style={{ color: '#99a09a', fontSize: 11 }}><code>{k.key_prefix}</code> · {k.partner_name || t('settings.global_label')} · {t('settings.created_on')} {fmtDate(k.created_at)}{k.last_used_at && <> · {t('settings.used_on')} {fmtDate(k.last_used_at)}</>}</div></div>
               </div>
-              <button onClick={() => handleRevoke(k.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
+              <button onClick={() => handleRevoke(k.id)} style={{ background: '#f7e9e6', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#b23b2e" /></button>
             </div>
           ))}
-          {apiKeys.filter(k => k.is_active).length === 0 && <div style={{ color: '#94a3b8', fontSize: 13, padding: 16, textAlign: 'center' }}>{t('settings.api_no_keys')}</div>}
+          {apiKeys.filter(k => k.is_active).length === 0 && <div style={{ color: '#99a09a', fontSize: 13, padding: 16, textAlign: 'center' }}>{t('settings.api_no_keys')}</div>}
         </div>
       )}
     </div>
@@ -1780,7 +1780,7 @@ function IntegrationsPanel() {
       name: 'Pennylane',
       description: t('settings.pennylane_subtitle', 'Créez automatiquement des factures fournisseurs dans Pennylane pour chaque commission.'),
       letter: 'P',
-      color: '#0f172a',
+      color: '#0e1f18',
       logo: '/images/integrations/pennylane-logo.svg',
       connected: !!pennylaneStatus?.connected,
       meta: pennylaneStatus?.connected
@@ -1869,7 +1869,7 @@ function IntegrationsPanel() {
   };
   const handleUpgrade = () => { window.location.href = '/billing'; };
 
-  if (loading) return <div style={{ color: '#94a3b8', padding: 16 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ color: '#99a09a', padding: 16 }}>{t('settings.loading')}</div>;
 
   // ─── Filter pills ──────────────────────────────────────────────────
   const FILTERS = [
@@ -1892,18 +1892,18 @@ function IntegrationsPanel() {
 
   return (
     <div>
-      <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Plug size={16} color="#6366f1"/> {t('crm.integrations', 'Intégrations')}
+      <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Plug size={16} color="#0e7a54"/> {t('crm.integrations', 'Intégrations')}
       </h4>
 
       {err && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{err}</div>
+        <div style={{ background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{err}</div>
       )}
       {qontoMsg && (
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{qontoMsg}</div>
+        <div style={{ background: '#e9f1ea', border: '1px solid #cfe6d6', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{qontoMsg}</div>
       )}
       {pipedriveMsg && (
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{pipedriveMsg}</div>
+        <div style={{ background: '#e9f1ea', border: '1px solid #cfe6d6', color: '#15803d', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{pipedriveMsg}</div>
       )}
 
       {/* Filter pills */}
@@ -1918,9 +1918,9 @@ function IntegrationsPanel() {
                 padding: '6px 14px', borderRadius: 999,
                 fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                 cursor: 'pointer', transition: 'all .15s',
-                border: '1.5px solid ' + (active ? '#0f172a' : '#e5e7eb'),
-                background: active ? '#0f172a' : '#fff',
-                color: active ? '#fff' : '#475569',
+                border: '1.5px solid ' + (active ? '#0e1f18' : '#e3ddd0'),
+                background: active ? '#0e1f18' : '#fff',
+                color: active ? '#fff' : '#33433b',
               }}
             >
               {f.label}
@@ -2020,12 +2020,12 @@ function IntegrationsPanel() {
             onClick={e => e.stopPropagation()}
             style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 480, maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', padding: 24 }}
           >
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18', marginBottom: 12 }}>
               {t('qonto.choose_account', 'Choisir le compte à débiter')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
               {qontoAccounts.length === 0 && (
-                <div style={{ color: '#94a3b8', fontSize: 13, padding: 12 }}>{t('qonto.no_accounts', 'Aucun compte trouvé.')}</div>
+                <div style={{ color: '#99a09a', fontSize: 13, padding: 12 }}>{t('qonto.no_accounts', 'Aucun compte trouvé.')}</div>
               )}
               {qontoAccounts.map(acc => (
                 <button
@@ -2035,13 +2035,13 @@ function IntegrationsPanel() {
                   disabled={busy}
                   style={{
                     textAlign: 'left', padding: '12px 14px', borderRadius: 10,
-                    border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer',
+                    border: '1px solid #ded8cb', background: '#f6f2e9', cursor: 'pointer',
                   }}
                 >
-                  <div style={{ fontWeight: 700, color: '#0f172a' }}>{acc.label || acc.slug || acc.iban}</div>
-                  <div style={{ color: '#64748b', fontSize: 12, fontFamily: 'monospace', marginTop: 2 }}>{acc.iban}</div>
+                  <div style={{ fontWeight: 700, color: '#0e1f18' }}>{acc.label || acc.slug || acc.iban}</div>
+                  <div style={{ color: '#6e756c', fontSize: 12, fontFamily: 'monospace', marginTop: 2 }}>{acc.iban}</div>
                   {typeof acc.balance !== 'undefined' && (
-                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 2 }}>{acc.currency || 'EUR'} · {acc.balance}</div>
+                    <div style={{ color: '#99a09a', fontSize: 11, marginTop: 2 }}>{acc.currency || 'EUR'} · {acc.balance}</div>
                   )}
                 </button>
               ))}
@@ -2073,14 +2073,14 @@ function IntegrationRow({
 
   // Status badge styles (Connecté green, Actif blue, Non connecté grey)
   const badge = ssoActive
-    ? { bg: '#eff6ff', fg: '#1d4ed8', label: t('settings.integrations.active', 'Actif') }
+    ? { bg: '#e9f1ea', fg: '#1d4ed8', label: t('settings.integrations.active', 'Actif') }
     : connected
-      ? { bg: '#f0fdf4', fg: '#15803d', label: t('settings.integrations.connected', 'Connecté') }
+      ? { bg: '#e9f1ea', fg: '#15803d', label: t('settings.integrations.connected', 'Connecté') }
       : { bg: '#f3f4f6', fg: '#6b7280', label: t('settings.integrations.not_connected', 'Non connecté') };
 
   return (
     <div style={{
-      border: '1px solid ' + (hover ? '#d1d5db' : '#e5e7eb'),
+      border: '1px solid ' + (hover ? '#d1d5db' : '#e3ddd0'),
       borderRadius: 12, marginBottom: 8, transition: 'border-color .15s',
       background: '#fff', overflow: 'hidden',
     }}
@@ -2096,7 +2096,7 @@ function IntegrationRow({
           <div style={{
             width: 36, height: 36, borderRadius: 8, flexShrink: 0,
             background: logo ? '#fff' : color,
-            border: logo ? '1px solid #e5e7eb' : 'none',
+            border: logo ? '1px solid #e3ddd0' : 'none',
             color: '#fff', fontSize: 14, fontWeight: 600,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: logo ? 4 : 0, overflow: 'hidden',
@@ -2117,10 +2117,10 @@ function IntegrationRow({
             ) : letter}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{name}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: '#0e1f18' }}>{name}</div>
             <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>{description}</div>
             {meta && (
-              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, fontStyle: 'italic' }}>{meta}</div>
+              <div style={{ fontSize: 11, color: '#99a09a', marginTop: 2, fontStyle: 'italic' }}>{meta}</div>
             )}
           </div>
         </div>
@@ -2139,7 +2139,7 @@ function IntegrationRow({
           {ssoActive ? null : planRequired ? (
             <button onClick={onUpgrade} disabled={busy} style={{
               fontSize: 12, padding: '6px 12px', borderRadius: 8,
-              background: '#0f172a', color: '#fff', border: 'none',
+              background: '#0e1f18', color: '#fff', border: 'none',
               cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
             }}>
               {t('crm.upgrade_cta', 'Passer au Business')} →
@@ -2147,7 +2147,7 @@ function IntegrationRow({
           ) : connected ? (
             <button onClick={onConfigure} disabled={busy} style={{
               fontSize: 12, padding: '6px 12px', borderRadius: 8,
-              border: '1px solid #e5e7eb', background: '#fff', color: '#0f172a',
+              border: '1px solid #e3ddd0', background: '#fff', color: '#0e1f18',
               cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
             }}>
               {t('settings.integrations.configure', 'Configurer')}
@@ -2155,7 +2155,7 @@ function IntegrationRow({
           ) : (
             <button onClick={onConnect} disabled={busy || (integration.id === 'qonto' && configured === false)} style={{
               fontSize: 12, padding: '6px 12px', borderRadius: 8,
-              background: '#059669', color: '#fff', border: 'none',
+              background: '#0e7a54', color: '#fff', border: 'none',
               cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
               opacity: (busy || (integration.id === 'qonto' && configured === false)) ? 0.6 : 1,
             }}>
@@ -2168,12 +2168,12 @@ function IntegrationRow({
       {/* Inline expansion — Qonto's account picker / disconnect, plus
           Notion's sync now / disconnect actions while connected. */}
       {expanded && integration.id === 'qonto' && qontoStatus?.connected && (
-        <div style={{ borderTop: '1px solid #e5e7eb', padding: 14, background: '#f9fafb' }}>
+        <div style={{ borderTop: '1px solid #e3ddd0', padding: 14, background: '#f9fafb' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
             <button type="button" onClick={onQontoOpenPicker} disabled={busy} style={btnSecondary}>
               {t('qonto.choose_account', 'Choisir le compte à débiter')}
             </button>
-            <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+            <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#8f2e24', borderColor: '#edc4bd' }}>
               {t('crm.disconnect', 'Déconnecter')}
             </button>
           </div>
@@ -2184,15 +2184,15 @@ function IntegrationRow({
           a small actions row right under the card so admins don't
           need to open the mappings modal just to trigger a sync. */}
       {connected && integration.id === 'notion' && (
-        <div style={{ borderTop: '1px solid #e5e7eb', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ borderTop: '1px solid #e3ddd0', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" onClick={onSync} disabled={busy} style={btnSecondary}>{t('notion.sync_now', 'Synchroniser maintenant')}</button>
-          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>{t('notion.disconnect', 'Déconnecter')}</button>
+          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#8f2e24', borderColor: '#edc4bd' }}>{t('notion.disconnect', 'Déconnecter')}</button>
           {notionMsg && (
             <div style={{
               padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-              background: notionMsg.tone === 'success' ? '#ecfdf5' : '#fef2f2',
-              border: notionMsg.tone === 'success' ? '1px solid #6ee7b7' : '1px solid #fecaca',
-              color: notionMsg.tone === 'success' ? '#047857' : '#b91c1c',
+              background: notionMsg.tone === 'success' ? '#e9f1ea' : '#f7e9e6',
+              border: notionMsg.tone === 'success' ? '1px solid #6ee7b7' : '1px solid #edc4bd',
+              color: notionMsg.tone === 'success' ? '#0b5e40' : '#8f2e24',
             }}>{notionMsg.text}</div>
           )}
         </div>
@@ -2201,8 +2201,8 @@ function IntegrationRow({
       {/* HubSpot / Salesforce: when connected, surface the disconnect
           shortcut. Configure goes through the modal. */}
       {connected && (integration.id === 'hubspot' || integration.id === 'salesforce') && (
-        <div style={{ borderTop: '1px solid #e5e7eb', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+        <div style={{ borderTop: '1px solid #e3ddd0', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#8f2e24', borderColor: '#edc4bd' }}>
             {t('crm.disconnect', 'Déconnecter')}
           </button>
         </div>
@@ -2214,7 +2214,7 @@ function IntegrationRow({
           surface a red banner prompting reconnection — that's the most
           actionable thing the admin can do until P2 lands. */}
       {integration.id === 'pipedrive' && pipedriveStatus?.last_error && (
-        <div style={{ borderTop: '1px solid #fecaca', padding: '10px 14px', background: '#fef2f2', display: 'flex', alignItems: 'center', gap: 8, color: '#b91c1c', fontSize: 12 }}>
+        <div style={{ borderTop: '1px solid #edc4bd', padding: '10px 14px', background: '#f7e9e6', display: 'flex', alignItems: 'center', gap: 8, color: '#8f2e24', fontSize: 12 }}>
           {t('pipedrive.connection_error', 'Erreur de synchronisation, reconnectez-vous.')}
         </div>
       )}
@@ -2223,7 +2223,7 @@ function IntegrationRow({
           actions row). Mapping config is opened via the dedicated
           modal — no inline expansion needed any more. */}
       {pipedriveStatus?.connected && integration.id === 'pipedrive' && (
-        <div style={{ borderTop: '1px solid #e5e7eb', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ borderTop: '1px solid #e3ddd0', padding: '10px 14px', background: '#f9fafb', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <button
             type="button" onClick={onPipedrivePushAll} disabled={busy || pipedrivePushing}
             style={btnSecondary}
@@ -2232,7 +2232,7 @@ function IntegrationRow({
               ? t('pipedrive.push_all_running', 'Synchronisation…')
               : t('pipedrive.push_all', 'Pousser tous les referrals')}
           </button>
-          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+          <button type="button" onClick={onDisconnect} disabled={busy} style={{ ...btnSecondary, color: '#8f2e24', borderColor: '#edc4bd' }}>
             {t('crm.disconnect', 'Déconnecter')}
           </button>
           {pipedrivePushMsg && (() => {
@@ -2244,15 +2244,15 @@ function IntegrationRow({
                 disabled={!clickable}
                 style={{
                   padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                  background: pipedrivePushMsg.tone === 'success' ? '#ecfdf5'
-                            : pipedrivePushMsg.tone === 'warning' ? '#fffbeb'
-                            : '#fef2f2',
+                  background: pipedrivePushMsg.tone === 'success' ? '#e9f1ea'
+                            : pipedrivePushMsg.tone === 'warning' ? '#f6efda'
+                            : '#f7e9e6',
                   border: '1px solid ' + (pipedrivePushMsg.tone === 'success' ? '#6ee7b7'
-                                        : pipedrivePushMsg.tone === 'warning' ? '#fde68a'
-                                        : '#fecaca'),
-                  color: pipedrivePushMsg.tone === 'success' ? '#047857'
-                       : pipedrivePushMsg.tone === 'warning' ? '#92400e'
-                       : '#b91c1c',
+                                        : pipedrivePushMsg.tone === 'warning' ? '#ecd9a0'
+                                        : '#edc4bd'),
+                  color: pipedrivePushMsg.tone === 'success' ? '#0b5e40'
+                       : pipedrivePushMsg.tone === 'warning' ? '#7a4a16'
+                       : '#8f2e24',
                   cursor: clickable ? 'pointer' : 'default',
                   fontFamily: 'inherit',
                   textDecoration: clickable ? 'underline dotted' : 'none',
@@ -2272,25 +2272,25 @@ function IntegrationRow({
           PennylaneSection; the visual chrome above this block comes
           from the shared IntegrationRow header. */}
       {expanded && integration.id === 'pennylane' && (
-        <div style={{ borderTop: '1px solid #e5e7eb', padding: 14, background: '#f9fafb' }}>
+        <div style={{ borderTop: '1px solid #e3ddd0', padding: 14, background: '#f9fafb' }}>
           {pennylaneStatus?.connected ? (
             <>
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-                padding: '12px 14px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', marginBottom: 12,
+                padding: '12px 14px', borderRadius: 10, border: '1px solid #e3ddd0', background: '#fff', marginBottom: 12,
               }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0e1f18' }}>
                     {t('settings.pennylane_auto_invoice', 'Création automatique des factures')}
                   </div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: '#6e756c', marginTop: 2 }}>
                     {t('settings.pennylane_auto_invoice_desc', 'Créer une facture fournisseur dans Pennylane à chaque commission approuvée.')}
                   </div>
                 </div>
                 <button onClick={onPennylaneToggle} aria-pressed={!!pennylaneStatus.enabled}
                   style={{
                     width: 44, height: 24, borderRadius: 999,
-                    background: pennylaneStatus.enabled ? '#059669' : '#cbd5e1',
+                    background: pennylaneStatus.enabled ? '#0e7a54' : '#cfc8b8',
                     border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
                   }}>
                   <span style={{
@@ -2301,7 +2301,7 @@ function IntegrationRow({
                 </button>
               </div>
               <button type="button" onClick={onDisconnect} disabled={busy}
-                style={{ ...btnSecondary, color: '#b91c1c', borderColor: '#fecaca' }}>
+                style={{ ...btnSecondary, color: '#8f2e24', borderColor: '#edc4bd' }}>
                 {t('settings.disconnect', 'Déconnecter')}
               </button>
             </>
@@ -2310,12 +2310,12 @@ function IntegrationRow({
               {pennylaneStatus?.error && pennylaneStatus.error !== 'Pennylane: API token requis' && (
                 <div style={{
                   padding: '8px 12px', borderRadius: 8, marginBottom: 12,
-                  background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12,
+                  background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', fontSize: 12,
                 }}>
                   {t('settings.pennylane_token_invalid', 'Le token enregistré a été refusé par Pennylane. Saisissez-en un nouveau.')}
                 </div>
               )}
-              <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 600, marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#33433b', fontWeight: 600, marginBottom: 6 }}>
                 {t('settings.pennylane_token', 'Token API Pennylane')}
               </label>
               <input
@@ -2325,17 +2325,17 @@ function IntegrationRow({
                 placeholder="plk_xxxxxxxxxxxxxxxxxxxxxxxx"
                 style={{
                   width: '100%', padding: '9px 12px', borderRadius: 8,
-                  border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'monospace',
+                  border: '1.5px solid #ded8cb', fontSize: 13, fontFamily: 'monospace',
                   boxSizing: 'border-box', background: '#fff',
                 }}
               />
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: '#99a09a', marginTop: 6, marginBottom: 12 }}>
                 {t('settings.pennylane_token_help', 'Disponible dans Pennylane → Paramètres → Développeurs → Créer un token.')}
               </div>
               <button onClick={onPennylaneSubmit} disabled={pennylaneSubmitting || !pennylaneToken}
                 style={{
                   padding: '8px 16px', borderRadius: 8, border: 'none',
-                  background: '#059669', color: '#fff', fontSize: 13, fontWeight: 600,
+                  background: '#0e7a54', color: '#fff', fontSize: 13, fontWeight: 600,
                   cursor: (pennylaneSubmitting || !pennylaneToken) ? 'not-allowed' : 'pointer',
                   opacity: (pennylaneSubmitting || !pennylaneToken) ? 0.6 : 1, fontFamily: 'inherit',
                 }}>
@@ -2353,30 +2353,30 @@ function IntegrationRow({
 function SyncHistoryPanel({ log, t }) {
   if (!log || log.length === 0) {
     return (
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+      <div style={{ background: '#fff', border: '1px solid #e3ddd0', borderRadius: 12, padding: 24, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
         {t('crm.no_sync_yet', 'Aucune synchronisation pour l\'instant.')}
       </div>
     );
   }
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ background: '#fff', border: '1px solid #e3ddd0', borderRadius: 12, overflow: 'hidden' }}>
       {log.map((row, i) => (
         <div key={row.id} style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
           padding: '10px 14px', fontSize: 13,
-          borderTop: i === 0 ? 'none' : '1px solid #f1f5f9',
+          borderTop: i === 0 ? 'none' : '1px solid #ece7db',
         }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', overflow: 'hidden', minWidth: 0 }}>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
-              background: row.status === 'success' ? '#f0fdf4' : '#fef2f2',
-              color: row.status === 'success' ? '#059669' : '#b91c1c',
+              background: row.status === 'success' ? '#e9f1ea' : '#f7e9e6',
+              color: row.status === 'success' ? '#0e7a54' : '#8f2e24',
               textTransform: 'uppercase',
             }}>{row.action}</span>
-            <span style={{ color: '#0f172a', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.prospect_name || '—'}</span>
-            <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>· {row.provider}</span>
+            <span style={{ color: '#0e1f18', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.prospect_name || '—'}</span>
+            <span style={{ color: '#99a09a', whiteSpace: 'nowrap' }}>· {row.provider}</span>
           </div>
-          <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>{fmtDate(row.created_at)}</span>
+          <span style={{ color: '#99a09a', whiteSpace: 'nowrap' }}>{fmtDate(row.created_at)}</span>
         </div>
       ))}
     </div>
@@ -2497,24 +2497,24 @@ function CrmMappingModal({ integration, onClose }) {
     } finally { setSaving(false); }
   };
 
-  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
 
   return (
     <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 640, maxHeight: '88vh', overflowY: 'auto', padding: 24, boxShadow: '0 25px 80px rgba(15,23,42,0.25)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0e1f18' }}>
             {t('crm.configure')} — {t('crm.' + integration.provider)}
           </h3>
-          <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }} style={{ background: '#ece7db', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <X size={16}/>
           </button>
         </div>
 
-        {loading ? <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>…</div> : (
+        {loading ? <div style={{ padding: 24, textAlign: 'center', color: '#99a09a' }}>…</div> : (
           <>
             {isHubspot && (
-              <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 16 }}>
+              <div style={{ display: 'flex', gap: 4, background: '#ece7db', borderRadius: 10, padding: 3, marginBottom: 16 }}>
                 {[
                   { id: 'transaction', label: 'Transaction' },
                   { id: 'contact',     label: 'Contact' },
@@ -2528,7 +2528,7 @@ function CrmMappingModal({ integration, onClose }) {
                       flex: 1, padding: '7px 10px', borderRadius: 8, border: 'none',
                       cursor: 'pointer', fontSize: 12, fontWeight: 600,
                       background: activeTab === tab.id ? '#fff' : 'transparent',
-                      color: activeTab === tab.id ? '#059669' : '#64748b',
+                      color: activeTab === tab.id ? '#0e7a54' : '#6e756c',
                       boxShadow: activeTab === tab.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     }}
                   >{tab.label}</button>
@@ -2555,7 +2555,7 @@ function CrmMappingModal({ integration, onClose }) {
         )}
         {!loading && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center', marginTop: 4 }}>
-            {savedMsg && <span style={{ color: '#059669', fontSize: 12, fontWeight: 600 }}>{savedMsg}</span>}
+            {savedMsg && <span style={{ color: '#0e7a54', fontSize: 12, fontWeight: 600 }}>{savedMsg}</span>}
             <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClose(); }} disabled={saving} style={btnSecondary}>{t('settings.cancel')}</button>
             <button type="button" onClick={(e) => { e.stopPropagation(); e.preventDefault(); save(); }} disabled={saving} style={btnPrimary}>{saving ? '…' : t('crm.save_mappings')}</button>
           </div>
@@ -2569,15 +2569,15 @@ function CrmMappingModal({ integration, onClose }) {
 // The original modal body, now extracted into a subcomponent so
 // CrmMappingModal can render it inside a tab layout.
 function TransactionMappingContent({ fields, setFields, stages, setStages, crmFields, crmStages, tenantStages, t }) {
-  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
   return (
     <>
-      <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+      <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0e1f18', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
         {t('crm.field_mappings')}
       </h4>
       <table style={{ width: '100%', marginBottom: 20 }}>
         <thead>
-          <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+          <tr style={{ fontSize: 11, color: '#6e756c', textAlign: 'left' }}>
             <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_field')}</th>
             <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_field')}</th>
           </tr>
@@ -2585,7 +2585,7 @@ function TransactionMappingContent({ fields, setFields, stages, setStages, crmFi
         <tbody>
           {fields.map((row, i) => (
             <tr key={row.refboost_field}>
-              <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t('crm.field_' + row.refboost_field)}</td>
+              <td style={{ padding: '4px 8px', fontSize: 13, color: '#2b3a32' }}>{t('crm.field_' + row.refboost_field)}</td>
               <td style={{ padding: '4px 8px' }}>
                 {crmFields.length > 0 ? (
                   <select value={row.crm_field} onChange={e => setFields(f => f.map((x, j) => j === i ? { ...x, crm_field: e.target.value } : x))} style={inp}>
@@ -2601,12 +2601,12 @@ function TransactionMappingContent({ fields, setFields, stages, setStages, crmFi
         </tbody>
       </table>
 
-      <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+      <h4 style={{ fontSize: 13, fontWeight: 700, color: '#0e1f18', margin: '4px 0 10px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
         {t('crm.stage_mappings')}
       </h4>
       <table style={{ width: '100%', marginBottom: 20 }}>
         <thead>
-          <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+          <tr style={{ fontSize: 11, color: '#6e756c', textAlign: 'left' }}>
             <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.refboost_status')}</th>
             <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('crm.crm_stage')}</th>
           </tr>
@@ -2614,7 +2614,7 @@ function TransactionMappingContent({ fields, setFields, stages, setStages, crmFi
         <tbody>
           {stages.map((row, i) => (
             <tr key={row.refboost_status}>
-              <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>
+              <td style={{ padding: '4px 8px', fontSize: 13, color: '#2b3a32' }}>
                 {(tenantStages.find(s => s.slug === row.refboost_status)?.name) || t('crm.status_' + row.refboost_status)}
               </td>
               <td style={{ padding: '4px 8px' }}>
@@ -2640,7 +2640,7 @@ function TransactionMappingContent({ fields, setFields, stages, setStages, crmFi
 // a dropdown populated from HubSpot's contacts/companies property
 // list. Auto-suggested pairings happen upstream in the parent.
 function ObjectMappingTable({ type, properties, mapping, onChange }) {
-  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
   const rows = type === 'contact'
     ? [
         { key: 'firstname', label: 'Prénom' },
@@ -2657,7 +2657,7 @@ function ObjectMappingTable({ type, properties, mapping, onChange }) {
   return (
     <table style={{ width: '100%', marginBottom: 20 }}>
       <thead>
-        <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+        <tr style={{ fontSize: 11, color: '#6e756c', textAlign: 'left' }}>
           <th style={{ padding: '6px 8px', fontWeight: 600 }}>Champ RefBoost</th>
           <th style={{ padding: '6px 8px', fontWeight: 600 }}>Propriété HubSpot</th>
         </tr>
@@ -2665,7 +2665,7 @@ function ObjectMappingTable({ type, properties, mapping, onChange }) {
       <tbody>
         {rows.map(r => (
           <tr key={r.key}>
-            <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{r.label}</td>
+            <td style={{ padding: '4px 8px', fontSize: 13, color: '#2b3a32' }}>{r.label}</td>
             <td style={{ padding: '4px 8px' }}>
               <select
                 value={mapping[r.key] || ''}
@@ -2687,12 +2687,12 @@ function ObjectMappingTable({ type, properties, mapping, onChange }) {
 
 const btnPrimary = {
   padding: '8px 14px', borderRadius: 8, border: 'none',
-  background: 'linear-gradient(135deg, #059669, #10b981)',
+  background: 'linear-gradient(135deg, #0e7a54, #1c9a6b)',
   color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
 };
 const btnSecondary = {
-  padding: '8px 14px', borderRadius: 8, border: '1.5px solid #e2e8f0',
-  background: '#fff', color: '#0f172a', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+  padding: '8px 14px', borderRadius: 8, border: '1.5px solid #ded8cb',
+  background: '#fff', color: '#0e1f18', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
 };
 
 // ═══ LIEN PUBLIC ═══
@@ -2709,8 +2709,8 @@ function PublicLinkTab() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
-  if (!tenant) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.tenant_load_error')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#99a09a', padding: 40 }}>{t('settings.loading')}</div>;
+  if (!tenant) return <div style={{ textAlign: 'center', color: '#99a09a', padding: 40 }}>{t('settings.tenant_load_error')}</div>;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const directLink = origin + '/r/' + (tenant.slug || '');
@@ -2724,39 +2724,39 @@ function PublicLinkTab() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.public_link_title')}</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.public_link_full_desc')}</p>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', marginBottom: 8 }}>{t('settings.public_link_title')}</h3>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>{t('settings.public_link_full_desc')}</p>
 
       <div style={{ marginBottom: 28 }}>
-        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>{t('settings.direct_link')}</h4>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-          <code style={{ flex: 1, fontSize: 13, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{directLink}</code>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0e1f18', marginBottom: 10 }}>{t('settings.direct_link')}</h4>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 14, background: '#f6f2e9', borderRadius: 12, border: '1px solid #ded8cb' }}>
+          <code style={{ flex: 1, fontSize: 13, color: '#0e1f18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{directLink}</code>
           <button onClick={() => copy('link', directLink)} style={{
             padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: copied === 'link' ? '#dcfce7' : 'var(--rb-primary, #059669)',
-            color: copied === 'link' ? '#166534' : '#fff',
+            background: copied === 'link' ? '#dcfce7' : 'var(--rb-primary, #0e7a54)',
+            color: copied === 'link' ? '#0e4d34' : '#fff',
             fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
           }}>
             {copied === 'link' ? <><CheckCircle size={14}/> {t('settings.copied_short')}</> : <><Copy size={14}/> {t('settings.copy_short')}</>}
           </button>
         </div>
-        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>{t('settings.link_share_hint')}</p>
+        <p style={{ color: '#99a09a', fontSize: 12, marginTop: 8 }}>{t('settings.link_share_hint')}</p>
       </div>
 
       <div>
-        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>{t('settings.embed_code')}</h4>
-        <div style={{ padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-          <code style={{ display: 'block', fontSize: 12, color: '#0f172a', marginBottom: 12, fontFamily: 'monospace', wordBreak: 'break-all', lineHeight: 1.6 }}>{embedCode}</code>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: '#0e1f18', marginBottom: 10 }}>{t('settings.embed_code')}</h4>
+        <div style={{ padding: 14, background: '#f6f2e9', borderRadius: 12, border: '1px solid #ded8cb' }}>
+          <code style={{ display: 'block', fontSize: 12, color: '#0e1f18', marginBottom: 12, fontFamily: 'monospace', wordBreak: 'break-all', lineHeight: 1.6 }}>{embedCode}</code>
           <button onClick={() => copy('embed', embedCode)} style={{
             padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: copied === 'embed' ? '#dcfce7' : 'var(--rb-primary, #059669)',
-            color: copied === 'embed' ? '#166534' : '#fff',
+            background: copied === 'embed' ? '#dcfce7' : 'var(--rb-primary, #0e7a54)',
+            color: copied === 'embed' ? '#0e4d34' : '#fff',
             fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
           }}>
             {copied === 'embed' ? <><CheckCircle size={14}/> {t('settings.copied_short')}</> : <><Copy size={14}/> {t('settings.copy_code')}</>}
           </button>
         </div>
-        <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 8 }}>{t('settings.embed_hint')}</p>
+        <p style={{ color: '#99a09a', fontSize: 12, marginTop: 8 }}>{t('settings.embed_hint')}</p>
       </div>
     </div>
   );
@@ -2765,7 +2765,7 @@ function PublicLinkTab() {
 // ═══ APPARENCE ═══
 function AppearanceTab() {
   const { t } = useTranslation();
-  const [form, setForm] = useState({ name: '', revenue_model: 'CA', primary_color: '#059669', accent_color: '#f97316', logo_url: '' });
+  const [form, setForm] = useState({ name: '', revenue_model: 'CA', primary_color: '#0e7a54', accent_color: '#d5541a', logo_url: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -2776,9 +2776,9 @@ function AppearanceTab() {
         if (d && d.tenant) {
           setForm({
             name: d.tenant.name || '',
-            primary_color: d.tenant.primary_color || '#059669',
+            primary_color: d.tenant.primary_color || '#0e7a54',
             revenue_model: d.tenant.revenue_model || 'CA',
-            accent_color: d.tenant.accent_color || '#f97316',
+            accent_color: d.tenant.accent_color || '#d5541a',
             logo_url: d.tenant.logo_url || '',
           });
         }
@@ -2813,18 +2813,18 @@ function AppearanceTab() {
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#99a09a', padding: 40 }}>{t('settings.loading')}</div>;
 
-  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', fontFamily: 'inherit' };
-  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 };
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', fontFamily: 'inherit' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 };
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.tab_appearance')}</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('settings.appearance_desc_full')}</p>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', marginBottom: 8 }}>{t('settings.tab_appearance')}</h3>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>{t('settings.appearance_desc_full')}</p>
 
       {msg && (
-        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#e9f1ea' : '#f7e9e6', color: msg.type === 'success' ? '#157a4c' : '#b23b2e', border: `1px solid ${msg.type === 'success' ? '#cfe6d6' : '#edc4bd'}` }}>
           {msg.text}
         </div>
       )}
@@ -2856,9 +2856,9 @@ function AppearanceTab() {
         <div>
           <label style={labelStyle}>{t('settings.branding_logo')}</label>
           <input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder={t('settings.logo_ph')} style={inputStyle} />
-          <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>{t('settings.logo_hint')}</p>
+          <p style={{ color: '#99a09a', fontSize: 12, marginTop: 6 }}>{t('settings.logo_hint')}</p>
           {form.logo_url && (
-            <div style={{ marginTop: 12, padding: 16, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <div style={{ marginTop: 12, padding: 16, background: '#f6f2e9', borderRadius: 10, border: '1px solid #ded8cb', textAlign: 'center' }}>
               <img src={form.logo_url} alt={t('settings.preview')} style={{ maxHeight: 60, maxWidth: '100%' }} onError={e => { e.target.style.display = 'none'; }} />
             </div>
           )}
@@ -2866,7 +2866,7 @@ function AppearanceTab() {
 
         <button onClick={save} disabled={saving} style={{
           padding: '12px 24px', borderRadius: 10, border: 'none', cursor: saving ? 'wait' : 'pointer',
-          background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 700, fontSize: 14,
+          background: 'var(--rb-primary, #0e7a54)', color: '#fff', fontWeight: 700, fontSize: 14,
           width: 'fit-content', display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <Palette size={16} /> {saving ? t('settings.saving_short') : t('settings.save')}
@@ -2882,7 +2882,7 @@ function ProgramTab() {
   const [data, setData] = useState({ levels: [], threshold_type: 'deals' });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // level id or 'new'
-  const [form, setForm] = useState({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
+  const [form, setForm] = useState({ name: '', icon: '⭐', color: '#99a09a', min_threshold: 0, commission_rate: 10 });
   const [msg, setMsg] = useState(null);
 
   const load = async () => {
@@ -2913,7 +2913,7 @@ function ProgramTab() {
     setForm({
       name: l.name || '',
       icon: l.icon || '⭐',
-      color: l.color || '#94a3b8',
+      color: l.color || '#99a09a',
       min_threshold: parseFloat(l.min_threshold) || 0,
       commission_rate: parseFloat(l.commission_rate) || 10,
     });
@@ -2921,7 +2921,7 @@ function ProgramTab() {
   };
 
   const startNew = () => {
-    setForm({ name: '', icon: '⭐', color: '#94a3b8', min_threshold: 0, commission_rate: 10 });
+    setForm({ name: '', icon: '⭐', color: '#99a09a', min_threshold: 0, commission_rate: 10 });
     setEditing('new');
   };
 
@@ -2974,17 +2974,17 @@ function ProgramTab() {
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#99a09a', padding: 40 }}>{t('settings.loading')}</div>;
 
   const isDeal = data.threshold_type === 'deals';
   const unitLabel = isDeal ? t('programme.unit_deals') : t('programme.unit_volume');
   const thresholdInputLabel = isDeal ? t('programme.threshold_deals') : t('programme.threshold_volume');
 
-  const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' };
-  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 11, marginBottom: 4 };
+  const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 11, marginBottom: 4 };
 
   const formBlock = (
-    <div style={{ padding: 16, background: '#fffbeb', borderRadius: 12, border: '2px dashed #fbbf24', marginBottom: 8 }}>
+    <div style={{ padding: 16, background: '#f6efda', borderRadius: 12, border: '2px dashed #fbbf24', marginBottom: 8 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 60px', gap: 10, marginBottom: 10 }}>
         <div>
           <label style={labelStyle}>{t('programme.level_name')}</label>
@@ -3010,35 +3010,35 @@ function ProgramTab() {
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.save')}</button>
-        <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
+        <button onClick={save} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--rb-primary, #0e7a54)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.save')}</button>
+        <button onClick={() => setEditing(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #ded8cb', background: '#fff', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('settings.cancel')}</button>
       </div>
     </div>
   );
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('programme.title_full')}</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('programme.subtitle_full')}</p>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', marginBottom: 8 }}>{t('programme.title_full')}</h3>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>{t('programme.subtitle_full')}</p>
 
       {msg && (
-        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#e9f1ea' : '#f7e9e6', color: msg.type === 'success' ? '#157a4c' : '#b23b2e', border: `1px solid ${msg.type === 'success' ? '#cfe6d6' : '#edc4bd'}` }}>
           {msg.text}
         </div>
       )}
 
       {/* Threshold type */}
       <div style={{ marginBottom: 28 }}>
-        <label style={{ display: 'block', fontWeight: 600, color: '#0f172a', fontSize: 13, marginBottom: 10 }}>{t('programme.crit_title')}</label>
+        <label style={{ display: 'block', fontWeight: 600, color: '#0e1f18', fontSize: 13, marginBottom: 10 }}>{t('programme.crit_title')}</label>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setType('deals')} style={{
-            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (isDeal ? 'var(--rb-primary, #059669)' : '#e2e8f0'),
-            background: isDeal ? '#f0fdf4' : '#fff', color: isDeal ? '#0f172a' : '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (isDeal ? 'var(--rb-primary, #0e7a54)' : '#ded8cb'),
+            background: isDeal ? '#e9f1ea' : '#fff', color: isDeal ? '#0e1f18' : '#6e756c', fontWeight: 600, fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>{t('programme.crit_deals')}</button>
           <button onClick={() => setType('volume')} style={{
-            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (!isDeal ? 'var(--rb-primary, #059669)' : '#e2e8f0'),
-            background: !isDeal ? '#f0fdf4' : '#fff', color: !isDeal ? '#0f172a' : '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            flex: 1, padding: '12px 16px', borderRadius: 10, border: '2px solid ' + (!isDeal ? 'var(--rb-primary, #0e7a54)' : '#ded8cb'),
+            background: !isDeal ? '#e9f1ea' : '#fff', color: !isDeal ? '#0e1f18' : '#6e756c', fontWeight: 600, fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>{t('programme.crit_volume')}</button>
         </div>
@@ -3049,14 +3049,14 @@ function ProgramTab() {
         {data.levels.map(l => editing === l.id ? (
           <div key={l.id}>{formBlock}</div>
         ) : (
-          <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: (l.color || '#94a3b8') + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{l.icon || '⭐'}</div>
+          <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#f6f2e9', borderRadius: 12, border: '1px solid #ded8cb' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: (l.color || '#99a09a') + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{l.icon || '⭐'}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, color: l.color || '#0f172a', fontSize: 15 }}>{l.name}</div>
-              <div style={{ color: '#64748b', fontSize: 12 }}>{t('programme.level_desc', { min: parseFloat(l.min_threshold), unit: unitLabel, rate: parseFloat(l.commission_rate) })}</div>
+              <div style={{ fontWeight: 700, color: l.color || '#0e1f18', fontSize: 15 }}>{l.name}</div>
+              <div style={{ color: '#6e756c', fontSize: 12 }}>{t('programme.level_desc', { min: parseFloat(l.min_threshold), unit: unitLabel, rate: parseFloat(l.commission_rate) })}</div>
             </div>
-            <button onClick={() => startEdit(l)} title={t('common.edit')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef2ff', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#6366f1" /></button>
-            <button onClick={() => del(l.id)} title={t('common.delete')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#fef2f2', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
+            <button onClick={() => startEdit(l)} title={t('common.edit')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#eef1ea', cursor: 'pointer', display: 'flex' }}><Edit2 size={14} color="#0e7a54" /></button>
+            <button onClick={() => del(l.id)} title={t('common.delete')} style={{ padding: 8, borderRadius: 8, border: 'none', background: '#f7e9e6', cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#b23b2e" /></button>
           </div>
         ))}
         {editing === 'new' && formBlock}
@@ -3066,14 +3066,14 @@ function ProgramTab() {
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button onClick={startNew} disabled={editing !== null} style={{
           padding: '10px 18px', borderRadius: 10, border: 'none',
-          background: editing !== null ? '#e2e8f0' : 'var(--rb-primary, #059669)',
-          color: editing !== null ? '#94a3b8' : '#fff',
+          background: editing !== null ? '#ded8cb' : 'var(--rb-primary, #0e7a54)',
+          color: editing !== null ? '#99a09a' : '#fff',
           fontWeight: 600, fontSize: 13, cursor: editing !== null ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', gap: 6,
         }}><Plus size={14} /> {t('programme.add_level')}</button>
         <button onClick={reset} style={{
-          padding: '10px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
-          background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+          padding: '10px 18px', borderRadius: 10, border: '1px solid #ded8cb',
+          background: '#fff', color: '#6e756c', fontWeight: 600, fontSize: 13, cursor: 'pointer',
         }}>{t('programme.reset_defaults')}</button>
       </div>
     </div>
@@ -3190,17 +3190,17 @@ function CommissionTab() {
     setSavingPayoutCadence(false);
   };
 
-  if (loading) return <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>{t('settings.loading')}</div>;
+  if (loading) return <div style={{ textAlign: 'center', color: '#99a09a', padding: 40 }}>{t('settings.loading')}</div>;
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('settings.commission.title', 'Commission')}</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', marginBottom: 8 }}>{t('settings.commission.title', 'Commission')}</h3>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>
         {t('settings.commission.subtitle', 'Configurez la facturation récurrente et le déclenchement des renouvellements.')}
       </p>
 
       {msg && (
-        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#f0fdf4' : '#fef2f2', color: msg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${msg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500, background: msg.type === 'success' ? '#e9f1ea' : '#f7e9e6', color: msg.type === 'success' ? '#157a4c' : '#b23b2e', border: `1px solid ${msg.type === 'success' ? '#cfe6d6' : '#edc4bd'}` }}>
           {msg.text}
         </div>
       )}
@@ -3211,11 +3211,11 @@ function CommissionTab() {
           de récurrence, pas de longévité). Le mode forfait_tjm masque
           automatiquement le toggle "facturation récurrente" + le
           backend force recurring_billing_enabled=false. */}
-      <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
-        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+      <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #ded8cb', background: '#fff' }}>
+        <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, marginBottom: 4 }}>
           {t('settings.commission.business_model_title', 'Modèle commercial')}
         </div>
-        <div style={{ color: '#64748b', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
+        <div style={{ color: '#6e756c', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
           {t('settings.commission.business_model_desc', 'Définit comment vos partenaires sont rémunérés. MRR = commission récurrente sur revenu mensuel. Hybride = MRR + setup one-shot. Forfait/TJM = commission unique au gain (pas de récurrence).')}
         </div>
         {[
@@ -3225,7 +3225,7 @@ function CommissionTab() {
         ].map(opt => {
           const active = businessModel === opt.id;
           return (
-            <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingBusinessModel ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
+            <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingBusinessModel ? 'wait' : 'pointer', background: active ? '#eef1ea' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
               <input
                 type="radio"
                 name="business-model"
@@ -3236,7 +3236,7 @@ function CommissionTab() {
                 style={{ marginTop: 3, cursor: savingBusinessModel ? 'wait' : 'pointer' }}
               />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
+                <div style={{ fontWeight: 600, color: active ? '#0e7a54' : '#0e1f18', fontSize: 13 }}>{opt.label}</div>
               </div>
             </label>
           );
@@ -3249,20 +3249,20 @@ function CommissionTab() {
           = FALSE à la bascule vers forfait_tjm pour éviter un état
           incohérent. */}
       {businessModel !== 'forfait_tjm' && (
-        <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
+        <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #ded8cb', background: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+              <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, marginBottom: 4 }}>
                 {t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
               </div>
-              <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
+              <div style={{ color: '#6e756c', fontSize: 12, lineHeight: 1.5 }}>
                 {t('programme.recurring_billing_desc', 'Permet de définir des commissions à vie ou sur une durée limitée pour les deals récurrents. Sans cette option, les commissions sont calculées une seule fois au moment du gain.')}
               </div>
             </div>
             <button
               onClick={toggleEnabled}
               disabled={savingEnabled}
-              style={{ background: 'none', border: 'none', cursor: savingEnabled ? 'wait' : 'pointer', color: enabled ? '#059669' : '#cbd5e1', flexShrink: 0, padding: 4 }}
+              style={{ background: 'none', border: 'none', cursor: savingEnabled ? 'wait' : 'pointer', color: enabled ? '#0e7a54' : '#cfc8b8', flexShrink: 0, padding: 4 }}
               aria-label={t('programme.recurring_billing_title', 'Activer la facturation récurrente')}
             >
               {enabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
@@ -3275,13 +3275,13 @@ function CommissionTab() {
           switch is ON. The cadence selector lives in the same gated
           branch: it only makes sense once recurring billing is on. */}
       {!enabled ? (
-        <div style={{ padding: '14px 16px', borderRadius: 10, background: '#f8fafc', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: 13 }}>
+        <div style={{ padding: '14px 16px', borderRadius: 10, background: '#f6f2e9', border: '1px dashed #cfc8b8', color: '#6e756c', fontSize: 13 }}>
           {t('settings.commission.activate_first', 'Activez d\'abord la facturation récurrente pour configurer le déclenchement des renouvellements.')}
         </div>
       ) : (
         <>
-          <div style={{ padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 12 }}>
+          <div style={{ padding: 16, borderRadius: 12, border: '1px solid #ded8cb', background: '#fff' }}>
+            <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, marginBottom: 12 }}>
               {t('settings.commission.trigger_title', 'Déclenchement du renouvellement')}
             </div>
             {[
@@ -3298,7 +3298,7 @@ function CommissionTab() {
             ].map(opt => {
               const active = trigger === opt.id;
               return (
-                <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingTrigger ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
+                <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingTrigger ? 'wait' : 'pointer', background: active ? '#eef1ea' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
                   <input
                     type="radio"
                     name="renewal-trigger"
@@ -3309,19 +3309,19 @@ function CommissionTab() {
                     style={{ marginTop: 3, cursor: savingTrigger ? 'wait' : 'pointer' }}
                   />
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
-                    <div style={{ color: '#64748b', fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>{opt.desc}</div>
+                    <div style={{ fontWeight: 600, color: active ? '#0e7a54' : '#0e1f18', fontSize: 13 }}>{opt.label}</div>
+                    <div style={{ color: '#6e756c', fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>{opt.desc}</div>
                   </div>
                 </label>
               );
             })}
           </div>
 
-          <div style={{ padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', marginTop: 16 }}>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14, marginBottom: 4 }}>
+          <div style={{ padding: 16, borderRadius: 12, border: '1px solid #ded8cb', background: '#fff', marginTop: 16 }}>
+            <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 14, marginBottom: 4 }}>
               {t('settings.commission.payout_cadence_title', 'Cadence de paiement groupé')}
             </div>
-            <div style={{ color: '#64748b', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
+            <div style={{ color: '#6e756c', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
               {t('settings.commission.payout_cadence_desc', 'Définit la fréquence à laquelle vous payez vos partenaires. La cadence unitary conserve le comportement actuel.')}
             </div>
             {[
@@ -3331,7 +3331,7 @@ function CommissionTab() {
             ].map(opt => {
               const active = payoutCadence === opt.id;
               return (
-                <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingPayoutCadence ? 'wait' : 'pointer', background: active ? '#eef2ff' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
+                <label key={opt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 10, cursor: savingPayoutCadence ? 'wait' : 'pointer', background: active ? '#eef1ea' : 'transparent', border: '1px solid ' + (active ? '#c7d2fe' : 'transparent'), marginBottom: 6 }}>
                   <input
                     type="radio"
                     name="payout-cadence"
@@ -3342,7 +3342,7 @@ function CommissionTab() {
                     style={{ marginTop: 3, cursor: savingPayoutCadence ? 'wait' : 'pointer' }}
                   />
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, color: active ? '#6366f1' : '#0f172a', fontSize: 13 }}>{opt.label}</div>
+                    <div style={{ fontWeight: 600, color: active ? '#0e7a54' : '#0e1f18', fontSize: 13 }}>{opt.label}</div>
                   </div>
                 </label>
               );
@@ -3420,12 +3420,12 @@ function NotificationsTab({ forCommercial = false } = {}) {
     setSaving(false);
   };
 
-  if (loading) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+  if (loading) return <div style={{ padding: 24, color: '#99a09a' }}>…</div>;
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>{t('notifications.preferences')}</h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>{t('notifications.preferences_desc')}</p>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', marginBottom: 6 }}>{t('notifications.preferences')}</h2>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>{t('notifications.preferences_desc')}</p>
 
       {(() => {
         // Index prefs by event_type so the group lookups are O(1).
@@ -3448,15 +3448,15 @@ function NotificationsTab({ forCommercial = false } = {}) {
         if (orphans.length) grouped.push({ id: 'other', rows: orphans });
 
         const renderRow = (p) => (
-          <div key={p.event_type} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
-            <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>{t('notifications.event_' + p.event_type, p.event_type)}</div>
+          <div key={p.event_type} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', padding: '14px 16px', borderTop: '1px solid #ece7db', alignItems: 'center' }}>
+            <div style={{ fontSize: 14, color: '#0e1f18', fontWeight: 500 }}>{t('notifications.event_' + p.event_type, p.event_type)}</div>
             <div style={{ textAlign: 'center' }}>
-              <button onClick={() => toggle(p.event_type, 'in_app')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.in_app ? '#059669' : '#cbd5e1' }}>
+              <button onClick={() => toggle(p.event_type, 'in_app')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.in_app ? '#0e7a54' : '#cfc8b8' }}>
                 {p.in_app ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
               </button>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <button onClick={() => toggle(p.event_type, 'email')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.email ? '#059669' : '#cbd5e1' }}>
+              <button onClick={() => toggle(p.event_type, 'email')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.email ? '#0e7a54' : '#cfc8b8' }}>
                 {p.email ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
               </button>
             </div>
@@ -3465,8 +3465,8 @@ function NotificationsTab({ forCommercial = false } = {}) {
                 onClick={() => openPreview(p.event_type)}
                 style={{
                   padding: '6px 12px', borderRadius: 8,
-                  border: '1px solid #e2e8f0', background: '#fff',
-                  color: '#475569', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                  border: '1px solid #ded8cb', background: '#fff',
+                  color: '#33433b', fontWeight: 600, fontSize: 12, cursor: 'pointer',
                 }}
               >
                 {t('notifications.preview', 'Aperçu')}
@@ -3478,8 +3478,8 @@ function NotificationsTab({ forCommercial = false } = {}) {
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             {grouped.map((g, gi) => (
-              <div key={g.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>
+              <div key={g.id} style={{ border: '1px solid #ded8cb', borderRadius: 12, overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', background: '#f6f2e9', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 1 }}>
                   <div>{t('notifications.group_' + g.id, g.id)}</div>
                   {gi === 0 ? (
                     <>
@@ -3503,12 +3503,12 @@ function NotificationsTab({ forCommercial = false } = {}) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
         <button onClick={save} disabled={saving} style={{
           padding: '10px 20px', borderRadius: 10, border: 'none',
-          background: 'var(--rb-primary, #059669)', color: '#fff',
+          background: 'var(--rb-primary, #0e7a54)', color: '#fff',
           fontWeight: 600, fontSize: 14, cursor: 'pointer',
           opacity: saving ? 0.7 : 1,
         }}>{saving ? t('common.saving') : t('common.save')}</button>
         {savedAt > 0 && Date.now() - savedAt < 3000 && (
-          <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ color: '#157a4c', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
             <CheckCircle size={14} /> {t('common.saved')}
           </span>
         )}
@@ -3540,23 +3540,23 @@ function EmailPreviewModal({ preview, onClose }) {
           boxShadow: '0 25px 80px rgba(0,0,0,0.25)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #ded8cb' }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>Aperçu email</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginTop: 2 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>Aperçu email</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', marginTop: 2 }}>
               {preview.loading ? '…' : (preview.subject || preview.error || 'Aperçu')}
             </div>
           </div>
           <button
             onClick={onClose}
-            style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: 18 }}
+            style={{ background: '#ece7db', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#33433b', fontSize: 18 }}
           >×</button>
         </div>
-        <div style={{ flex: 1, overflow: 'hidden', padding: 12, background: '#f1f5f9' }}>
+        <div style={{ flex: 1, overflow: 'hidden', padding: 12, background: '#ece7db' }}>
           {preview.loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement…</div>
+            <div style={{ padding: 40, textAlign: 'center', color: '#99a09a' }}>Chargement…</div>
           ) : preview.error ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#dc2626' }}>{preview.error}</div>
+            <div style={{ padding: 40, textAlign: 'center', color: '#b23b2e' }}>{preview.error}</div>
           ) : (
             <iframe
               title="Aperçu email"
@@ -3599,26 +3599,26 @@ function TrackingFeaturesTab() {
     setSaving(false);
   };
 
-  if (loading || !flags) return <div style={{ color: '#94a3b8' }}>…</div>;
+  if (loading || !flags) return <div style={{ color: '#99a09a' }}>…</div>;
 
   // One feature card, soft-green icon tile on the left, brand-green
   // toggle on the right. Same white-card styling as other settings
   // tabs (Profile, Integrations, etc.).
   const FeatureCard = ({ icon: Icon, title, desc, on, onChange }) => (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+    <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 14, padding: 20, marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: on ? '#f0fdf4' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Icon size={18} color={on ? '#059669' : '#64748b'} />
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: on ? '#e9f1ea' : '#ece7db', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon size={18} color={on ? '#0e7a54' : '#6e756c'} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{title}</div>
-          <div style={{ fontSize: 13, color: '#64748b', marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18' }}>{title}</div>
+          <div style={{ fontSize: 13, color: '#6e756c', marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
         </div>
         <button
           onClick={() => onChange(!on)}
           disabled={saving}
           aria-pressed={on}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: on ? '#059669' : '#cbd5e1', padding: 0, lineHeight: 0 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: on ? '#0e7a54' : '#cfc8b8', padding: 0, lineHeight: 0 }}
         >
           {on ? <ToggleRight size={34} /> : <ToggleLeft size={34} />}
         </button>
@@ -3628,8 +3628,8 @@ function TrackingFeaturesTab() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>{t('features.tracking_title')}</h3>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', marginBottom: 6 }}>{t('features.tracking_title')}</h3>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>
         {t('features.tracking_subtitle')}
       </p>
 
@@ -3722,19 +3722,19 @@ function PartnerCategoriesTab() {
     } catch (err) { setErr(err.message); reload(); }
   };
 
-  if (loading) return <div style={{ color: '#94a3b8' }}>…</div>;
+  if (loading) return <div style={{ color: '#99a09a' }}>…</div>;
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 }}>{t('partner_category.title')}</h3>
-        <button onClick={add} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0e1f18', margin: 0 }}>{t('partner_category.title')}</h3>
+        <button onClick={add} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
           + {t('partner_category.add')}
         </button>
       </div>
-      {err && <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>{err}</div>}
+      {err && <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 8, background: '#f7e9e6', color: '#b23b2e', fontSize: 13 }}>{err}</div>}
 
-      <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ border: '1px solid #ded8cb', borderRadius: 12, overflow: 'hidden' }}>
         {categories.map(c => (
           <div
             key={c.id}
@@ -3747,8 +3747,8 @@ function PartnerCategoriesTab() {
               gridTemplateColumns: '32px 1fr 2fr 80px 80px',
               gap: 10, alignItems: 'center',
               padding: '12px 14px',
-              borderTop: '1px solid #f1f5f9',
-              background: draggingId === c.id ? '#f8fafc' : '#fff',
+              borderTop: '1px solid #ece7db',
+              background: draggingId === c.id ? '#f6f2e9' : '#fff',
               cursor: 'move',
             }}
           >
@@ -3756,24 +3756,24 @@ function PartnerCategoriesTab() {
               type="color"
               value={c.color || '#6B7280'}
               onChange={e => updateInline(c.id, { color: e.target.value })}
-              style={{ width: 28, height: 28, padding: 0, border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', background: 'transparent' }}
+              style={{ width: 28, height: 28, padding: 0, border: '1px solid #ded8cb', borderRadius: 8, cursor: 'pointer', background: 'transparent' }}
               title={t('partner_category.color')}
             />
             <input
               defaultValue={c.name}
               onBlur={e => e.target.value.trim() && e.target.value !== c.name && updateInline(c.id, { name: e.target.value.trim() })}
-              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#0f172a' }}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ded8cb', fontSize: 13, fontWeight: 600, color: '#0e1f18' }}
             />
             <input
               defaultValue={c.description || ''}
               placeholder={t('partner_category.description')}
               onBlur={e => e.target.value !== (c.description || '') && updateInline(c.id, { description: e.target.value })}
-              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12, color: '#475569' }}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ded8cb', fontSize: 12, color: '#33433b' }}
             />
             <button
               onClick={() => !c.is_default && setDefault(c.id)}
               title={c.is_default ? t('partner_category.default') : t('partner_category.set_default')}
-              style={{ background: 'none', border: 'none', cursor: c.is_default ? 'default' : 'pointer', color: c.is_default ? '#f59e0b' : '#cbd5e1', fontSize: 22, lineHeight: 1, padding: 0 }}
+              style={{ background: 'none', border: 'none', cursor: c.is_default ? 'default' : 'pointer', color: c.is_default ? '#b4791f' : '#cfc8b8', fontSize: 22, lineHeight: 1, padding: 0 }}
             >
               {c.is_default ? '★' : '☆'}
             </button>
@@ -3790,7 +3790,7 @@ function PartnerCategoriesTab() {
               style={{
                 background: 'none', border: 'none',
                 cursor: (c.is_default || c.partners_count > 0) ? 'not-allowed' : 'pointer',
-                color: (c.is_default || c.partners_count > 0) ? '#cbd5e1' : '#dc2626',
+                color: (c.is_default || c.partners_count > 0) ? '#cfc8b8' : '#b23b2e',
                 fontSize: 14, fontWeight: 600,
               }}
             >
@@ -3837,29 +3837,29 @@ function PipedrivePushErrorsModal({ errors, onClose, t }) {
           boxShadow: '0 25px 80px rgba(15,23,42,0.25)',
         }}
       >
-        <div style={{ padding: '20px 24px 12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+        <div style={{ padding: '20px 24px 12px', borderBottom: '1px solid #ece7db', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0e1f18' }}>
               {t('pipedrive.push_errors_title', 'Détail des échecs Pipedrive')}
             </h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6e756c' }}>
               {t('pipedrive.push_errors_subtitle', { count: list.length, defaultValue: '{{count}} referral(s) en échec' })}
             </p>
           </div>
           <button
             type="button" onClick={onClose}
-            style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ background: '#ece7db', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >×</button>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 24px 24px' }}>
           {list.length === 0 ? (
-            <div style={{ padding: 16, color: '#64748b', fontSize: 13, textAlign: 'center' }}>
+            <div style={{ padding: 16, color: '#6e756c', fontSize: 13, textAlign: 'center' }}>
               {t('pipedrive.push_errors_empty', 'Aucune erreur à afficher.')}
             </div>
           ) : list.map((e, i) => (
             <div key={e.referralId || i} style={{
               padding: '12px 14px', marginBottom: 10,
-              border: '1px solid #fecaca', background: '#fef2f2',
+              border: '1px solid #edc4bd', background: '#f7e9e6',
               borderRadius: 10, color: '#7f1d1d',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 6 }}>
@@ -3868,7 +3868,7 @@ function PipedrivePushErrorsModal({ errors, onClose, t }) {
                 </span>
                 <span style={{
                   fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
-                  background: '#fff', border: '1px solid #fecaca', color: '#b91c1c',
+                  background: '#fff', border: '1px solid #edc4bd', color: '#8f2e24',
                 }}>
                   {STEP_LABEL[e.step] || e.step || t('pipedrive.step_unknown', 'Inconnu')}
                   {e.pipedrive_status ? ` · ${e.pipedrive_status}` : ''}
@@ -3884,7 +3884,7 @@ function PipedrivePushErrorsModal({ errors, onClose, t }) {
                   </summary>
                   <pre style={{
                     margin: '6px 0 0', padding: 10, background: '#fff',
-                    border: '1px solid #fecaca', borderRadius: 6,
+                    border: '1px solid #edc4bd', borderRadius: 6,
                     fontSize: 11, color: '#7f1d1d',
                     whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                     maxHeight: 160, overflowY: 'auto',
@@ -3932,9 +3932,9 @@ function NotionConnectModal({ onClose, onConnected }) {
     } finally { setBusy(false); }
   };
 
-  const inp = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontFamily: 'ui-monospace, monospace', boxSizing: 'border-box' };
-  const lbl = { display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 4, marginTop: 12 };
-  const hint = { fontSize: 11, color: '#94a3b8', marginTop: 4 };
+  const inp = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 13, fontFamily: 'ui-monospace, monospace', boxSizing: 'border-box' };
+  const lbl = { display: 'block', fontSize: 12, fontWeight: 600, color: '#6e756c', marginBottom: 4, marginTop: 12 };
+  const hint = { fontSize: 11, color: '#99a09a', marginTop: 4 };
 
   const canSubmit = form.token.trim() && form.dbTransactions.trim();
 
@@ -3942,18 +3942,18 @@ function NotionConnectModal({ onClose, onConnected }) {
     <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>{t('notion.title')} — {t('notion.connect')}</h3>
-          <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0e1f18' }}>{t('notion.title')} — {t('notion.connect')}</h3>
+          <button type="button" onClick={onClose} style={{ background: '#ece7db', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <X size={16}/>
           </button>
         </div>
 
-        <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, marginBottom: 12, border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+        <div style={{ background: '#f6f2e9', borderRadius: 10, padding: 14, marginBottom: 12, border: '1px solid #ded8cb' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#0e1f18', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
             {t('notion.setup_instructions')}
           </div>
-          <ol style={{ margin: 0, paddingLeft: 20, color: '#475569', fontSize: 12, lineHeight: 1.7 }}>
-            <li>{t('notion.step1')} — <a href="https://www.notion.so/my-integrations" target="_blank" rel="noreferrer" style={{ color: '#059669', fontWeight: 600 }}>notion.so/my-integrations</a></li>
+          <ol style={{ margin: 0, paddingLeft: 20, color: '#33433b', fontSize: 12, lineHeight: 1.7 }}>
+            <li>{t('notion.step1')} — <a href="https://www.notion.so/my-integrations" target="_blank" rel="noreferrer" style={{ color: '#0e7a54', fontWeight: 600 }}>notion.so/my-integrations</a></li>
             <li>{t('notion.step2')}</li>
             <li>{t('notion.step3')}</li>
             <li>{t('notion.step4')}</li>
@@ -3983,29 +3983,29 @@ function NotionConnectModal({ onClose, onConnected }) {
           style={{ ...inp, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
         />
 
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginTop: 18, marginBottom: 4 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#0e1f18', marginTop: 18, marginBottom: 4 }}>
           Configurez vos bases de données
         </div>
-        <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>
+        <div style={{ fontSize: 11, color: '#99a09a', marginBottom: 4 }}>
           L'ID se trouve dans l'URL de votre base Notion (les 32 caractères après le dernier /).
         </div>
 
         <label style={lbl}>Base Transactions (Deals) *</label>
         <input value={form.dbTransactions} onChange={e => setForm(f => ({ ...f, dbTransactions: e.target.value }))} placeholder="32-char hex" style={inp}/>
 
-        <label style={lbl}>Base Contacts <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optionnel)</span></label>
+        <label style={lbl}>Base Contacts <span style={{ fontWeight: 400, color: '#99a09a' }}>(optionnel)</span></label>
         <input value={form.dbContacts} onChange={e => setForm(f => ({ ...f, dbContacts: e.target.value }))} placeholder="32-char hex" style={inp}/>
 
-        <label style={lbl}>Base Entreprises <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optionnel)</span></label>
+        <label style={lbl}>Base Entreprises <span style={{ fontWeight: 400, color: '#99a09a' }}>(optionnel)</span></label>
         <input value={form.dbCompanies} onChange={e => setForm(f => ({ ...f, dbCompanies: e.target.value }))} placeholder="32-char hex" style={inp}/>
 
-        {err && <div style={{ marginTop: 14, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12 }}>{err}</div>}
+        {err && <div style={{ marginTop: 14, background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', padding: '8px 12px', borderRadius: 8, fontSize: 12 }}>{err}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
-          <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #ded8cb', background: '#fff', color: '#0e1f18', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {t('common.cancel') || 'Annuler'}
           </button>
-          <button type="button" onClick={submit} disabled={busy || !canSubmit} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: busy || !canSubmit ? 0.6 : 1 }}>
+          <button type="button" onClick={submit} disabled={busy || !canSubmit} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#0e7a54', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: busy || !canSubmit ? 0.6 : 1 }}>
             {busy ? '…' : t('notion.connect')}
           </button>
         </div>
@@ -4132,7 +4132,7 @@ function NotionMappingModal({ onClose }) {
     finally { setSaving(false); }
   };
 
-  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const inp = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
   const currentTab = TABS.find(t => t.id === active);
   const currentProps = propsByType[active] || [];
   const currentDbConfigured = !!status.databases?.[active];
@@ -4141,14 +4141,14 @@ function NotionMappingModal({ onClose }) {
     <div onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>{t('notion.title')} — {t('notion.field_mapping')}</h3>
-          <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0e1f18' }}>{t('notion.title')} — {t('notion.field_mapping')}</h3>
+          <button type="button" onClick={onClose} style={{ background: '#ece7db', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <X size={16}/>
           </button>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 4, background: '#ece7db', borderRadius: 10, padding: 3, marginBottom: 14 }}>
           {TABS.map(tab => {
             const configured = !!status.databases?.[tab.id];
             return (
@@ -4162,7 +4162,7 @@ function NotionMappingModal({ onClose }) {
                   cursor: configured ? 'pointer' : 'not-allowed',
                   fontSize: 12, fontWeight: 600,
                   background: active === tab.id ? '#fff' : 'transparent',
-                  color: !configured ? '#cbd5e1' : active === tab.id ? '#0f172a' : '#64748b',
+                  color: !configured ? '#cfc8b8' : active === tab.id ? '#0e1f18' : '#6e756c',
                   boxShadow: active === tab.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                 }}
               >
@@ -4173,16 +4173,16 @@ function NotionMappingModal({ onClose }) {
         </div>
 
         {loading ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8' }}>…</div>
+          <div style={{ padding: 24, textAlign: 'center', color: '#99a09a' }}>…</div>
         ) : !currentDbConfigured ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+          <div style={{ padding: 24, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
             Base non configurée. Ajoutez l'ID dans la connexion Notion pour activer ce mapping.
           </div>
         ) : (
           <>
             <table style={{ width: '100%', marginBottom: 16 }}>
               <thead>
-                <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+                <tr style={{ fontSize: 11, color: '#6e756c', textAlign: 'left' }}>
                   <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.refboost_field')}</th>
                   <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.notion_property')}</th>
                 </tr>
@@ -4190,7 +4190,7 @@ function NotionMappingModal({ onClose }) {
               <tbody>
                 {currentTab.fields.map(f => (
                   <tr key={f.key}>
-                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{f.label}</td>
+                    <td style={{ padding: '4px 8px', fontSize: 13, color: '#2b3a32' }}>{f.label}</td>
                     <td style={{ padding: '4px 8px' }}>
                       <select
                         value={mappings[active]?.[f.key] || ''}
@@ -4222,21 +4222,21 @@ function NotionMappingModal({ onClose }) {
               const statusProp = currentProps.find(p => p.name === statusPropName);
               const options = Array.isArray(statusProp?.options) ? statusProp.options : [];
               return (
-                <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid #e2e8f0' }}>
-                  <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{t('notion.status_mapping_title')}</h4>
-                  <p style={{ margin: '0 0 12px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>{t('notion.status_mapping_hint')}</p>
+                <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid #ded8cb' }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#0e1f18' }}>{t('notion.status_mapping_title')}</h4>
+                  <p style={{ margin: '0 0 12px', fontSize: 12, color: '#6e756c', lineHeight: 1.55 }}>{t('notion.status_mapping_hint')}</p>
                   {!statusPropName ? (
-                    <div style={{ padding: 12, background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', borderRadius: 8, fontSize: 12 }}>
+                    <div style={{ padding: 12, background: '#f3ead0', border: '1px solid #ecd9a0', color: '#7a4a16', borderRadius: 8, fontSize: 12 }}>
                       {t('notion.status_mapping_pick_property')}
                     </div>
                   ) : !options.length ? (
-                    <div style={{ padding: 12, background: '#f1f5f9', color: '#475569', borderRadius: 8, fontSize: 12 }}>
+                    <div style={{ padding: 12, background: '#ece7db', color: '#33433b', borderRadius: 8, fontSize: 12 }}>
                       {t('notion.status_mapping_no_options')}
                     </div>
                   ) : (
                     <table style={{ width: '100%' }}>
                       <thead>
-                        <tr style={{ fontSize: 11, color: '#64748b', textAlign: 'left' }}>
+                        <tr style={{ fontSize: 11, color: '#6e756c', textAlign: 'left' }}>
                           <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.status_col_refboost')}</th>
                           <th style={{ padding: '6px 8px', fontWeight: 600 }}>{t('notion.status_col_notion')}</th>
                         </tr>
@@ -4244,7 +4244,7 @@ function NotionMappingModal({ onClose }) {
                       <tbody>
                         {REFBOOST_STATUSES.map(s => (
                           <tr key={s.slug}>
-                            <td style={{ padding: '4px 8px', fontSize: 13, color: '#334155' }}>{t(s.labelKey) || s.fallback}</td>
+                            <td style={{ padding: '4px 8px', fontSize: 13, color: '#2b3a32' }}>{t(s.labelKey) || s.fallback}</td>
                             <td style={{ padding: '4px 8px' }}>
                               <select
                                 value={statusMapping[s.slug] || ''}
@@ -4268,18 +4268,18 @@ function NotionMappingModal({ onClose }) {
           </>
         )}
 
-        {err && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+        {err && <div style={{ background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12 }}>{err}</div>}
         {savedOk && (
-          <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', color: '#047857', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, fontWeight: 600 }}>
+          <div style={{ background: '#e9f1ea', border: '1px solid #6ee7b7', color: '#0b5e40', padding: '8px 12px', borderRadius: 8, fontSize: 12, marginBottom: 12, fontWeight: 600 }}>
             {t('notion.mapping_saved')}
           </div>
         )}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: 10, border: '1.5px solid #ded8cb', background: '#fff', color: '#0e1f18', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {t('common.close') || 'Fermer'}
           </button>
-          <button type="button" onClick={save} disabled={saving || savedOk} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#059669', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving || savedOk ? 0.6 : 1 }}>
+          <button type="button" onClick={save} disabled={saving || savedOk} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#0e7a54', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving || savedOk ? 0.6 : 1 }}>
             {saving ? '…' : savedOk ? (t('notion.mapping_saved_short') || 'OK') : (t('common.save') || 'Enregistrer')}
           </button>
         </div>
@@ -4351,33 +4351,33 @@ function PartnerNotificationsTab() {
     setSaving(false);
   };
 
-  if (!prefs) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+  if (!prefs) return <div style={{ padding: 24, color: '#99a09a' }}>…</div>;
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', marginBottom: 6 }}>
         {t('partner_notifications.title', 'Notifications')}
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>
         {t('partner_notifications.subtitle', 'Choisissez les emails que vous souhaitez recevoir. Les notifications dans l\'application restent toujours actives.')}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         {PARTNER_NOTIF_GROUPS.map((g, gi) => (
-          <div key={g.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', background: '#f8fafc', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>
+          <div key={g.id} style={{ border: '1px solid #ded8cb', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', background: '#f6f2e9', padding: '12px 16px', fontSize: 11, fontWeight: 700, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 1 }}>
               <div>{t('partner_notifications.group_' + g.id, g.id.replace('_', ' '))}</div>
               <div style={{ textAlign: 'center' }}>{gi === 0 ? t('notifications.email', 'E-mail') : ''}</div>
             </div>
             {g.keys.map(row => (
-              <div key={row.key} style={{ display: 'grid', gridTemplateColumns: '1fr 90px', padding: '14px 16px', borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
-                <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 500 }}>
+              <div key={row.key} style={{ display: 'grid', gridTemplateColumns: '1fr 90px', padding: '14px 16px', borderTop: '1px solid #ece7db', alignItems: 'center' }}>
+                <div style={{ fontSize: 14, color: '#0e1f18', fontWeight: 500 }}>
                   {t(row.label, row.defaultLabel)}
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <button
                     onClick={() => toggle(row.key)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: prefs[row.key] ? '#059669' : '#cbd5e1' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: prefs[row.key] ? '#0e7a54' : '#cfc8b8' }}
                   >
                     {prefs[row.key] ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
                   </button>
@@ -4391,11 +4391,11 @@ function PartnerNotificationsTab() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
         <button onClick={save} disabled={saving} style={{
           padding: '10px 20px', borderRadius: 10, border: 'none',
-          background: 'var(--rb-primary, #059669)', color: '#fff',
+          background: 'var(--rb-primary, #0e7a54)', color: '#fff',
           fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1,
         }}>{saving ? t('common.saving', 'Enregistrement…') : t('common.save', 'Enregistrer')}</button>
         {savedAt > 0 && Date.now() - savedAt < 3000 && (
-          <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ color: '#157a4c', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
             <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
           </span>
         )}
@@ -4513,30 +4513,30 @@ function PartnerBankInfoTab() {
     setSaving(false);
   };
 
-  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' };
-  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 };
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 };
 
-  if (loading) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+  if (loading) return <div style={{ padding: 24, color: '#99a09a' }}>…</div>;
 
   const hasSaved = !!(saved && saved.iban);
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', marginBottom: 6 }}>
         {t('partnerBankInfo.title', 'Informations bancaires')}
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>
         {t('partnerBankInfo.subtitle', 'Ajoutez vos coordonnées bancaires pour recevoir vos paiements plus rapidement.')}
       </p>
 
       {err && (
-        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontSize: 13 }}>
+        <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, background: '#f7e9e6', color: '#b23b2e', border: '1px solid #edc4bd', fontSize: 13 }}>
           {err}
         </div>
       )}
 
       {!editing && hasSaved ? (
-        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
+        <div style={{ background: '#f6f2e9', border: '1px solid #ded8cb', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
             <Field label={t('partnerBankInfo.account_holder', 'Titulaire du compte')} value={saved.account_holder || '—'} />
             <Field label={t('partnerBankInfo.bank_name', 'Nom de la banque')} value={saved.bank_name || '—'} />
@@ -4560,7 +4560,7 @@ function PartnerBankInfoTab() {
           )}
           <button onClick={() => setEditing(true)} style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10,
-            background: '#fff', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            background: '#fff', border: '1px solid #ded8cb', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: 'pointer',
           }}>
             <Edit2 size={14} /> {t('common.edit', 'Modifier')}
           </button>
@@ -4598,7 +4598,7 @@ function PartnerBankInfoTab() {
             <div>
               <label style={labelStyle}>
                 {t('partnerBankInfo.bank_name', 'Nom de la banque')}
-                <span style={{ color: '#94a3b8', fontWeight: 400, marginLeft: 4 }}>({t('common.optional', 'optionnel')})</span>
+                <span style={{ color: '#99a09a', fontWeight: 400, marginLeft: 4 }}>({t('common.optional', 'optionnel')})</span>
               </label>
               <input
                 value={form.bank_name}
@@ -4609,11 +4609,11 @@ function PartnerBankInfoTab() {
             </div>
           </div>
           {/* ─── VAT section ──────────────────────────────────────── */}
-          <div style={{ marginTop: 16, paddingTop: 20, borderTop: '1px solid #e2e8f0' }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 12px' }}>
+          <div style={{ marginTop: 16, paddingTop: 20, borderTop: '1px solid #ded8cb' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', margin: '0 0 12px' }}>
               {t('settings.bankInfo.tax.title')}
             </h3>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#334155', cursor: 'pointer', marginBottom: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#2b3a32', cursor: 'pointer', marginBottom: 12 }}>
               <input
                 type="checkbox"
                 checked={form.tax_subject}
@@ -4657,7 +4657,7 @@ function PartnerBankInfoTab() {
                 <div style={{ marginBottom: 12 }}>
                   <label style={labelStyle}>
                     {t('settings.bankInfo.tax.taxIdLabel')}
-                    <span style={{ color: '#94a3b8', fontWeight: 400, marginLeft: 4 }}>({t('common.optional', 'optionnel')})</span>
+                    <span style={{ color: '#99a09a', fontWeight: 400, marginLeft: 4 }}>({t('common.optional', 'optionnel')})</span>
                   </label>
                   <input
                     value={form.tax_id}
@@ -4676,7 +4676,7 @@ function PartnerBankInfoTab() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
             <button onClick={handleSave} disabled={saving} style={{
               padding: '10px 20px', borderRadius: 10, border: 'none',
-              background: 'var(--rb-primary, #059669)', color: '#fff',
+              background: 'var(--rb-primary, #0e7a54)', color: '#fff',
               fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1,
               display: 'inline-flex', alignItems: 'center', gap: 6,
             }}>
@@ -4693,14 +4693,14 @@ function PartnerBankInfoTab() {
                 tax_rate: saved.tax_rate != null ? String(saved.tax_rate) : '',
                 tax_id: saved.tax_id || '',
               }); }} disabled={saving} style={{
-                padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
-                background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                padding: '10px 16px', borderRadius: 10, border: '1px solid #ded8cb',
+                background: '#fff', color: '#6e756c', fontWeight: 600, fontSize: 14, cursor: 'pointer',
               }}>
                 {t('common.cancel', 'Annuler')}
               </button>
             )}
             {savedAt > 0 && Date.now() - savedAt < 3000 && (
-              <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: '#157a4c', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
               </span>
             )}
@@ -4806,21 +4806,21 @@ function PrivacySection({ user }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Shield size={16} color="#6366f1" />
-        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+        <Shield size={16} color="#0e7a54" />
+        <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0e1f18', margin: 0 }}>
           {t('settings.privacy.title', 'Confidentialité')}
         </h4>
       </div>
-      <p style={{ color: '#64748b', fontSize: 13, margin: '0 0 16px', lineHeight: 1.55 }}>
+      <p style={{ color: '#6e756c', fontSize: 13, margin: '0 0 16px', lineHeight: 1.55 }}>
         {t('settings.privacy.subtitle', 'Vos droits RGPD : exportez vos données ou supprimez votre compte à tout moment.')}
       </p>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button onClick={handleExport} disabled={exporting}
-          style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#0f172a', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, opacity: exporting ? 0.6 : 1 }}>
+          style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #ded8cb', background: '#fff', color: '#0e1f18', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, opacity: exporting ? 0.6 : 1 }}>
           <Download size={14} /> {exporting ? t('common.loading', 'Chargement…') : t('settings.privacy.export_cta', 'Exporter mes données')}
         </button>
         <button onClick={() => { setStep(1); setReasonCode(''); setFreeText(''); setConfirmInput(''); setErr(''); }}
-          style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #fecaca', background: '#fff', color: '#dc2626', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          style={{ padding: '9px 16px', borderRadius: 10, border: '1.5px solid #edc4bd', background: '#fff', color: '#b23b2e', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <Trash2 size={14} /> {deleteLabel}
         </button>
       </div>
@@ -4831,31 +4831,31 @@ function PrivacySection({ user }) {
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 520, maxWidth: '100%', padding: 28, boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
             {step === 1 && (
               <>
-                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0e1f18' }}>
                   {t('settings.privacy.feedback_title', 'Nous sommes désolés de vous voir partir')}
                 </h3>
-                <p style={{ margin: '0 0 18px', color: '#475569', fontSize: 14 }}>
+                <p style={{ margin: '0 0 18px', color: '#33433b', fontSize: 14 }}>
                   {t('settings.privacy.feedback_body', 'Pouvez-vous nous dire pourquoi ? Cela nous aide à améliorer RefBoost.')}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
                   {REASONS.map(r => (
-                    <label key={r.code} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid ' + (reasonCode === r.code ? '#0f172a' : '#e2e8f0'), background: reasonCode === r.code ? '#f8fafc' : '#fff', cursor: 'pointer' }}>
+                    <label key={r.code} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1.5px solid ' + (reasonCode === r.code ? '#0e1f18' : '#ded8cb'), background: reasonCode === r.code ? '#f6f2e9' : '#fff', cursor: 'pointer' }}>
                       <input type="radio" name="delete_reason" checked={reasonCode === r.code} onChange={() => setReasonCode(r.code)} />
-                      <span style={{ fontSize: 14, color: '#0f172a' }}>{r.label}</span>
+                      <span style={{ fontSize: 14, color: '#0e1f18' }}>{r.label}</span>
                     </label>
                   ))}
                 </div>
-                <label style={{ display: 'block', fontSize: 12, color: '#475569', fontWeight: 600, marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 12, color: '#33433b', fontWeight: 600, marginBottom: 6 }}>
                   {t('settings.privacy.feedback_free_label', 'Commentaire (optionnel)')}
                 </label>
                 <textarea rows={3} value={freeText} onChange={e => setFreeText(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical' }} />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
-                  <button onClick={() => setStep(0)} style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={() => setStep(0)} style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid #ded8cb', background: '#fff', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {t('common.cancel', 'Annuler')}
                   </button>
                   <button onClick={() => setStep(2)}
-                    style={{ padding: '9px 16px', borderRadius: 10, background: '#0f172a', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ padding: '9px 16px', borderRadius: 10, background: '#0e1f18', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {t('settings.privacy.continue', 'Continuer')}
                   </button>
                 </div>
@@ -4864,16 +4864,16 @@ function PrivacySection({ user }) {
 
             {step === 2 && (
               <>
-                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#0e1f18' }}>
                   {t('settings.privacy.confirm_title', 'Confirmer la suppression définitive')}
                 </h3>
-                <p style={{ margin: '0 0 16px', color: '#475569', fontSize: 14, lineHeight: 1.5 }}>
+                <p style={{ margin: '0 0 16px', color: '#33433b', fontSize: 14, lineHeight: 1.5 }}>
                   {isTenantOwner
                     ? t('settings.privacy.confirm_body_tenant', 'Cette action supprimera définitivement votre compte entreprise, vos partenaires, vos referrals, vos commissions, et toutes les données associées. Vos accès partenaires chez d\'autres clients RefBoost ne seront PAS affectés. Cette opération est irréversible.')
                     : t('settings.privacy.confirm_body_partner', 'Cette action supprimera définitivement votre compte. Cette opération est irréversible.')
                   }
                 </p>
-                <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>
+                <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>
                   {isTenantOwner
                     ? t('settings.privacy.confirm_name_label', { name: info.tenant_name, defaultValue: 'Pour confirmer, tapez le nom de votre entreprise (ex : {{name}}) :' })
                     : t('settings.delete_account.confirm_email_label', 'Confirmez en saisissant votre email')
@@ -4881,15 +4881,15 @@ function PrivacySection({ user }) {
                 </label>
                 <input type="text" value={confirmInput} onChange={e => setConfirmInput(e.target.value)}
                   placeholder={expectedConfirm}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid ' + (err ? '#dc2626' : '#e2e8f0'), fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
-                {err && <div style={{ color: '#dc2626', fontSize: 12, marginTop: 6 }}>{err}</div>}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid ' + (err ? '#b23b2e' : '#ded8cb'), fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                {err && <div style={{ color: '#b23b2e', fontSize: 12, marginTop: 6 }}>{err}</div>}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
                   <button onClick={() => setStep(0)} disabled={deleting}
-                    style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid #ded8cb', background: '#fff', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {t('common.cancel', 'Annuler')}
                   </button>
                   <button onClick={handleDelete} disabled={deleting || !confirmValid}
-                    style={{ padding: '9px 16px', borderRadius: 10, background: confirmValid ? '#dc2626' : '#e2e8f0', color: confirmValid ? '#fff' : '#94a3b8', border: 'none', fontWeight: 600, fontSize: 13, cursor: confirmValid && !deleting ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+                    style={{ padding: '9px 16px', borderRadius: 10, background: confirmValid ? '#b23b2e' : '#ded8cb', color: confirmValid ? '#fff' : '#99a09a', border: 'none', fontWeight: 600, fontSize: 13, cursor: confirmValid && !deleting ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
                     {deleting ? t('common.loading', 'Chargement…') : t('settings.privacy.delete_definitive', 'Supprimer définitivement')}
                   </button>
                 </div>
@@ -4952,19 +4952,19 @@ function PartnerPrivacyTab({ user }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', marginBottom: 6 }}>
         {t('settings.tab_privacy', 'Confidentialité')}
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>
         {t('settings.privacy.subtitle', 'Vos droits RGPD : exportez vos données ou supprimez votre compte à tout moment.')}
       </p>
 
       {/* Export — Article 20 */}
-      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20, marginBottom: 20 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+      <div style={{ background: '#f6f2e9', border: '1px solid #ded8cb', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18', marginBottom: 6 }}>
           {t('settings.export.title', 'Exporter mes données')}
         </h3>
-        <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.5, marginBottom: 14 }}>
+        <p style={{ color: '#6e756c', fontSize: 13, lineHeight: 1.5, marginBottom: 14 }}>
           {t('settings.export.description', 'Téléchargez un fichier JSON contenant votre profil, vos recommandations, vos commissions et vos messages.')}
         </p>
         <button
@@ -4972,7 +4972,7 @@ function PartnerPrivacyTab({ user }) {
           disabled={exporting}
           style={{
             padding: '10px 18px', borderRadius: 10, border: 'none',
-            background: 'var(--rb-primary, #059669)', color: '#fff',
+            background: 'var(--rb-primary, #0e7a54)', color: '#fff',
             fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: exporting ? 0.7 : 1,
           }}
         >
@@ -4981,7 +4981,7 @@ function PartnerPrivacyTab({ user }) {
       </div>
 
       {/* Delete — Article 17 */}
-      <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 14, padding: 20 }}>
+      <div style={{ background: '#f7e9e6', border: '1px solid #edc4bd', borderRadius: 14, padding: 20 }}>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: '#991b1b', marginBottom: 6 }}>
           {t('settings.delete_account.title', 'Supprimer mon compte')}
         </h3>
@@ -4992,7 +4992,7 @@ function PartnerPrivacyTab({ user }) {
           onClick={() => { setConfirmOpen(true); setEmailInput(''); setErr(''); }}
           style={{
             padding: '10px 18px', borderRadius: 10, border: 'none',
-            background: '#dc2626', color: '#fff',
+            background: '#b23b2e', color: '#fff',
             fontWeight: 600, fontSize: 14, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 6,
           }}
@@ -5006,13 +5006,13 @@ function PartnerPrivacyTab({ user }) {
         <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div onClick={() => !deleting && setConfirmOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 16, width: 480, maxWidth: '100%', padding: 24, boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0e1f18', marginBottom: 8 }}>
               {t('settings.delete_account.modal_title', 'Supprimer mon compte')}
             </h3>
-            <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.5, marginBottom: 16 }}>
+            <p style={{ color: '#33433b', fontSize: 14, lineHeight: 1.5, marginBottom: 16 }}>
               {t('settings.delete_account.modal_body', 'Cette action est irréversible. Toutes vos données seront supprimées dans 30 jours.')}
             </p>
-            <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>
+            <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>
               {t('settings.delete_account.confirm_email_label', 'Confirmez en saisissant votre email')}
             </label>
             <input
@@ -5023,11 +5023,11 @@ function PartnerPrivacyTab({ user }) {
               disabled={deleting}
               style={{
                 width: '100%', padding: '10px 14px', borderRadius: 10,
-                border: '2px solid #e2e8f0', fontSize: 14, marginBottom: 12, boxSizing: 'border-box',
+                border: '2px solid #ded8cb', fontSize: 14, marginBottom: 12, boxSizing: 'border-box',
               }}
             />
             {err && (
-              <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 12, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontSize: 13 }}>
+              <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 12, background: '#f7e9e6', color: '#b23b2e', border: '1px solid #edc4bd', fontSize: 13 }}>
                 {err}
               </div>
             )}
@@ -5036,8 +5036,8 @@ function PartnerPrivacyTab({ user }) {
                 onClick={() => setConfirmOpen(false)}
                 disabled={deleting}
                 style={{
-                  padding: '10px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
-                  background: '#fff', color: '#64748b', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                  padding: '10px 16px', borderRadius: 10, border: '1px solid #ded8cb',
+                  background: '#fff', color: '#6e756c', fontWeight: 600, fontSize: 14, cursor: 'pointer',
                 }}
               >
                 {t('settings.delete_account.cancel', 'Annuler')}
@@ -5047,7 +5047,7 @@ function PartnerPrivacyTab({ user }) {
                 disabled={deleting}
                 style={{
                   padding: '10px 18px', borderRadius: 10, border: 'none',
-                  background: '#dc2626', color: '#fff',
+                  background: '#b23b2e', color: '#fff',
                   fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: deleting ? 0.7 : 1,
                 }}
               >
@@ -5110,17 +5110,17 @@ function CompanyBillingTab() {
     setSaving(false);
   };
 
-  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' };
-  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 6 };
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 6 };
 
-  if (loading) return <div style={{ padding: 24, color: '#94a3b8' }}>…</div>;
+  if (loading) return <div style={{ padding: 24, color: '#99a09a' }}>…</div>;
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', marginBottom: 6 }}>
         {t('settings.company_tab', 'Entreprise')}
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 24 }}>
         {t('settings.company_subtitle', 'Ces informations sont affichées sur la page de paiement de chaque partenaire pour qu\'il puisse vous facturer correctement.')}
       </p>
       <div style={{ maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -5153,14 +5153,14 @@ function CompanyBillingTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
           <button onClick={save} disabled={saving} style={{
             padding: '10px 20px', borderRadius: 10, border: 'none',
-            background: 'var(--rb-primary, #059669)', color: '#fff',
+            background: 'var(--rb-primary, #0e7a54)', color: '#fff',
             fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1,
             display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
             <Save size={14} /> {saving ? t('common.saving', 'Enregistrement…') : t('common.save', 'Enregistrer')}
           </button>
           {savedAt > 0 && Date.now() - savedAt < 3000 && (
-            <span style={{ color: '#16a34a', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ color: '#157a4c', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
               <CheckCircle size={14} /> {t('common.saved', 'Enregistré')}
             </span>
           )}
@@ -5174,8 +5174,8 @@ function CompanyBillingTab() {
 function Field({ label, value }) {
   return (
     <div>
-      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ color: '#0f172a', fontWeight: 600, marginTop: 4 }}>{value}</div>
+      <div style={{ color: '#99a09a', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ color: '#0e1f18', fontWeight: 600, marginTop: 4 }}>{value}</div>
     </div>
   );
 }

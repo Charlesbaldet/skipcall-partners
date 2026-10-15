@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 
-const C = { p:'#059669', pl:'#10b981', s:'#0f172a', m:'#64748b', a:'#f97316' };
+const C = { p:'#0e7a54', pl:'#1c9a6b', s:'#0e1f18', m:'#6e756c', a:'#d5541a' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
 
 function useMobile() {
@@ -125,10 +125,10 @@ export function LandingNav() {
                   </svg>
                 </span>
                 {featOpen && (
-                  <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:260,zIndex:200 }}>
+                  <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #ece7db',padding:8,paddingTop:16,minWidth:260,zIndex:200 }}>
                     {FEATURES.map(f=>(
                       <a key={f.href} href={f.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
-                        onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                        onMouseEnter={e=>e.currentTarget.style.background='#f6f2e9'}
                         onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                         <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{f.label}</div>
                         <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{f.desc}</div>
@@ -145,10 +145,10 @@ export function LandingNav() {
                   </svg>
                 </span>
                 {useCasesOpen && (
-                  <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #f1f5f9',padding:8,paddingTop:16,minWidth:280,zIndex:200 }}>
+                  <div style={{ position:'absolute',top:'100%',left:-16,background:'#fff',borderRadius:16,boxShadow:'0 12px 40px rgba(0,0,0,0.12)',border:'1px solid #ece7db',padding:8,paddingTop:16,minWidth:280,zIndex:200 }}>
                     {USE_CASES.map(u=>(
                       <a key={u.href} href={u.href} style={{ display:'block',padding:'10px 14px',borderRadius:10,textDecoration:'none' }}
-                        onMouseEnter={e=>e.currentTarget.style.background='#f8fafc'}
+                        onMouseEnter={e=>e.currentTarget.style.background='#f6f2e9'}
                         onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                         <div style={{ fontWeight:600,fontSize:14,color:C.s }}>{u.label}</div>
                         <div style={{ fontSize:12,color:C.m,marginTop:2 }}>{u.desc}</div>
@@ -200,7 +200,7 @@ export function LandingNav() {
           ].map(section => {
             const isOpen = expandedSection === section.id;
             return (
-              <div key={section.id} style={{ borderBottom:'1px solid #f1f5f9' }}>
+              <div key={section.id} style={{ borderBottom:'1px solid #ece7db' }}>
                 <button
                   onClick={() => setExpandedSection(prev => prev === section.id ? null : section.id)}
                   aria-expanded={isOpen}
@@ -246,7 +246,7 @@ export function LandingNav() {
           {/* Simple links — no dropdown */}
           <div style={{ display:'flex',flexDirection:'column',gap:0,marginTop:4 }}>
             {[['nav.integrations','/integrations'],['nav.marketplace','/marketplace'],['nav.pricing','/pricing'],['nav.testimonials','/#temoignages'],['nav.blog','/blog']].map(([key,href])=>(
-              <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #f1f5f9',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>
+              <a key={key} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 0',borderBottom:'1px solid #ece7db',fontSize:16,fontWeight:500,color:C.s,textDecoration:'none' }}>
                 {t(key)}
               </a>
             ))}
@@ -296,40 +296,40 @@ export function LandingFooter() {
         <div style={{ display:'flex',flexDirection:mobile?'column':'row',justifyContent:'space-between',alignItems:'flex-start',gap:mobile?32:0,marginBottom:32 }}>
           <div>
             <Logo size={28} white/>
-            <p style={{ color:'#64748b',fontSize:13,marginTop:12,maxWidth:300 }}>{t('landing.footer.tagline')}</p>
+            <p style={{ color:'#6e756c',fontSize:13,marginTop:12,maxWidth:300 }}>{t('landing.footer.tagline')}</p>
           </div>
           <div style={{ display:'flex',flexWrap:'wrap',gap:mobile?32:48 }}>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.features')}</div>
-              {FEATURES.map(f=><a key={f.href} href={f.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{f.label}</a>)}
+              <div style={{ color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.features')}</div>
+              {FEATURES.map(f=><a key={f.href} href={f.href} style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}>{f.label}</a>)}
             </div>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.useCases')}</div>
-              {USE_CASES.map(u=><a key={u.href} href={u.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{u.label}</a>)}
+              <div style={{ color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.useCases')}</div>
+              {USE_CASES.map(u=><a key={u.href} href={u.href} style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}>{u.label}</a>)}
             </div>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.integrations', 'Intégrations')}</div>
-              {INTEGRATIONS_LINKS.map(i=><a key={i.href} href={i.href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>{i.label}</a>)}
+              <div style={{ color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.integrations', 'Intégrations')}</div>
+              {INTEGRATIONS_LINKS.map(i=><a key={i.href} href={i.href} style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}>{i.label}</a>)}
             </div>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.resources')}</div>
+              <div style={{ color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.resources')}</div>
               {['blog','guide','faq','contact'].map(key=>(
-                <a key={key} href={key==='blog'?'/blog':key==='marketplace'?'/marketplace':'#'} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+                <a key={key} href={key==='blog'?'/blog':key==='marketplace'?'/marketplace':'#'} style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}>
                   {t(`landing.footer.links.${key}`)}
                 </a>
               ))}
             </div>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.contact', 'Contact')}</div>
-              <a href="mailto:sales@refboost.io" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+              <div style={{ color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.contact', 'Contact')}</div>
+              <a href="mailto:sales@refboost.io" style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}>
                 {t('landing.footer.links.sales', 'Sales')} : sales@refboost.io
               </a>
-              <a href="mailto:support@refboost.io" style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+              <a href="mailto:support@refboost.io" style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}>
                 {t('landing.footer.links.support', 'Support')} : support@refboost.io
               </a>
             </div>
             <div>
-              <div style={{ color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.legal')}</div>
+              <div style={{ color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12 }}>{t('landing.footer.sections.legal')}</div>
               {[
                 { key: 'cgv',     href: '/cgv' },
                 { key: 'privacy', href: '/confidentialite' },
@@ -339,7 +339,7 @@ export function LandingFooter() {
                 { key: 'security', href: '/security', i18nKey: 'footer.security' },
                 { key: 'status',  href: '/status' },
               ].map(({ key, href, i18nKey })=>(
-                <a key={key} href={href} style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}>
+                <a key={key} href={href} style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}>
                   {t(i18nKey || `landing.footer.links.${key}`)}
                 </a>
               ))}
@@ -354,7 +354,7 @@ export function LandingFooter() {
                   try { localStorage.removeItem('cookie_consent'); } catch {}
                   window.location.reload();
                 }}
-                style={{ display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8 }}
+                style={{ display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8 }}
               >
                 {t('footer.manage_cookies', 'Gérer les cookies')}
               </a>
@@ -362,9 +362,9 @@ export function LandingFooter() {
           </div>
         </div>
         <div style={{ borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',flexDirection:mobile?'column':'row',justifyContent:'space-between',alignItems:mobile?'flex-start':'center',gap:12 }}>
-          <div style={{ color:'#475569',fontSize:12 }}>{t('landing.footer.copyright')}</div>
+          <div style={{ color:'#33433b',fontSize:12 }}>{t('landing.footer.copyright')}</div>
           <LanguageSwitcher direction="up" dark={true}/>
-          <div style={{ color:'#475569',fontSize:12 }}>{t('landing.footer.madeIn')}</div>
+          <div style={{ color:'#33433b',fontSize:12 }}>{t('landing.footer.madeIn')}</div>
         </div>
       </div>
     </footer>
@@ -373,7 +373,7 @@ export function LandingFooter() {
 
 export default function LandingLayout({ children }) {
   return (
-    <div style={{ fontFamily:'inherit',background:'#fafbfc',minHeight:'100vh',display:'flex',flexDirection:'column' }}>
+    <div style={{ fontFamily:'inherit',background:'#faf6ec',minHeight:'100vh',display:'flex',flexDirection:'column' }}>
       <LandingNav />
       <div style={{ flex:1,paddingTop:80 }}>{children}</div>
       <LandingFooter />

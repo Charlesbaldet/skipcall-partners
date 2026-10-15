@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 
-const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#fafbfc' };
+const C = { p: '#0e7a54', s: '#0e1f18', m: '#6e756c', bg: '#faf6ec' };
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation();
@@ -57,12 +57,12 @@ export default function ForgotPasswordPage() {
             onChange={e => setEmail(e.target.value)}
             placeholder="vous@entreprise.com"
             required
-            style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: C.bg, fontSize: 15, color: C.s, outline: 'none', boxSizing: 'border-box', marginBottom: 16 }}
+            style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #ded8cb', background: C.bg, fontSize: 15, color: C.s, outline: 'none', boxSizing: 'border-box', marginBottom: 16 }}
           />
           <button
             type="submit"
             disabled={loading}
-            style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: loading ? '#94a3b8' : C.p, color: '#fff', fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: loading ? 'none' : '0 8px 30px rgba(5,150,105,0.3)' }}
+            style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', background: loading ? '#99a09a' : C.p, color: '#fff', fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: loading ? 'none' : '0 8px 30px rgba(5,150,105,0.3)' }}
           >
             {loading ? t("forgotPwd.loading") : t("forgotPwd.submit")}
           </button>

@@ -17,7 +17,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { LandingNav } from '../components/LandingLayout';
 
 
-const C = { p:'#059669',pl:'#10b981',pd:'#047857',s:'#0f172a',sl:'#1e293b',a:'#f97316',al:'#fb923c',m:'#64748b',bg:'#fafbfc' };
+const C = { p:'#0e7a54',pl:'#1c9a6b',pd:'#0b5e40',s:'#0e1f18',sl:'#1a2c24',a:'#d5541a',al:'#fb923c',m:'#6e756c',bg:'#faf6ec' };
 const g = (a,b) => `linear-gradient(135deg,${a},${b})`;
 
 function Logo({ size = 40, white = false }) {
@@ -48,24 +48,24 @@ function BlogPreview({ t, C }) {
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={{textAlign:'center',padding:'40px 0',color:'#64748b'}}>...</div>;
-  if (!posts.length) return <p style={{textAlign:'center',color:'#64748b'}}>{t('landing.blog.no_posts')}</p>;
+  if (loading) return <div style={{textAlign:'center',padding:'40px 0',color:'#6e756c'}}>...</div>;
+  if (!posts.length) return <p style={{textAlign:'center',color:'#6e756c'}}>{t('landing.blog.no_posts')}</p>;
 
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:24}}>
       {posts.map(post => (
-        <a key={post.id} href={'/blog/' + post.slug} style={{textDecoration:'none',display:'block',background:'#fff',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 16px rgba(0,0,0,0.08)',border:'1px solid #e2e8f0',transition:'transform .2s,box-shadow .2s'}}
+        <a key={post.id} href={'/blog/' + post.slug} style={{textDecoration:'none',display:'block',background:'#fff',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 16px rgba(0,0,0,0.08)',border:'1px solid #ded8cb',transition:'transform .2s,box-shadow .2s'}}
           onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.15)';}}
           onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 2px 16px rgba(0,0,0,0.08)';}}>
           {post.cover_image_url && <img src={post.cover_image_url} alt={post.title} style={{width:'100%',height:180,objectFit:'cover'}} />}
-          {!post.cover_image_url && <div style={{height:6,background:'linear-gradient(90deg,'+(C&&C.p?C.p:'#6366f1')+','+(C&&C.s?C.s:'#8b5cf6')+')'}} />}
+          {!post.cover_image_url && <div style={{height:6,background:'linear-gradient(90deg,'+(C&&C.p?C.p:'#0e7a54')+','+(C&&C.s?C.s:'#0e7a54')+')'}} />}
           <div style={{padding:24}}>
-            {post.category && <span style={{fontSize:12,fontWeight:600,color:(C&&C.p?C.p:'#6366f1'),textTransform:'uppercase',letterSpacing:1}}>{post.category}</span>}
-            <h3 style={{fontSize:17,fontWeight:700,margin:'8px 0 10px',color:'#0f172a',lineHeight:1.4}}>{post.title}</h3>
-            {post.excerpt && <p style={{fontSize:14,color:'#64748b',margin:'0 0 16px',lineHeight:1.6,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{post.excerpt}</p>}
+            {post.category && <span style={{fontSize:12,fontWeight:600,color:(C&&C.p?C.p:'#0e7a54'),textTransform:'uppercase',letterSpacing:1}}>{post.category}</span>}
+            <h3 style={{fontSize:17,fontWeight:700,margin:'8px 0 10px',color:'#0e1f18',lineHeight:1.4}}>{post.title}</h3>
+            {post.excerpt && <p style={{fontSize:14,color:'#6e756c',margin:'0 0 16px',lineHeight:1.6,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{post.excerpt}</p>}
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:12,color:'#94a3b8'}}>{post.reading_time_minutes} min</span>
-              <span style={{fontSize:13,fontWeight:600,color:(C&&C.p?C.p:'#6366f1')}}>{t('landing.blog.read_more')}</span>
+              <span style={{fontSize:12,color:'#99a09a'}}>{post.reading_time_minutes} min</span>
+              <span style={{fontSize:13,fontWeight:600,color:(C&&C.p?C.p:'#0e7a54')}}>{t('landing.blog.read_more')}</span>
             </div>
           </div>
         </a>
@@ -192,16 +192,16 @@ export default function LandingPage() {
           <p className="fu fu3" style={{fontSize:20,color:C.m,lineHeight:1.6,maxWidth:620,margin:'0 auto 40px',fontFamily:'inherit'}}>{t('landing.hero.description')}</p>
           <div className="fu fu4" style={{display:'flex',gap:mobile?10:16,justifyContent:'center',flexDirection:mobile?'column':'row'}}>
             <button onClick={()=>{trackClick('hero_cta');navigate('/signup');}} className="bp" style={{padding:mobile?'13px 0':'16px 36px',width:mobile?'100%':'auto',borderRadius:14,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:17,cursor:'pointer',fontFamily:'inherit',boxShadow:`0 8px 30px ${C.p}30`}}>{t('landing.hero.cta_primary')}</button>
-            <button onClick={()=>document.getElementById('fonctionnalites')?.scrollIntoView({behavior:'smooth'})} className="bs" style={{padding:mobile?'13px 0':'16px 36px',width:mobile?'100%':'auto',borderRadius:14,border:'2px solid #e2e8f0',background:'#fff',color:C.s,fontWeight:600,fontSize:17,cursor:'pointer',fontFamily:'inherit'}}>{t('landing.hero.cta_secondary')}</button>
+            <button onClick={()=>document.getElementById('fonctionnalites')?.scrollIntoView({behavior:'smooth'})} className="bs" style={{padding:mobile?'13px 0':'16px 36px',width:mobile?'100%':'auto',borderRadius:14,border:'2px solid #ded8cb',background:'#fff',color:C.s,fontWeight:600,fontSize:17,cursor:'pointer',fontFamily:'inherit'}}>{t('landing.hero.cta_secondary')}</button>
           </div>
           <div className="fu fu4" style={{display:'flex',alignItems:'center',justifyContent:'center',gap:32,marginTop:60,color:C.m,fontSize:14}}>
             <div><span style={{fontSize:28,fontWeight:800,color:C.s}}>{t('landing.hero.stat1_value')}</span><br/>{t('landing.hero.stat1_label')}</div>
-            <div style={{width:1,height:40,background:'#e2e8f0'}}/>
+            <div style={{width:1,height:40,background:'#ded8cb'}}/>
             <div><span style={{fontSize:28,fontWeight:800,color:C.s}}>{t('landing.hero.stat2_value')}</span><br/>{t('landing.hero.stat2_label')}</div>
-            <div style={{width:1,height:40,background:'#e2e8f0'}}/>
+            <div style={{width:1,height:40,background:'#ded8cb'}}/>
             <div><span style={{fontSize:28,fontWeight:800,color:C.s}}>{t('landing.hero.stat3_value')}</span><br/>{t('landing.hero.stat3_label')}</div>
           </div>
-          <p className="fu fu4" style={{color:'#94a3b8',fontSize:12,marginTop:20}}>{t('landing.hero.trial_badges')}</p>
+          <p className="fu fu4" style={{color:'#99a09a',fontSize:12,marginTop:20}}>{t('landing.hero.trial_badges')}</p>
         </div>
       </section>
 
@@ -215,7 +215,7 @@ export default function LandingPage() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'repeat(3,1fr)',gap:24}}>
             {Array.isArray(features) && features.map((f,i)=>(
-              <div key={i} className="hl" style={{padding:32,borderRadius:20,background:'#fff',border:'1px solid #f1f5f9',boxShadow:'0 4px 20px rgba(0,0,0,.03)',cursor:'default'}}>
+              <div key={i} className="hl" style={{padding:32,borderRadius:20,background:'#fff',border:'1px solid #ece7db',boxShadow:'0 4px 20px rgba(0,0,0,.03)',cursor:'default'}}>
                 <div style={{width:44,height:44,borderRadius:10,background:`${C.p}15`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={C.p} strokeWidth="2"/><path d="M8 12l2.5 2.5L16 9" stroke={C.p} strokeWidth="2" strokeLinecap="round"/></svg>
                 </div>
@@ -237,7 +237,7 @@ export default function LandingPage() {
               <div key={i} style={{textAlign:'center'}}>
                 <div style={{width:64,height:64,borderRadius:16,margin:'0 auto 20px',background:g(C.p,C.pl),display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,color:'#fff'}}>0{i+1}</div>
                 <h3 style={{fontSize:20,fontWeight:700,color:'#fff',marginBottom:8}}>{st.title}</h3>
-                <p style={{color:'#94a3b8',fontSize:14,lineHeight:1.7,margin:0,fontFamily:'inherit'}}>{st.desc}</p>
+                <p style={{color:'#99a09a',fontSize:14,lineHeight:1.7,margin:0,fontFamily:'inherit'}}>{st.desc}</p>
               </div>
             ))}
           </div>
@@ -274,7 +274,7 @@ export default function LandingPage() {
                 <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.p} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>
               )},
             ].map((card)=>(
-              <a key={card.href} href={card.href} className="hl" style={{display:'block',padding:28,borderRadius:20,background:'#fff',border:'1px solid #f1f5f9',boxShadow:'0 4px 20px rgba(0,0,0,.03)',textDecoration:'none',color:'inherit',cursor:'pointer',transition:'transform .25s,box-shadow .25s'}}>
+              <a key={card.href} href={card.href} className="hl" style={{display:'block',padding:28,borderRadius:20,background:'#fff',border:'1px solid #ece7db',boxShadow:'0 4px 20px rgba(0,0,0,.03)',textDecoration:'none',color:'inherit',cursor:'pointer',transition:'transform .25s,box-shadow .25s'}}>
                 <div style={{width:52,height:52,borderRadius:14,background:`${C.p}15`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18}}>
                   {card.icon}
                 </div>
@@ -291,7 +291,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- INTEGRATIONS --- */}
-      <section style={{...s.section,background:'#fafbfc'}}>
+      <section style={{...s.section,background:'#faf6ec'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={s.center}>
             <div style={s.label}>{t('landing.integrations.label','Intégrations')}</div>
@@ -314,7 +314,7 @@ export default function LandingPage() {
                  style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,textDecoration:'none',padding:8,borderRadius:12,transition:'transform .15s'}}
                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';}}
                  onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
-                <div style={{width:60,height:60,borderRadius:14,background:'#fff',border:'1px solid #e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',padding:10,boxShadow:'0 4px 14px rgba(15,23,42,0.06)'}}>
+                <div style={{width:60,height:60,borderRadius:14,background:'#fff',border:'1px solid #ded8cb',display:'flex',alignItems:'center',justifyContent:'center',padding:10,boxShadow:'0 4px 14px rgba(15,23,42,0.06)'}}>
                   <img src={item.src} alt={item.name} width={40} height={40} style={{width:'100%',height:'100%',objectFit:'contain'}} />
                 </div>
                 <span style={{fontSize:13,fontWeight:600,color:C.s}}>{item.name}</span>
@@ -338,9 +338,9 @@ export default function LandingPage() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'repeat(3,1fr)',gap:24}}>
             {Array.isArray(testimonials) && testimonials.map((t2,i)=>(
-              <div key={i} className="hl" style={{padding:32,borderRadius:20,background:'#fafbfc',border:'1px solid #f1f5f9'}}>
+              <div key={i} className="hl" style={{padding:32,borderRadius:20,background:'#faf6ec',border:'1px solid #ece7db'}}>
                 <div style={{display:'flex',gap:2,marginBottom:16}}><svg width='88' height='16' viewBox='0 0 88 16'>{[0,1,2,3,4].map(j=><path key={j} transform={`translate(${j*18},0)`} d='M8 1l1.8 5.5H16l-5 3.6 1.9 5.9L8 12.5l-4.9 3.5 1.9-5.9-5-3.6h6.2z' fill='#fbbf24'/>)}</svg></div>
-                <p style={{color:'#334155',fontSize:15,lineHeight:1.7,margin:'0 0 24px',fontFamily:'inherit',fontStyle:'italic'}}>"{t2.t}"</p>
+                <p style={{color:'#2b3a32',fontSize:15,lineHeight:1.7,margin:'0 0 24px',fontFamily:'inherit',fontStyle:'italic'}}>"{t2.t}"</p>
                 <div style={{display:'flex',alignItems:'center',gap:12}}>
                   <div style={{width:44,height:44,borderRadius:12,background:g(C.p,C.pl),display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:18}}>{t2.a}</div>
                   <div>
@@ -358,50 +358,50 @@ export default function LandingPage() {
       <section id="marketplace" style={{padding:'80px 24px',background:'#fff'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:48}}>
-            <span style={{display:'inline-flex',alignItems:'center',gap:6,background:'#ecfdf5',border:'1px solid #6ee7b7',color:'#059669',borderRadius:20,padding:'6px 16px',fontSize:12,fontWeight:700,marginBottom:16}}>{t('landing.marketplace.badge')}</span>
-            <h2 style={{fontSize:'clamp(26px,4vw,40px)',fontWeight:900,color:'#0f172a',margin:'0 0 16px',lineHeight:1.15}}>{t('landing.marketplace.title_start')}<br/><span style={{color:'#059669'}}>{t('landing.marketplace.title_highlight')}</span></h2>
-            <p style={{color:'#64748b',fontSize:16,maxWidth:560,margin:'0 auto'}}>{t('landing.marketplace.description')}</p>
+            <span style={{display:'inline-flex',alignItems:'center',gap:6,background:'#e9f1ea',border:'1px solid #6ee7b7',color:'#0e7a54',borderRadius:20,padding:'6px 16px',fontSize:12,fontWeight:700,marginBottom:16}}>{t('landing.marketplace.badge')}</span>
+            <h2 style={{fontSize:'clamp(26px,4vw,40px)',fontWeight:900,color:'#0e1f18',margin:'0 0 16px',lineHeight:1.15}}>{t('landing.marketplace.title_start')}<br/><span style={{color:'#0e7a54'}}>{t('landing.marketplace.title_highlight')}</span></h2>
+            <p style={{color:'#6e756c',fontSize:16,maxWidth:560,margin:'0 auto'}}>{t('landing.marketplace.description')}</p>
           </div>
           {featuredPartners.length > 0 ? (
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:20,marginBottom:40}}>
               {featuredPartners.map(p=>{
                 const initials=p.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-                const color=p.primary_color||'#059669';
+                const color=p.primary_color||'#0e7a54';
                 return (
-                  <div key={p.id} style={{background:'#fff',borderRadius:16,padding:24,border:'1px solid #e2e8f0',boxShadow:'0 2px 10px rgba(0,0,0,.05)'}}>
+                  <div key={p.id} style={{background:'#fff',borderRadius:16,padding:24,border:'1px solid #ded8cb',boxShadow:'0 2px 10px rgba(0,0,0,.05)'}}>
                     <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
                       {p.logo_url?<img src={p.logo_url} alt={p.name} style={{width:44,height:44,borderRadius:10,objectFit:'contain'}}/>:<div style={{width:44,height:44,borderRadius:10,background:color+'20',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color}}>{initials}</div>}
-                      <div><div style={{fontWeight:700,fontSize:15,color:'#0f172a'}}>{p.name}</div>{p.sector&&<span style={{fontSize:11,fontWeight:600,color,background:color+'15',borderRadius:20,padding:'2px 8px'}}>{p.sector}</span>}</div>
+                      <div><div style={{fontWeight:700,fontSize:15,color:'#0e1f18'}}>{p.name}</div>{p.sector&&<span style={{fontSize:11,fontWeight:600,color,background:color+'15',borderRadius:20,padding:'2px 8px'}}>{p.sector}</span>}</div>
                     </div>
-                    <p style={{fontSize:13,color:'#64748b',lineHeight:1.6,margin:0,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}>{p.short_description}</p>
+                    <p style={{fontSize:13,color:'#6e756c',lineHeight:1.6,margin:0,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}>{p.short_description}</p>
                   </div>
                 );
               })}
             </div>
           ) : (
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:20,marginBottom:40}}>
-              {[{name:'TechFlow SaaS',sector:'SaaS',desc:'Solution CRM pour PME. 15% de commission sur 12 mois.',color:'#059669'},{name:'ScaleUp Agency',sector:'Marketing',desc:'Agence growth B2B. 500 EUR par deal signÃÂ©.',color:'#7c3aed'},{name:'DataViz Pro',sector:'SaaS',desc:'Outil BI pour ÃÂ©quipes data. 20% MRR sur 6 mois.',color:'#0ea5e9'}].map((p,i)=>(
-                <div key={i} style={{background:'#fff',borderRadius:16,padding:24,border:'1px solid #e2e8f0',boxShadow:'0 2px 10px rgba(0,0,0,.05)'}}>
+              {[{name:'TechFlow SaaS',sector:'SaaS',desc:'Solution CRM pour PME. 15% de commission sur 12 mois.',color:'#0e7a54'},{name:'ScaleUp Agency',sector:'Marketing',desc:'Agence growth B2B. 500 EUR par deal signÃÂ©.',color:'#7c3aed'},{name:'DataViz Pro',sector:'SaaS',desc:'Outil BI pour ÃÂ©quipes data. 20% MRR sur 6 mois.',color:'#0ea5e9'}].map((p,i)=>(
+                <div key={i} style={{background:'#fff',borderRadius:16,padding:24,border:'1px solid #ded8cb',boxShadow:'0 2px 10px rgba(0,0,0,.05)'}}>
                   <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
                     <div style={{width:44,height:44,borderRadius:10,background:p.color+'20',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:p.color}}>{p.name.split(' ').slice(0,2).map(w=>w[0]).join('')}</div>
-                    <div><div style={{fontWeight:700,fontSize:15,color:'#0f172a'}}>{p.name}</div><span style={{fontSize:11,fontWeight:600,color:p.color,background:p.color+'15',borderRadius:20,padding:'2px 8px'}}>{p.sector}</span></div>
+                    <div><div style={{fontWeight:700,fontSize:15,color:'#0e1f18'}}>{p.name}</div><span style={{fontSize:11,fontWeight:600,color:p.color,background:p.color+'15',borderRadius:20,padding:'2px 8px'}}>{p.sector}</span></div>
                   </div>
-                  <p style={{fontSize:13,color:'#64748b',lineHeight:1.6,margin:0}}>{p.desc}</p>
+                  <p style={{fontSize:13,color:'#6e756c',lineHeight:1.6,margin:0}}>{p.desc}</p>
                 </div>
               ))}
             </div>
           )}
           <div style={{display:'flex',gap:24,justifyContent:'center',marginBottom:36,flexWrap:'wrap'}}>
             {[{val:t('landing.marketplace.stat1_val'),label:t('landing.marketplace.stat1_label')},{val:t('landing.marketplace.stat2_val'),label:t('landing.marketplace.stat2_label')},{val:t('landing.marketplace.stat3_val'),label:t('landing.marketplace.stat3_label')}].map((s2,i)=>(
-              <div key={i} style={{textAlign:'center',padding:'16px 32px',background:'#f8fafc',borderRadius:12}}>
-                <div style={{fontSize:28,fontWeight:900,color:'#059669'}}>{s2.val}</div>
-                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{s2.label}</div>
+              <div key={i} style={{textAlign:'center',padding:'16px 32px',background:'#f6f2e9',borderRadius:12}}>
+                <div style={{fontSize:28,fontWeight:900,color:'#0e7a54'}}>{s2.val}</div>
+                <div style={{fontSize:12,color:'#6e756c',marginTop:2}}>{s2.label}</div>
               </div>
             ))}
           </div>
           <div style={{textAlign:'center'}}>
-            <a href="/marketplace" style={{display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#059669,#10b981)',color:'#fff',padding:'16px 36px',borderRadius:14,fontWeight:700,fontSize:16,textDecoration:'none',boxShadow:'0 8px 30px rgba(5,150,105,.35)'}}>{t('landing.marketplace.cta')}</a>
-            <p style={{fontSize:13,color:'#94a3b8',marginTop:12}}>{t('landing.marketplace.cta_note')}</p>
+            <a href="/marketplace" style={{display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#0e7a54,#1c9a6b)',color:'#fff',padding:'16px 36px',borderRadius:14,fontWeight:700,fontSize:16,textDecoration:'none',boxShadow:'0 8px 30px rgba(5,150,105,.35)'}}>{t('landing.marketplace.cta')}</a>
+            <p style={{fontSize:13,color:'#99a09a',marginTop:12}}>{t('landing.marketplace.cta_note')}</p>
           </div>
         </div>
       </section>
@@ -413,11 +413,11 @@ export default function LandingPage() {
             <div style={s.label}>{t('landing.pricing.label')}</div>
             <h2 style={s.h2}>{t('billing.pricing_title')}</h2>
             <p style={{color:C.m,fontSize:16,marginTop:16,fontFamily:'inherit'}}>{t('billing.pricing_subtitle')}</p>
-            <div style={{marginTop:24,display:'inline-flex',background:'#fff',border:'1px solid #e2e8f0',borderRadius:999,padding:4,gap:2}}>
+            <div style={{marginTop:24,display:'inline-flex',background:'#fff',border:'1px solid #ded8cb',borderRadius:999,padding:4,gap:2}}>
               {['monthly','annual'].map(key=>(
                 <button key={key} onClick={()=>setPricingInterval(key)}
                   style={{padding:'8px 18px',borderRadius:999,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:13,fontWeight:600,background:pricingInterval===key?C.s:'transparent',color:pricingInterval===key?'#fff':C.m}}>
-                  {t('billing.'+key)}{key==='annual'&&<span style={{marginLeft:6,fontSize:10,fontWeight:700,color:pricingInterval==='annual'?'#10b981':'#059669',background:pricingInterval==='annual'?'rgba(16,185,129,.15)':'#f0fdf4',padding:'2px 6px',borderRadius:999}}>-20%</span>}
+                  {t('billing.'+key)}{key==='annual'&&<span style={{marginLeft:6,fontSize:10,fontWeight:700,color:pricingInterval==='annual'?'#1c9a6b':'#0e7a54',background:pricingInterval==='annual'?'rgba(16,185,129,.15)':'#e9f1ea',padding:'2px 6px',borderRadius:999}}>-20%</span>}
                 </button>
               ))}
             </div>
@@ -435,7 +435,7 @@ export default function LandingPage() {
                   ? ['everything_in_starter','plan_analytics_advanced','plan_csv_export','plan_multi_admin','plan_priority_support']
                   : ['everything_in_pro','plan_api_access','plan_custom_branding','plan_dedicated_support','plan_unlimited_partners'];
               return (
-                <div key={p.key} className="hl" style={{padding:36,borderRadius:24,background:'#fff',border:p.popular?`2px solid ${C.p}`:'1px solid #f1f5f9',boxShadow:p.popular?`0 20px 60px ${C.p}15`:'0 4px 20px rgba(0,0,0,.03)',position:'relative',display:'flex',flexDirection:'column'}}>
+                <div key={p.key} className="hl" style={{padding:36,borderRadius:24,background:'#fff',border:p.popular?`2px solid ${C.p}`:'1px solid #ece7db',boxShadow:p.popular?`0 20px 60px ${C.p}15`:'0 4px 20px rgba(0,0,0,.03)',position:'relative',display:'flex',flexDirection:'column'}}>
                   {p.popular && <div style={{position:'absolute',top:-12,left:'50%',transform:'translateX(-50%)',background:g(C.p,C.pl),color:'#fff',fontSize:11,fontWeight:700,padding:'4px 16px',borderRadius:50,textTransform:'uppercase',letterSpacing:1}}>{t('billing.most_popular')}</div>}
                   <h3 style={{fontSize:22,fontWeight:800,marginBottom:4,color:C.s}}>{t('billing.'+p.key)}</h3>
                   <div style={{display:'flex',alignItems:'baseline',gap:6,margin:'8px 0'}}>
@@ -448,12 +448,12 @@ export default function LandingPage() {
                   <div style={{fontSize:14,color:C.p,fontWeight:600,margin:'8px 0 16px'}}>{p.limit} {t('billing.partners_used').toLowerCase()}</div>
                   <ul style={{listStyle:'none',padding:0,margin:'0 0 28px',flex:1}}>
                     {features.map(f=>(
-                      <li key={f} style={{padding:'8px 0',fontSize:14,color:'#334155',display:'flex',alignItems:'center',gap:10,fontFamily:'inherit'}}>
+                      <li key={f} style={{padding:'8px 0',fontSize:14,color:'#2b3a32',display:'flex',alignItems:'center',gap:10,fontFamily:'inherit'}}>
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{flexShrink:0}}><circle cx="7" cy="7" r="6" fill={`${C.p}20`}/><path d="M4 7l2 2 4-4" stroke={C.p} strokeWidth="1.5" strokeLinecap="round"/></svg> {t('billing.'+f)}
                       </li>
                     ))}
                   </ul>
-                  <button onClick={()=>{trackClick('pricing_'+p.key);navigate('/signup'+p.query);}} className={p.popular?'bp':'bs'} style={{width:'100%',padding:'14px 24px',borderRadius:12,cursor:'pointer',fontFamily:'inherit',fontSize:15,fontWeight:700,border:p.popular?'none':'2px solid #e2e8f0',background:p.popular?g(C.p,C.pl):'#fff',color:p.popular?'#fff':C.s,boxShadow:p.popular?`0 8px 30px ${C.p}25`:'none'}}>
+                  <button onClick={()=>{trackClick('pricing_'+p.key);navigate('/signup'+p.query);}} className={p.popular?'bp':'bs'} style={{width:'100%',padding:'14px 24px',borderRadius:12,cursor:'pointer',fontFamily:'inherit',fontSize:15,fontWeight:700,border:p.popular?'none':'2px solid #ded8cb',background:p.popular?g(C.p,C.pl):'#fff',color:p.popular?'#fff':C.s,boxShadow:p.popular?`0 8px 30px ${C.p}25`:'none'}}>
                     {p.key==='starter'?t('billing.get_started'):t('billing.start_trial')}
                   </button>
                 </div>
@@ -481,8 +481,8 @@ export default function LandingPage() {
             <h2 style={s.h2}>{t('landing.faq.title')}</h2>
           </div>
           {Array.isArray(faqItems) && faqItems.map((faq,i)=>(
-            <details key={i} style={{marginBottom:12,borderRadius:16,border:'1px solid #f1f5f9',overflow:'hidden'}}>
-              <summary style={{padding:'20px 24px',fontWeight:600,fontSize:16,cursor:'pointer',background:'#fafbfc',listStyle:'none',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
+            <details key={i} style={{marginBottom:12,borderRadius:16,border:'1px solid #ece7db',overflow:'hidden'}}>
+              <summary style={{padding:'20px 24px',fontWeight:600,fontSize:16,cursor:'pointer',background:'#faf6ec',listStyle:'none',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
                 {faq.q}<span style={{color:C.p,fontSize:20}}>+</span>
               </summary>
               <div style={{padding:'0 24px 20px',color:C.m,fontSize:14,lineHeight:1.7,fontFamily:'inherit'}}>{faq.a}</div>
@@ -492,12 +492,12 @@ export default function LandingPage() {
       </section>
 
       {/* --- Blog Preview --- */}
-      <section style={{padding:'80px 48px',background:'#f8fafc'}}>
+      <section style={{padding:'80px 48px',background:'#f6f2e9'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:48}}>
             <span style={{display:'inline-block',padding:'6px 16px',background:C.p+'22',color:C.p,borderRadius:999,fontSize:13,fontWeight:600,marginBottom:12}}>{t('landing.blog.label')}</span>
-            <h2 style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:800,margin:'0 0 12px',color:'#0f172a'}}>{t('landing.blog.title')}</h2>
-            <p style={{fontSize:17,color:'#64748b',maxWidth:560,margin:'0 auto'}}>{t('landing.blog.subtitle')}</p>
+            <h2 style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:800,margin:'0 0 12px',color:'#0e1f18'}}>{t('landing.blog.title')}</h2>
+            <p style={{fontSize:17,color:'#6e756c',maxWidth:560,margin:'0 auto'}}>{t('landing.blog.subtitle')}</p>
           </div>
           <BlogPreview t={t} C={C} />
           <div style={{textAlign:'center',marginTop:40}}>
@@ -508,18 +508,18 @@ export default function LandingPage() {
 
 
       {/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ CTA Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */}
-      <section style={{padding:'100px 48px',background:g(C.s,'#1e293b'),position:'relative',overflow:'hidden'}}>
+      <section style={{padding:'100px 48px',background:g(C.s,'#1a2c24'),position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',top:-100,right:-100,width:400,height:400,borderRadius:'50%',background:`${C.p}10`}}/>
         <div style={{position:'absolute',bottom:-50,left:-50,width:250,height:250,borderRadius:'50%',background:`${C.a}08`}}/>
         <div style={{maxWidth:650,margin:'0 auto',textAlign:'center',position:'relative',zIndex:1}}>
           <h2 style={{fontSize:44,fontWeight:800,color:'#fff',letterSpacing:-2,margin:'0 0 16px'}}>{t('landing.cta.title')}<br/>{t('landing.cta.title_end')}</h2>
-          <p style={{color:'#94a3b8',fontSize:17,lineHeight:1.6,marginBottom:36,fontFamily:'inherit'}}>{t('landing.cta.description')}</p>
+          <p style={{color:'#99a09a',fontSize:17,lineHeight:1.6,marginBottom:36,fontFamily:'inherit'}}>{t('landing.cta.description')}</p>
           <div style={{display:'flex',gap:12,justifyContent:'center',maxWidth:460,margin:'0 auto',flexDirection:mobile?'column':'row'}}>
             <input type="email" placeholder={t('landing.cta.email_placeholder')} value={email} onChange={e=>setEmail(e.target.value)} style={{flex:1,padding:'16px 20px',borderRadius:12,border:'2px solid rgba(255,255,255,.1)',background:'rgba(255,255,255,.06)',color:'#fff',fontSize:15,fontFamily:'inherit',outline:'none'}}/>
             <button onClick={()=>{trackClick('footer_cta');navigate('/signup'+(email?'?email='+encodeURIComponent(email):''));}} className="bp" style={{padding:'16px 28px',borderRadius:12,border:'none',background:g(C.p,C.pl),color:'#fff',fontWeight:700,fontSize:15,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap',boxShadow:`0 8px 30px ${C.p}30`}}>{t('landing.cta.cta_btn')}</button>
           </div>
-          <p style={{color:'#475569',fontSize:12,marginTop:16}}>{t('landing.cta.note')}</p>
-          <p style={{color:'#94a3b8',fontSize:13,marginTop:14}}>
+          <p style={{color:'#33433b',fontSize:12,marginTop:16}}>{t('landing.cta.note')}</p>
+          <p style={{color:'#99a09a',fontSize:13,marginTop:14}}>
             {t('landing.cta.demo_hint', 'Besoin d\'une démo ?')}{' '}
             <a href="mailto:sales@refboost.io" style={{color:'#34d399',fontWeight:600,textDecoration:'none'}}>sales@refboost.io</a>
           </p>
@@ -532,17 +532,17 @@ export default function LandingPage() {
           <div style={{display:'flex',flexDirection:mobile?'column':'row',justifyContent:'space-between',alignItems:'flex-start',gap:mobile?32:0,marginBottom:32}}>
             <div>
               <Logo size={28} white/>
-              <p style={{color:'#64748b',fontSize:13,marginTop:12,maxWidth:300,fontFamily:'inherit'}}>{t('landing.footer.tagline')}</p>
+              <p style={{color:'#6e756c',fontSize:13,marginTop:12,maxWidth:300,fontFamily:'inherit'}}>{t('landing.footer.tagline')}</p>
             </div>
             <div style={{display:'flex',gap:48,flexWrap:'wrap'}}>
               <div>
-                <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.features')}</div>
+                <div style={{color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.features')}</div>
                 {[['pipeline','pipeline'],['commissions','commissions'],['analytics','analytics'],['whiteLabel','personnalisation'],['tracking','tracking']].map(([key,slug])=>(
-                  <a key={key} href={`/fonctionnalites/${slug}`} style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>
+                  <a key={key} href={`/fonctionnalites/${slug}`} style={{display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>
                 ))}
               </div>
               <div>
-                <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.useCases')}</div>
+                <div style={{color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.useCases')}</div>
                 {[
                   { label: t('useCases.nav.saas'),         href: '/cas-dusage/saas-b2b' },
                   { label: t('useCases.nav.conseil'),      href: '/cas-dusage/cabinet-conseil' },
@@ -551,38 +551,38 @@ export default function LandingPage() {
                   { label: t('useCases.nav.marketplace'),  href: '/cas-dusage/marketplace-plateforme' },
                   { label: t('useCases.nav.agence'),       href: '/cas-dusage/agence-marketing' },
                 ].map(u => (
-                  <a key={u.href} href={u.href} style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{u.label}</a>
+                  <a key={u.href} href={u.href} style={{display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8}}>{u.label}</a>
                 ))}
               </div>
               <div>
-                <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.resources')}</div>
+                <div style={{color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.resources')}</div>
                 {['blog','guide','faq','contact'].map(key=>(
-                  <a key={key} href={key==='blog'?'/blog':'#'} style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>
+                  <a key={key} href={key==='blog'?'/blog':'#'} style={{display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>
                 ))}
               </div>
               <div>
-                <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.contact', 'Contact')}</div>
-                <a href="mailto:sales@refboost.io" style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t('landing.footer.links.sales', 'Sales')} : sales@refboost.io</a>
-                <a href="mailto:support@refboost.io" style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t('landing.footer.links.support', 'Support')} : support@refboost.io</a>
+                <div style={{color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.contact', 'Contact')}</div>
+                <a href="mailto:sales@refboost.io" style={{display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8}}>{t('landing.footer.links.sales', 'Sales')} : sales@refboost.io</a>
+                <a href="mailto:support@refboost.io" style={{display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8}}>{t('landing.footer.links.support', 'Support')} : support@refboost.io</a>
               </div>
               <div>
-                <div style={{color:'#94a3b8',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.legal')}</div>
+                <div style={{color:'#99a09a',fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>{t('landing.footer.sections.legal')}</div>
                 {[
                   { key: 'cgv',     href: '/cgv' },
                   { key: 'privacy', href: '/confidentialite' },
                   { key: 'legal',   href: '/mentions-legales' },
                   { key: 'rgpd',    href: '/rgpd' },
                 ].map(({ key, href })=>(
-                  <a key={key} href={href} style={{display:'block',color:'#64748b',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>
+                  <a key={key} href={href} style={{display:'block',color:'#6e756c',textDecoration:'none',fontSize:13,marginBottom:8}}>{t(`landing.footer.links.${key}`)}</a>
                 ))}
               </div>
             </div>
           </div>
           {/* Footer bottom : copyright + language switcher */}
           <div style={{borderTop:'1px solid rgba(255,255,255,.06)',paddingTop:20,display:'flex',flexDirection:mobile?'column':'row',justifyContent:'space-between',alignItems:mobile?'flex-start':'center',gap:12}}>
-            <div style={{color:'#475569',fontSize:12}}>{t('landing.footer.copyright')}</div>
+            <div style={{color:'#33433b',fontSize:12}}>{t('landing.footer.copyright')}</div>
             <LanguageSwitcher/>
-            <div style={{color:'#475569',fontSize:12}}>{t('landing.footer.madeIn')}</div>
+            <div style={{color:'#33433b',fontSize:12}}>{t('landing.footer.madeIn')}</div>
           </div>
         </div>
       </footer>

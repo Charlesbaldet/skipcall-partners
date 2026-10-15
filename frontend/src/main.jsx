@@ -10,15 +10,16 @@ import './i18n';
 const style = document.createElement('style');
 style.textContent = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; color: #0f172a; -webkit-font-smoothing: antialiased; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #ece7db; color: #0e1f18; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
+h1, h2, h3 { font-family: 'Fraunces', 'Hoefler Text', 'Iowan Old Style', Georgia, serif !important; letter-spacing: -0.015em; }
 button { font-family: inherit; }
 input, select, textarea { font-family: inherit; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: #6366f1 !important; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #0e7a54 !important; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar-thumb { background: #cfc8b8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #99a09a; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
 .fade-in { animation: fadeIn 0.3s ease-out; }

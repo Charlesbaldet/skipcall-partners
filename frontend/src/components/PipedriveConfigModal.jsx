@@ -75,18 +75,18 @@ const FIELD_FALLBACK = {
 
 // ─── Shared styles (kept inline to match the rest of the codebase) ──
 const btnSecondary = {
-  padding: '8px 14px', borderRadius: 8, border: '1px solid #e5e7eb',
-  background: '#fff', color: '#0f172a', fontWeight: 500, fontSize: 13,
+  padding: '8px 14px', borderRadius: 8, border: '1px solid #e3ddd0',
+  background: '#fff', color: '#0e1f18', fontWeight: 500, fontSize: 13,
   cursor: 'pointer', fontFamily: 'inherit',
 };
 const btnPrimary = {
   padding: '8px 16px', borderRadius: 8, border: 'none',
-  background: '#059669', color: '#fff', fontWeight: 600, fontSize: 13,
+  background: '#0e7a54', color: '#fff', fontWeight: 600, fontSize: 13,
   cursor: 'pointer', fontFamily: 'inherit',
 };
 const inp = {
   width: '100%', padding: '8px 10px', borderRadius: 8,
-  border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit',
+  border: '1.5px solid #ded8cb', fontSize: 13, fontFamily: 'inherit',
   boxSizing: 'border-box', background: '#fff',
 };
 
@@ -391,19 +391,19 @@ export default function PipedriveConfigModal({ onClose }) {
         {/* Header */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          padding: '20px 24px 12px', borderBottom: '1px solid #f1f5f9',
+          padding: '20px 24px 12px', borderBottom: '1px solid #ece7db',
         }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0e1f18' }}>
               {t('pipedrive.configure_title', 'Configurer Pipedrive')}
             </h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6e756c' }}>
               {t('pipedrive.configure_subtitle', 'Synchronisez vos referrals et partenaires avec votre pipeline')}
             </p>
           </div>
           <button
             type="button" onClick={onClickClose}
-            style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ background: '#ece7db', border: 'none', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
             <XIcon size={16} />
           </button>
@@ -412,13 +412,13 @@ export default function PipedriveConfigModal({ onClose }) {
         {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
           {loading && (
-            <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+            <div style={{ padding: 32, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
               {t('common.loading', 'Chargement…')}
             </div>
           )}
 
           {!loading && loadError && (
-            <div style={{ padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 13, marginBottom: 12 }}>
+            <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', fontSize: 13, marginBottom: 12 }}>
               {t('pipedrive.section_pipeline_error', 'Impossible de charger les pipelines')} — {loadError}
             </div>
           )}
@@ -429,18 +429,18 @@ export default function PipedriveConfigModal({ onClose }) {
               {banners.map((b, i) => (
                 <div key={i} style={{
                   padding: '8px 12px', borderRadius: 10, fontSize: 12, marginBottom: 10,
-                  background: b.tone === 'warning' ? '#fffbeb' : '#eff6ff',
-                  border: '1px solid ' + (b.tone === 'warning' ? '#fde68a' : '#bfdbfe'),
-                  color: b.tone === 'warning' ? '#92400e' : '#1d4ed8',
+                  background: b.tone === 'warning' ? '#f6efda' : '#e9f1ea',
+                  border: '1px solid ' + (b.tone === 'warning' ? '#ecd9a0' : '#bfdbfe'),
+                  color: b.tone === 'warning' ? '#7a4a16' : '#1d4ed8',
                 }}>{b.text}</div>
               ))}
 
               {/* Section 1 — Pipeline picker */}
               <section style={{ marginBottom: 20 }}>
-                <h4 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                <h4 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 600, color: '#0e1f18' }}>
                   {t('pipedrive.section_pipeline_title', 'Pipeline cible')}
                 </h4>
-                <p style={{ margin: '0 0 8px', fontSize: 12, color: '#64748b' }}>
+                <p style={{ margin: '0 0 8px', fontSize: 12, color: '#6e756c' }}>
                   {t('pipedrive.section_pipeline_label', 'Choisissez le pipeline Pipedrive dans lequel pousser vos referrals')}
                 </p>
                 <select
@@ -461,7 +461,7 @@ export default function PipedriveConfigModal({ onClose }) {
               {/* Section 2 — Tabs */}
               <div style={{
                 display: 'flex', justifyContent: 'center', alignItems: 'center',
-                gap: 4, paddingTop: 4, borderBottom: '1px solid #e2e8f0',
+                gap: 4, paddingTop: 4, borderBottom: '1px solid #ded8cb',
                 marginBottom: 16,
               }}>
                 {[
@@ -478,8 +478,8 @@ export default function PipedriveConfigModal({ onClose }) {
                         padding: '10px 20px', background: 'transparent', border: 'none', cursor: 'pointer',
                         fontFamily: 'inherit', fontSize: 14,
                         fontWeight: active ? 600 : 500,
-                        color: active ? '#059669' : '#64748b',
-                        borderBottom: '2px solid ' + (active ? '#059669' : 'transparent'),
+                        color: active ? '#0e7a54' : '#6e756c',
+                        borderBottom: '2px solid ' + (active ? '#0e7a54' : 'transparent'),
                         marginBottom: -1, transition: 'color .15s, border-color .15s',
                       }}
                     >{tab.label}</button>
@@ -520,7 +520,7 @@ export default function PipedriveConfigModal({ onClose }) {
 
         {/* Footer */}
         <div style={{
-          borderTop: '1px solid #f1f5f9', padding: '14px 24px',
+          borderTop: '1px solid #ece7db', padding: '14px 24px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           gap: 12, flexWrap: 'wrap',
         }}>
@@ -531,7 +531,7 @@ export default function PipedriveConfigModal({ onClose }) {
               aria-pressed={autoPush}
               style={{
                 width: 36, height: 20, borderRadius: 999,
-                background: autoPush ? '#059669' : '#cbd5e1',
+                background: autoPush ? '#0e7a54' : '#cfc8b8',
                 border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
               }}
             >
@@ -542,10 +542,10 @@ export default function PipedriveConfigModal({ onClose }) {
               }} />
             </button>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: '#0e1f18' }}>
                 {t('pipedrive.auto_push_label', 'Synchroniser automatiquement les nouveaux referrals avec Pipedrive')}
               </div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+              <div style={{ fontSize: 11, color: '#99a09a' }}>
                 {t('pipedrive.auto_push_helper', 'Si désactivé, vous devrez pousser manuellement chaque referral depuis sa fiche')}
               </div>
             </div>
@@ -575,18 +575,18 @@ function StatusesTab({ t, stageMap, setStageMap, stages, stagesLoading, pipeline
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>
           {t('pipedrive.statuses_col_refboost', 'Statut RefBoost')}
         </div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>
           {t('pipedrive.statuses_col_pipedrive', 'Stage Pipedrive')}
         </div>
       </div>
       {STAGE_MAPPABLE_STATUSES.map(slug => {
         const label = t(STATUS_LABEL_KEYS[slug], STATUS_FALLBACK[slug]);
         return (
-          <div key={slug} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f8fafc' }}>
-            <div style={{ fontSize: 13, color: '#0f172a' }}>{label}</div>
+          <div key={slug} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f6f2e9' }}>
+            <div style={{ fontSize: 13, color: '#0e1f18' }}>{label}</div>
             <select
               value={stageMap[slug] || ''}
               onChange={e => setStageMap(prev => ({ ...prev, [slug]: e.target.value }))}
@@ -601,7 +601,7 @@ function StatusesTab({ t, stageMap, setStageMap, stages, stagesLoading, pipeline
           </div>
         );
       })}
-      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>
+      <p style={{ fontSize: 11, color: '#99a09a', marginTop: 12 }}>
         {t('pipedrive.statuses_helper', 'Les referrals seront poussés vers le stage Pipedrive correspondant à leur statut RefBoost')}
       </p>
 
@@ -610,11 +610,11 @@ function StatusesTab({ t, stageMap, setStageMap, stages, stagesLoading, pipeline
           wonder where those rows went. */}
       <div style={{
         marginTop: 12, padding: '10px 12px', borderRadius: 10,
-        background: '#f8fafc', border: '1px solid #e2e8f0',
+        background: '#f6f2e9', border: '1px solid #ded8cb',
         display: 'flex', gap: 10, alignItems: 'flex-start',
       }}>
-        <Info size={14} color="#64748b" style={{ flexShrink: 0, marginTop: 2 }} />
-        <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+        <Info size={14} color="#6e756c" style={{ flexShrink: 0, marginTop: 2 }} />
+        <div style={{ fontSize: 12, color: '#6e756c', lineHeight: 1.5 }}>
           {t('pipedrive.won_lost_auto_helper', "Les statuts 'Gagné' et 'Perdu' sont gérés automatiquement via le status Pipedrive — pas de mapping de stage nécessaire. Lors du push, les deals 'Gagné' seront marqués comme 'won' dans Pipedrive et les 'Perdu' comme 'lost'.")}
         </div>
       </div>
@@ -644,9 +644,9 @@ function FieldsTab({ t, entity, fields, fieldMap, error, onRetry, onChange }) {
       <div>
         <div style={{
           padding: '12px 14px', borderRadius: 10,
-          background: tone === 'error' ? '#fef2f2' : '#fffbeb',
-          border: '1px solid ' + (tone === 'error' ? '#fecaca' : '#fde68a'),
-          color: tone === 'error' ? '#b91c1c' : '#92400e',
+          background: tone === 'error' ? '#f7e9e6' : '#f6efda',
+          border: '1px solid ' + (tone === 'error' ? '#edc4bd' : '#ecd9a0'),
+          color: tone === 'error' ? '#8f2e24' : '#7a4a16',
           fontSize: 13, marginBottom: 12,
         }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>{headline}</div>
@@ -657,8 +657,8 @@ function FieldsTab({ t, entity, fields, fieldMap, error, onRetry, onChange }) {
         <button
           type="button" onClick={onRetry}
           style={{
-            padding: '6px 14px', borderRadius: 8, border: '1px solid #e5e7eb',
-            background: '#fff', color: '#0f172a', fontWeight: 500, fontSize: 13,
+            padding: '6px 14px', borderRadius: 8, border: '1px solid #e3ddd0',
+            background: '#fff', color: '#0e1f18', fontWeight: 500, fontSize: 13,
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -680,12 +680,12 @@ function FieldsTab({ t, entity, fields, fieldMap, error, onRetry, onChange }) {
 
   return (
     <div>
-      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#64748b' }}>{description}</p>
+      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#6e756c' }}>{description}</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>
           {t('pipedrive.statuses_col_refboost', 'Statut RefBoost').replace('Statut', t('pipedrive.field_col_refboost', 'Champ'))}
         </div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5 }}>
           {t('pipedrive.fields_col_pipedrive', 'Champ Pipedrive')}
         </div>
       </div>
@@ -698,9 +698,9 @@ function FieldsTab({ t, entity, fields, fieldMap, error, onRetry, onChange }) {
           ? t('pipedrive.organization_company_hint', "Le nom de l'entreprise du prospect. Généralement mappé sur le champ « Name » de l'organisation Pipedrive.")
           : null;
         return (
-          <div key={refField} style={{ padding: '6px 0', borderBottom: '1px solid #f8fafc' }}>
+          <div key={refField} style={{ padding: '6px 0', borderBottom: '1px solid #f6f2e9' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center' }}>
-              <div style={{ fontSize: 13, color: '#0f172a' }}>{label}</div>
+              <div style={{ fontSize: 13, color: '#0e1f18' }}>{label}</div>
               <FieldCombobox
                 value={fieldMap[refField] || ''}
                 fields={fields}
@@ -709,13 +709,13 @@ function FieldsTab({ t, entity, fields, fieldMap, error, onRetry, onChange }) {
               />
             </div>
             {rowHelper && (
-              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#94a3b8' }}>{rowHelper}</p>
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#99a09a' }}>{rowHelper}</p>
             )}
           </div>
         );
       })}
       {helper && (
-        <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>{helper}</p>
+        <p style={{ fontSize: 11, color: '#99a09a', marginTop: 12 }}>{helper}</p>
       )}
     </div>
   );
