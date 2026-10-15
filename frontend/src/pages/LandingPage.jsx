@@ -75,6 +75,62 @@ function BlogPreview({ t, C }) {
 }
 
 
+// Panneau produit du hero : registre de commissions ANONYME + ANIMÉ (lignes qui se
+// remplissent, total qui ticque, point « live » qui pulse) = mini-démo produit.
+// Noms 100 % fictifs — jamais de vrais partenaires. Respecte prefers-reduced-motion.
+function HeroLedger({ t }) {
+  const rows = [
+    { i:'AP', n:'Atlas Partners', d:7, mrr:'4 820 €', com:2410, c:'#0e7a54' },
+    { i:'NS', n:'Nova Studio',    d:4, mrr:'2 640 €', com:792,  c:'#d5541a' },
+    { i:'OM', n:'Orbit Média',    d:3, mrr:'1 950 €', com:585,  c:'#2b3a32' },
+    { i:'LC', n:'Lumen Conseil',  d:2, mrr:'1 180 €', com:354,  c:'#0e7a54' },
+  ];
+  const total = rows.reduce((s, r) => s + r.com, 0);
+  const reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [vis, setVis] = useState(reduce ? rows.length : 0);
+  const [tot, setTot] = useState(reduce ? total : 0);
+  useEffect(() => {
+    if (reduce) return;
+    let r = 0;
+    const ri = setInterval(() => { r += 1; setVis(r); if (r >= rows.length) clearInterval(ri); }, 180);
+    const delay = setTimeout(() => {
+      const start = performance.now(); const dur = 1100;
+      const step = (now) => { const p = Math.min(1, (now - start) / dur); setTot(Math.round(total * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }, rows.length * 180);
+    return () => { clearInterval(ri); clearTimeout(delay); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const fmt = (n) => n.toLocaleString('fr-FR');
+  const cell = (i, extra = {}) => ({ padding:'12px 18px', borderTop:i?'1px solid #f0ece2':'none', fontFamily:'ui-monospace,Menlo,monospace', fontSize:13, color:'#0e1f18', textAlign:'right', ...extra });
+  return (
+    <div className="fu fu4" style={{background:'#fff',border:'1px solid #ded8cb',borderRadius:16,overflow:'hidden',boxShadow:'0 26px 50px -32px rgba(14,31,24,.30)'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderBottom:'1px solid #ded8cb',background:'#faf6ec'}}>
+        <div style={{display:'flex',alignItems:'center',gap:9,fontWeight:700,fontSize:14,color:'#0e1f18'}}><span className="rb-pulse" style={{width:8,height:8,borderRadius:'50%',background:'#1c9a6b'}}/> {t('landing.hero.panel_title','Registre des commissions')}</div>
+        <span style={{fontSize:12,color:'#6e756c',fontFamily:'ui-monospace,Menlo,monospace'}}>Oct. 2026</span>
+      </div>
+      <div style={{overflowX:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',minWidth:380,fontFamily:'inherit'}}>
+          <thead><tr>{[t('landing.hero.panel_col_partner','Partenaire'),'Deals','MRR',t('landing.hero.panel_col_commission','Commission')].map((h,i)=><th key={i} style={{textAlign:i?'right':'left',fontSize:10,letterSpacing:'.08em',textTransform:'uppercase',color:'#99a09a',fontWeight:700,padding:'11px 18px',fontFamily:'inherit'}}>{h}</th>)}</tr></thead>
+          <tbody>
+            {rows.map((r,i)=>(
+              <tr key={i} style={{opacity:i<vis?1:0,transform:i<vis?'none':'translateY(6px)',transition:'opacity .4s ease, transform .4s ease'}}>
+                <td style={{padding:'12px 18px',borderTop:i?'1px solid #f0ece2':'none',fontSize:14}}><span style={{display:'inline-flex',alignItems:'center',gap:10,fontWeight:600,color:'#0e1f18'}}><span style={{width:27,height:27,borderRadius:7,background:r.c,color:'#fff',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700}}>{r.i}</span>{r.n}</span></td>
+                <td style={cell(i)}>{r.d}</td>
+                <td style={cell(i)}>{r.mrr}</td>
+                <td style={cell(i,{fontWeight:600})}>{fmt(r.com)} €</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderTop:'1px solid #ded8cb',background:'#faf6ec'}}>
+        <span style={{fontSize:12.5,color:'#6e756c'}}>{t('landing.hero.panel_footer','Commissions du mois')} · <span style={{color:'#0e7a54',fontWeight:700,fontFamily:'ui-monospace,Menlo,monospace'}}>▲ 18 %</span></span>
+        <span style={{fontSize:19,fontWeight:700,color:'#0e1f18',fontFamily:'ui-monospace,Menlo,monospace'}}>{fmt(tot)} €</span>
+      </div>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -173,6 +229,9 @@ export default function LandingPage() {
         .hl{transition:transform .2s,border-color .2s}.hl:hover{transform:translateY(-3px);border-color:#cbe0d4!important}
         .bp{transition:background .15s,transform .12s}.bp:hover{transform:translateY(-1px);background:${C.pd}!important}
         .bs:hover{border-color:${C.p}!important;color:${C.p}!important}
+        .rb-pulse{animation:rbpulse 2.2s ease-in-out infinite}
+        @keyframes rbpulse{0%,100%{box-shadow:0 0 0 0 rgba(28,154,107,.45)}50%{box-shadow:0 0 0 5px rgba(28,154,107,0)}}
+        @media(prefers-reduced-motion:reduce){.fu,.rb-pulse{animation:none!important;opacity:1!important}}
       `}</style>
 
       <LandingNav />
@@ -199,31 +258,7 @@ export default function LandingPage() {
             </div>
             <p className="fu fu4" style={{color:'#99a09a',fontSize:12,marginTop:16}}>{t('landing.hero.trial_badges')}</p>
           </div>
-          <div className="fu fu4" style={{background:'#fff',border:'1px solid #ded8cb',borderRadius:16,overflow:'hidden',boxShadow:'0 26px 50px -32px rgba(14,31,24,.30)'}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderBottom:'1px solid #ded8cb',background:'#faf6ec'}}>
-              <div style={{display:'flex',alignItems:'center',gap:9,fontWeight:700,fontSize:14,color:C.s}}><span style={{width:8,height:8,borderRadius:'50%',background:C.pl}}/> {t('landing.hero.panel_title','Registre des commissions')}</div>
-              <span style={{fontSize:12,color:C.m,fontFamily:'ui-monospace,Menlo,monospace'}}>Oct. 2026</span>
-            </div>
-            <div style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',minWidth:380,fontFamily:'inherit'}}>
-                <thead><tr>{[t('landing.hero.panel_col_partner','Partenaire'),'Deals','MRR',t('landing.hero.panel_col_commission','Commission')].map((h,i)=><th key={i} style={{textAlign:i?'right':'left',fontSize:10,letterSpacing:'.08em',textTransform:'uppercase',color:'#99a09a',fontWeight:700,padding:'11px 18px',fontFamily:'inherit'}}>{h}</th>)}</tr></thead>
-                <tbody>
-                  {[['LR','Léo Rousselière','7','4 820 €','2 410 €','#0e7a54'],['GE','Genesis Partners','4','2 640 €','792 €','#d5541a'],['XP','Xpanzee','3','1 950 €','585 €','#2b3a32'],['AC','A. Chevillard','2','1 180 €','354 €','#0e7a54']].map((r,i)=>(
-                    <tr key={i}>
-                      <td style={{padding:'12px 18px',borderTop:i?'1px solid #f0ece2':'none',fontSize:14}}><span style={{display:'inline-flex',alignItems:'center',gap:10,fontWeight:600,color:C.s}}><span style={{width:27,height:27,borderRadius:7,background:r[5],color:'#fff',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700}}>{r[0]}</span>{r[1]}</span></td>
-                      <td style={{padding:'12px 18px',borderTop:i?'1px solid #f0ece2':'none',textAlign:'right',fontFamily:'ui-monospace,Menlo,monospace',fontSize:13,color:C.s}}>{r[2]}</td>
-                      <td style={{padding:'12px 18px',borderTop:i?'1px solid #f0ece2':'none',textAlign:'right',fontFamily:'ui-monospace,Menlo,monospace',fontSize:13,color:C.s}}>{r[3]}</td>
-                      <td style={{padding:'12px 18px',borderTop:i?'1px solid #f0ece2':'none',textAlign:'right',fontFamily:'ui-monospace,Menlo,monospace',fontSize:13,fontWeight:600,color:C.s}}>{r[4]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',borderTop:'1px solid #ded8cb',background:'#faf6ec'}}>
-              <span style={{fontSize:12.5,color:C.m}}>{t('landing.hero.panel_footer','Commissions du mois')} · <span style={{color:C.p,fontWeight:700,fontFamily:'ui-monospace,Menlo,monospace'}}>▲ 18 %</span></span>
-              <span style={{fontSize:19,fontWeight:700,color:C.s,fontFamily:'ui-monospace,Menlo,monospace'}}>4 141 €</span>
-            </div>
-          </div>
+          <HeroLedger t={t} />
         </div>
       </section>
 
