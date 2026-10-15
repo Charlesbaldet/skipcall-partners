@@ -9,9 +9,9 @@ import api from '../lib/api';
 // can return to it anytime via the sidebar's "Progression" entry.
 
 const C = {
-  p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b',
-  border: '#e2e8f0', bg: '#fafbfc',
-  greenBg: '#f0fdf4', greenBorder: '#bbf7d0',
+  p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c',
+  border: '#ded8cb', bg: '#faf6ec',
+  greenBg: '#e9f1ea', greenBorder: '#cfe6d6',
 };
 
 export default function ProgressionPage() {
@@ -46,7 +46,7 @@ export default function ProgressionPage() {
           </span>
           <span style={{ fontSize: 26, fontWeight: 600, color: C.p }}>{data.percentage}%</span>
         </div>
-        <div style={{ height: 12, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ height: 12, background: '#ece7db', borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
             height: '100%', background: C.p,
             width: data.percentage + '%',
@@ -70,7 +70,7 @@ export default function ProgressionPage() {
         >
           <div style={{
             width: 32, height: 32, borderRadius: '50%',
-            border: '2px solid ' + (step.completed ? C.p : '#cbd5e1'),
+            border: '2px solid ' + (step.completed ? C.p : '#cfc8b8'),
             background: step.completed ? C.p : 'transparent',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,

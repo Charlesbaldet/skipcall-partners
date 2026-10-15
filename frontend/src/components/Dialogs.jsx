@@ -170,11 +170,11 @@ function ToastList({ toasts }) {
 
 function Toast({ toast }) {
   const palette = toast.type === 'error'
-    ? { bg: '#fef2f2', border: '#fecaca', color: '#b91c1c', icon: AlertTriangle }
+    ? { bg: '#f7e9e6', border: '#edc4bd', color: '#8f2e24', icon: AlertTriangle }
     : toast.type === 'success'
-      ? { bg: '#f0fdf4', border: '#bbf7d0', color: '#166534', icon: CheckCircle }
+      ? { bg: '#e9f1ea', border: '#cfe6d6', color: '#0e4d34', icon: CheckCircle }
       : toast.type === 'warning'
-        ? { bg: '#fffbeb', border: '#fde68a', color: '#92400e', icon: AlertCircle }
+        ? { bg: '#f6efda', border: '#ecd9a0', color: '#7a4a16', icon: AlertCircle }
         : { bg: '#f0f9ff', border: '#bae6fd', color: '#075985', icon: AlertCircle };
   const Icon = palette.icon;
   const dismiss = () => {
@@ -237,17 +237,17 @@ function PromptModalImpl({ prompt }) {
           background: '#fff', borderRadius: 16, padding: 24,
           width: '100%', maxWidth: 440,
           boxShadow: '0 25px 80px rgba(15,23,42,0.25)',
-          color: '#0f172a',
+          color: '#0e1f18',
         }}
       >
         <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800 }}>{prompt.title}</h3>
         {prompt.message && (
-          <p style={{ margin: '0 0 14px', color: '#475569', fontSize: 14, lineHeight: 1.55 }}>
+          <p style={{ margin: '0 0 14px', color: '#33433b', fontSize: 14, lineHeight: 1.55 }}>
             {prompt.message}
           </p>
         )}
         {prompt.label && (
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#2b3a32', marginBottom: 6 }}>
             {prompt.label}
           </label>
         )}
@@ -259,8 +259,8 @@ function PromptModalImpl({ prompt }) {
           placeholder={prompt.placeholder}
           style={{
             width: '100%', padding: '10px 14px', borderRadius: 10,
-            border: '2px solid #e2e8f0', fontSize: 14,
-            color: '#0f172a', boxSizing: 'border-box', fontFamily: 'inherit',
+            border: '2px solid #ded8cb', fontSize: 14,
+            color: '#0e1f18', boxSizing: 'border-box', fontFamily: 'inherit',
           }}
         />
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
@@ -268,8 +268,8 @@ function PromptModalImpl({ prompt }) {
             onClick={() => prompt.resolve(null)}
             style={{
               padding: '10px 18px', borderRadius: 10,
-              border: '1.5px solid #e2e8f0', background: '#fff',
-              color: '#0f172a', fontSize: 14, fontWeight: 600,
+              border: '1.5px solid #ded8cb', background: '#fff',
+              color: '#0e1f18', fontSize: 14, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -282,10 +282,10 @@ function PromptModalImpl({ prompt }) {
               padding: '10px 18px', borderRadius: 10,
               border: 'none',
               background: !canSubmit
-                ? '#94a3b8'
-                : prompt.variant === 'danger'  ? '#dc2626'
-                : prompt.variant === 'warning' ? '#f59e0b'
-                : '#059669',
+                ? '#99a09a'
+                : prompt.variant === 'danger'  ? '#b23b2e'
+                : prompt.variant === 'warning' ? '#b4791f'
+                : '#0e7a54',
               color: '#fff', fontSize: 14, fontWeight: 700,
               cursor: canSubmit ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
               boxShadow: !canSubmit

@@ -27,7 +27,7 @@ function daysAgo(dateStr) {
 
 const card = {
   background: '#fff',
-  border: '1px solid #e2e8f0',
+  border: '1px solid #ded8cb',
   borderRadius: 16,
   padding: 24,
   display: 'flex',
@@ -42,7 +42,7 @@ const cardTitleStyle = {
   gap: 8,
   fontSize: 13,
   fontWeight: 600,
-  color: '#64748b',
+  color: '#6e756c',
   textTransform: 'uppercase',
   letterSpacing: 0.5,
 };
@@ -50,14 +50,14 @@ const cardTitleStyle = {
 const bigNumberStyle = {
   fontSize: 36,
   fontWeight: 800,
-  color: '#0f172a',
+  color: '#0e1f18',
   lineHeight: 1,
   marginTop: 4,
 };
 
 const captionStyle = {
   fontSize: 12,
-  color: '#94a3b8',
+  color: '#99a09a',
 };
 
 export default function CompliancePage() {
@@ -81,10 +81,10 @@ export default function CompliancePage() {
     <div style={{ padding: '24px 32px', maxWidth: 1280, margin: '0 auto' }}>
       <Helmet><title>{t('compliance.title', 'Conformité')} · RefBoost</title></Helmet>
 
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', margin: '0 0 6px' }}>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', margin: '0 0 6px' }}>
         {t('compliance.title', 'Conformité')}
       </h1>
-      <p style={{ color: '#64748b', fontSize: 14, margin: '0 0 28px' }}>
+      <p style={{ color: '#6e756c', fontSize: 14, margin: '0 0 28px' }}>
         {t('compliance.subtitle', 'Tableau de bord SOC 2 / ISO 27001 — preuves opérationnelles')}
       </p>
 
@@ -107,7 +107,7 @@ export default function CompliancePage() {
         {/* 1. Last security audit */}
         <div style={card}>
           <div style={cardTitleStyle}>
-            <Shield size={14} color="#6366f1" />
+            <Shield size={14} color="#0e7a54" />
             {t('compliance.card.last_audit', 'Dernier audit sécurité')}
           </div>
           <div style={bigNumberStyle}>
@@ -137,7 +137,7 @@ export default function CompliancePage() {
         {/* 3. MFA adoption */}
         <div style={card}>
           <div style={cardTitleStyle}>
-            <Lock size={14} color="#059669" />
+            <Lock size={14} color="#0e7a54" />
             {t('compliance.card.mfa_adoption', 'Adoption MFA')}
           </div>
           <div style={bigNumberStyle}>
@@ -151,10 +151,10 @@ export default function CompliancePage() {
         {/* 4. Failed logins (24h) */}
         <div style={card}>
           <div style={cardTitleStyle}>
-            <AlertTriangle size={14} color="#dc2626" />
+            <AlertTriangle size={14} color="#b23b2e" />
             {t('compliance.card.failed_logins', 'Échecs de connexion')}
           </div>
-          <div style={{ ...bigNumberStyle, color: (data?.failed_logins_24h || 0) > 10 ? '#dc2626' : '#0f172a' }}>
+          <div style={{ ...bigNumberStyle, color: (data?.failed_logins_24h || 0) > 10 ? '#b23b2e' : '#0e1f18' }}>
             {loading ? '…' : (data?.failed_logins_24h ?? 0).toLocaleString('fr-FR')}
           </div>
           <div style={captionStyle}>
@@ -165,7 +165,7 @@ export default function CompliancePage() {
         {/* 5. npm vulnerabilities */}
         <div style={card}>
           <div style={cardTitleStyle}>
-            <Package size={14} color="#f97316" />
+            <Package size={14} color="#d5541a" />
             {t('compliance.card.npm_vulns', 'Vulnérabilités npm')}
           </div>
           <div style={bigNumberStyle}>
@@ -183,7 +183,7 @@ export default function CompliancePage() {
         {/* 6. System uptime */}
         <div style={card}>
           <div style={cardTitleStyle}>
-            <Activity size={14} color="#8b5cf6" />
+            <Activity size={14} color="#0e7a54" />
             {t('compliance.card.uptime', 'Temps de fonctionnement')}
           </div>
           <div style={bigNumberStyle}>

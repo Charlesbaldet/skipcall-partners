@@ -9,7 +9,7 @@ import Pagination from '../components/Pagination';
 
 const SITE = 'https://refboost.io';
 const ITEMS_PER_PAGE = 9;
-const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
+const C = { p: '#0e7a54', s: '#0e1f18', m: '#6e756c', bg: '#f6f2e9', card: '#fff' };
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -153,10 +153,10 @@ export default function BlogPage() {
       </Helmet>
 
       {/* Hero */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '72px 48px 64px', textAlign: 'center' }}>
-        <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 2 }}>Blog</p>
+      <section style={{ background: 'linear-gradient(135deg, #0e1f18 0%, #1a2c24 100%)', padding: '72px 48px 64px', textAlign: 'center' }}>
+        <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: '#1c9a6b', textTransform: 'uppercase', letterSpacing: 2 }}>Blog</p>
         <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>{t("blog.subtitle")}</h1>
-        <p style={{ margin: '0 auto', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
+        <p style={{ margin: '0 auto', fontSize: 18, color: '#99a09a', maxWidth: 560, lineHeight: 1.6 }}>
           {t('blog.page_subtitle')}
         </p>
       </section>
@@ -165,12 +165,12 @@ export default function BlogPage() {
         {/* Filtres */}
         {categories.length > 0 && (
           <nav aria-label={t('blog.categories')} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
-            <button onClick={()=>handleCategoryChange('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? '#059669' : '#e2e8f0', background: !activeCategory ? '#059669' : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            <button onClick={()=>handleCategoryChange('')} style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: !activeCategory ? '#0e7a54' : '#ded8cb', background: !activeCategory ? '#0e7a54' : 'transparent', color: !activeCategory ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
               {t('blog.all_categories')} ({totalAll})
             </button>
             {categories.map(c => (
               <button key={c.category} onClick={()=>handleCategoryChange(c.category === activeCategory ? '' : c.category)}
-                style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: activeCategory === c.category ? '#059669' : '#e2e8f0', background: activeCategory === c.category ? '#059669' : 'transparent', color: activeCategory === c.category ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+                style={{ padding: '8px 18px', borderRadius: 20, border: '1.5px solid', borderColor: activeCategory === c.category ? '#0e7a54' : '#ded8cb', background: activeCategory === c.category ? '#0e7a54' : 'transparent', color: activeCategory === c.category ? '#fff' : C.m, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
                 {translateCat(c.category)} ({c.count})
               </button>
             ))}

@@ -8,9 +8,9 @@ import { LayoutDashboard, FileText, DollarSign, Users, Send, MessageCircle, LogO
 import OnboardingChecklist from './OnboardingChecklist.jsx';
 
 const C = {
-  p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)',
-  pd: 'var(--rb-primary-dark, #047857)', s: '#0f172a', sl: '#1e293b',
-  a: 'var(--rb-accent, #f97316)', al: 'var(--rb-accent-light, #fb923c)', m: '#64748b',
+  p: 'var(--rb-primary, #0e7a54)', pl: 'var(--rb-primary-light, #1c9a6b)',
+  pd: 'var(--rb-primary-dark, #0b5e40)', s: '#0e1f18', sl: '#1a2c24',
+  a: 'var(--rb-accent, #d5541a)', al: 'var(--rb-accent-light, #fb923c)', m: '#6e756c',
 };
 
 function RefBoostLogo({ size = 36 }) {
@@ -310,15 +310,15 @@ export default function Layout({ children }) {
   // ─── Style tokens ─────────────────────────────────────────────────
   // Every nav row (Dashboard, section items, bottom Notifications)
   // shares one geometry: 8px 18px padding + 18px icons + 10px gap.
-  // The 2px transparent left border is promoted to #059669 on active so
+  // The 2px transparent left border is promoted to #0e7a54 on active so
   // the indicator never shifts content.
-  const ACTIVE_ACCENT = isSuperAdmin ? '#dc2626' : '#059669';
+  const ACTIVE_ACCENT = isSuperAdmin ? '#b23b2e' : '#0e7a54';
   const s = {
     sidebar: { width: 220, minWidth: 220, background: isSuperAdmin ? '#1a1a2e' : C.s, color: '#fff', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 50 },
     link: {
       display: 'flex', alignItems: 'center', gap: 10,
       padding: '8px 18px', borderLeft: '2px solid transparent',
-      color: '#94a3b8', textDecoration: 'none',
+      color: '#99a09a', textDecoration: 'none',
       fontSize: 13, fontWeight: 500, transition: 'all 0.15s',
       lineHeight: 1.3,
     },
@@ -333,7 +333,7 @@ export default function Layout({ children }) {
     activeQueryLink: { background: 'rgba(255,255,255,0.08)', color: '#fff', borderLeft: '2px solid ' + ACTIVE_ACCENT },
     sectionLabel: {
       fontSize: 10, textTransform: 'uppercase', letterSpacing: 1,
-      color: '#475569', fontWeight: 500,
+      color: '#33433b', fontWeight: 500,
       padding: '10px 18px 3px',
     },
   };
@@ -365,7 +365,7 @@ export default function Layout({ children }) {
         <span style={{
           position: 'absolute', top: -2, right: -2,
           width: 8, height: 8, borderRadius: '50%',
-          background: '#ef4444', boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
+          background: '#c24436', boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
         }}/>
       )}
     </span>
@@ -385,7 +385,7 @@ export default function Layout({ children }) {
       : (user?.tenantName || currentSpace?.tenant_name || tenant?.name || 'RefBoost');
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', overflow: 'hidden', background: '#f6f2e9' }}>
       <aside style={s.sidebar}>
         {/* ─── Top: tenant logo OR name (single visual, not both), also
              the space-switcher trigger. Either render the tenant logo
@@ -410,7 +410,7 @@ export default function Layout({ children }) {
           >
             {isSuperAdmin ? (
               <>
-                <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #dc2626, #ef4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: 'linear-gradient(135deg, #b23b2e, #c24436)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(220,38,38,0.3)' }}>
                   <Shield size={18} color="#fff"/>
                 </div>
                 <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, maxWidth: 140 }}>
@@ -451,7 +451,7 @@ export default function Layout({ children }) {
             {hasMultipleSpaces && (
               <ChevronsUpDown
                 size={14}
-                color="#94a3b8"
+                color="#99a09a"
                 style={{
                   flexShrink: 0,
                   transition: 'transform .15s ease',
@@ -526,11 +526,11 @@ export default function Layout({ children }) {
                     width: '100%', padding: '6px 8px',
                     display: 'flex', alignItems: 'center', gap: 10,
                     borderRadius: 4, border: 'none',
-                    background: isActive ? '#f0fdf4' : 'transparent',
-                    color: '#0f172a', cursor: isActive ? 'default' : 'pointer',
+                    background: isActive ? '#e9f1ea' : 'transparent',
+                    color: '#0e1f18', cursor: isActive ? 'default' : 'pointer',
                     textAlign: 'left', fontFamily: 'inherit',
                   }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = '#f6f2e9'; }}
                   onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                 >
                   {space.tenant_logo_url ? (
@@ -541,7 +541,7 @@ export default function Layout({ children }) {
                         width: 22, height: 22, flexShrink: 0,
                         borderRadius: 6, objectFit: 'contain',
                         background: '#fff', padding: 1,
-                        border: '1px solid #f1f5f9',
+                        border: '1px solid #ece7db',
                       }}
                       onError={e => { e.target.style.display = 'none'; }}
                     />
@@ -556,7 +556,7 @@ export default function Layout({ children }) {
                     }}>{initials}</div>
                   )}
                   <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: '#0e1f18', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
                   </div>
                   <span style={{
                     fontSize: 9, fontWeight: 500, padding: '1px 6px', borderRadius: 999,
@@ -569,7 +569,7 @@ export default function Layout({ children }) {
             const sectionHeader = (label) => (
               <div style={{
                 padding: '8px 8px 4px', fontSize: 10, fontWeight: 500,
-                color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5,
+                color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.5,
               }}>{label}</div>
             );
             return (
@@ -578,7 +578,7 @@ export default function Layout({ children }) {
                 style={{
                   position: 'absolute', top: '100%', left: 12, right: 12,
                   marginTop: 6, zIndex: 60,
-                  background: '#fff', border: '1px solid #e2e8f0',
+                  background: '#fff', border: '1px solid #ded8cb',
                   borderRadius: 8, padding: 6,
                   boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                   maxHeight: '60vh', overflowY: 'auto',
@@ -651,7 +651,7 @@ export default function Layout({ children }) {
                     <ItemIcon Icon={item.icon} hasDot={notifyCount > 0}/>
                     <span style={{ flex: 1 }}>{item.label}</span>
                     {badge > 0 && (
-                      <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
+                      <span style={{ background: '#c24436', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
                         {badge}
                       </span>
                     )}
@@ -685,7 +685,7 @@ export default function Layout({ children }) {
                 borderTop: '1px solid rgba(255,255,255,0.06)',
                 textDecoration: 'none', outline: 'none',
                 fontSize: 13, fontWeight: 500,
-                color: isActive ? '#fff' : (hasUnread ? '#cbd5e1' : '#475569'),
+                color: isActive ? '#fff' : (hasUnread ? '#cfc8b8' : '#33433b'),
                 background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
                 transition: 'all 0.15s',
               })}
@@ -698,7 +698,7 @@ export default function Layout({ children }) {
                 </span>
               )}
               {hasUnread && (
-                <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
+                <span style={{ background: '#c24436', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 16, textAlign: 'center' }}>
                   {count}
                 </span>
               )}
@@ -711,7 +711,7 @@ export default function Layout({ children }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-              background: isSuperAdmin ? '#dc2626' : user?.role === 'admin' ? C.p : user?.role === 'commercial' ? '#0891b2' : C.pl,
+              background: isSuperAdmin ? '#b23b2e' : user?.role === 'admin' ? C.p : user?.role === 'commercial' ? '#0891b2' : C.pl,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: 12,
             }}>
@@ -725,7 +725,7 @@ export default function Layout({ children }) {
             <button
               onClick={handleLogout}
               title={t('layout.logout')}
-              style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex' }}
+              style={{ background: 'transparent', border: 'none', color: '#33433b', cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex' }}
             >
               <LogOut size={14}/>
             </button>

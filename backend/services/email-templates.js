@@ -6,8 +6,8 @@
  * Text version is provided as fallback for clients that don't render HTML.
  */
 
-const BRAND_PRIMARY = '#059669';
-const BG_SOFT = '#f0fdf4';
+const BRAND_PRIMARY = '#0e7a54';
+const BG_SOFT = '#e9f1ea';
 const TEXT_DARK = '#1f2937';
 const TEXT_MUTED = '#6b7280';
 
@@ -163,7 +163,7 @@ function commissionPaid({ partnerName, prospectName, commissionAmount, amountHt,
     <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:14px;">
       <tr><td style="padding:4px 0;color:${TEXT_MUTED};">Montant HT</td><td style="padding:4px 0;text-align:right;font-weight:600;color:${TEXT_DARK};">${nf(amountHt)}</td></tr>
       <tr><td style="padding:4px 0;color:${TEXT_MUTED};">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;color:${TEXT_DARK};">${nf(amountTax)}</td></tr>
-      <tr style="border-top:1px solid #bbf7d0;"><td style="padding:6px 0 0;color:${BRAND_PRIMARY};font-weight:700;">Montant TTC versé</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:${BRAND_PRIMARY};">${nf(amountTtc)}</td></tr>
+      <tr style="border-top:1px solid #cfe6d6;"><td style="padding:6px 0 0;color:${BRAND_PRIMARY};font-weight:700;">Montant TTC versé</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:${BRAND_PRIMARY};">${nf(amountTtc)}</td></tr>
     </table>` : '';
   const bodyHtml = `
     <p style="margin:0 0 16px;">Bonjour ${name},</p>

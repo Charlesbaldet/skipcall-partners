@@ -72,13 +72,13 @@ function newReferralSubmittedTpl(partnerName, prospectName, prospectCompany) {
   return {
     subject: `Nouveau referral de ${partnerName} : ${prospectName}`,
     html: frame({
-      accent: '#6366f1',
+      accent: '#0e7a54',
       heading: 'Nouveau referral reçu',
       bodyHtml: `
         <p><strong>${partnerName}</strong> vient de soumettre un nouveau prospect&nbsp;:</p>
-        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin: 16px 0;">
-          <div style="font-weight: 700; color: #0f172a; font-size: 16px;">${prospectName}</div>
-          ${prospectCompany ? `<div style="color: #64748b; font-size: 14px;">${prospectCompany}</div>` : ''}
+        <div style="background: #f6f2e9; border-radius: 12px; padding: 16px; margin: 16px 0;">
+          <div style="font-weight: 700; color: #0e1f18; font-size: 16px;">${prospectName}</div>
+          ${prospectCompany ? `<div style="color: #6e756c; font-size: 14px;">${prospectCompany}</div>` : ''}
         </div>`,
       ctaLabel: 'Voir dans le pipeline',
       ctaUrl: `${FRONTEND}/referrals`,
@@ -90,12 +90,12 @@ function referralStatusChangedTpl(partnerName, prospectName, newStatusLabel) {
   return {
     subject: `Votre recommandation « ${prospectName} » est passée en ${newStatusLabel}`,
     html: frame({
-      accent: '#6366f1',
+      accent: '#0e7a54',
       heading: `Bonjour ${partnerName || ''},`.trim(),
       bodyHtml: `
         <p>Votre recommandation <strong>${prospectName}</strong> a changé de statut&nbsp;:</p>
-        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: center;">
-          <span style="font-size: 22px; font-weight: 700; color: #6366f1;">${newStatusLabel}</span>
+        <div style="background: #f6f2e9; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: center;">
+          <span style="font-size: 22px; font-weight: 700; color: #0e7a54;">${newStatusLabel}</span>
         </div>
         <p>Connectez-vous à votre espace pour suivre l'avancement.</p>`,
       ctaLabel: 'Voir mes recommandations',
@@ -108,13 +108,13 @@ function newCommissionAvailableTpl(partnerName, amount, prospectName) {
   return {
     subject: `Commission de ${amount}€ disponible`,
     html: frame({
-      accent: '#16a34a',
+      accent: '#157a4c',
       heading: `Félicitations ${partnerName || ''} !`.trim(),
       bodyHtml: `
         <p>Votre recommandation <strong>${prospectName}</strong> a abouti.</p>
-        <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-radius: 12px; padding: 20px; margin: 16px 0; text-align: center; border: 1px solid #bbf7d0;">
-          <div style="color: #16a34a; font-size: 13px; font-weight: 600;">Commission</div>
-          <div style="font-size: 32px; font-weight: 800; color: #16a34a;">${amount} €</div>
+        <div style="background: linear-gradient(135deg, #e9f1ea, #e9f1ea); border-radius: 12px; padding: 20px; margin: 16px 0; text-align: center; border: 1px solid #cfe6d6;">
+          <div style="color: #157a4c; font-size: 13px; font-weight: 600;">Commission</div>
+          <div style="font-size: 32px; font-weight: 800; color: #157a4c;">${amount} €</div>
         </div>`,
       ctaLabel: 'Voir mes paiements',
       ctaUrl: `${FRONTEND}/partner/payments`,
@@ -126,7 +126,7 @@ function newPartnerApplicationTpl(applicantName, applicantCompany) {
   return {
     subject: `Nouvelle candidature partenaire : ${applicantName}`,
     html: frame({
-      accent: '#f59e0b',
+      accent: '#b4791f',
       heading: 'Nouvelle candidature partenaire',
       bodyHtml: `
         <p><strong>${applicantName}</strong>${applicantCompany ? ` (${applicantCompany})` : ''} souhaite rejoindre votre programme.</p>
@@ -141,13 +141,13 @@ function dealWonTpl(partnerName, prospectName, dealValue) {
   return {
     subject: `Deal gagné ! ${prospectName} — ${dealValue}€`,
     html: frame({
-      accent: '#16a34a',
+      accent: '#157a4c',
       heading: ' Deal gagné !',
       bodyHtml: `
         <p>La recommandation <strong>${prospectName}</strong> apportée par <strong>${partnerName}</strong> vient d'être signée.</p>
-        <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-radius: 12px; padding: 20px; margin: 16px 0; text-align: center; border: 1px solid #bbf7d0;">
-          <div style="color: #16a34a; font-size: 13px; font-weight: 600;">Montant</div>
-          <div style="font-size: 32px; font-weight: 800; color: #16a34a;">${dealValue} €</div>
+        <div style="background: linear-gradient(135deg, #e9f1ea, #e9f1ea); border-radius: 12px; padding: 20px; margin: 16px 0; text-align: center; border: 1px solid #cfe6d6;">
+          <div style="color: #157a4c; font-size: 13px; font-weight: 600;">Montant</div>
+          <div style="font-size: 32px; font-weight: 800; color: #157a4c;">${dealValue} €</div>
         </div>`,
       ctaLabel: 'Voir le pipeline',
       ctaUrl: `${FRONTEND}/referrals`,
@@ -159,10 +159,10 @@ function newsPublishedTpl(newsTitle, tenantName, preview) {
   return {
     subject: `${tenantName || 'RefBoost'} — ${newsTitle}`,
     html: frame({
-      accent: '#6366f1',
+      accent: '#0e7a54',
       heading: newsTitle,
       bodyHtml: `
-        ${tenantName ? `<p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;">${tenantName}</p>` : ''}
+        ${tenantName ? `<p style="color:#99a09a;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;">${tenantName}</p>` : ''}
         <p>${(preview || '').slice(0, 400)}</p>`,
       ctaLabel: 'Lire la publication',
       ctaUrl: `${FRONTEND}/partner/news`,
@@ -191,7 +191,7 @@ function billingPaymentFailedTpl(recipientName, planLabel) {
   return {
     subject: `Votre paiement a échoué — mettez à jour votre moyen de paiement`,
     html: frame({
-      accent: '#dc2626',
+      accent: '#b23b2e',
       heading: `Bonjour ${recipientName || ''},`.trim(),
       bodyHtml: `
         <p>Votre dernier paiement pour le plan <strong>${planLabel || 'RefBoost'}</strong> a échoué.</p>
@@ -216,7 +216,7 @@ function billingSubscriptionCancelingTpl(recipientName, planLabel, endDate, tena
         <p>Nous sommes désolés de vous voir partir${tenantName ? ` de <strong>${tenantName}</strong>` : ''}.</p>
         <p>Votre plan <strong>${planLabel || 'RefBoost'}</strong> restera actif jusqu'au <strong>${endDate || ''}</strong>. Après cette date, votre espace sera basculé automatiquement sur le plan gratuit Starter (3 partenaires max). Vos partenaires existants ne seront pas supprimés.</p>
         <p>Vous pouvez réactiver votre abonnement à tout moment depuis votre page de facturation — tant que la date ci-dessus n'est pas passée, rien ne change pour vous.</p>
-        <p style="color:#64748b;">S'il y a quelque chose que nous aurions pu faire mieux, répondez simplement à cet email — nous serions ravis de vous lire.</p>`,
+        <p style="color:#6e756c;">S'il y a quelque chose que nous aurions pu faire mieux, répondez simplement à cet email — nous serions ravis de vous lire.</p>`,
       ctaLabel: 'Réactiver mon abonnement',
       ctaUrl: `${FRONTEND}/billing`,
     }),
@@ -230,7 +230,7 @@ function billingInvoicePaidTpl(recipientName, amountLabel, dateLabel, invoicePdf
   return {
     subject: `Paiement reçu — ${amountLabel || ''}`.trim(),
     html: frame({
-      accent: '#059669',
+      accent: '#0e7a54',
       heading: `Bonjour ${recipientName || ''},`.trim(),
       bodyHtml: `
         <p>Votre paiement de <strong>${amountLabel || ''}</strong>${tenantName ? ` pour <strong>${tenantName}</strong>` : ''} a bien été traité le <strong>${dateLabel || ''}</strong>.</p>
@@ -245,7 +245,7 @@ function billingSubscriptionCanceledTpl(recipientName) {
   return {
     subject: `Votre abonnement a été annulé — retour au plan Starter`,
     html: frame({
-      accent: '#64748b',
+      accent: '#6e756c',
       heading: `Bonjour ${recipientName || ''},`.trim(),
       bodyHtml: `
         <p>Votre abonnement RefBoost a été annulé et votre espace a été rétrogradé au plan <strong>Starter</strong> gratuit.</p>

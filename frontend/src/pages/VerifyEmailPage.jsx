@@ -12,8 +12,8 @@ import { useTranslation } from 'react-i18next';
 //             resend-verification (à saisir email)
 
 const C = {
-  p: '#059669', pl: '#10b981',
-  s: '#0f172a', m: '#64748b',
+  p: '#0e7a54', pl: '#1c9a6b',
+  s: '#0e1f18', m: '#6e756c',
 };
 
 export default function VerifyEmailPage() {
@@ -62,16 +62,16 @@ export default function VerifyEmailPage() {
     <div style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '24px',
-      background: '#fafbfc',
+      background: '#faf6ec',
     }}>
       <div style={{
         width: '100%', maxWidth: 440, padding: 36, borderRadius: 20,
         background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-        border: '1px solid #e2e8f0', textAlign: 'center',
+        border: '1px solid #ded8cb', textAlign: 'center',
       }}>
         {status === 'loading' && (
           <>
-            <div style={{ width: 72, height: 72, borderRadius: 20, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 36 }}>⏳</div>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: '#e9f1ea', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 36 }}>⏳</div>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.s, margin: '0 0 8px' }}>
               {t('verify_email.loading_title', 'Vérification en cours…')}
             </h2>
@@ -101,7 +101,7 @@ export default function VerifyEmailPage() {
         )}
         {status === 'error' && (
           <>
-            <div style={{ width: 72, height: 72, borderRadius: 20, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 36 }}>⚠️</div>
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: '#f7e9e6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 36 }}>⚠️</div>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.s, margin: '0 0 8px' }}>
               {t('verify_email.error_title', 'Lien invalide ou expiré')}
             </h2>

@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import LandingLayout from './LandingLayout';
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c', bg: '#faf6ec', border: '#ded8cb' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 // Master list of personas — kept in the same order as the nav and
@@ -96,7 +96,7 @@ export default function UseCasePageTemplate({
       </Helmet>
 
       {/* Hero — matches /blog and /marketplace pages */}
-      <section style={{ background: `linear-gradient(135deg, ${C.s} 0%, #1e293b 100%)`, padding: mobile ? '56px 20px 48px' : '80px 24px 64px', textAlign: 'center' }}>
+      <section style={{ background: `linear-gradient(135deg, ${C.s} 0%, #1a2c24 100%)`, padding: mobile ? '56px 20px 48px' : '80px 24px 64px', textAlign: 'center' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <nav aria-label="Breadcrumb" style={{ marginBottom: 20, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
             <a href="/" style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'none' }}>{t('useCases.breadcrumb.home')}</a>
@@ -109,7 +109,7 @@ export default function UseCasePageTemplate({
             {t('useCases.hero.badge')}
           </span>
           <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: -1 }}>{h1}</h1>
-          <p style={{ margin: '0 auto 32px', fontSize: mobile ? 16 : 18, color: '#94a3b8', lineHeight: 1.6, maxWidth: 620 }}>{subtitle}</p>
+          <p style={{ margin: '0 auto 32px', fontSize: mobile ? 16 : 18, color: '#99a09a', lineHeight: 1.6, maxWidth: 620 }}>{subtitle}</p>
           <button onClick={() => navigate('/signup')} style={{ padding: mobile ? '13px 26px' : '15px 32px', borderRadius: 12, border: 'none', background: g(C.p, C.pl), color: '#fff', fontWeight: 700, fontSize: mobile ? 15 : 16, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}40`, fontFamily: 'inherit' }}>
             {t('useCases.hero.cta')} →
           </button>
@@ -122,11 +122,11 @@ export default function UseCasePageTemplate({
           <div style={{ textAlign: 'center', marginBottom: mobile ? 32 : 40 }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.p, textTransform: 'uppercase', letterSpacing: 2 }}>{t('useCases.roi.label')}</p>
           </div>
-          <div style={{ padding: mobile ? 32 : 56, borderRadius: 24, background: g(C.s, '#1e293b'), color: '#fff', textAlign: 'center', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ padding: mobile ? 32 : 56, borderRadius: 24, background: g(C.s, '#1a2c24'), color: '#fff', textAlign: 'center', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -80, right: -80, width: 240, height: 240, borderRadius: '50%', background: `${C.p}18` }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: mobile ? 64 : 96, fontWeight: 900, lineHeight: 1, letterSpacing: -3, background: g(C.pl, '#6ee7b7'), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 16 }}>{roiMain}</div>
-              <p style={{ margin: '0 auto', fontSize: mobile ? 16 : 20, color: '#cbd5e1', lineHeight: 1.5, maxWidth: 620 }}>{roiMainDesc}</p>
+              <p style={{ margin: '0 auto', fontSize: mobile ? 16 : 20, color: '#cfc8b8', lineHeight: 1.5, maxWidth: 620 }}>{roiMainDesc}</p>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2,1fr)', gap: 16 }}>
@@ -218,19 +218,19 @@ export default function UseCasePageTemplate({
       </section>
 
       {/* Bottom CTA */}
-      <section style={{ background: g(C.s, '#1e293b'), padding: mobile ? '56px 20px' : '96px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ background: g(C.s, '#1a2c24'), padding: mobile ? '56px 20px' : '96px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: `${C.p}10` }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto', zIndex: 1 }}>
           <h2 style={{ margin: '0 0 16px', fontSize: mobile ? 28 : 38, fontWeight: 800, color: '#fff', letterSpacing: -1 }}>
             {t('useCases.bottomCta.title')}
           </h2>
-          <p style={{ margin: '0 0 32px', fontSize: mobile ? 16 : 18, color: '#cbd5e1', lineHeight: 1.6 }}>
+          <p style={{ margin: '0 0 32px', fontSize: mobile ? 16 : 18, color: '#cfc8b8', lineHeight: 1.6 }}>
             {t('useCases.bottomCta.subtitle')}
           </p>
           <button onClick={() => navigate('/signup')} style={{ padding: mobile ? '14px 28px' : '16px 36px', borderRadius: 14, border: 'none', background: g(C.p, C.pl), color: '#fff', fontWeight: 700, fontSize: mobile ? 16 : 18, cursor: 'pointer', boxShadow: `0 8px 30px ${C.p}40`, fontFamily: 'inherit' }}>
             {t('useCases.bottomCta.cta')} →
           </button>
-          <p style={{ marginTop: 14, fontSize: 13, color: '#94a3b8' }}>{t('useCases.bottomCta.note')}</p>
+          <p style={{ marginTop: 14, fontSize: 13, color: '#99a09a' }}>{t('useCases.bottomCta.note')}</p>
         </div>
       </section>
     </LandingLayout>

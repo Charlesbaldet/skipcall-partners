@@ -9,16 +9,16 @@ import { showConfirm, showToast } from '../components/Dialogs.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 
 const C = {
-  p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff',
-  border: '#e2e8f0', light: '#f1f5f9',
+  p: '#0e7a54', s: '#0e1f18', m: '#6e756c', bg: '#f6f2e9', card: '#fff',
+  border: '#ded8cb', light: '#ece7db',
 };
 
 const CAT_COLORS = {
-  update:        { bg: '#dbeafe', color: '#3b82f6', border: '#bfdbfe' },
-  newsletter:    { bg: '#ede9fe', color: '#8b5cf6', border: '#ddd6fe' },
-  event:         { bg: '#fef3c7', color: '#f59e0b', border: '#fde68a' },
-  product:       { bg: '#d1fae5', color: '#059669', border: '#a7f3d0' },
-  promotion:     { bg: '#fee2e2', color: '#ef4444', border: '#fecaca' },
+  update:        { bg: '#dbeafe', color: '#0e7a54', border: '#bfdbfe' },
+  newsletter:    { bg: '#ede9fe', color: '#0e7a54', border: '#ddd6fe' },
+  event:         { bg: '#f3ead0', color: '#b4791f', border: '#ecd9a0' },
+  product:       { bg: '#d1fae5', color: '#0e7a54', border: '#a7f3d0' },
+  promotion:     { bg: '#fee2e2', color: '#c24436', border: '#edc4bd' },
   commercial_kit:{ bg: '#cffafe', color: '#0891b2', border: '#a5f3fc' },
 };
 
@@ -149,7 +149,7 @@ export default function NewsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: C.s, letterSpacing: -0.2, margin: 0 }}>{t('news.title')}</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{t('news.subtitle')}</p>
+          <p style={{ color: '#6e756c', fontSize: 13, margin: '4px 0 0' }}>{t('news.subtitle')}</p>
         </div>
         {!editing && (
           <button onClick={startNew} style={{
@@ -179,7 +179,7 @@ export default function NewsPage() {
 
       {/* List */}
       {loading ? (
-        <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>…</div>
+        <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>…</div>
       ) : posts.length === 0 ? (
         <div style={{ background: C.card, borderRadius: 16, padding: 48, textAlign: 'center', color: C.m }}>
           {t('news.no_posts')}
@@ -250,14 +250,14 @@ function PostRow({ post, onEdit, onDelete, onStats }) {
       <div style={{ flex: '1 1 400px', minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 }}>
           <CatBadge category={post.category} t={t} />
-          {post.is_pinned && <span title={t('news.pinned')}><Pin size={14} color="#f59e0b" /></span>}
+          {post.is_pinned && <span title={t('news.pinned')}><Pin size={14} color="#b4791f" /></span>}
           {post.is_draft && (
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: C.m }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#ece7db', color: C.m }}>
               {t('news.draft').toUpperCase()}
             </span>
           )}
           {isScheduled && !post.is_draft && (
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#fef3c7', color: '#d97706' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f3ead0', color: '#d97706' }}>
               {t('news.scheduled').toUpperCase()}
             </span>
           )}
@@ -269,7 +269,7 @@ function PostRow({ post, onEdit, onDelete, onStats }) {
         </div>
         <div style={{ fontWeight: 700, fontSize: 16, color: C.s, marginBottom: 4 }}>{post.title}</div>
         <div style={{ fontSize: 13, color: C.m, lineHeight: 1.5 }}>{preview}{preview.length >= 150 ? '…' : ''}</div>
-        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
+        <div style={{ fontSize: 11, color: '#99a09a', marginTop: 8 }}>
           {post.published_at ? new Date(post.published_at).toLocaleString() : ''}
         </div>
       </div>
@@ -286,16 +286,16 @@ function PostRow({ post, onEdit, onDelete, onStats }) {
       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
         <IconButton icon={BarChart2} label={t('news.read_stats')} onClick={onStats} />
         <IconButton icon={Edit2} label={t('news.edit_post')} onClick={onEdit} />
-        <IconButton icon={Trash2} label={t('news.delete_post')} onClick={onDelete} color="#dc2626" />
+        <IconButton icon={Trash2} label={t('news.delete_post')} onClick={onDelete} color="#b23b2e" />
       </div>
     </div>
   );
 }
 
-function IconButton({ icon: Icon, label, onClick, color = '#475569' }) {
+function IconButton({ icon: Icon, label, onClick, color = '#33433b' }) {
   return (
     <button onClick={onClick} title={label} style={{
-      background: '#f8fafc', border: `1px solid ${C.border}`, borderRadius: 8,
+      background: '#f6f2e9', border: `1px solid ${C.border}`, borderRadius: 8,
       padding: '6px 10px', cursor: 'pointer', color, display: 'flex',
       alignItems: 'center', gap: 4, fontSize: 12,
     }}><Icon size={14} /></button>
@@ -330,7 +330,7 @@ function PostForm({ form, setForm, attachments, addAttachment, removeAttachment,
     <div style={{
       background: C.card, borderRadius: 16, border: `1px solid ${C.border}`,
       padding: 24, marginBottom: 24,
-      borderLeft: isKit ? '4px solid #0891b2' : isPromo ? '4px solid #ef4444' : `1px solid ${C.border}`,
+      borderLeft: isKit ? '4px solid #0891b2' : isPromo ? '4px solid #c24436' : `1px solid ${C.border}`,
     }}>
       <div style={{ display: 'grid', gap: 16 }}>
         <div>
@@ -394,7 +394,7 @@ function PostForm({ form, setForm, attachments, addAttachment, removeAttachment,
         </div>
 
         {isPromo && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, padding: 16, background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, padding: 16, background: '#f7e9e6', borderRadius: 12, border: '1px solid #edc4bd' }}>
             <div>
               <label style={label}>{t('news.promo_code')}</label>
               <input value={form.promo_code} onChange={set('promo_code')} style={input} />
@@ -410,7 +410,7 @@ function PostForm({ form, setForm, attachments, addAttachment, removeAttachment,
           </div>
         )}
 
-        <div style={{ padding: 16, background: isKit ? '#ecfeff' : '#f8fafc', borderRadius: 12, border: `1px solid ${isKit ? '#a5f3fc' : C.border}` }}>
+        <div style={{ padding: 16, background: isKit ? '#ecfeff' : '#f6f2e9', borderRadius: 12, border: `1px solid ${isKit ? '#a5f3fc' : C.border}` }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: C.s, marginBottom: 10 }}>
             {t('news.attachments')} ({attachments.length})
           </div>
@@ -421,7 +421,7 @@ function PostForm({ form, setForm, attachments, addAttachment, removeAttachment,
                   <Paperclip size={13} color={C.m} />
                   <span style={{ fontSize: 13, color: C.s, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.filename}</span>
                   {a.file_type && <span style={{ fontSize: 11, color: C.m }}>{a.file_type}</span>}
-                  <button onClick={() => removeAttachment(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 4 }}>
+                  <button onClick={() => removeAttachment(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b23b2e', padding: 4 }}>
                     <X size={14} />
                   </button>
                 </div>
@@ -443,12 +443,12 @@ function PostForm({ form, setForm, attachments, addAttachment, removeAttachment,
         </div>
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-          <button onClick={onCancel} style={{ padding: '10px 18px', borderRadius: 10, background: '#f1f5f9', color: C.m, border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+          <button onClick={onCancel} style={{ padding: '10px 18px', borderRadius: 10, background: '#ece7db', color: C.m, border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
             {t('news.cancel')}
           </button>
           <button onClick={onSave} disabled={saving || !form.title || !form.content} style={{
             padding: '10px 20px', borderRadius: 10, border: 'none',
-            background: saving || !form.title || !form.content ? '#94a3b8' : C.p,
+            background: saving || !form.title || !form.content ? '#99a09a' : C.p,
             color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
@@ -486,7 +486,7 @@ function StatsModal({ post, onClose }) {
             <div style={{ fontSize: 11, color: C.m, marginBottom: 4 }}>{t('news.read_stats')}</div>
             <h2 style={{ fontSize: 18, fontWeight: 800, color: C.s, margin: 0 }}>{post.title}</h2>
           </div>
-          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', width: 32, height: 32, borderRadius: 8, cursor: 'pointer' }}><X size={14} /></button>
+          <button onClick={onClose} style={{ background: '#ece7db', border: 'none', width: 32, height: 32, borderRadius: 8, cursor: 'pointer' }}><X size={14} /></button>
         </div>
 
         {data ? (
@@ -502,11 +502,11 @@ function StatsModal({ post, onClose }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 12, color: '#16a34a', marginBottom: 8, textTransform: 'uppercase' }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#157a4c', marginBottom: 8, textTransform: 'uppercase' }}>
                   {t('news.read_by')} ({data.read.length})
                 </div>
                 {data.read.length ? data.read.map(r => (
-                  <div key={r.partner_id} style={{ padding: '8px 10px', background: '#f0fdf4', borderRadius: 8, marginBottom: 6 }}>
+                  <div key={r.partner_id} style={{ padding: '8px 10px', background: '#e9f1ea', borderRadius: 8, marginBottom: 6 }}>
                     <div style={{ fontWeight: 600, fontSize: 13, color: C.s }}>{r.name}</div>
                     <div style={{ fontSize: 11, color: C.m }}>{new Date(r.read_at).toLocaleString()}</div>
                   </div>
@@ -517,7 +517,7 @@ function StatsModal({ post, onClose }) {
                   {t('news.not_read')} ({data.not_read.length})
                 </div>
                 {data.not_read.length ? data.not_read.map(r => (
-                  <div key={r.partner_id} style={{ padding: '8px 10px', background: '#f8fafc', borderRadius: 8, marginBottom: 6 }}>
+                  <div key={r.partner_id} style={{ padding: '8px 10px', background: '#f6f2e9', borderRadius: 8, marginBottom: 6 }}>
                     <div style={{ fontWeight: 500, fontSize: 13, color: C.s }}>{r.name}</div>
                   </div>
                 )) : <div style={{ color: C.m, fontSize: 13 }}>—</div>}
@@ -595,7 +595,7 @@ function SocialsEditor({ t }) {
       </div>
       <button onClick={save} disabled={saving} style={{
         padding: '8px 16px', borderRadius: 10, border: 'none',
-        background: saved ? '#16a34a' : C.p, color: '#fff',
+        background: saved ? '#157a4c' : C.p, color: '#fff',
         fontWeight: 600, fontSize: 13, cursor: 'pointer',
         display: 'inline-flex', alignItems: 'center', gap: 6,
       }}>
@@ -626,7 +626,7 @@ function EngagementTable({ t }) {
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
-            <tr style={{ background: '#f8fafc' }}>
+            <tr style={{ background: '#f6f2e9' }}>
               {[t('partners.tbl_partner'), t('news.posts_read'), t('news.total_posts'), t('news.engagement_score'), t('news.last_read')].map((h, i) => (
                 <th key={i} style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.m, textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>{h}</th>
               ))}
@@ -641,7 +641,7 @@ function EngagementTable({ t }) {
                 </td>
                 <td style={{ padding: '10px 12px', color: C.s }}>{p.posts_read}</td>
                 <td style={{ padding: '10px 12px', color: C.m }}>{p.total_posts}</td>
-                <td style={{ padding: '10px 12px', fontWeight: 700, color: p.engagement_pct >= 70 ? '#16a34a' : p.engagement_pct >= 40 ? '#f59e0b' : '#dc2626' }}>
+                <td style={{ padding: '10px 12px', fontWeight: 700, color: p.engagement_pct >= 70 ? '#157a4c' : p.engagement_pct >= 40 ? '#b4791f' : '#b23b2e' }}>
                   {p.engagement_pct}%
                 </td>
                 <td style={{ padding: '10px 12px', color: C.m, fontSize: 12 }}>
@@ -661,7 +661,7 @@ function EngagementTable({ t }) {
 
 function SummaryTile({ label, value, sub }) {
   return (
-    <div style={{ padding: 14, background: '#f8fafc', borderRadius: 12, border: `1px solid ${C.border}` }}>
+    <div style={{ padding: 14, background: '#f6f2e9', borderRadius: 12, border: `1px solid ${C.border}` }}>
       <div style={{ fontSize: 11, color: C.m, fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 800, color: C.s }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: C.m, marginTop: 2 }}>{sub}</div>}

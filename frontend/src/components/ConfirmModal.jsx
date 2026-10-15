@@ -36,10 +36,10 @@ export default function ConfirmModal({
   if (!isOpen) return null;
 
   const palette = variant === 'danger'
-    ? { accent: '#dc2626', accentHover: '#b91c1c', soft: '#fef2f2', softBorder: '#fecaca', icon: AlertTriangle }
+    ? { accent: '#b23b2e', accentHover: '#8f2e24', soft: '#f7e9e6', softBorder: '#edc4bd', icon: AlertTriangle }
     : variant === 'warning'
-      ? { accent: '#d97706', accentHover: '#b45309', soft: '#fffbeb', softBorder: '#fde68a', icon: AlertCircle }
-      : { accent: '#059669', accentHover: '#047857', soft: '#f0fdf4', softBorder: '#bbf7d0', icon: AlertCircle };
+      ? { accent: '#d97706', accentHover: '#9a5a16', soft: '#f6efda', softBorder: '#ecd9a0', icon: AlertCircle }
+      : { accent: '#0e7a54', accentHover: '#0b5e40', soft: '#e9f1ea', softBorder: '#cfe6d6', icon: AlertCircle };
   const Icon = palette.icon;
 
   return (
@@ -63,7 +63,7 @@ export default function ConfirmModal({
           padding: 24,
           width: '100%', maxWidth: 420,
           boxShadow: '0 25px 80px rgba(15,23,42,0.25)',
-          color: '#0f172a',
+          color: '#0e1f18',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -75,16 +75,16 @@ export default function ConfirmModal({
           }}>
             <Icon size={20} color={palette.accent}/>
           </div>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0e1f18' }}>{title}</h3>
         </div>
 
         {message && (
-          <div style={{ color: '#475569', fontSize: 14, lineHeight: 1.55, marginBottom: 20 }}>
+          <div style={{ color: '#33433b', fontSize: 14, lineHeight: 1.55, marginBottom: 20 }}>
             {message}
           </div>
         )}
         {children && (
-          <div style={{ color: '#475569', fontSize: 14, lineHeight: 1.55, marginBottom: 20 }}>
+          <div style={{ color: '#33433b', fontSize: 14, lineHeight: 1.55, marginBottom: 20 }}>
             {children}
           </div>
         )}
@@ -95,8 +95,8 @@ export default function ConfirmModal({
             disabled={loading}
             style={{
               padding: '10px 18px', borderRadius: 10,
-              border: '1.5px solid #e2e8f0', background: '#fff',
-              color: '#0f172a', fontSize: 14, fontWeight: 600,
+              border: '1.5px solid #ded8cb', background: '#fff',
+              color: '#0e1f18', fontSize: 14, fontWeight: 600,
               cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
             }}
           >

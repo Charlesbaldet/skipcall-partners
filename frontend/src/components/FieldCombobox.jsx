@@ -154,8 +154,8 @@ export default function FieldCombobox({
 
   const trigger = {
     width: '100%', padding: '8px 10px', borderRadius: 8,
-    border: '1.5px solid #e2e8f0', background: disabled ? '#f8fafc' : '#fff',
-    color: '#0f172a', fontSize: 13, fontFamily: 'inherit',
+    border: '1.5px solid #ded8cb', background: disabled ? '#f6f2e9' : '#fff',
+    color: '#0e1f18', fontSize: 13, fontFamily: 'inherit',
     cursor: disabled ? 'not-allowed' : 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     gap: 8, opacity: disabled ? 0.7 : 1,
@@ -169,11 +169,11 @@ export default function FieldCombobox({
         disabled={disabled}
         style={trigger}
       >
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: selectedField ? '#0f172a' : '#94a3b8' }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: selectedField ? '#0e1f18' : '#99a09a' }}>
           {triggerLabel}
         </span>
         <ChevronDown
-          size={14} color="#94a3b8"
+          size={14} color="#99a09a"
           style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
         />
       </button>
@@ -182,14 +182,14 @@ export default function FieldCombobox({
         <div
           style={{
             position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-            background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+            background: '#fff', border: '1px solid #ded8cb', borderRadius: 10,
             boxShadow: '0 8px 24px rgba(15,23,42,0.10)', zIndex: 100,
             maxHeight: 320, display: 'flex', flexDirection: 'column',
           }}
         >
           {/* Search input */}
-          <div style={{ position: 'relative', padding: 8, borderBottom: '1px solid #f1f5f9' }}>
-            <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', padding: 8, borderBottom: '1px solid #ece7db' }}>
+            <Search size={14} color="#99a09a" style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             <input
               ref={inputRef}
               type="search"
@@ -199,7 +199,7 @@ export default function FieldCombobox({
               placeholder={placeholderText}
               style={{
                 width: '100%', padding: '7px 10px 7px 32px', borderRadius: 8,
-                border: '1px solid #e2e8f0', fontSize: 13, color: '#0f172a',
+                border: '1px solid #ded8cb', fontSize: 13, color: '#0e1f18',
                 fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none',
               }}
             />
@@ -218,7 +218,7 @@ export default function FieldCombobox({
             />
 
             {standards.length === 0 && custom.length === 0 && (
-              <div style={{ padding: '14px 12px', color: '#94a3b8', fontSize: 13, textAlign: 'center' }}>
+              <div style={{ padding: '14px 12px', color: '#99a09a', fontSize: 13, textAlign: 'center' }}>
                 {t('pipedrive.field_no_results', 'Aucun champ trouvé')}
               </div>
             )}
@@ -276,7 +276,7 @@ function SectionHeader({ label }) {
   return (
     <div style={{
       padding: '6px 12px 4px', fontSize: 10, fontWeight: 600,
-      color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5,
+      color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.5,
       background: '#fff', position: 'sticky', top: 0,
     }}>
       {label}
@@ -296,19 +296,19 @@ function ComboItem({ innerRef, active, selected, onMouseEnter, onClick, label, q
       style={{
         width: '100%', padding: '8px 12px', textAlign: 'left',
         border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-        background: active ? '#f1f5f9' : (selected ? '#f0fdf4' : '#fff'),
+        background: active ? '#ece7db' : (selected ? '#e9f1ea' : '#fff'),
         display: 'flex', alignItems: 'center', gap: 8,
-        borderBottom: '1px solid #fafbfc',
+        borderBottom: '1px solid #faf6ec',
       }}
     >
-      {selected && !isUnmapped && <Check size={13} color="#059669" style={{ flexShrink: 0 }} />}
-      <div style={{ flex: 1, minWidth: 0, fontSize: 13, color: isUnmapped ? '#94a3b8' : '#0f172a', fontStyle: isUnmapped ? 'italic' : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginLeft: selected && !isUnmapped ? 0 : 21 }}>
+      {selected && !isUnmapped && <Check size={13} color="#0e7a54" style={{ flexShrink: 0 }} />}
+      <div style={{ flex: 1, minWidth: 0, fontSize: 13, color: isUnmapped ? '#99a09a' : '#0e1f18', fontStyle: isUnmapped ? 'italic' : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginLeft: selected && !isUnmapped ? 0 : 21 }}>
         {query ? <HighlightYellow text={label} query={query} /> : label}
       </div>
       {badge && (
         <span style={{
           fontSize: 9, padding: '1px 5px', borderRadius: 999,
-          background: '#f1f5f9', color: '#64748b', flexShrink: 0,
+          background: '#ece7db', color: '#6e756c', flexShrink: 0,
         }}>{badge}</span>
       )}
     </button>

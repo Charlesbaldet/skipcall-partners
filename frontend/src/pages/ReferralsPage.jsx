@@ -191,7 +191,7 @@ export default function ReferralsPage() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteId(null)}
       >
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#99a09a', marginTop: 4 }}>
           {t('trash.recovery_notice')}
         </span>
       </ConfirmModal>
@@ -200,20 +200,20 @@ export default function ReferralsPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.2, margin: 0 }}>{t('referrals.title')}</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{total} {t('referrals.count')}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.2, margin: 0 }}>{t('referrals.title')}</h1>
+          <p style={{ color: '#6e756c', fontSize: 13, margin: '4px 0 0' }}>{total} {t('referrals.count')}</p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {/* View toggle */}
-          <div style={{ display: 'flex', gap: 2, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
+          <div style={{ display: 'flex', gap: 2, background: '#ece7db', borderRadius: 10, padding: 3 }}>
             <button onClick={() => setViewMode('kanban')} style={{
               padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-              background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0f172a' : '#94a3b8',
+              background: viewMode === 'kanban' ? '#fff' : 'transparent', color: viewMode === 'kanban' ? '#0e1f18' : '#99a09a',
               fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'kanban' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
             }}><LayoutGrid size={14} /> {t('referrals.view_kanban')}</button>
             <button onClick={() => setViewMode('table')} style={{
               padding: '7px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-              background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0f172a' : '#94a3b8',
+              background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#0e1f18' : '#99a09a',
               fontWeight: 600, fontSize: 12, boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
             }}><List size={14} /> {t('referrals.view_table')}</button>
           </div>
@@ -234,13 +234,13 @@ export default function ReferralsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('referrals.loading')}</div>
+        <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>{t('referrals.loading')}</div>
       ) : viewMode === 'table' ? (
         /* TABLE VIEW */
-        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
-              <tr style={{ background: '#f8fafc' }}>
+              <tr style={{ background: '#f6f2e9' }}>
                 {/* Per-column alignment + click-to-sort. align defaults
                     to 'left'; numeric/date columns use 'right',
                     badge columns use 'center'. Arrow icon mirrors
@@ -259,9 +259,9 @@ export default function ReferralsPage() {
                     <th key={h.key} onClick={() => setSort(h.key)}
                       style={{
                         padding: '13px 16px', textAlign: h.align,
-                        fontWeight: 600, color: active ? '#0f172a' : '#64748b',
+                        fontWeight: 600, color: active ? '#0e1f18' : '#6e756c',
                         fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5,
-                        borderBottom: '1px solid #e2e8f0', cursor: 'pointer',
+                        borderBottom: '1px solid #ded8cb', cursor: 'pointer',
                         whiteSpace: 'nowrap', userSelect: 'none',
                       }}>
                       <span style={{
@@ -270,33 +270,33 @@ export default function ReferralsPage() {
                         // wrapper's text-align to push the chip the right way.
                       }}>
                         {h.label}
-                        <ArrowIcon size={11} color={active ? '#059669' : '#cbd5e1'} />
+                        <ArrowIcon size={11} color={active ? '#0e7a54' : '#cfc8b8'} />
                       </span>
                     </th>
                   );
                 })}
-                <th style={{ borderBottom: '1px solid #e2e8f0', padding: '13px 16px', width: 32 }} />
+                <th style={{ borderBottom: '1px solid #ded8cb', padding: '13px 16px', width: 32 }} />
               </tr>
             </thead>
             <tbody>
               {referrals.length === 0 ? (
-                <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('referrals.no_result')}</td></tr>
+                <tr><td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>{t('referrals.no_result')}</td></tr>
               ) : referrals.map(r => (
-                <tr key={r.id} onClick={() => openDetail(r)} style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background 0.1s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                <tr key={r.id} onClick={() => openDetail(r)} style={{ borderBottom: '1px solid #f6f2e9', cursor: 'pointer', transition: 'background 0.1s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#faf6ec'} onMouseLeave={e => e.currentTarget.style.background = ''}>
                   <td style={{ padding: '13px 16px', textAlign: 'left' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontWeight: 600, color: '#0f172a' }}>{r.prospect_name}</span>
+                      <span style={{ fontWeight: 600, color: '#0e1f18' }}>{r.prospect_name}</span>
                       <CrmSyncBadge referral={r}/>
                     </div>
-                    <div style={{ color: '#94a3b8', fontSize: 12 }}>{r.prospect_company}</div>
+                    <div style={{ color: '#99a09a', fontSize: 12 }}>{r.prospect_company}</div>
                   </td>
-                  <td style={{ padding: '13px 16px', color: '#475569', textAlign: 'left' }}>{r.partner_name}</td>
+                  <td style={{ padding: '13px 16px', color: '#33433b', textAlign: 'left' }}>{r.partner_name}</td>
                   <td style={{ padding: '13px 16px', textAlign: 'center' }}><Badge config={TEMPERATURE_CONFIG} value={r.recommendation_level} /></td>
                   <td style={{ padding: '13px 16px', textAlign: 'center' }}><Badge config={stageStatusConfig} value={(stages.find(s => s.id === r.stage_id)?.slug) || r.status} /></td>
-                  <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0f172a', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
-                  <td style={{ padding: '13px 16px', color: '#94a3b8', fontSize: 13, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
-                  <td style={{ padding: '13px 16px', textAlign: 'right' }}><ChevronRight size={16} color="#94a3b8" /></td>
+                  <td style={{ padding: '13px 16px', fontWeight: 600, color: '#0e1f18', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{r.deal_value > 0 ? fmt(r.deal_value) : '—'}</td>
+                  <td style={{ padding: '13px 16px', color: '#99a09a', fontSize: 13, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
+                  <td style={{ padding: '13px 16px', textAlign: 'right' }}><ChevronRight size={16} color="#99a09a" /></td>
                 </tr>
               ))}
             </tbody>
@@ -306,7 +306,7 @@ export default function ReferralsPage() {
         /* KANBAN VIEW */
         <div style={{ overflow: 'hidden', borderRadius: 16 }}>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, height: 'calc(100vh - 140px)', minHeight: 400 }}>
-          {(stages.length ? stages : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#64748b' }))).map(stage => {
+          {(stages.length ? stages : KANBAN_STATUSES.map(slug => ({ id: slug, slug, name: STATUS_CONFIG[slug]?.label || slug, color: STATUS_CONFIG[slug]?.color || '#6e756c' }))).map(stage => {
             // Match referrals to this column by stage_id primarily;
             // fall back to legacy status slug so anything predating
             // the migration still renders somewhere.
@@ -316,7 +316,7 @@ export default function ReferralsPage() {
             const limit = kanbanLimits[stage.id || stage.slug] || 25;
             const cards = allCards.slice(0, limit);
             const hasMore = allCards.length > limit;
-            const stageColor = stage.color || '#64748b';
+            const stageColor = stage.color || '#6e756c';
             // Sum MRR/CA across the WHOLE column, not the page
             // slice, so the header total stays correct even when
             // only the first 25 cards are rendered.
@@ -333,29 +333,29 @@ export default function ReferralsPage() {
             return (
               <div key={stage.id || stage.slug}
                 onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = `${stageColor}0a`; }}
-                onDragLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
-                onDrop={e => { e.currentTarget.style.background = '#f8fafc'; handleDrop(e, stage); }}
+                onDragLeave={e => { e.currentTarget.style.background = '#f6f2e9'; }}
+                onDrop={e => { e.currentTarget.style.background = '#f6f2e9'; handleDrop(e, stage); }}
                 style={{
-                  minWidth: 260, width: 260, flexShrink: 0, background: '#f8fafc', borderRadius: 16,
+                  minWidth: 260, width: 260, flexShrink: 0, background: '#f6f2e9', borderRadius: 16,
                   padding: 12, display: 'flex', flexDirection: 'column',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #ded8cb',
                   borderTop: `3px solid ${stageColor}`,
                 }}
               >
                 {/* Column header — title row + MRR/CA total. Total
                     is the WHOLE-column sum, not the visible slice,
                     so paging through the column doesn't shift it. */}
-                <div style={{ padding: '10px 12px', marginBottom: 10, borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0' }}>
+                <div style={{ padding: '10px 12px', marginBottom: 10, borderRadius: 10, background: '#fff', border: '1px solid #ded8cb' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: stageColor, flexShrink: 0 }} />
-                      <span style={{ fontWeight: 600, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stage.name}</span>
-                      <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}>{allCards.length}</span>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: '#0e1f18', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stage.name}</span>
+                      <span style={{ background: '#ece7db', color: '#6e756c', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 999, flexShrink: 0 }}>{allCards.length}</span>
                     </div>
                     {columnMrr > 0 && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{fmt(columnMrr)}</div>
-                        <div style={{ fontSize: 10, color: '#94a3b8', marginTop: -1 }}>{columnLabel}</div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: '#0e1f18' }}>{fmt(columnMrr)}</div>
+                        <div style={{ fontSize: 10, color: '#99a09a', marginTop: -1 }}>{columnLabel}</div>
                       </div>
                     )}
                   </div>
@@ -386,11 +386,11 @@ export default function ReferralsPage() {
                       onClick={() => openDetail(r)}
                       style={{
                         background: '#fff', borderRadius: 12, padding: 12, cursor: 'grab',
-                        border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0',
+                        border: draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #ded8cb',
                         // Won column: 3px green left accent so closed
                         // deals jump out visually without a separate
                         // badge.
-                        borderLeft: stage.is_won ? '3px solid #16a34a' : (draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #e2e8f0'),
+                        borderLeft: stage.is_won ? '3px solid #157a4c' : (draggedId === r.id ? `2px solid ${stageColor}` : '1px solid #ded8cb'),
                         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                         opacity: draggedId === r.id ? 0.5 : 1, transition: 'all 0.15s',
                       }}
@@ -398,13 +398,13 @@ export default function ReferralsPage() {
                       {/* Row 1: company / prospect + amount */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
-                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {r.prospect_company || r.prospect_name}
                           </div>
                           <CrmSyncBadge referral={r}/>
                         </div>
                         {dealValue > 0 && (
-                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13, whiteSpace: 'nowrap' }}>{fmt(dealValue)}</div>
+                          <div style={{ fontWeight: 700, color: '#0e1f18', fontSize: 13, whiteSpace: 'nowrap' }}>{fmt(dealValue)}</div>
                         )}
                       </div>
                       {/* Row 2: lead-handling badge ("GÉRÉ PAR
@@ -417,10 +417,10 @@ export default function ReferralsPage() {
                           covers the lead source, so this line is
                           purely contact info. */}
                       {(r.contact_first_name || r.contact_last_name || r.partner_name) && (
-                        <div style={{ color: '#64748b', fontSize: 11, marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ color: '#6e756c', fontSize: 11, marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {[r.contact_first_name, r.contact_last_name].filter(Boolean).join(' ')}
                           {(r.contact_first_name || r.contact_last_name) && r.partner_name ? ' · ' : ''}
-                          {r.partner_name && <span style={{ color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{r.partner_name}</span>}
+                          {r.partner_name && <span style={{ color: 'var(--rb-primary, #0e7a54)', fontWeight: 600 }}>{r.partner_name}</span>}
                         </div>
                       )}
                       {/* Row 4: temperature pill (left) + commission
@@ -443,7 +443,7 @@ export default function ReferralsPage() {
                           </span>
                         ) : <span/>}
                         {fc && fc.amount > 0 && (
-                          <span style={{ color: '#16a34a', fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          <span style={{ color: '#157a4c', fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap' }}>
                             ~{fmt(fc.amount)} {t('referrals.commission_short', 'comm.')}
                           </span>
                         )}
@@ -455,7 +455,7 @@ export default function ReferralsPage() {
                       <div style={{ marginTop: 8 }}>
                         <select value={r.status} onChange={e => { e.stopPropagation(); handleStatusChangeFromCard(r.id, e.target.value); }}
                           onClick={e => e.stopPropagation()}
-                          style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontWeight: 500, fontSize: 11, cursor: 'pointer' }}>
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid #ded8cb', background: '#f6f2e9', color: '#33433b', fontWeight: 500, fontSize: 11, cursor: 'pointer' }}>
                           {(stages.length ? stages.map(s => ({ k: s.slug, label: s.name })) : Object.entries(STATUS_CONFIG).map(([k, v]) => ({ k, label: v.label }))).map(({ k, label }) => (
                             <option key={k} value={k}>{label}</option>
                           ))}
@@ -466,8 +466,8 @@ export default function ReferralsPage() {
                   })}
                   {hasMore && (
                     <button onClick={() => setKanbanLimits(prev => ({ ...prev, [stage.id || stage.slug]: limit + 25 }))} style={{
-                      padding: '10px', borderRadius: 10, border: '1px dashed #cbd5e1', background: 'transparent',
-                      color: 'var(--rb-primary, #059669)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
+                      padding: '10px', borderRadius: 10, border: '1px dashed #cfc8b8', background: 'transparent',
+                      color: 'var(--rb-primary, #0e7a54)', fontWeight: 600, fontSize: 12, cursor: 'pointer', textAlign: 'center',
                     }}>{t('referrals.see_more', { count: allCards.length - limit })}</button>
                   )}
                 </div>
@@ -491,7 +491,7 @@ export default function ReferralsPage() {
 
 // ═══ CONFETTI EASTER EGG ═══
 function Confetti() {
-  const colors = ['#6366f1', '#f59e0b', '#16a34a', '#dc2626', '#ec4899', '#0ea5e9', '#8b5cf6', '#f97316'];
+  const colors = ['#0e7a54', '#b4791f', '#157a4c', '#b23b2e', '#ec4899', '#0ea5e9', '#0e7a54', '#d5541a'];
   const pieces = Array.from({ length: 60 }, (_, i) => ({
     id: i, left: Math.random() * 100, delay: Math.random() * 0.5,
     color: colors[Math.floor(Math.random() * colors.length)],
@@ -528,12 +528,12 @@ function Confetti() {
 // tier names — any custom name a tenant defines falls through to
 // the neutral slate palette so unknown tiers still look intentional.
 const TIER_PALETTE = {
-  Bronze:   { bg: '#fef3c7', text: '#92400e', border: '#f59e0b' },
-  Silver:   { bg: '#e0f2fe', text: '#0c4a6e', border: '#3b82f6' },
+  Bronze:   { bg: '#f3ead0', text: '#7a4a16', border: '#b4791f' },
+  Silver:   { bg: '#e0f2fe', text: '#0c4a6e', border: '#0e7a54' },
   Gold:     { bg: '#fef9c3', text: '#854d0e', border: '#eab308' },
-  Platinum: { bg: '#f3e8ff', text: '#6b21a8', border: '#8b5cf6' },
+  Platinum: { bg: '#f3e8ff', text: '#6b21a8', border: '#0e7a54' },
 };
-const TIER_NEUTRAL = { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
+const TIER_NEUTRAL = { bg: '#ece7db', text: '#33433b', border: '#cfc8b8' };
 function tierPalette(tier) {
   if (!tier || !tier.name) return TIER_NEUTRAL;
   return TIER_PALETTE[tier.name] || TIER_NEUTRAL;
@@ -712,21 +712,21 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
         <div style={{ padding: '28px 32px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{referral.prospect_name}</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5 }}>{referral.prospect_name}</h2>
               <Badge config={TEMPERATURE_CONFIG} value={referral.recommendation_level} />
             </div>
-            <p style={{ color: '#64748b', fontSize: 14 }}>
+            <p style={{ color: '#6e756c', fontSize: 14 }}>
               {referral.prospect_company} · {referral.partner_name}
               {(referral.contact_first_name || referral.contact_last_name) && (
                 <> · <span style={{ fontStyle: 'italic' }}>{[referral.contact_first_name, referral.contact_last_name].filter(Boolean).join(' ')}</span></>
               )}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', width: 38, height: 38, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} color="#475569" /></button>
+          <button onClick={onClose} style={{ background: '#ece7db', border: 'none', width: 38, height: 38, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} color="#33433b" /></button>
         </div>
-        <div style={{ padding: '16px 32px 0', display: 'flex', gap: 4, borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ padding: '16px 32px 0', display: 'flex', gap: 4, borderBottom: '1px solid #ded8cb' }}>
           {[{ id: 'info', label: t('referrals.tab_info') }, { id: 'pipeline', label: t('referrals.tab_pipeline') }, { id: 'history', label: `${t('referrals.tab_history')} (${activities.length})` }].map(tab_ => (
-            <button key={tab_.id} onClick={() => setTab(tab_.id)} style={{ padding: '10px 18px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: tab === tab_.id ? '#6366f1' : '#64748b', borderBottom: tab === tab_.id ? '2px solid var(--rb-primary, #059669)' : '2px solid transparent', background: 'transparent', marginBottom: -1 }}>{tab_.label}</button>
+            <button key={tab_.id} onClick={() => setTab(tab_.id)} style={{ padding: '10px 18px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: tab === tab_.id ? '#0e7a54' : '#6e756c', borderBottom: tab === tab_.id ? '2px solid var(--rb-primary, #0e7a54)' : '2px solid transparent', background: 'transparent', marginBottom: -1 }}>{tab_.label}</button>
           ))}
         </div>
         <div style={{ padding: '24px 32px 28px' }}>
@@ -762,8 +762,8 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               </div>
               {referral.notes && (
                 <div>
-                  <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('referrals.partner_notes')}</div>
-                  <div style={{ background: '#fffbeb', borderRadius: 12, padding: 16, color: '#92400e', fontSize: 14, lineHeight: 1.6, borderLeft: '3px solid #f59e0b' }}>{referral.notes}</div>
+                  <div style={{ fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 8 }}>{t('referrals.partner_notes')}</div>
+                  <div style={{ background: '#f6efda', borderRadius: 12, padding: 16, color: '#7a4a16', fontSize: 14, lineHeight: 1.6, borderLeft: '3px solid #b4791f' }}>{referral.notes}</div>
                 </div>
               )}
             </div>
@@ -788,24 +788,24 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
             <div>
               {/* Section: status with stepper bar */}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 10 }}>{t('referrals.field_status')}</div>
+                <div style={{ fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 10 }}>{t('referrals.field_status')}</div>
                 {stageList.length > 0 && (
                   <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
                     {stageList.map((s, i) => {
                       const bg = isLost
                         ? '#fee2e2'
                         : i <= currentIndex && currentIndex >= 0
-                          ? '#16a34a'
+                          ? '#157a4c'
                           : i === currentIndex + 1
                             ? '#fbbf24'
-                            : '#e2e8f0';
+                            : '#ded8cb';
                       return <div key={s.id} style={{ flex: 1, height: 4, borderRadius: 999, background: bg, transition: 'background-color .15s' }} />;
                     })}
                   </div>
                 )}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {(stages.length
-                    ? stages.map(s => ({ id: s.id, slug: s.slug, label: s.name, color: s.color || '#64748b', isStage: true, stage: s }))
+                    ? stages.map(s => ({ id: s.id, slug: s.slug, label: s.name, color: s.color || '#6e756c', isStage: true, stage: s }))
                     : Object.entries(STATUS_CONFIG).map(([k, v]) => ({ id: k, slug: k, label: v.label, color: v.color, bg: v.bg, isStage: false }))
                   ).map(opt => {
                     const active = opt.isStage ? editStageId === opt.id : editStatus === opt.slug;
@@ -823,7 +823,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                         title={stageLocked ? t('referrals.status_locked_tooltip', 'Statut verrouillé — commission en cours de paiement') : undefined}
                         style={{
                           padding: '8px 14px', borderRadius: 10,
-                          border: active ? `2px solid ${opt.color}` : '2px solid #e2e8f0',
+                          border: active ? `2px solid ${opt.color}` : '2px solid #ded8cb',
                           background: active ? bg : '#fff',
                           opacity: stageLocked ? 0.45 : 1,
                           color: opt.color,
@@ -839,7 +839,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               </div>
 
               {/* Separator between status and the financial section */}
-              <div style={{ borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
+              <div style={{ borderTop: '1px solid #ece7db', margin: '20px 0' }} />
 
               {/* Section: MRR/CA + Commission rate side by side. The
                   two-column row matches the Option A approved
@@ -847,7 +847,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   left, the rate drives it on the right. */}
               <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 220px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6e756c', fontWeight: 600, marginBottom: 6 }}>
                     {/* H1 — label deal_value selon business_model.
                         forfait_tjm = montant one-shot HT (pas de
                         cadence) ; mrr / hybrid = MRR mensuel comme avant. */}
@@ -855,7 +855,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                       ? t('referrals.value_label_forfait', 'Montant forfait HT')
                       : `${rLabel} (${rUnit})`}
                     {referral.deal_value_locked && (
-                      <span title={t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 8px' }}>
+                      <span title={t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#7a4a16', background: '#f6efda', border: '1px solid #ecd9a0', borderRadius: 999, padding: '2px 8px' }}>
                         <Lock size={11} /> {t('referrals.deal_value_locked', 'Verrouillé')}
                       </span>
                     )}
@@ -863,7 +863,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                         spawn an amendment (commission_revisions) on
                         an already-approved recurring commission. */}
                     {referral.deal_value_revision_allowed && Number(editValue) !== Number(referral.deal_value) && (
-                      <span title={t('referrals.deal_value_revision_tooltip', 'La modification créera un avenant — les versements passés restent figés.')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#6366f1', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 999, padding: '2px 8px' }}>
+                      <span title={t('referrals.deal_value_revision_tooltip', 'La modification créera un avenant — les versements passés restent figés.')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#0e7a54', background: '#eef1ea', border: '1px solid #c7d2fe', borderRadius: 999, padding: '2px 8px' }}>
                         {t('referrals.deal_value_revision_badge', 'Crée un avenant')}
                       </span>
                     )}
@@ -877,10 +877,10 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                     title={referral.deal_value_locked ? t('referrals.deal_value_locked_tooltip', 'Montant verrouillé — commission en cours de traitement') : undefined}
                     style={{
                       width: '100%', padding: '10px 14px', borderRadius: 10,
-                      border: '2px solid #e2e8f0',
+                      border: '2px solid #ded8cb',
                       fontSize: 14, fontWeight: 600,
-                      color: referral.deal_value_locked ? '#94a3b8' : '#0f172a',
-                      background: referral.deal_value_locked ? '#f8fafc' : '#fff',
+                      color: referral.deal_value_locked ? '#99a09a' : '#0e1f18',
+                      background: referral.deal_value_locked ? '#f6f2e9' : '#fff',
                       cursor: referral.deal_value_locked ? 'not-allowed' : 'text',
                       boxSizing: 'border-box',
                     }}
@@ -890,7 +890,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                       2 colonnes ; help-text pour clarifier la sémantique. */}
                   {isHybridTenant && (
                     <div style={{ marginTop: 10 }}>
-                      <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                      <div style={{ fontSize: 12, color: '#6e756c', fontWeight: 600, marginBottom: 6 }}>
                         {t('referrals.setup_value_label', 'Setup one-shot HT')}
                       </div>
                       <input
@@ -902,18 +902,18 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                         placeholder={t('referrals.setup_value_ph', 'Montant setup HT (laisser vide si pas de setup)')}
                         style={{
                           width: '100%', padding: '10px 14px', borderRadius: 10,
-                          border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 600,
-                          color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                          border: '2px solid #ded8cb', fontSize: 14, fontWeight: 600,
+                          color: '#0e1f18', background: '#fff', boxSizing: 'border-box',
                         }}
                       />
-                      <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>
+                      <div style={{ color: '#99a09a', fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>
                         {t('referrals.setup_value_help', 'Montant one-shot facturé au client à la signature (configuration, onboarding, etc.). Le partenaire touchera un % distinct sur ce montant.')}
                       </div>
                     </div>
                   )}
                 </div>
                 <div style={{ flex: '1 1 220px' }}>
-                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, color: '#6e756c', fontWeight: 600, marginBottom: 6 }}>
                     {t('pipeline.partner_commission', 'Commission du partenaire')}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -928,11 +928,11 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                         onBlur={handleRateBlur}
                         style={{
                           width: '100%', padding: '10px 26px 10px 12px', borderRadius: 10,
-                          border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 700,
-                          color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                          border: '2px solid #ded8cb', fontSize: 14, fontWeight: 700,
+                          color: '#0e1f18', background: '#fff', boxSizing: 'border-box',
                         }}
                       />
-                      <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>%</span>
+                      <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#99a09a', fontSize: 13, fontWeight: 600 }}>%</span>
                     </div>
                     {partnerTier && (() => {
                       const pal = tierPalette(partnerTier);
@@ -950,7 +950,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                     })()}
                   </div>
                   {commissionOverridden && partnerTier && tierRate != null && (
-                    <div style={{ marginTop: 6, fontSize: 12, color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ marginTop: 6, fontSize: 12, color: '#9a5a16', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <AlertTriangle size={13} />
                       {t('pipeline.commission_overridden', {
                         tierName: partnerTier.name,
@@ -962,7 +962,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                 </div>
               </div>
               {referral.deal_value_locked && (
-                <div style={{ marginTop: -10, marginBottom: 16, fontSize: 12, color: '#92400e' }}>
+                <div style={{ marginTop: -10, marginBottom: 16, fontSize: 12, color: '#7a4a16' }}>
                   {t('referrals.deal_value_locked_help', 'Le montant ne peut plus être modifié — un virement est en cours pour cette commission.')}
                 </div>
               )}
@@ -979,19 +979,19 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   à jour. */}
               {!isForfaitTjmTenant && (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 8 }}>{t('referrals.engagement')}</div>
+                <div style={{ fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 8 }}>{t('referrals.engagement')}</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {[
                     ['mensuel',     t('pipeline.mensuel',     'Mensuel')],
                     ['trimestriel', t('pipeline.trimestriel', 'Trimestriel')],
                     ['annuel',      t('pipeline.annuel',      'Annuel')],
                   ].map(([k, label]) => (
-                    <button key={k} onClick={() => handleEngagementChange(k)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editEngagement === k ? '2px solid var(--rb-primary, #059669)' : '2px solid #e2e8f0', background: editEngagement === k ? '#eef2ff' : '#fff', color: editEngagement === k ? '#6366f1' : '#64748b' }}>{label}</button>
+                    <button key={k} onClick={() => handleEngagementChange(k)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: editEngagement === k ? '2px solid var(--rb-primary, #0e7a54)' : '2px solid #ded8cb', background: editEngagement === k ? '#eef1ea' : '#fff', color: editEngagement === k ? '#0e7a54' : '#6e756c' }}>{label}</button>
                   ))}
                 </div>
                 {editEngagement !== 'forfait' && (
                   <div style={{ marginTop: 12 }}>
-                    <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>
+                    <label style={{ display: 'block', fontSize: 12, color: '#6e756c', marginBottom: 6 }}>
                       {editEngagement === 'mensuel' && t('pipeline.nb_months', 'Nombre de mois')}
                       {editEngagement === 'trimestriel' && t('pipeline.nb_quarters', 'Nombre de trimestres')}
                       {editEngagement === 'annuel' && t('pipeline.nb_years', "Nombre d'années")}
@@ -1004,8 +1004,8 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                       onChange={e => setEditPeriods(Math.max(1, parseInt(e.target.value, 10) || 1))}
                       style={{
                         width: 140, padding: '10px 14px', borderRadius: 10,
-                        border: '2px solid #e2e8f0', fontSize: 14, fontWeight: 600,
-                        color: '#0f172a', background: '#fff', boxSizing: 'border-box',
+                        border: '2px solid #ded8cb', fontSize: 14, fontWeight: 600,
+                        color: '#0e1f18', background: '#fff', boxSizing: 'border-box',
                       }}
                     />
                   </div>
@@ -1026,18 +1026,18 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   ? decomposeAmountWithTax(forecast.amount, partnerVatRate)
                   : null;
                 return (
-                  <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid #bbf7d0' }}>
-                    <div style={{ fontSize: 10, color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                  <div style={{ background: '#e9f1ea', borderRadius: 14, padding: 16, marginBottom: 20, border: '1px solid #cfe6d6' }}>
+                    <div style={{ fontSize: 10, color: '#0e4d34', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                       {t('pipeline.forecast_commission', 'Commission prévisionnelle')}
                     </div>
-                    <div style={{ fontSize: 22, fontWeight: 600, color: '#16a34a', lineHeight: 1.2 }}>
+                    <div style={{ fontSize: 22, fontWeight: 600, color: '#157a4c', lineHeight: 1.2 }}>
                       {fmt(forecast.amount)}{breakdown ? ' HT' : ''}
                     </div>
                     {breakdown && (
                       <div style={{ fontSize: 13, color: '#15803d', marginTop: 4 }}>
                         TVA {breakdown.tax_rate}% : {fmt(breakdown.amount_tax)}
                         {' · '}
-                        <strong style={{ color: '#166534' }}>TTC : {fmt(breakdown.amount_ttc)}</strong>
+                        <strong style={{ color: '#0e4d34' }}>TTC : {fmt(breakdown.amount_ttc)}</strong>
                       </div>
                     )}
                     <div style={{ fontSize: 11, color: '#15803d', marginTop: breakdown ? 4 : 2 }}>
@@ -1057,8 +1057,8 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                   after approval at least once). The list is read-only
                   by design — amendments are immutable. */}
               {Array.isArray(referral.commission_revisions) && referral.commission_revisions.length > 1 && (
-                <div style={{ marginTop: 16, padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                <div style={{ marginTop: 16, padding: 14, borderRadius: 12, border: '1px solid #ded8cb', background: '#fff' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#6e756c', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
                     {t('pipeline.revisions_title', { count: referral.commission_revisions.length, defaultValue: 'Historique des avenants ({{count}})' })}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1067,15 +1067,15 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
                                        : r.reason === 'downsell' ? t('pipeline.rev_downsell', 'downsell')
                                        : r.reason === 'initial'  ? t('pipeline.rev_initial',  'initial')
                                        : (r.reason || '—');
-                      const color = r.reason === 'upsell' ? '#16a34a' : r.reason === 'downsell' ? '#dc2626' : '#64748b';
+                      const color = r.reason === 'upsell' ? '#157a4c' : r.reason === 'downsell' ? '#b23b2e' : '#6e756c';
                       return (
                         <div key={r.revision_index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 12 }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#475569', fontFamily: 'tabular-nums' }}>
-                            <span style={{ fontWeight: 700, color: '#0f172a' }}>#{r.revision_index}</span>
-                            <span style={{ padding: '1px 7px', borderRadius: 6, background: '#f1f5f9', color, fontWeight: 600, fontSize: 11 }}>{reasonLabel}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#33433b', fontFamily: 'tabular-nums' }}>
+                            <span style={{ fontWeight: 700, color: '#0e1f18' }}>#{r.revision_index}</span>
+                            <span style={{ padding: '1px 7px', borderRadius: 6, background: '#ece7db', color, fontWeight: 600, fontSize: 11 }}>{reasonLabel}</span>
                             <span>{fmt(r.amount_ttc)} TTC</span>
                           </span>
-                          <span style={{ color: '#94a3b8', fontSize: 11 }}>{fmtDate(r.effective_date)}</span>
+                          <span style={{ color: '#99a09a', fontSize: 11 }}>{fmtDate(r.effective_date)}</span>
                         </div>
                       );
                     })}
@@ -1084,7 +1084,7 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               )}
 
               {/* Separator before the footer buttons. */}
-              <div style={{ borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
+              <div style={{ borderTop: '1px solid #ece7db', margin: '20px 0' }} />
 
               {/* Pipedrive sync action — visible only when the tenant
                   has Pipedrive connected. Label adapts to whether the
@@ -1092,13 +1092,13 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
               <PipedrivePushButton referral={referral} t={t} />
 
               {saveToast && (
-                <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 600, background: saveToast.type === 'success' ? '#f0fdf4' : '#fef2f2', color: saveToast.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${saveToast.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
+                <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 600, background: saveToast.type === 'success' ? '#e9f1ea' : '#f7e9e6', color: saveToast.type === 'success' ? '#157a4c' : '#b23b2e', border: `1px solid ${saveToast.type === 'success' ? '#cfe6d6' : '#edc4bd'}` }}>
                   {saveToast.text}
                 </div>
               )}
               <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1 }}>{saving ? t('referrals.saving') : t('referrals.save')}</button>
-                <button onClick={() => onDelete(referral.id)} style={{ padding: '14px 20px', borderRadius: 12, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><Trash2 size={16} /> {t('referrals.delete')}</button>
+                <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '14px', borderRadius: 12, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 15px rgba(5,150,105,0.3)', opacity: saving ? 0.7 : 1 }}>{saving ? t('referrals.saving') : t('referrals.save')}</button>
+                <button onClick={() => onDelete(referral.id)} style={{ padding: '14px 20px', borderRadius: 12, background: '#f7e9e6', color: '#b23b2e', border: '1px solid #edc4bd', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><Trash2 size={16} /> {t('referrals.delete')}</button>
               </div>
             </div>
             );
@@ -1106,14 +1106,14 @@ function DetailModal({ referral, activities, onClose, onUpdate, onDelete, myTena
           {tab === 'history' && (
             <div>
               {activities.length === 0 ? (
-                <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>{t('referrals.no_activity')}</div>
+                <div style={{ padding: 32, textAlign: 'center', color: '#99a09a' }}>{t('referrals.no_activity')}</div>
               ) : (
-                <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div style={{ borderLeft: '2px solid #ded8cb', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
                   {activities.map(a => (
                     <div key={a.id} style={{ position: 'relative' }}>
-                      <div style={{ position: 'absolute', left: -26, top: 4, width: 10, height: 10, borderRadius: '50%', background: 'var(--rb-primary, #059669)', border: '2px solid #fff', boxShadow: '0 0 0 2px #e2e8f0' }} />
-                      <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 3 }}>{fmtDateTime(a.created_at)} · {a.user_name}</div>
-                      <div style={{ fontSize: 14, color: '#334155', fontWeight: 500 }}>{formatActivity(a, t)}</div>
+                      <div style={{ position: 'absolute', left: -26, top: 4, width: 10, height: 10, borderRadius: '50%', background: 'var(--rb-primary, #0e7a54)', border: '2px solid #fff', boxShadow: '0 0 0 2px #ded8cb' }} />
+                      <div style={{ fontSize: 11, color: '#99a09a', marginBottom: 3 }}>{fmtDateTime(a.created_at)} · {a.user_name}</div>
+                      <div style={{ fontSize: 14, color: '#2b3a32', fontWeight: 500 }}>{formatActivity(a, t)}</div>
                     </div>
                   ))}
                 </div>
@@ -1225,11 +1225,11 @@ function PipedrivePushButton({ referral, t }) {
   };
 
   return (
-    <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+    <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 10, background: '#f6f2e9', border: '1px solid #ded8cb' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Pipedrive</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0e1f18' }}>Pipedrive</div>
+          <div style={{ fontSize: 11, color: '#6e756c' }}>
             {dealId
               ? t('pipedrive.push_one_linked', { dealId, defaultValue: 'Lié au deal #{{dealId}}' })
               : t('pipedrive.push_one_unlinked', 'Pas encore synchronisé')}
@@ -1239,7 +1239,7 @@ function PipedrivePushButton({ referral, t }) {
           {dealUrl && (
             <a href={dealUrl} target="_blank" rel="noreferrer"
               onClick={e => e.stopPropagation()}
-              style={{ fontSize: 12, color: '#0f172a', textDecoration: 'underline' }}>
+              style={{ fontSize: 12, color: '#0e1f18', textDecoration: 'underline' }}>
               {t('pipedrive.push_one_open', 'Ouvrir')}
             </a>
           )}
@@ -1247,7 +1247,7 @@ function PipedrivePushButton({ referral, t }) {
             type="button" onClick={handleClick} disabled={pushing}
             style={{
               padding: '8px 14px', borderRadius: 8, border: 'none',
-              background: '#059669', color: '#fff',
+              background: '#0e7a54', color: '#fff',
               fontSize: 13, fontWeight: 600, cursor: pushing ? 'wait' : 'pointer',
               fontFamily: 'inherit', opacity: pushing ? 0.7 : 1,
             }}
@@ -1263,9 +1263,9 @@ function PipedrivePushButton({ referral, t }) {
       {msg && (
         <div style={{
           marginTop: 10, padding: '6px 10px', borderRadius: 8, fontSize: 12,
-          background: msg.tone === 'success' ? '#ecfdf5' : '#fef2f2',
-          border: '1px solid ' + (msg.tone === 'success' ? '#6ee7b7' : '#fecaca'),
-          color: msg.tone === 'success' ? '#047857' : '#b91c1c',
+          background: msg.tone === 'success' ? '#e9f1ea' : '#f7e9e6',
+          border: '1px solid ' + (msg.tone === 'success' ? '#6ee7b7' : '#edc4bd'),
+          color: msg.tone === 'success' ? '#0b5e40' : '#8f2e24',
         }}>{msg.text}</div>
       )}
     </div>
@@ -1273,7 +1273,7 @@ function PipedrivePushButton({ referral, t }) {
 }
 
 function InfoRow({ label, value }) {
-  return (<div><div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{label}</div><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div></div>);
+  return (<div><div style={{ color: '#99a09a', fontSize: 11, fontWeight: 500 }}>{label}</div><div style={{ color: '#0e1f18', fontWeight: 500, marginTop: 2, fontSize: 14 }}>{value}</div></div>);
 }
 
 // Inline-editable variant of InfoRow. Click-to-edit, blur or Enter to
@@ -1321,7 +1321,7 @@ function EditableInfoRow({ label, value, onSave, type = 'text', required = false
 
   return (
     <div>
-      <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 500 }}>{label}</div>
+      <div style={{ color: '#99a09a', fontSize: 11, fontWeight: 500 }}>{label}</div>
       {editing ? (
         <input
           autoFocus
@@ -1331,26 +1331,26 @@ function EditableInfoRow({ label, value, onSave, type = 'text', required = false
           onBlur={commit}
           onKeyDown={e => { if (e.key === 'Enter') commit(); else if (e.key === 'Escape') cancel(); }}
           disabled={busy}
-          style={{ marginTop: 2, padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--rb-primary, #059669)', fontSize: 14, color: '#0f172a', fontWeight: 500, fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box', background: '#fff' }}
+          style={{ marginTop: 2, padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--rb-primary, #0e7a54)', fontSize: 14, color: '#0e1f18', fontWeight: 500, fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box', background: '#fff' }}
         />
       ) : (
         <div
           onClick={() => setEditing(true)}
           title="Cliquer pour modifier"
-          style={{ marginTop: 2, padding: '3px 6px', marginLeft: -6, borderRadius: 6, color: '#0f172a', fontWeight: 500, fontSize: 14, cursor: 'pointer', transition: 'background 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
+          style={{ marginTop: 2, padding: '3px 6px', marginLeft: -6, borderRadius: 6, color: '#0e1f18', fontWeight: 500, fontSize: 14, cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#ece7db'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
         >
-          {value || <span style={{ color: '#cbd5e1' }}>—</span>}
+          {value || <span style={{ color: '#cfc8b8' }}>—</span>}
         </div>
       )}
-      {error && <div style={{ marginTop: 4, color: '#dc2626', fontSize: 11 }}>{error}</div>}
+      {error && <div style={{ marginTop: 4, color: '#b23b2e', fontSize: 11 }}>{error}</div>}
     </div>
   );
 }
 
 function Select({ value, onChange, children }) {
-  return (<select value={value} onChange={e => onChange(e.target.value)} style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 13, fontWeight: 600, color: '#334155', background: '#fff', cursor: 'pointer' }}>{children}</select>);
+  return (<select value={value} onChange={e => onChange(e.target.value)} style={{ padding: '8px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 13, fontWeight: 600, color: '#2b3a32', background: '#fff', cursor: 'pointer' }}>{children}</select>);
 }
 
 // Per-CRM sync badges — tiny letter circles (H / N / S) shown next to
@@ -1389,7 +1389,7 @@ function CrmSyncBadge({ referral }) {
   if (hubspotLinked) {
     badges.push(
       <span key="hs" title={`HubSpot${suffix}${date ? ' — ' + date : ''}`} aria-label="HubSpot synced"
-        style={circle(hubspotLinked ? '#ff7a59' : '#f1f5f9', '#fff', 'H')}>H</span>
+        style={circle(hubspotLinked ? '#ff7a59' : '#ece7db', '#fff', 'H')}>H</span>
     );
   }
   if (notionLinked) {
@@ -1417,7 +1417,7 @@ function CrmSyncBadge({ referral }) {
     // see something's been synced.
     badges.push(
       <span key="legacy" title={`CRM synced${date ? ' — ' + date : ''}`} aria-label="CRM synced"
-        style={circle('#f0fdf4', '#059669', '')}>•</span>
+        style={circle('#e9f1ea', '#0e7a54', '')}>•</span>
     );
   }
   if (!badges.length) return null;
@@ -1439,7 +1439,7 @@ function LeadHandlingBadge({ handling }) {
     );
   }
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#f0fdf4', color: '#059669', fontSize: 10, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: '#e9f1ea', color: '#0e7a54', fontSize: 10, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 }}>
        {t('referral.partner_managed_badge')}
     </div>
   );

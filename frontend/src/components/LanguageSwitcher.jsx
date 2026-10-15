@@ -42,12 +42,12 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
 
   const btnBorder  = dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
   const btnBorderH = dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)';
-  const btnColor   = dark ? '#94a3b8' : '#64748b';
-  const dropBg     = dark ? '#1e293b' : '#ffffff';
-  const dropBorder = dark ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
+  const btnColor   = dark ? '#99a09a' : '#6e756c';
+  const dropBg     = dark ? '#1a2c24' : '#ffffff';
+  const dropBorder = dark ? 'rgba(255,255,255,0.1)' : '#ded8cb';
   const dropShadow = dark ? '0 8px 30px rgba(0,0,0,0.4)' : '0 8px 30px rgba(0,0,0,0.12)';
-  const itemColor  = dark ? '#94a3b8' : '#64748b';
-  const itemHover  = dark ? 'rgba(255,255,255,0.05)' : '#f8fafc';
+  const itemColor  = dark ? '#99a09a' : '#6e756c';
+  const itemHover  = dark ? 'rgba(255,255,255,0.05)' : '#f6f2e9';
 
   // Dropdown anchors to the right edge of the button so it never overflows
   // off the right side of the viewport on mobile. `left: auto` is explicit
@@ -123,7 +123,7 @@ export default function LanguageSwitcher({ style = {}, compact = false, directio
                   background: l.code === i18n.language ? 'rgba(5,150,105,0.12)' : 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  color: l.code === i18n.language ? '#059669' : itemColor,
+                  color: l.code === i18n.language ? '#0e7a54' : itemColor,
                   fontWeight: l.code === i18n.language ? 600 : 400,
                   fontSize: 13,
                   fontFamily: 'inherit',

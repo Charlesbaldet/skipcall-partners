@@ -45,11 +45,11 @@ const NAVIGATION_ITEMS = [
 
 const CATEGORIES = [
   { key: 'navigation',  icon: Compass,    color: '#0EA5E9' },
-  { key: 'referrals',   icon: FileText,   color: '#3B82F6' },
-  { key: 'partners',    icon: Users,      color: '#059669' },
-  { key: 'commissions', icon: DollarSign, color: '#F59E0B' },
-  { key: 'marketplace', icon: Store,      color: '#10B981' },
-  { key: 'news',        icon: Newspaper,  color: '#8B5CF6' },
+  { key: 'referrals',   icon: FileText,   color: '#0e7a54' },
+  { key: 'partners',    icon: Users,      color: '#0e7a54' },
+  { key: 'commissions', icon: DollarSign, color: '#b4791f' },
+  { key: 'marketplace', icon: Store,      color: '#1c9a6b' },
+  { key: 'news',        icon: Newspaper,  color: '#0e7a54' },
 ];
 
 export default function SearchPage() {
@@ -122,7 +122,7 @@ export default function SearchPage() {
 
   return (
     <div style={{ maxWidth: 820, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 20 }}>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5, marginBottom: 20 }}>
         {t('search.title')}
       </h1>
 
@@ -130,7 +130,7 @@ export default function SearchPage() {
       <div style={{ position: 'relative', marginBottom: 32 }}>
         <Search
           size={20}
-          color="#94a3b8"
+          color="#99a09a"
           style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
         />
         <input
@@ -141,19 +141,19 @@ export default function SearchPage() {
           placeholder={t('search.placeholder')}
           style={{
             width: '100%', height: 48, padding: '0 16px 0 48px',
-            borderRadius: 12, border: '1.5px solid #e2e8f0',
-            fontSize: 15, fontFamily: 'inherit', color: '#0f172a',
+            borderRadius: 12, border: '1.5px solid #ded8cb',
+            fontSize: 15, fontFamily: 'inherit', color: '#0e1f18',
             outline: 'none', background: '#fff',
             boxSizing: 'border-box',
           }}
-          onFocus={(e) => { e.target.style.borderColor = '#059669'; }}
-          onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }}
+          onFocus={(e) => { e.target.style.borderColor = '#0e7a54'; }}
+          onBlur={(e) => { e.target.style.borderColor = '#ded8cb'; }}
         />
         {/* Cmd+K hint chip on the right */}
         <span style={{
           position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
-          fontSize: 11, color: '#94a3b8', background: '#f1f5f9', padding: '4px 8px',
-          borderRadius: 6, border: '1px solid #e2e8f0', pointerEvents: 'none',
+          fontSize: 11, color: '#99a09a', background: '#ece7db', padding: '4px 8px',
+          borderRadius: 6, border: '1px solid #ded8cb', pointerEvents: 'none',
           fontFamily: 'ui-monospace, SFMono-Regular, monospace',
         }}>
           {t('search.shortcut_hint')}
@@ -161,27 +161,27 @@ export default function SearchPage() {
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '12px 16px', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
+        <div style={{ background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', padding: '12px 16px', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
           {error}
         </div>
       )}
 
       {/* Empty state before typing */}
       {!results && !loading && (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontSize: 14 }}>
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#99a09a', fontSize: 14 }}>
           {t('search.empty_hint')}
         </div>
       )}
 
       {loading && debounced.trim().length >= 2 && (
-        <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: 14 }}>
+        <div style={{ textAlign: 'center', padding: '24px', color: '#99a09a', fontSize: 14 }}>
           {t('search.searching')}
         </div>
       )}
 
       {showEmpty && (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b', fontSize: 14 }}>
-          {t('search.no_results')} <strong style={{ color: '#0f172a' }}>“{debounced}”</strong>
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6e756c', fontSize: 14 }}>
+          {t('search.no_results')} <strong style={{ color: '#0e1f18' }}>“{debounced}”</strong>
         </div>
       )}
 
@@ -199,10 +199,10 @@ export default function SearchPage() {
               }}>
                 <Icon size={14}/>
               </span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#2b3a32' }}>
                 {t('search.' + group.key)}
               </span>
-              <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>
+              <span style={{ fontSize: 12, color: '#99a09a', fontWeight: 600 }}>
                 ({group.items.length})
               </span>
             </header>
@@ -227,19 +227,19 @@ export default function SearchPage() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     width: '100%', textAlign: 'left',
-                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+                    background: '#fff', border: '1px solid #ded8cb', borderRadius: 10,
                     padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'background .12s',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f6f2e9'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0e1f18', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       <Highlight text={item.title} query={debounced}/>
                     </div>
                     {item.subtitle && (
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: 12, color: '#6e756c', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         <Highlight text={item.subtitle} query={debounced}/>
                       </div>
                     )}
@@ -254,7 +254,7 @@ export default function SearchPage() {
                       {item.status}
                     </span>
                   )}
-                  <ChevronRight size={16} color="#cbd5e1" style={{ flexShrink: 0 }}/>
+                  <ChevronRight size={16} color="#cfc8b8" style={{ flexShrink: 0 }}/>
                 </button>
               ))}
             </div>

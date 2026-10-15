@@ -8,7 +8,7 @@ import LandingLayout from '../components/LandingLayout';
 // Match the colour tokens the Blog/Marketplace pages use so the pricing
 // page sits next to them seamlessly.
 const SITE = 'https://refboost.io';
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#f8fafc', card: '#fff' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c', bg: '#f6f2e9', card: '#fff' };
 
 // ─── Plan catalog ────────────────────────────────────────────────────
 // Mirrors backend/routes/billing.js so signup pricing stays in sync.
@@ -97,8 +97,8 @@ const FAQ_KEYS = ['1', '2', '3', '4'];
 
 function Cell({ value, t }) {
   if (value === true) return <Check size={18} color={C.p} style={{ display: 'block', margin: '0 auto' }}/>;
-  if (value === false) return <Minus size={16} color="#cbd5e1" style={{ display: 'block', margin: '0 auto' }}/>;
-  if (value === 'soon') return <span style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>{t('pricing.coming_soon')}</span>;
+  if (value === false) return <Minus size={16} color="#cfc8b8" style={{ display: 'block', margin: '0 auto' }}/>;
+  if (value === 'soon') return <span style={{ fontSize: 12, color: '#99a09a', fontStyle: 'italic' }}>{t('pricing.coming_soon')}</span>;
   if (value === 'unlimited') return <span style={{ fontSize: 14, fontWeight: 700, color: C.s }}>∞</span>;
   return <span style={{ fontSize: 14, fontWeight: 700, color: C.s }}>{value}</span>;
 }
@@ -117,7 +117,7 @@ function FaqItem({ q, a }) {
     >
       <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, color: C.s, fontSize: 16, fontWeight: 700 }}>
         <span>{q}</span>
-        <ChevronDown size={18} color="#94a3b8" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform .15s', flexShrink: 0 }}/>
+        <ChevronDown size={18} color="#99a09a" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform .15s', flexShrink: 0 }}/>
       </summary>
       <div style={{ paddingTop: 12, color: C.m, fontSize: 14, lineHeight: 1.6 }}>{a}</div>
     </details>
@@ -172,14 +172,14 @@ export default function PricingPage() {
       </Helmet>
 
       {/* ─── HERO (mirrors Blog & Marketplace dark navy hero) ─── */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '72px 24px 64px', textAlign: 'center' }}>
+      <section style={{ background: 'linear-gradient(135deg, #0e1f18 0%, #1a2c24 100%)', padding: '72px 24px 64px', textAlign: 'center' }}>
         <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: C.pl, textTransform: 'uppercase', letterSpacing: 2 }}>
           {t('nav.pricing')}
         </p>
         <h1 style={{ margin: '0 0 16px', fontSize: 44, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>
           {t('pricing.hero_title')}
         </h1>
-        <p style={{ margin: '0 auto', fontSize: 18, color: '#94a3b8', maxWidth: 560, lineHeight: 1.6 }}>
+        <p style={{ margin: '0 auto', fontSize: 18, color: '#99a09a', maxWidth: 560, lineHeight: 1.6 }}>
           {t('pricing.hero_subtitle')}
         </p>
       </section>
@@ -188,7 +188,7 @@ export default function PricingPage() {
           between hero and cards like the Blog page's filter pills) ─── */}
       <main style={{ background: C.bg, padding: '40px 24px 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto 32px', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ display: 'inline-flex', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 999, padding: 4, gap: 2, boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+          <div style={{ display: 'inline-flex', background: '#fff', border: '1px solid #ded8cb', borderRadius: 999, padding: 4, gap: 2, boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
             {['monthly', 'annual'].map(opt => (
               <button
                 key={opt}
@@ -203,7 +203,7 @@ export default function PricingPage() {
               >
                 {t('billing.' + opt)}
                 {opt === 'annual' && (
-                  <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: interval === 'annual' ? '#10b981' : C.p, background: interval === 'annual' ? 'rgba(16,185,129,.15)' : '#f0fdf4', padding: '2px 7px', borderRadius: 999 }}>
+                  <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: interval === 'annual' ? '#1c9a6b' : C.p, background: interval === 'annual' ? 'rgba(16,185,129,.15)' : '#e9f1ea', padding: '2px 7px', borderRadius: 999 }}>
                     -20%
                   </span>
                 )}
@@ -272,7 +272,7 @@ export default function PricingPage() {
 
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', flex: 1 }}>
                   {p.features.map(f => (
-                    <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0', fontSize: 14, color: '#334155', lineHeight: 1.5 }}>
+                    <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0', fontSize: 14, color: '#2b3a32', lineHeight: 1.5 }}>
                       <Check size={16} color={C.p} style={{ flexShrink: 0, marginTop: 2 }}/>
                       <span>{t('pricing.' + f)}</span>
                     </li>
@@ -327,7 +327,7 @@ export default function PricingPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
                 <thead>
-                  <tr style={{ background: '#fafbfc', borderBottom: '1px solid #e2e8f0' }}>
+                  <tr style={{ background: '#faf6ec', borderBottom: '1px solid #ded8cb' }}>
                     <th style={{ textAlign: 'left', padding: '18px 20px', fontSize: 13, color: C.m, fontWeight: 600 }}>&nbsp;</th>
                     {['starter', 'pro', 'business'].map(k => (
                       <th
@@ -335,7 +335,7 @@ export default function PricingPage() {
                         style={{
                           textAlign: 'center', padding: '18px 20px',
                           fontSize: 15, fontWeight: 800, color: C.s, minWidth: 140,
-                          background: k === 'pro' ? '#f0fdf4' : 'transparent',
+                          background: k === 'pro' ? '#e9f1ea' : 'transparent',
                           borderBottom: k === 'pro' ? `3px solid ${C.p}` : 'none',
                         }}
                       >
@@ -348,13 +348,13 @@ export default function PricingPage() {
                   {TABLE.map(cat => (
                     <Fragment key={cat.cat}>
                       <tr>
-                        <td colSpan={4} style={{ padding: '14px 20px 6px', fontSize: 11, fontWeight: 700, color: C.m, textTransform: 'uppercase', letterSpacing: 1, background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                        <td colSpan={4} style={{ padding: '14px 20px 6px', fontSize: 11, fontWeight: 700, color: C.m, textTransform: 'uppercase', letterSpacing: 1, background: '#f6f2e9', borderTop: '1px solid #ded8cb' }}>
                           {t('pricing.' + cat.cat)}
                         </td>
                       </tr>
                       {cat.rows.map(row => (
-                        <tr key={'row-' + row.label} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '12px 20px', fontSize: 14, color: '#334155' }}>
+                        <tr key={'row-' + row.label} style={{ borderBottom: '1px solid #ece7db' }}>
+                          <td style={{ padding: '12px 20px', fontSize: 14, color: '#2b3a32' }}>
                             {t('pricing.' + row.label)}
                           </td>
                           {['starter', 'pro', 'business'].map(k => (
@@ -390,11 +390,11 @@ export default function PricingPage() {
       </section>
 
       {/* ─── FINAL CTA (dark navy, like the landing page CTA) ─── */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '72px 24px', textAlign: 'center' }}>
+      <section style={{ background: 'linear-gradient(135deg, #0e1f18 0%, #1a2c24 100%)', padding: '72px 24px', textAlign: 'center' }}>
         <h2 style={{ margin: '0 0 14px', fontSize: 36, fontWeight: 800, color: '#fff', letterSpacing: -1 }}>
           {t('pricing.final_title')}
         </h2>
-        <p style={{ margin: '0 0 32px', fontSize: 16, color: '#94a3b8' }}>{t('pricing.final_subtitle')}</p>
+        <p style={{ margin: '0 0 32px', fontSize: 16, color: '#99a09a' }}>{t('pricing.final_subtitle')}</p>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
           <button
             onClick={() => navigate('/signup')}

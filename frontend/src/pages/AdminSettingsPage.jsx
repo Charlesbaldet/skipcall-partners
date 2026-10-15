@@ -11,7 +11,7 @@ export default function AdminSettingsPage() {
   const { user } = useAuth();
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString(t('admin.fmt_locale'), { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   const ROLE_CONFIG = {
-    admin: { label: t('admin.role_admin'), icon: Shield, color: '#dc2626', bg: '#fef2f2' },
+    admin: { label: t('admin.role_admin'), icon: Shield, color: '#b23b2e', bg: '#f7e9e6' },
     commercial: { label: t('admin.role_member'), icon: Briefcase, color: '#0891b2', bg: '#ecfeff' },
   };
   const [users, setUsers] = useState([]);
@@ -93,14 +93,14 @@ export default function AdminSettingsPage() {
     <div className="fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5 }}>{t('admin.settings_title')}</h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{isAdmin ? t('admin.settings_subtitle_admin') : t('admin.settings_subtitle_member')}</p>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5 }}>{t('admin.settings_title')}</h1>
+          <p style={{ color: '#6e756c', marginTop: 4 }}>{isAdmin ? t('admin.settings_subtitle_admin') : t('admin.settings_subtitle_member')}</p>
         </div>
         {isAdmin && (
         <button onClick={() => { setShowInvite(!showInvite); setInviteResult(null); }} style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12,
-          background: showInvite ? '#f1f5f9' : 'var(--rb-primary, #059669)',
-          color: showInvite ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+          background: showInvite ? '#ece7db' : 'var(--rb-primary, #0e7a54)',
+          color: showInvite ? '#33433b' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer',
         }}>
           {showInvite ? <X size={16} /> : <UserPlus size={16} />}
           {showInvite ? t('admin.cancel') : t('admin.add_user')}
@@ -110,59 +110,59 @@ export default function AdminSettingsPage() {
 
       {/* Invite form */}
       {isAdmin && showInvite && (
-        <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #e2e8f0', marginBottom: 24 }} className="fade-in">
+        <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #ded8cb', marginBottom: 24 }} className="fade-in">
           {inviteResult ? (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <CheckCircle size={24} color="#16a34a" />
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#e9f1ea', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <CheckCircle size={24} color="#157a4c" />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{t('admin.user_created')}</h3>
-              <p style={{ color: '#64748b', fontSize: 14, marginBottom: 16 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0e1f18', marginBottom: 8 }}>{t('admin.user_created')}</h3>
+              <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 16 }}>
                 {t('admin.share_credentials')}
               </p>
-              <div style={{ background: '#f8fafc', borderRadius: 12, padding: 20, display: 'inline-block', textAlign: 'left', border: '1px solid #e2e8f0' }}>
+              <div style={{ background: '#f6f2e9', borderRadius: 12, padding: 20, display: 'inline-block', textAlign: 'left', border: '1px solid #ded8cb' }}>
                 <div style={{ marginBottom: 10 }}>
-                  <span style={{ color: '#64748b', fontSize: 12 }}>{t('admin.email')}</span>
-                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 15 }}>{inviteResult.email}</div>
+                  <span style={{ color: '#6e756c', fontSize: 12 }}>{t('admin.email')}</span>
+                  <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 15 }}>{inviteResult.email}</div>
                 </div>
                 <div style={{ marginBottom: 12 }}>
-                  <span style={{ color: '#64748b', fontSize: 12 }}>{t('admin.temp_password')}</span>
+                  <span style={{ color: '#6e756c', fontSize: 12 }}>{t('admin.temp_password')}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <code style={{ background: '#eef2ff', padding: '6px 12px', borderRadius: 8, color: 'var(--rb-primary, #059669)', fontWeight: 700, fontSize: 16, letterSpacing: 1 }}>{inviteResult.tempPassword}</code>
-                    <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#f0fdf4' : '#eef2ff', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
-                      {copied ? <CheckCircle size={14} color="#16a34a" /> : <Copy size={14} color="#6366f1" />}
+                    <code style={{ background: '#eef1ea', padding: '6px 12px', borderRadius: 8, color: 'var(--rb-primary, #0e7a54)', fontWeight: 700, fontSize: 16, letterSpacing: 1 }}>{inviteResult.tempPassword}</code>
+                    <button onClick={() => copyToClipboard(inviteResult.tempPassword)} style={{ background: copied ? '#e9f1ea' : '#eef1ea', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}>
+                      {copied ? <CheckCircle size={14} color="#157a4c" /> : <Copy size={14} color="#0e7a54" />}
                     </button>
                   </div>
                 </div>
-                <div style={{ fontSize: 12, color: '#f59e0b', background: '#fffbeb', padding: '6px 10px', borderRadius: 6 }}>
+                <div style={{ fontSize: 12, color: '#b4791f', background: '#f6efda', padding: '6px 10px', borderRadius: 6 }}>
                   {t('admin.user_can_change_pwd')}
                 </div>
               </div>
               <div style={{ marginTop: 16 }}>
-                <button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>{t('admin.close')}</button>
+                <button onClick={() => { setShowInvite(false); setInviteResult(null); }} style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>{t('admin.close')}</button>
               </div>
             </div>
           ) : (
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 20 }}>{t('admin.new_user')}</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18', marginBottom: 20 }}>{t('admin.new_user')}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.full_name')}</label>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>{t('admin.full_name')}</label>
                   <input value={inviteForm.full_name} onChange={e => setInviteForm(f => ({ ...f, full_name: e.target.value }))} placeholder={t('admin.full_name_ph')}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.email_required')}</label>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>{t('admin.email_required')}</label>
                   <input value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder={t('admin.email_ph')} type="email"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.role_required')}</label>
+                  <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>{t('admin.role_required')}</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {Object.entries(ROLE_CONFIG).map(([k, v]) => (
                       <button key={k} onClick={() => setInviteForm(f => ({ ...f, role: k }))} style={{
                         flex: 1, padding: '10px', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                        border: inviteForm.role === k ? `2px solid ${v.color}` : '2px solid #e2e8f0',
+                        border: inviteForm.role === k ? `2px solid ${v.color}` : '2px solid #ded8cb',
                         background: inviteForm.role === k ? v.bg : '#fff', color: v.color,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}>
@@ -173,7 +173,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
               <button onClick={handleInvite} disabled={sending || !inviteForm.email || !inviteForm.full_name} style={{
-                padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #059669)',
+                padding: '12px 24px', borderRadius: 12, background: 'var(--rb-primary, #0e7a54)',
                 color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: sending ? 0.7 : 1,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
@@ -186,14 +186,14 @@ export default function AdminSettingsPage() {
 
       {/* Tabs */}
       {isAdmin && (
-      <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, background: '#ece7db', borderRadius: 10, padding: 3, marginBottom: 24, width: 'fit-content' }}>
         {[
           { id: 'users', label: t('admin.tab_members_count', { count: users.length }) },
           { id: 'password', label: t('admin.tab_my_account') },
         ].map(tb => (
           <button key={tb.id} onClick={() => setTab(tb.id)} style={{
             padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            background: tab === tb.id ? '#fff' : 'transparent', color: tab === tb.id ? '#0f172a' : '#64748b',
+            background: tab === tb.id ? '#fff' : 'transparent', color: tab === tb.id ? '#0e1f18' : '#6e756c',
             boxShadow: tab === tb.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
           }}>{tb.label}</button>
         ))}
@@ -201,12 +201,12 @@ export default function AdminSettingsPage() {
       )}
 
       {isAdmin && tab === 'users' && (
-        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
-              <tr style={{ background: '#f8fafc' }}>
+              <tr style={{ background: '#f6f2e9' }}>
                 {[t('admin.th_user'), t('admin.th_role'), t('admin.th_status'), t('admin.th_created_at'), t('admin.th_actions')].map((h, i) => (
-                  <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                  <th key={i} style={{ padding: '13px 16px', textAlign: 'left', fontWeight: 600, color: '#6e756c', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #ded8cb' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -214,10 +214,10 @@ export default function AdminSettingsPage() {
               {users.map(u => {
                 const role = ROLE_CONFIG[u.role];
                 return (
-                  <tr key={u.id} style={{ borderBottom: '1px solid #f8fafc', opacity: u.is_active ? 1 : 0.5 }}>
+                  <tr key={u.id} style={{ borderBottom: '1px solid #f6f2e9', opacity: u.is_active ? 1 : 0.5 }}>
                     <td style={{ padding: '13px 16px' }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{u.full_name}</div>
-                      <div style={{ color: '#94a3b8', fontSize: 12 }}>{u.email}</div>
+                      <div style={{ fontWeight: 600, color: '#0e1f18' }}>{u.full_name}</div>
+                      <div style={{ color: '#99a09a', fontSize: 12 }}>{u.email}</div>
                     </td>
                     <td style={{ padding: '13px 16px' }}>
                       <select value={u.role} onChange={e => handleRoleChange(u, e.target.value)}
@@ -227,16 +227,16 @@ export default function AdminSettingsPage() {
                       </select>
                     </td>
                     <td style={{ padding: '13px 16px' }}>
-                      <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: u.is_active ? '#f0fdf4' : '#fef2f2', color: u.is_active ? '#16a34a' : '#dc2626' }}>
+                      <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: u.is_active ? '#e9f1ea' : '#f7e9e6', color: u.is_active ? '#157a4c' : '#b23b2e' }}>
                         {u.is_active ? t('admin.status_active') : t('admin.status_disabled')}
                       </span>
                     </td>
-                    <td style={{ padding: '13px 16px', color: '#64748b', fontSize: 13 }}>{fmtDate(u.created_at)}</td>
+                    <td style={{ padding: '13px 16px', color: '#6e756c', fontSize: 13 }}>{fmtDate(u.created_at)}</td>
                     <td style={{ padding: '13px 16px' }}>
                       <button onClick={() => handleToggleActive(u)} title={u.is_active ? t('admin.action_deactivate') : t('admin.action_activate')} style={{
                         background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
                       }}>
-                        {u.is_active ? <ToggleRight size={20} color="#16a34a" /> : <ToggleLeft size={20} color="#dc2626" />}
+                        {u.is_active ? <ToggleRight size={20} color="#157a4c" /> : <ToggleLeft size={20} color="#b23b2e" />}
                       </button>
                     </td>
                   </tr>
@@ -248,43 +248,43 @@ export default function AdminSettingsPage() {
       )}
 
       {(tab === 'password' || !isAdmin) && (
-        <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #e2e8f0', maxWidth: 480 }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: 28, border: '1px solid #ded8cb', maxWidth: 480 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-            <Lock size={20} color="#6366f1" />
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{t('admin.change_my_password')}</h3>
+            <Lock size={20} color="#0e7a54" />
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0e1f18' }}>{t('admin.change_my_password')}</h3>
           </div>
 
           {pwMsg && (
             <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 500,
-              background: pwMsg.type === 'success' ? '#f0fdf4' : '#fef2f2',
-              color: pwMsg.type === 'success' ? '#16a34a' : '#dc2626',
-              border: `1px solid ${pwMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+              background: pwMsg.type === 'success' ? '#e9f1ea' : '#f7e9e6',
+              color: pwMsg.type === 'success' ? '#157a4c' : '#b23b2e',
+              border: `1px solid ${pwMsg.type === 'success' ? '#cfe6d6' : '#edc4bd'}`,
             }}>{pwMsg.text}</div>
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.current_password')}</label>
+              <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>{t('admin.current_password')}</label>
               <div style={{ position: 'relative' }}>
                 <input type={showPw ? 'text' : 'password'} value={pwForm.current} onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
-                  style={{ width: '100%', padding: '10px 40px 10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
-                <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
+                  style={{ width: '100%', padding: '10px 40px 10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' }} />
+                <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#99a09a' }}>
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.new_password')}</label>
+              <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>{t('admin.new_password')}</label>
               <input type="password" value={pwForm.newPw} onChange={e => setPwForm(f => ({ ...f, newPw: e.target.value }))} placeholder={t('admin.min_8_chars')}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 13, marginBottom: 6 }}>{t('admin.confirm_password')}</label>
+              <label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 13, marginBottom: 6 }}>{t('admin.confirm_password')}</label>
               <input type="password" value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} placeholder={t('admin.retype_password')}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box' }} />
             </div>
             <button onClick={handlePasswordChange} disabled={pwSaving || !pwForm.current || !pwForm.newPw} style={{
-              padding: '12px', borderRadius: 12, background: 'var(--rb-primary, #059669)',
+              padding: '12px', borderRadius: 12, background: 'var(--rb-primary, #0e7a54)',
               color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: pwSaving ? 0.7 : 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>

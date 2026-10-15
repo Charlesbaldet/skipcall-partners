@@ -46,7 +46,7 @@ import { BLOCK_COMPONENTS, DEFAULT_BLOCKS } from './marketplaceBlocks/Marketplac
 //      for more than one language" warning.
 // ──────────────────────────────────────────────────────────────────
 
-const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
+const C = { p: '#0e7a54', s: '#0e1f18', m: '#6e756c', bg: '#faf6ec', border: '#ded8cb' };
 const SITE = 'https://refboost.io';
 
 function SimilarSection({ similar, t }) {

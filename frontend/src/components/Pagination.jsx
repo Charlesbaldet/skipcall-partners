@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 // passes 50 articles. Handlers receive the new page number; the
 // caller is responsible for any URL / scroll side-effects.
 
-const C = { p: '#059669', s: '#0f172a', m: '#64748b', border: '#e5e7eb' };
+const C = { p: '#0e7a54', s: '#0e1f18', m: '#6e756c', border: '#e3ddd0' };
 
 const baseBtn = {
   height: 40, padding: '0 12px',
@@ -65,7 +65,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         disabled={currentPage === 1}
         aria-label={t('pagination.previous', 'Précédent')}
         style={currentPage === 1 ? disabledBtn : baseBtn}
-        onMouseEnter={e => { if (currentPage !== 1) e.currentTarget.style.background = '#f8fafc'; }}
+        onMouseEnter={e => { if (currentPage !== 1) e.currentTarget.style.background = '#f6f2e9'; }}
         onMouseLeave={e => { if (currentPage !== 1) e.currentTarget.style.background = '#fff'; }}
       >
         ← {t('pagination.previous', 'Précédent')}
@@ -81,7 +81,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
           aria-current={p === currentPage ? 'page' : undefined}
           aria-label={t('pagination.page', 'Page') + ' ' + p}
           style={p === currentPage ? activeBtn : numBtn}
-          onMouseEnter={e => { if (p !== currentPage) e.currentTarget.style.background = '#f8fafc'; }}
+          onMouseEnter={e => { if (p !== currentPage) e.currentTarget.style.background = '#f6f2e9'; }}
           onMouseLeave={e => { if (p !== currentPage) e.currentTarget.style.background = '#fff'; }}
         >
           {p}
@@ -94,7 +94,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         disabled={currentPage === totalPages}
         aria-label={t('pagination.next', 'Suivant')}
         style={currentPage === totalPages ? disabledBtn : baseBtn}
-        onMouseEnter={e => { if (currentPage !== totalPages) e.currentTarget.style.background = '#f8fafc'; }}
+        onMouseEnter={e => { if (currentPage !== totalPages) e.currentTarget.style.background = '#f6f2e9'; }}
         onMouseLeave={e => { if (currentPage !== totalPages) e.currentTarget.style.background = '#fff'; }}
       >
         {t('pagination.next', 'Suivant')} →

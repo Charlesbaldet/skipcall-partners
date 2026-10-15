@@ -10,10 +10,10 @@ import { CreditCard, Clock, CheckCircle, DollarSign, XCircle, Upload, Download, 
 // 4-column lifecycle, ordered left → right.
 const STATUS_KEYS = ['pending_approval', 'awaiting_invoice', 'pending_validation', 'paid'];
 const PAY_STATUS_META = {
-  pending_approval:   { color: '#f59e0b', bg: '#fffbeb', icon: Clock },
-  awaiting_invoice:   { color: '#6366f1', bg: '#eef2ff', icon: FileText },
-  pending_validation: { color: '#0284c7', bg: '#eff6ff', icon: ShieldCheck },
-  paid:               { color: '#16a34a', bg: '#f0fdf4', icon: CreditCard },
+  pending_approval:   { color: '#b4791f', bg: '#f6efda', icon: Clock },
+  awaiting_invoice:   { color: '#0e7a54', bg: '#eef1ea', icon: FileText },
+  pending_validation: { color: '#0284c7', bg: '#e9f1ea', icon: ShieldCheck },
+  paid:               { color: '#157a4c', bg: '#e9f1ea', icon: CreditCard },
 };
 
 export default function PartnerPaymentsPage() {
@@ -181,8 +181,8 @@ export default function PartnerPaymentsPage() {
   return (
     <div className="fade-in">
       <input ref={fileInputRef} type="file" accept="application/pdf,image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerPayments.title')}</h1>
-      <p style={{ color: '#64748b', marginBottom: 20 }}>{t('partnerPayments.subtitle')}</p>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5, marginBottom: 4 }}>{t('partnerPayments.title')}</h1>
+      <p style={{ color: '#6e756c', marginBottom: 20 }}>{t('partnerPayments.subtitle')}</p>
 
       {/* Bank-info banner: only when the partner hasn't filled the new
           settings tab yet. Linking to /settings?tab=bank lands directly
@@ -193,8 +193,8 @@ export default function PartnerPaymentsPage() {
           style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '12px 16px', borderRadius: 12, marginBottom: 20,
-            background: '#fffbeb', border: '1px solid #fcd34d',
-            color: '#92400e', textDecoration: 'none',
+            background: '#f6efda', border: '1px solid #fcd34d',
+            color: '#7a4a16', textDecoration: 'none',
           }}
         >
           <AlertTriangle size={18} />
@@ -211,33 +211,33 @@ export default function PartnerPaymentsPage() {
           in Settings → Entreprise. Gives the partner the legal entity
           + SIRET + address they need to address their invoice to. */}
       {billingInfo && (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 12 }}>
-            <Building size={16} color="#94a3b8" />
+        <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 14, padding: 16, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#0e1f18', marginBottom: 12 }}>
+            <Building size={16} color="#99a09a" />
             {t('partner_payments.billing_info_title', 'Informations de facturation')}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, fontSize: 13 }}>
             <div>
-              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+              <div style={{ color: '#99a09a', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
                 {t('settings.billing_company_name', 'Nom de la structure')}
               </div>
-              <div style={{ fontWeight: 600, color: '#0f172a' }}>{billingInfo.billing_company_name}</div>
+              <div style={{ fontWeight: 600, color: '#0e1f18' }}>{billingInfo.billing_company_name}</div>
             </div>
             <div>
-              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+              <div style={{ color: '#99a09a', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
                 {t('settings.billing_siret', 'N° SIRET')}
               </div>
-              <div style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace', fontSize: 12 }}>
+              <div style={{ fontWeight: 600, color: '#0e1f18', fontFamily: 'monospace', fontSize: 12 }}>
                 {billingInfo.billing_siret || '—'}
               </div>
             </div>
           </div>
           {(billingInfo.billing_address || billingInfo.billing_city || billingInfo.billing_postal_code) && (
-            <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 12, paddingTop: 12 }}>
-              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+            <div style={{ borderTop: '1px solid #ece7db', marginTop: 12, paddingTop: 12 }}>
+              <div style={{ color: '#99a09a', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
                 {t('settings.billing_address', 'Adresse')}
               </div>
-              <div style={{ color: '#0f172a', fontSize: 13, lineHeight: 1.5 }}>
+              <div style={{ color: '#0e1f18', fontSize: 13, lineHeight: 1.5 }}>
                 {billingInfo.billing_address && <>{billingInfo.billing_address}<br/></>}
                 {billingInfo.billing_postal_code} {billingInfo.billing_city}
                 {billingInfo.billing_country ? `, ${billingInfo.billing_country}` : ''}
@@ -251,15 +251,15 @@ export default function PartnerPaymentsPage() {
           The TVA breakdown lives on each individual card; tile shows
           one number for at-a-glance scanning. */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <PayKPI icon={DollarSign}  label={t('commissions.kpi_total')}        value={fmt(totalAll)}       color="#6366f1" />
-        <PayKPI icon={Clock}       label={t('partnerPayments.kpi_pending')}  value={fmt(totals.pending)} color="#f59e0b" />
-        <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')}         value={fmt(totals.paid)}    color="#16a34a" />
+        <PayKPI icon={DollarSign}  label={t('commissions.kpi_total')}        value={fmt(totalAll)}       color="#0e7a54" />
+        <PayKPI icon={Clock}       label={t('partnerPayments.kpi_pending')}  value={fmt(totals.pending)} color="#b4791f" />
+        <PayKPI icon={CheckCircle} label={t('commissions.kpi_paid')}         value={fmt(totals.paid)}    color="#157a4c" />
       </div>
 
       {/* Rejected rows surfaced before the kanban so partners actually see them */}
       {rejectedRows.length > 0 && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #fecaca', padding: 16, marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b91c1c', fontWeight: 700, marginBottom: 12 }}>
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #edc4bd', padding: 16, marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#8f2e24', fontWeight: 700, marginBottom: 12 }}>
             <XCircle size={16} /> {t('commission.rejected')} ({rejectedRows.length})
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
@@ -267,12 +267,12 @@ export default function PartnerPaymentsPage() {
               const hasVat = parseFloat(c.amount_tax || 0) > 0;
               const headlineAmount = hasVat ? c.amount_ttc : c.amount;
               return (
-                <div key={c.id} style={{ padding: 12, background: '#fef2f2', borderRadius: 10, border: '1px solid #fecaca' }}>
+                <div key={c.id} style={{ padding: 12, background: '#f7e9e6', borderRadius: 10, border: '1px solid #edc4bd' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.prospect_company || c.prospect_name}</div>
-                    <div style={{ fontWeight: 700, color: '#dc2626', textAlign: 'right', lineHeight: 1.15 }}>
+                    <div style={{ fontWeight: 600, color: '#0e1f18' }}>{c.prospect_company || c.prospect_name}</div>
+                    <div style={{ fontWeight: 700, color: '#b23b2e', textAlign: 'right', lineHeight: 1.15 }}>
                       <div>{fmt(headlineAmount)}{hasVat ? ' TTC' : ''}</div>
-                      {hasVat && <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>{fmt(c.amount_ht)} HT</div>}
+                      {hasVat && <div style={{ fontSize: 10, color: '#99a09a', fontWeight: 500 }}>{fmt(c.amount_ht)} HT</div>}
                     </div>
                   </div>
                   {c.rejection_reason && (
@@ -355,16 +355,16 @@ export default function PartnerPaymentsPage() {
               <div
                 key={statusKey}
                 style={{
-                  flex: 1, minWidth: 0, background: '#f8fafc', borderRadius: 16,
+                  flex: 1, minWidth: 0, background: '#f6f2e9', borderRadius: 16,
                   padding: 12, display: 'flex', flexDirection: 'column',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #ded8cb',
                   borderTop: `3px solid ${st.color}`,
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: 10, borderRadius: 10, background: '#fff' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
-                    <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.label}</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#0e1f18', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.label}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                     {colTotalHt > 0 && <span style={{ fontWeight: 700, fontSize: 13, color: st.color }}>{fmt(colTotalHt)}</span>}
@@ -407,7 +407,7 @@ export default function PartnerPaymentsPage() {
                                 ▣ {t('payouts.partner_period_prefix', 'Votre paie de')} {ab.period}
                               </div>
                               {ab.tenant_name && (
-                                <div style={{ color: '#64748b', fontSize: 11 }}>
+                                <div style={{ color: '#6e756c', fontSize: 11 }}>
                                   {t('payouts.paid_by', { tenant: ab.tenant_name, defaultValue: 'Versée par {{tenant}}' })}
                                 </div>
                               )}
@@ -420,7 +420,7 @@ export default function PartnerPaymentsPage() {
                             {fmt(ab.total_amount_ttc)}{hasVatGroup ? ' TTC' : ''}
                           </div>
                           {hasVatGroup && (
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
+                            <div style={{ color: '#6e756c', fontSize: 11, marginBottom: 8, lineHeight: 1.4 }}>
                               {fmt(ab.total_amount_ht)} HT · {fmt(ab.total_amount_tax)} TVA
                             </div>
                           )}
@@ -429,18 +429,18 @@ export default function PartnerPaymentsPage() {
                               const pcHasVat = parseFloat(pc.amount_tax || 0) > 0;
                               const pcHt = pcHasVat ? pc.amount_ht : pc.amount;
                               return (
-                                <div key={pc.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#475569', fontSize: 11 }}>
+                                <div key={pc.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#33433b', fontSize: 11 }}>
                                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     · {pc.prospect_company || pc.prospect_name || '—'}
                                   </span>
-                                  <span style={{ color: '#94a3b8', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                                  <span style={{ color: '#99a09a', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
                                     {fmt(pcHt)}
                                   </span>
                                 </div>
                               );
                             })}
                             {remaining > 0 && (
-                              <div style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>
+                              <div style={{ color: '#99a09a', fontSize: 11, fontStyle: 'italic' }}>
                                 +{remaining} {t('payouts.aggregate_more', 'autres')}
                               </div>
                             )}
@@ -451,7 +451,7 @@ export default function PartnerPaymentsPage() {
                               disabled={batchUploadingId === ab.id}
                               style={{
                                 width: '100%', padding: '8px', borderRadius: 8,
-                                background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
+                                background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff',
                                 fontWeight: 700, fontSize: 12, cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                                 fontFamily: 'inherit', marginBottom: 6,
@@ -464,7 +464,7 @@ export default function PartnerPaymentsPage() {
                           {invoiceReceived && (
                             <div style={{
                               padding: '7px 10px', borderRadius: 8,
-                              background: '#eff6ff', color: '#0284c7',
+                              background: '#e9f1ea', color: '#0284c7',
                               fontSize: 11, textAlign: 'center', fontWeight: 600,
                               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                               marginBottom: 6,
@@ -501,14 +501,14 @@ export default function PartnerPaymentsPage() {
                       key={c.id}
                       style={{
                         background: '#fff', borderRadius: 12, padding: 14,
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid #ded8cb',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                       }}
                     >
                       {/* Status pill removed — the column header
                           already conveys the lifecycle stage. */}
                       <div style={{ marginBottom: 6, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {c.prospect_company || c.prospect_name || '—'}
                         </div>
                         {inBatch && (
@@ -519,7 +519,7 @@ export default function PartnerPaymentsPage() {
                       </div>
 
                       {c.prospect_company && c.prospect_name && c.prospect_company !== c.prospect_name && (
-                        <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 8 }}>{c.prospect_name}</div>
+                        <div style={{ color: '#99a09a', fontSize: 11, marginBottom: 8 }}>{c.prospect_name}</div>
                       )}
 
                       {(() => {
@@ -538,14 +538,14 @@ export default function PartnerPaymentsPage() {
                               {fmt(headline)}{hasVat ? ' HT' : ''}
                             </div>
                             {hasVat && (
-                              <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6, lineHeight: 1.4 }}>
-                                TVA {c.tax_rate_applied}% : {fmt(c.amount_tax)} · <strong style={{ color: '#0f172a' }}>TTC : {fmt(c.amount_ttc)}</strong>
+                              <div style={{ color: '#6e756c', fontSize: 11, marginBottom: 6, lineHeight: 1.4 }}>
+                                TVA {c.tax_rate_applied}% : {fmt(c.amount_tax)} · <strong style={{ color: '#0e1f18' }}>TTC : {fmt(c.amount_ttc)}</strong>
                               </div>
                             )}
                           </>
                         );
                       })()}
-                      <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 10 }}>
+                      <div style={{ color: '#99a09a', fontSize: 11, marginBottom: 10 }}>
                         {c.rate}% · {fmt(c.deal_value)} · {fmtDate(c.created_at)}
                       </div>
 
@@ -560,7 +560,7 @@ export default function PartnerPaymentsPage() {
                       {statusKey === 'awaiting_invoice' && !inBatch && tenantCadence !== 'unitary' && (
                         <div style={{
                           padding: '7px 10px', borderRadius: 8,
-                          background: '#f1f5f9', color: '#64748b',
+                          background: '#ece7db', color: '#6e756c',
                           fontSize: 11, textAlign: 'center', fontWeight: 600,
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                         }}>
@@ -573,7 +573,7 @@ export default function PartnerPaymentsPage() {
                           disabled={uploadingId === c.id}
                           style={{
                             width: '100%', padding: '8px 12px', borderRadius: 10,
-                            background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
+                            background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff',
                             fontWeight: 700, fontSize: 12, cursor: 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                             opacity: uploadingId === c.id ? 0.7 : 1,
@@ -603,7 +603,7 @@ export default function PartnerPaymentsPage() {
                       {statusKey === 'pending_validation' && (
                         <div style={{
                           padding: '7px 10px', borderRadius: 8,
-                          background: '#eff6ff', color: '#0284c7',
+                          background: '#e9f1ea', color: '#0284c7',
                           fontSize: 11, textAlign: 'center', fontWeight: 600,
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                         }}>
@@ -617,8 +617,8 @@ export default function PartnerPaymentsPage() {
                               onClick={() => handleDownload(c.id)}
                               style={{
                                 width: '100%', padding: '7px', borderRadius: 8,
-                                background: '#f0fdf4', border: '1px solid #bbf7d0',
-                                color: '#166534', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                                background: '#e9f1ea', border: '1px solid #cfe6d6',
+                                color: '#0e4d34', fontWeight: 600, fontSize: 12, cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                               }}
                             >
@@ -626,7 +626,7 @@ export default function PartnerPaymentsPage() {
                             </button>
                           )}
                           {c.paid_at && (
-                            <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>
+                            <div style={{ textAlign: 'center', color: '#99a09a', fontSize: 11 }}>
                               {t('commissions.paid_on')} {fmtDate(c.paid_at)}
                             </div>
                           )}
@@ -636,7 +636,7 @@ export default function PartnerPaymentsPage() {
                   );
                   })}
                   {cards.length === 0 && (
-                    <div style={{ color: '#cbd5e1', fontSize: 12, textAlign: 'center', padding: 16 }}>
+                    <div style={{ color: '#cfc8b8', fontSize: 12, textAlign: 'center', padding: 16 }}>
                       {t('partnerPayments.empty_col', 'Aucune commission')}
                     </div>
                   )}
@@ -647,7 +647,7 @@ export default function PartnerPaymentsPage() {
       </div>
 
       {commissions.length === 0 && (
-        <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', color: '#94a3b8', border: '1px solid #e2e8f0', marginTop: 16 }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: 48, textAlign: 'center', color: '#99a09a', border: '1px solid #ded8cb', marginTop: 16 }}>
           {t('partnerPayments.no_payments')}
         </div>
       )}
@@ -661,7 +661,7 @@ export default function PartnerPaymentsPage() {
           <div onClick={() => batchUploadingId === null && setBatchDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
           <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, width: 600, maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
             {batchDetail.loading && (
-              <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+              <div style={{ padding: 48, textAlign: 'center', color: '#99a09a', fontSize: 13 }}>
                 {t('common.loading', 'Chargement…')}
               </div>
             )}
@@ -671,28 +671,28 @@ export default function PartnerPaymentsPage() {
               const hasVatBd = parseFloat(bd.total_amount_tax || 0) > 0;
               const canUploadBd = bd.status === 'awaiting_invoice';
               const statusBadge = {
-                awaiting_invoice:  { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#fffbeb', color: '#92400e' },
-                ready_to_pay:      { label: t('payouts.status_ready_to_pay', 'Prêt à payer'),               bg: '#eff6ff', color: '#1d4ed8' },
-                paid:              { label: t('payouts.status_paid', 'Payé'),                                bg: '#f0fdf4', color: '#166534' },
-                cancelled:         { label: t('payouts.status_cancelled', 'Annulé'),                         bg: '#f1f5f9', color: '#475569' },
-              }[bd.status] || { label: bd.status, bg: '#f1f5f9', color: '#475569' };
+                awaiting_invoice:  { label: t('payouts.status_awaiting_invoice', 'En attente de facture'), bg: '#f6efda', color: '#7a4a16' },
+                ready_to_pay:      { label: t('payouts.status_ready_to_pay', 'Prêt à payer'),               bg: '#e9f1ea', color: '#1d4ed8' },
+                paid:              { label: t('payouts.status_paid', 'Payé'),                                bg: '#e9f1ea', color: '#0e4d34' },
+                cancelled:         { label: t('payouts.status_cancelled', 'Annulé'),                         bg: '#ece7db', color: '#33433b' },
+              }[bd.status] || { label: bd.status, bg: '#ece7db', color: '#33433b' };
               return (
                 <>
-                  <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #ece7db' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-                          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0e1f18', margin: 0 }}>
                             {t('payouts.partner_detail_title', { period: bd.period, defaultValue: 'Batch — {{period}}' })}
                           </h2>
                           <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, background: statusBadge.bg, color: statusBadge.color }}>
                             {statusBadge.label}
                           </span>
                         </div>
-                        <p style={{ color: '#64748b', fontSize: 13, margin: 0 }}>
+                        <p style={{ color: '#6e756c', fontSize: 13, margin: 0 }}>
                           {list.length} {t('payouts.aggregate_count_suffix', 'commissions')}
                           {' · '}{fmt(bd.total_amount_ttc)} TTC
-                          {hasVatBd && <span style={{ color: '#94a3b8' }}> ({fmt(bd.total_amount_ht)} HT + {fmt(bd.total_amount_tax)} TVA)</span>}
+                          {hasVatBd && <span style={{ color: '#99a09a' }}> ({fmt(bd.total_amount_ht)} HT + {fmt(bd.total_amount_tax)} TVA)</span>}
                         </p>
                         {bd.invoice_uploaded_at && (
                           <p style={{ color: '#0284c7', fontSize: 12, margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -700,15 +700,15 @@ export default function PartnerPaymentsPage() {
                           </p>
                         )}
                       </div>
-                      <button onClick={() => batchUploadingId === null && setBatchDetail(null)} style={{ background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: batchUploadingId !== null ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <X size={16} color="#475569" />
+                      <button onClick={() => batchUploadingId === null && setBatchDetail(null)} style={{ background: '#ece7db', border: 'none', width: 36, height: 36, borderRadius: 10, cursor: batchUploadingId !== null ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <X size={16} color="#33433b" />
                       </button>
                     </div>
                   </div>
 
                   <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px' }}>
                     {list.length === 0 ? (
-                      <div style={{ textAlign: 'center', color: '#94a3b8', padding: 24, fontSize: 13 }}>
+                      <div style={{ textAlign: 'center', color: '#99a09a', padding: 24, fontSize: 13 }}>
                         {t('payouts.detail_empty', 'Aucune commission dans ce batch.')}
                       </div>
                     ) : (
@@ -716,21 +716,21 @@ export default function PartnerPaymentsPage() {
                         {list.map(dc => {
                           const dcHasVat = parseFloat(dc.amount_tax || 0) > 0;
                           return (
-                            <div key={dc.id} style={{ padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                            <div key={dc.id} style={{ padding: 12, background: '#f6f2e9', borderRadius: 10, border: '1px solid #ded8cb' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                 <div style={{ minWidth: 0, flex: 1 }}>
-                                  <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <div style={{ fontWeight: 600, color: '#0e1f18', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {dc.prospect_company || dc.prospect_name || '—'}
                                   </div>
                                   {dc.prospect_company && dc.prospect_name && dc.prospect_company !== dc.prospect_name && (
-                                    <div style={{ color: '#94a3b8', fontSize: 11, marginTop: 1 }}>{dc.prospect_name}</div>
+                                    <div style={{ color: '#99a09a', fontSize: 11, marginTop: 1 }}>{dc.prospect_name}</div>
                                   )}
-                                  <div style={{ color: '#64748b', fontSize: 11, marginTop: 4 }}>
+                                  <div style={{ color: '#6e756c', fontSize: 11, marginTop: 4 }}>
                                     {dc.rate}% · {fmt(dc.deal_value)}
                                   </div>
                                 </div>
                                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0e1f18' }}>
                                     {fmt(dcHasVat ? dc.amount_ttc : dc.amount)}{dcHasVat ? ' TTC' : ''}
                                   </div>
                                   {dc.referral_id && (
@@ -738,7 +738,7 @@ export default function PartnerPaymentsPage() {
                                       href={'/partner/referrals?open=' + dc.referral_id}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      style={{ color: 'var(--rb-primary, #059669)', fontSize: 11, fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
+                                      style={{ color: 'var(--rb-primary, #0e7a54)', fontSize: 11, fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
                                     >
                                       {t('payouts.see_deal_link', 'Voir le deal →')}
                                     </a>
@@ -752,14 +752,14 @@ export default function PartnerPaymentsPage() {
                     )}
                   </div>
 
-                  <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #ece7db', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     {canUploadBd ? (
                       <button
                         onClick={() => triggerBatchUpload(bd.id)}
                         disabled={batchUploadingId === bd.id}
                         style={{
                           padding: '9px 16px', borderRadius: 10,
-                          background: 'var(--rb-primary, #059669)', border: 'none', color: '#fff',
+                          background: 'var(--rb-primary, #0e7a54)', border: 'none', color: '#fff',
                           fontWeight: 700, fontSize: 13,
                           cursor: batchUploadingId === bd.id ? 'wait' : 'pointer', fontFamily: 'inherit',
                           display: 'flex', alignItems: 'center', gap: 6,
@@ -772,7 +772,7 @@ export default function PartnerPaymentsPage() {
                     <button
                       onClick={() => batchUploadingId === null && setBatchDetail(null)}
                       disabled={batchUploadingId !== null}
-                      style={{ padding: '9px 16px', borderRadius: 10, background: '#f1f5f9', border: 'none', color: '#475569', fontWeight: 600, fontSize: 13, cursor: batchUploadingId !== null ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                      style={{ padding: '9px 16px', borderRadius: 10, background: '#ece7db', border: 'none', color: '#33433b', fontWeight: 600, fontSize: 13, cursor: batchUploadingId !== null ? 'wait' : 'pointer', fontFamily: 'inherit' }}
                     >
                       {t('common.close', 'Fermer')}
                     </button>
@@ -789,15 +789,15 @@ export default function PartnerPaymentsPage() {
 
 function PayKPI({ icon: Icon, label, value, sub, suffix, color }) {
   return (
-    <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
+    <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #ded8cb' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
+          <div style={{ color: '#6e756c', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
           <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: -1 }}>
             {value}
-            {suffix && <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 6, color: '#94a3b8' }}>{suffix}</span>}
+            {suffix && <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 6, color: '#99a09a' }}>{suffix}</span>}
           </div>
-          {sub && <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 4 }}>{sub}</div>}
+          {sub && <div style={{ fontSize: 11, color: '#99a09a', fontWeight: 500, marginTop: 4 }}>{sub}</div>}
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={20} color={color} />

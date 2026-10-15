@@ -72,19 +72,19 @@ export default function TrashPage() {
 
   return (
     <div className="fade-in" style={{ maxWidth: 880, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0e1f18', letterSpacing: -0.5, marginBottom: 4 }}>
         {t('trash.title')}
       </h1>
-      <p style={{ color: '#64748b', marginBottom: 24, fontSize: 14 }}>
+      <p style={{ color: '#6e756c', marginBottom: 24, fontSize: 14 }}>
         {t('trash.subtitle')}
       </p>
 
       {loading ? (
-        <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>…</div>
+        <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>…</div>
       ) : items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px 24px' }}>
-          <Trash2 size={48} color="#e2e8f0" style={{ margin: '0 auto 12px', display: 'block' }}/>
-          <p style={{ color: '#94a3b8', fontSize: 14 }}>{t('trash.empty')}</p>
+          <Trash2 size={48} color="#ded8cb" style={{ margin: '0 auto 12px', display: 'block' }}/>
+          <p style={{ color: '#99a09a', fontSize: 14 }}>{t('trash.empty')}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -99,33 +99,33 @@ export default function TrashPage() {
                 key={`${item.type}-${item.id}`}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: 16, border: '1px solid #e2e8f0', borderRadius: 12,
+                  padding: 16, border: '1px solid #ded8cb', borderRadius: 12,
                   background: '#fff',
                 }}
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: '#0e1f18', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {title}
                     </span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
-                      background: isReferral ? '#eef2ff' : '#fef3c7',
-                      color:      isReferral ? '#4338ca' : '#92400e',
+                      background: isReferral ? '#eef1ea' : '#f3ead0',
+                      color:      isReferral ? '#4338ca' : '#7a4a16',
                       textTransform: 'uppercase', letterSpacing: 0.4,
                     }}>
                       {isReferral ? 'Referral' : 'Commission'}
                     </span>
                   </div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>
+                  <div style={{ fontSize: 12, color: '#6e756c' }}>
                     {t('trash.deleted_on', { date: dateStr })}
-                    <span style={{ margin: '0 6px', color: '#cbd5e1' }}>·</span>
-                    <span style={{ color: lowDays ? '#dc2626' : '#64748b', fontWeight: lowDays ? 600 : 400 }}>
+                    <span style={{ margin: '0 6px', color: '#cfc8b8' }}>·</span>
+                    <span style={{ color: lowDays ? '#b23b2e' : '#6e756c', fontWeight: lowDays ? 600 : 400 }}>
                       {t('trash.days_remaining', { n: days })}
                     </span>
                   </div>
                   {item.amount != null && parseFloat(item.amount) > 0 && (
-                    <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: '#99a09a', marginTop: 2 }}>
                       {fmtMoney(item.amount)}
                     </div>
                   )}
@@ -137,7 +137,7 @@ export default function TrashPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
                       padding: '8px 14px', borderRadius: 10, border: 'none',
-                      background: '#059669', color: '#fff',
+                      background: '#0e7a54', color: '#fff',
                       fontSize: 12, fontWeight: 700,
                       cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit',
                       opacity: busy ? 0.7 : 1,
@@ -151,8 +151,8 @@ export default function TrashPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
                       padding: '8px 14px', borderRadius: 10,
-                      border: '1px solid #fecaca', background: '#fff',
-                      color: '#dc2626', fontSize: 12, fontWeight: 600,
+                      border: '1px solid #edc4bd', background: '#fff',
+                      color: '#b23b2e', fontSize: 12, fontWeight: 600,
                       cursor: busy ? 'wait' : 'pointer', fontFamily: 'inherit',
                     }}
                   >
@@ -176,7 +176,7 @@ export default function TrashPage() {
         onConfirm={confirmPermanentDelete}
         onCancel={() => setPendingPermanent(null)}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: '#94a3b8', fontSize: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: '#99a09a', fontSize: 12 }}>
           <Info size={14} style={{ flexShrink: 0, marginTop: 1 }}/>
           <span>{t('trash.permanent_confirm_message')}</span>
         </div>

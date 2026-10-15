@@ -1,5 +1,5 @@
-const PRIMARY = '#059669';
-const LIGHT = '#10b981';
+const PRIMARY = '#0e7a54';
+const LIGHT = '#1c9a6b';
 
 const wrap = { width: 28, height: 28 };
 const wrapHero = { width: 72, height: 72 };

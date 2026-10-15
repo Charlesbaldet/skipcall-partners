@@ -58,43 +58,43 @@ export default function PublicTrackingPage() {
     setSending(false);
   };
 
-  const inputStyle = { width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #e2e8f0', fontSize: 15, boxSizing: 'border-box', transition: 'border 0.2s' };
-  const labelStyle = { display: 'block', fontWeight: 600, color: '#334155', fontSize: 14, marginBottom: 6 };
+  const inputStyle = { width: '100%', padding: '12px 16px', borderRadius: 12, border: '2px solid #ded8cb', fontSize: 15, boxSizing: 'border-box', transition: 'border 0.2s' };
+  const labelStyle = { display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 14, marginBottom: 6 };
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}><div style={{ color: '#94a3b8' }}>{t('publicTracking.loading')}</div></div>;
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f6f2e9' }}><div style={{ color: '#99a09a' }}>{t('publicTracking.loading')}</div></div>;
 
   if (error) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f6f2e9' }}>
       <div style={{ textAlign: 'center' }}>
-        <AlertTriangle size={48} color="#f59e0b" />
-        <h2 style={{ color: '#0f172a', marginTop: 16 }}>{error}</h2>
-        <p style={{ color: '#64748b' }}>{t('publicTracking.invalid')}</p>
+        <AlertTriangle size={48} color="#b4791f" />
+        <h2 style={{ color: '#0e1f18', marginTop: 16 }}>{error}</h2>
+        <p style={{ color: '#6e756c' }}>{t('publicTracking.invalid')}</p>
       </div>
     </div>
   );
 
   if (submitted) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f6f2e9' }}>
       <div style={{ textAlign: 'center', maxWidth: 400 }} className="fade-in">
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <CheckCircle size={40} color="#16a34a" />
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#e9f1ea', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <CheckCircle size={40} color="#157a4c" />
         </div>
-        <h2 style={{ color: '#0f172a', fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{t('publicTracking.thanks_short')}</h2>
-        <p style={{ color: '#64748b', lineHeight: 1.6 }}>{t('publicTracking.contact_soon_prefix')} <strong>{partner.name}</strong> {t('publicTracking.contact_soon_suffix')}</p>
+        <h2 style={{ color: '#0e1f18', fontSize: 24, fontWeight: 800, marginBottom: 8 }}>{t('publicTracking.thanks_short')}</h2>
+        <p style={{ color: '#6e756c', lineHeight: 1.6 }}>{t('publicTracking.contact_soon_prefix')} <strong>{partner.name}</strong> {t('publicTracking.contact_soon_suffix')}</p>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0e1f18 0%, #1a2c24 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: '#fff', borderRadius: 28, maxWidth: 520, width: '100%', padding: 40, boxShadow: '0 25px 80px rgba(0,0,0,0.3)' }} className="fade-in">
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--rb-primary, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 0 30px rgba(5,150,105,0.3)' }}>
+          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--rb-primary, #0e7a54)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 0 30px rgba(5,150,105,0.3)' }}>
             <span style={{ color: '#fff', fontWeight: 800, fontSize: 22 }}>S</span>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>{t('publicTracking.recommended_by')} {partner.name}</h1>
-          <p style={{ color: '#64748b', fontSize: 15 }}>{t('publicTracking.form_intro')}</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0e1f18', marginBottom: 6 }}>{t('publicTracking.recommended_by')} {partner.name}</h1>
+          <p style={{ color: '#6e756c', fontSize: 15 }}>{t('publicTracking.form_intro')}</p>
         </div>
 
         {/* Form */}
@@ -129,7 +129,7 @@ export default function PublicTrackingPage() {
           </div>
           <button type="submit" disabled={sending || !form.prospect_name || !form.prospect_email} style={{
             padding: '14px', borderRadius: 14, fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer',
-            background: 'var(--rb-primary, #059669)', color: '#fff',
+            background: 'var(--rb-primary, #0e7a54)', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             opacity: sending ? 0.7 : 1, boxShadow: '0 4px 20px rgba(5,150,105,0.3)',
           }}>
@@ -137,8 +137,8 @@ export default function PublicTrackingPage() {
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12, marginTop: 20 }}>
-          {t('publicTracking.powered_by')} <strong style={{ color: 'var(--rb-primary, #059669)' }}>Skipcall</strong>
+        <p style={{ textAlign: 'center', color: '#99a09a', fontSize: 12, marginTop: 20 }}>
+          {t('publicTracking.powered_by')} <strong style={{ color: 'var(--rb-primary, #0e7a54)' }}>Skipcall</strong>
         </p>
       </div>
     </div>

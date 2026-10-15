@@ -46,16 +46,16 @@ function baseTemplate(content, ctaUrl, ctaText) {
   <style>
     body { margin: 0; padding: 0; background: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 40px; margin-bottom: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .header { background: #1a2236; padding: 24px 32px; text-align: center; }
+    .header { background: #10231b; padding: 24px 32px; text-align: center; }
     .header img { height: 32px; }
     .header-text { color: #ffffff; font-size: 18px; font-weight: 700; }
-    .header-text span { color: #059669; }
+    .header-text span { color: #0e7a54; }
     .body { padding: 32px; color: #374151; font-size: 15px; line-height: 1.6; }
-    .body h2 { color: #1a2236; font-size: 20px; margin-top: 0; }
-    .cta { display: inline-block; background: #059669; color: #ffffff !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 16px 0; }
-    .footer { padding: 24px 32px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
-    .highlight { background: #f0fdf4; border-left: 3px solid #059669; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; }
-    .stat { font-size: 24px; font-weight: 700; color: #059669; }
+    .body h2 { color: #10231b; font-size: 20px; margin-top: 0; }
+    .cta { display: inline-block; background: #0e7a54; color: #ffffff !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 16px 0; }
+    .footer { padding: 24px 32px; text-align: center; font-size: 12px; color: #99a09a; border-top: 1px solid #e3ddd0; }
+    .highlight { background: #e9f1ea; border-left: 3px solid #0e7a54; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; }
+    .stat { font-size: 24px; font-weight: 700; color: #0e7a54; }
   </style>
 </head>
 <body>
@@ -70,9 +70,9 @@ function baseTemplate(content, ctaUrl, ctaText) {
     <div class="footer">
       <p>RefBoost — Gestion de programme partenaires</p>
       <p>
-        Besoin d'aide ? <a href="mailto:support@refboost.io" style="color:#059669">support@refboost.io</a>
+        Besoin d'aide ? <a href="mailto:support@refboost.io" style="color:#0e7a54">support@refboost.io</a>
         &nbsp;·&nbsp;
-        <a href="https://refboost.io" style="color:#059669">refboost.io</a>
+        <a href="https://refboost.io" style="color:#0e7a54">refboost.io</a>
       </p>
     </div>
   </div>
@@ -123,7 +123,7 @@ function partnerInvite({ recipientName, tenantName, inviteUrl } = {}) {
       <p>Bonjour ${who},</p>
       <p><strong>${tenant}</strong> vous invite à rejoindre son programme partenaires. Recommandez des prospects qualifiés et percevez une commission pour chaque deal conclu.</p>
       <p>Activez votre compte pour accéder à votre pipeline, vos commissions et les ressources de communication.</p>
-      <p style="color:#9ca3af;font-size:13px;">Ce lien expire dans 7 jours.</p>`,
+      <p style="color:#99a09a;font-size:13px;">Ce lien expire dans 7 jours.</p>`,
     ctaUrl: inviteUrl,
     ctaLabel: 'Activer mon compte partenaire',
   });
@@ -207,7 +207,7 @@ function payoutBatchInvoiceRequest({ partner_first_name, period_label, commissio
   const taxLabel = fmtMoney(total_tax, '€');
   const list = Array.isArray(deals_list) ? deals_list : [];
   const dealsHtml = list.length ? `
-      <p style="margin:16px 0 8px;font-weight:600;color:#0f172a;">Détail des commissions :</p>
+      <p style="margin:16px 0 8px;font-weight:600;color:#0e1f18;">Détail des commissions :</p>
       <ul style="margin:0 0 16px;padding-left:20px;color:#374151;line-height:1.7;">
         ${list.map(d => `<li>${d.prospect_name || ''}${d.company ? ' — ' + d.company : ''} — <strong>${fmtMoney(d.amount_ttc, '€')}</strong></li>`).join('')}
       </ul>` : '';
@@ -220,7 +220,7 @@ function payoutBatchInvoiceRequest({ partner_first_name, period_label, commissio
       <div class="highlight" style="text-align:center;">
         <div style="color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">Total à facturer</div>
         <div class="stat">${ttcLabel}</div>
-        <div style="color:#475569;font-size:13px;margin-top:6px;">${htLabel} HT + ${taxLabel} TVA</div>
+        <div style="color:#33433b;font-size:13px;margin-top:6px;">${htLabel} HT + ${taxLabel} TVA</div>
       </div>
       ${dealsHtml}
       <p>Merci de déposer <strong>une seule facture mensuelle</strong> pour le total ci-dessus.</p>`,
@@ -238,12 +238,12 @@ function commissionPaymentSent({ partnerName, amount, amountHt, amountTax, amoun
   const rate = Number(taxRate);
   const hasVat = amountTtc != null && Number.isFinite(rate) && rate > 0;
   const breakdownHtml = hasVat ? `
-      <div class="highlight" style="background:#f0fdf4;border-left:4px solid #059669;">
-        <div style="margin-bottom:4px;color:#475569;font-size:13px;">Décomposition du virement</div>
+      <div class="highlight" style="background:#e9f1ea;border-left:4px solid #0e7a54;">
+        <div style="margin-bottom:4px;color:#33433b;font-size:13px;">Décomposition du virement</div>
         <table style="width:100%;border-collapse:collapse;font-size:14px;">
-          <tr><td style="padding:4px 0;color:#475569;">Montant HT</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#0f172a;">${fmtMoney(amountHt, currency)}</td></tr>
-          <tr><td style="padding:4px 0;color:#475569;">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#0f172a;">${fmtMoney(amountTax, currency)}</td></tr>
-          <tr style="border-top:1px solid #bbf7d0;"><td style="padding:6px 0 0;color:#166534;font-weight:700;">Montant TTC viré</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:#059669;font-size:15px;">${fmtMoney(amountTtc, currency)}</td></tr>
+          <tr><td style="padding:4px 0;color:#33433b;">Montant HT</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#0e1f18;">${fmtMoney(amountHt, currency)}</td></tr>
+          <tr><td style="padding:4px 0;color:#33433b;">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;color:#0e1f18;">${fmtMoney(amountTax, currency)}</td></tr>
+          <tr style="border-top:1px solid #cfe6d6;"><td style="padding:6px 0 0;color:#0e4d34;font-weight:700;">Montant TTC viré</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:#0e7a54;font-size:15px;">${fmtMoney(amountTtc, currency)}</td></tr>
         </table>
       </div>` : '';
   return renderEmail({
@@ -331,7 +331,7 @@ function passwordReset({ recipientName, resetUrl } = {}) {
     bodyHtml: `
       <p>Bonjour ${recipientName || ''},</p>
       <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.</p>
-      <p style="color:#9ca3af;font-size:13px;">Ce lien expire dans 1 heure. Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email — votre mot de passe restera inchangé.</p>`,
+      <p style="color:#99a09a;font-size:13px;">Ce lien expire dans 1 heure. Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email — votre mot de passe restera inchangé.</p>`,
     ctaUrl: resetUrl,
     ctaLabel: 'Réinitialiser mon mot de passe',
   });
@@ -406,12 +406,12 @@ function paymentSentAdmin({ partnerName, amount, amountHt, amountTax, amountTtc,
   const rate = Number(taxRate);
   const hasVat = amountTtc != null && Number.isFinite(rate) && rate > 0;
   const breakdownHtml = hasVat ? `
-      <div class="highlight" style="background:#f8fafc;">
-        <div style="margin-bottom:4px;color:#475569;font-size:13px;">Décomposition</div>
+      <div class="highlight" style="background:#f6f2e9;">
+        <div style="margin-bottom:4px;color:#33433b;font-size:13px;">Décomposition</div>
         <table style="width:100%;border-collapse:collapse;font-size:14px;">
-          <tr><td style="padding:4px 0;color:#475569;">HT</td><td style="padding:4px 0;text-align:right;font-weight:600;">${fmtMoney(amountHt, currency)}</td></tr>
-          <tr><td style="padding:4px 0;color:#475569;">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;">${fmtMoney(amountTax, currency)}</td></tr>
-          <tr style="border-top:1px solid #e2e8f0;"><td style="padding:6px 0 0;color:#0f172a;font-weight:700;">TTC viré</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:#0f172a;">${fmtMoney(amountTtc, currency)}</td></tr>
+          <tr><td style="padding:4px 0;color:#33433b;">HT</td><td style="padding:4px 0;text-align:right;font-weight:600;">${fmtMoney(amountHt, currency)}</td></tr>
+          <tr><td style="padding:4px 0;color:#33433b;">TVA ${rate}%</td><td style="padding:4px 0;text-align:right;font-weight:600;">${fmtMoney(amountTax, currency)}</td></tr>
+          <tr style="border-top:1px solid #ded8cb;"><td style="padding:6px 0 0;color:#0e1f18;font-weight:700;">TTC viré</td><td style="padding:6px 0 0;text-align:right;font-weight:800;color:#0e1f18;">${fmtMoney(amountTtc, currency)}</td></tr>
         </table>
       </div>` : '';
   return renderEmail({
@@ -516,7 +516,7 @@ function accountDeletionRequested({ recipientName, scheduledPurgeAt, tenantName 
         Vos données seront définitivement supprimées le <strong>${scheduledPurgeAt || ''}</strong>.
       </div>
       <p>Pour annuler cette demande pendant le délai de 30 jours, écrivez à <a href="mailto:dpo@refboost.io">dpo@refboost.io</a> depuis l'adresse email associée à votre compte.</p>
-      <p style="color:#9ca3af;font-size:13px;">Conformément à l'article 17 du RGPD, certaines données peuvent être conservées au-delà de cette date pour répondre à nos obligations légales (facturation, comptabilité).</p>`,
+      <p style="color:#99a09a;font-size:13px;">Conformément à l'article 17 du RGPD, certaines données peuvent être conservées au-delà de cette date pour répondre à nos obligations légales (facturation, comptabilité).</p>`,
     ctaUrl: `${FRONTEND}/`,
     ctaLabel: 'Retour à RefBoost',
   });

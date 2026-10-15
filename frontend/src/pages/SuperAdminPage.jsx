@@ -77,7 +77,7 @@ export default function SuperAdminPage() {
   const [auditLogsTotal, setAuditLogsTotal] = useState(0);
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #059669)', secondary_color: '#8b5cf6', accent_color: '#f59e0b', logo_url: '' });
+  const [form, setForm] = useState({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #0e7a54)', secondary_color: '#0e7a54', accent_color: '#b4791f', logo_url: '' });
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [deleteBlogId, setDeleteBlogId] = useState(null);
@@ -317,7 +317,7 @@ export default function SuperAdminPage() {
     try {
       await api.request('/super-admin/tenants', { method: 'POST', body: JSON.stringify(form), headers: { 'Content-Type': 'application/json' } });
       setShowCreate(false);
-      setForm({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #059669)', secondary_color: '#8b5cf6', accent_color: '#f59e0b', logo_url: '' });
+      setForm({ name: '', slug: '', domain: '', primary_color: 'var(--rb-primary, #0e7a54)', secondary_color: '#0e7a54', accent_color: '#b4791f', logo_url: '' });
       load();
     } catch (e) { showToast.error(e.message); }
     setSaving(false);
@@ -325,7 +325,7 @@ export default function SuperAdminPage() {
 
   const startEdit = (tn) => {
     setEditingId(tn.id);
-    setEditForm({ name: tn.name, domain: tn.domain || '', primary_color: tn.primary_color, secondary_color: tn.secondary_color, accent_color: tn.accent_color || '#f59e0b', logo_url: tn.logo_url || '', is_active: tn.is_active });
+    setEditForm({ name: tn.name, domain: tn.domain || '', primary_color: tn.primary_color, secondary_color: tn.secondary_color, accent_color: tn.accent_color || '#b4791f', logo_url: tn.logo_url || '', is_active: tn.is_active });
   };
 
   const saveEdit = async () => {
@@ -348,7 +348,7 @@ export default function SuperAdminPage() {
     }
   };
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}><p style={{ color: '#94a3b8' }}>{t('admin.loading')}</p></div>;
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}><p style={{ color: '#99a09a' }}>{t('admin.loading')}</p></div>;
 
   // J4-FIX2 — masque le tenant fondateur de la liste Clients. Aucune
   // action utile possible dessus (DELETE protégé J4, pas d'édition
@@ -390,8 +390,8 @@ export default function SuperAdminPage() {
             'Clients par plan' which is always current state). */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0f172a', letterSpacing: -0.4 }}>{t('super_admin.stats.title', 'Statistiques')}</h2>
-            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 13 }}>{t('super_admin.stats.subtitle', "Vue d'ensemble multi-tenants")}</p>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0e1f18', letterSpacing: -0.4 }}>{t('super_admin.stats.title', 'Statistiques')}</h2>
+            <p style={{ margin: '4px 0 0', color: '#6e756c', fontSize: 13 }}>{t('super_admin.stats.subtitle', "Vue d'ensemble multi-tenants")}</p>
           </div>
           <PeriodPicker period={period} setPeriod={setPeriod} t={t} />
         </div>
@@ -470,46 +470,46 @@ export default function SuperAdminPage() {
 
       {tab === 'clients' && (<>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-          <button onClick={() => setShowCreate(!showCreate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 12, background: showCreate ? '#f1f5f9' : 'var(--rb-primary, #059669)', color: showCreate ? '#475569' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+          <button onClick={() => setShowCreate(!showCreate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 12, background: showCreate ? '#ece7db' : 'var(--rb-primary, #0e7a54)', color: showCreate ? '#33433b' : '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
             {showCreate ? <X size={14} /> : <Plus size={14} />}
             {showCreate ? t('admin.cancel') : t('admin.new_tenant')}
           </button>
         </div>
         {showCreate && (
-          <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #e2e8f0', marginBottom: 20 }} className="fade-in">
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #ded8cb', marginBottom: 20 }} className="fade-in">
             <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>{t('admin.new_tenant')}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('admin.name')} *</label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Acme" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
-              <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('admin.th_slug')} *</label><input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} placeholder="my-client" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box', fontFamily: 'monospace' }} /></div>
-              <div><label style={{ display: 'block', fontWeight: 600, color: '#334155', fontSize: 12, marginBottom: 4 }}>{t('admin.domain')}</label><input value={form.domain} onChange={e => setForm(f => ({ ...f, domain: e.target.value }))} placeholder="app.client.com" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></div>
+              <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('admin.name')} *</label><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Acme" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box' }} /></div>
+              <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('admin.th_slug')} *</label><input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} placeholder="my-client" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box', fontFamily: 'monospace' }} /></div>
+              <div><label style={{ display: 'block', fontWeight: 600, color: '#2b3a32', fontSize: 12, marginBottom: 4 }}>{t('admin.domain')}</label><input value={form.domain} onChange={e => setForm(f => ({ ...f, domain: e.target.value }))} placeholder="app.client.com" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid #ded8cb', fontSize: 13, boxSizing: 'border-box' }} /></div>
             </div>
             <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
               {[['primary_color', t('admin.color_primary')], ['secondary_color', t('admin.color_secondary')], ['accent_color', t('admin.color_accent')]].map(([key, label]) => (
-                <div key={key}><label style={{ fontSize: 10, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11, color: '#94a3b8' }}>{form[key]}</code></div></div>
+                <div key={key}><label style={{ fontSize: 10, fontWeight: 600, color: '#6e756c' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11, color: '#99a09a' }}>{form[key]}</code></div></div>
               ))}
             </div>
-            <button onClick={handleCreate} disabled={saving || !form.name || !form.slug} style={{ padding: '10px 24px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? t('admin.creating') : t('admin.create_tenant')}</button>
+            <button onClick={handleCreate} disabled={saving || !form.name || !form.slug} style={{ padding: '10px 24px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? t('admin.creating') : t('admin.create_tenant')}</button>
           </div>
         )}
         {editingId && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={() => setEditingId(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
             <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 520, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-              <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0f172a' }}>{t('admin.edit_tenant')}</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: '#0e1f18' }}>{t('admin.edit_tenant')}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-                <div><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{t('admin.name')}</label><input value={editForm.name || ''} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
-                <div><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{t('admin.domain')}</label><input value={editForm.domain || ''} onChange={e => setEditForm(f => ({ ...f, domain: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
-                <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{t('admin.logo_url')}</label><input value={editForm.logo_url || ''} onChange={e => setEditForm(f => ({ ...f, logo_url: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c' }}>{t('admin.name')}</label><input value={editForm.name || ''} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
+                <div><label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c' }}>{t('admin.domain')}</label><input value={editForm.domain || ''} onChange={e => setEditForm(f => ({ ...f, domain: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c' }}>{t('admin.logo_url')}</label><input value={editForm.logo_url || ''} onChange={e => setEditForm(f => ({ ...f, logo_url: e.target.value }))} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '2px solid #ded8cb', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }} /></div>
               </div>
               <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                 {[['primary_color', t('admin.color_primary')], ['secondary_color', t('admin.color_secondary')], ['accent_color', t('admin.color_accent')]].map(([key, label]) => (
-                  <div key={key}><label style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm[key] || '#059669'} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm[key]}</code></div></div>
+                  <div key={key}><label style={{ fontSize: 11, fontWeight: 600, color: '#6e756c' }}>{label}</label><div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><input type="color" value={editForm[key] || '#0e7a54'} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer' }} /><code style={{ fontSize: 11 }}>{editForm[key]}</code></div></div>
                 ))}
               </div>
-              <div style={{ padding: 16, borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', marginBottom: 16 }}>
+              <div style={{ padding: 16, borderRadius: 12, background: '#f6f2e9', border: '1px solid #ded8cb', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: editForm.primary_color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18 }}>{(editForm.name || 'T')[0]}</div>
-                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, color: '#0f172a' }}>{editForm.name || t('admin.tenant_placeholder')}</div><div style={{ fontSize: 12, color: '#94a3b8' }}>{editForm.domain || t('admin.no_domain')}</div></div>
+                  <div style={{ flex: 1 }}><div style={{ fontWeight: 700, color: '#0e1f18' }}>{editForm.name || t('admin.tenant_placeholder')}</div><div style={{ fontSize: 12, color: '#99a09a' }}>{editForm.domain || t('admin.no_domain')}</div></div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <div style={{ width: 20, height: 20, borderRadius: 4, background: editForm.primary_color }} />
                     <div style={{ width: 20, height: 20, borderRadius: 4, background: editForm.secondary_color }} />
@@ -518,8 +518,8 @@ export default function SuperAdminPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.cancel')}</button>
-                <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--rb-primary, #059669)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.save')}</button>
+                <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #ded8cb', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.cancel')}</button>
+                <button onClick={saveEdit} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'var(--rb-primary, #0e7a54)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.save')}</button>
               </div>
             </div>
           </div>
@@ -528,41 +528,41 @@ export default function SuperAdminPage() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={() => setDeleteConfirm(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }} />
             <div className="fade-in" style={{ position: 'relative', background: '#fff', borderRadius: 24, padding: 32, width: 440, maxWidth: '90%', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><AlertTriangle size={28} color="#dc2626" /></div>
-              <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>{t('admin.delete_tenant_title')}</h3>
-              <p style={{ color: '#64748b', fontSize: 14, marginBottom: 4 }}>{t('admin.delete_tenant_confirm')} <strong>{deleteConfirm.name}</strong></p>
-              <p style={{ color: '#94a3b8', fontSize: 12, marginBottom: 24 }}>{t('admin.delete_tenant_note')}</p>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: '#f7e9e6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><AlertTriangle size={28} color="#b23b2e" /></div>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0e1f18', marginBottom: 8 }}>{t('admin.delete_tenant_title')}</h3>
+              <p style={{ color: '#6e756c', fontSize: 14, marginBottom: 4 }}>{t('admin.delete_tenant_confirm')} <strong>{deleteConfirm.name}</strong></p>
+              <p style={{ color: '#99a09a', fontSize: 12, marginBottom: 24 }}>{t('admin.delete_tenant_note')}</p>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #e2e8f0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.cancel')}</button>
-                <button onClick={() => handleDelete(deleteConfirm.id, true)} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#dc2626,#ef4444)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.delete')}</button>
+                <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid #ded8cb', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.cancel')}</button>
+                <button onClick={() => handleDelete(deleteConfirm.id, true)} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#b23b2e,#c24436)', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>{t('admin.delete')}</button>
               </div>
             </div>
           </div>
         )}
-        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead><tr style={{ background: '#f8fafc' }}>
+            <thead><tr style={{ background: '#f6f2e9' }}>
               {[t('admin.th_tenant'), t('admin.th_slug'), t('admin.th_admin'), t('admin.th_domain'), t('admin.th_users'), t('admin.th_partners'), t('admin.th_status'), t('admin.th_onboarding', 'Onboarding'), t('admin.th_plan', 'Plan'), t('admin.th_created_at'), t('admin.th_model'), ''].map((h, i) => (
-                <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                <th key={i} style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600, color: '#6e756c', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #ded8cb' }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>{visibleTenants.map(tn => (
-              <tr key={tn.id} data-row-id={tn.id} style={{ borderBottom: '1px solid #f8fafc', background: flashId === tn.id ? '#fef9c3' : undefined, transition: 'background 0.6s' }}>
+              <tr key={tn.id} data-row-id={tn.id} style={{ borderBottom: '1px solid #f6f2e9', background: flashId === tn.id ? '#fef9c3' : undefined, transition: 'background 0.6s' }}>
                 <td style={{ padding: '13px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 8, background: tn.primary_color || '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{tn.name[0]}</div>
-                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{tn.name}</span>
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: tn.primary_color || '#0e7a54', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{tn.name[0]}</div>
+                    <span style={{ fontWeight: 600, color: '#0e1f18' }}>{tn.name}</span>
                   </div>
                 </td>
-                <td style={{ padding: '13px 16px', textAlign: 'center' }}><code style={{ fontSize: 12, color: 'var(--rb-primary, #059669)', background: '#eef2ff', padding: '2px 8px', borderRadius: 4 }}>{tn.slug}</code></td>
-                <td style={{ padding: '13px 16px', fontSize: 13 }}><div style={{ fontWeight: 600 }}>{tn.admin_name || '—'}</div>{tn.admin_email && <div style={{ color: '#64748b', fontSize: 12 }}>{tn.admin_email}</div>}</td>
-                <td style={{ padding: '13px 16px', textAlign: 'center', color: '#64748b', fontSize: 13 }}>{tn.domain || '—'}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'center' }}><code style={{ fontSize: 12, color: 'var(--rb-primary, #0e7a54)', background: '#eef1ea', padding: '2px 8px', borderRadius: 4 }}>{tn.slug}</code></td>
+                <td style={{ padding: '13px 16px', fontSize: 13 }}><div style={{ fontWeight: 600 }}>{tn.admin_name || '—'}</div>{tn.admin_email && <div style={{ color: '#6e756c', fontSize: 12 }}>{tn.admin_email}</div>}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'center', color: '#6e756c', fontSize: 13 }}>{tn.domain || '—'}</td>
                 <td style={{ padding: '13px 16px', textAlign: 'center' }}>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{tn.active_user_count}</span>
-                  <span style={{ color: '#94a3b8', fontSize: 12 }}> / {tn.user_count}</span>
+                  <span style={{ fontWeight: 700, color: '#0e1f18' }}>{tn.active_user_count}</span>
+                  <span style={{ color: '#99a09a', fontSize: 12 }}> / {tn.user_count}</span>
                 </td>
                 <td style={{ padding: '13px 16px', textAlign: 'center', fontWeight: 600 }}>{tn.partner_count}</td>
-                <td style={{ padding: '13px 16px', textAlign: 'center' }}><span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: tn.is_active ? '#f0fdf4' : '#fef2f2', color: tn.is_active ? '#16a34a' : '#dc2626' }}>{tn.is_active ? t('admin.status_active') : t('admin.status_inactive')}</span></td>
+                <td style={{ padding: '13px 16px', textAlign: 'center' }}><span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: tn.is_active ? '#e9f1ea' : '#f7e9e6', color: tn.is_active ? '#157a4c' : '#b23b2e' }}>{tn.is_active ? t('admin.status_active') : t('admin.status_inactive')}</span></td>
                 <td style={{ padding: '13px 16px', textAlign: 'center' }}>
                   <OnboardingCell tn={tn} t={t} />
                 </td>
@@ -573,41 +573,41 @@ export default function SuperAdminPage() {
                     return <span style={{ padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: `${c}1A`, color: c, textTransform: 'capitalize' }}>{p}</span>;
                   })()}
                 </td>
-                <td style={{ padding: '13px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>{fmtDate(tn.created_at)}</td>
-                <td style={{ padding: '13px 16px', textAlign: 'center', fontSize: 12, color: '#475569' }}>{tn.revenue_model || '—'}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'center', color: '#99a09a', fontSize: 12 }}>{fmtDate(tn.created_at)}</td>
+                <td style={{ padding: '13px 16px', textAlign: 'center', fontSize: 12, color: '#33433b' }}>{tn.revenue_model || '—'}</td>
                 <td style={{ padding: '13px 16px', textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                    <button onClick={() => startEdit(tn)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Pencil size={14} color="#64748b" /></button>
-                    <button onClick={() => setDeleteConfirm(tn)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#dc2626" /></button>
+                    <button onClick={() => startEdit(tn)} style={{ background: '#ece7db', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Pencil size={14} color="#6e756c" /></button>
+                    <button onClick={() => setDeleteConfirm(tn)} style={{ background: '#f7e9e6', border: 'none', borderRadius: 6, padding: 6, cursor: 'pointer', display: 'flex' }}><Trash2 size={14} color="#b23b2e" /></button>
                   </div>
                 </td>
               </tr>
             ))}</tbody>
           </table>
-          {visibleTenants.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.no_tenants')}</div>}
+          {visibleTenants.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>{t('admin.no_tenants')}</div>}
         </div>
       </>)}
 
       {tab === 'logs' && (<>
-        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #ded8cb' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead><tr style={{ background: '#f8fafc' }}>
+            <thead><tr style={{ background: '#f6f2e9' }}>
               {[t('admin.th_date'), t('admin.th_user'), t('admin.th_tenant_short'), t('admin.th_action'), t('admin.th_resource'), t('admin.th_ip')].map((h, i) => (
-                <th key={i} style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                <th key={i} style={{ padding: '12px 14px', textAlign: 'left', fontWeight: 600, color: '#6e756c', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #ded8cb' }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>{logs.map(l => (
-              <tr key={l.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDateTime(l.created_at)}</td>
-                <td style={{ padding: '10px 14px', fontWeight: 500, color: '#0f172a' }}>{l.user_name || l.user_email || '—'}</td>
-                <td style={{ padding: '10px 14px', color: 'var(--rb-primary, #059669)', fontSize: 12 }}>{l.tenant_name || '—'}</td>
-                <td style={{ padding: '10px 14px' }}><span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: l.action.includes('fail') || l.action.includes('block') ? '#fef2f2' : '#eef2ff', color: l.action.includes('fail') || l.action.includes('block') ? '#dc2626' : '#059669' }}>{l.action}</span></td>
-                <td style={{ padding: '10px 14px', color: '#64748b', fontSize: 12 }}>{l.resource_type || '—'}</td>
-                <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 11, fontFamily: 'monospace' }}>{l.ip_address || '—'}</td>
+              <tr key={l.id} style={{ borderBottom: '1px solid #f6f2e9' }}>
+                <td style={{ padding: '10px 14px', color: '#99a09a', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDateTime(l.created_at)}</td>
+                <td style={{ padding: '10px 14px', fontWeight: 500, color: '#0e1f18' }}>{l.user_name || l.user_email || '—'}</td>
+                <td style={{ padding: '10px 14px', color: 'var(--rb-primary, #0e7a54)', fontSize: 12 }}>{l.tenant_name || '—'}</td>
+                <td style={{ padding: '10px 14px' }}><span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, background: l.action.includes('fail') || l.action.includes('block') ? '#f7e9e6' : '#eef1ea', color: l.action.includes('fail') || l.action.includes('block') ? '#b23b2e' : '#0e7a54' }}>{l.action}</span></td>
+                <td style={{ padding: '10px 14px', color: '#6e756c', fontSize: 12 }}>{l.resource_type || '—'}</td>
+                <td style={{ padding: '10px 14px', color: '#99a09a', fontSize: 11, fontFamily: 'monospace' }}>{l.ip_address || '—'}</td>
               </tr>
             ))}</tbody>
           </table>
-          {logs.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>{t('admin.no_logs')}</div>}
+          {logs.length === 0 && <div style={{ padding: 48, textAlign: 'center', color: '#99a09a' }}>{t('admin.no_logs')}</div>}
         </div>
         {auditLogsTotal > AUDIT_LOGS_PAGE_SIZE && (
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
@@ -622,14 +622,14 @@ export default function SuperAdminPage() {
 
       {tab === 'search' && (
         <div style={{ maxWidth: 900 }}>
-          <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, color: '#0f172a', letterSpacing: -0.4 }}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, color: '#0e1f18', letterSpacing: -0.4 }}>
             {t('super_admin.search.title', 'Recherche globale')}
           </h2>
-          <p style={{ margin: '0 0 20px', fontSize: 13, color: '#64748b' }}>
+          <p style={{ margin: '0 0 20px', fontSize: 13, color: '#6e756c' }}>
             {t('super_admin.search.subtitle', 'Cherche à travers tous les tenants : clients, utilisateurs, partenaires, deals, articles et logs.')}
           </p>
           <div style={{ position: 'relative', marginBottom: 24 }}>
-            <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <Search size={18} color="#99a09a" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             <input
               autoFocus
               type="search"
@@ -638,30 +638,30 @@ export default function SuperAdminPage() {
               placeholder={t('super_admin.search.placeholder', 'Nom, email, slug, ID, action…')}
               style={{
                 width: '100%', height: 44, padding: '0 14px 0 42px',
-                borderRadius: 10, border: '1.5px solid #e2e8f0',
-                fontSize: 14, fontFamily: 'inherit', color: '#0f172a',
+                borderRadius: 10, border: '1.5px solid #ded8cb',
+                fontSize: 14, fontFamily: 'inherit', color: '#0e1f18',
                 outline: 'none', background: '#fff', boxSizing: 'border-box',
               }}
-              onFocus={(e) => { e.target.style.borderColor = '#059669'; }}
-              onBlur={(e) => { e.target.style.borderColor = '#e2e8f0'; }}
+              onFocus={(e) => { e.target.style.borderColor = '#0e7a54'; }}
+              onBlur={(e) => { e.target.style.borderColor = '#ded8cb'; }}
             />
           </div>
           {searchError && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+            <div style={{ background: '#f7e9e6', border: '1px solid #edc4bd', color: '#8f2e24', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
               {searchError}
             </div>
           )}
           {searchLoading && debouncedSearch.trim().length >= 2 && (
-            <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: 13 }}>{t('super_admin.search.searching', 'Recherche…')}</div>
+            <div style={{ textAlign: 'center', padding: '24px', color: '#99a09a', fontSize: 13 }}>{t('super_admin.search.searching', 'Recherche…')}</div>
           )}
           {!searchLoading && debouncedSearch.trim().length < 2 && !searchResults && (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontSize: 13 }}>
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#99a09a', fontSize: 13 }}>
               {t('super_admin.search.hint', 'Tape au moins 2 caractères pour lancer la recherche.')}
             </div>
           )}
           {!searchLoading && searchResults && (searchResults.total || 0) === 0 && debouncedSearch.trim().length >= 2 && (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b', fontSize: 13 }}>
-              {t('super_admin.search.no_results', 'Aucun résultat pour')} <strong style={{ color: '#0f172a' }}>« {debouncedSearch} »</strong>
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6e756c', fontSize: 13 }}>
+              {t('super_admin.search.no_results', 'Aucun résultat pour')} <strong style={{ color: '#0e1f18' }}>« {debouncedSearch} »</strong>
             </div>
           )}
           {!searchLoading && searchResults && (searchResults.total || 0) > 0 && (() => {
@@ -670,11 +670,11 @@ export default function SuperAdminPage() {
             // exception — no highlight, just jump to the logs tab.
             const GROUPS = [
               { key: 'tenants',    label: t('super_admin.search.group.tenants',    'Clients'),       icon: Globe,    color: '#0EA5E9', dest: 'clients' },
-              { key: 'users',      label: t('super_admin.search.group.users',      'Utilisateurs'),  icon: Users,    color: '#6366f1', dest: 'clients' },
-              { key: 'partners',   label: t('super_admin.search.group.partners',   'Partenaires'),   icon: Users,    color: '#059669', dest: 'clients' },
-              { key: 'referrals',  label: t('super_admin.search.group.referrals',  'Deals'),         icon: Briefcase, color: '#3b82f6', dest: 'clients' },
-              { key: 'blog_posts', label: t('super_admin.search.group.blog',       'Articles blog'), icon: FileText, color: '#8b5cf6', dest: 'blog'    },
-              { key: 'audit_logs', label: t('super_admin.search.group.audit_logs', 'Logs'),          icon: Activity, color: '#dc2626', dest: 'logs'    },
+              { key: 'users',      label: t('super_admin.search.group.users',      'Utilisateurs'),  icon: Users,    color: '#0e7a54', dest: 'clients' },
+              { key: 'partners',   label: t('super_admin.search.group.partners',   'Partenaires'),   icon: Users,    color: '#0e7a54', dest: 'clients' },
+              { key: 'referrals',  label: t('super_admin.search.group.referrals',  'Deals'),         icon: Briefcase, color: '#0e7a54', dest: 'clients' },
+              { key: 'blog_posts', label: t('super_admin.search.group.blog',       'Articles blog'), icon: FileText, color: '#0e7a54', dest: 'blog'    },
+              { key: 'audit_logs', label: t('super_admin.search.group.audit_logs', 'Logs'),          icon: Activity, color: '#b23b2e', dest: 'logs'    },
             ];
             const buckets = GROUPS
               .map(g => ({ ...g, items: searchResults.results?.[g.key] || [] }))
@@ -689,8 +689,8 @@ export default function SuperAdminPage() {
                         <span style={{ width: 24, height: 24, borderRadius: 7, background: group.color + '15', color: group.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <Icon size={13}/>
                         </span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{group.label}</span>
-                        <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>({group.items.length})</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#2b3a32' }}>{group.label}</span>
+                        <span style={{ fontSize: 12, color: '#99a09a', fontWeight: 600 }}>({group.items.length})</span>
                       </header>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {group.items.map(it => (
@@ -715,16 +715,16 @@ export default function SuperAdminPage() {
                                 : it.id;
                               navigate('/super-admin?tab=' + group.dest + '&highlight=' + encodeURIComponent(highlightId));
                             }}
-                            style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '11px 14px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .12s' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', background: '#fff', border: '1px solid #ded8cb', borderRadius: 10, padding: '11px 14px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .12s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#f6f2e9'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
                           >
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#0e1f18', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 <Highlight text={it.title} query={debouncedSearch}/>
                               </div>
                               {it.subtitle && (
-                                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div style={{ fontSize: 12, color: '#6e756c', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                   <Highlight text={it.subtitle} query={debouncedSearch}/>
                                 </div>
                               )}
@@ -734,7 +734,7 @@ export default function SuperAdminPage() {
                                 {it.status}
                               </span>
                             )}
-                            <ChevronRight size={15} color="#cbd5e1" style={{ flexShrink: 0 }}/>
+                            <ChevronRight size={15} color="#cfc8b8" style={{ flexShrink: 0 }}/>
                           </button>
                         ))}
                       </div>
@@ -753,7 +753,7 @@ export default function SuperAdminPage() {
               re-renders. */}
           <style>{`@keyframes rb-spin { to { transform: rotate(360deg); } } .rb-spin { animation: rb-spin 1.6s linear infinite; }`}</style>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 12, flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{t('admin.blog_articles')}</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0e1f18' }}>{t('admin.blog_articles')}</h2>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                 <button
@@ -781,7 +781,7 @@ export default function SuperAdminPage() {
                     title={t('admin.translate_cancel_tooltip', 'Arrête la traduction en cours et permet de relancer immédiatement')}
                     style={{
                       marginTop: 6, padding: '6px 12px', borderRadius: 8,
-                      background: '#fff', color: '#dc2626', border: '1px solid #fecaca',
+                      background: '#fff', color: '#b23b2e', border: '1px solid #edc4bd',
                       cursor: 'pointer', fontWeight: 600, fontSize: 12,
                     }}
                   >
@@ -789,7 +789,7 @@ export default function SuperAdminPage() {
                   </button>
                 )}
                 {blogTranslating && blogTranslateStatus?.running && !blogTranslateStatus.running.finishedAt && (
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: '#6e756c', marginTop: 4 }}>
                     {(blogTranslateStatus.running.progress?.done || 0)} {t('admin.translate_done_count', 'traduits')}
                     {blogTranslateStatus.blog_progress?.totalMissing != null
                       ? ` · ${blogTranslateStatus.blog_progress.totalMissing} ${t('admin.translate_remaining', 'restants')}`
@@ -798,15 +798,15 @@ export default function SuperAdminPage() {
                 )}
               </div>
               <button onClick={() => { setBlogShowForm(!blogShowForm); setBlogEditId(null); setBlogForm({ title: '', slug: '', excerpt: '', content: '', author: 'RefBoost', category: '', tags: '', cover_image_url: '', published: false, meta_title: '', meta_description: '' }); }}
-                style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #059669)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+                style={{ padding: '10px 20px', borderRadius: 10, background: 'var(--rb-primary, #0e7a54)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
                 {blogShowForm ? t('admin.cancel') : t('admin.new_article')}
               </button>
             </div>
           </div>
-          {blogMsg && <div style={{ padding: '12px 16px', borderRadius: 10, background: blogMsg.startsWith('\u2705') ? '#f0fdf4' : '#fef2f2', color: blogMsg.startsWith('\u2705') ? '#16a34a' : '#dc2626', marginBottom: 20, fontSize: 14 }}>{blogMsg}</div>}
+          {blogMsg && <div style={{ padding: '12px 16px', borderRadius: 10, background: blogMsg.startsWith('\u2705') ? '#e9f1ea' : '#f7e9e6', color: blogMsg.startsWith('\u2705') ? '#157a4c' : '#b23b2e', marginBottom: 20, fontSize: 14 }}>{blogMsg}</div>}
           {blogShowForm && (
-            <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 28, border: '1px solid #e2e8f0' }}>
-              <h3 style={{ margin: '0 0 20px', color: '#0f172a', fontSize: 16 }}>{blogEditId ? t('admin.edit_article') : t('admin.new_article')}</h3>
+            <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 28, border: '1px solid #ded8cb' }}>
+              <h3 style={{ margin: '0 0 20px', color: '#0e1f18', fontSize: 16 }}>{blogEditId ? t('admin.edit_article') : t('admin.new_article')}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 {[
                   [t('admin.blog_title'), 'title', 'text', t('admin.blog_title_ph')],
@@ -819,35 +819,35 @@ export default function SuperAdminPage() {
                   [t('admin.blog_meta_desc'), 'meta_description', 'text', t('admin.blog_meta_desc_ph')],
                 ].map(([label, key, type, ph]) => (
                   <div key={key}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6e756c', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</label>
                     <input type={type} value={blogForm[key]} onChange={e => setBlogForm(f => ({ ...f, [key]: e.target.value }))} placeholder={ph}
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', color: '#0f172a', fontSize: 14, boxSizing: 'border-box' }} />
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #ded8cb', background: '#fff', color: '#0e1f18', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                 ))}
               </div>
               <div style={{ marginTop: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{t('admin.blog_excerpt')}</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6e756c', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{t('admin.blog_excerpt')}</label>
                 <textarea value={blogForm.excerpt} onChange={e => setBlogForm(f => ({ ...f, excerpt: e.target.value }))} placeholder={t('admin.blog_excerpt_ph')} rows={3}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', color: '#0f172a', fontSize: 14, boxSizing: 'border-box', resize: 'vertical' }} />
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #ded8cb', color: '#0e1f18', fontSize: 14, boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
               <div style={{ marginTop: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{t('admin.blog_content')}</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6e756c', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{t('admin.blog_content')}</label>
                 <textarea value={blogForm.content} onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))} placeholder={t('admin.blog_content_ph')} rows={12}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', color: '#0f172a', fontSize: 13, fontFamily: 'monospace', boxSizing: 'border-box', resize: 'vertical' }} />
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #ded8cb', color: '#0e1f18', fontSize: 13, fontFamily: 'monospace', boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
               <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#334155', fontSize: 14 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#2b3a32', fontSize: 14 }}>
                   <input type="checkbox" checked={blogForm.published} onChange={e => setBlogForm(f => ({ ...f, published: e.target.checked }))} style={{ width: 18, height: 18 }} />
                   {t('admin.blog_publish_now')}
                 </label>
               </div>
               <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
                 <button onClick={saveBlogPost} disabled={blogSaving || !blogForm.title || !blogForm.content}
-                  style={{ padding: '12px 28px', borderRadius: 10, background: (!blogForm.title || !blogForm.content) ? '#e2e8f0' : 'var(--rb-primary, #059669)', color: (!blogForm.title || !blogForm.content) ? '#94a3b8' : '#fff', border: 'none', cursor: (!blogForm.title || !blogForm.content) ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15 }}>
+                  style={{ padding: '12px 28px', borderRadius: 10, background: (!blogForm.title || !blogForm.content) ? '#ded8cb' : 'var(--rb-primary, #0e7a54)', color: (!blogForm.title || !blogForm.content) ? '#99a09a' : '#fff', border: 'none', cursor: (!blogForm.title || !blogForm.content) ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15 }}>
                   {blogSaving ? t('admin.blog_saving') : blogEditId ? '\u2705 ' + t('admin.blog_update') : "\ud83d\ude80 " + t('admin.blog_publish_article')}
                 </button>
                 <button onClick={() => { setBlogShowForm(false); setBlogEditId(null); }}
-                  style={{ padding: '12px 20px', borderRadius: 10, background: '#f1f5f9', color: '#64748b', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                  style={{ padding: '12px 20px', borderRadius: 10, background: '#ece7db', color: '#6e756c', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                   {t('admin.cancel')}
                 </button>
               </div>
@@ -855,28 +855,28 @@ export default function SuperAdminPage() {
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {blogPosts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+              <div style={{ textAlign: 'center', padding: 60, color: '#99a09a', background: '#fff', borderRadius: 16, border: '1px solid #ded8cb' }}>
                 <p style={{ fontSize: 16 }}>{t('admin.blog_no_articles')}</p>
               </div>
             ) : blogPosts.map(p => (
-              <div key={p.id} data-row-id={p.id} style={{ background: flashId === p.id ? '#fef9c3' : '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 16, transition: 'background 0.6s' }}>
+              <div key={p.id} data-row-id={p.id} style={{ background: flashId === p.id ? '#fef9c3' : '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #ded8cb', display: 'flex', alignItems: 'center', gap: 16, transition: 'background 0.6s' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: p.published ? '#f0fdf4' : '#f8fafc', color: p.published ? '#16a34a' : '#94a3b8', fontWeight: 700 }}>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: p.published ? '#e9f1ea' : '#f6f2e9', color: p.published ? '#157a4c' : '#99a09a', fontWeight: 700 }}>
                       {p.published ? '● ' + t('admin.blog_published') : '○ ' + t('admin.blog_draft')}
                     </span>
-                    {p.category && <span style={{ fontSize: 11, color: 'var(--rb-primary, #059669)', fontWeight: 600 }}>{p.category}</span>}
-                    <span style={{ fontSize: 11, color: '#94a3b8' }}>{p.reading_time_minutes} {t('admin.blog_min')}</span>
+                    {p.category && <span style={{ fontSize: 11, color: 'var(--rb-primary, #0e7a54)', fontWeight: 600 }}>{p.category}</span>}
+                    <span style={{ fontSize: 11, color: '#99a09a' }}>{p.reading_time_minutes} {t('admin.blog_min')}</span>
                     {/* Translation badge — 7/7 = green, partial =
                         amber, FR-only = grey. Range 1..7 because
                         French is the source and always counts. */}
                     {(() => {
                       const n = Number(p.translated_count) || 1;
                       const palette = n >= 7
-                        ? { bg: '#f0fdf4', fg: '#15803d', dot: '#22c55e' }
+                        ? { bg: '#e9f1ea', fg: '#15803d', dot: '#2fa876' }
                         : n >= 2
-                          ? { bg: '#fffbeb', fg: '#a16207', dot: '#f59e0b' }
-                          : { bg: '#f1f5f9', fg: '#64748b', dot: '#94a3b8' };
+                          ? { bg: '#f6efda', fg: '#a16207', dot: '#b4791f' }
+                          : { bg: '#ece7db', fg: '#6e756c', dot: '#99a09a' };
                       return (
                         <span title={t('admin.translate_badge_tooltip', 'Langues couvertes par cet article (FR comprise)')}
                           style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: palette.bg, color: palette.fg, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
@@ -886,13 +886,13 @@ export default function SuperAdminPage() {
                       );
                     })()}
                   </div>
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{p.title}</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>/blog/{p.slug} · {p.published_at ? new Date(p.published_at).toLocaleDateString(t('admin.fmt_locale')) : t('admin.blog_not_published')}</p>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0e1f18' }}>{p.title}</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#6e756c' }}>/blog/{p.slug} · {p.published_at ? new Date(p.published_at).toLocaleDateString(t('admin.fmt_locale')) : t('admin.blog_not_published')}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <a href={'/blog/' + p.slug} target="_blank" rel="noopener" style={{ padding: '7px 14px', borderRadius: 8, background: '#f1f5f9', color: '#475569', textDecoration: 'none', fontSize: 13 }}> {t('admin.blog_view')}</a>
+                  <a href={'/blog/' + p.slug} target="_blank" rel="noopener" style={{ padding: '7px 14px', borderRadius: 8, background: '#ece7db', color: '#33433b', textDecoration: 'none', fontSize: 13 }}> {t('admin.blog_view')}</a>
                   <button onClick={() => editBlogPost(p)} style={{ padding: '7px 14px', borderRadius: 8, background: '#fff3cd', color: '#856404', border: 'none', cursor: 'pointer', fontSize: 13 }}> {t('admin.blog_edit')}</button>
-                  <button onClick={() => deleteBlogPost(p.id)} style={{ padding: '7px 14px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', border: 'none', cursor: 'pointer', fontSize: 13 }}></button>
+                  <button onClick={() => deleteBlogPost(p.id)} style={{ padding: '7px 14px', borderRadius: 8, background: '#f7e9e6', color: '#b23b2e', border: 'none', cursor: 'pointer', fontSize: 13 }}></button>
                 </div>
               </div>
             ))}
@@ -914,17 +914,17 @@ export default function SuperAdminPage() {
 
 function TimelineChart({ series, active, setActive, t, loading = false }) {
   const metrics = [
-    { key: 'tenants_cumul',  label: t('admin.timeline_metric_clients'),  color: '#059669', isCurrency: false },
+    { key: 'tenants_cumul',  label: t('admin.timeline_metric_clients'),  color: '#0e7a54', isCurrency: false },
     { key: 'partners_cumul', label: t('admin.timeline_metric_partners'), color: '#0ea5e9', isCurrency: false },
-    { key: 'leads_cumul',    label: t('admin.timeline_metric_leads'),    color: '#f59e0b', isCurrency: false },
-    { key: 'volume_won',     label: t('admin.timeline_metric_volume'),   color: '#16a34a', isCurrency: true  },
-    { key: 'mrr',            label: t('super_admin.stats.evolution.metric.mrr', 'MRR'), color: '#6366f1', isCurrency: true },
+    { key: 'leads_cumul',    label: t('admin.timeline_metric_leads'),    color: '#b4791f', isCurrency: false },
+    { key: 'volume_won',     label: t('admin.timeline_metric_volume'),   color: '#157a4c', isCurrency: true  },
+    { key: 'mrr',            label: t('super_admin.stats.evolution.metric.mrr', 'MRR'), color: '#0e7a54', isCurrency: true },
   ];
   const activeM = metrics.find((m) => m.key === active) || metrics[0];
 
   // Card wrapper shared by all three states so the page layout never
   // shifts when data arrives or vanishes.
-  const cardStyle = { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, marginBottom: 20, overflow: 'hidden' };
+  const cardStyle = { background: '#fff', border: '1px solid #e3ddd0', borderRadius: 12, marginBottom: 20, overflow: 'hidden' };
 
   // Loading skeleton — distinct from "no data". Renders the same
   // outer card shape + a pulsing block where the chart will land, so
@@ -932,7 +932,7 @@ function TimelineChart({ series, active, setActive, t, loading = false }) {
   if (loading) {
     return (
       <div style={cardStyle}>
-        <style>{`@keyframes rb-tl-pulse{0%,100%{opacity:.55}50%{opacity:1}}.rb-tl-skel{background:#f1f5f9;border-radius:8;animation:rb-tl-pulse 1.4s ease-in-out infinite}`}</style>
+        <style>{`@keyframes rb-tl-pulse{0%,100%{opacity:.55}50%{opacity:1}}.rb-tl-skel{background:#ece7db;border-radius:8;animation:rb-tl-pulse 1.4s ease-in-out infinite}`}</style>
         <div style={{ padding: '14px 18px 0' }}>
           <div className="rb-tl-skel" style={{ width: 160, height: 16, marginBottom: 6 }} />
           <div className="rb-tl-skel" style={{ width: 220, height: 12, marginBottom: 16 }} />
@@ -946,7 +946,7 @@ function TimelineChart({ series, active, setActive, t, loading = false }) {
 
   if (!series || series.length === 0) {
     return (
-      <div style={{ ...cardStyle, padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+      <div style={{ ...cardStyle, padding: 40, textAlign: 'center', color: '#99a09a' }}>
         {t('admin.timeline_no_data')}
       </div>
     );
@@ -975,8 +975,8 @@ function TimelineChart({ series, active, setActive, t, loading = false }) {
     <div style={cardStyle}>
       <div style={{ padding: '14px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('admin.timeline_title')}</h3>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>{t('admin.timeline_subtitle')}</p>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0e1f18' }}>{t('admin.timeline_title')}</h3>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#6e756c' }}>{t('admin.timeline_subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {metrics.map((m) => {
@@ -992,8 +992,8 @@ function TimelineChart({ series, active, setActive, t, loading = false }) {
                   fontWeight: 600,
                   cursor: 'pointer',
                   background: isActive ? `${m.color}15` : 'transparent',
-                  color: isActive ? m.color : '#64748b',
-                  border: `1px solid ${isActive ? m.color : '#e2e8f0'}`,
+                  color: isActive ? m.color : '#6e756c',
+                  border: `1px solid ${isActive ? m.color : '#ded8cb'}`,
                   transition: 'all .15s',
                 }}
               >
@@ -1015,22 +1015,22 @@ function TimelineChart({ series, active, setActive, t, loading = false }) {
             <CartesianGrid stroke="#f3f4f6" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 11, fill: '#94a3b8' }}
-              axisLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 11, fill: '#99a09a' }}
+              axisLine={{ stroke: '#e3ddd0' }}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: '#94a3b8' }}
+              tick={{ fontSize: 11, fill: '#99a09a' }}
               axisLine={false}
               tickLine={false}
               width={48}
               tickFormatter={yTickFormatter}
             />
             <Tooltip
-              contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-              labelStyle={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}
+              contentStyle={{ borderRadius: 10, border: '1px solid #e3ddd0', fontSize: 13, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+              labelStyle={{ color: '#6e756c', fontSize: 11, marginBottom: 2 }}
               formatter={(v) => [tooltipFormatter(v), activeM.label]}
-              cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }}
+              cursor={{ stroke: '#ded8cb', strokeWidth: 1 }}
             />
             <Area
               type="monotone"
@@ -1050,10 +1050,10 @@ function TimelineChart({ series, active, setActive, t, loading = false }) {
 
 function KPI({ icon: Icon, label, value, color }) {
   return (
-    <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0' }}>
+    <div style={{ padding: 20, borderRadius: 16, background: '#fff', border: '1px solid #ded8cb' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ color: '#64748b', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
+          <div style={{ color: '#6e756c', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
           <div style={{ fontSize: 18, fontWeight: 700, color, letterSpacing: -1 }}>{value}</div>
         </div>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={20} color={color} /></div>
@@ -1065,7 +1065,7 @@ function KPI({ icon: Icon, label, value, color }) {
 // ─── Stats tab — section header label ────────────────────────────────
 function SectionLabel({ children }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
       {children}
     </div>
   );
@@ -1088,19 +1088,19 @@ function OnboardingCell({ tn, t }) {
   const total = tn.onboarding_total || 8;
   const done = tn.onboarding_completed;
   if (done == null) {
-    return <span title={t('admin.onb_unknown', 'Indisponible')} style={{ color: '#cbd5e1', fontSize: 13 }}>—</span>;
+    return <span title={t('admin.onb_unknown', 'Indisponible')} style={{ color: '#cfc8b8', fontSize: 13 }}>—</span>;
   }
   const isComplete = !!tn.onboarding_completed_at || done >= total;
   const pct = Math.max(0, Math.min(100, Math.round((done / total) * 100)));
   const ageDays = tn.created_at ? (Date.now() - new Date(tn.created_at).getTime()) / 86400000 : 0;
   const needsFollowup = !isComplete && ageDays > ONB_FOLLOWUP_DAYS;
-  const barColor = pct >= 100 ? '#16a34a' : pct >= 67 ? '#2563eb' : pct >= 34 ? '#f59e0b' : '#dc2626';
+  const barColor = pct >= 100 ? '#157a4c' : pct >= 67 ? '#2563eb' : pct >= 34 ? '#b4791f' : '#b23b2e';
 
   if (isComplete) {
     return (
       <span
         title={t('admin.onb_tooltip', { done: total, total, defaultValue: '{{done}} sur {{total}} étapes d’onboarding complétées' })}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: '#f0fdf4', color: '#16a34a' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: '#e9f1ea', color: '#157a4c' }}
       >
         <Check size={12} /> {t('admin.onb_complete', 'Terminé')}
       </span>
@@ -1111,15 +1111,15 @@ function OnboardingCell({ tn, t }) {
     <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 5, minWidth: 96 }}
       title={t('admin.onb_tooltip', { done, total, defaultValue: '{{done}} sur {{total}} étapes d’onboarding complétées' })}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, width: '100%' }}>
-        <div style={{ flex: 1, height: 6, borderRadius: 999, background: '#e2e8f0', overflow: 'hidden' }}>
+        <div style={{ flex: 1, height: 6, borderRadius: 999, background: '#ded8cb', overflow: 'hidden' }}>
           <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 999, transition: 'width .3s' }} />
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>{done}/{total}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#33433b', whiteSpace: 'nowrap' }}>{done}/{total}</span>
       </div>
       {needsFollowup && (
         <span
           title={t('admin.onb_followup_tooltip', 'Onboarding incomplet depuis plus de 7 jours — pensez à relancer ce client')}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700, background: '#fef2f2', color: '#dc2626', textTransform: 'uppercase', letterSpacing: 0.3 }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700, background: '#f7e9e6', color: '#b23b2e', textTransform: 'uppercase', letterSpacing: 0.3 }}
         >
           <AlertTriangle size={10} /> {t('admin.onb_followup', 'À relancer')}
         </span>
@@ -1136,16 +1136,16 @@ function OnboardingCell({ tn, t }) {
 // for the cumulative conversions counter).
 function PeriodKPI({ label, value, delta, deltaFormat, hint, t }) {
   let hintText = hint || null;
-  let hintColor = '#94a3b8';
+  let hintColor = '#99a09a';
   if (delta != null && deltaFormat) {
     const arrow = delta > 0 ? '↑ ' : delta < 0 ? '↓ ' : '';
     hintText = `${arrow}${deltaFormat(delta)} ${t('super_admin.stats.delta.vs_previous', 'vs période précédente')}`;
-    hintColor = delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : '#94a3b8';
+    hintColor = delta > 0 ? '#0e7a54' : delta < 0 ? '#b23b2e' : '#99a09a';
   }
   return (
-    <div style={{ padding: 16, borderRadius: 12, background: '#fff', border: '1px solid #e2e8f0' }}>
-      <div style={{ color: '#64748b', fontSize: 12, fontWeight: 500, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 500, color: '#0f172a', letterSpacing: -0.4 }}>{value}</div>
+    <div style={{ padding: 16, borderRadius: 12, background: '#fff', border: '1px solid #ded8cb' }}>
+      <div style={{ color: '#6e756c', fontSize: 12, fontWeight: 500, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.4 }}>{value}</div>
       {hintText && <div style={{ fontSize: 11, color: hintColor, marginTop: 4 }}>{hintText}</div>}
     </div>
   );
@@ -1215,18 +1215,18 @@ function PeriodPicker({ period, setPeriod, t }) {
         onClick={() => setOpen(v => !v)}
         style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
-          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
-          cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#0f172a',
+          background: '#fff', border: '1px solid #ded8cb', borderRadius: 10,
+          cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#0e1f18',
         }}
       >
-        <Calendar size={14} color="#64748b" />
+        <Calendar size={14} color="#6e756c" />
         <span>{label}</span>
-        <ChevronDown size={14} color="#94a3b8" style={{ transition: 'transform .15s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }} />
+        <ChevronDown size={14} color="#99a09a" style={{ transition: 'transform .15s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }} />
       </button>
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 50,
-          minWidth: 240, background: '#fff', border: '1px solid #e2e8f0',
+          minWidth: 240, background: '#fff', border: '1px solid #ded8cb',
           borderRadius: 12, padding: 6,
           boxShadow: '0 12px 32px rgba(15,23,42,0.12)',
         }}>
@@ -1239,22 +1239,22 @@ function PeriodPicker({ period, setPeriod, t }) {
                   style={{
                     display: 'block', width: '100%', textAlign: 'left',
                     padding: '8px 12px', border: 'none',
-                    background: period.preset === p.key ? '#f1f5f9' : 'transparent',
+                    background: period.preset === p.key ? '#ece7db' : 'transparent',
                     borderRadius: 8, fontSize: 13, fontWeight: 500,
-                    color: '#0f172a', cursor: 'pointer',
+                    color: '#0e1f18', cursor: 'pointer',
                   }}
                 >
                   {p.label}
                 </button>
               ))}
-              <div style={{ height: 1, background: '#f1f5f9', margin: '6px 0' }} />
+              <div style={{ height: 1, background: '#ece7db', margin: '6px 0' }} />
               <button
                 onClick={() => setCustomMode(true)}
                 style={{
                   display: 'block', width: '100%', textAlign: 'left',
                   padding: '8px 12px', border: 'none', background: 'transparent',
                   borderRadius: 8, fontSize: 13, fontWeight: 500,
-                  color: '#0f172a', cursor: 'pointer',
+                  color: '#0e1f18', cursor: 'pointer',
                 }}
               >
                 {t('super_admin.stats.period.custom', 'Personnalisé…')}
@@ -1267,26 +1267,26 @@ function PeriodPicker({ period, setPeriod, t }) {
                   type="date"
                   value={customFrom}
                   onChange={e => setCustomFrom(e.target.value)}
-                  style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }}
+                  style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #ded8cb', fontSize: 13 }}
                 />
                 <input
                   type="date"
                   value={customTo}
                   onChange={e => setCustomTo(e.target.value)}
-                  style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }}
+                  style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid #ded8cb', fontSize: 13 }}
                 />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => setCustomMode(false)}
-                  style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: 12 }}
+                  style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid #ded8cb', background: '#fff', cursor: 'pointer', fontSize: 12 }}
                 >
                   {t('admin.cancel', 'Annuler')}
                 </button>
                 <button
                   onClick={applyCustom}
                   disabled={!customFrom || !customTo}
-                  style={{ flex: 1, padding: 8, borderRadius: 8, border: 'none', background: '#059669', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600, opacity: (!customFrom || !customTo) ? 0.5 : 1 }}
+                  style={{ flex: 1, padding: 8, borderRadius: 8, border: 'none', background: '#0e7a54', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600, opacity: (!customFrom || !customTo) ? 0.5 : 1 }}
                 >
                   {t('super_admin.stats.period.custom_apply', 'Appliquer')}
                 </button>
@@ -1315,9 +1315,9 @@ function ClientsByPlanCard({ stats, t }) {
     { key: 'business', label: t('super_admin.stats.plan.business', 'Business (79 €/mois)'), color: '#1D9E75', count: plans.business || 0, eur: (plans.business || 0) * 79 },
   ];
   return (
-    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20, marginBottom: 24 }}>
-      <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{t('super_admin.stats.clients_by_plan.title', 'Clients par plan')}</h3>
-      <p style={{ margin: '4px 0 16px', fontSize: 12, color: '#64748b' }}>
+    <div style={{ background: '#fff', border: '1px solid #ded8cb', borderRadius: 12, padding: 20, marginBottom: 24 }}>
+      <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0e1f18' }}>{t('super_admin.stats.clients_by_plan.title', 'Clients par plan')}</h3>
+      <p style={{ margin: '4px 0 16px', fontSize: 12, color: '#6e756c' }}>
         {t('super_admin.stats.clients_by_plan.subtitle', { n: total, defaultValue: 'Répartition actuelle des {{n}} tenants' })}
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 24 }}>
@@ -1330,13 +1330,13 @@ function ClientsByPlanCard({ stats, t }) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.color }} />
-                    <span style={{ fontSize: 13, color: '#0f172a', fontWeight: 500 }}>{r.label}</span>
+                    <span style={{ fontSize: 13, color: '#0e1f18', fontWeight: 500 }}>{r.label}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>
+                  <div style={{ fontSize: 12, color: '#6e756c' }}>
                     {r.count} · {fmtEUR(r.eur)}
                   </div>
                 </div>
-                <div style={{ height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ height: 8, background: '#ece7db', borderRadius: 4, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${pct}%`, background: r.color, borderRadius: 4 }} />
                 </div>
               </div>
@@ -1344,26 +1344,26 @@ function ClientsByPlanCard({ stats, t }) {
           })}
         </div>
         {/* Right column — 3 mini-metrics */}
-        <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ borderLeft: '1px solid #ded8cb', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
               {t('super_admin.stats.clients_by_plan.mrr_total', 'MRR total')}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 500, color: '#059669', letterSpacing: -0.3 }}>{fmtEUR(mrr)}/mois</div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: '#0e7a54', letterSpacing: -0.3 }}>{fmtEUR(mrr)}/mois</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
               {t('super_admin.stats.clients_by_plan.paid_rate', 'Taux payant')}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 500, color: '#0f172a', letterSpacing: -0.3 }}>
+            <div style={{ fontSize: 20, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.3 }}>
               {total > 0 ? Math.round((paid / total) * 100) : 0} % · {paid}/{total}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#99a09a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>
               {t('super_admin.stats.clients_by_plan.partners_per_client', 'Partenaires / client')}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 500, color: '#0f172a', letterSpacing: -0.3 }}>
+            <div style={{ fontSize: 20, fontWeight: 500, color: '#0e1f18', letterSpacing: -0.3 }}>
               {partnersPerClient.toFixed(1)} en moy
             </div>
           </div>

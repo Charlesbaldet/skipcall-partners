@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Users, UserPlus, Palette, Link2, Sparkles, Rocket, Copy, Check, Store } from 'lucide-react';
 import api from '../lib/api';
 
-const C = { p: 'var(--rb-primary, #059669)', pl: 'var(--rb-primary-light, #10b981)', s: '#0f172a', m: '#64748b', a: 'var(--rb-accent, #f97316)' };
+const C = { p: 'var(--rb-primary, #0e7a54)', pl: 'var(--rb-primary-light, #1c9a6b)', s: '#0e1f18', m: '#6e756c', a: 'var(--rb-accent, #d5541a)' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 // <input type="color"> requires a literal `#rrggbb` value; CSS var() strings
@@ -11,8 +11,8 @@ const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 // as invalid CSS strings if the user only touches one swatch — which the
 // backend then rejects. Use real hex defaults so a single-swatch edit
 // still produces a valid payload.
-const DEFAULT_PRIMARY_HEX = '#059669';
-const DEFAULT_ACCENT_HEX = '#f97316';
+const DEFAULT_PRIMARY_HEX = '#0e7a54';
+const DEFAULT_ACCENT_HEX = '#d5541a';
 
 const STEPS = [
   { id: 'welcome',       icon: Sparkles },
@@ -179,7 +179,7 @@ export default function OnboardingWizard({ onClose }) {
       }}>
         <button onClick={handleClose} aria-label={t('onboarding.close_aria')} style={{
           position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 8,
-          background: '#f1f5f9', border: 'none', cursor: 'pointer',
+          background: '#ece7db', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.m,
         }}><X size={16} /></button>
 
@@ -188,7 +188,7 @@ export default function OnboardingWizard({ onClose }) {
           {STEPS.map((s, i) => (
             <div key={s.id} style={{
               flex: 1, height: 4, borderRadius: 2,
-              background: i <= step ? '#059669' : '#e2e8f0',
+              background: i <= step ? '#0e7a54' : '#ded8cb',
               transition: 'background 0.3s',
             }} />
           ))}
@@ -198,7 +198,7 @@ export default function OnboardingWizard({ onClose }) {
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 18, margin: '0 auto 16px',
-            background: '#059669',
+            background: '#0e7a54',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 8px 30px rgba(5,150,105,0.3)',
           }}><Icon size={28} color="#fff" /></div>
@@ -268,7 +268,7 @@ export default function OnboardingWizard({ onClose }) {
             </div>
           )}
           {step === 3 && customized && (
-            <div style={{ textAlign: 'center', padding: 20, background: '#f0fdf4', borderRadius: 12, color: '#166534' }}>
+            <div style={{ textAlign: 'center', padding: 20, background: '#e9f1ea', borderRadius: 12, color: '#0e4d34' }}>
                {t('onboarding.space_customized')}
             </div>
           )}
@@ -276,11 +276,11 @@ export default function OnboardingWizard({ onClose }) {
           {step === 4 && (
             <div>
               <p style={{ color: C.m, fontSize: 14, marginTop: 0, marginBottom: 14 }}>{t('onboarding.link_desc')}</p>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 14, background: '#f6f2e9', borderRadius: 12, border: '1px solid #ded8cb' }}>
                 <code style={{ flex: 1, fontSize: 13, color: C.s, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{publicLink}</code>
                 <button onClick={copyLink} style={{
                   padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: copied ? '#dcfce7' : '#059669', color: copied ? '#166534' : '#fff',
+                  background: copied ? '#dcfce7' : '#0e7a54', color: copied ? '#0e4d34' : '#fff',
                   fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
                 }}>
                   {copied ? <><Check size={14}/>{t('settings.link_copied')}</> : <><Copy size={14}/>{t('settings.copy_link')}</>}
@@ -296,30 +296,30 @@ export default function OnboardingWizard({ onClose }) {
             </p>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.sector')}</label>
-              <select value={marketplaceForm.sector} onChange={e => setMkt('sector', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}>
+              <select value={marketplaceForm.sector} onChange={e => setMkt('sector', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #ded8cb', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}>
                 <option value=''>{t('onboarding.marketplace_choose')}</option>
                 {[['SaaS / Logiciel','saas_logiciel'],['Conseil & Services','conseil_services'],['Finance & Fintech','finance_fintech'],['RH & Recrutement','rh_recrutement'],['Marketing & Communication','marketing_communication'],['Immobilier','immobilier'],['Commerce','commerce'],['Formation','formation'],['Juridique','juridique'],['Industrie','industrie'],['Autre','autre']].map(([v, k]) => <option key={v} value={v}>{t('onboarding.sector_' + k)}</option>)}
               </select>
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.website')}</label>
-              <input type='url' value={marketplaceForm.website} onChange={e => setMkt('website', e.target.value)} placeholder={t('onboarding.marketplace_website_placeholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              <input type='url' value={marketplaceForm.website} onChange={e => setMkt('website', e.target.value)} placeholder={t('onboarding.marketplace_website_placeholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #ded8cb', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.icp')} <span style={{ fontWeight: 400, color: C.m }}>({t('onboarding.optional')})</span></label>
-              <input value={marketplaceForm.icp} onChange={e => setMkt('icp', e.target.value)} placeholder={t('onboarding.marketplace_icp_placeholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              <input value={marketplaceForm.icp} onChange={e => setMkt('icp', e.target.value)} placeholder={t('onboarding.marketplace_icp_placeholder')} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #ded8cb', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: C.s, display: 'block', marginBottom: 6 }}>{t('onboarding.short_description')}</label>
-              <textarea value={marketplaceForm.short_description} onChange={e => setMkt('short_description', e.target.value)} placeholder={t('onboarding.marketplace_description_placeholder')} rows={3} style={{ ...{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }, resize: 'vertical' }} />
+              <textarea value={marketplaceForm.short_description} onChange={e => setMkt('short_description', e.target.value)} placeholder={t('onboarding.marketplace_description_placeholder')} rows={3} style={{ ...{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #ded8cb', fontSize: 14, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }, resize: 'vertical' }} />
             </div>
             <div onClick={() => setMkt('marketplace_visible', !marketplaceForm.marketplace_visible)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: marketplaceForm.marketplace_visible ? '#ecfdf5' : '#f8fafc', border: '1.5px solid ' + (marketplaceForm.marketplace_visible ? '#059669' : '#e2e8f0'), borderRadius: 12, padding: '12px 16px', cursor: 'pointer', transition: 'all .3s' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: marketplaceForm.marketplace_visible ? '#e9f1ea' : '#f6f2e9', border: '1.5px solid ' + (marketplaceForm.marketplace_visible ? '#0e7a54' : '#ded8cb'), borderRadius: 12, padding: '12px 16px', cursor: 'pointer', transition: 'all .3s' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: C.s }}>{t('onboarding.marketplace_visible')}</div>
                 <div style={{ fontSize: 12, color: C.m }}>{marketplaceForm.marketplace_visible ? t('onboarding.marketplace_active') : t('onboarding.marketplace_inactive')}</div>
               </div>
-              <div style={{ width: 40, height: 22, borderRadius: 11, background: marketplaceForm.marketplace_visible ? '#059669' : '#cbd5e1', position: 'relative', flexShrink: 0 }}>
+              <div style={{ width: 40, height: 22, borderRadius: 11, background: marketplaceForm.marketplace_visible ? '#0e7a54' : '#cfc8b8', position: 'relative', flexShrink: 0 }}>
                 <div style={{ position: 'absolute', top: 2, left: marketplaceForm.marketplace_visible ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'left .3s' }} />
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function OnboardingWizard({ onClose }) {
 
         {/* Error */}
         {error && (
-          <div style={{ padding: 12, background: '#fef2f2', color: '#b91c1c', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
+          <div style={{ padding: 12, background: '#f7e9e6', color: '#8f2e24', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
             {error}
           </div>
         )}
@@ -341,14 +341,14 @@ export default function OnboardingWizard({ onClose }) {
           <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
             {step < STEPS.length - 1 && (
               <button onClick={goBack} disabled={submitting || step === 0} style={{
-                padding: '14px 18px', borderRadius: 12, border: '1.5px solid #e2e8f0',
+                padding: '14px 18px', borderRadius: 12, border: '1.5px solid #ded8cb',
                 background: '#fff', color: C.m, fontWeight: 600, fontSize: 14,
                 cursor: submitting ? 'wait' : 'pointer',
               }}>{t('onboarding.prev')}</button>
             )}
             <button onClick={primaryAction} disabled={submitting} style={{
               flex: 1, padding: '14px 24px', borderRadius: 12, border: 'none',
-              background: submitting ? '#047857' : '#059669', color: '#fff',
+              background: submitting ? '#0b5e40' : '#0e7a54', color: '#fff',
               fontWeight: 700, fontSize: 15, cursor: submitting ? 'wait' : 'pointer',
               boxShadow: submitting ? 'none' : '0 8px 24px rgba(5,150,105,0.3)',
             }}>{primaryLabel()}</button>
@@ -380,15 +380,15 @@ export default function OnboardingWizard({ onClose }) {
 }
 
 const inputStyle = {
-  width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0',
-  fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#fafbfc',
-  color: '#0f172a', boxSizing: 'border-box',
+  width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #ded8cb',
+  fontSize: 14, fontFamily: 'inherit', outline: 'none', background: '#faf6ec',
+  color: '#0e1f18', boxSizing: 'border-box',
 };
 
 function Field({ label, children }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#0f172a', marginBottom: 6 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#0e1f18', marginBottom: 6 }}>{label}</label>
       {children}
     </div>
   );
@@ -400,9 +400,9 @@ function Input({ value, onChange, placeholder, type = 'text' }) {
 
 function SuccessBox({ text, code }) {
   return (
-    <div style={{ padding: 16, background: '#f0fdf4', borderRadius: 12, border: '1px solid #bbf7d0', textAlign: 'center' }}>
-      <div style={{ color: '#166534', fontSize: 14, marginBottom: 8 }}> {text}</div>
-      <code style={{ display: 'inline-block', padding: '8px 14px', background: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#0f172a', border: '1px solid #bbf7d0' }}>{code}</code>
+    <div style={{ padding: 16, background: '#e9f1ea', borderRadius: 12, border: '1px solid #cfe6d6', textAlign: 'center' }}>
+      <div style={{ color: '#0e4d34', fontSize: 14, marginBottom: 8 }}> {text}</div>
+      <code style={{ display: 'inline-block', padding: '8px 14px', background: '#fff', borderRadius: 8, fontSize: 14, fontWeight: 700, color: '#0e1f18', border: '1px solid #cfe6d6' }}>{code}</code>
     </div>
   );
 }

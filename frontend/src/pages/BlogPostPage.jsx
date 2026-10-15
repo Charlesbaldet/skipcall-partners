@@ -8,7 +8,7 @@ import { translateCat } from '../lib/blog-categories';
 import LandingLayout from '../components/LandingLayout';
 
 const SITE = 'https://refboost.io';
-const C = { p: '#059669', s: '#0f172a', m: '#64748b', bg: '#f8fafc' };
+const C = { p: '#0e7a54', s: '#0e1f18', m: '#6e756c', bg: '#f6f2e9' };
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -178,16 +178,16 @@ export default function BlogPostPage() {
         <article
           className="blog-content"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || '') }}
-          style={{ fontSize: 17, lineHeight: 1.85, color: '#1e293b' }}
+          style={{ fontSize: 17, lineHeight: 1.85, color: '#1a2c24' }}
         />
 
         {/* Tags */}
         {post.tags?.length > 0 && (
-          <footer style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid #e2e8f0' }}>
+          <footer style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid #ded8cb' }}>
             <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: C.m, textTransform: 'uppercase', letterSpacing: 1 }}>{t('blog.tags')}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {post.tags.map(t => (
-                <span key={t} style={{ padding: '4px 12px', background: '#f0fdf4', color: C.p, borderRadius: 20, fontSize: 13, fontWeight: 600 }}>{t}</span>
+                <span key={t} style={{ padding: '4px 12px', background: '#e9f1ea', color: C.p, borderRadius: 20, fontSize: 13, fontWeight: 600 }}>{t}</span>
               ))}
             </div>
           </footer>
@@ -198,7 +198,7 @@ export default function BlogPostPage() {
             "page has only one dofollow incoming internal link"
             warning on long-tail blog posts. */}
         {related.length > 0 && (
-          <section style={{ marginTop: 64, paddingTop: 32, borderTop: '1px solid #e2e8f0' }}>
+          <section style={{ marginTop: 64, paddingTop: 32, borderTop: '1px solid #ded8cb' }}>
             <h2 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 800, color: C.s }}>
               {t('blog.related_title', 'Articles similaires')}
             </h2>
@@ -217,7 +217,7 @@ export default function BlogPostPage() {
                   style={{
                     display: 'flex', flexDirection: 'column', gap: 10,
                     padding: 18, borderRadius: 14,
-                    background: '#fff', border: '1px solid #e2e8f0',
+                    background: '#fff', border: '1px solid #ded8cb',
                     textDecoration: 'none', color: 'inherit',
                     transition: 'transform .2s, box-shadow .2s',
                   }}

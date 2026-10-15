@@ -4,12 +4,12 @@ import { Zap } from 'lucide-react';
 import api from '../lib/api';
 import { showConfirm, showToast } from './Dialogs.jsx';
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#f8fafc', border: '#e2e8f0', danger: '#dc2626' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c', bg: '#f6f2e9', border: '#ded8cb', danger: '#b23b2e' };
 
 const STATUS_COLORS = {
-  success: { fg: '#047857', bg: '#d1fae5' },
-  failed: { fg: '#b91c1c', bg: '#fee2e2' },
-  pending: { fg: '#b45309', bg: '#fef3c7' },
+  success: { fg: '#0b5e40', bg: '#d1fae5' },
+  failed: { fg: '#8f2e24', bg: '#fee2e2' },
+  pending: { fg: '#9a5a16', bg: '#f3ead0' },
 };
 
 function fmtDate(iso) {
@@ -132,13 +132,13 @@ export default function WebhooksSection() {
   return (
     <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${C.border}` }}>
       <h4 style={{ fontSize: 15, fontWeight: 700, color: C.s, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Zap size={16} color="#6366f1" /> {t('webhooks.title')}
+        <Zap size={16} color="#0e7a54" /> {t('webhooks.title')}
       </h4>
       <p style={{ margin: '0 0 16px', fontSize: 13, color: C.m, lineHeight: 1.55, maxWidth: 720 }}>{t('webhooks.subtitle')}</p>
 
       {/* Secret just-created callout */}
       {newSecret && (
-        <div style={{ padding: 16, borderRadius: 12, background: '#ecfdf5', border: `1px solid ${C.pl}`, marginBottom: 16 }}>
+        <div style={{ padding: 16, borderRadius: 12, background: '#e9f1ea', border: `1px solid ${C.pl}`, marginBottom: 16 }}>
           <div style={{ fontWeight: 700, color: C.s, marginBottom: 6, fontSize: 13 }}>{t('webhooks.secret_created')}</div>
           <div style={{ fontSize: 12, color: C.m, marginBottom: 10 }}>{t('webhooks.secret_shown_once')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', padding: 8, borderRadius: 8, border: `1px solid ${C.border}`, fontFamily: 'monospace', fontSize: 12 }}>
@@ -256,7 +256,7 @@ export default function WebhooksSection() {
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.s, marginBottom: 8 }}>{t('webhooks.events_label')}</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 6 }}>
               {events.map(ev => (
-                <label key={ev} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 6, border: `1px solid ${C.border}`, cursor: 'pointer', background: form.events.includes(ev) ? '#ecfdf5' : '#fff' }}>
+                <label key={ev} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 6, border: `1px solid ${C.border}`, cursor: 'pointer', background: form.events.includes(ev) ? '#e9f1ea' : '#fff' }}>
                   <input type="checkbox" checked={form.events.includes(ev)} onChange={() => toggleEvent(ev)} />
                   <span style={{ fontSize: 12, fontFamily: 'monospace', color: C.s }}>{ev}</span>
                 </label>
@@ -276,7 +276,7 @@ export default function WebhooksSection() {
       <details style={{ background: '#fff', borderRadius: 12, border: `1px solid ${C.border}`, padding: '10px 14px' }}>
         <summary style={{ cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.s }}>{t('webhooks.doc_title')}</summary>
         <p style={{ margin: '10px 0 12px', fontSize: 12, color: C.m, lineHeight: 1.6 }}>{t('webhooks.doc_intro')}</p>
-        <pre style={{ margin: 0, padding: 14, background: C.s, color: '#e2e8f0', borderRadius: 8, fontSize: 11, overflowX: 'auto', lineHeight: 1.6 }}>{`// Node.js verification
+        <pre style={{ margin: 0, padding: 14, background: C.s, color: '#ded8cb', borderRadius: 8, fontSize: 11, overflowX: 'auto', lineHeight: 1.6 }}>{`// Node.js verification
 const crypto = require('crypto');
 
 function verifyRefBoostSignature(rawBody, headerValue, secret) {

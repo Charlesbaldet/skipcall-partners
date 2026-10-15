@@ -16,7 +16,7 @@ import { Link as LinkIcon, Pencil, X, Plus, Trash2, Upload, Award } from 'lucide
 import api from '../../lib/api';
 import { showToast } from '../../components/Dialogs.jsx';
 
-const C = { p: '#059669', pl: '#10b981', s: '#0f172a', m: '#64748b', bg: '#fafbfc', border: '#e2e8f0' };
+const C = { p: '#0e7a54', pl: '#1c9a6b', s: '#0e1f18', m: '#6e756c', bg: '#faf6ec', border: '#ded8cb' };
 const g = (a, b) => `linear-gradient(135deg,${a},${b})`;
 
 // Returns a safe-to-render string, or '' if the input looks like
@@ -113,9 +113,9 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false, 
           display: 'inline-flex', alignItems: 'center', gap: 6,
           fontSize: 13, fontWeight: 600,
           padding: readOnly ? '6px 14px' : '6px 6px 6px 14px', borderRadius: 999,
-          background: dark ? 'rgba(255,255,255,0.08)' : '#f0fdf4',
-          border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : '#bbf7d0'}`,
-          color: dark ? '#cbd5e1' : '#059669',
+          background: dark ? 'rgba(255,255,255,0.08)' : '#e9f1ea',
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : '#cfe6d6'}`,
+          color: dark ? '#cfc8b8' : '#0e7a54',
         }}>
           {tg}
           {!readOnly && (
@@ -125,7 +125,7 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false, 
               style={{
                 background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(5,150,105,0.12)',
                 border: 'none', borderRadius: '50%', width: 18, height: 18,
-                cursor: 'pointer', color: dark ? '#cbd5e1' : '#059669',
+                cursor: 'pointer', color: dark ? '#cfc8b8' : '#0e7a54',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 12, lineHeight: 1,
               }}
@@ -157,7 +157,7 @@ export function TagEditor({ tags, onChange, addLabel = 'Ajouter', dark = false, 
             fontSize: 13, fontWeight: 600,
             padding: '6px 14px', borderRadius: 999,
             background: 'transparent', border: `1px dashed ${dark ? 'rgba(255,255,255,0.25)' : C.border}`,
-            color: dark ? '#94a3b8' : C.m, cursor: 'pointer',
+            color: dark ? '#99a09a' : C.m, cursor: 'pointer',
           }}
         >+ {addLabel}</button>
       ))}
@@ -258,7 +258,7 @@ function LogoDisplay({ tenant }) {
 export function HeroBlock({ tenant, onPatch, t, editable = true }) {
   return (
     <section style={{
-      background: g(C.s, '#1e293b'),
+      background: g(C.s, '#1a2c24'),
       padding: '80px 32px 64px', textAlign: 'center', borderRadius: 20,
     }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
@@ -278,13 +278,13 @@ export function HeroBlock({ tenant, onPatch, t, editable = true }) {
           />
         </h1>
 
-        <div style={{ margin: '0 auto 28px', fontSize: 17, color: '#cbd5e1', lineHeight: 1.6, maxWidth: 640 }}>
+        <div style={{ margin: '0 auto 28px', fontSize: 17, color: '#cfc8b8', lineHeight: 1.6, maxWidth: 640 }}>
           <EditableText
             value={tenant.short_description}
             onChange={v => onPatch({ short_description: v })}
             placeholder={t('marketplace.editor.short_desc_ph', 'Décrivez votre programme partenaires en une ligne…')}
             multiline
-            style={{ color: '#cbd5e1' }}
+            style={{ color: '#cfc8b8' }}
             readOnly={!editable}
           />
         </div>
@@ -296,7 +296,7 @@ export function HeroBlock({ tenant, onPatch, t, editable = true }) {
             </span>
           )}
           {tenant.icp && (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: '#cbd5e1' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', color: '#cfc8b8' }}>
               {tenant.icp}
             </span>
           )}
@@ -492,7 +492,7 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {primary && (
           <div className={editable ? 'rb-card-hover-parent' : ''} style={{
-            padding: 56, borderRadius: 24, background: g(C.s, '#1e293b'),
+            padding: 56, borderRadius: 24, background: g(C.s, '#1a2c24'),
             color: '#fff', textAlign: 'center', marginBottom: 16,
             position: 'relative', overflow: 'hidden',
           }}>
@@ -534,13 +534,13 @@ export function ConditionsBlock({ page, onPatch, t, editable = true }) {
                   readOnly={!editable}
                 />
               </div>
-              <div style={{ color: '#cbd5e1', fontSize: 17, lineHeight: 1.5, maxWidth: 620, margin: '0 auto' }}>
+              <div style={{ color: '#cfc8b8', fontSize: 17, lineHeight: 1.5, maxWidth: 620, margin: '0 auto' }}>
                 <EditableText
                   value={primary.description}
                   onChange={v => updateItem(primary.id, { description: v })}
                   placeholder={t('marketplace.editor.placeholder_description', 'Description…')}
                   multiline
-                  style={{ color: '#cbd5e1' }}
+                  style={{ color: '#cfc8b8' }}
                   readOnly={!editable}
                 />
               </div>
@@ -911,8 +911,8 @@ export function ReferencesBlock({ page, onPatch, t, editable = true }) {
                   onClick={() => handleDelete(r.id)}
                   title={t('common.delete', 'Supprimer')}
                   style={{
-                    width: 26, height: 26, borderRadius: 8, background: '#fef2f2',
-                    border: `1px solid #fecaca`, color: '#dc2626', cursor: 'pointer',
+                    width: 26, height: 26, borderRadius: 8, background: '#f7e9e6',
+                    border: `1px solid #edc4bd`, color: '#b23b2e', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 ><Trash2 size={12} /></button>
@@ -1063,7 +1063,7 @@ export function AboutBlock({ tenant, page, onPatch, t, editable = true }) {
 export function CtaBlock({ tenant, t, editable = true }) {
   return (
     <section style={{
-      background: g(C.s, '#1e293b'),
+      background: g(C.s, '#1a2c24'),
       padding: '72px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden',
       borderRadius: 20,
     }}>
@@ -1072,7 +1072,7 @@ export function CtaBlock({ tenant, t, editable = true }) {
         <h2 style={{ margin: '0 0 16px', fontSize: 'clamp(26px,4vw,36px)', fontWeight: 800, color: '#fff', letterSpacing: -1 }}>
           {t('marketplace.editor.cta_title', { company: tenant.company_name, defaultValue: 'Rejoindre le programme {{company}}' })}
         </h2>
-        <p style={{ margin: '0 0 28px', fontSize: 17, color: '#cbd5e1', lineHeight: 1.6 }}>
+        <p style={{ margin: '0 0 28px', fontSize: 17, color: '#cfc8b8', lineHeight: 1.6 }}>
           {t('marketplace.editor.cta_body', 'Postulez en quelques clics et démarrez à votre rythme.')}
         </p>
         {editable ? (

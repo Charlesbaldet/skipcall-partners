@@ -222,14 +222,14 @@ export default function LegalPage({ which }) {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <article style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 80px', color: '#0f172a', fontFamily: 'inherit' }}>
+      <article style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 80px', color: '#0e1f18', fontFamily: 'inherit' }}>
         <h1 style={{ fontSize: 36, fontWeight: 800, letterSpacing: -1, margin: '0 0 8px' }}>{page.title}</h1>
-        <p style={{ color: '#64748b', fontSize: 14, margin: '0 0 32px' }}>Dernière mise à jour : {LAST_UPDATED}</p>
+        <p style={{ color: '#6e756c', fontSize: 14, margin: '0 0 32px' }}>Dernière mise à jour : {LAST_UPDATED}</p>
         <style>{`
-          .rb-legal h2 { font-size: 20px; font-weight: 700; color: #0f172a; margin: 32px 0 12px; letter-spacing: -0.2px; }
-          .rb-legal p  { font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 14px; }
-          .rb-legal a  { color: #059669; text-decoration: underline; }
-          .rb-legal strong { color: #0f172a; font-weight: 700; }
+          .rb-legal h2 { font-size: 20px; font-weight: 700; color: #0e1f18; margin: 32px 0 12px; letter-spacing: -0.2px; }
+          .rb-legal p  { font-size: 15px; line-height: 1.7; color: #2b3a32; margin: 0 0 14px; }
+          .rb-legal a  { color: #0e7a54; text-decoration: underline; }
+          .rb-legal strong { color: #0e1f18; font-weight: 700; }
         `}</style>
         <div className="rb-legal" dangerouslySetInnerHTML={{ __html: page.body }} />
       </article>
