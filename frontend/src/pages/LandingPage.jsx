@@ -181,9 +181,7 @@ export default function LandingPage() {
       <section style={{padding:mobile?'108px 24px 48px':'148px 48px 68px',background:C.bg,borderBottom:'1px solid #ded8cb'}}>
         <div style={{maxWidth:1180,margin:'0 auto',display:'grid',gridTemplateColumns:mobile?'1fr':'1.05fr .95fr',gap:mobile?40:56,alignItems:'center'}}>
           <div>
-            <div className="fu fu1" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',borderRadius:999,background:'#fff',border:'1px solid #ded8cb',fontSize:13,fontWeight:600,color:C.p,marginBottom:26}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:C.p}}/> {t('landing.hero.badge')}
-            </div>
+            <div className="fu fu1" style={{fontSize:14,fontWeight:600,color:C.p,marginBottom:20,letterSpacing:'.005em'}}>{t('landing.hero.badge')}</div>
             <h1 className="fu fu2" style={{fontSize:mobile?36:60,fontWeight:560,lineHeight:1.04,letterSpacing:-2,margin:'0 0 22px',color:C.s}}>
               {t('landing.hero.h1_start')} <span style={{color:C.p,fontStyle:'italic'}}>{t('landing.hero.h1_highlight')}</span>
             </h1>
@@ -382,7 +380,7 @@ export default function LandingPage() {
       <section id="marketplace" style={{padding:'80px 24px',background:'#fff'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:48}}>
-            <span style={{display:'inline-flex',alignItems:'center',gap:6,background:'#e9f1ea',border:'1px solid #6ee7b7',color:'#0e7a54',borderRadius:14,padding:'6px 16px',fontSize:12,fontWeight:700,marginBottom:16}}>{t('landing.marketplace.badge')}</span>
+            <span style={{display:'inline-block',color:'#0e7a54',fontSize:13,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:14}}>{t('landing.marketplace.badge')}</span>
             <h2 style={{fontSize:'clamp(26px,4vw,40px)',fontWeight:900,color:'#0e1f18',margin:'0 0 16px',lineHeight:1.15}}>{t('landing.marketplace.title_start')}<br/><span style={{color:'#0e7a54'}}>{t('landing.marketplace.title_highlight')}</span></h2>
             <p style={{color:'#6e756c',fontSize:16,maxWidth:560,margin:'0 auto'}}>{t('landing.marketplace.description')}</p>
           </div>
@@ -519,7 +517,7 @@ export default function LandingPage() {
       <section style={{padding:'80px 48px',background:'#f6f2e9'}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div style={{textAlign:'center',marginBottom:48}}>
-            <span style={{display:'inline-block',padding:'6px 16px',background:C.p+'22',color:C.p,borderRadius:999,fontSize:13,fontWeight:600,marginBottom:12}}>{t('landing.blog.label')}</span>
+            <span style={{display:'inline-block',color:C.p,fontSize:13,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:12}}>{t('landing.blog.label')}</span>
             <h2 style={{fontSize:'clamp(28px,4vw,40px)',fontWeight:800,margin:'0 0 12px',color:'#0e1f18'}}>{t('landing.blog.title')}</h2>
             <p style={{fontSize:17,color:'#6e756c',maxWidth:560,margin:'0 auto'}}>{t('landing.blog.subtitle')}</p>
           </div>
