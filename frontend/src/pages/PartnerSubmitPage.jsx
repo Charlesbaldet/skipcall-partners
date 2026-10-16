@@ -67,7 +67,9 @@ export default function PartnerSubmitPage({ onSubmitted } = {}) {
         setSubmitted(true);
       }
     } catch (err) {
-      setError(err.message || 'Erreur lors de la soumission');
+      // Préfère le message « ami » renvoyé par le serveur (ex. doublon Contact X :
+      // « nous sommes déjà en relation… ») au code d'erreur brut.
+      setError(err.data?.message || err.message || 'Erreur lors de la soumission');
     }
     setSaving(false);
   };

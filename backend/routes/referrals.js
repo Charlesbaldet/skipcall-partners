@@ -15,6 +15,7 @@ const crmService = require('../services/crmService');
 const notionService = require('../services/notionService');
 const { sendWebhookEvent } = require('../services/webhookService');
 const { logAudit } = require('../services/auditLog');
+const { checkContactXDuplicate } = require('../services/contactxLookup');
 
 const router = express.Router();
 
@@ -339,6 +340,26 @@ router.post('/', [
     const safeContactFirst = (contact_first_name || '').trim() || null;
     const safeContactLast  = (contact_last_name  || '').trim() || null;
     const safeLeadHandling = lead_handling === 'client_prospect' ? 'client_prospect' : 'partner_managed';
+
+    // Anti-doublon Contact X : si l'entreprise (ou le contact) est DÉJÀ connue dans le CRM
+    // de l'entité, on refuse le lead — on est déjà en relation. BEST-EFFORT : un incident
+    // Contact X (réseau, pas d'intégration) ne bloque jamais la soumission.
+    try {
+      const dup = await checkContactXDuplicate(req.tenantId, {
+        company: prospect_company,
+        email: prospect_email,
+      });
+      if (dup && dup.exists) {
+        return res.status(409).json({
+          error: 'already_in_crm',
+          message:
+            dup.message ||
+            'Nous sommes déjà en relation avec cette entreprise, aucun lead ne peut être ajouté.',
+        });
+      }
+    } catch (e) {
+      console.warn('[referrals.create] dedup Contact X ignoré (best-effort):', e.message);
+    }
 
     // Track the submission source for admin analytics. Tracking codes
     // override any explicit partner_id in the body.
